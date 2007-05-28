@@ -33,6 +33,7 @@
 
 #include <wx/defs.h>
 #include <wx/renderer.h>
+#include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
 #include <wx/scrolwin.h>
 #include <wx/settings.h>
@@ -190,7 +191,7 @@ void RenderThemeWx::adjustButtonStyle(CSSStyleSelector* selector, RenderStyle* s
 bool RenderThemeWx::paintButton(RenderObject* o, const RenderObject::PaintInfo& i, const IntRect& r)
 {
     wxScrolledWindow* window = o->view()->frameView()->nativeWindow();
-    wxPaintDC dc((wxWindow*)window);
+    wxAutoBufferedPaintDC dc((wxWindow*)window);
     window->DoPrepareDC(dc);
 
     int flags = 0;
