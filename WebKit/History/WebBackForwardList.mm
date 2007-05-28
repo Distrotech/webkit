@@ -267,12 +267,12 @@ static NSArray* vectorToNSArray(HistoryItemVector& list)
     return result;
 }
 
-- (void)setPageCacheSize:(unsigned)size
+- (void)setPageCacheSize:(WebNSUInteger)size
 {
     core(self)->setPageCacheSize(size);
 }
 
-- (unsigned)pageCacheSize
+- (WebNSUInteger)pageCacheSize
 {
     return core(self)->pageCacheSize();
 }
