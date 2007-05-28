@@ -78,7 +78,6 @@
 
 #elif defined(BUILDING_WX__)
 #define WTF_PLATFORM_WX 1
-#define WTF_USE_WXGC 0
 #elif PLATFORM(DARWIN) 
 #define WTF_PLATFORM_MAC 1
 #elif PLATFORM(WIN_OS)
