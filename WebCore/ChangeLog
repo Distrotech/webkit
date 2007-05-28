@@ -1,3 +1,9 @@
+2007-05-28  Sam Weinig  <sam@webkit.org>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-05-27  Sam Weinig  <sam@webkit.org>
 
         Build fix.

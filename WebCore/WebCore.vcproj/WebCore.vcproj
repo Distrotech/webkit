@@ -6811,6 +6811,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLElementCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLElementWrapperFactory.cpp"
 					>
 				</File>
