@@ -501,13 +501,9 @@ void wxWebView::OnKeyEvents(wxKeyEvent& event)
         else
         {
             WebCore::PlatformKeyboardEvent wkEvent(event);
-            if (event.GetEventType() == wxEVT_CHAR)
-            {
-                // FIXME: This doesn't ever seem to get triggered.
-                if (m_impl->frame->eventHandler()->handleTextInputEvent(wxString(event.GetUnicodeKey())))
-                    return;
-            }
-            else
+            // For now, I don't know of any way to identify a keyboard event
+            // as a char event, so just send key up and key down messages.
+            if (event.GetEventType() != wxEVT_CHAR)
             {
                 if (m_impl->frame->eventHandler()->keyEvent(wkEvent))
                     return;

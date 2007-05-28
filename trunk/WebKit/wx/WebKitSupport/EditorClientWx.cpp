@@ -232,17 +232,9 @@ void EditorClientWx::redo()
 
 void EditorClientWx::handleInputMethodKeypress(KeyboardEvent* event)
 {
-    Frame* frame = m_page->focusController()->focusedOrMainFrame();
-    if (!frame)
-        return;
-
-    const PlatformKeyboardEvent* kevent = event->keyEvent();
-    Node* start = frame->selectionController()->start().node();
-    if (start && start->isContentEditable()) 
-    {
-            frame->editor()->insertText(kevent->text(), event);
-    }
-    event->setDefaultHandled();
+// NOTE: we don't currently need to handle this. When key events occur,
+// both this method and handleKeypress get a chance at handling them.
+// We might use this method later on for IME-specific handling.
 }
 
 void EditorClientWx::handleKeypress(KeyboardEvent* event)
@@ -257,12 +249,10 @@ void EditorClientWx::handleKeypress(KeyboardEvent* event)
         if (start && start->isContentEditable()) {
             switch(kevent->WindowsKeyCode()) {
             case VK_BACK:
-                fprintf(stderr, "backspace hit!\n");
                 frame->editor()->deleteWithDirection(SelectionController::BACKWARD,
                                                      CharacterGranularity, false, true);
                 break;
             case VK_DELETE:
-                fprintf(stderr, "delete hit!\n");
                 frame->editor()->deleteWithDirection(SelectionController::FORWARD,
                                                      CharacterGranularity, false, true);
                 break;
@@ -278,8 +268,11 @@ void EditorClientWx::handleKeypress(KeyboardEvent* event)
             case VK_DOWN:
                 frame->editor()->execCommand("MoveDown");
                 break;
+            case VK_RETURN:
+                frame->editor()->insertLineBreak();
             default:
-                break; //frame->editor()->insertText(kevent->text(), event);
+                if (!kevent->ctrlKey() && !kevent->altKey())
+                    frame->editor()->insertText(kevent->text(), event);
             }
             event->setDefaultHandled();
         }
