@@ -651,6 +651,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLEmbedElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLEmbedElement.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLFieldSetElement.cpp"
 				>
 			</File>
@@ -820,6 +828,14 @@
 			</File>
 			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLModElement.h"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLObjectElement.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSHTMLObjectElement.h"
 				>
 			</File>
 			<File
@@ -6787,6 +6803,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLAppletElementCustom.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLDocumentCustom.cpp"
 					>
 				</File>
@@ -6796,6 +6816,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLElementWrapperFactory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLEmbedElementCustom.cpp"
 					>
 				</File>
 				<File
@@ -6812,6 +6836,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLInputElementBase.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLObjectElementCustom.cpp"
 					>
 				</File>
 				<File
