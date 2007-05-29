@@ -1,3 +1,14 @@
+2007-05-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Port code from open source changeset 21808, fixing
+        http://bugs.webkit.org/show_bug.cgi?id=13871 
+        
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeMac::adjustSliderThumbStyle):
+        * rendering/RenderThemeSafari.h:
+
 2007-05-29  Ada Chan  <adachan@apple.com>
 
         Build fix.

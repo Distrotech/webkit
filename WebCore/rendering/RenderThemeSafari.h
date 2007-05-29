@@ -72,6 +72,7 @@ public:
     virtual int minimumMenuListSize(RenderStyle*) const;
 
     virtual void adjustSliderThumbSize(RenderObject*) const;
+    virtual void adjustSliderThumbStyle(CSSStyleSelector*, RenderStyle*, Element*) const; 
 
 protected:
     // Methods for each appearance value.

@@ -865,6 +865,11 @@ bool RenderThemeSafari::paintSliderTrack(RenderObject* o, const RenderObject::Pa
     return false;
 }
 
+void RenderThemeMac::adjustSliderThumbStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const 
+{ 
+    style->setBoxShadow(0); 
+} 
+
 const float verticalSliderHeightPadding = 0.1f;
 
 bool RenderThemeSafari::paintSliderThumb(RenderObject* o, const RenderObject::PaintInfo& paintInfo, const IntRect& r)
