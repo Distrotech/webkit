@@ -1,3 +1,13 @@
+2007-05-29  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Darin.
+        
+        Removed setPageCacheSize/pageCacheSize from IWebBackForwardList.
+
+        * Interfaces/IWebBackForwardList.idl: Removed unnecessary methods.
+        * WebBackForwardList.cpp: Removed unnecessary methods.
+        * WebBackForwardList.h: Removed unnecessary methods.
+
 2007-05-29  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Adam Roben.

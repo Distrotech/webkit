@@ -195,18 +195,4 @@ interface IWebBackForwardList : IUnknown
         - (WebHistoryItem *)itemAtIndex:(int)index;
     */
     HRESULT itemAtIndex([in] int index, [out, retval] IWebHistoryItem** item);
-
-    /*!
-        @method setPageCacheSize:
-        @abstract This method is deprecated. It does nothing.
-        Use IWebPreferences::setUsesPageCache instead.
-    */
-    HRESULT setPageCacheSize([in] UINT size);
-
-    /*!
-        @method setPageCacheSize:
-        @abstract This method is deprecated. It does nothing and returns 0.
-        Use IWebPreferences::usesPageCache instead.
-    */
-    HRESULT pageCacheSize([out, retval] UINT* size);
 }

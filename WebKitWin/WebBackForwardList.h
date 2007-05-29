@@ -102,12 +102,6 @@ public:
         /* [in] */ int index,
         /* [retval][out] */ IWebHistoryItem **item);
     
-    virtual HRESULT STDMETHODCALLTYPE setPageCacheSize( 
-        /* [in] */ UINT size);
-    
-    virtual HRESULT STDMETHODCALLTYPE pageCacheSize( 
-        /* [retval][out] */ UINT *size);
-
     // IWebBackForwardListPrivate
     virtual HRESULT STDMETHODCALLTYPE removeItem( 
         /* [in] */ IWebHistoryItem* item);

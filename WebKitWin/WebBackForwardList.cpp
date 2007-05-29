@@ -288,21 +288,6 @@ HRESULT STDMETHODCALLTYPE WebBackForwardList::itemAtIndex(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebBackForwardList::setPageCacheSize( 
-    /* [in] */ UINT /* size */)
-{
-    // This function is here for binary compatbility only.
-    return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE WebBackForwardList::pageCacheSize( 
-    /* [retval][out] */ UINT* size)
-{
-    // This function is here for binary compatbility only.
-    *size = 0;
-    return S_OK;
-}
-
 // IWebBackForwardListPrivate --------------------------------------------------------
 
 HRESULT STDMETHODCALLTYPE WebBackForwardList::removeItem( 
