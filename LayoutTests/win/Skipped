@@ -185,6 +185,7 @@ editing/execCommand/nsresponder-outdent.html
 editing/input/firstrectforcharacterrange-plain.html
 editing/input/firstrectforcharacterrange-styled.html
 editing/input/range-for-empty-document.html
+editing/input/replace-invalid-range.html
 editing/input/text-input-controller.html
 editing/input/wrapped-line-char-rect.html
 editing/selection/4947387.html

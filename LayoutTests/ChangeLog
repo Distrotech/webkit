@@ -1,5 +1,9 @@
 2007-05-29  Adam Roben  <aroben@apple.com>
 
+        * win/Skipped: Added another failing test.
+
+2007-05-29  Adam Roben  <aroben@apple.com>
+
         * win/Skipped: Removed some fixed tests, and added some failing ones.
 
 2007-05-25  Adam Roben  <aroben@apple.com>
