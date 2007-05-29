@@ -95,6 +95,8 @@ public:
     PlatformGraphicsContext* context;
     IntRect focusRect;
     int mswDCStateID;
+    wxRegion gtkCurrentClipRgn;
+    wxRegion gtkPaintClipRgn;
 };
 
 GraphicsContextPlatformPrivate::GraphicsContextPlatformPrivate()
@@ -102,6 +104,8 @@ GraphicsContextPlatformPrivate::GraphicsContextPlatformPrivate()
     context = NULL;
     focusRect = IntRect();
     mswDCStateID = 0;
+    gtkCurrentClipRgn = wxRegion();
+    gtkPaintClipRgn = wxRegion();
 }
 
 GraphicsContextPlatformPrivate::~GraphicsContextPlatformPrivate()
@@ -156,6 +160,9 @@ void GraphicsContext::savePlatformState()
     #elif __WXMSW__
         HDC dc = (HDC)m_data->context->GetHDC();
         m_data->mswDCStateID = ::SaveDC(dc);
+    #elif __WXGTK__
+        m_data->gtkCurrentClipRgn = m_data->context->m_currentClippingRegion;
+        m_data->gtkPaintClipRgn = m_data->context->m_paintClippingRegion;
     #endif
 #endif // __WXMAC__
     }
@@ -178,6 +185,9 @@ void GraphicsContext::restorePlatformState()
     #elif __WXMSW__
         HDC dc = (HDC)m_data->context->GetHDC();
         ::RestoreDC(dc, m_data->mswDCStateID);
+    #elif __WXGTK__
+        m_data->context->m_currentClippingRegion = m_data->gtkCurrentClipRgn;
+        m_data->context->m_paintClippingRegion = m_data->gtkPaintClipRgn;
     #endif
 
 #endif // USE_WXGC 

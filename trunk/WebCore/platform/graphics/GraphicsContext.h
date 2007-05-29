@@ -43,14 +43,14 @@ class QPainter;
 typedef QPainter PlatformGraphicsContext;
 #elif PLATFORM(WX)
 class wxGraphicsContext;
-class wxDC;
+class wxWindowDC;
 // wxGraphicsContext allows us to support Path, etc. 
 // but on some platforms, e.g. Linux, it requires fairly 
 // new software.
 #if USE(WXGC)
     typedef wxGraphicsContext PlatformGraphicsContext;
 #else
-    typedef wxDC PlatformGraphicsContext;
+    typedef wxWindowDC PlatformGraphicsContext;
 #endif
 #else
 typedef void PlatformGraphicsContext;
