@@ -1,3 +1,20 @@
+2007-05-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/4761543> nike.com doesn't finish loading if Flash plugin is installed
+        <rdar://problem/5131528> play button on Flash in ESPN front page does not start movie
+        
+        Make sure to call NPP_SetWindow right after creating the plugin, and not from the main loop. However,
+        the WMP plugin needs to have the plugin's window coordinates set correctly when calling NPP_SetWindow so add a 
+        quirk for that.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::determineQuirks):
+        (WebCore::PluginViewWin::init):
+        * plugins/win/PluginViewWin.h:
+        (WebCore::):
+
 2007-05-29  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Adam Roben.

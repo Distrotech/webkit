@@ -61,6 +61,7 @@ namespace WebCore {
     
     enum PluginQuirks {
         PluginQuirkWantsMozillaUserAgent = 1 << 0,
+        PluginQuirkDeferFirstSetWindowCall = 1 << 1,
     };
 
     enum PluginStatus {

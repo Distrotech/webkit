@@ -1153,6 +1153,11 @@ void PluginViewWin::determineQuirks(const String& mimeType)
     // The flash plugin only requests windowless plugins if we return a mozilla user agent
     if (mimeType == "application/x-shockwave-flash")
         m_quirks |= PluginQuirkWantsMozillaUserAgent;
+
+    // The WMP plugin sets its size on the first NPP_SetWindow call and never updates its size, so
+    // call SetWindow when the plugin view has a correct size
+    if (m_plugin->name().contains("Microsoft") && m_plugin->name().contains("Windows Media"))
+        m_quirks |= PluginQuirkDeferFirstSetWindowCall;
 }
 
 PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
@@ -1232,6 +1237,9 @@ void PluginViewWin::init()
         m_npWindow.type = NPWindowTypeDrawable;
         m_npWindow.window = 0;
     }
+
+    if (!(m_quirks & PluginQuirkDeferFirstSetWindowCall))
+        setNPWindowRect(frameGeometry());
 
     m_status = PluginStatusLoadedSuccessfully;
 }
