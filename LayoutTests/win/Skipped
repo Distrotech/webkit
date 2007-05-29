@@ -410,13 +410,9 @@ svg/hixie/viewbox/preserveAspectRatio/001.xml
 # No support for WebArchives in WebKitWin <rdar://problem/5066490>
 webarchive
 
-# PNG in <object> rendered as image document <rdar://problem/5212399>
+# PNG in <object> rendered as image document <rdar://problem/5234139>
 css2.1/t0801-c412-hz-box-00-b-a.html
-fast/css/acid2.html
-fast/css/acid2-pixel.html
-fast/replaced/object-align-hspace-vspace.html
-http/tests/misc/acid2-pixel.html
-http/tests/misc/acid2.html
+fast/invalid/td-inside-object.html
 
 # Image document in frame has no size <rdar://problem/5230233>
 dom/xhtml/level2/html/frame.xhtml
@@ -467,6 +463,10 @@ http/tests/loading/bad-server-subframe.html
 http/tests/loading/basic.html
 http/tests/loading/empty-subframe.html
 http/tests/loading/simple-subframe.html
+
+# <rdar://problem/5233929> frame-loading-via-document-write.html is failing
+fast/dom/frame-loading-via-document-write.html
+http/tests/security/frame-loading-via-document-write.html
 
 ################################################################################
 ####################### No bugs filed about the below yet#######################
