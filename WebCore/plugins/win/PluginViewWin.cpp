@@ -965,14 +965,14 @@ NPError PluginViewWin::postURL(const char* url, const char* target, uint32 len, 
 
 NPError PluginViewWin::newStream(NPMIMEType type, const char* target, NPStream** stream)
 {
-    LOG_NOIMPL();
+    notImplemented();
     // Unsupported
     return NPERR_GENERIC_ERROR;
 }
 
 int32 PluginViewWin::write(NPStream* stream, int32 len, void* buffer)
 {
-    LOG_NOIMPL();
+    notImplemented();
     // Unsupported
     return -1;
 }
@@ -1060,7 +1060,7 @@ NPError PluginViewWin::setValue(NPPVariable variable, void* value)
             m_isTransparent = value;
             return NPERR_NO_ERROR;
         default:
-            LOG_NOIMPL();
+            notImplemented();
             return NPERR_GENERIC_ERROR;
     }
 }

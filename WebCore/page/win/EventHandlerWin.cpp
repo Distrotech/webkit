@@ -104,7 +104,7 @@ void EventHandler::focusDocumentView()
 
 bool EventHandler::passWidgetMouseDownEventToWidget(const MouseEventWithHitTestResults&)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 

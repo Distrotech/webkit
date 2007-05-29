@@ -1434,47 +1434,47 @@ void WebFrame::makeDocumentView()
 
 void WebFrame::makeRepresentation(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::forceLayout()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::forceLayoutForNonHTML()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::setCopiesOnScroll()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::detachedFromParent1()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::detachedFromParent2()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::detachedFromParent3()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::detachedFromParent4()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::loadedFromCachedPage()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::dispatchDidReceiveServerRedirectForProvisionalLoad()
@@ -1608,32 +1608,32 @@ void WebFrame::dispatchWillSubmitForm(FramePolicyFunction function, PassRefPtr<F
 
 void WebFrame::dispatchDidLoadMainResource(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::revertToProvisionalState(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::clearUnarchivingState(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::setMainFrameDocumentReady(bool)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::willChangeTitle(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::didChangeTitle(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::finishedLoading(DocumentLoader* loader)
@@ -1646,28 +1646,28 @@ void WebFrame::finishedLoading(DocumentLoader* loader)
 
 void WebFrame::finalSetupForReplace(DocumentLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::setDefersLoading(bool)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebFrame::isArchiveLoadPending(ResourceLoader*) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
 void WebFrame::cancelPendingArchiveLoad(ResourceLoader*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::clearArchivedResources()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebFrame::canHandleRequest(const ResourceRequest& request) const
@@ -1677,19 +1677,20 @@ bool WebFrame::canHandleRequest(const ResourceRequest& request) const
 
 bool WebFrame::canShowMIMEType(const String& /*MIMEType*/) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return true;
 }
 
 bool WebFrame::representationExistsForURLScheme(const String& /*URLScheme*/) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
 String WebFrame::generatedMIMETypeForURLScheme(const String& /*URLScheme*/) const
 {
-    STOP_NOIMPL();
+    notImplemented();
+    ASSERT_NOT_REACHED();
     return String();
 }
 
@@ -1702,33 +1703,33 @@ void WebFrame::frameLoadCompleted()
 void WebFrame::restoreViewState()
 {
     // FIXME: Need to restore view state for page caching
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::provisionalLoadStarted()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebFrame::shouldTreatURLAsSameAsCurrent(const KURL&) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
 void WebFrame::addHistoryItemForFragmentScroll()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::didFinishLoad()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::prepareForDataSourceReplacement()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::setTitle(const String& title, const KURL& url)
@@ -1759,7 +1760,7 @@ String WebFrame::userAgent(const KURL& url)
 
 void WebFrame::setDocumentViewFromCachedPage(CachedPage*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::updateGlobalHistoryForStandardLoad(const KURL& url)
@@ -1800,24 +1801,24 @@ void WebFrame::updateGlobalHistoryForReload(const KURL& url)
 
 bool WebFrame::shouldGoToHistoryItem(HistoryItem*) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return true;
 }
 
 void WebFrame::saveViewStateToItem(HistoryItem*)
 {
     // FIXME: Need to save view state for page caching
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::saveDocumentViewToCachedPage(CachedPage*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebFrame::canCachePage() const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
@@ -1834,7 +1835,7 @@ PassRefPtr<DocumentLoader> WebFrame::createDocumentLoader(const ResourceRequest&
 
 void WebFrame::setMainDocumentError(DocumentLoader*, const ResourceError&)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 ResourceError WebFrame::cancelledError(const ResourceRequest& request)
@@ -1852,7 +1853,7 @@ ResourceError WebFrame::blockedError(const ResourceRequest& request)
 
 ResourceError WebFrame::cannotShowURLError(const ResourceRequest&)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return ResourceError();
 }
 
@@ -1864,13 +1865,13 @@ ResourceError WebFrame::interruptForPolicyChangeError(const ResourceRequest& req
 
 ResourceError WebFrame::cannotShowMIMETypeError(const ResourceResponse&)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return ResourceError();
 }
 
 ResourceError WebFrame::fileDoesNotExistError(const ResourceResponse&)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return ResourceError();
 }
 
@@ -2025,7 +2026,7 @@ void WebFrame::download(ResourceHandle* handle, const ResourceRequest& request, 
 
 bool WebFrame::willUseArchive(ResourceLoader*, const ResourceRequest&, const KURL&) const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
@@ -2101,7 +2102,7 @@ void WebFrame::dispatchDidFailLoading(DocumentLoader* loader, unsigned long iden
 
 bool WebFrame::dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
@@ -2169,7 +2170,7 @@ void WebFrame::postProgressFinishedNotification()
 
 void WebFrame::startDownload(const ResourceRequest&)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::dispatchDidReceiveAuthenticationChallenge(DocumentLoader* loader, unsigned long identifier, const AuthenticationChallenge& challenge)
@@ -2350,7 +2351,7 @@ ObjectContentType WebFrame::objectContentType(const KURL& url, const String& mim
 
 String WebFrame::overrideMediaType() const
 {
-    LOG_NOIMPL();
+    notImplemented();
     return String();
 }
 
@@ -2537,12 +2538,12 @@ HRESULT STDMETHODCALLTYPE WebFrame::spoolPages(
 
 void WebFrame::addInspector(WebInspector*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebFrame::removeInspector(WebInspector*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 HRESULT STDMETHODCALLTYPE WebFrame::isFrameSet( 

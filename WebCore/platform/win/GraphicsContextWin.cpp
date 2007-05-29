@@ -423,7 +423,7 @@ void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& point, 
 GraphicsContext* contextForImage(SVGResourceImage*)
 {
     // FIXME: This should go in GraphicsContextCG.cpp
-    LOG_NOIMPL();
+    notImplemented();
     return 0;
 }
 #endif

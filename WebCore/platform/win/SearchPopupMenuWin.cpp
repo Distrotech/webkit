@@ -43,12 +43,12 @@ bool SearchPopupMenu::enabled()
 
 void SearchPopupMenu::saveRecentSearches(const AtomicString& name, const Vector<String>& searchItems)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void SearchPopupMenu::loadRecentSearches(const AtomicString& name, Vector<String>& searchItems)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 }

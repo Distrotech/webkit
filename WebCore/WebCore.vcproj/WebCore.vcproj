@@ -2890,6 +2890,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\OpenSource\WebCore\platform\NotImplemented.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\OpenSource\WebCore\platform\Pasteboard.h"
 				>
 			</File>
@@ -3230,10 +3234,6 @@
 				</File>
 				<File
 					RelativePath="..\platform\win\MimeTypeRegistryWin.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\platform\win\NotImplemented.h"
 					>
 				</File>
 				<File

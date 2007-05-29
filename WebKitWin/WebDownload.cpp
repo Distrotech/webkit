@@ -282,7 +282,7 @@ HRESULT STDMETHODCALLTYPE WebDownload::canResumeDownloadDecodedWithEncodingMIMET
         /* [in] */ BSTR, 
         /* [out, retval] */ BOOL*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return E_FAIL;
 }
 
@@ -415,14 +415,14 @@ HRESULT STDMETHODCALLTYPE WebDownload::setDestination(
 HRESULT STDMETHODCALLTYPE WebDownload::cancelAuthenticationChallenge(
         /* [in] */ IWebURLAuthenticationChallenge*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE WebDownload::continueWithoutCredentialForAuthenticationChallenge(
         /* [in] */ IWebURLAuthenticationChallenge*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return E_FAIL;
 }
 
@@ -430,7 +430,7 @@ HRESULT STDMETHODCALLTYPE WebDownload::useCredential(
         /* [in] */ IWebURLCredential*, 
         /* [in] */ IWebURLAuthenticationChallenge*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return E_FAIL;
 }
 
@@ -465,7 +465,7 @@ CFURLRequestRef WebDownload::willSendRequest(CFURLRequestRef request, CFURLRespo
 
 void WebDownload::didReceiveAuthenticationChallenge(CFURLAuthChallengeRef )
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebDownload::didReceiveResponse(CFURLResponseRef response)

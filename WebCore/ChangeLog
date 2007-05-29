@@ -1,3 +1,47 @@
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        - Removes platform/win/NotImplemented.h because we have consolidated
+          the notImplemented() for all platforms in platform/NotImplemented.h
+        - Fixes remaining uses of old macro to use the new notImplemented() one.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * page/win/EventHandlerWin.cpp:
+        (WebCore::EventHandler::passWidgetMouseDownEventToWidget):
+        * platform/graphics/svg/cg/SVGResourceFilterCg.cpp:
+        (WebCore::SVGResourceFilter::prepareFilter):
+        (WebCore::SVGResourceFilter::applyFilter):
+        * platform/graphics/svg/cg/SVGResourceMaskerCg.cpp:
+        (WebCore::SVGResourceMasker::applyMask):
+        * platform/win/GraphicsContextWin.cpp:
+        (WebCore::contextForImage):
+        * platform/win/NotImplemented.h: Removed.
+        * platform/win/SearchPopupMenuWin.cpp:
+        (WebCore::SearchPopupMenu::saveRecentSearches):
+        (WebCore::SearchPopupMenu::loadRecentSearches):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (Frame::print):
+        (Frame::issueTransposeCommand):
+        (GraphicsContextPlatformPrivate::clip):
+        (WebCore::FrameView::updateBorder):
+        (Widget::setIsSelected):
+        (ScrollView::inWindow):
+        (WebCore::focusRingColor):
+        (WebCore::setFocusRingColorChangeFunction):
+        (Frame::setNeedsReapplyStyles):
+        (FrameLoader::overrideMediaType):
+        (DocumentLoader::getResponseModifiedHeader):
+        (ResourceHandle::willLoadFromCache):
+        (WebCore::userIdleTime):
+        (CachedPage::close):
+        (WebCore::supportedKeySizes):
+        (WebCore::signedPublicKeyAndChallengeString):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::newStream):
+        (WebCore::PluginViewWin::write):
+        (WebCore::PluginViewWin::setValue):
+
 2007-05-29  Anders Carlsson  <andersca@apple.com>
 
         Build fix.

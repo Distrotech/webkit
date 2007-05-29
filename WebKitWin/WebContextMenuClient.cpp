@@ -141,15 +141,15 @@ void WebContextMenuClient::searchWithGoogle(const Frame* frame)
 
 void WebContextMenuClient::lookUpInDictionary(Frame*)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebContextMenuClient::speak(const String&)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebContextMenuClient::stopSpeaking()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }

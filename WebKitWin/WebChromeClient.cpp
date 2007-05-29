@@ -154,7 +154,7 @@ Page* WebChromeClient::createModalDialog(Frame*, const FrameLoadRequest&)
     Page* page = 0;
     IWebUIDelegate* uiDelegate = 0;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
-        LOG_NOIMPL();
+        notImplemented();
         uiDelegate->Release();
     }
     return page;
@@ -174,7 +174,7 @@ bool WebChromeClient::canRunModal()
     bool result = false;
     IWebUIDelegate* uiDelegate = 0;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
-        LOG_NOIMPL();
+        notImplemented();
         uiDelegate->Release();
     }
     return result;
@@ -184,7 +184,7 @@ void WebChromeClient::runModal()
 {
     IWebUIDelegate* uiDelegate = 0;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
-        LOG_NOIMPL();
+        notImplemented();
         uiDelegate->Release();
     }
 }
@@ -231,12 +231,12 @@ bool WebChromeClient::statusbarVisible()
 
 void WebChromeClient::setScrollbarsVisible(bool)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebChromeClient::scrollbarsVisible()
 {
-    LOG_NOIMPL();
+    notImplemented();
     return false;
 }
 
@@ -244,7 +244,7 @@ void WebChromeClient::setMenubarVisible(bool)
 {
     IWebUIDelegate* uiDelegate = 0;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
-        LOG_NOIMPL();
+        notImplemented();
         uiDelegate->Release();
     }
 }
@@ -254,7 +254,7 @@ bool WebChromeClient::menubarVisible()
     bool result = false;
     IWebUIDelegate* uiDelegate = 0;
     if (SUCCEEDED(m_webView->uiDelegate(&uiDelegate))) {
-        LOG_NOIMPL();
+        notImplemented();
         uiDelegate->Release();
     }
     return result;

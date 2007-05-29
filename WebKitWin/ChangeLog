@@ -1,3 +1,94 @@
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        - Removes platform/win/NotImplemented.h because we have consolidated
+          the notImplemented() for all platforms in platform/NotImplemented.h
+        - Fixes remaining uses of old macro to use the new notImplemented() one.
+
+        * WebChromeClient.cpp:
+        (WebChromeClient::createModalDialog):
+        (WebChromeClient::canRunModal):
+        (WebChromeClient::runModal):
+        (WebChromeClient::setScrollbarsVisible):
+        (WebChromeClient::scrollbarsVisible):
+        (WebChromeClient::setMenubarVisible):
+        (WebChromeClient::menubarVisible):
+        * WebContextMenuClient.cpp:
+        (WebContextMenuClient::lookUpInDictionary):
+        (WebContextMenuClient::speak):
+        (WebContextMenuClient::stopSpeaking):
+        * WebDownload.cpp:
+        (WebDownload::canResumeDownloadDecodedWithEncodingMIMEType):
+        (WebDownload::cancelAuthenticationChallenge):
+        (WebDownload::continueWithoutCredentialForAuthenticationChallenge):
+        (WebDownload::useCredential):
+        (WebDownload::didReceiveAuthenticationChallenge):
+        * WebEditorClient.cpp:
+        (WebEditorClient::spellCheckerDocumentTag):
+        (WebEditorClient::shouldBeginEditing):
+        (WebEditorClient::shouldEndEditing):
+        (WebEditorClient::didBeginEditing):
+        (WebEditorClient::respondToChangedContents):
+        (WebEditorClient::respondToChangedSelection):
+        (WebEditorClient::didEndEditing):
+        (WebEditorClient::didWriteSelectionToPasteboard):
+        (WebEditorClient::didSetSelectionTypesForPasteboard):
+        (WebEditorClient::shouldDeleteRange):
+        (WebEditorClient::shouldInsertNode):
+        (WebEditorClient::shouldInsertText):
+        (WebEditorClient::shouldApplyStyle):
+        (WebEditorClient::shouldChangeTypingStyle):
+        (WebEditorClient::webViewDidChangeTypingStyle):
+        (WebEditorClient::webViewDidChangeSelection):
+        (WebEditorClient::shouldShowDeleteInterface):
+        (WebEditorClient::shouldChangeSelectedRange):
+        * WebFrame.cpp:
+        (WebFrame::makeRepresentation):
+        (WebFrame::forceLayout):
+        (WebFrame::forceLayoutForNonHTML):
+        (WebFrame::setCopiesOnScroll):
+        (WebFrame::detachedFromParent1):
+        (WebFrame::detachedFromParent2):
+        (WebFrame::detachedFromParent3):
+        (WebFrame::detachedFromParent4):
+        (WebFrame::loadedFromCachedPage):
+        (WebFrame::dispatchDidLoadMainResource):
+        (WebFrame::revertToProvisionalState):
+        (WebFrame::clearUnarchivingState):
+        (WebFrame::setMainFrameDocumentReady):
+        (WebFrame::willChangeTitle):
+        (WebFrame::didChangeTitle):
+        (WebFrame::finalSetupForReplace):
+        (WebFrame::setDefersLoading):
+        (WebFrame::isArchiveLoadPending):
+        (WebFrame::cancelPendingArchiveLoad):
+        (WebFrame::clearArchivedResources):
+        (WebFrame::canShowMIMEType):
+        (WebFrame::representationExistsForURLScheme):
+        (WebFrame::generatedMIMETypeForURLScheme):
+        (WebFrame::restoreViewState):
+        (WebFrame::provisionalLoadStarted):
+        (WebFrame::shouldTreatURLAsSameAsCurrent):
+        (WebFrame::addHistoryItemForFragmentScroll):
+        (WebFrame::didFinishLoad):
+        (WebFrame::prepareForDataSourceReplacement):
+        (WebFrame::setDocumentViewFromCachedPage):
+        (WebFrame::shouldGoToHistoryItem):
+        (WebFrame::saveViewStateToItem):
+        (WebFrame::saveDocumentViewToCachedPage):
+        (WebFrame::canCachePage):
+        (WebFrame::setMainDocumentError):
+        (WebFrame::cannotShowURLError):
+        (WebFrame::cannotShowMIMETypeError):
+        (WebFrame::fileDoesNotExistError):
+        (WebFrame::willUseArchive):
+        (WebFrame::dispatchDidLoadResourceFromMemoryCache):
+        (WebFrame::startDownload):
+        (WebFrame::overrideMediaType):
+        (WebFrame::addInspector):
+        (WebFrame::removeInspector):
+
 2007-05-25  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Hyatt.

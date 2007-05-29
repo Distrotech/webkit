@@ -76,10 +76,10 @@
 
 using namespace WebCore;
 
-void Frame::print() { LOG_NOIMPL(); }
-void Frame::issueTransposeCommand() { LOG_NOIMPL(); }
+void Frame::print() { notImplemented(); }
+void Frame::issueTransposeCommand() { notImplemented(); }
 
-void GraphicsContextPlatformPrivate::clip(const Path&) { LOG_NOIMPL(); }
+void GraphicsContextPlatformPrivate::clip(const Path&) { notImplemented(); }
 
 bool AXObjectCache::gAccessibilityEnabled = false;
 
@@ -87,29 +87,29 @@ String WebCore::defaultLanguage() { return "en"; }
 
 namespace WebCore {
 
-void FrameView::updateBorder() { LOG_NOIMPL(); }
+void FrameView::updateBorder() { notImplemented(); }
 
 }
 
-void Widget::setIsSelected(bool) { LOG_NOIMPL(); }
+void Widget::setIsSelected(bool) { notImplemented(); }
 
-bool ScrollView::inWindow() const { LOG_NOIMPL(); return true; }
+bool ScrollView::inWindow() const { notImplemented(); return true; }
 
-Color WebCore::focusRingColor() { LOG_NOIMPL(); return 0xFF7DADD9; }
-void WebCore::setFocusRingColorChangeFunction(void (*)()) { LOG_NOIMPL(); }
+Color WebCore::focusRingColor() { notImplemented(); return 0xFF7DADD9; }
+void WebCore::setFocusRingColorChangeFunction(void (*)()) { notImplemented(); }
 
-void Frame::setNeedsReapplyStyles() { LOG_NOIMPL(); }
+void Frame::setNeedsReapplyStyles() { notImplemented(); }
 
-String FrameLoader::overrideMediaType()const { LOG_NOIMPL(); return String(); }
+String FrameLoader::overrideMediaType()const { notImplemented(); return String(); }
 
 bool ResourceHandle::loadsBlocked() { return false; }
 void ResourceHandle::setDefersLoading(bool) { }
 
 // CRITFIXME: See if any of the following are actually implemented in OpenSource and copy the impls to internal
-bool DocumentLoader::getResponseModifiedHeader(String&) const { LOG_NOIMPL(); return false; }
-bool ResourceHandle::willLoadFromCache(ResourceRequest&) { LOG_NOIMPL(); return false; }
-float WebCore::userIdleTime() { LOG_NOIMPL(); return 0.0; }
-void CachedPage::close() { LOG_NOIMPL(); }
+bool DocumentLoader::getResponseModifiedHeader(String&) const { notImplemented(); return false; }
+bool ResourceHandle::willLoadFromCache(ResourceRequest&) { notImplemented(); return false; }
+float WebCore::userIdleTime() { notImplemented(); return 0.0; }
+void CachedPage::close() { notImplemented(); }
 
-Vector<String> WebCore::supportedKeySizes() { LOG_NOIMPL(); return Vector<String>(); }
-String WebCore::signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { LOG_NOIMPL(); return String(); }
+Vector<String> WebCore::supportedKeySizes() { notImplemented(); return Vector<String>(); }
+String WebCore::signedPublicKeyAndChallengeString(unsigned, const String&, const KURL&) { notImplemented(); return String(); }

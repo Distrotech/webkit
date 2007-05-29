@@ -43,12 +43,12 @@ SVGResourceFilter::~SVGResourceFilter()
 
 void SVGResourceFilter::prepareFilter(GraphicsContext*&, const FloatRect&)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void SVGResourceFilter::applyFilter(GraphicsContext*&, const FloatRect&)
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 

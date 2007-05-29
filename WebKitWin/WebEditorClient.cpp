@@ -181,55 +181,56 @@ static void initViewSpecificSpelling(IWebViewEditing* viewEditing)
 int WebEditorClient::spellCheckerDocumentTag()
 {
     // we don't use the concept of spelling tags
-    STOP_NOIMPL();
+    notImplemented();
+    ASSERT_NOT_REACHED();
     return 0;
 }
 
 bool WebEditorClient::shouldBeginEditing(Range*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return true;
 }
 
 bool WebEditorClient::shouldEndEditing(Range*)
 {
-    LOG_NOIMPL();
+    notImplemented();
     return true;
 }
 
 void WebEditorClient::didBeginEditing()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebEditorClient::respondToChangedContents()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebEditorClient::respondToChangedSelection()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebEditorClient::didEndEditing()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebEditorClient::didWriteSelectionToPasteboard()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 void WebEditorClient::didSetSelectionTypesForPasteboard()
 {
-    LOG_NOIMPL();
+    notImplemented();
 }
 
 bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 {
-    LOG_NOIMPL(); 
+    notImplemented(); 
     return true; 
 
     // FIXME: calling m_webView->editingDelegate() will cause an assertion failure so we don't want to enable this code until that's implemented. 
@@ -246,13 +247,13 @@ bool WebEditorClient::shouldDeleteRange(Range* /*range*/)
 
 bool WebEditorClient::shouldInsertNode(Node* /*node*/, Range* /*replacingRange*/, EditorInsertAction /*givenAction*/)
 { 
-    LOG_NOIMPL(); 
+    notImplemented(); 
     return true; 
 }
 
 bool WebEditorClient::shouldInsertText(String /*str*/, Range* /* replacingRange */, EditorInsertAction /*givenAction*/)
 {     
-    LOG_NOIMPL(); 
+    notImplemented(); 
     return true; 
 
     // FIXME: calling m_webView->editingDelegate() will cause an assertion failure so we don't want to enable this code until that's implemented. 
@@ -269,22 +270,22 @@ bool WebEditorClient::shouldInsertText(String /*str*/, Range* /* replacingRange 
 }
 
 //bool WebEditorClient::shouldChangeSelectedRange(Range *currentRange, Range *toProposedRange, SelectionAffinity selectionAffinity, bool stillSelecting)
-//{ LOG_NOIMPL(); return false; }
+//{ notImplemented(); return false; }
 
 bool WebEditorClient::shouldApplyStyle(CSSStyleDeclaration* /*style*/, Range* /*toElementsInDOMRange*/)
-{ LOG_NOIMPL(); return true; }
+{ notImplemented(); return true; }
 
 bool WebEditorClient::shouldChangeTypingStyle(CSSStyleDeclaration* /*currentStyle*/, CSSStyleDeclaration* /*toProposedStyle*/)
-{ LOG_NOIMPL(); return false; }
+{ notImplemented(); return false; }
 
 void WebEditorClient::webViewDidChangeTypingStyle(WebNotification* /*notification*/)
-{  LOG_NOIMPL(); }
+{  notImplemented(); }
 
 void WebEditorClient::webViewDidChangeSelection(WebNotification* /*notification*/)
-{  LOG_NOIMPL(); }
+{  notImplemented(); }
 
 bool WebEditorClient::shouldShowDeleteInterface(HTMLElement* /*element*/)
-{ LOG_NOIMPL(); return false; }
+{ notImplemented(); return false; }
 
 bool WebEditorClient::smartInsertDeleteEnabled(void)
 { 
@@ -294,7 +295,7 @@ bool WebEditorClient::smartInsertDeleteEnabled(void)
 }
 
 bool WebEditorClient::shouldChangeSelectedRange(WebCore::Range*, WebCore::Range*, WebCore::EAffinity, bool)
-{ LOG_NOIMPL(); return true; }
+{ notImplemented(); return true; }
 
 void WebEditorClient::textFieldDidBeginEditing(Element* e)
 {
