@@ -435,14 +435,10 @@ void PluginViewWin::setNPWindowRect(const IntRect& rect)
     if (!m_isStarted)
         return;
 
-    if (m_isWindowed) {
-        m_npWindow.x = rect.x();
-        m_npWindow.y = rect.y();
-    } else {
-        IntPoint p = static_cast<FrameView*>(parent())->contentsToWindow(rect.location());
-        m_npWindow.x = p.x();
-        m_npWindow.y = p.y();
-    }
+    IntPoint p = static_cast<FrameView*>(parent())->contentsToWindow(rect.location());
+    m_npWindow.x = p.x();
+    m_npWindow.y = p.y();
+
     m_npWindow.width = rect.width();
     m_npWindow.height = rect.height();
 

@@ -2,6 +2,17 @@
 
         Reviewed by Adam.
 
+        <rdar://4782915> plugin is not in the right place at jumble.com/play.html
+
+        Pass the plugin window coordinates for windowed plugins too.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::setNPWindowRect):
+
+2007-05-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
         <rdar://problem/4761543> nike.com doesn't finish loading if Flash plugin is installed
         <rdar://problem/5131528> play button on Flash in ESPN front page does not start movie
         
