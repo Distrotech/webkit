@@ -1,5 +1,12 @@
 2007-05-29  Anders Carlsson  <andersca@apple.com>
 
+        Build fix.
+        
+        * rendering/RenderThemeSafari.cpp:
+        (WebCore::RenderThemeSafari::adjustSliderThumbStyle):
+
+2007-05-29  Anders Carlsson  <andersca@apple.com>
+
         Reviewed by Adam.
 
         Port code from open source changeset 21808, fixing

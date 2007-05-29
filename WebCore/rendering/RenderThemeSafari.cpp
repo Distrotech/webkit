@@ -865,7 +865,7 @@ bool RenderThemeSafari::paintSliderTrack(RenderObject* o, const RenderObject::Pa
     return false;
 }
 
-void RenderThemeMac::adjustSliderThumbStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const 
+void RenderThemeSafari::adjustSliderThumbStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const 
 { 
     style->setBoxShadow(0); 
 } 
