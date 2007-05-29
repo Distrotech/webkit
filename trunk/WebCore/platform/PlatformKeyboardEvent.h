@@ -91,6 +91,7 @@ namespace WebCore {
 
 #if PLATFORM(WX)
         PlatformKeyboardEvent(wxKeyEvent&);
+        bool isWxCharEvent() const { return m_isWxCharEvent; }
 #endif
 
     private:
@@ -105,6 +106,9 @@ namespace WebCore {
         bool m_ctrlKey;
         bool m_altKey;
         bool m_metaKey;
+#if PLATFORM(WX)
+        bool m_isWxCharEvent;
+#endif
     };
 
 } // namespace WebCore

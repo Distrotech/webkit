@@ -247,32 +247,35 @@ void EditorClientWx::handleKeypress(KeyboardEvent* event)
     if (!kevent->isKeyUp()) {
         Node* start = frame->selectionController()->start().node();
         if (start && start->isContentEditable()) {
-            switch(kevent->WindowsKeyCode()) {
-            case VK_BACK:
-                frame->editor()->deleteWithDirection(SelectionController::BACKWARD,
-                                                     CharacterGranularity, false, true);
-                break;
-            case VK_DELETE:
-                frame->editor()->deleteWithDirection(SelectionController::FORWARD,
-                                                     CharacterGranularity, false, true);
-                break;
-            case VK_LEFT:
-                frame->editor()->execCommand("MoveLeft");
-                break;
-            case VK_RIGHT:
-                frame->editor()->execCommand("MoveRight");
-                break;
-            case VK_UP:
-                frame->editor()->execCommand("MoveUp");
-                break;
-            case VK_DOWN:
-                frame->editor()->execCommand("MoveDown");
-                break;
-            case VK_RETURN:
-                frame->editor()->insertLineBreak();
-            default:
-                if (!kevent->ctrlKey() && !kevent->altKey())
-                    frame->editor()->insertText(kevent->text(), event);
+            if (kevent->isWxCharEvent() && !kevent->ctrlKey() && !kevent->altKey())
+                frame->editor()->insertText(kevent->text(), event);
+            else {
+                switch(kevent->WindowsKeyCode()) {
+                    case VK_BACK:
+                        frame->editor()->deleteWithDirection(SelectionController::BACKWARD,
+                                                             CharacterGranularity, false, true);
+                        break;
+                    case VK_DELETE:
+                        frame->editor()->deleteWithDirection(SelectionController::FORWARD,
+                                                             CharacterGranularity, false, true);
+                        break;
+                    case VK_LEFT:
+                        frame->editor()->execCommand("MoveLeft");
+                        break;
+                    case VK_RIGHT:
+                        frame->editor()->execCommand("MoveRight");
+                        break;
+                    case VK_UP:
+                        frame->editor()->execCommand("MoveUp");
+                        break;
+                    case VK_DOWN:
+                        frame->editor()->execCommand("MoveDown");
+                        break;
+                    case VK_RETURN:
+                        frame->editor()->execCommand("InsertLineBreak");
+                    default:
+                        break;
+                }
             }
             event->setDefaultHandled();
         }

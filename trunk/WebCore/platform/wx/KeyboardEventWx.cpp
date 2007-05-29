@@ -333,7 +333,8 @@ PlatformKeyboardEvent::PlatformKeyboardEvent(wxKeyEvent& event)
     m_shiftKey = event.ShiftDown();
     m_ctrlKey = event.CmdDown();
     m_altKey = event.AltDown();
-    m_metaKey = event.MetaDown();    
+    m_metaKey = event.MetaDown();
+    m_isWxCharEvent = event.GetEventType() == wxEVT_CHAR;
 }
 
 }

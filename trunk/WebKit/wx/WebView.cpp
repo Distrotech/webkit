@@ -499,18 +499,15 @@ void wxWebView::OnKeyEvents(wxKeyEvent& event)
             Paste();
         }
         else
-        {
+        {            
             WebCore::PlatformKeyboardEvent wkEvent(event);
-            // For now, I don't know of any way to identify a keyboard event
-            // as a char event, so just send key up and key down messages.
-            if (event.GetEventType() != wxEVT_CHAR)
-            {
-                if (m_impl->frame->eventHandler()->keyEvent(wkEvent))
-                    return;
-            }
+            m_impl->frame->eventHandler()->keyEvent(wkEvent);
         }
     }
-    event.Skip();
+    
+    // make sure we get the character event.
+    if (event.GetEventType() != wxEVT_CHAR)
+        event.Skip();
 }
 
 void wxWebView::OnSetFocus(wxFocusEvent& event)
