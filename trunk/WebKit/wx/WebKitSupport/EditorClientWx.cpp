@@ -247,8 +247,22 @@ void EditorClientWx::handleKeypress(KeyboardEvent* event)
     if (!kevent->isKeyUp()) {
         Node* start = frame->selectionController()->start().node();
         if (start && start->isContentEditable()) {
-            if (kevent->isWxCharEvent() && !kevent->ctrlKey() && !kevent->altKey())
-                frame->editor()->insertText(kevent->text(), event);
+        
+            if (kevent->isWxCharEvent() && !kevent->ctrlKey() && !kevent->altKey()) {
+                switch(kevent->WindowsKeyCode()) {
+                    // we handled these on key down, ignore them for char events
+                    case VK_BACK:
+                    case VK_DELETE:
+                    case VK_LEFT:
+                    case VK_RIGHT:
+                    case VK_UP:
+                    case VK_DOWN:
+                    case VK_RETURN:
+                        break;
+                    default:
+                        frame->editor()->insertText(kevent->text(), event);
+                }
+            }
             else {
                 switch(kevent->WindowsKeyCode()) {
                     case VK_BACK:
