@@ -27,9 +27,10 @@
 
 #include "config.h"
 #include "ContextMenuClientWx.h"
+#include "NotImplemented.h"
 #include <stdio.h>
 
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
+namespace WebCore {
 
 ContextMenuClientWx::~ContextMenuClientWx()
 {
@@ -40,39 +41,39 @@ void ContextMenuClientWx::contextMenuDestroyed()
     notImplemented();
 }
 
-WebCore::PlatformMenuDescription ContextMenuClientWx::getCustomMenuFromDefaultItems(WebCore::ContextMenu*)
+PlatformMenuDescription ContextMenuClientWx::getCustomMenuFromDefaultItems(ContextMenu*)
 {
     notImplemented();
     return 0;
 }
 
-void ContextMenuClientWx::contextMenuItemSelected(WebCore::ContextMenuItem*,
-                                                   const WebCore::ContextMenu*)
+void ContextMenuClientWx::contextMenuItemSelected(ContextMenuItem*,
+                                                   const ContextMenu*)
 {
     notImplemented();
 }
 
-void ContextMenuClientWx::downloadURL(const WebCore::KURL&)
+void ContextMenuClientWx::downloadURL(const KURL&)
 {
     notImplemented();
 }
 
-void ContextMenuClientWx::copyImageToClipboard(const WebCore::HitTestResult&)
+void ContextMenuClientWx::copyImageToClipboard(const HitTestResult&)
 {
     notImplemented();
 }
 
-void ContextMenuClientWx::searchWithGoogle(const WebCore::Frame*)
+void ContextMenuClientWx::searchWithGoogle(const Frame*)
 {
     notImplemented();
 }
 
-void ContextMenuClientWx::lookUpInDictionary(WebCore::Frame*)
+void ContextMenuClientWx::lookUpInDictionary(Frame*)
 {
     notImplemented();
 }
 
-void ContextMenuClientWx::speak(const WebCore::String&)
+void ContextMenuClientWx::speak(const String&)
 {
     notImplemented();
 }
@@ -80,4 +81,6 @@ void ContextMenuClientWx::speak(const WebCore::String&)
 void ContextMenuClientWx::stopSpeaking()
 {
     notImplemented();
+}
+
 }

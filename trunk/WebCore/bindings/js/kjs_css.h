@@ -3,7 +3,7 @@
  *  This file is part of the KDE libraries
  *  Copyright (C) 2000 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
- *  Copyright (C) 2004, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2006, 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,9 @@
 #define kjs_css_h
 
 #include "Color.h"
-#include "kjs_binding.h"
 #include "RectImpl.h"
+#include "JSStyleSheet.h"
+#include "kjs_binding.h"
 
 namespace WebCore {
     class Counter;
@@ -44,55 +45,6 @@ namespace WebCore {
 }
 
 namespace KJS {
-
-  KJS_DEFINE_PROTOTYPE(DOMCSSStyleDeclarationPrototype)
-
-  class DOMCSSStyleDeclaration : public DOMObject {
-  public:
-    virtual ~DOMCSSStyleDeclaration();
-    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    virtual void put(ExecState*, const Identifier& propertyName, JSValue*, int attr = None);
-    JSValue* getValueProperty(ExecState*, int token);
-
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
-    enum { CssText, Length, ParentRule };
-    enum { GetPropertyValue, GetPropertyCSSValue, RemoveProperty, 
-           GetPropertyPriority, GetPropertyShorthand, IsPropertyImplicit, SetProperty, Item };
-    WebCore::CSSStyleDeclaration* impl() const { return m_impl.get(); }
-  private:
-    static JSValue* indexGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&);
-    static JSValue *cssPropertyGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&);
-
-    // Don't use this class directly -- use JSCSSStyleDeclaration instead
-    friend class WebCore::JSCSSStyleDeclaration;
-    DOMCSSStyleDeclaration(ExecState*, WebCore::CSSStyleDeclaration *s);
-
-    RefPtr<WebCore::CSSStyleDeclaration> m_impl;
-  };
-
-  JSValue* toJS(ExecState*, WebCore::CSSStyleDeclaration*);
-
-  class DOMStyleSheet : public DOMObject {
-  public:
-    DOMStyleSheet(ExecState*, WebCore::StyleSheet*);
-    virtual ~DOMStyleSheet();
-    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual void put(ExecState*, const Identifier& propertyName, JSValue*, int attr = None);
-    virtual bool toBoolean(ExecState*) const { return true; }
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
-    enum { Type, Disabled, OwnerNode, ParentStyleSheet, Href, Title, Media };
-    WebCore::StyleSheet* impl() const { return m_impl.get(); }
-  protected:
-    // Constructor for derived classes; doesn't set up a prototype.
-    DOMStyleSheet(WebCore::StyleSheet*);
-  private:
-    RefPtr<WebCore::StyleSheet> m_impl;
-  };
-
-  JSValue* toJS(ExecState*, PassRefPtr<WebCore::StyleSheet>);
 
   class DOMStyleSheetList : public DOMObject {
   public:
@@ -117,27 +69,7 @@ namespace KJS {
   // The document is only used for get-stylesheet-by-name (make optional if necessary)
   JSValue* toJS(ExecState*, WebCore::StyleSheetList*, WebCore::Document*);
 
-  class DOMMediaList : public DOMObject {
-  public:
-    DOMMediaList(ExecState*, WebCore::MediaList*);
-    virtual ~DOMMediaList();
-    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token);
-    virtual void put(ExecState*, const Identifier& propertyName, JSValue*, int attr = None);
-    virtual const ClassInfo* classInfo() const { return &info; }
-    virtual bool toBoolean(ExecState*) const { return true; }
-    static const ClassInfo info;
-    enum { MediaText, Length,
-           Item, DeleteMedium, AppendMedium };
-    WebCore::MediaList* impl() const { return m_impl.get(); }
-  private:
-    static JSValue* indexGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&);
-    RefPtr<WebCore::MediaList> m_impl;
-  };
-
-  JSValue* toJS(ExecState*, WebCore::MediaList*);
-
-  class DOMCSSStyleSheet : public DOMStyleSheet {
+  class DOMCSSStyleSheet : public WebCore::JSStyleSheet {
   public:
     DOMCSSStyleSheet(ExecState*, WebCore::CSSStyleSheet*);
     virtual ~DOMCSSStyleSheet();
@@ -148,29 +80,6 @@ namespace KJS {
     static const ClassInfo info;
     enum { OwnerRule, CssRules, Rules, InsertRule, DeleteRule, AddRule, RemoveRule };
   };
-
-  class DOMCSSRule : public DOMObject {
-  public:
-    virtual ~DOMCSSRule();
-    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual void put(ExecState*, const Identifier& propertyName, JSValue*, int attr = None);
-    void putValueProperty(ExecState*, int token, JSValue*, int attr);
-    virtual const ClassInfo* classInfo() const;
-    static const ClassInfo info;
-    static const ClassInfo style_info, media_info, fontface_info, page_info, import_info, charset_info;
-    enum { ParentStyleSheet, Type, CssText, ParentRule, Style_SelectorText, Style_Style,
-           Media_Media, Media_InsertRule, Media_DeleteRule, Media_CssRules,
-           FontFace_Style, Page_SelectorText, Page_Style,
-           Import_Href, Import_Media, Import_StyleSheet, Charset_Encoding };
-    WebCore::CSSRule* impl() const { return m_impl.get(); }
-  private:
-    friend class WebCore::JSCSSRule;
-    DOMCSSRule(ExecState*, WebCore::CSSRule*);
-    RefPtr<WebCore::CSSRule> m_impl;
-  };
-
-  JSValue* toJS(ExecState*, WebCore::CSSRule*);
 
   class DOMCSSValue : public DOMObject {
   public:

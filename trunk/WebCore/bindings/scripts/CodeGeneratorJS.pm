@@ -162,7 +162,15 @@ sub UsesManualToJSImplementation
 {
     my $type = shift;
 
-    return 1 if $type eq "SVGPathSeg";
+    return 1 if $type eq "SVGPathSeg" or $type eq "StyleSheet" or $type eq "CSSRule";
+    return 0;
+}
+
+sub IndexGetterReturnsStrings
+{
+    my $type = shift;
+
+    return 1 if $type eq "CSSStyleDeclaration" or $type eq "MediaList";
     return 0;
 }
 
@@ -322,6 +330,9 @@ sub GenerateHeader
     if ($numAttributes > 0) {
         push(@headerContent, "    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);\n");
         push(@headerContent, "    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;\n");
+        if ($dataNode->extendedAttributes->{"CustomGetOwnPropertySlot"}) {
+            push(@headerContent, "    bool customGetOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);\n");
+        }
     }
 
     # Check if we have any writable properties
@@ -335,15 +346,34 @@ sub GenerateHeader
     if ($hasReadWriteProperties) {
         push(@headerContent, "    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);\n");
         push(@headerContent, "    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);\n");
+        if ($dataNode->extendedAttributes->{"CustomPutFunction"}) {
+            push(@headerContent, "    bool customPut(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr);\n");
+        }
     }
 
     # Class info
     push(@headerContent, "    virtual const KJS::ClassInfo* classInfo() const { return &info; }\n");
-    push(@headerContent, "    static const KJS::ClassInfo info;\n");
+    push(@headerContent, "    static const KJS::ClassInfo info;\n\n");
 
     # Custom mark function
     if ($dataNode->extendedAttributes->{"CustomMarkFunction"}) {
-        push(@headerContent, "\n    virtual void mark();\n\n");
+        push(@headerContent, "    virtual void mark();\n\n");
+    }
+
+    # Custom toString function
+    if ($dataNode->extendedAttributes->{"CustomToString"}) {
+        push(@headerContent, "    virtual KJS::UString toString(KJS::ExecState*) const;\n\n");
+    }
+
+    # Custom pushEventHandlerScope function
+    if ($dataNode->extendedAttributes->{"CustomPushEventHandlerScope"}) {
+        push(@headerContent, "    virtual void pushEventHandlerScope(KJS::ExecState*, KJS::ScopeChain&) const;\n\n");
+    }
+
+    # Custom call functions
+    if ($dataNode->extendedAttributes->{"CustomCall"}) {
+        push(@headerContent, "    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List& args);\n");
+        push(@headerContent, "    virtual bool implementsCall() const;\n\n");
     }
 
     # Constructor object getter
@@ -493,7 +523,7 @@ sub GenerateHeader
         push(@headerContent, "    ${className}Prototype() { }\n");
     } else {
         push(@headerContent, "    ${className}Prototype(KJS::ExecState* exec)\n");
-        if ($hasParent && $parentClassName ne "KJS::DOMCSSRule" && $parentClassName ne "KJS::DOMNodeFilter") {
+        if ($hasParent && $parentClassName ne "KJS::DOMNodeFilter") {
             push(@headerContent, "        : KJS::JSObject(${parentClassName}Prototype::self(exec)) { }\n");
         } else {
             push(@headerContent, "        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }\n");
@@ -775,6 +805,7 @@ sub GenerateImplementation
             push(@implContent, "        slot.setCustom(this, nameGetter);\n");
             push(@implContent, "        return true;\n");
             push(@implContent, "    }\n");
+            $implIncludes{"AtomicString.h"} = 1;
         };
 
         if ($dataNode->extendedAttributes->{"HasOverridingNameGetter"}) {
@@ -801,6 +832,12 @@ sub GenerateImplementation
 
         if ($dataNode->extendedAttributes->{"HasNameGetter"}) {
             &$hasNameGetterGeneration();
+        }
+
+        if ($dataNode->extendedAttributes->{"CustomGetOwnPropertySlot"}) {
+                push(@implContent, "    bool didGet = customGetOwnPropertySlot(exec, propertyName, slot);\n");
+                push(@implContent, "    if (didGet)\n");
+                push(@implContent, "        return true;\n");
         }
 
         if ($requiresManualLookup) {
@@ -907,6 +944,12 @@ sub GenerateImplementation
                 push(@implContent, "        return;\n");
                 push(@implContent, "    }\n");
             }
+            if ($dataNode->extendedAttributes->{"CustomPutFunction"}) {
+                push(@implContent, "    bool didPut = customPut(exec, propertyName, value, attr);\n");
+                push(@implContent, "    if (didPut)\n");
+                push(@implContent, "        return;\n");
+            }
+
             push(@implContent, "    lookupPut<$className, $parentClassName>(exec, propertyName, value, attr, &${className}Table, this);\n");
             push(@implContent, "}\n\n");
 
@@ -1020,6 +1063,11 @@ sub GenerateImplementation
                 push(@implContent, "        ExceptionCode ec = 0;\n");
             }
 
+            if ($function->signature->extendedAttributes->{"SVGCheckSecurityDocument"}) {
+                push(@implContent, "        if (!checkNodeSecurity(exec, imp->getSVGDocument(" . (@{$function->raisesExceptions} ? "ec" : "") .")))\n");
+                push(@implContent, "            return jsUndefined();\n");
+            }
+
             my $paramIndex = 0;
             my $functionString = "imp" . ($podType ? "." : "->") . $function->signature->name . "(";
 
@@ -1089,7 +1137,11 @@ sub GenerateImplementation
         push(@implContent, "\nJSValue* ${className}::indexGetter(ExecState* exec, JSObject* originalObject, const Identifier& propertyName, const PropertySlot& slot)\n");
         push(@implContent, "{\n");
         push(@implContent, "    ${className}* thisObj = static_cast<$className*>(slot.slotBase());\n");
-        push(@implContent, "    return toJS(exec, static_cast<$implClassName*>(thisObj->impl())->item(slot.index()));\n");
+        if (IndexGetterReturnsStrings($implClassName)) {
+            push(@implContent, "    return jsStringOrNull(thisObj->impl()->item(slot.index()));\n");
+        } else {
+            push(@implContent, "    return toJS(exec, static_cast<$implClassName*>(thisObj->impl())->item(slot.index()));\n");
+        }
         push(@implContent, "}\n");
     }
 
@@ -1394,6 +1446,10 @@ sub NativeToJSValue
         $value .= "Animated()";
     }
 
+    if ($type eq "CSSStyleDeclaration") {
+        $implIncludes{"CSSMutableStyleDeclaration.h"} = 1;
+    }
+
     if ($type eq "DOMImplementation") {
         $implIncludes{"kjs_dom.h"} = 1;
         $implIncludes{"JSDOMImplementation.h"} = 1;
@@ -1428,12 +1484,10 @@ sub NativeToJSValue
     } elsif ($type eq "NamedNodeMap") {
         $implIncludes{"kjs_dom.h"} = 1;
         $implIncludes{"NamedNodeMap.h"} = 1;
-    } elsif ($type eq "CSSStyleSheet" or $type eq "StyleSheet" or $type eq "MediaList") {
+    } elsif ($type eq "CSSStyleSheet") {
         $implIncludes{"CSSStyleSheet.h"} = 1;
-        $implIncludes{"MediaList.h"} = 1;
         $implIncludes{"kjs_css.h"} = 1;
-    } elsif ($type eq "CSSStyleDeclaration" or $type eq "Rect") {
-        $implIncludes{"CSSStyleDeclaration.h"} = 1;
+    } elsif ($type eq "Rect") {
         $implIncludes{"RectImpl.h"} = 1;
         $implIncludes{"kjs_css.h"} = 1;
     } elsif ($type eq "HTMLCanvasElement") {

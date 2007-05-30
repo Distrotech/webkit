@@ -161,13 +161,20 @@ LUT_TABLE_FILES += \
 
 IDL_BINDINGS += \
     css/Counter.idl \
+    css/CSSCharsetRule.idl \
+    css/CSSFontFaceRule.idl \
+    css/CSSImportRule.idl \
+    css/CSSMediaRule.idl \
+    css/CSSPageRule.idl \
     css/CSSPrimitiveValue.idl \
     css/CSSRule.idl \
     css/CSSRuleList.idl \
     css/CSSStyleDeclaration.idl \
+    css/CSSStyleRule.idl \
     css/CSSValue.idl \
     css/CSSValueList.idl \
     css/MediaList.idl \
+    css/StyleSheet.idl \
     dom/Attr.idl \
     dom/CharacterData.idl \
     dom/CDATASection.idl \
@@ -216,6 +223,7 @@ IDL_BINDINGS += \
     html/HTMLDListElement.idl \
     html/HTMLDocument.idl \
     html/HTMLElement.idl \
+    html/HTMLEmbedElement.idl \
     html/HTMLFieldSetElement.idl \
     html/HTMLFontElement.idl \
     html/HTMLFormElement.idl \
@@ -238,6 +246,7 @@ IDL_BINDINGS += \
     html/HTMLMenuElement.idl \
     html/HTMLMetaElement.idl \
     html/HTMLModElement.idl \
+    html/HTMLObjectElement.idl \
     html/HTMLOListElement.idl \
     html/HTMLOptGroupElement.idl \
     html/HTMLOptionElement.idl \
@@ -265,18 +274,25 @@ IDL_BINDINGS += \
 
 SOURCES += \
     bindings/js/JSCanvasRenderingContext2DCustom.cpp \
+    bindings/js/JSCSSRuleCustom.cpp \
+    bindings/js/JSCSSStyleDeclarationCustom.cpp \
     bindings/js/JSCustomXPathNSResolver.cpp \
     bindings/js/JSDocumentCustom.cpp \
     bindings/js/JSHTMLAnchorElementCustom.cpp \
+    bindings/js/JSHTMLAppletElementCustom.cpp \
     bindings/js/JSHTMLDocumentCustom.cpp \
+    bindings/js/JSHTMLElementCustom.cpp \
     bindings/js/JSHTMLElementWrapperFactory.cpp \
+    bindings/js/JSHTMLEmbedElementCustom.cpp \
     bindings/js/JSHTMLFormElementCustom.cpp \
     bindings/js/JSHTMLFrameSetElementCustom.cpp \
     bindings/js/JSHTMLInputElementBase.cpp \
+    bindings/js/JSHTMLObjectElementCustom.cpp \
     bindings/js/JSHTMLOptionElementConstructor.cpp \
     bindings/js/JSHTMLOptionsCollectionCustom.cpp \
     bindings/js/JSHTMLSelectElementCustom.cpp \
     bindings/js/JSNodeIteratorCustom.cpp \
+    bindings/js/JSStyleSheetCustom.cpp \
     bindings/js/JSTreeWalkerCustom.cpp \
     bindings/js/JSXMLHttpRequest.cpp \
     bindings/js/JSXSLTProcessor.cpp \
@@ -763,7 +779,8 @@ qt-port:SOURCES += \
     ../WebKitQt/Api/qwebnetworkinterface.cpp \
     ../WebKitQt/Api/qcookiejar.cpp \
     ../WebKitQt/Api/qwebpage.cpp \
-    ../WebKitQt/Api/qwebpagehistory.cpp
+    ../WebKitQt/Api/qwebpagehistory.cpp \
+    ../WebKitQt/Api/qwebsettings.cpp
 
 gdk-port:SOURCES += \
         platform/TextCodecICU.cpp \

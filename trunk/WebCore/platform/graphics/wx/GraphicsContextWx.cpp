@@ -26,6 +26,7 @@
 #include "config.h"
 #include "GraphicsContext.h"
 #include "Pen.h"
+#include "NotImplemented.h"
 
 #include "FloatRect.h"
 #include "Font.h"
@@ -49,8 +50,6 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
 
 namespace WebCore {
 

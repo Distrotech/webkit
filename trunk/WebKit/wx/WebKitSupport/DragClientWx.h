@@ -26,6 +26,8 @@
 #include "DragClient.h"
 #include "DragData.h"
 
+namespace WebCore {
+
 class DragClientWx : public WebCore::DragClient {
 public:
     virtual void willPerformDragDestinationAction(WebCore::DragDestinationAction,
@@ -43,3 +45,4 @@ public:
 private:
 };
 
+}

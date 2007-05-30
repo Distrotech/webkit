@@ -23,6 +23,7 @@
 #ifndef kjs_binding_h
 #define kjs_binding_h
 
+#include <kjs/function.h>
 #include <kjs/lookup.h>
 #include <wtf/Noncopyable.h>
 
@@ -31,6 +32,7 @@
 #endif
 
 namespace WebCore {
+    class AtomicString;
     class Document;
     class Event;
     class Frame;

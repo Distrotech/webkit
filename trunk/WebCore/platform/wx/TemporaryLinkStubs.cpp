@@ -80,11 +80,9 @@
 #include "DocumentLoader.h"
 #include "BitmapImage.h"
 #include "DragController.h"
+#include "NotImplemented.h"
 
 using namespace WebCore;
-
-//static void notImplemented() { puts("Not yet implemented"); }
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
 
 Vector<char> loadResourceIntoArray(const char* resourceName)
 {
@@ -180,6 +178,7 @@ PopupMenu::~PopupMenu() { notImplemented(); }
 void PopupMenu::show(const IntRect&, FrameView*, int index) { notImplemented(); }
 void PopupMenu::hide() { notImplemented(); }
 void PopupMenu::updateFromElement() { notImplemented(); }
+bool PopupMenu::itemWritingDirectionIsNatural() { notImplemented(); return false; }
 
 Icon::Icon() { notImplemented(); }
 Icon::~Icon() { notImplemented(); }

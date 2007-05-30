@@ -1,3 +1,100 @@
+2007-05-29  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Anders.
+
+        Create a GtkLayout and pass it to the FrameView/ScrollView. Embed the GtkLayout into a GtkScrolledWindow
+        to provide ScrollBars for the FrameView.
+
+        * GdkLauncher/main.cpp:
+        (registerRenderingAreaEvents):
+        (layout_realize_callback): Only after realization we can access the GtkLayout::bin_window
+        (frameResizeCallback): Inform the ScrollView about its new viewport size, and ask the FrameView to adjust
+        (main):
+
+2007-05-29  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13901
+          run-pageloadtest does not obey testName on command-line
+
+        * Scripts/run-pageloadtest: Grab $testName from the command-line if it is present,
+        otherwise default to "svg".  Added dummy check to make sure $testName.pltsuite
+        exists.
+
+2007-05-29  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13900
+          svnStatus($) subroutine in svn-[un]apply does not work properly with directories
+
+        This patch also fixes an instance of the "broken pipe" warning that happened when
+        a directory contained modified files that were not part of an applied or unapplied
+        patch.
+
+        * Scripts/svn-apply:
+        (svnStatus($)): If we're trying to get status on a directory (instead of a file),
+        make sure we actually get the directory's status (if it has one), not the first
+        file's status reported within the directory.  Fix "broken pipe" warnings by
+        reading all of the output from the SVN filehandle before closing it.
+        * Scripts/svn-unapply:
+        (svnStatus($)): Ditto.
+
+2007-05-28  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=10342
+          prepare-ChangeLog only shows removed files but not added files when files are moved
+        - fix prepare-ChangeLog part of http://bugs.webkit.org/show_bug.cgi?id=13408
+          prepare-ChangeLog and svn-create-patch don't show replaced files
+
+        Switched method used to find list of changed files from "diff" to "status".  This
+        makes added and replaced files with history appear in the changed file list for svn.
+        Added check for "+" in output from the svn status command to detect file history, and
+        handle it in the generateFileList(\@\@\%) and in statusDescription($$) subroutines.
+
+        * Scripts/prepare-ChangeLog:
+        (diffCommand(@)): Switched argument from hash ref to array to match statusCommand(@).
+        (statusCommand(@)): Switched argument from array ref to array.  Necessary to use
+        the output of "keys $paths" without creating a temporary array variable.
+        (findOriginalFileFromSvn($)): Added.  Based on findSourceFileAndRevision($)
+        subroutine in svn-create-patch.
+        (generateFileList(\@\@\%)): Added.  Extracted from main body of script.  Runs status
+        command using command-line arguments instead of list of changed files from the diff
+        command.  Changed svn regex to only accept file statuses that we know how to handle.
+        Identify original file when an added/replaced status with history is present.
+        (statusDescription($$)): Handled added/replaced statuses with history.  Added
+        fall-through return statement.
+
+2007-05-28  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        Add scripts and data to generate a coverage data for WebKit.
+
+        * CodeCoverage/README: Added.
+        * CodeCoverage/amber.png: Added.
+        * CodeCoverage/cov.py: Added.
+        * CodeCoverage/emerald.png: Added.
+        * CodeCoverage/gcov.css: Added.
+        * CodeCoverage/glass.png: Added.
+        * CodeCoverage/regenerate-coverage-display: Added.
+        * CodeCoverage/ruby.png: Added.
+        * CodeCoverage/run-generate-coverage-data: Added.
+        * CodeCoverage/snow.png: Added.
+        * Scripts/build-webkit: Add --coverage by Niko
+        * Scripts/check-for-global-initializers: Skip the check on coverage builds
+        * Scripts/generate-coverage-data: Added.
+        * Scripts/run-javascriptcore-tests: Add --coverage by Niko
+
+2007-05-29  Mark Rowe  <mrowe@apple.com>
+
+        Build fix after r21745.
+
+        * Scripts/check-for-global-initializers: Skip CachedPage.o as it now has a global initializer in debug builds.
+
 2007-05-25  Anders Carlsson  <andersca@apple.com>
 
         Fix build.

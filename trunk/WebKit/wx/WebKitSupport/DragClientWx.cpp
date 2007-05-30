@@ -24,23 +24,24 @@
  */
 
 #include "DragClientWx.h"
+#include "NotImplemented.h"
 
 #include <stdio.h>
 
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
+namespace WebCore {
 
-WebCore::DragDestinationAction DragClientWx::actionMaskForDrag(WebCore::DragData*)
+DragDestinationAction DragClientWx::actionMaskForDrag(DragData*)
 {
-    return WebCore::DragDestinationActionAny;
+    return DragDestinationActionAny;
 }
 
-void DragClientWx::willPerformDragDestinationAction(WebCore::DragDestinationAction,
-                                                    WebCore::DragData*)
+void DragClientWx::willPerformDragDestinationAction(DragDestinationAction,
+                                                    DragData*)
 {
     notImplemented();
 }
 
-void DragClientWx::willPerformDragSourceAction(WebCore::DragSourceAction, const WebCore::IntPoint&, WebCore::Clipboard*)
+void DragClientWx::willPerformDragSourceAction(DragSourceAction, const IntPoint&, Clipboard*)
 {
     notImplemented();
 }
@@ -49,20 +50,22 @@ void DragClientWx::dragControllerDestroyed()
 {    
 }
 
-WebCore::DragSourceAction DragClientWx::dragSourceActionMaskForPoint(const WebCore::IntPoint&)
+DragSourceAction DragClientWx::dragSourceActionMaskForPoint(const IntPoint&)
 {
-    return WebCore::DragSourceActionAny;
+    return DragSourceActionAny;
 }
 
-void DragClientWx::startDrag(WebCore::DragImageRef dragImage, 
-                        const WebCore::IntPoint& dragImageOrigin, 
-                        const WebCore::IntPoint& eventPos, WebCore::Clipboard*, 
-                        WebCore::Frame*, bool linkDrag)
+void DragClientWx::startDrag(DragImageRef dragImage, 
+                        const IntPoint& dragImageOrigin, 
+                        const IntPoint& eventPos, Clipboard*, 
+                        Frame*, bool linkDrag)
 {
     notImplemented();
 }
 
-WebCore::DragImageRef DragClientWx::createDragImageForLink(WebCore::KURL&, const WebCore::String& label, WebCore::Frame*)
+DragImageRef DragClientWx::createDragImageForLink(KURL&, const String& label, Frame*)
 {
     return 0;
+}
+
 }

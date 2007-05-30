@@ -300,9 +300,15 @@ all : \
     HTMLEntityNames.c \
     JSAttr.h \
     JSCDATASection.h \
+    JSCSSCharsetRule.h \
+    JSCSSFontFaceRule.h \
+    JSCSSImportRule.h \
+    JSCSSMediaRule.h \
+    JSCSSPageRule.h \
     JSCSSPrimitiveValue.h \
     JSCSSRule.h \
     JSCSSRuleList.h \
+    JSCSSStyleRule.h \
     JSCSSValue.h \
     JSCSSValueList.h \
     JSCanvasGradient.h \
@@ -337,6 +343,7 @@ all : \
     JSHTMLDivElement.h \
     JSHTMLDocument.h \
     JSHTMLElement.h \
+    JSHTMLEmbedElement.h \
     JSHTMLFieldSetElement.h \
     JSHTMLFontElement.h \
     JSHTMLFormElement.h \
@@ -362,6 +369,7 @@ all : \
     JSHTMLModElement.h \
     JSHTMLOListElement.h \
     JSHTMLOptGroupElement.h \
+    JSHTMLObjectElement.h \
     JSHTMLOptionElement.h \
     JSHTMLOptionsCollection.h \
     JSHTMLParagraphElement.h \
@@ -381,6 +389,7 @@ all : \
     JSHTMLTitleElement.h \
     JSHTMLUListElement.h \
     JSKeyboardEvent.h \
+    JSMediaList.h \
     JSMouseEvent.h \
     JSMutationEvent.h \
     JSNode.h \
@@ -514,6 +523,7 @@ all : \
     JSSVGMaskElement.h \
     JSSVGMarkerElement.h \
     JSSVGTransform.h \
+    JSStyleSheet.h \
     JSText.h \
     JSTextEvent.h \
     JSTreeWalker.h \

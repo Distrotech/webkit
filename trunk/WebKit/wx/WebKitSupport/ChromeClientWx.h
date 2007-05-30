@@ -32,26 +32,28 @@
 #include "FocusDirection.h"
 #include "IntRect.h"
 
-class ChromeClientWx : public WebCore::ChromeClient {
+namespace WebCore {
+
+class ChromeClientWx : public ChromeClient {
 public:
     virtual ~ChromeClientWx();
     virtual void chromeDestroyed();
 
-    virtual void setWindowRect(const WebCore::FloatRect&);
-    virtual WebCore::FloatRect windowRect();
+    virtual void setWindowRect(const FloatRect&);
+    virtual FloatRect windowRect();
 
-    virtual WebCore::FloatRect pageRect();
+    virtual FloatRect pageRect();
 
     virtual float scaleFactor();
 
     virtual void focus();
     virtual void unfocus();
 
-    virtual bool canTakeFocus(WebCore::FocusDirection);
-    virtual void takeFocus(WebCore::FocusDirection);
+    virtual bool canTakeFocus(FocusDirection);
+    virtual void takeFocus(FocusDirection);
 
-    virtual WebCore::Page* createWindow(WebCore::Frame*, const WebCore::FrameLoadRequest&);
-    virtual WebCore::Page* createModalDialog(WebCore::Frame*, const WebCore::FrameLoadRequest&);
+    virtual Page* createWindow(Frame*, const FrameLoadRequest&);
+    virtual Page* createModalDialog(Frame*, const FrameLoadRequest&);
     virtual void show();
 
     virtual bool canRunModal();
@@ -71,28 +73,29 @@ public:
 
     virtual void setResizable(bool);
 
-    virtual void addMessageToConsole(const WebCore::String& message,
+    virtual void addMessageToConsole(const String& message,
                                      unsigned int lineNumber,
-                                     const WebCore::String& sourceID);
+                                     const String& sourceID);
 
     virtual bool canRunBeforeUnloadConfirmPanel();
-    virtual bool runBeforeUnloadConfirmPanel(const WebCore::String& message,
-                                             WebCore::Frame* frame);
+    virtual bool runBeforeUnloadConfirmPanel(const String& message,
+                                             Frame* frame);
 
     virtual void closeWindowSoon();
     
-    virtual void runJavaScriptAlert(WebCore::Frame*, const WebCore::String&);
-    virtual bool runJavaScriptConfirm(WebCore::Frame*, const WebCore::String&);
-    virtual bool runJavaScriptPrompt(WebCore::Frame*, const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result);
-    virtual void setStatusbarText(const WebCore::String&);
+    virtual void runJavaScriptAlert(Frame*, const String&);
+    virtual bool runJavaScriptConfirm(Frame*, const String&);
+    virtual bool runJavaScriptPrompt(Frame*, const String& message, const String& defaultValue, String& result);
+    virtual void setStatusbarText(const String&);
     virtual bool shouldInterruptJavaScript();
     
     virtual bool tabsToLinks() const;
 
-    virtual WebCore::IntRect windowResizerRect() const;
-    virtual void addToDirtyRegion(const WebCore::IntRect&);
-    virtual void scrollBackingStore(int dx, int dy, const WebCore::IntRect& scrollViewRect, const WebCore::IntRect& clipRect);
+    virtual IntRect windowResizerRect() const;
+    virtual void addToDirtyRegion(const IntRect&);
+    virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
     virtual void updateBackingStore();
 };
 
+}
 #endif // ChromeClientWx_H

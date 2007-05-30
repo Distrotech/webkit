@@ -7,9 +7,15 @@
         DerivedSources/WebCore/HTMLNames.cpp
         DerivedSources/WebCore/JSAttr.cpp
         DerivedSources/WebCore/JSCDATASection.cpp
+        DerivedSources/WebCore/JSCSSCharsetRule.cpp
+        DerivedSources/WebCore/JSCSSFontFaceRule.cpp
+        DerivedSources/WebCore/JSCSSImportRule.cpp
+        DerivedSources/WebCore/JSCSSMediaRule.cpp
+        DerivedSources/WebCore/JSCSSPageRule.cpp
         DerivedSources/WebCore/JSCSSPrimitiveValue.cpp
         DerivedSources/WebCore/JSCSSRule.cpp
         DerivedSources/WebCore/JSCSSRuleList.cpp
+        DerivedSources/WebCore/JSCSSStyleRule.cpp
         DerivedSources/WebCore/JSCSSStyleDeclaration.cpp
         DerivedSources/WebCore/JSCSSValue.cpp
         DerivedSources/WebCore/JSCSSValueList.cpp
@@ -44,6 +50,7 @@
         DerivedSources/WebCore/JSHTMLDivElement.cpp
         DerivedSources/WebCore/JSHTMLDocument.cpp
         DerivedSources/WebCore/JSHTMLElement.cpp
+        DerivedSources/WebCore/JSHTMLEmbedElement.cpp
         DerivedSources/WebCore/JSHTMLFieldSetElement.cpp
         DerivedSources/WebCore/JSHTMLFontElement.cpp
         DerivedSources/WebCore/JSHTMLFormElement.cpp
@@ -66,6 +73,7 @@
         DerivedSources/WebCore/JSHTMLMenuElement.cpp
         DerivedSources/WebCore/JSHTMLMetaElement.cpp
         DerivedSources/WebCore/JSHTMLModElement.cpp
+        DerivedSources/WebCore/JSHTMLObjectElement.cpp
         DerivedSources/WebCore/JSHTMLOListElement.cpp
         DerivedSources/WebCore/JSHTMLOptGroupElement.cpp
         DerivedSources/WebCore/JSHTMLOptionElement.cpp
@@ -87,6 +95,7 @@
         DerivedSources/WebCore/JSHTMLTitleElement.cpp
         DerivedSources/WebCore/JSHTMLUListElement.cpp
         DerivedSources/WebCore/JSKeyboardEvent.cpp
+        DerivedSources/WebCore/JSMediaList.cpp
         DerivedSources/WebCore/JSMouseEvent.cpp
         DerivedSources/WebCore/JSMutationEvent.cpp
         DerivedSources/WebCore/JSNode.cpp
@@ -97,6 +106,7 @@
         DerivedSources/WebCore/JSProcessingInstruction.cpp
         DerivedSources/WebCore/JSRange.cpp
         DerivedSources/WebCore/JSRangeException.cpp
+        DerivedSources/WebCore/JSStyleSheet.cpp
         DerivedSources/WebCore/JSText.cpp
         DerivedSources/WebCore/JSTextEvent.cpp
         DerivedSources/WebCore/JSTreeWalker.cpp
@@ -730,18 +740,25 @@
 
     <set append="1" var="WEBCORE_SOURCES_JS">
         bindings/js/JSCanvasRenderingContext2DCustom.cpp
+        bindings/js/JSCSSRuleCustom.cpp
+        bindings/js/JSCSSStyleDeclarationCustom.cpp
         bindings/js/JSCustomXPathNSResolver.cpp
         bindings/js/JSDocumentCustom.cpp
         bindings/js/JSHTMLAnchorElementCustom.cpp
+        bindings/js/JSHTMLAppletElementCustom.cpp
+        bindings/js/JSHTMLElementCustom.cpp
         bindings/js/JSHTMLElementWrapperFactory.cpp
+        bindings/js/JSHTMLEmbedElementCustom.cpp
         bindings/js/JSHTMLFormElementCustom.cpp
         bindings/js/JSHTMLFrameSetElementCustom.cpp
         bindings/js/JSHTMLDocumentCustom.cpp
         bindings/js/JSHTMLInputElementBase.cpp
+        bindings/js/JSHTMLObjectElementCustom.cpp
         bindings/js/JSHTMLOptionElementConstructor.cpp
         bindings/js/JSHTMLOptionsCollectionCustom.cpp
         bindings/js/JSHTMLSelectElementCustom.cpp
         bindings/js/JSNodeIteratorCustom.cpp
+        bindings/js/JSStyleSheetCustom.cpp
         bindings/js/JSTreeWalkerCustom.cpp
         bindings/js/JSXMLHttpRequest.cpp
         bindings/js/JSXSLTProcessor.cpp

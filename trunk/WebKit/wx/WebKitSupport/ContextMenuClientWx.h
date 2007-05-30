@@ -31,21 +31,25 @@
 #include "ContextMenuClient.h"
 #include "PlatformMenuDescription.h"
 
-class ContextMenuClientWx : public WebCore::ContextMenuClient {
+namespace WebCore {
+
+class ContextMenuClientWx : public ContextMenuClient {
 public:
     virtual ~ContextMenuClientWx();
     virtual void contextMenuDestroyed();
 
-    virtual WebCore::PlatformMenuDescription getCustomMenuFromDefaultItems(WebCore::ContextMenu*);
-    virtual void contextMenuItemSelected(WebCore::ContextMenuItem*,
-                                         const WebCore::ContextMenu*);
+    virtual PlatformMenuDescription getCustomMenuFromDefaultItems(ContextMenu*);
+    virtual void contextMenuItemSelected(ContextMenuItem*,
+                                         const ContextMenu*);
 
-    virtual void downloadURL(const WebCore::KURL&);
-    virtual void copyImageToClipboard(const WebCore::HitTestResult&);
-    virtual void searchWithGoogle(const WebCore::Frame*);
-    virtual void lookUpInDictionary(WebCore::Frame*);
-    virtual void speak(const WebCore::String&);
+    virtual void downloadURL(const KURL&);
+    virtual void copyImageToClipboard(const HitTestResult&);
+    virtual void searchWithGoogle(const Frame*);
+    virtual void lookUpInDictionary(Frame*);
+    virtual void speak(const String&);
     virtual void stopSpeaking();
 };
+
+}
 
 #endif // ContextMenuClientWx_h

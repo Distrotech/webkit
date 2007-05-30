@@ -35,6 +35,11 @@ typedef QPainterPath PlatformPath;
 #elif PLATFORM(WX) && USE(WXGC)
 class wxGraphicsPath;
 typedef wxGraphicsPath PlatformPath;
+#elif PLATFORM(CAIRO)
+namespace WebCore {
+    struct CairoPath;
+}
+typedef WebCore::CairoPath PlatformPath;
 #else
 typedef void PlatformPath;
 #endif

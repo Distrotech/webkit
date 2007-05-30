@@ -28,16 +28,12 @@
 #include "AffineTransform.h"
 #include "FloatPoint.h"
 #include "FloatRect.h"
+#include "NotImplemented.h"
 
 #include <stdio.h>
 
 #include <wx/defs.h>
 #include <wx/graphics.h>
-
-// TODO: Note that this class seems to be pretty much exclusively used with
-// SVG so I'm leaving the main impl until we are in better shape to test this code.
-
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
 
 namespace WebCore {
 

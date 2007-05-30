@@ -26,6 +26,7 @@
 #include "config.h"
 #include "Image.h"
 #include "BitmapImage.h"
+#include "NotImplemented.h"
 
 #include "FloatRect.h"
 #include "GraphicsContext.h"
@@ -40,8 +41,6 @@
 #include <wx/dcgraph.h>
 #include <wx/bitmap.h>
 #include <wx/graphics.h>
-
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
 
 // This function loads resources from WebKit
 Vector<char> loadResourceIntoArray(const char*);

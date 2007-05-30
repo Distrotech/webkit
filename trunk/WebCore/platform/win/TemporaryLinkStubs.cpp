@@ -80,12 +80,7 @@
 #include "SearchPopupMenu.h"
 #include "TextBoundaries.h"
 #include "Widget.h"
-
-#define notImplemented() do { \
-    char buf[256] = {0}; \
-    _snprintf(buf, sizeof(buf), "FIXME: UNIMPLEMENTED: %s:%d\n", __FILE__, __LINE__); \
-    OutputDebugStringA(buf); \
-} while (0)
+#include "NotImplemented.h"
 
 namespace WebCore {
 
@@ -334,6 +329,7 @@ PopupMenu::~PopupMenu() { notImplemented(); }
 void PopupMenu::show(const IntRect&, FrameView*, int index) { notImplemented(); }
 void PopupMenu::hide() { notImplemented(); }
 void PopupMenu::updateFromElement() { notImplemented(); }
+bool PopupMenu::itemWritingDirectionIsNatural() { notImplemented(); return false; }
 
 void RenderThemeWin::systemFont(int propId, FontDescription& fontDescription) const { notImplemented(); }
 

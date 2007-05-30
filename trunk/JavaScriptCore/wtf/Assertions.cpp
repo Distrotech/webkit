@@ -69,7 +69,9 @@ static void vprintf_stderr_common(const char* format, va_list args)
         CFRelease(str);
         CFRelease(cfFormat);
     } else
-#elif PLATFORM(WIN)
+#elif COMPILER(GCC) 
+    vfprintf(stderr, format, args); 
+#elif COMPILER(MSVC)
     if (IsDebuggerPresent()) {
         size_t size = 1024;
 

@@ -66,6 +66,7 @@
 /* Operating environments */
 
 /* PLATFORM(QT) */
+/* PLATFORM(GDK) */
 /* PLATFORM(MAC) */
 /* PLATFORM(WIN) */
 #if defined(BUILDING_QT__)
@@ -78,13 +79,12 @@
 
 #elif defined(BUILDING_WX__)
 #define WTF_PLATFORM_WX 1
-#elif PLATFORM(DARWIN) 
+#elif defined(BUILDING_GDK__)
+#define WTF_PLATFORM_GDK 1
+#elif PLATFORM(DARWIN)
 #define WTF_PLATFORM_MAC 1
 #elif PLATFORM(WIN_OS)
 #define WTF_PLATFORM_WIN 1
-#endif
-#if defined(BUILDING_GDK__)
-#define WTF_PLATFORM_GDK 1
 #endif
 
 /* Graphics engines */

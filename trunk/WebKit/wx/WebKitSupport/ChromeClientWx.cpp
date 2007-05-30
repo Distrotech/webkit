@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include "FloatRect.h"
 #include "FrameLoadRequest.h"
+#include "NotImplemented.h"
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
@@ -42,9 +43,7 @@
 #include "WebViewPrivate.h"
 #include "WebFrame.h"
 
-
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
-
+namespace WebCore {
 
 ChromeClientWx::~ChromeClientWx()
 {
@@ -54,20 +53,20 @@ void ChromeClientWx::chromeDestroyed()
 {
 }
 
-void ChromeClientWx::setWindowRect(const WebCore::FloatRect&)
+void ChromeClientWx::setWindowRect(const FloatRect&)
 {
 }
 
-WebCore::FloatRect ChromeClientWx::windowRect()
+FloatRect ChromeClientWx::windowRect()
 {
     notImplemented();
-    return WebCore::FloatRect();
+    return FloatRect();
 }
 
-WebCore::FloatRect ChromeClientWx::pageRect()
+FloatRect ChromeClientWx::pageRect()
 {
     notImplemented();
-    return WebCore::FloatRect();
+    return FloatRect();
 }
 
 float ChromeClientWx::scaleFactor()
@@ -86,21 +85,21 @@ void ChromeClientWx::unfocus()
     notImplemented();
 }
 
-bool ChromeClientWx::canTakeFocus(WebCore::FocusDirection)
+bool ChromeClientWx::canTakeFocus(FocusDirection)
 {
     notImplemented();
     return false;
 }
 
-void ChromeClientWx::takeFocus(WebCore::FocusDirection)
+void ChromeClientWx::takeFocus(FocusDirection)
 {
     notImplemented();
 }
 
 
-WebCore::Page* ChromeClientWx::createWindow(WebCore::Frame*, const WebCore::FrameLoadRequest& request)
+Page* ChromeClientWx::createWindow(Frame*, const FrameLoadRequest& request)
 {
-    WebCore::Page* myPage = 0;
+    Page* myPage = 0;
     wxWebFrame* newFrame = new wxWebFrame(wxTheApp->GetAppName());
     
     if (newFrame->webview)
@@ -116,7 +115,7 @@ WebCore::Page* ChromeClientWx::createWindow(WebCore::Frame*, const WebCore::Fram
     return myPage;
 }
 
-WebCore::Page* ChromeClientWx::createModalDialog(WebCore::Frame*, const WebCore::FrameLoadRequest&)
+Page* ChromeClientWx::createModalDialog(Frame*, const FrameLoadRequest&)
 {
     notImplemented();
     return 0;
@@ -187,9 +186,9 @@ void ChromeClientWx::setResizable(bool)
     notImplemented();
 }
 
-void ChromeClientWx::addMessageToConsole(const WebCore::String&,
+void ChromeClientWx::addMessageToConsole(const String&,
                                           unsigned int,
-                                          const WebCore::String&)
+                                          const String&)
 {
     notImplemented();
 }
@@ -200,8 +199,8 @@ bool ChromeClientWx::canRunBeforeUnloadConfirmPanel()
     return true;
 }
 
-bool ChromeClientWx::runBeforeUnloadConfirmPanel(const WebCore::String& string,
-                                                  WebCore::Frame* frame)
+bool ChromeClientWx::runBeforeUnloadConfirmPanel(const String& string,
+                                                  Frame* frame)
 {
     wxMessageDialog dialog(NULL, string, wxT("Confirm Action?"), wxYES_NO);
     return dialog.ShowModal() == wxYES;
@@ -219,19 +218,19 @@ void ChromeClientWx::closeWindowSoon()
     Confirm - http://www.htmlite.com/JS006.php
 */
 
-void ChromeClientWx::runJavaScriptAlert(WebCore::Frame* frame, const WebCore::String& string)
+void ChromeClientWx::runJavaScriptAlert(Frame* frame, const String& string)
 {
     wxMessageBox(string, wxT("JavaScript Alert"), wxOK);
 }
 
-bool ChromeClientWx::runJavaScriptConfirm(WebCore::Frame* frame, const WebCore::String& string)
+bool ChromeClientWx::runJavaScriptConfirm(Frame* frame, const String& string)
 {
     wxMessageDialog dialog(NULL, string, wxT("JavaScript Confirm"), wxYES_NO);
     dialog.Centre();
     return (dialog.ShowModal() == wxID_YES);
 }
 
-bool ChromeClientWx::runJavaScriptPrompt(WebCore::Frame* frame, const WebCore::String& message, const WebCore::String& defaultValue, WebCore::String& result)
+bool ChromeClientWx::runJavaScriptPrompt(Frame* frame, const String& message, const String& defaultValue, String& result)
 {
     wxTextEntryDialog dialog(NULL, message, wxT("JavaScript Prompt"), wxEmptyString, wxOK | wxCANCEL);
     dialog.Centre();
@@ -244,7 +243,7 @@ bool ChromeClientWx::runJavaScriptPrompt(WebCore::Frame* frame, const WebCore::S
     return false;
 }
 
-void ChromeClientWx::setStatusbarText(const WebCore::String&)
+void ChromeClientWx::setStatusbarText(const String&)
 {
     notImplemented();
 }
@@ -261,20 +260,20 @@ bool ChromeClientWx::tabsToLinks() const
     return false;
 }
 
-WebCore::IntRect ChromeClientWx::windowResizerRect() const
+IntRect ChromeClientWx::windowResizerRect() const
 {
     notImplemented();
-    return WebCore::IntRect();
+    return IntRect();
 }
 
-void ChromeClientWx::addToDirtyRegion(const WebCore::IntRect&)
+void ChromeClientWx::addToDirtyRegion(const IntRect&)
 {
     notImplemented();
 }
 
 void ChromeClientWx::scrollBackingStore(int dx, int dy, 
-                    const WebCore::IntRect& scrollViewRect, 
-                    const WebCore::IntRect& clipRect)
+                    const IntRect& scrollViewRect, 
+                    const IntRect& clipRect)
 {
     notImplemented();
 }
@@ -282,4 +281,6 @@ void ChromeClientWx::scrollBackingStore(int dx, int dy,
 void ChromeClientWx::updateBackingStore()
 {
     notImplemented();
+}
+
 }

@@ -36,18 +36,13 @@
 #include "ProgressTracker.h"
 #include "DocumentLoader.h"
 #include "ResourceResponse.h"
+#include "NotImplemented.h"
 #include <stdio.h>
 
 #include "WebView.h"
 #include "WebViewPrivate.h"
 
-// for now we don't really care about these functions
-// they end up being noise
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
-
-
-namespace WebCore
-{
+namespace WebCore {
 
 inline int wxNavTypeFromWebNavType(NavigationType type){
     if (type == NavigationTypeLinkClicked)
@@ -892,5 +887,3 @@ void FrameLoaderClientWx::windowObjectCleared() const
 }
 
 }
-
-

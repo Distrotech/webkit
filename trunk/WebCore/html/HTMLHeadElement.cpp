@@ -62,7 +62,7 @@ bool HTMLHeadElement::childAllowed(Node* newChild)
 
 bool HTMLHeadElement::checkDTD(const Node* newChild)
 {
-    return newChild->hasTagName(titleTag) || newChild->hasTagName(isindexTag) ||
+    return newChild->hasTagName(noscriptTag) || newChild->hasTagName(titleTag) || newChild->hasTagName(isindexTag) ||
            newChild->hasTagName(baseTag) || newChild->hasTagName(scriptTag) ||
            newChild->hasTagName(styleTag) || newChild->hasTagName(metaTag) ||
            newChild->hasTagName(linkTag) || newChild->isTextNode();

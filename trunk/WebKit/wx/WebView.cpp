@@ -175,7 +175,7 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     else
     {
         WebCore::EditorClientWx* editorClient = new WebCore::EditorClientWx();
-        page = new WebCore::Page(new ChromeClientWx(), new ContextMenuClientWx(), editorClient, new DragClientWx());
+        page = new WebCore::Page(new WebCore::ChromeClientWx(), new WebCore::ContextMenuClientWx(), editorClient, new WebCore::DragClientWx());
         editorClient->setPage(page);
     }
     

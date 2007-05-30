@@ -28,13 +28,17 @@
 
 #import "DOMImplementationFront.h"
 #import "DOMInternal.h"
+#import "JSCSSRule.h"
 #import "JSCSSRuleList.h"
+#import "JSCSSStyleDeclaration.h"
 #import "JSCounter.h"
 #import "JSDOMImplementation.h"
 #import "JSEvent.h"
 #import "JSHTMLOptionsCollection.h"
+#import "JSMediaList.h"
 #import "JSNodeIterator.h"
 #import "JSRange.h"
+#import "JSStyleSheet.h"
 #import "JSTreeWalker.h"
 #import "JSXPathExpression.h"
 #import "JSXPathResult.h"
@@ -64,10 +68,14 @@ static inline id createDOMWrapper(KJS::JSObject* object)
         if (object->inherits(&WebCore::JS##className::info)) \
             return [DOM##className _wrap##className:static_cast<WebCore::JS##className*>(object)->impl()];
 
+    WRAP(CSSRule)
     WRAP(CSSRuleList)
+    WRAP(CSSStyleDeclaration)
     WRAP(Counter)
     WRAP(HTMLOptionsCollection)
+    WRAP(MediaList)
     WRAP(Range)
+    WRAP(StyleSheet)
     WRAP(XPathExpression)
     WRAP(XPathResult)
 
@@ -77,17 +85,13 @@ static inline id createDOMWrapper(KJS::JSObject* object)
         if (object->inherits(&DOM##className::info)) \
             return [objc_getClass("DOM" #className) _wrap##className:static_cast<DOM##className*>(object)->impl()];
 
-    WRAP(CSSRule)
-    WRAP(CSSStyleDeclaration)
     WRAP(CSSValue)
     WRAP(Event)
-    WRAP(MediaList)
     WRAP(NamedNodeMap)
     WRAP(Node)
     WRAP(NodeList)
     WRAP(RGBColor)
     WRAP(Rect)
-    WRAP(StyleSheet)
     WRAP(StyleSheetList)
 
     #undef WRAP

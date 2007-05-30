@@ -1,3 +1,63 @@
+2007-05-30  Mark Rowe  <mrowe@apple.com>
+
+        Mac build fix.  Update #include.
+
+        * API/JSCallbackFunction.h:
+
+2007-05-30  Luciano Montanaro  <mikelima@cirulla.net>
+
+        Reviewed by Maciej.
+
+        - cross-port Harri Porten's commits 636099 and 636108 from KJS: 
+        "publish a class anyway public already" and "class is being used from
+        outside for quite some time" in preparation for further syncronizations
+
+        * kjs/context.h:
+        * kjs/date_object.cpp:
+        * kjs/date_object.h:
+        * kjs/function.h:
+        (KJS::):
+        (KJS::InternalFunctionImp::classInfo):
+        (KJS::InternalFunctionImp::functionName):
+        * kjs/function_object.h:
+        * kjs/internal.h:
+        * kjs/lookup.h:
+        (KJS::getStaticPropertySlot):
+        (KJS::getStaticFunctionSlot):
+        (KJS::getStaticValueSlot):
+        * kjs/object_object.h:
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Cleanup function and fix to match comparison API.
+
+        * kjs/string_object.cpp:
+        (KJS::substituteBackreferences):
+        (KJS::localeCompare):
+
+2007-05-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Slight clarification to an exception message.
+
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::put):
+
+2007-05-27  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * wtf/Platform.h: Move Gdk up to allow building WebKit/Gdk on Darwin
+
+2007-05-27  Darin Adler  <darin@apple.com>
+
+        - fix a couple ifdefs that said WIN instead of WIN_OS
+
+        * kjs/collector.cpp:
+        (KJS::allocateBlock): WIN -> WIN_OS
+        (KJS::freeBlock): Ditto.
+
 2007-05-26  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Darin.

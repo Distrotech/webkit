@@ -31,10 +31,10 @@ namespace WebCore {
 const char* htmlParserErrorMessageTemplate(HTMLParserErrorCode errorCode)
 {
     static const char* const errors[] = { 
-        "%tag1 is not allowed inside %tag2.  Moving %tag1 into the nearest enclosing <table>.",
-        "<head> must be a child of <html>.  Content ignored.",
+        "%tag1 is not allowed inside %tag2. Moving %tag1 into the nearest enclosing <table>.",
+        "<head> must be a child of <html>. Content ignored.",
+        "%tag1 is not allowed inside %tag2. Moving %tag1 into the <head>.",
         "Extra %tag1 encountered.  Migrating attributes back to the original %tag1 element and ignoring the tag.",
-        "%tag1 is not allowed inside <object>. Skipping all content until </object> is encountered.",
         "<area> is not allowed inside %tag1. Moving the <area> into the nearest enclosing <map>.",
         "%tag1 is not allowed inside %tag2. Content ignored.",
         "%tag1 is not allowed in a <frameset> page. Content ignored.",

@@ -34,6 +34,7 @@
 #include "HTMLBRElement.h"
 #include "HTMLDocument.h"
 #include "HTMLElementFactory.h"
+#include "HTMLFormElement.h"
 #include "HTMLNames.h"
 #include "HTMLTokenizer.h"
 #include "RenderWordBreak.h"
@@ -279,7 +280,57 @@ PassRefPtr<DocumentFragment> HTMLElement::createContextualFragment(const String 
     return fragment.release();
 }
 
-void HTMLElement::setInnerHTML(const String &html, ExceptionCode& ec)
+static inline bool hasOneChild(ContainerNode* node)
+{
+    Node* firstChild = node->firstChild();
+    return firstChild && !firstChild->nextSibling();
+}
+
+static inline bool hasOneTextChild(ContainerNode* node)
+{
+    return hasOneChild(node) && node->firstChild()->isTextNode();
+}
+
+static void replaceChildrenWithFragment(HTMLElement* element, PassRefPtr<DocumentFragment> fragment, ExceptionCode& ec)
+{
+    if (!fragment->firstChild()) {
+        element->removeChildren();
+        return;
+    }
+
+    if (hasOneTextChild(element) && hasOneTextChild(fragment.get())) {
+        static_cast<Text*>(element->firstChild())->setData(static_cast<Text*>(fragment->firstChild())->string(), ec);
+        return;
+    }
+
+    if (hasOneChild(element)) {
+        element->replaceChild(fragment, element->firstChild(), ec);
+        return;
+    }
+
+    element->removeChildren();
+    element->appendChild(fragment, ec);
+}
+
+static void replaceChildrenWithText(HTMLElement* element, const String& text, ExceptionCode& ec)
+{
+    if (hasOneTextChild(element)) {
+        static_cast<Text*>(element->firstChild())->setData(text, ec);
+        return;
+    }
+
+    RefPtr<Text> textNode = new Text(element->document(), text);
+
+    if (hasOneChild(element)) {
+        element->replaceChild(textNode.release(), element->firstChild(), ec);
+        return;
+    }
+
+    element->removeChildren();
+    element->appendChild(textNode.release(), ec);
+}
+
+void HTMLElement::setInnerHTML(const String& html, ExceptionCode& ec)
 {
     RefPtr<DocumentFragment> fragment = createContextualFragment(html);
     if (!fragment) {
@@ -287,14 +338,10 @@ void HTMLElement::setInnerHTML(const String &html, ExceptionCode& ec)
         return;
     }
 
-    // FIXME: Add special case for when we had one text child and we just want to set its text?
-    // FIXME: Add special case for cases where we can use replaceChild?
-
-    removeChildren();
-    appendChild(fragment.release(), ec);
+    replaceChildrenWithFragment(this, fragment.release(), ec);
 }
 
-void HTMLElement::setOuterHTML(const String &html, ExceptionCode& ec)
+void HTMLElement::setOuterHTML(const String& html, ExceptionCode& ec)
 {
     Node* p = parent();
     if (!p || !p->isHTMLElement()) {
@@ -309,8 +356,8 @@ void HTMLElement::setOuterHTML(const String &html, ExceptionCode& ec)
         return;
     }
 
-    // FIXME: Add special case for when we had one text child and we just want to set its text?
     // FIXME: Why doesn't this have code to merge neighboring text nodes the way setOuterText does?
+
     parent->replaceChild(fragment.release(), this, ec);
 }
 
@@ -330,15 +377,13 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
     }
 
     // FIXME: This doesn't take whitespace collapsing into account at all.
-    // FIXME: Add special case for when we had one text child and we just want to set its text?
-    // FIXME: Add special case for cases where we can use replaceChild?
-
-    removeChildren();
 
     if (!text.contains('\n') && !text.contains('\r')) {
-        if (text.isEmpty())
+        if (text.isEmpty()) {
+            removeChildren();
             return;
-        appendChild(new Text(document(), text), ec);
+        }
+        replaceChildrenWithText(this, text, ec);
         return;
     }
 
@@ -348,19 +393,19 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
     RenderObject* r = renderer();
     if (r && r->style()->preserveNewline()) {
         if (!text.contains('\r')) {
-            appendChild(new Text(document(), text), ec);
+            replaceChildrenWithText(this, text, ec);
             return;
         }
-        // FIXME: Stick with String once it has a replace that can do this.
-        DeprecatedString textWithConsistentLineBreaks = text.deprecatedString();
+        String textWithConsistentLineBreaks = text;
         textWithConsistentLineBreaks.replace("\r\n", "\n");
         textWithConsistentLineBreaks.replace('\r', '\n');
-        appendChild(new Text(document(), textWithConsistentLineBreaks), ec);
+        replaceChildrenWithText(this, textWithConsistentLineBreaks, ec);
         return;
     }
 
     // Add text nodes and <br> elements.
     ec = 0;
+    RefPtr<DocumentFragment> fragment = new DocumentFragment(document());
     int lineStart = 0;
     UChar prev = 0;
     int length = text.length();
@@ -368,12 +413,12 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
         UChar c = text[i];
         if (c == '\n' || c == '\r') {
             if (i > lineStart) {
-                appendChild(new Text(document(), text.substring(lineStart, i - lineStart)), ec);
+                fragment->appendChild(new Text(document(), text.substring(lineStart, i - lineStart)), ec);
                 if (ec)
                     return;
             }
             if (!(c == '\n' && i != 0 && prev == '\r')) {
-                appendChild(new HTMLBRElement(document()), ec);
+                fragment->appendChild(new HTMLBRElement(document()), ec);
                 if (ec)
                     return;
             }
@@ -382,7 +427,8 @@ void HTMLElement::setInnerText(const String& text, ExceptionCode& ec)
         prev = c;
     }
     if (length > lineStart)
-        appendChild(new Text(document(), text.substring(lineStart, length - lineStart)), ec);
+        fragment->appendChild(new Text(document(), text.substring(lineStart, length - lineStart)), ec);
+    replaceChildrenWithFragment(this, fragment.release(), ec);
 }
 
 void HTMLElement::setOuterText(const String &text, ExceptionCode& ec)
@@ -864,4 +910,17 @@ RenderObject* HTMLElement::createRenderer(RenderArena* arena, RenderStyle* style
     return RenderObject::createObject(this, style);
 }
 
+HTMLFormElement* HTMLElement::findFormAncestor() const
+{
+    for (Node* ancestor = parentNode(); ancestor; ancestor = ancestor->parentNode())
+        if (ancestor->hasTagName(formTag))
+            return static_cast<HTMLFormElement*>(ancestor);
+    return 0;
 }
+
+HTMLFormElement* HTMLElement::virtualForm() const
+{
+    return findFormAncestor();
+}
+
+} // namespace WebCore

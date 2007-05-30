@@ -31,8 +31,8 @@ namespace WebCore {
 enum HTMLParserErrorCode { 
     MisplacedTablePartError,
     MisplacedHeadError,
+    MisplacedHeadContentError,
     RedundantHTMLBodyError,
-    BadObjectContentError,
     MisplacedAreaError,
     IgnoredContentError,
     MisplacedFramesetContentError,

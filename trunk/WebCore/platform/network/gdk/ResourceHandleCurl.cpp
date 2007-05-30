@@ -29,24 +29,20 @@
 #include "ResourceHandle.h"
 
 #include "DocLoader.h"
-#if PLATFORM(GDK)
-#include "NotImplementedGdk.h"
-#endif
+#include "NotImplemented.h"
 #include "ResourceHandleInternal.h"
 #include "ResourceHandleManager.h"
-
-#if !PLATFORM(GDK)
-#define notImplementedGdk() do { fprintf(stderr, "FIXME: UNIMPLEMENTED %s %s:%d\n", WTF_PRETTY_FUNCTION, __FILE__, __LINE__); } while(0)
-#endif
 
 namespace WebCore {
 
 ResourceHandleInternal::~ResourceHandleInternal()
 {
     free(m_url);
-
+    free(m_fileName);
     if (m_customHeaders)
         curl_slist_free_all(m_customHeaders);
+    if (m_customPostHeader)
+        curl_slist_free_all(m_customPostHeader);
 }
 
 ResourceHandle::~ResourceHandle()
@@ -80,7 +76,7 @@ bool ResourceHandle::supportsBufferedData()
 void ResourceHandle::setDefersLoading(bool defers)
 {
     d->m_defersLoading = defers;
-    notImplementedGdk();
+    notImplemented();
 }
 
 } // namespace WebCore

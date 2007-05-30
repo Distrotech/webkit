@@ -42,13 +42,21 @@ typedef struct _cairo PlatformGraphicsContext;
 class QPainter;
 typedef QPainter PlatformGraphicsContext;
 #elif PLATFORM(WX)
-class wxGraphicsContext;
+class wxGCDC;
 class wxWindowDC;
+
 // wxGraphicsContext allows us to support Path, etc. 
 // but on some platforms, e.g. Linux, it requires fairly 
 // new software.
 #if USE(WXGC)
-    typedef wxGraphicsContext PlatformGraphicsContext;
+// On OS X, wxGCDC is just a typedef for wxDC, so use wxDC explicitly to make
+// the linker happy.
+#ifdef __APPLE__
+    class wxDC;
+    typedef wxDC PlatformGraphicsContext;
+#else
+    typedef wxGCDC PlatformGraphicsContext;
+#endif
 #else
     typedef wxWindowDC PlatformGraphicsContext;
 #endif

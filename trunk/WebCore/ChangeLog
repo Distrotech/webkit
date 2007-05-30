@@ -1,3 +1,1197 @@
+2007-05-30  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13775
+          REGRESSION: Popup button text should use "natural" directionality to match the items in the popup menu
+
+        Test: fast/forms/select-writing-direction-natural.html
+
+        * platform/PopupMenu.h: Added the static method itemWritingDirectionIsNatural
+        which says whether items in the popup ignore the CSS text-align and direction
+        properties and instead are left-aligned and use natural writing direction.
+        * platform/gdk/PopupMenuGdk.cpp:
+        (WebCore::PopupMenu::itemWritingDirectionIsNatural):
+        * platform/mac/PopupMenuMac.mm:
+        (WebCore::PopupMenu::itemWritingDirectionIsNatural):
+        * platform/qt/PopupMenuQt.cpp:
+        (WebCore::PopupMenu::itemWritingDirectionIsNatural):
+        * platform/win/TemporaryLinkStubs.cpp:
+        (WebCore::PopupMenu::itemWritingDirectionIsNatural):
+        * platform/wx/TemporaryLinkStubs.cpp:
+        (PopupMenu::itemWritingDirectionIsNatural):
+        * rendering/RenderMenuList.cpp:
+        (WebCore::textDirectionForParagraph): Added this helper function that uses
+        the Unicode Bidi Algorithm rules P2 and P3 to determine the writing direction
+        of text.
+        (WebCore::RenderMenuList::adjustInnerStyle): Made the alignment and direction
+        adjustment conditional on the popup implementation.
+        (WebCore::RenderMenuList::setText): Added call to adjustInnerStyle() since
+        the style depends on the text when natural writing direction is used.
+
+2007-05-30  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5200795> REGRESSION (r21057): lineBoxRects doesn't match actual text when wrapping occurs
+
+        Use box->end() instead of box->len().
+
+        * rendering/RenderText.cpp:
+        (WebCore::RenderText::addLineBoxRects):
+
+2007-05-30  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13919
+        Autogenerate the JS bindings for the CSSRule and its subclasses
+
+        - subclasses generated are CSSCharsetRule, CSSFontFaceRule, CSSImportRule
+          CSSMediaRule, CSSPageRule and CSSStyleRule.
+
+        * DerivedSources.make:
+        * WebCore.pro:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSCSSRuleCustom.cpp: Added.
+        (WebCore::toJS):
+        * bindings/js/kjs_css.cpp:
+        * bindings/js/kjs_css.h:
+        * bindings/objc/DOMUtility.mm:
+        (KJS::createDOMWrapper):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * css/CSSCharsetRule.h:
+        (WebCore::CSSCharsetRule::setEncoding):
+        * css/CSSCharsetRule.idl:
+        * css/CSSFontFaceRule.idl:
+        * css/CSSImportRule.idl:
+        * css/CSSMediaRule.idl:
+        * css/CSSPageRule.cpp:
+        (WebCore::CSSPageRule::setSelectorText):
+        * css/CSSPageRule.h:
+        * css/CSSPageRule.idl:
+        * css/CSSRule.cpp:
+        (WebCore::CSSRule::setCssText):
+        * css/CSSRule.h:
+        * css/CSSRule.idl:
+        * css/CSSStyleRule.cpp:
+        (WebCore::CSSStyleRule::setSelectorText):
+        * css/CSSStyleRule.h:
+        * css/CSSStyleRule.idl:
+        * page/DOMWindow.idl: add new constructors.
+
+2007-05-30  Mark Rowe  <mrowe@apple.com>
+
+        Build fixes after r21889.  Add missing #includes.
+
+        * ForwardingHeaders/kjs/function.h: Added.
+        * bindings/js/kjs_binding.h:
+        * bindings/js/kjs_dom.h:
+        * bindings/js/kjs_window.h:
+
+2007-05-30  Mark Rowe  <mrowe@apple.com>
+
+        Gdk build fix.  Update WidgetGdk to use NotImplemented.h.
+
+        * platform/gdk/WidgetGdk.cpp:
+        (WebCore::Widget::setEnabled):
+        (WebCore::Widget::isEnabled):
+        (WebCore::Widget::removeFromParent):
+        (WebCore::Widget::paint):
+        (WebCore::Widget::setIsSelected):
+
+2007-05-29  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Anders.
+
+        Make ScrollView use a GtkLayout. This class matches QScrollView the most and promises
+        to ease the implementation of ScrollView::addChild. GtkLayout should be resource friendly
+        even with huge width and heights of frames.
+        Make Widget aware of GtkLayout to use the right GdkWindow as drawable. For GtkLayout one must
+        draw on the bin_window.
+        Remove the layer violation from FrameGdk.cpp and ScrollView. FrameGdk is no longer responsible to
+        implement scrolling on keyboard events. ScrollView is no longer required to know that it could be
+        a FrameView and handles scrolling of Frames magically.
+
+        * platform/ScrollView.h:
+        * platform/gdk/FrameGdk.cpp:
+        (WebCore::FrameGdk::keyPress):
+        (WebCore::FrameGdk::handleGdkEvent):
+        * platform/gdk/ScrollViewGdk.cpp:
+        (WebCore::ScrollView::ScrollViewPrivate::ScrollViewPrivate):
+        (WebCore::ScrollView::updateContents):
+        (WebCore::ScrollView::visibleWidth):
+        (WebCore::ScrollView::visibleHeight):
+        (WebCore::ScrollView::visibleContentRect):
+        (WebCore::ScrollView::resizeContents):
+        (WebCore::ScrollView::contentsX):
+        (WebCore::ScrollView::contentsY):
+        (WebCore::ScrollView::scrollOffset):
+        (WebCore::ScrollView::scrollBy):
+        (WebCore::ScrollView::setFrameGeometry):
+        (WebCore::ScrollView::updateGeometry):
+        (WebCore::ScrollView::setGtkWidget):
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::windowToContents):
+        (WebCore::ScrollView::contentsToWindow):
+        (WebCore::ScrollView::scrollbarUnderMouse):
+        * platform/gdk/TemporaryLinkStubs.cpp: Move Widget methods to WidgetGdk.cpp
+        * platform/gdk/WidgetGdk.cpp:
+        (WebCore::Widget::setGtkWidget):
+        (WebCore::Widget::setFrameGeometry):
+        (WebCore::Widget::setEnabled):
+        (WebCore::Widget::isEnabled):
+        (WebCore::Widget::removeFromParent):
+        (WebCore::Widget::paint):
+        (WebCore::Widget::setIsSelected):
+        (WebCore::Widget::invalidate):
+        (WebCore::Widget::invalidateRect):
+
+2007-05-29  Krzysztof Kowalczyk  <kkowalczyk@gmail.com>
+
+        Reviewed by Maciej.
+
+        Curl (linux/gdk) networking improvements: 
+        a) POST support
+        b) don't use CURL in a re-entrant way.
+        c) turn on curl's internal debugging support in a debug build if the DEBUG_CURL environment variable is set.
+
+        * platform/network/ResourceHandleInternal.h:
+        (WebCore::ResourceHandleInternal::ResourceHandleInternal):
+        * platform/network/gdk/ResourceHandleCurl.cpp:
+        (WebCore::ResourceHandleInternal::~ResourceHandleInternal):
+        * platform/network/gdk/ResourceHandleManager.cpp:
+        (WebCore::ResourceHandleManager::ResourceHandleManager):
+        (WebCore::writeCallback):
+        (WebCore::ResourceHandleManager::downloadTimerCallback):
+        (WebCore::ResourceHandleManager::setupPOST):
+        (WebCore::ResourceHandleManager::add):
+        (WebCore::ResourceHandleManager::removeScheduledJob):
+        (WebCore::ResourceHandleManager::startScheduledJobs):
+        (WebCore::ResourceHandleManager::startJob):
+        (WebCore::ResourceHandleManager::cancel):
+        * platform/network/gdk/ResourceHandleManager.h:
+        (WebCore::ResourceHandleList::ResourceHandleList):
+        (WebCore::ResourceHandleList::next):
+        (WebCore::ResourceHandleList::job):
+        (WebCore::ResourceHandleList::setRemoved):
+        (WebCore::ResourceHandleList::removed):
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Fix the Qt and Gdk builds.
+
+        * WebCore.pro:
+
+2007-05-29  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+
+        Fix for <rdar://problem/5109711> REGRESSION: Focus ring artifacts appear around a widget's search field at times (Address Book, Dictionary)
+
+        * rendering/RenderThemeMac.mm: (WebCore::RenderThemeMac::paintSearchField):
+          We only need this hack for drawing the search field focus ring on Tiger.  On Leopard, drawWithFrame correctly draws the cell's focus ring.
+
+2007-05-29  Alp Toker  <alp.toker@collabora.co.uk>
+
+        Reviewed by Mitz.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13899
+
+        * platform/graphics/cairo/GraphicsContextCairo.cpp:
+        (WebCore::GraphicsContext::strokeArc): Use cairo_arc_negative() to fix
+        CSS rounded borders.
+        (WebCore::GraphicsContext::beginTransparencyLayer):
+        (WebCore::GraphicsContext::endTransparencyLayer): save/restore is
+        redundant. push/pop group does this implicitly.
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13912
+        Autogenerate the JS bindings for the MediaList
+
+        * DerivedSources.make:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/kjs_css.cpp:
+        * bindings/js/kjs_css.h:
+        * bindings/objc/DOMUtility.mm:
+        (KJS::createDOMWrapper):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * css/MediaList.idl:
+        * page/DOMWindow.idl: Add constructor.
+
+2007-05-29  Matt Perry  <mpComplete@gmail.com>
+
+        Reviewed by Maciej.
+
+        Fixed some rendering issues for <select>s on Windows.
+
+        * rendering/RenderThemeWin.cpp:
+        (WebCore::RenderThemeWin::adjustMenuListStyle):
+        (WebCore::RenderThemeWin::paintMenuList):
+        * rendering/RenderThemeWin.h:
+
+2007-05-29  David Hyatt  <hyatt@apple.com>
+
+        Fold the invalidateVerticalPositions crawl into the bidi iteration.
+        This makes it more correct (since we won't drill into elements that
+        did not need to be reset) and cuts out an extra walk of all our children.
+        We're still O(n^2) as new content streams in, but this at least cuts
+        out one separate O(n^2) crawl.
+
+        Reviewed by olliej
+
+        * rendering/RenderObject.cpp:
+        * rendering/RenderObject.h:
+        (WebCore::RenderObject::invalidateVerticalPosition):
+        * rendering/bidi.cpp:
+        (WebCore::RenderBlock::layoutInlineChildren):
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13908
+        Autogenerate the JS bindings for the StyleSheet
+
+        * DerivedSources.make:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSStyleSheetCustom.cpp: Added.
+        (WebCore::toJS):
+        (WebCore::JSStyleSheet::toBoolean):
+        * bindings/js/kjs_css.cpp:
+        (KJS::):
+        (KJS::DOMCSSStyleSheet::DOMCSSStyleSheet):
+        (KJS::DOMCSSStyleSheet::getOwnPropertySlot):
+        * bindings/js/kjs_css.h:
+        * bindings/objc/DOMUtility.mm:
+        (KJS::createDOMWrapper):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * css/StyleSheet.idl:
+        * page/DOMWindow.idl: Add new constructor.
+
+2007-05-29  David Hyatt  <hyatt@apple.com>
+
+        Make sure <embed> does not allow an end tag.
+
+        Reviewed by olliej
+
+        * html/HTMLEmbedElement.h:
+        (WebCore::HTMLEmbedElement::endTagRequirement):
+
+2007-05-29  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Brady.
+
+        Fix for <rdar://problem/5213039> REGRESSION: Wells Fargo registration page returns blank
+
+        Roll out updated fix for 11866 that tried to make reset work for hidden inputs.  Since
+        all browsers update the value attribute when setting the value, it doesn't really make sense to reset.
+        Its true that IE does support resetting these controls, but in this case, it doesn't really make sense to have
+        another place to store an alternate version of the value.
+
+        * html/HTMLInputElement.cpp: (WebCore::HTMLInputElement::reset):
+        * html/HTMLInputElement.h:
+
+2007-05-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Anders.
+
+        - removed the general case optimization for innerHTML because some sites
+          rely on setting innerHTML to trigger loading plug-ins for example; we
+          could consider bringing it back some day, perhaps with a list of element
+          types to exclude
+
+        * dom/CharacterData.cpp: (WebCore::CharacterData::setData):
+        Do nothing if the old data is identical to the new data.
+
+        * html/HTMLElement.cpp:
+        (WebCore::replaceChildrenWithFragment): Remove childrenAreEqual optimization.
+        (WebCore::replaceChildrenWithText): Remove optimization for cases where the
+        text data is identical to the new data, since CharacterData handles that now.
+        (WebCore::HTMLElement::setOuterHTML): Remove childrenAreEqual optimization.
+
+2007-05-29  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Maciej.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13904
+          REGRESSION: Search fields with a results popup do not always draw the popup arrow
+
+        Covered by fast/forms/box-shadow-override.html
+
+        The search button draws a popup arrow depending on whether the
+        search menu template is set, rather than on the maximum number of recent
+        search strings.
+
+        * rendering/RenderThemeMac.h:
+        * rendering/RenderThemeMac.mm:
+        (WebCore::RenderThemeMac::paintSearchFieldResultsDecoration): Removed the
+        call to -setMaxmiumRecents:.
+        (WebCore::RenderThemeMac::paintSearchFieldResultsButton): Replaced calling
+        -setMaximumRecents: with setting the search menu template.
+        (WebCore::RenderThemeMac::search): Removed initialization of the menu.
+        (WebCore::RenderThemeMac::searchMenuTemplate): Added. Returns an empty
+        NSMenu to be used as the search menu template.
+
+2007-05-29  David Hyatt  <hyatt@apple.com>
+
+        Fix for bug 13907, <noscript> should be allowed inside <head> when
+        scripting is enabled.
+
+        Reviewed by aroben
+
+        * html/HTMLHeadElement.cpp:
+        (WebCore::HTMLHeadElement::checkDTD):
+        * html/HTMLParser.cpp:
+        (WebCore::HTMLParser::handleError):
+        * html/HTMLParserErrorCodes.cpp:
+        (WebCore::htmlParserErrorMessageTemplate):
+        * html/HTMLParserErrorCodes.h:
+
+2007-05-29  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Maciej.
+
+        - fix crash in http://bugs.webkit.org/show_bug.cgi?id=13792
+          REGRESSION: WebKit doesn't show this javascript screenshot page (and crashes after click on its "hidden link")
+
+        Test: fast/frames/removal-before-attach-crash.html
+
+        Delayed the queueing of the post-attach callback until attach().
+
+        * html/HTMLFrameElementBase.cpp:
+        (WebCore::HTMLFrameElementBase::HTMLFrameElementBase):
+        (WebCore::HTMLFrameElementBase::parseMappedAttribute): Replaced call to the
+        HTMLElement implementation with a call to the HTMLFrameOwnerElement
+        implementation, as the latter is the parent class.
+        (WebCore::HTMLFrameElementBase::insertedIntoDocument): Instead of queueing
+        the post-attach callback here, just set a flag telling us to do so
+        at the beginning of attach().
+        (WebCore::HTMLFrameElementBase::removedFromDocument): Reset the above flag.
+        (WebCore::HTMLFrameElementBase::attach): If this is the first attach() after
+        being inserted into the document, queue a post-attach callback to load the
+        frame.
+        (WebCore::HTMLFrameElementBase::willRemove): Changed to call up to the correct
+        parent class.
+        (WebCore::HTMLFrameElementBase::setFocus): Ditto.
+        * html/HTMLFrameElementBase.h:
+        * html/HTMLPlugInElement.cpp:
+        (WebCore::HTMLPlugInElement::mapToEntry): Replaced call to the HTMLElement
+        implementation with a call to the HTMLFrameOwnerElement implementation,
+        as the latter is the parent class.
+        (WebCore::HTMLPlugInElement::parseMappedAttribute): Ditto.
+        (WebCore::HTMLPlugInElement::checkDTD): Ditto.
+        (WebCore::HTMLPlugInElement::detach): Ditto.
+
+2007-05-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13602
+          Amazon product pages keep repainting over and over again
+
+        - fix first-letter when the text of the affected text node is changed
+
+        Optimize setInnerHTML, setOuterHTML, and setInnerText so they don't change the DOM at all
+        if they don't need to.
+
+        Test: fast/dom/HTMLElement/set-inner-outer-optimization.html
+        Test: fast/css/first-letter-detach.html
+
+        * html/HTMLElement.cpp:
+        (WebCore::equal): Added. Helper function that compares two Text nodes or two NamedAttrMap
+        attribute maps.
+        (WebCore::shallowEqual): Added. Helper function that compares two Element nodes or two
+        arbitrary nodes.
+        (WebCore::childrenAreEqual): Added. Helper functions that compare children of nodes.
+        (WebCore::hasOneChild): Added. Helper function.
+        (WebCore::hasOneTextChild): Added. Helper function.
+        (WebCore::replaceChildrenWithFragment): Added. Helper function used by setInnerHTML and
+        setInnerText. Optimizes the cases where all the nodes are the same, where both the current
+        and the new content are single text nodes, and where the current content is a single node
+        that can be replaced with replaceChild.
+        (WebCore::replaceChildrenWithText): Added. Helper function used by setInnerText. Optimizes
+        the case where the current content is a single text node or a single node that can be
+        replaced with replaceChild.
+        (WebCore::HTMLElement::setInnerHTML): Changed to call replaceChildrenWithFragment.
+        (WebCore::HTMLElement::setOuterHTML): Added special case to optimize when the new content
+        exactly matches the current node.
+        (WebCore::HTMLElement::setInnerText): Changed to call replaceChildrenWithText in a few
+        cases instead of doing removeChildren/appendChild. Changed code that was using
+        DeprecatedString to instead use String. Changed general case to use a document fragment
+        and replaceChildrenWithFragment.
+
+        * dom/CharacterData.cpp: (WebCore::CharacterData::dispatchModifiedEvent):
+        Fixed bug where we would not dispatch the DOMSubtreeModified event unless someone
+        was registered for the DOMCharacterDataModified event. Caused trouble in the test.
+
+        * rendering/RenderBlock.cpp: (WebCore::RenderBlock::updateFirstLetter): Set first-letter
+        after the setStyle call so calls to setTextInternal inside setStyle don't clear it.
+
+        * rendering/RenderText.h: Made setTextInternal virtual so that RenderTextFragment can do
+        appropriate work when the text changes.
+
+        * rendering/RenderTextFragment.h: Added an override of setTextInternal. Removed the
+        firstLetter parameter to the constructor and made it a separate setter. Also changed
+        m_generatedContentStr to m_contentString to match the getter function.
+        * rendering/RenderTextFragment.cpp:
+        (WebCore::RenderTextFragment::RenderTextFragment): Removed firstLetter parameter.
+        (WebCore::RenderTextFragment::setTextInternal): When the text changes, destroy the
+        first-letter node and reset the fragment values so that RenderBlock::updateFirstLetter,
+        which will run during layout, will create a new first-letter child. Otherwise we end up
+        with the first letter of the old text.
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Fix Qt build.
+
+        * platform/NotImplemented.h:
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Consolidate platform dependent notImplemented() macros
+        into one platform independent macro that uses WTFLog.
+
+        * platform/NotImplemented.h:
+
+2007-05-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Sam.
+
+        - a clean-up pass on form-related aspects of the recent JSHTMLElement patch
+
+        * bindings/js/JSHTMLElementCustom.cpp: (WebCore::JSHTMLElement::pushEventHandlerScope):
+        Replace the call to formForEventHandlerScope() with a call to the new form() function.
+        And removed the now-uneeded code to search for a form ancestor.
+
+        * html/HTMLElement.h: Added a general-purpose form() function. The intent is to return
+        the form ancestor if any, but return the associated form for a form control, which isn't
+        always an ancestor of the control. To keep form() efficient for form controls, it's an
+        inline that calls a virtual, allowing a derived class to override it with an inline.
+        This replaces formForEventHandlerScope(). Also added findFormAncestor() to use here and
+        to replace the multiple loops found elsewhere to search for the nearest form ancestor.
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::findFormAncestor): Added.
+        (WebCore::HTMLElement::virtualForm): Added. Calls findFormAncestor().
+
+        * html/HTMLGenericFormElement.h: Suggested name change to HTMLFormControlElement.
+        Removed the confusing getForm() function, which is superceded by findFormAncestor.
+        Removed the unused onSelect() function. Removed the override of formForEventHandlerScope(),
+        replacing it with an override of virtualForm().
+        * html/HTMLGenericFormElement.cpp:
+        (WebCore::HTMLGenericFormElement::HTMLGenericFormElement): Use findFormAncestor
+        instead of getForm.
+        (WebCore::HTMLGenericFormElement::insertedIntoTree): Ditto.
+        (WebCore::HTMLGenericFormElement::virtualForm): Added.
+
+        * html/HTMLLabelElement.h: Removed now-unneeded form() and formForEventHandlerScope()
+        functions, since base class behavior is now good enough. Renamed formElement() to
+        correspondingControl(), since that's the terminology used elsewhere in the code,
+        and the old name was unnecessarily confusing.
+        * html/HTMLLabelElement.cpp:
+        (WebCore::HTMLLabelElement::correspondingControl): Renamed. Removed unnecessary
+        special case for empty ID, since getElementById already returns 0 for that case.
+        (WebCore::HTMLLabelElement::setActive): Updated for name change.
+        (WebCore::HTMLLabelElement::setHovered): Ditto.
+        (WebCore::HTMLLabelElement::defaultEventHandler): Ditto.
+        (WebCore::HTMLLabelElement::focus): Ditto.
+        (WebCore::HTMLLabelElement::accessKeyAction): Ditto.
+
+        * html/HTMLObjectElement.h: Removed now-unneeded form() and formForEventHandlerScope()
+        functions, since base class behavior is now good enough. Also removed forward
+        declaration of KJS::Bindings::Instance -- since the type is the return value of a
+        function from the base class, it's guaranteed to be declared in the base class header.
+        * html/HTMLObjectElement.cpp: Ditto.
+
+        * bridge/mac/WebCoreAXObject.mm: (labelForElement): Updated for name change.
+
+2007-05-29  Zack Rusin  <zrusin@trolltech.com>
+
+        Reviewed by George and Niko
+
+        Making the convenience method notImplemented convenient
+        for the Qt port.
+
+        * platform/NotImplemented.h:
+
+2007-05-28  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoff.
+
+        - Patch for http://bugs.webkit.org/show_bug.cgi?id=13902
+          Autogenerate the JS bindings for the CSSStyleDeclaration
+
+        * WebCore.pro:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSCSSStyleDeclarationCustom.cpp: Added.
+        (WebCore::cssPropertyName):
+        (WebCore::isCSSPropertyName):
+        (WebCore::JSCSSStyleDeclaration::canGetItemsForName):
+        (WebCore::JSCSSStyleDeclaration::nameGetter):
+        (WebCore::JSCSSStyleDeclaration::customPut):
+        * bindings/js/kjs_binding.h:
+        * bindings/js/kjs_css.cpp:
+        * bindings/js/kjs_css.h:
+        * bindings/objc/DOMUtility.mm:
+        (KJS::createDOMWrapper):
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * css/CSSStyleDeclaration.idl:
+
+2007-05-28  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=13896
+          REGRESSION (NativePopup): Reproductible crasher on Google Coop control panel
+
+        Test: fast/forms/select-display-none-style-resolve.html
+
+        * html/HTMLOptGroupElement.cpp:
+        (WebCore::HTMLOptGroupElement::attach): Do not compute style if the parent
+        does not have style.
+        * html/HTMLOptionElement.cpp:
+        (WebCore::HTMLOptionElement::attach): Ditto.
+
+2007-05-28  Sam Weinig  <sam@webkit.org>
+
+        Fix Gdk and Qt builds.
+
+        * WebCore.pro:
+
+2007-05-28  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13894
+        Remove the legacy class KJS::JSHTMLElement
+
+        - Now that all of the subclasses of JSHTMLElement are
+          autogenerated and no longer rely on the legacy parent,
+          we can remove it and update all the HTML idl files to
+          reflect so.
+
+        - Also adds JSHTMLBlockquoteElement's JS constructor which
+          was mistakingly missing.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSHTMLAnchorElementCustom.cpp:
+        (WebCore::JSHTMLAnchorElement::toString):
+        * bindings/js/JSHTMLElementCustom.cpp: Added.
+        (WebCore::JSHTMLElement::pushEventHandlerScope):
+        * bindings/js/JSHTMLElementWrapperFactory.cpp:
+        (WebCore::createJSHTMLWrapper):
+        * bindings/js/JSHTMLInputElementBase.cpp:
+        (WebCore::):
+        (WebCore::JSHTMLInputElementBase::JSHTMLInputElementBase):
+        (WebCore::JSHTMLInputElementBase::getOwnPropertySlot):
+        (WebCore::JSHTMLInputElementBase::put):
+        * bindings/js/JSHTMLInputElementBase.h:
+        * bindings/js/JSHTMLSelectElementCustom.cpp:
+        * bindings/js/kjs_html.cpp:
+        (KJS::runtimeObjectCustomGetOwnPropertySlot):
+        * bindings/js/kjs_html.h:
+        * bindings/scripts/CodeGeneratorJS.pm:
+        * html/HTMLAnchorElement.idl:
+        * html/HTMLAppletElement.idl:
+        * html/HTMLAreaElement.idl:
+        * html/HTMLBRElement.idl:
+        * html/HTMLBaseElement.idl:
+        * html/HTMLBaseFontElement.idl:
+        * html/HTMLBlockquoteElement.idl:
+        * html/HTMLBodyElement.idl:
+        * html/HTMLButtonElement.idl:
+        * html/HTMLCanvasElement.idl:
+        * html/HTMLDListElement.idl:
+        * html/HTMLDirectoryElement.idl:
+        * html/HTMLDivElement.idl:
+        * html/HTMLElement.cpp:
+        (WebCore::HTMLElement::formForEventHandlerScope):
+        * html/HTMLElement.h:
+        * html/HTMLElement.idl:
+        * html/HTMLEmbedElement.idl:
+        * html/HTMLFieldSetElement.idl:
+        * html/HTMLFontElement.idl:
+        * html/HTMLFormElement.idl:
+        * html/HTMLFrameElement.idl:
+        * html/HTMLFrameSetElement.idl:
+        * html/HTMLGenericFormElement.cpp:
+        (WebCore::HTMLGenericFormElement::formForEventHandlerScope):
+        * html/HTMLGenericFormElement.h:
+        * html/HTMLHRElement.idl:
+        * html/HTMLHeadElement.idl:
+        * html/HTMLHeadingElement.idl:
+        * html/HTMLHtmlElement.idl:
+        * html/HTMLIFrameElement.idl:
+        * html/HTMLImageElement.idl:
+        * html/HTMLIsIndexElement.idl:
+        * html/HTMLLIElement.idl:
+        * html/HTMLLabelElement.cpp:
+        (WebCore::HTMLLabelElement::form):
+        (WebCore::HTMLLabelElement::formForEventHandlerScope):
+        * html/HTMLLabelElement.h:
+        * html/HTMLLabelElement.idl:
+        * html/HTMLLegendElement.idl:
+        * html/HTMLLinkElement.idl:
+        * html/HTMLMapElement.idl:
+        * html/HTMLMarqueeElement.idl:
+        * html/HTMLMenuElement.idl:
+        * html/HTMLMetaElement.idl:
+        * html/HTMLModElement.idl:
+        * html/HTMLOListElement.idl:
+        * html/HTMLObjectElement.cpp:
+        (WebCore::HTMLObjectElement::formForEventHandlerScope):
+        * html/HTMLObjectElement.h:
+        * html/HTMLObjectElement.idl:
+        * html/HTMLOptGroupElement.idl:
+        * html/HTMLOptionElement.idl:
+        * html/HTMLParagraphElement.idl:
+        * html/HTMLParamElement.idl:
+        * html/HTMLPreElement.idl:
+        * html/HTMLQuoteElement.idl:
+        * html/HTMLScriptElement.idl:
+        * html/HTMLSelectElement.idl:
+        * html/HTMLStyleElement.idl:
+        * html/HTMLTableCaptionElement.idl:
+        * html/HTMLTableCellElement.idl:
+        * html/HTMLTableColElement.idl:
+        * html/HTMLTableElement.idl:
+        * html/HTMLTableRowElement.idl:
+        * html/HTMLTableSectionElement.idl:
+        * html/HTMLTextAreaElement.idl:
+        * html/HTMLTitleElement.idl:
+        * html/HTMLUListElement.idl:
+        * page/DOMWindow.idl:
+
+2007-05-28  Zack Rusin  <zrusin@trolltech.com>
+
+        Reviewed by andersca
+
+        Adding Qt related constructor/casting operators
+        to the AtomicString and updating the project
+        file for new Qt settings api using those.
+
+        * WebCore.pro:
+        * platform/AtomicString.h:
+
+2007-05-27  Sam Weinig  <sam@webkit.org>
+
+        Qt and Gdk build fix.
+
+        * WebCore.pro:
+
+2007-05-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Hyatt.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13893
+        Autogenerate the JS bindings for the HTMLObjectElement, 
+        HTMLEmbedElement and HTMLAppletElement
+
+        * DerivedSources.make:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSHTMLAppletElementCustom.cpp: Added.
+        (WebCore::JSHTMLAppletElement::customGetOwnPropertySlot):
+        (WebCore::JSHTMLAppletElement::customPut):
+        (WebCore::JSHTMLAppletElement::implementsCall):
+        (WebCore::JSHTMLAppletElement::callAsFunction):
+        (WebCore::JSHTMLAppletElement::canGetItemsForName):
+        (WebCore::JSHTMLAppletElement::nameGetter):
+        * bindings/js/JSHTMLElementWrapperFactory.cpp:
+        * bindings/js/JSHTMLEmbedElementCustom.cpp: Added.
+        (WebCore::JSHTMLEmbedElement::customGetOwnPropertySlot):
+        (WebCore::JSHTMLEmbedElement::customPut):
+        (WebCore::JSHTMLEmbedElement::implementsCall):
+        (WebCore::JSHTMLEmbedElement::callAsFunction):
+        (WebCore::JSHTMLEmbedElement::canGetItemsForName):
+        (WebCore::JSHTMLEmbedElement::nameGetter):
+        * bindings/js/JSHTMLObjectElementCustom.cpp: Added.
+        (WebCore::JSHTMLObjectElement::customGetOwnPropertySlot):
+        (WebCore::JSHTMLObjectElement::customPut):
+        (WebCore::JSHTMLObjectElement::implementsCall):
+        (WebCore::JSHTMLObjectElement::callAsFunction):
+        (WebCore::JSHTMLObjectElement::canGetItemsForName):
+        (WebCore::JSHTMLObjectElement::nameGetter):
+        * bindings/js/kjs_html.cpp:
+        (KJS::):
+        (KJS::JSHTMLElement::toString):
+        (KJS::JSHTMLElement::pushEventHandlerScope):
+        (KJS::runtimeObjectGetter):
+        (KJS::runtimeObjectPropertyGetter):
+        (KJS::runtimeObjectCustomGetOwnPropertySlot):
+        (KJS::runtimeObjectCustomPut):
+        (KJS::runtimeObjectImplementsCall):
+        (KJS::runtimeObjectCallAsFunction):
+        * bindings/js/kjs_html.h:
+        (KJS::JSHTMLElement::classInfo):
+        * bindings/scripts/CodeGeneratorJS.pm: Add support for 
+        CustomGetOwnPropertySlot, CustomPutFunction, CustomCall,
+        and SVGCheckSecurityDocument properties.
+        * html/HTMLAppletElement.idl:
+        * html/HTMLEmbedElement.idl:
+        * html/HTMLObjectElement.idl:
+        * page/DOMWindow.idl: Uncomment constructors.
+
+2007-05-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Gdk build fix.
+
+        * platform/graphics/Path.h:
+
+2007-05-27  Sam Weinig  <sam@webkit.org>
+
+        Gdk build fix.  Forgot to update a few instances of notImplementedGdk() to notImplemented().
+
+        * page/gdk/EventHandlerGdk.cpp:
+        (WebCore::EventHandler::passMousePressEventToScrollbar):
+        * platform/gdk/EditorClientGdk.cpp:
+        (WebCore::EditorClientGdk::ignoreWordInSpellDocument):
+        (WebCore::EditorClientGdk::learnWord):
+        (WebCore::EditorClientGdk::checkSpellingOfString):
+        (WebCore::EditorClientGdk::checkGrammarOfString):
+        (WebCore::EditorClientGdk::updateSpellingUIWithGrammarString):
+        (WebCore::EditorClientGdk::updateSpellingUIWithMisspelledWord):
+        (WebCore::EditorClientGdk::showSpellingUI):
+        (WebCore::EditorClientGdk::spellingUIIsShowing):
+        (WebCore::EditorClientGdk::getGuessesForWord):
+        * platform/gdk/FrameGdk.cpp:
+        (WebCore::Frame::dashboardRegionsChanged):
+        * platform/gdk/PlatformScrollBarGdk.cpp:
+        (PlatformScrollbar::paint):
+        (PlatformScrollbar::updateThumbPosition):
+        (PlatformScrollbar::updateThumbProportion):
+        * platform/gdk/TemporaryLinkStubs.cpp:
+        (Widget::setEnabled):
+        (Widget::isEnabled):
+        (Widget::removeFromParent):
+        (Widget::paint):
+        (Widget::setIsSelected):
+        (Widget::invalidate):
+        (Widget::invalidateRect):
+
+2007-05-27  Alp Toker  <alp.toker@collabora.co.uk>
+
+        Reviewed by Sam and Oliver.
+
+        Implement PathCairo. This patch is based on changes in Mike Emmel's
+        WebKit fork with some additional clean-ups and updates.
+
+        * platform/graphics/Path.h:
+        * platform/graphics/cairo/CairoPath.h: Added.
+        (CairoPath::CairoPath):
+        (CairoPath::~CairoPath):
+        * platform/graphics/cairo/GraphicsContextCairo.cpp:
+        (WebCore::GraphicsContext::clip):
+        * platform/graphics/cairo/PathCairo.cpp:
+        (WebCore::Path::Path):
+        (WebCore::Path::~Path):
+        (WebCore::Path::operator=):
+        (WebCore::Path::clear):
+        (WebCore::Path::isEmpty):
+        (WebCore::Path::translate):
+        (WebCore::Path::moveTo):
+        (WebCore::Path::addLineTo):
+        (WebCore::Path::addRect):
+        (WebCore::Path::addQuadCurveTo):
+        (WebCore::Path::addBezierCurveTo):
+        (WebCore::Path::addArc):
+        (WebCore::Path::addArcTo):
+        (WebCore::Path::addEllipse):
+        (WebCore::Path::closeSubpath):
+        (WebCore::Path::boundingRect):
+        (WebCore::Path::contains):
+        (WebCore::Path::apply):
+        (WebCore::Path::transform):
+        (WebCore::Path::debugString):
+
+2007-05-27  Kevin Ollivier  <kevino@theolliviers.com>
+
+        Reviewed by Sam Weinig.
+
+        Consolidate all notImplemented() macro definitions into
+        one header file for all platforms.
+
+        * loader/gdk/DocumentLoaderGdk.cpp:
+        (WebCore::DocumentLoader::getResponseModifiedHeader):
+        * loader/gdk/FrameLoaderClientGdk.cpp:
+        (WebCore::FrameLoaderClientGdk::dispatchDidReceiveAuthenticationChallenge):
+        (WebCore::FrameLoaderClientGdk::dispatchDidCancelAuthenticationChallenge):
+        (WebCore::FrameLoaderClientGdk::dispatchWillSendRequest):
+        (WebCore::FrameLoaderClientGdk::assignIdentifierToInitialRequest):
+        (WebCore::FrameLoaderClientGdk::createPlugin):
+        (WebCore::FrameLoaderClientGdk::createFrame):
+        (WebCore::FrameLoaderClientGdk::redirectDataToPlugin):
+        (WebCore::FrameLoaderClientGdk::createJavaAppletWidget):
+        (WebCore::FrameLoaderClientGdk::objectContentType):
+        (WebCore::FrameLoaderClientGdk::overrideMediaType):
+        (WebCore::FrameLoaderClientGdk::windowObjectCleared):
+        (WebCore::FrameLoaderClientGdk::hasWebView):
+        (WebCore::FrameLoaderClientGdk::hasFrameView):
+        (WebCore::FrameLoaderClientGdk::frameLoadCompleted):
+        (WebCore::FrameLoaderClientGdk::saveViewStateToItem):
+        (WebCore::FrameLoaderClientGdk::restoreViewState):
+        (WebCore::FrameLoaderClientGdk::privateBrowsingEnabled):
+        (WebCore::FrameLoaderClientGdk::makeDocumentView):
+        (WebCore::FrameLoaderClientGdk::makeRepresentation):
+        (WebCore::FrameLoaderClientGdk::forceLayout):
+        (WebCore::FrameLoaderClientGdk::forceLayoutForNonHTML):
+        (WebCore::FrameLoaderClientGdk::setCopiesOnScroll):
+        (WebCore::FrameLoaderClientGdk::detachedFromParent1):
+        (WebCore::FrameLoaderClientGdk::detachedFromParent2):
+        (WebCore::FrameLoaderClientGdk::detachedFromParent3):
+        (WebCore::FrameLoaderClientGdk::detachedFromParent4):
+        (WebCore::FrameLoaderClientGdk::loadedFromCachedPage):
+        (WebCore::FrameLoaderClientGdk::dispatchDidHandleOnloadEvents):
+        (WebCore::FrameLoaderClientGdk::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebCore::FrameLoaderClientGdk::dispatchDidCancelClientRedirect):
+        (WebCore::FrameLoaderClientGdk::dispatchWillPerformClientRedirect):
+        (WebCore::FrameLoaderClientGdk::dispatchDidChangeLocationWithinPage):
+        (WebCore::FrameLoaderClientGdk::dispatchWillClose):
+        (WebCore::FrameLoaderClientGdk::dispatchDidReceiveIcon):
+        (WebCore::FrameLoaderClientGdk::dispatchDidStartProvisionalLoad):
+        (WebCore::FrameLoaderClientGdk::dispatchDidReceiveTitle):
+        (WebCore::FrameLoaderClientGdk::dispatchDidCommitLoad):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFinishDocumentLoad):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFirstLayout):
+        (WebCore::FrameLoaderClientGdk::dispatchShow):
+        (WebCore::FrameLoaderClientGdk::cancelPolicyCheck):
+        (WebCore::FrameLoaderClientGdk::dispatchDidLoadMainResource):
+        (WebCore::FrameLoaderClientGdk::revertToProvisionalState):
+        (WebCore::FrameLoaderClientGdk::clearUnarchivingState):
+        (WebCore::FrameLoaderClientGdk::willChangeTitle):
+        (WebCore::FrameLoaderClientGdk::finishedLoading):
+        (WebCore::FrameLoaderClientGdk::finalSetupForReplace):
+        (WebCore::FrameLoaderClientGdk::setDefersLoading):
+        (WebCore::FrameLoaderClientGdk::isArchiveLoadPending):
+        (WebCore::FrameLoaderClientGdk::cancelPendingArchiveLoad):
+        (WebCore::FrameLoaderClientGdk::clearArchivedResources):
+        (WebCore::FrameLoaderClientGdk::canHandleRequest):
+        (WebCore::FrameLoaderClientGdk::canShowMIMEType):
+        (WebCore::FrameLoaderClientGdk::representationExistsForURLScheme):
+        (WebCore::FrameLoaderClientGdk::generatedMIMETypeForURLScheme):
+        (WebCore::FrameLoaderClientGdk::provisionalLoadStarted):
+        (WebCore::FrameLoaderClientGdk::didFinishLoad):
+        (WebCore::FrameLoaderClientGdk::prepareForDataSourceReplacement):
+        (WebCore::FrameLoaderClientGdk::setTitle):
+        (WebCore::FrameLoaderClientGdk::setDocumentViewFromCachedPage):
+        (WebCore::FrameLoaderClientGdk::dispatchDidReceiveContentLength):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFinishLoading):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFailLoading):
+        (WebCore::FrameLoaderClientGdk::dispatchDidLoadResourceFromMemoryCache):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFailProvisionalLoad):
+        (WebCore::FrameLoaderClientGdk::dispatchDidFailLoad):
+        (WebCore::FrameLoaderClientGdk::download):
+        (WebCore::FrameLoaderClientGdk::cancelledError):
+        (WebCore::FrameLoaderClientGdk::blockedError):
+        (WebCore::FrameLoaderClientGdk::cannotShowURLError):
+        (WebCore::FrameLoaderClientGdk::interruptForPolicyChangeError):
+        (WebCore::FrameLoaderClientGdk::cannotShowMIMETypeError):
+        (WebCore::FrameLoaderClientGdk::fileDoesNotExistError):
+        (WebCore::FrameLoaderClientGdk::shouldFallBack):
+        (WebCore::FrameLoaderClientGdk::willUseArchive):
+        (WebCore::FrameLoaderClientGdk::saveDocumentViewToCachedPage):
+        (WebCore::FrameLoaderClientGdk::canCachePage):
+        (WebCore::FrameLoaderClientGdk::dispatchCreatePage):
+        (WebCore::FrameLoaderClientGdk::dispatchUnableToImplementPolicy):
+        (WebCore::FrameLoaderClientGdk::setMainDocumentError):
+        (WebCore::FrameLoaderClientGdk::startDownload):
+        (WebCore::FrameLoaderClientGdk::updateGlobalHistoryForStandardLoad):
+        (WebCore::FrameLoaderClientGdk::updateGlobalHistoryForReload):
+        * loader/qt/DocumentLoaderQt.cpp:
+        * page/gdk/ContextMenuClientGdk.cpp:
+        (WebCore::ContextMenuClientGdk::contextMenuDestroyed):
+        (WebCore::ContextMenuClientGdk::getCustomMenuFromDefaultItems):
+        (WebCore::ContextMenuClientGdk::contextMenuItemSelected):
+        (WebCore::ContextMenuClientGdk::downloadURL):
+        (WebCore::ContextMenuClientGdk::copyImageToClipboard):
+        (WebCore::ContextMenuClientGdk::searchWithGoogle):
+        (WebCore::ContextMenuClientGdk::lookUpInDictionary):
+        (WebCore::ContextMenuClientGdk::speak):
+        (WebCore::ContextMenuClientGdk::stopSpeaking):
+        * page/gdk/EventHandlerGdk.cpp:
+        (WebCore::EventHandler::passMouseDownEventToWidget):
+        (WebCore::EventHandler::eventActivatedView):
+        (WebCore::EventHandler::passSubframeEventToSubframe):
+        (WebCore::EventHandler::passWheelEventToWidget):
+        (WebCore::EventHandler::createDraggingClipboard):
+        * page/qt/EventHandlerQt.cpp:
+        * page/qt/FrameQt.cpp:
+        * platform/NotImplemented.h: Added.
+        * platform/gdk/CursorGdk.cpp:
+        (WebCore::Cursor::Cursor):
+        * platform/gdk/EditorClientGdk.cpp:
+        (WebCore::EditorClientGdk::shouldDeleteRange):
+        (WebCore::EditorClientGdk::isContinuousSpellCheckingEnabled):
+        (WebCore::EditorClientGdk::isGrammarCheckingEnabled):
+        (WebCore::EditorClientGdk::spellCheckerDocumentTag):
+        (WebCore::EditorClientGdk::shouldBeginEditing):
+        (WebCore::EditorClientGdk::shouldEndEditing):
+        (WebCore::EditorClientGdk::shouldInsertText):
+        (WebCore::EditorClientGdk::shouldChangeSelectedRange):
+        (WebCore::EditorClientGdk::shouldApplyStyle):
+        (WebCore::EditorClientGdk::didBeginEditing):
+        (WebCore::EditorClientGdk::respondToChangedContents):
+        (WebCore::EditorClientGdk::respondToChangedSelection):
+        (WebCore::EditorClientGdk::didEndEditing):
+        (WebCore::EditorClientGdk::didWriteSelectionToPasteboard):
+        (WebCore::EditorClientGdk::didSetSelectionTypesForPasteboard):
+        (WebCore::EditorClientGdk::selectWordBeforeMenuEvent):
+        (WebCore::EditorClientGdk::isEditable):
+        (WebCore::EditorClientGdk::registerCommandForUndo):
+        (WebCore::EditorClientGdk::registerCommandForRedo):
+        (WebCore::EditorClientGdk::clearUndoRedoOperations):
+        (WebCore::EditorClientGdk::canUndo):
+        (WebCore::EditorClientGdk::canRedo):
+        (WebCore::EditorClientGdk::undo):
+        (WebCore::EditorClientGdk::redo):
+        (WebCore::EditorClientGdk::shouldInsertNode):
+        (WebCore::EditorClientGdk::pageDestroyed):
+        (WebCore::EditorClientGdk::smartInsertDeleteEnabled):
+        (WebCore::EditorClientGdk::toggleContinuousSpellChecking):
+        (WebCore::EditorClientGdk::handleInputMethodKeypress):
+        (WebCore::EditorClientGdk::textFieldDidBeginEditing):
+        (WebCore::EditorClientGdk::textFieldDidEndEditing):
+        (WebCore::EditorClientGdk::textDidChangeInTextField):
+        (WebCore::EditorClientGdk::doTextFieldCommandFromEvent):
+        (WebCore::EditorClientGdk::textWillBeDeletedInTextField):
+        (WebCore::EditorClientGdk::textDidChangeInTextArea):
+        * platform/gdk/FrameGdk.cpp:
+        (WebCore::Frame::print):
+        (WebCore::Frame::issueTransposeCommand):
+        (WebCore::Frame::cleanupPlatformScriptObjects):
+        (WebCore::Frame::dragImageForSelection):
+        * platform/gdk/NotImplementedGdk.h: Removed.
+        * platform/gdk/PopupMenuGdk.cpp:
+        (WebCore::PopupMenu::PopupMenu):
+        (WebCore::PopupMenu::~PopupMenu):
+        (WebCore::PopupMenu::show):
+        (WebCore::PopupMenu::hide):
+        (WebCore::PopupMenu::updateFromElement):
+        * platform/gdk/RenderThemeGdk.cpp:
+        (WebCore::RenderThemeGdk::setCheckboxSize):
+        (WebCore::RenderThemeGdk::setRadioSize):
+        (WebCore::RenderThemeGdk::adjustTextFieldStyle):
+        * platform/gdk/ScreenGdk.cpp:
+        (WebCore::screenDepthPerComponent):
+        (WebCore::screenIsMonochrome):
+        (WebCore::screenRect):
+        (WebCore::screenAvailableRect):
+        * platform/gdk/ScrollViewGdk.cpp:
+        (WebCore::ScrollView::update):
+        (WebCore::ScrollView::addChild):
+        (WebCore::ScrollView::removeChild):
+        (WebCore::ScrollView::scrollRectIntoViewRecursively):
+        (WebCore::ScrollView::inWindow):
+        (WebCore::ScrollView::wheelEvent):
+        (WebCore::ScrollView::updateScrollbars):
+        (WebCore::ScrollView::updateScrollInfo):
+        (WebCore::ScrollView::windowToContents):
+        (WebCore::ScrollView::contentsToWindow):
+        (WebCore::ScrollView::scrollbarUnderMouse):
+        * platform/gdk/TemporaryLinkStubs.cpp:
+        (FrameView::updateBorder):
+        (WebCore::findNextWordFromIndex):
+        (WebCore::currentTextBreakLocaleID):
+        (ChromeClientGdk::chromeDestroyed):
+        (ChromeClientGdk::windowRect):
+        (ChromeClientGdk::setWindowRect):
+        (ChromeClientGdk::pageRect):
+        (ChromeClientGdk::scaleFactor):
+        (ChromeClientGdk::focus):
+        (ChromeClientGdk::unfocus):
+        (ChromeClientGdk::createWindow):
+        (ChromeClientGdk::createModalDialog):
+        (ChromeClientGdk::show):
+        (ChromeClientGdk::canRunModal):
+        (ChromeClientGdk::runModal):
+        (ChromeClientGdk::setToolbarsVisible):
+        (ChromeClientGdk::toolbarsVisible):
+        (ChromeClientGdk::setStatusbarVisible):
+        (ChromeClientGdk::statusbarVisible):
+        (ChromeClientGdk::setScrollbarsVisible):
+        (ChromeClientGdk::scrollbarsVisible):
+        (ChromeClientGdk::setMenubarVisible):
+        (ChromeClientGdk::menubarVisible):
+        (ChromeClientGdk::setResizable):
+        (ChromeClientGdk::closeWindowSoon):
+        (ChromeClientGdk::canTakeFocus):
+        (ChromeClientGdk::takeFocus):
+        (ChromeClientGdk::canRunBeforeUnloadConfirmPanel):
+        (ChromeClientGdk::addMessageToConsole):
+        (ChromeClientGdk::runBeforeUnloadConfirmPanel):
+        (ChromeClientGdk::runJavaScriptAlert):
+        (ChromeClientGdk::runJavaScriptConfirm):
+        (ChromeClientGdk::runJavaScriptPrompt):
+        (ChromeClientGdk::setStatusbarText):
+        (ChromeClientGdk::shouldInterruptJavaScript):
+        (ChromeClientGdk::tabsToLinks):
+        (ChromeClientGdk::windowResizerRect):
+        (ChromeClientGdk::addToDirtyRegion):
+        (ChromeClientGdk::scrollBackingStore):
+        (ChromeClientGdk::updateBackingStore):
+        (PlugInInfoStore::createPluginInfoForPluginAtIndex):
+        (PlugInInfoStore::pluginCount):
+        (WebCore::PlugInInfoStore::supportsMIMEType):
+        (WebCore::refreshPlugins):
+        (SearchPopupMenu::saveRecentSearches):
+        (SearchPopupMenu::loadRecentSearches):
+        (SearchPopupMenu::SearchPopupMenu):
+        (SearchPopupMenu::enabled):
+        (FileChooser::FileChooser):
+        (FileChooser::~FileChooser):
+        (FileChooser::openFileChooser):
+        (FileChooser::basenameForWidth):
+        (ResourceHandle::willLoadFromCache):
+        (ResourceHandle::loadsBlocked):
+        (ResourceHandle::loadResourceSynchronously):
+        (Icon::Icon):
+        (Icon::~Icon):
+        (Icon::newIconForFile):
+        (Icon::paint):
+        (Font::selectionRectForComplexText):
+        (Font::drawComplexText):
+        (Font::floatWidthForComplexText):
+        (Font::offsetForPositionForComplexText):
+        (CachedPage::close):
+        (Editor::newGeneralClipboard):
+        (Pasteboard::generalPasteboard):
+        (Pasteboard::writeSelection):
+        (Pasteboard::writeURL):
+        (Pasteboard::writeImage):
+        (Pasteboard::clear):
+        (Pasteboard::canSmartReplace):
+        (Pasteboard::documentFragment):
+        (Pasteboard::plainText):
+        (Pasteboard::Pasteboard):
+        (Pasteboard::~Pasteboard):
+        (ContextMenu::ContextMenu):
+        (ContextMenu::~ContextMenu):
+        (ContextMenu::appendItem):
+        (ContextMenuItem::ContextMenuItem):
+        (ContextMenuItem::~ContextMenuItem):
+        (ContextMenuItem::releasePlatformDescription):
+        (ContextMenuItem::type):
+        (ContextMenuItem::setType):
+        (ContextMenuItem::action):
+        (ContextMenuItem::setAction):
+        (ContextMenuItem::title):
+        (ContextMenuItem::setTitle):
+        (ContextMenuItem::platformSubMenu):
+        (ContextMenuItem::setSubMenu):
+        (ContextMenuItem::setChecked):
+        (ContextMenuItem::setEnabled):
+        (WebCore::supportedKeySizes):
+        (WebCore::systemBeep):
+        (WebCore::userIdleTime):
+        * platform/graphics/cairo/GraphicsContextCairo.cpp:
+        * platform/graphics/cairo/ImageBufferCairo.cpp:
+        * platform/graphics/cairo/PathCairo.cpp:
+        * platform/graphics/gdk/ImageGdk.cpp:
+        * platform/graphics/qt/GraphicsContextQt.cpp:
+        * platform/graphics/qt/IconQt.cpp:
+        * platform/graphics/qt/ImageQt.cpp:
+        * platform/network/gdk/ResourceHandleCurl.cpp:
+        (WebCore::ResourceHandle::setDefersLoading):
+        * platform/network/gdk/ResourceHandleManager.cpp:
+        (WebCore::ResourceHandleManager::setupPUT):
+        (WebCore::ResourceHandleManager::setupPOST):
+        * platform/network/qt/ResourceHandleQt.cpp:
+        * platform/qt/ClipboardQt.cpp:
+        * platform/qt/CursorQt.cpp:
+        * platform/qt/DragDataQt.cpp:
+        * platform/qt/FileChooserQt.cpp:
+        * platform/qt/MimeTypeRegistryQt.cpp:
+        * platform/qt/PasteboardQt.cpp:
+        * platform/qt/PlatformScrollBarQt.cpp:
+        * platform/qt/PopupMenuQt.cpp:
+        * platform/qt/ScrollViewQt.cpp:
+        * platform/qt/TemporaryLinkStubs.cpp:
+        * platform/qt/TextBoundaries.cpp:
+        * platform/qt/WidgetQt.cpp:
+        * platform/win/FontWin.cpp:
+        * platform/win/TemporaryLinkStubs.cpp:
+        * platform/wx/ClipboardWx.cpp:
+        * platform/wx/FontWx.cpp:
+        * platform/wx/ScrollViewWx.cpp:
+        * platform/wx/SharedTimerWx.cpp:
+        * platform/wx/TemporaryLinkStubs.cpp:
+
+2007-05-27  Rob Buis  <buis@kde.org>
+
+        Reviewed by Oliver.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13828
+        x/y values on rootmost <svg> elements should be ignored
+
+        Make sure that root-most <svg> elements do not take into account x/y.
+
+        * ksvg2/svg/SVGSVGElement.cpp:
+        (WebCore::SVGSVGElement::viewport):
+        (WebCore::SVGSVGElement::getCTM):
+        (WebCore::SVGSVGElement::getScreenCTM):
+        * rendering/RenderSVGContainer.cpp:
+        (WebCore::RenderSVGContainer::calcViewport):
+
+2007-05-26  David Hyatt  <hyatt@apple.com>
+
+        Fix for radar bug 5219562, PNG isn't displayed on SVG test suite.
+        Improve <object> error handling so that it recovers properly when
+        <td> is used inside it.
+
+        Reviewed by olliej
+
+        Added fast/invalid/td-inside-object.html
+
+        * html/HTMLObjectElement.h:
+        (WebCore::HTMLObjectElement::tagPriority):
+        * html/HTMLParser.cpp:
+        (WebCore::HTMLParser::handleError):
+        * html/HTMLParserErrorCodes.cpp:
+        (WebCore::htmlParserErrorMessageTemplate):
+        * html/HTMLParserErrorCodes.h:
+
+2007-05-26  David Hyatt  <hyatt@apple.com>
+
+        Don't compare the "isset" variables in background layers, since they
+        lead us to turn off the Aqua look incorrectly, even when the background
+        matches the default.
+
+        Reviewed by olliej
+
+        * rendering/RenderStyle.cpp:
+        (WebCore::BackgroundLayer::operator==):
+
+2007-05-26  David Hyatt  <hyatt@apple.com>
+
+        Improve the </p> -> <p></p> error message to not spew two errors.
+        Fix a bug where errors reported inside document.write didn't get
+        reported as such because of a mistake in the notation of SegmentedString.
+
+        Reviewed by aroben
+
+        * html/HTMLParser.cpp:
+        (WebCore::HTMLParser::processCloseTag):
+        * platform/SegmentedString.h:
+        (WebCore::SegmentedSubstring::clear):
+
+2007-05-26  David Hyatt  <hyatt@apple.com>
+
+        Fix for bug 13887, percentage height block not sized correctly inside
+        positioned percentage height containing block.
+
+        Reviewed by mitz
+
+        fast/block/positioning/complex-percentage-height.html
+
+        * rendering/RenderBox.cpp:
+        (WebCore::RenderBox::calcPercentageHeight):
+
 2007-05-26  Mitz Pettel  <mitz@webkit.org>
 
         Reviewed by Oliver Hunt.
