@@ -410,6 +410,11 @@ void PopupMenu::updateFromElement()
         ::UpdateWindow(m_popup);
 }
 
+bool PopupMenu::itemWritingDirectionIsNatural() 
+{ 
+    return false; 
+}
+
 const int separatorPadding = 4;
 const int separatorHeight = 1;
 void PopupMenu::paint(const IntRect& damageRect, HDC hdc)
