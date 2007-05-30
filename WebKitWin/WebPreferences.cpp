@@ -32,6 +32,8 @@
 
 #pragma warning( push, 0 )
 #include <WebCore/Font.h>
+#include <WebCore/PlatformString.h>
+#include <WebCore/StringHash.h>
 #pragma warning( pop )
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -40,6 +42,7 @@
 #include <shfolder.h>
 #include <tchar.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
+#include <wtf/HashMap.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/RetainPtr.h>
 #include <wtf/Vector.h>
@@ -57,6 +60,8 @@ static unsigned long long WebSystemMainMemory()
 
 CFMutableDictionaryRef WebPreferences::m_standardUserDefaults = 0;
 WebPreferences* WebPreferences::m_standardPreferences = 0;
+
+static HashMap<WebCore::String, WebPreferences*> webPreferencesInstances;
 
 WebPreferences::WebPreferences()
 : m_refCount(0)
@@ -97,10 +102,28 @@ WebPreferences* WebPreferences::getInstanceForIdentifier(BSTR identifier)
             return m_standardPreferences;
         return 0;
     }    
-    
-    //WebPreferences *instance = [webPreferencesInstances objectForKey:[self _concatenateKeyWithIBCreatorID:ident]];
-    ASSERT_NOT_REACHED(); //FIXME
-    return 0;
+
+    WebCore::String identifierString(identifier, SysStringLen(identifier));
+    return webPreferencesInstances.get(identifierString);
+}
+
+void WebPreferences::setInstance(WebPreferences* instance, BSTR identifier)
+{
+    if (!identifier || !instance)
+        return;
+    WebCore::String identifierString(identifier, SysStringLen(identifier));
+    webPreferencesInstances.add(identifierString, instance);
+}
+
+void WebPreferences::removeReferenceForIdentifier(BSTR identifier)
+{
+    if (!identifier || webPreferencesInstances.isEmpty())
+        return;
+
+    WebCore::String identifierString(identifier, SysStringLen(identifier));
+    WebPreferences* webPreference = webPreferencesInstances.get(identifierString);
+    if (webPreference && webPreference->m_refCount == 1)
+        webPreferencesInstances.remove(identifierString);
 }
 
 void WebPreferences::initialize()
@@ -480,6 +503,9 @@ void WebPreferences::save()
 
 void WebPreferences::load()
 {
+    if (m_standardUserDefaults) // don't need to read in defaults again
+        return;
+
     TCHAR appDataPath[MAX_PATH];
     RetainPtr<CFURLRef> urlRef;
     CFPropertyListFormat format = kCFPropertyListBinaryFormat_v1_0 | kCFPropertyListXMLFormat_v1_0;
@@ -663,14 +689,22 @@ HRESULT STDMETHODCALLTYPE WebPreferences::initWithIdentifier(
 
     *preferences = this;
     AddRef();
+
+    if (anIdentifier) {
+        m_identifier = anIdentifier;
+        setInstance(this, m_identifier);
+    }
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebPreferences::identifier( 
-    /* [retval][out] */ BSTR* /*ident*/)
+    /* [retval][out] */ BSTR* ident)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (!ident)
+        return E_POINTER;
+    *ident = m_identifier ? SysAllocString(m_identifier) : 0;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebPreferences::standardFontFamily( 

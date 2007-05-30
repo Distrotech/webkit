@@ -28,6 +28,7 @@
 
 #include "IWebPreferences.h"
 #include <CoreFoundation/CoreFoundation.h>
+#include <WebCore/BString.h>
 
 class WebPreferences : public IWebPreferences
 {
@@ -266,6 +267,8 @@ public:
 
     // WebPreferences
     static BSTR webPreferencesChangedNotification();
+    static void setInstance(WebPreferences* instance, BSTR identifier);
+    static void removeReferenceForIdentifier(BSTR identifier);
 
     // From WebHistory.h
     HRESULT historyItemLimit(int* limit);
@@ -294,6 +297,7 @@ protected:
     ULONG m_refCount;
     CFMutableDictionaryRef m_privatePrefs;
     bool m_autoSaves;
+    WebCore::BString m_identifier;
     static CFMutableDictionaryRef m_standardUserDefaults;
     static WebPreferences* m_standardPreferences;
 };

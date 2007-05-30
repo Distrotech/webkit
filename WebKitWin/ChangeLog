@@ -1,3 +1,32 @@
+2007-05-30  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Steve.
+
+        Implemented the mechanism to associate a WebPreferences instance with an identifier.
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::init): fixed a missing Release on standardPrefs by using COMPtr.
+        * WebPreferences.cpp:
+        (WebPreferences::getInstanceForIdentifier): implemented
+        (WebPreferences::setInstance): implemented
+        (WebPreferences::removeReferenceForIdentifier): if the WebPreferences going to be
+        released has only one ref left, remove it from the s_webPreferencesInstances dictionary.
+        (WebPreferences::load): don't need to reread in the default preferences if we have done so.
+        (WebPreferences::initWithIdentifier): update the m_identifier data member with the
+        passed in identifier string, and store the identifier to WebPreferences instance mapping in
+        s_webPreferencesInstances dictionary.
+        (WebPreferences::identifier): implemented
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::~WebView): removed the call to removeObserver for the WebPreferencesChangedNotification
+        since it's already done in close().
+        (WebView::close): the call to removeObserver now takes in the WebPreferences instance for the object -
+        this way the WebView is only notified when that particular WebPreferences instance changes.
+        (WebView::initWithFrame): the call to addObserver now takes in the WebPreferences instance for the object -
+        this way the WebView is only notified when that particular WebPreferences instance changes.
+        (WebView::setPreferences): implemented
+        (WebView::onNotify): used COMPtr to fix a missing release
+
 2007-05-29  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Darin.

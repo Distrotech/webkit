@@ -153,9 +153,6 @@ WebView::WebView()
 
 WebView::~WebView()
 {
-    IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
-    notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
-
     deleteBackingStore();
 
     // <rdar://4958382> m_viewWindow will be destroyed when m_hostWindow is destroyed, but if
@@ -181,7 +178,18 @@ WebView* WebView::createInstance()
 void WebView::close()
 {
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
-    notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
+    COMPtr<IWebPreferences> prefs;
+    if (SUCCEEDED(preferences(&prefs)))
+        notifyCenter->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), prefs.get());
+    prefs = 0;  // make sure we release the reference, since WebPreferences::removeReferenceForIdentifier will check for last reference to WebPreferences
+    if (m_preferences) {
+        BSTR identifier = 0;
+        if (SUCCEEDED(m_preferences->identifier(&identifier)))
+            WebPreferences::removeReferenceForIdentifier(identifier);
+        if (identifier)
+            SysFreeString(identifier);
+        m_preferences = 0;
+    }
 
     setHostWindow(0);
     setFrameLoadDelegate(0);
@@ -1749,7 +1757,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     IWebNotificationCenter* notifyCenter = WebNotificationCenter::defaultCenterInternal();
     if (!WebPreferences::webPreferencesChangedNotification())
         return E_OUTOFMEMORY;
-    notifyCenter->addObserver(this, WebPreferences::webPreferencesChangedNotification(), 0);
+    notifyCenter->addObserver(this, WebPreferences::webPreferencesChangedNotification(), prefs.get());
 
     setSmartInsertDeleteEnabled(TRUE);
     return hr;
@@ -2106,10 +2114,32 @@ HRESULT STDMETHODCALLTYPE WebView::windowScriptObject(
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setPreferences( 
-    /* [in] */ IWebPreferences* /*prefs*/)
+    /* [in] */ IWebPreferences* prefs)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    if (m_preferences == prefs)
+        return S_OK;
+
+    IWebNotificationCenter* nc = WebNotificationCenter::defaultCenterInternal();
+    COMPtr<IWebPreferences> oldPrefs;
+    if (SUCCEEDED(preferences(&oldPrefs)) && oldPrefs) {
+        nc->removeObserver(this, WebPreferences::webPreferencesChangedNotification(), oldPrefs.get());
+        BSTR identifier = 0;
+        HRESULT hr = oldPrefs->identifier(&identifier);
+        oldPrefs = 0;   // make sure we release the reference, since WebPreferences::removeReferenceForIdentifier will check for last reference to WebPreferences
+        if (SUCCEEDED(hr))
+            WebPreferences::removeReferenceForIdentifier(identifier);
+        if (identifier)
+            SysFreeString(identifier);
+    }
+    m_preferences = prefs;
+    COMPtr<IWebPreferences> newPrefs;
+    if (SUCCEEDED(preferences(&newPrefs)))
+        nc->addObserver(this, WebPreferences::webPreferencesChangedNotification(), newPrefs.get());
+    HRESULT hr = nc->postNotificationName(WebPreferences::webPreferencesChangedNotification(), newPrefs.get(), 0);
+    if (FAILED(hr))
+        return hr;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebView::preferences( 
@@ -3197,18 +3227,17 @@ HRESULT STDMETHODCALLTYPE WebView::stopSpeaking(
 HRESULT STDMETHODCALLTYPE WebView::onNotify( 
     /* [in] */ IWebNotification* notification)
 {
-    IUnknown* unkPrefs;
+    COMPtr<IUnknown> unkPrefs;
     HRESULT hr = notification->getObject(&unkPrefs);
     if (FAILED(hr))
         return hr;
 
-    WebPreferences *preferences;
+    COMPtr<IWebPreferences> preferences;
     hr = unkPrefs->QueryInterface(IID_IWebPreferences, (void**)&preferences);
     if (FAILED(hr))
         return hr;
 
-    hr = updateWebCoreSettingsFromPreferences(preferences);
-    preferences->Release();
+    hr = updateWebCoreSettingsFromPreferences(preferences.get());
 
     return hr;
 }

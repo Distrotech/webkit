@@ -27,6 +27,7 @@
 #include "WebKitDLL.h"
 #include "WebIconDatabase.h"
 
+#include "COMPtr.h"
 #include "WebPreferences.h"
 #pragma warning(push, 0)
 #include <WebCore/IconDatabase.h>
@@ -89,7 +90,7 @@ HRESULT userIconDatabasePath(String& path)
 void WebIconDatabase::init()
 {
     WebPreferences* prefs = WebPreferences::createInstance();
-    IWebPreferences* standardPrefs;
+    COMPtr<IWebPreferences> standardPrefs;
     BOOL enabled = FALSE;
     if (SUCCEEDED(prefs->standardPreferences(&standardPrefs)))
         if (FAILED(standardPrefs->iconDatabaseEnabled(&enabled))) {
