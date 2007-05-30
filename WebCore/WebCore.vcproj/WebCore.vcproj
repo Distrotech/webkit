@@ -1007,6 +1007,14 @@
 				>
 			</File>
 			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMediaList.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMediaList.h"
+				>
+			</File>
+			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSMouseEvent.cpp"
 				>
 			</File>
@@ -1084,6 +1092,14 @@
 			</File>
 			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSRangeException.h"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSStyleSheet.cpp"
+				>
+			</File>
+			<File
+				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\JSStyleSheet.h"
 				>
 			</File>
 			<File
@@ -6872,6 +6888,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeIteratorCustom.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSStyleSheetCustom.cpp"
 					>
 				</File>
 				<File
