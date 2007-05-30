@@ -370,7 +370,7 @@ void wxWebView::OnPaint(wxPaintEvent& event)
 #if USE(WXGC)
             WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&gcdc);
 #else
-            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&dc);
+            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext((wxWindowDC*)&dc);
 #endif
             if (gc && m_impl->frame->renderer())
                 m_impl->frame->paint(gc, paintRect);
