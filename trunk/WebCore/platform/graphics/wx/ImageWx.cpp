@@ -37,6 +37,7 @@
 #include <wx/image.h>
 #include <wx/dc.h>
 #include <wx/dcmemory.h>
+#include <wx/dcgraph.h>
 #include <wx/bitmap.h>
 #include <wx/graphics.h>
 
@@ -85,9 +86,9 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
         return;
 
 #if USE(WXGC)
-    wxGraphicsContext* context = ctxt->platformContext();
+    wxGCDC* context = (wxGCDC*)ctxt->platformContext();
 #else
-    wxDC* context = ctxt->platformContext();
+    wxWindowDC* context = ctxt->platformContext();
 #endif
 
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
@@ -104,12 +105,11 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
     float scaleX = srcRect.width() / dstRect.width();
     float scaleY = srcRect.height() / dstRect.height();
    
-// FIXME: Transparency doesn't seem to be respected when we do this...
-#if USE(WXGC)
-    context->DrawBitmap(*bitmap, dst.x(), dst.y(), dst.width(), dst.height()); 
-#else
-    context->DrawBitmap(*bitmap, dst.x(), dst.y(), true);
-#endif
+    wxMemoryDC* mydc = new wxMemoryDC(); 
+    mydc->SelectObject(*bitmap); 
+    context->Blit((wxCoord)dst.x(),(wxCoord)dst.y(), (wxCoord)dst.width(), (wxCoord)dst.height(), mydc, 
+                    (wxCoord)src.x(), (wxCoord)src.y()); 
+    mydc->SelectObject(wxNullBitmap); 
     startAnimation();
 }
 
@@ -120,9 +120,9 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
         return;
 
 #if USE(WXGC)
-    wxGraphicsContext* context = ctxt->platformContext();
+    wxGCDC* context = (wxGCDC*)ctxt->platformContext();
 #else
-    wxDC* context = ctxt->platformContext();
+    wxWindowDC* context = ctxt->platformContext();
 #endif
 
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
@@ -133,22 +133,20 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
     float currentH = 0;
     
 #if USE(WXGC)
-    context->ConcatTransform(patternTransform);
-#else
+    wxGraphicsContext* gc = context->GetGraphicsContext();
+    gc->ConcatTransform(patternTransform);
+#endif
+
     wxMemoryDC* mydc = new wxMemoryDC();
     mydc->SelectObject(*bitmap);
-#endif
 
     while ( currentW < dstRect.width() )
     {
         while ( currentH < dstRect.height() )
         {
-// FIXME: This doesn't seem to work for transparent images.
-#if USE(WXGC)
-            context->DrawBitmap(*bitmap, dstRect.x() + currentW, dstRect.y() + currentH, srcRect.width(), srcRect.height()); 
-#else
-            context->DrawBitmap(*bitmap, dstRect.x() + currentW, dstRect.y() + currentH, true);
-#endif
+            context->Blit((wxCoord)dstRect.x() + currentW, (wxCoord)dstRect.y() + currentH,  
+                            (wxCoord)srcRect.width(), (wxCoord)srcRect.height(), mydc, 
+                            (wxCoord)srcRect.x(), (wxCoord)srcRect.y()); 
             currentH += srcRect.height();
         }
         currentW += srcRect.width();

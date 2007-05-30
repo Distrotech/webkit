@@ -35,6 +35,7 @@
 
 #include <wx/defs.h>
 #include <wx/dcclient.h>
+#include <wx/dcgraph.h>
 
 namespace WebCore {
 
@@ -47,14 +48,14 @@ void Font::drawGlyphs(GraphicsContext* graphicsContext, const FontData* font, co
     Color color = graphicsContext->fillColor();
 
 #if USE(WXGC)
-    wxGraphicsContext* dc = (wxGraphicsContext*)graphicsContext->platformContext();
-    dc->SetFont(*font->getWxFont(), color);
+    wxGCDC* dc = (wxGCDC*)graphicsContext->platformContext();
+    //dc->SetFont(*font->getWxFont(), color);
 #else
-    wxDC* dc = graphicsContext->platformContext();
+    wxWindowDC* dc = graphicsContext->platformContext();
+#endif
     dc->SetTextBackground(color);
     dc->SetTextForeground(color);
     dc->SetFont(*font->getWxFont());
-#endif
 
     // convert glyphs to wxString
     GlyphBufferGlyph* glyphs = const_cast<GlyphBufferGlyph*>(glyphBuffer.glyphs(from));

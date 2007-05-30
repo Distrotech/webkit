@@ -37,6 +37,7 @@
 #include <wx/defs.h>
 #include <wx/window.h>
 #include <wx/dcclient.h>
+#include <wx/dcgraph.h>
 #include <wx/graphics.h>
 
 #if __WXMAC__
@@ -91,8 +92,11 @@ public:
     GraphicsContextPlatformPrivate();
     ~GraphicsContextPlatformPrivate();
 
-
-    PlatformGraphicsContext* context;
+#if USE(WXGC)
+    wxGCDC* context;
+#else
+    wxWindowDC* context;
+#endif
     IntRect focusRect;
     int mswDCStateID;
     wxRegion gtkCurrentClipRgn;
@@ -128,7 +132,11 @@ GraphicsContext::GraphicsContext(PlatformGraphicsContext* context)
         setPlatformFillColor(fillColor());
         setPlatformStrokeColor(strokeColor());
     }
-    m_data->context = context; //wxGraphicsContext::Create(*m_data->dc);
+#if USE(WXGC)
+    m_data->context = (wxGCDC*)context;
+#else
+    m_data->context = (wxWindowDC*)context;
+#endif
 }
 
 GraphicsContext::~GraphicsContext()
@@ -147,7 +155,8 @@ void GraphicsContext::savePlatformState()
     if (m_data->context)
     {
 #if USE(WXGC)
-        m_data->context->PushState();
+        wxGraphicsContext* gc = m_data->context->GetGraphicsContext();
+        gc->PushState();
 #else
     // when everything is working with USE_WXGC, we can remove this
     #if __WXMAC__
@@ -173,7 +182,8 @@ void GraphicsContext::restorePlatformState()
     if (m_data->context)
     {
 #if USE(WXGC)
-        m_data->context->PopState();
+        wxGraphicsContext* gc = m_data->context->GetGraphicsContext();
+        gc->PopState();
 #else
     #if __WXMAC__
         CGContextRef context;
@@ -248,11 +258,7 @@ void GraphicsContext::drawLine(const IntPoint& point1, const IntPoint& point2)
     
     //adjustLineToPixelBounderies(p1, p2, width, penStyle);
     m_data->context->SetPen(wxPen(strokeColor(), strokeThickness(), strokeStyleToWxPenStyle(strokeStyle())));
-#if USE(WXGC)
-    m_data->context->StrokeLine(point1.x(), point1.y(), point2.x(), point2.y());
-#else
     m_data->context->DrawLine(point1.x(), point1.y(), point2.x(), point2.y());
-#endif
 }
 
 // This method is only used to draw the little circles used in lists.
@@ -271,9 +277,7 @@ void GraphicsContext::strokeArc(const IntRect& rect, int startAngle, int angleSp
         return;
     
     m_data->context->SetPen(wxPen(strokeColor(), strokeThickness(), strokeStyleToWxPenStyle(strokeStyle())));
-#if !USE(WXGC)
     m_data->context->DrawEllipticArc(rect.x(), rect.y(), rect.width(), rect.height(), startAngle, angleSpan);
-#endif
 }
 
 void GraphicsContext::drawConvexPolygon(size_t npoints, const FloatPoint* points, bool shouldAntialias)
@@ -288,9 +292,7 @@ void GraphicsContext::drawConvexPolygon(size_t npoints, const FloatPoint* points
     for (size_t i = 0; i < npoints; i++)
         polygon[i] = wxPoint(points[i].x(), points[i].y());
     m_data->context->SetPen(wxPen(strokeColor(), strokeThickness(), strokeStyleToWxPenStyle(strokeStyle())));
-#if !USE(WXGC)
     m_data->context->DrawPolygon((int)npoints, polygon);
-#endif
     delete [] polygon;
 }
 
@@ -350,11 +352,6 @@ void GraphicsContext::drawFocusRing(const Color& color)
 
 void GraphicsContext::clip(const IntRect& r)
 {
-    // FIXME: This gets called when drawing buttons using RenderTheme::paintButton,
-    // but the clipping region doesn't ever seem to be reset. 
-#if USE(WXGC)
-    m_data->context->Clip(r.x(), r.y(), r.width(), r.height());
-#else
     wxWindowDC* windc = dynamic_cast<wxWindowDC*>(m_data->context);
     wxPoint pos(0, 0);
     if (windc)
@@ -368,7 +365,6 @@ void GraphicsContext::clip(const IntRect& r)
             pos = window->GetPosition();
     }
     m_data->context->SetClippingRegion(r.x() - pos.x, r.y() - pos.y, r.width() + pos.x, r.height() + pos.y);
-#endif
 }
 
 void GraphicsContext::clipOut(const Path&)
@@ -388,12 +384,12 @@ void GraphicsContext::clipOutEllipseInRect(const IntRect&)
 
 void GraphicsContext::setFocusRingClip(const IntRect& r)
 {
-    m_data->focusRect = r; //notImplemented();
+    m_data->focusRect = r;
 }
 
 void GraphicsContext::clearFocusRingClip()
 {
-    m_data->focusRect = IntRect(); // notImplemented();
+    m_data->focusRect = IntRect(); 
 }
 
 void GraphicsContext::drawLineForText(const IntPoint& origin, int width, bool printing)
@@ -403,11 +399,7 @@ void GraphicsContext::drawLineForText(const IntPoint& origin, int width, bool pr
 
     IntPoint endPoint = origin + IntSize(width, 0);
     m_data->context->SetPen(wxPen(strokeColor(), strokeThickness(), strokeStyleToWxPenStyle(strokeStyle())));
-#if USE(WXGC)
-    m_data->context->StrokeLine(origin.x(), origin.y(), endPoint.x(), endPoint.y());
-#else
     m_data->context->DrawLine(origin.x(), origin.y(), endPoint.x(), endPoint.y());
-#endif
 }
 
 
@@ -418,12 +410,7 @@ void GraphicsContext::drawLineForMisspellingOrBadGrammar(const IntPoint& origin,
     else
         m_data->context->SetPen(wxPen(*wxRED, 2, wxLONG_DASH));
     
-#if USE(WXGC)
-    m_data->context->StrokeLine(origin.x(), origin.y(), origin.x() + width, origin.y());
-#else
     m_data->context->DrawLine(origin.x(), origin.y(), origin.x() + width, origin.y());
-#endif
-
 }
 
 void GraphicsContext::clip(const Path&) 
@@ -434,7 +421,10 @@ void GraphicsContext::translate(float tx, float ty)
 { 
 #if USE(WXGC)
     if (m_data->context)
-        m_data->context->Translate(tx, ty);
+    {
+        wxGraphicsContext* gc = m_data->context->GetGraphicsContext();
+        gc->Translate(tx, ty);
+    }
 #endif
 }
 
@@ -442,7 +432,10 @@ void GraphicsContext::rotate(float angle)
 { 
 #if USE(WXGC)
     if (m_data->context)
-        m_data->context->Rotate(angle);
+    {
+        wxGraphicsContext* gc = m_data->context->GetGraphicsContext();
+        gc->Rotate(angle);
+    }
 #endif
 }
 
@@ -450,7 +443,10 @@ void GraphicsContext::scale(const FloatSize& scale)
 { 
 #if USE(WXGC)
     if (m_data->context)
-        m_data->context->Scale(scale.width(), scale.height());
+    {
+        wxGraphicsContext* gc = m_data->context->GetGraphicsContext();
+        gc->Scale(scale.width(), scale.height());
+    }
 #endif
 }
 
@@ -459,7 +455,6 @@ FloatRect GraphicsContext::roundToDevicePixels(const FloatRect& frect)
 {
     FloatRect result;
 
-#if !USE(WXGC)
     double x =frect.x();
     double y = frect.y();
 
@@ -473,7 +468,6 @@ FloatRect GraphicsContext::roundToDevicePixels(const FloatRect& frect)
     m_data->context->LogicalToDeviceYRel((wxCoord)&y);
     result.setWidth((float)x);
     result.setHeight((float)y);
-#endif
     return result; 
 }
 
@@ -484,10 +478,8 @@ void GraphicsContext::setURLForRect(const KURL&, const IntRect&)
 
 void GraphicsContext::setCompositeOperation(CompositeOperator op)
 {
-#if !USE(WXGC)
     if (m_data->context)
         m_data->context->SetLogicalFunction(getWxCompositingOperation(op, false));
-#endif
 }
 
 void GraphicsContext::setPlatformStrokeColor(const Color& color)

@@ -353,8 +353,7 @@ void wxWebView::OnPaint(wxPaintEvent& event)
     if (IsShown() && m_impl->frame && m_impl->frame->document())
     {
 #if USE(WXGC)
-        wxGraphicsContext* gcdc;
-        gcdc = wxGraphicsContext::Create(dc);
+        wxGCDC gcdc(dc);
 #endif
 
         if (dc.IsOk())
@@ -369,8 +368,7 @@ void wxWebView::OnPaint(wxPaintEvent& event)
             paintRect.Offset(x * unitX, y * unitY);
 
 #if USE(WXGC)
-            gcdc->Translate( -(x * unitX), -(y * unitY));
-            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(gcdc);
+            WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&gcdc);
 #else
             WebCore::GraphicsContext* gc = new WebCore::GraphicsContext(&dc);
 #endif
