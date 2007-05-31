@@ -162,7 +162,7 @@ sub UsesManualToJSImplementation
 {
     my $type = shift;
 
-    return 1 if $type eq "SVGPathSeg" or $type eq "StyleSheet" or $type eq "CSSRule";
+    return 1 if $type eq "SVGPathSeg" or $type eq "StyleSheet" or $type eq "CSSRule" or $type eq "CSSValue";
     return 0;
 }
 
@@ -907,6 +907,8 @@ sub GenerateImplementation
                         push(@implContent, "        }\n\n");
                         push(@implContent, "        return toJS(exec, obj.get());\n");
                         push(@implContent, "    }\n");
+                    } elsif ($attribute->signature->extendedAttributes->{"NullCheck"}) {
+                        push(@implContent, "        return imp->$name() ? $jsType : jsUndefined();\n");
                     } else {
                         push(@implContent, "        return $jsType;\n");
                     }
@@ -917,6 +919,8 @@ sub GenerateImplementation
         
                 if ($podType) {
                     push(@implContent, "        KJS::JSValue* result = " . NativeToJSValue($attribute->signature, "", "imp.$name(ec)") . ";\n");
+                } elsif ($attribute->signature->extendedAttributes->{"NullCheck"}) {
+                    push(@implContent, "        return imp->$name(ec) ? " . NativeToJSValue($attribute->signature, $implClassNameForValueConversion, "imp->$name(ec)") . " : jsUndefined();\n");
                 } else {
                     push(@implContent, "        KJS::JSValue* result = " . NativeToJSValue($attribute->signature, $implClassNameForValueConversion, "imp->$name(ec)") . ";\n");
                 }
@@ -1138,6 +1142,7 @@ sub GenerateImplementation
         push(@implContent, "{\n");
         push(@implContent, "    ${className}* thisObj = static_cast<$className*>(slot.slotBase());\n");
         if (IndexGetterReturnsStrings($implClassName)) {
+            $implIncludes{"PlatformString.h"} = 1;
             push(@implContent, "    return jsStringOrNull(thisObj->impl()->item(slot.index()));\n");
         } else {
             push(@implContent, "    return toJS(exec, static_cast<$implClassName*>(thisObj->impl())->item(slot.index()));\n");
@@ -1390,6 +1395,7 @@ sub NativeToJSValue
     return "jsNumber($value)" if $codeGenerator->IsPrimitiveType($type) or $type eq "SVGPaintType";
 
     if ($codeGenerator->IsStringType($type)) {
+        $implIncludes{"PlatformString.h"} = 1;
         my $conv = $signature->extendedAttributes->{"ConvertNullStringTo"};
         if (defined $conv) {
             return "jsStringOrNull($value)" if $conv eq "Null";
@@ -1484,9 +1490,6 @@ sub NativeToJSValue
     } elsif ($type eq "NamedNodeMap") {
         $implIncludes{"kjs_dom.h"} = 1;
         $implIncludes{"NamedNodeMap.h"} = 1;
-    } elsif ($type eq "CSSStyleSheet") {
-        $implIncludes{"CSSStyleSheet.h"} = 1;
-        $implIncludes{"kjs_css.h"} = 1;
     } elsif ($type eq "Rect") {
         $implIncludes{"RectImpl.h"} = 1;
         $implIncludes{"kjs_css.h"} = 1;

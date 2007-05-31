@@ -95,6 +95,7 @@ wxWebCore port Bakefile project file.
 	           platform/wx/FontWx.cpp	          
 	           platform/wx/GlyphMapWx.cpp
 	           platform/wx/KeyboardEventWx.cpp
+	           platform/wx/LoggingWx.cpp
 	           platform/wx/MimeTypeRegistryWx.cpp
 	           platform/wx/MouseEventWx.cpp
 	           platform/wx/MouseWheelEventWx.cpp

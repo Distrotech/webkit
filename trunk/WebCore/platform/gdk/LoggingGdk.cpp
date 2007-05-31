@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Zack Rusin <zack@kde.org>
+ * Copyright (C) 2007 Alp Toker <alp.toker@collabora.co.uk>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,61 +20,19 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
 #include "config.h"
-#include "ContextMenuClientQt.h"
-
-#include "HitTestResult.h"
-#include "KURL.h"
-#include "Shared.h"
-#include "NotImplemented.h"
-
-#include <stdio.h>
+#include "Logging.h"
 
 namespace WebCore {
-    
-void ContextMenuClientQt::contextMenuDestroyed()
+
+void InitializeLoggingChannelsIfNecessary()
 {
-    notImplemented();
+    // FIXME: Add a way for the user to specify which
+    // logs he/she would like turned on.
+    LogNotYetImplemented.state = WTFLogChannelOn;
 }
 
-PlatformMenuDescription ContextMenuClientQt::getCustomMenuFromDefaultItems(ContextMenu*)
-{
-    notImplemented();
-    return PlatformMenuDescription();
-}
-
-void ContextMenuClientQt::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::downloadURL(const KURL& url)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::lookUpInDictionary(Frame*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::speak(const String&)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::stopSpeaking()
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::searchWithGoogle(const Frame*)
-{
-    notImplemented();
-}
-
-}
-
+} // namespace WebCore

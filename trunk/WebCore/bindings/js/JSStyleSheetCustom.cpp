@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Zack Rusin <zack@kde.org>
+ * Copyright (C) 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,61 +20,35 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
 #include "config.h"
-#include "ContextMenuClientQt.h"
+#include "JSStyleSheet.h"
 
-#include "HitTestResult.h"
-#include "KURL.h"
-#include "Shared.h"
-#include "NotImplemented.h"
-
-#include <stdio.h>
+#include "CSSStyleSheet.h"
+#include "JSCSSStyleSheet.h"
+#include "StyleSheet.h"
 
 namespace WebCore {
-    
-void ContextMenuClientQt::contextMenuDestroyed()
+
+KJS::JSValue* toJS(KJS::ExecState* exec, StyleSheet* styleSheet)
 {
-    notImplemented();
+    if (!styleSheet)
+        return KJS::jsNull();
+
+    KJS::ScriptInterpreter* interp = static_cast<KJS::ScriptInterpreter*>(exec->dynamicInterpreter());
+    KJS::DOMObject* ret = interp->getDOMObject(styleSheet);
+    if (ret)
+        return ret;
+
+    if (styleSheet->isCSSStyleSheet())
+        ret = new JSCSSStyleSheet(exec, static_cast<CSSStyleSheet*>(styleSheet));
+    else
+        ret = new JSStyleSheet(exec, styleSheet);
+
+    interp->putDOMObject(styleSheet, ret);
+    return ret;
 }
 
-PlatformMenuDescription ContextMenuClientQt::getCustomMenuFromDefaultItems(ContextMenu*)
-{
-    notImplemented();
-    return PlatformMenuDescription();
-}
-
-void ContextMenuClientQt::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::downloadURL(const KURL& url)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::lookUpInDictionary(Frame*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::speak(const String&)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::stopSpeaking()
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::searchWithGoogle(const Frame*)
-{
-    notImplemented();
-}
-
-}
-
+} // namespace WebCore

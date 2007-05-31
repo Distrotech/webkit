@@ -353,6 +353,7 @@ void GraphicsContext::clip(const IntRect& r)
 {
     wxWindowDC* windc = dynamic_cast<wxWindowDC*>(m_data->context);
     wxPoint pos(0, 0);
+/*
     if (windc)
     {
 #ifndef __WXGTK__
@@ -363,6 +364,8 @@ void GraphicsContext::clip(const IntRect& r)
         if (window)
             pos = window->GetPosition();
     }
+*/
+    fprintf(stderr, "Setting clip region to %d, %d, %d, %d\n", r.x(), r.y(), r.width(), r.height());
     m_data->context->SetClippingRegion(r.x() - pos.x, r.y() - pos.y, r.width() + pos.x, r.height() + pos.y);
 }
 

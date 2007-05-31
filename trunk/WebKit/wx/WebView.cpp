@@ -50,6 +50,7 @@
 #include "EventHandler.h"
 #include "Settings.h"
 #include "RenderObject.h"
+#include "Logging.h"
 
 #include "kjs_proxy.h"
 //#include "value.h"
@@ -162,7 +163,8 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 
     m_impl = new WebViewPrivate();
-    
+
+    WebCore::InitializeLoggingChannelsIfNecessary();    
     WebCore::HTMLFrameOwnerElement* parentFrame = 0;
     WebCore::Page* page = 0;
     wxWebView* parentWebView = dynamic_cast<wxWebView*>(parent);
@@ -182,8 +184,10 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     WebCore::FrameLoaderClientWx* loaderClient = new WebCore::FrameLoaderClientWx();
     
     m_impl->frame = new WebCore::Frame(page, parentFrame, loaderClient);
+    m_impl->frame->deref();
     m_impl->frameView = new WebCore::FrameView(m_impl->frame.get());
     m_impl->frameView->deref();
+    
     m_impl->frame->setView(m_impl->frameView.get());
     m_impl->frame->init();
     
@@ -209,11 +213,16 @@ wxWebView::~wxWebView()
 {
     m_beingDestroyed = true;
     
+    m_impl->frame->loader()->detachFromParent();
+    
     // This test determines whether or not the frame is a subframe
     // or the main (top level) frame. If it's the main frame, then
     // delete its page to keep leaks from occurring
     if (!m_impl->frame->ownerElement())
         delete m_impl->frame->page();
+        
+    m_impl->frameView = 0;
+    m_impl->frame = 0;
 
     delete m_impl;
 }

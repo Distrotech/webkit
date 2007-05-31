@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Zack Rusin <zack@kde.org>
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,61 +20,16 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "ContextMenuClientQt.h"
+/* This header is needed only for backwards-compatibility with internal clients
+ * which have yet to move away from it: <rdar://problem/5141290>.
+ */
 
-#include "HitTestResult.h"
-#include "KURL.h"
-#include "Shared.h"
-#include "NotImplemented.h"
+#warning <WebKit/WebAssertions.h> is deprecated.  Please move away from this SPI as soon as is possible.
 
-#include <stdio.h>
-
-namespace WebCore {
-    
-void ContextMenuClientQt::contextMenuDestroyed()
-{
-    notImplemented();
-}
-
-PlatformMenuDescription ContextMenuClientQt::getCustomMenuFromDefaultItems(ContextMenu*)
-{
-    notImplemented();
-    return PlatformMenuDescription();
-}
-
-void ContextMenuClientQt::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::downloadURL(const KURL& url)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::lookUpInDictionary(Frame*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::speak(const String&)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::stopSpeaking()
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::searchWithGoogle(const Frame*)
-{
-    notImplemented();
-}
-
-}
-
+#define ASSERT(...) ((void)0)
+#define ASSERT_NOT_REACHED(...) ((void)0)
+#define ASSERT_ARG(...) ((void)0)
+#define ERROR(...) ((void)0)

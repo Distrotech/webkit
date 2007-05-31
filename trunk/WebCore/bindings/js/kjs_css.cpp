@@ -27,29 +27,17 @@
 
 #include "CSSRule.h"
 #include "CSSRuleList.h"
-#include "CSSValueList.h"
 #include "Document.h"
 #include "HTMLNames.h"
 #include "HTMLStyleElement.h"
 #include "JSCSSPrimitiveValue.h"
 #include "JSCSSRule.h"
 #include "JSCSSRuleList.h"
-#include "JSCSSStyleDeclaration.h"
-#include "JSCSSValueList.h"
 #include "JSStyleSheet.h"
 #include "StyleSheetList.h"
 #include "kjs_dom.h"
 
-#include <kjs/string_object.h>
-
 #include "kjs_css.lut.h"
-
-#if ENABLE(SVG)
-#include "JSSVGColor.h"
-#include "JSSVGPaint.h"
-#include "SVGColor.h"
-#include "SVGPaint.h"
-#endif
 
 using namespace WebCore;
 using namespace HTMLNames;
@@ -165,171 +153,6 @@ JSValue* DOMStyleSheetListFunc::callAsFunction(ExecState* exec, JSObject* thisOb
   if (id == DOMStyleSheetList::Item)
     return toJS(exec, styleSheetList.item(args[0]->toInt32(exec)));
   return jsUndefined();
-}
-
-// -------------------------------------------------------------------------
-
-const ClassInfo DOMCSSStyleSheet::info = { "CSSStyleSheet", &WebCore::JSStyleSheet::info, &DOMCSSStyleSheetTable, 0 };
-
-/*
-@begin DOMCSSStyleSheetTable 5
-  ownerRule     DOMCSSStyleSheet::OwnerRule     DontDelete|ReadOnly
-  cssRules      DOMCSSStyleSheet::CssRules      DontDelete|ReadOnly
-# MSIE extension
-  rules         DOMCSSStyleSheet::Rules         DontDelete|ReadOnly
-@end
-@begin DOMCSSStyleSheetPrototypeTable 6
-  insertRule    DOMCSSStyleSheet::InsertRule    DontDelete|Function 2
-  deleteRule    DOMCSSStyleSheet::DeleteRule    DontDelete|Function 1
-# MSIE extensions
-  addRule       DOMCSSStyleSheet::AddRule       DontDelete|Function 2
-  removeRule    DOMCSSStyleSheet::RemoveRule    DontDelete|Function 1
-@end
-*/
-KJS_DEFINE_PROTOTYPE(DOMCSSStyleSheetPrototype)
-KJS_IMPLEMENT_PROTOTYPE_FUNCTION(DOMCSSStyleSheetPrototypeFunction)
-KJS_IMPLEMENT_PROTOTYPE("DOMCSSStyleSheet",DOMCSSStyleSheetPrototype,DOMCSSStyleSheetPrototypeFunction) // warning, use _WITH_PARENT if DOMStyleSheet gets a prototype
-
-DOMCSSStyleSheet::DOMCSSStyleSheet(ExecState* exec, CSSStyleSheet *ss)
-  : JSStyleSheet(exec, ss) 
-{
-  setPrototype(DOMCSSStyleSheetPrototype::self(exec));
-}
-
-DOMCSSStyleSheet::~DOMCSSStyleSheet()
-{
-}
-
-JSValue* DOMCSSStyleSheet::getValueProperty(ExecState* exec, int token) const
-{
-  switch (token) {
-  case OwnerRule:
-    return toJS(exec, static_cast<CSSStyleSheet*>(impl())->ownerRule());
-  case CssRules:
-    return toJS(exec, static_cast<CSSStyleSheet*>(impl())->cssRules());
-  case Rules:
-    return toJS(exec, static_cast<CSSStyleSheet*>(impl())->cssRules(true));
-  default:
-    ASSERT(0);
-    return jsUndefined();
-  }
-}
-
-bool DOMCSSStyleSheet::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
-{
-  return getStaticValueSlot<DOMCSSStyleSheet, JSStyleSheet>(exec, &DOMCSSStyleSheetTable, this, propertyName, slot);
-}
-
-JSValue* DOMCSSStyleSheetPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List &args)
-{
-  if (!thisObj->inherits(&KJS::DOMCSSStyleSheet::info))
-    return throwError(exec, TypeError);
-  DOMExceptionTranslator exception(exec);
-  CSSStyleSheet &styleSheet = *static_cast<CSSStyleSheet*>(static_cast<DOMCSSStyleSheet*>(thisObj)->impl());
-  switch (id) {
-    case DOMCSSStyleSheet::InsertRule:
-      return jsNumber(styleSheet.insertRule(args[0]->toString(exec), args[1]->toInt32(exec), exception));
-    case DOMCSSStyleSheet::DeleteRule:
-      styleSheet.deleteRule(args[0]->toInt32(exec), exception);
-      return jsUndefined();
-    case DOMCSSStyleSheet::AddRule: {
-      int index = args.size() >= 3 ? args[2]->toInt32(exec) : -1;
-      styleSheet.addRule(args[0]->toString(exec), args[1]->toString(exec), index, exception);
-      // As per Microsoft documentation, always return -1.
-      return jsNumber(-1);
-    }
-    case DOMCSSStyleSheet::RemoveRule: {
-      int index = args.size() >= 1 ? args[0]->toInt32(exec) : 0;
-      styleSheet.removeRule(index, exception);
-      return jsUndefined();
-    }
-  }
-  return jsUndefined();
-}
-
-// -------------------------------------------------------------------------
-
-const ClassInfo DOMCSSValue::info = { "CSSValue", 0, &DOMCSSValueTable, 0 };
-
-/*
-@begin DOMCSSValuePrototypeTable 0
-@end
-@begin DOMCSSValueTable 2
-  cssText       DOMCSSValue::CssText            DontDelete|ReadOnly
-  cssValueType  DOMCSSValue::CssValueType       DontDelete|ReadOnly
-@end
-*/
-KJS_IMPLEMENT_PROTOTYPE_FUNCTION(DOMCSSValuePrototypeFunction)
-KJS_IMPLEMENT_PROTOTYPE("DOMCSSValue", DOMCSSValuePrototype, DOMCSSValuePrototypeFunction)
-
-DOMCSSValue::DOMCSSValue(ExecState* exec, CSSValue* v) 
-: m_impl(v) 
-{ 
-    setPrototype(DOMCSSValuePrototype::self(exec));
-}
-
-DOMCSSValue::~DOMCSSValue()
-{
-  ScriptInterpreter::forgetDOMObject(m_impl.get());
-}
-
-JSValue* DOMCSSValue::getValueProperty(ExecState* exec, int token) const
-{
-  CSSValue &cssValue = *m_impl;
-  switch (token) {
-  case CssText:
-    return jsStringOrNull(cssValue.cssText());
-  case CssValueType:
-    return jsNumber(cssValue.cssValueType());
-  default:
-    ASSERT(0);
-    return jsUndefined();
-  }
-}
-
-bool DOMCSSValue::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
-{
-  return getStaticValueSlot<DOMCSSValue, DOMObject>(exec, &DOMCSSValueTable, this, propertyName, slot);
-}
-
-void DOMCSSValue::put(ExecState* exec, const Identifier &propertyName, JSValue* value, int attr)
-{
-  CSSValue &cssValue = *m_impl;
-  if (propertyName == "cssText")
-    cssValue.setCssText(valueToStringWithNullCheck(exec, value));
-  else
-    DOMObject::put(exec, propertyName, value, attr);
-}
-
-JSValue* DOMCSSValuePrototypeFunction::callAsFunction(ExecState*, JSObject*, const List&)
-{
-    return 0;
-}
-
-JSValue* toJS(ExecState* exec, CSSValue *v)
-{
-  DOMObject *ret;
-  if (!v)
-    return jsNull();
-  ScriptInterpreter* interp = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter());
-  if ((ret = interp->getDOMObject(v)))
-    return ret;
-  else {
-    if (v->isValueList())
-      ret = new JSCSSValueList(exec, static_cast<CSSValueList*>(v));
-#if ENABLE(SVG)
-    else if (v->isSVGColor())
-      ret = new JSSVGColor(exec, static_cast<SVGColor*>(v));
-    else if (v->isSVGPaint())
-      ret = new JSSVGPaint(exec, static_cast<SVGPaint*>(v));
-#endif
-    else if (v->isPrimitiveValue())
-      ret = new JSCSSPrimitiveValue(exec, static_cast<CSSPrimitiveValue*>(v));
-    else
-      ret = new DOMCSSValue(exec, v);
-    interp->putDOMObject(v, ret);
-    return ret;
-  }
 }
 
 // -------------------------------------------------------------------------

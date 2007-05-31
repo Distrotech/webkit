@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Zack Rusin <zack@kde.org>
+ * Copyright (C) 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,57 +24,50 @@
  */
 
 #include "config.h"
-#include "ContextMenuClientQt.h"
+#include "JSCSSValue.h"
 
-#include "HitTestResult.h"
-#include "KURL.h"
-#include "Shared.h"
-#include "NotImplemented.h"
+#include "CSSPrimitiveValue.h"
+#include "CSSValue.h"
+#include "CSSValueList.h"
+#include "JSCSSPrimitiveValue.h"
+#include "JSCSSValueList.h"
+#include "kjs_binding.h"
 
-#include <stdio.h>
+#if ENABLE(SVG)
+#include "JSSVGColor.h"
+#include "JSSVGPaint.h"
+#include "SVGColor.h"
+#include "SVGPaint.h"
+#endif
 
 namespace WebCore {
-    
-void ContextMenuClientQt::contextMenuDestroyed()
+
+KJS::JSValue* toJS(KJS::ExecState* exec, CSSValue* value)
 {
-    notImplemented();
+    if (!value)
+        return KJS::jsNull();
+
+    KJS::ScriptInterpreter* interp = static_cast<KJS::ScriptInterpreter*>(exec->dynamicInterpreter());
+    KJS::DOMObject* ret = interp->getDOMObject(value);
+
+    if (ret)
+        return ret;
+
+    if (value->isValueList())
+        ret = new JSCSSValueList(exec, static_cast<CSSValueList*>(value));
+#if ENABLE(SVG)
+    else if (value->isSVGColor())
+        ret = new JSSVGColor(exec, static_cast<SVGColor*>(value));
+    else if (value->isSVGPaint())
+        ret = new JSSVGPaint(exec, static_cast<SVGPaint*>(value));
+#endif
+    else if (value->isPrimitiveValue())
+        ret = new JSCSSPrimitiveValue(exec, static_cast<CSSPrimitiveValue*>(value));
+    else
+        ret = new JSCSSValue(exec, value);
+
+    interp->putDOMObject(value, ret);
+    return ret;
 }
 
-PlatformMenuDescription ContextMenuClientQt::getCustomMenuFromDefaultItems(ContextMenu*)
-{
-    notImplemented();
-    return PlatformMenuDescription();
-}
-
-void ContextMenuClientQt::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::downloadURL(const KURL& url)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::lookUpInDictionary(Frame*)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::speak(const String&)
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::stopSpeaking()
-{
-    notImplemented();
-}
-
-void ContextMenuClientQt::searchWithGoogle(const Frame*)
-{
-    notImplemented();
-}
-
-}
-
+} // namespace WebCore

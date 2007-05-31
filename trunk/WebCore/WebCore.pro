@@ -171,6 +171,7 @@ IDL_BINDINGS += \
     css/CSSRuleList.idl \
     css/CSSStyleDeclaration.idl \
     css/CSSStyleRule.idl \
+    css/CSSStyleSheet.idl \
     css/CSSValue.idl \
     css/CSSValueList.idl \
     css/MediaList.idl \
@@ -276,6 +277,7 @@ SOURCES += \
     bindings/js/JSCanvasRenderingContext2DCustom.cpp \
     bindings/js/JSCSSRuleCustom.cpp \
     bindings/js/JSCSSStyleDeclarationCustom.cpp \
+    bindings/js/JSCSSValueCustom.cpp \
     bindings/js/JSCustomXPathNSResolver.cpp \
     bindings/js/JSDocumentCustom.cpp \
     bindings/js/JSHTMLAnchorElementCustom.cpp \
@@ -802,6 +804,7 @@ gdk-port:SOURCES += \
         platform/gdk/FrameGdk.cpp \
         platform/gdk/GlyphPageTreeNodeGdk.cpp \
         platform/gdk/KeyEventGdk.cpp \
+        platform/gdk/LoggingGdk.cpp \
         platform/gdk/MimeTypeRegistryGdk.cpp \
         platform/gdk/MouseEventGdk.cpp \
         platform/gdk/PlatformScrollBarGdk.cpp \

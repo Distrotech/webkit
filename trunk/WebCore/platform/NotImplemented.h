@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Zack Rusin <zack@kde.org>
+ * Copyright (C) 2007 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,58 +23,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "ContextMenuClientQt.h"
+#ifndef NotImplemented_h
+#define NotImplemented_h
 
-#include "HitTestResult.h"
-#include "KURL.h"
-#include "Shared.h"
-#include "NotImplemented.h"
+#include "Logging.h"
+#include <wtf/Assertions.h>
 
-#include <stdio.h>
+#if PLATFORM(GDK)
+    #define supressNotImplementedWarning() getenv("DISABLE_NI_WARNING")
+#else
+    #define supressNotImplementedWarning() false
+#endif
 
-namespace WebCore {
-    
-void ContextMenuClientQt::contextMenuDestroyed()
-{
-    notImplemented();
-}
+#if PLATFORM(QT)
 
-PlatformMenuDescription ContextMenuClientQt::getCustomMenuFromDefaultItems(ContextMenu*)
-{
-    notImplemented();
-    return PlatformMenuDescription();
-}
+    #include <qglobal.h>
+    #define notImplemented() qDebug("FIXME: UNIMPLEMENTED: %s:%d (%s)", __FILE__, __LINE__, WTF_PRETTY_FUNCTION)
 
-void ContextMenuClientQt::contextMenuItemSelected(ContextMenuItem*, const ContextMenu*)
-{
-    notImplemented();
-}
+#elif defined(NDEBUG)
 
-void ContextMenuClientQt::downloadURL(const KURL& url)
-{
-    notImplemented();
-}
+#define notImplemented() ((void)0)
 
-void ContextMenuClientQt::lookUpInDictionary(Frame*)
-{
-    notImplemented();
-}
+#else
 
-void ContextMenuClientQt::speak(const String&)
-{
-    notImplemented();
-}
+#define notImplemented() do { \
+        static bool havePrinted = false; \
+        if (!havePrinted && !supressNotImplementedWarning()) { \
+            WTFLogVerbose(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, &LogNotYetImplemented, "UNIMPLEMENTED: "); \
+            havePrinted = true; \
+        } \
+    } while (0)
 
-void ContextMenuClientQt::stopSpeaking()
-{
-    notImplemented();
-}
+#endif // NDEBUG
 
-void ContextMenuClientQt::searchWithGoogle(const Frame*)
-{
-    notImplemented();
-}
-
-}
-
+#endif // NotImplemented_h

@@ -25,6 +25,8 @@
         DerivedSources/WebCore/JSCharacterData.cpp
         DerivedSources/WebCore/JSComment.cpp
         DerivedSources/WebCore/JSCounter.cpp
+        DerivedSources/WebCore/JSCSSStyleSheet.cpp
+        DerivedSources/WebCore/JSCSSValue.cpp
         DerivedSources/WebCore/JSDOMImplementation.cpp
         DerivedSources/WebCore/JSDOMParser.cpp
         DerivedSources/WebCore/JSDOMWindow.cpp
@@ -741,6 +743,7 @@
     <set append="1" var="WEBCORE_SOURCES_JS">
         bindings/js/JSCanvasRenderingContext2DCustom.cpp
         bindings/js/JSCSSRuleCustom.cpp
+        bindings/js/JSCSSValueCustom.cpp
         bindings/js/JSCSSStyleDeclarationCustom.cpp
         bindings/js/JSCustomXPathNSResolver.cpp
         bindings/js/JSDocumentCustom.cpp
