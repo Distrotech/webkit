@@ -181,6 +181,22 @@ HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::didFailLoadWithError(
     return S_OK;
 }
 
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::setFrame( 
+        /* [in] */ IWebView* /*sender*/,
+        /* [in] */ RECT* frame)
+{
+    m_frame = frame;
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::webViewFrame( 
+        /* [in] */ IWebView* /*sender*/,
+        /* [retval][out] */ RECT* frame)
+{
+    frame = m_frame;
+    return S_OK;
+}
+
 
 HRESULT STDMETHODCALLTYPE WaitUntilDoneDelegate::runJavaScriptAlertPanelWithMessage( 
         /* [in] */ IWebView* /*sender*/,

@@ -1,3 +1,202 @@
+2007-05-31  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Steve.
+
+        - Adding the Drosera code to the repository.  This set is probably too large and will be trimmed later, but it currently compiles.  I also have a way to add it to Safari.sln, but do not want to do that until the project is even half way usable.
+
+
+        * Drosera: Added.
+        * Drosera/Drosera.vcproj: Added.
+        * Drosera/Drosera.vcproj/Drosera: Added.
+        * Drosera/Drosera.vcproj/Drosera/BaseDelegate.h: Added.
+        (BaseDelegate::QueryInterface):
+        (BaseDelegate::didFinishLoadForFrame):
+        (BaseDelegate::windowScriptObjectAvailable):
+        (BaseDelegate::didStartProvisionalLoadForFrame):
+        (BaseDelegate::didReceiveServerRedirectForProvisionalLoadForFrame):
+        (BaseDelegate::didFailProvisionalLoadWithError):
+        (BaseDelegate::didCommitLoadForFrame):
+        (BaseDelegate::didReceiveTitle):
+        (BaseDelegate::didReceiveIcon):
+        (BaseDelegate::didFailLoadWithError):
+        (BaseDelegate::didChangeLocationWithinPageForFrame):
+        (BaseDelegate::willPerformClientRedirectToURL):
+        (BaseDelegate::didCancelClientRedirectForFrame):
+        (BaseDelegate::willCloseFrame):
+        (BaseDelegate::createWebViewWithRequest):
+        (BaseDelegate::webViewShow):
+        (BaseDelegate::webViewClose):
+        (BaseDelegate::webViewFocus):
+        (BaseDelegate::webViewUnfocus):
+        (BaseDelegate::webViewFirstResponder):
+        (BaseDelegate::makeFirstResponder):
+        (BaseDelegate::setStatusText):
+        (BaseDelegate::webViewStatusText):
+        (BaseDelegate::webViewAreToolbarsVisible):
+        (BaseDelegate::setToolbarsVisible):
+        (BaseDelegate::webViewIsStatusBarVisible):
+        (BaseDelegate::setStatusBarVisible):
+        (BaseDelegate::webViewIsResizable):
+        (BaseDelegate::setResizable):
+        (BaseDelegate::setFrame):
+        (BaseDelegate::webViewFrame):
+        (BaseDelegate::setContentRect):
+        (BaseDelegate::webViewContentRect):
+        (BaseDelegate::runJavaScriptAlertPanelWithMessage):
+        (BaseDelegate::runJavaScriptConfirmPanelWithMessage):
+        (BaseDelegate::runJavaScriptTextInputPanelWithPrompt):
+        (BaseDelegate::runBeforeUnloadConfirmPanelWithMessage):
+        (BaseDelegate::runOpenPanelForFileButtonWithResultListener):
+        (BaseDelegate::mouseDidMoveOverElement):
+        (BaseDelegate::contextMenuItemsForElement):
+        (BaseDelegate::validateUserInterfaceItem):
+        (BaseDelegate::shouldPerformAction):
+        (BaseDelegate::dragDestinationActionMaskForDraggingInfo):
+        (BaseDelegate::willPerformDragDestinationAction):
+        (BaseDelegate::dragSourceActionMaskForPoint):
+        (BaseDelegate::willPerformDragSourceAction):
+        (BaseDelegate::contextMenuItemSelected):
+        (BaseDelegate::hasCustomMenuImplementation):
+        (BaseDelegate::trackCustomPopupMenu):
+        (BaseDelegate::measureCustomMenuItem):
+        (BaseDelegate::drawCustomMenuItem):
+        (BaseDelegate::addCustomMenuDrawingData):
+        (BaseDelegate::cleanUpCustomMenuDrawingData):
+        (BaseDelegate::canTakeFocus):
+        (BaseDelegate::takeFocus):
+        (BaseDelegate::registerUndoWithTarget):
+        (BaseDelegate::removeAllActionsWithTarget):
+        (BaseDelegate::setActionTitle):
+        (BaseDelegate::undo):
+        (BaseDelegate::redo):
+        (BaseDelegate::canUndo):
+        (BaseDelegate::canRedo):
+        (BaseDelegate::onNotify):
+        * Drosera/Drosera.vcproj/Drosera/DebuggerApplication.cpp: Added.
+        (DebuggerApplication::serverLoaded):
+        (DebuggerApplication::serverUnloaded):
+        (DebuggerApplication::attach):
+        (DebuggerApplication::numberOfRowsInTableView):
+        (DebuggerApplication::tableView):
+        * Drosera/Drosera.vcproj/Drosera/DebuggerApplication.h: Added.
+        (DebuggerApplication::DebuggerApplication):
+        (DebuggerApplication::~DebuggerApplication):
+        (DebuggerApplication::knownServers):
+        * Drosera/Drosera.vcproj/Drosera/DebuggerDocument.cpp: Added.
+        * Drosera/Drosera.vcproj/Drosera/DebuggerDocument.h: Added.
+        * Drosera/Drosera.vcproj/Drosera/DebuggerObjectCallbacks.cpp: Added.
+        (breakpointEditorHTMLCallback):
+        (currentFunctionStackCallback):
+        (doubleClickMillisecondsCallback):
+        (evaluateScript_inCallFrame_Callback):
+        (isPausedCallback):
+        (localScopeVariableNamesForCallFrame_Callback):
+        (pauseCallback):
+        (resumeCallback):
+        (stepIntoCallback):
+        (valueForScopeVariableNamed_inCallFrame_Callback):
+        (staticFunctions):
+        * Drosera/Drosera.vcproj/Drosera/DebuggerObjectCallbacks.h: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.aps: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.cpp: Added.
+        (_tWinMain):
+        (RegisterDroseraClass):
+        (DroseraWndProc):
+        (About):
+        (Attach):
+        (Drosera::Drosera):
+        (Drosera::initUI):
+        (Drosera::QueryInterface):
+        (Drosera::AddRef):
+        (Drosera::Release):
+        (Drosera::didFinishLoadForFrame):
+        (getClass):
+        (Drosera::windowScriptObjectAvailable):
+        (Drosera::webViewClose):
+        (Drosera::validateUserInterfaceItem):
+        (Drosera::onNotify):
+        (Drosera::setFrame):
+        (Drosera::webViewFrame):
+        (Drosera::runJavaScriptAlertPanelWithMessage):
+        (Drosera::onSize):
+        * Drosera/Drosera.vcproj/Drosera/Drosera.h: Added.
+        (Drosera::webViewLoaded):
+        * Drosera/Drosera.vcproj/Drosera/Drosera.icns: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.ico: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.pch: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.rc: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.resources: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.resources/Info.plist: Added.
+        * Drosera/Drosera.vcproj/Drosera/Drosera.vcproj: Added.
+        * Drosera/Drosera.vcproj/Drosera/English.lproj: Added.
+        * Drosera/Drosera.vcproj/Drosera/FakeClasses.h: Added.
+        * Drosera/Drosera.vcproj/Drosera/HelperFunctions.h: Added.
+        (CFStringToBSTR):
+        * Drosera/Drosera.vcproj/Drosera/Images: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/SourceArrow.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/SourceArrowBlank.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/SourceArrowOpen.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/Thumbs.db: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/background_stripe.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/breakPoint.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/breakPointDisabled.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/breakpointeditor.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/close.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/close_active.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/close_hover.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/console.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/continue.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/fileIcon.jpg: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/finishFunction.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/glossyFooterFill.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/glossyHeader.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/glossyHeaderPressed.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/gradientBackground.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/gutter.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navLeftDisabled.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navLeftNormal.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navLeftPressed.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navRightDisabled.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navRightNormal.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/navRightPressed.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/pause.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/popUpArrows.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/programCounter.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/programCounterBreakP#1EFD97.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/programCounterBreakPoint.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/programCounterBreakPointDisabled.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/run.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/siteCollapsed.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/siteExpanded.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/siteIcon.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/splitterBar.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/splitterDimple.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/step.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/stepOut.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/stepOver.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/stop.tif: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/toolbarBackground.png: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/verticalSplitterBar.tiff: Added.
+        * Drosera/Drosera.vcproj/Drosera/Images/verticalSplitterDimple.tiff: Added.
+        * Drosera/Drosera.vcproj/Drosera/Info.plist: Added.
+        * Drosera/Drosera.vcproj/Drosera/Makefile: Added.
+        * Drosera/Drosera.vcproj/Drosera/ReadMe.txt: Added.
+        * Drosera/Drosera.vcproj/Drosera/Resource.h: Added.
+        * Drosera/Drosera.vcproj/Drosera/breakpointEditor.html: Added.
+        * Drosera/Drosera.vcproj/Drosera/console.css: Added.
+        * Drosera/Drosera.vcproj/Drosera/console.html: Added.
+        * Drosera/Drosera.vcproj/Drosera/console.js: Added.
+        * Drosera/Drosera.vcproj/Drosera/debug.vsprops: Added.
+        * Drosera/Drosera.vcproj/Drosera/debugger.css: Added.
+        * Drosera/Drosera.vcproj/Drosera/debugger.html: Added.
+        * Drosera/Drosera.vcproj/Drosera/debugger.js: Added.
+        * Drosera/Drosera.vcproj/Drosera/release.vsprops: Added.
+        * Drosera/Drosera.vcproj/Drosera/small.ico: Added.
+        * Drosera/Drosera.vcproj/Drosera/stdafx.cpp: Added.
+        * Drosera/Drosera.vcproj/Drosera/stdafx.h: Added.
+        * Drosera/Drosera.vcproj/Drosera/viewer.css: Added.
+        * Drosera/Drosera.vcproj/Drosera/viewer.html: Added.
+
 2007-05-14  Adam Roben  <aroben@apple.com>
 
         Build fix.

@@ -36,7 +36,7 @@
 class WaitUntilDoneDelegate : public IWebUIDelegate, IWebUIDelegatePrivate, public IWebFrameLoadDelegate
 {
 public:
-    WaitUntilDoneDelegate() : m_refCount(1) { }
+    WaitUntilDoneDelegate() : m_refCount(1), m_frame(0) { }
 
     void processWork();
 
@@ -165,11 +165,11 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE setFrame( 
         /* [in] */ IWebView *sender,
-        /* [in] */ RECT *frame) { return E_NOTIMPL; }
+        /* [in] */ RECT *frame);
 
     virtual HRESULT STDMETHODCALLTYPE webViewFrame( 
         /* [in] */ IWebView *sender,
-        /* [retval][out] */ RECT *frame) { return E_NOTIMPL; }
+        /* [retval][out] */ RECT *frame);
 
     virtual HRESULT STDMETHODCALLTYPE setContentRect( 
         /* [in] */ IWebView *sender,
@@ -355,6 +355,9 @@ protected:
     void locationChangeDone(IWebError*, IWebFrame*);
 
     ULONG                   m_refCount;
+
+private:
+    RECT* m_frame;
 };
 
 #endif
