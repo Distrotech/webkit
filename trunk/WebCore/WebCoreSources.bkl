@@ -26,7 +26,6 @@
         DerivedSources/WebCore/JSComment.cpp
         DerivedSources/WebCore/JSCounter.cpp
         DerivedSources/WebCore/JSCSSStyleSheet.cpp
-        DerivedSources/WebCore/JSCSSValue.cpp
         DerivedSources/WebCore/JSDOMImplementation.cpp
         DerivedSources/WebCore/JSDOMParser.cpp
         DerivedSources/WebCore/JSDOMWindow.cpp
