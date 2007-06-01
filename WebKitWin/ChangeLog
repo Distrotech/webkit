@@ -1,3 +1,11 @@
+2007-06-01  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Oliver.
+
+        - Uncommenting some functions that should not be commented out.  I needed them for the Drosera port.
+
+        * WebKit.vcproj/WebKit_debug.def:
+
 2007-06-01  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Kevin Decker.
