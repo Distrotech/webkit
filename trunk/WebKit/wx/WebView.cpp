@@ -258,7 +258,7 @@ void wxWebView::SetPageSource(const wxString& source, const wxString& baseUrl)
     {
         WebCore::FrameLoader* loader = m_impl->frame->loader();
         loader->begin(WebCore::KURL((const char*)baseUrl.mb_str(wxConvUTF8)));
-        loader->write(source); //(const char*)source.mb_str(wxConvUTF8), source.Length());
+        loader->write((const WebCore::String&)source);
         loader->end();
     }
 }
