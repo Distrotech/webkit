@@ -151,7 +151,6 @@ public:
     RenderPart* ownerRenderer(); // renderer for the element that contains this frame
 
     friend class FramePrivate;
-    friend class FrameWx;
 
     DragImageRef dragImageForSelection();
     
