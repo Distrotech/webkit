@@ -4,6 +4,12 @@
 
         * WebCore.vcproj/WebCore.vcproj:
 
+2007-05-31  Sam Weinig  <sam@webkit.org>
+
+        Fixed build.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2007-05-30  Ada Chan  <adachan@apple.com>
 
         Reviewed by Adam.
