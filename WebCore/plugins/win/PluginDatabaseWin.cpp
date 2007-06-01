@@ -288,6 +288,13 @@ static inline void addMozillaPluginPaths(Vector<String>& paths)
 
 static inline void addWindowsMediaPlayerPluginPath(Vector<String>& paths)
 {
+    // The new WMP Firefox plugin is installed in \PFiles\Plugins if it can't find any Firefox installs
+    WCHAR pluginDirectoryStr[_MAX_PATH + 1];
+    DWORD pluginDirectorySize = ::ExpandEnvironmentStringsW(TEXT("%SYSTEMDRIVE%\\PFiles\\Plugins"), pluginDirectoryStr, _countof(pluginDirectoryStr));
+
+    if (pluginDirectorySize > 0 && pluginDirectorySize <= _countof(pluginDirectoryStr))
+        paths.append(String(pluginDirectoryStr, pluginDirectorySize - 1));
+
     DWORD type;
     WCHAR installationDirectoryStr[_MAX_PATH];
     DWORD installationDirectorySize = sizeof(installationDirectoryStr);
