@@ -1,3 +1,13 @@
+2007-06-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Kevin Decker.
+        
+        Remove unnecessary user agent spoofs, now that we have the final UA in place.
+        Added spoof to allow Flash downloads from adobe.com
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL):
+
 2007-05-30  Ada Chan  <adachan@apple.com>
 
         Reviewed by Steve.

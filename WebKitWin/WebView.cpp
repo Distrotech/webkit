@@ -1557,18 +1557,12 @@ const String& WebView::userAgentForKURL(const KURL& url)
         return m_userAgentCustom;
 
     static const DeprecatedString uaCustomHosts[] = {
-        "yahoo.com",                        // <rdar://problem/5041782> http://www.yahoo.com thinks Boomer is an unsupported browser
         "flickr.com",                       // <rdar://problem/5081617> flickr does not recognize post-2.0.4 versions of Safari
-        "disney.com",                       // <rdar://problem/5041779> http://www.disney.com thinks Boomer is an unsupported browser
-        "disney.go.com",                    // <rdar://problem/5041779> http://www.disney.com thinks Boomer is an unsupported browser
-        "ax.phobos.apple.com.edgesuite.net" // <rdar://problem/5041780> iTunes links don't work with Boomer (useragent issue) works if UA is Firefox
+        "adobe.com"                         // <rdar://problem/5243655> Flash download page doesn't recognize Boomer
     };
     static const String uaCustomValues[] = {
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/418.9.1 (KHTML, like Gecko) Safari/419.3",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/418.9.1 (KHTML, like Gecko) Safari/419.3",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1",
-        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522 (KHTML, like Gecko) Safari/521.32.1"
+        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3"
     };
 
     if (allowSiteSpecificHacks())
