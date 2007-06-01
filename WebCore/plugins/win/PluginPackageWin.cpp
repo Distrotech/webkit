@@ -45,7 +45,7 @@ static String getVersionInfo(const LPVOID versionInfoData, const String& info)
 
     bool retval = VerQueryValueW(versionInfoData, const_cast<UChar*>(subInfo.charactersWithNullTermination()), 
                                  &buffer, &bufferLength);
-    if (!retval)
+    if (!retval || bufferLength == 0)
         return String();
 
     // Subtract 1 from the length; we don't want the trailing 0

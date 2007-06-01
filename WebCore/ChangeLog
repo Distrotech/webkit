@@ -2,6 +2,15 @@
 
         Reviewed by Steve.
 
+        If the value exists but is empty, return an empty String.
+        
+        * plugins/win/PluginPackageWin.cpp:
+        (WebCore::getVersionInfo):
+
+2007-06-01  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Steve.
+
         Add the default path for the new WMP Firefox plugin.
 
         * plugins/win/PluginDatabaseWin.cpp:
