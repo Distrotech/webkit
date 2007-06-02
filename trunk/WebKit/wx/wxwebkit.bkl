@@ -3,7 +3,6 @@
 
 <makefile>
     <set var="WX_UNICODE">1</set>
-    <set var="WX_DEBUG">1</set>
     <set var="WX_SHARED">1</set>
 
     <include file="../../Bakefiles/presets.bkl"/>
