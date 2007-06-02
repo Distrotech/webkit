@@ -118,7 +118,7 @@ void PluginStreamWin::startStream()
 
     // Some plugins (Flash) expect that javascript URLs are passed back decoded as this is the
     // format used when requesting the URL.
-    if (responseURL.protocol() == "javascript")
+    if (!strcmpi(responseURL.protocol().ascii(), "javascript"))
         m_stream.url = _strdup(responseURL.decode_string(responseURL.url()).utf8());
     else
         m_stream.url = _strdup(responseURL.url().utf8());

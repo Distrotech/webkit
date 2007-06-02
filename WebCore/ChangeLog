@@ -1,3 +1,15 @@
+2007-06-02  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by gramps.
+
+        Fix http://www.tvguide.com/ "LAUNCH VIDEO & PHOTO PLAYER" button.
+        Make "javascript" URL scheme string compare case insensitive.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream): Use strcmpi.
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::scriptStringIfJavaScriptURL): Use strcmpi.
+
 2007-06-01  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Steve.
