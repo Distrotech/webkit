@@ -35,7 +35,7 @@
 #include <CoreFoundation/CFString.h>
 #endif
 
-#if COMPILER(MSVC)
+#if PLATFORM(WIN_OS)
 #ifndef WINVER
 #define WINVER 0x0500
 #endif
@@ -70,7 +70,7 @@ static void vprintf_stderr_common(const char* format, va_list args)
         CFRelease(str);
         CFRelease(cfFormat);
     } else
-#elif COMPILER(MSVC)
+#elif PLATFORM(WIN_OS)
     if (IsDebuggerPresent()) {
         size_t size = 1024;
 

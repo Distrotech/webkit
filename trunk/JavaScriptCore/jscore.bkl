@@ -52,9 +52,6 @@ JavaScriptCore Bakefile project file.
             $(JSCORE_SOURCES_PCRE)
             $(WTF_SOURCES)
         </sources>
-        <if cond="PLATFORM_WIN32=='1'">
-            $(JSCORE_SOURCES_WIN)
-        </if>
         <install-to>$(WKOUTPUTDIR)</install-to>
         <pic>on</pic>
         <threading>multi</threading>

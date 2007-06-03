@@ -91,13 +91,11 @@
 
 /* PLATFORM(CG) */
 /* PLATFORM(CAIRO) */
-#if !PLATFORM(WX)
 #if PLATFORM(MAC)
 #define WTF_PLATFORM_CG 1
 #define WTF_PLATFORM_CI 1
-#elif !PLATFORM(QT)
+#elif !PLATFORM(QT) && !PLATFORM(WX)
 #define WTF_PLATFORM_CAIRO 1
-#endif
 #endif
 
 
@@ -199,7 +197,7 @@
 #define WTF_PLATFORM_CF 1
 #endif
 
-#if PLATFORM(WIN) && !PLATFORM(WX)
+#if PLATFORM(WIN)
 #define WTF_USE_WININET 1
 #endif
 
