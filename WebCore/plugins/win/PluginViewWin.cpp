@@ -90,7 +90,7 @@ private:
 
 static String scriptStringIfJavaScriptURL(const KURL& url)
 {
-    if (strcmpi(url.protocol().ascii(), "javascript"))
+    if (!url.url().startsWith("javascript:", false))
         return String();
 
     // This returns an unescaped string

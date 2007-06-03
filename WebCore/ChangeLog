@@ -1,5 +1,16 @@
 2007-06-02  Steve Falkenburg  <sfalken@apple.com>
 
+        Reviewed by Adam.
+
+        Update last fix to use startsWith instead of strcmpi.
+
+        * plugins/win/PluginStreamWin.cpp:
+        (WebCore::PluginStreamWin::startStream):
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::scriptStringIfJavaScriptURL):
+
+2007-06-02  Steve Falkenburg  <sfalken@apple.com>
+
         Reviewed by gramps.
 
         Fix http://www.tvguide.com/ "LAUNCH VIDEO & PHOTO PLAYER" button.
