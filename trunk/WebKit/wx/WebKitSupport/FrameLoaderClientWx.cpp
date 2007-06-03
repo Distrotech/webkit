@@ -333,11 +333,6 @@ void FrameLoaderClientWx::dispatchDidCommitLoad()
 
 void FrameLoaderClientWx::dispatchDidFinishDocumentLoad()
 {
-    notImplemented();
-}
-
-void FrameLoaderClientWx::dispatchDidFinishLoad()
-{
     wxWindow* target = m_frame->view()->nativeWindow();
     if (target)
     {
@@ -346,6 +341,11 @@ void FrameLoaderClientWx::dispatchDidFinishLoad()
         wkEvent.SetURL(m_frame->loader()->URL().url());
         target->GetEventHandler()->ProcessEvent(wkEvent);
     }
+}
+
+void FrameLoaderClientWx::dispatchDidFinishLoad()
+{
+    notImplemented();
 }
 
 
