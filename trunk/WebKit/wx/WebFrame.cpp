@@ -228,8 +228,8 @@ void wxWebFrame::OnStateChangedEvent(wxWebViewStateChangedEvent& event)
         }
         else if (event.GetState() == wxWEBVIEW_STATE_STOP){
             GetStatusBar()->SetStatusText(_("Load complete."));
-            //addressBar->SetValue(event.GetURL());
-            //SetTitle(mySafari->GetTitle());
+            addressBar->SetValue(event.GetURL());
+            SetTitle(webview->GetPageTitle());
         }
         else if (event.GetState() == wxWEBVIEW_STATE_FAILED){
             GetStatusBar()->SetStatusText(_("Failed to load ") + event.GetURL());

@@ -155,6 +155,7 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     m_isEditable = false;
     m_isInitialized = false;
     m_beingDestroyed = false;
+    m_title = wxEmptyString;
 
     if (!wxScrolledWindow::Create(parent, id, position, size))
         return;

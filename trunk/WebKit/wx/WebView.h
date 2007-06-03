@@ -73,6 +73,8 @@ public:
     void MakeEditable(bool enable);
     bool IsEditable() { return m_isEditable; }
 
+    wxString GetPageTitle() { return m_title; }
+    void SetPageTitle(const wxString& title) { m_title = title; }
     WebViewPrivate* m_impl;
 
 protected:
@@ -93,6 +95,7 @@ private:
     bool m_isEditable;
     bool m_isInitialized;
     bool m_beingDestroyed;
+    wxString m_title;
 };
 
 // ----------------------------------------------------------------------------

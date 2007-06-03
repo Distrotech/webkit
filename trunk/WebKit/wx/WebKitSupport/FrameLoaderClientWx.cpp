@@ -303,7 +303,7 @@ void FrameLoaderClientWx::dispatchDidStartProvisionalLoad()
     {
         wxWebViewStateChangedEvent wkEvent(target);
         wkEvent.SetState(wxWEBVIEW_STATE_NEGOTIATING);
-        //wkEvent.SetURL(m_frame->loader()->documentLoader()->request().url().url());
+        wkEvent.SetURL(m_frame->loader()->provisionalDocumentLoader()->request().url().url());
         target->GetEventHandler()->ProcessEvent(wkEvent);
     }
 }
@@ -311,7 +311,11 @@ void FrameLoaderClientWx::dispatchDidStartProvisionalLoad()
 
 void FrameLoaderClientWx::dispatchDidReceiveTitle(const String& title)
 {
-    notImplemented();
+    wxWebView* target = (wxWebView*)m_frame->view()->nativeWindow();
+    if (target)
+    {
+        target->SetPageTitle((const String&)title);
+    }
 }
 
 
@@ -322,7 +326,7 @@ void FrameLoaderClientWx::dispatchDidCommitLoad()
     {
         wxWebViewStateChangedEvent wkEvent(target);
         wkEvent.SetState(wxWEBVIEW_STATE_TRANSFERRING);
-        //wkEvent.SetURL(m_frame->loader()->documentLoader()->request().url().url());
+        wkEvent.SetURL(m_frame->loader()->documentLoader()->request().url().url());
         target->GetEventHandler()->ProcessEvent(wkEvent);
     }
 }
@@ -339,7 +343,7 @@ void FrameLoaderClientWx::dispatchDidFinishLoad()
     {
         wxWebViewStateChangedEvent wkEvent(target);
         wkEvent.SetState(wxWEBVIEW_STATE_STOP);
-        //wkEvent.SetURL(m_frame->loader()->documentLoader()->request().url().url());
+        wkEvent.SetURL(m_frame->loader()->URL().url());
         target->GetEventHandler()->ProcessEvent(wkEvent);
     }
 }
@@ -717,7 +721,6 @@ void FrameLoaderClientWx::dispatchDidReceiveResponse(WebCore::DocumentLoader* lo
 
     m_response = response;
     m_firstData = true;
-    //fprintf(stderr, "got response from %S\n", response.url().url().utf8());
 }
 
 void FrameLoaderClientWx::dispatchDidReceiveContentLength(WebCore::DocumentLoader* loader, unsigned long id, int length)
