@@ -365,7 +365,6 @@ void GraphicsContext::clip(const IntRect& r)
             pos = window->GetPosition();
     }
 */
-    fprintf(stderr, "Setting clip region to %d, %d, %d, %d\n", r.x(), r.y(), r.width(), r.height());
     m_data->context->SetClippingRegion(r.x() - pos.x, r.y() - pos.y, r.width() + pos.x, r.height() + pos.y);
 }
 
