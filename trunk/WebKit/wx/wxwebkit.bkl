@@ -10,6 +10,12 @@
     
     <dll id="wxwebkit-dynamic" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
         <debug-info>on</debug-info>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <debug-runtime-libs>
+                $(substituteFromDict(WX_DEBUG, {'1':'on','0':'off'}))
+            </debug-runtime-libs>
+        </if>
+        
         <!-- make sure we relink wxwebkit if either webcore or jscore change -->
         <if cond="FORMAT=='gnu'">
             <depends-on-file>$(WKOUTPUTDIR)/libjscore.a</depends-on-file>

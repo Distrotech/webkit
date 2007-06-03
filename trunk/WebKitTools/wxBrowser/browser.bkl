@@ -15,6 +15,11 @@
     <exe id="wxBrowser" template="wx,xml2,iconv,xslt,icu,jscore,webcore,wxwebkit,curl,pthreads">
         <app-type>gui</app-type>
         <debug-info>on</debug-info>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <debug-runtime-libs>
+                $(substituteFromDict(WX_DEBUG, {'1':'on','0':'off'}))
+            </debug-runtime-libs>
+        </if>
         <runtime-libs>dynamic</runtime-libs>
         <dirname>$(WKOUTPUTDIR)</dirname>
         <set var="BUILDDIR">obj-$(FORMAT)</set>

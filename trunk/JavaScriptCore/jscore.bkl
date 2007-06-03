@@ -35,6 +35,7 @@ JavaScriptCore Bakefile project file.
     <include file="../Bakefiles/presets.bkl"/>
     <include file="JavaScriptCoreSources.bkl"/>
     <include file="WTFSources.bkl"/>
+    <include file="presets/wx.bkl" ignore_missing="1"/>
 
     <set var="BUILDDIR">obj-$(FORMAT)</set>
 
@@ -46,6 +47,11 @@ JavaScriptCore Bakefile project file.
         <cxx-rtti>off</cxx-rtti>
         <cxx-exceptions>off</cxx-exceptions>
         <debug-info>on</debug-info>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj'] and isdefined('WX_DEBUG')">
+            <debug-runtime-libs>
+                $(substituteFromDict(WX_DEBUG, {'1':'on','0':'off'}))
+            </debug-runtime-libs>
+        </if>
         <sources>
             $(JSCORE_SOURCES_BINDINGS)
             $(JSCORE_SOURCES_KJS)

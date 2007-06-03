@@ -50,6 +50,11 @@ wxWebCore port Bakefile project file.
         <pic>on</pic>
         <threading>multi</threading>
         <debug-info>on</debug-info>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <debug-runtime-libs>
+                $(substituteFromDict(WX_DEBUG, {'1':'on','0':'off'}))
+            </debug-runtime-libs>
+        </if>
         <dirname>$(WKOUTPUTDIR)</dirname>
 
         <define>BUILDING_WX__=1</define>
