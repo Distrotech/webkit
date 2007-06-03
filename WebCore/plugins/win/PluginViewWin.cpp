@@ -1061,6 +1061,15 @@ NPError PluginViewWin::setValue(NPPVariable variable, void* value)
     }
 }
 
+void PluginViewWin::invalidateTimerFired(Timer<PluginViewWin>* timer)
+{
+    ASSERT(timer == &m_invalidateTimer);
+
+    Widget::invalidateRect(m_invalidRect);
+    m_invalidRect.setSize(IntSize());
+}
+
+
 void PluginViewWin::invalidateRect(NPRect* rect)
 {
     if (!rect) {
@@ -1073,8 +1082,18 @@ void PluginViewWin::invalidateRect(NPRect* rect)
     if (m_isWindowed) {
         RECT invalidRect(r);
         InvalidateRect(m_window, &invalidRect, FALSE);
-    } else
-        Widget::invalidateRect(r);
+    } else {
+        if (m_quirks & PluginQuirksThrottleInvalidate) {
+            if (m_invalidateTimer.isActive())
+                m_invalidRect.unite(r);
+            else {
+                ASSERT(m_invalidRect.isEmpty());
+                m_invalidRect = r;
+                m_invalidateTimer.startOneShot(0.0);
+            }
+        } else
+            Widget::invalidateRect(r);
+    }
 }
 
 void PluginViewWin::invalidateRegion(NPRegion region)
@@ -1147,8 +1166,10 @@ void PluginViewWin::disconnectStream(PluginStreamWin* stream)
 void PluginViewWin::determineQuirks(const String& mimeType)
 {
     // The flash plugin only requests windowless plugins if we return a mozilla user agent
-    if (mimeType == "application/x-shockwave-flash")
+    if (mimeType == "application/x-shockwave-flash") {
         m_quirks |= PluginQuirkWantsMozillaUserAgent;
+        m_quirks |= PluginQuirksThrottleInvalidate;
+    }
 
     // The WMP plugin sets its size on the first NPP_SetWindow call and never updates its size, so
     // call SetWindow when the plugin view has a correct size
@@ -1165,6 +1186,7 @@ PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Eleme
     , m_baseURL(m_parentFrame->loader()->completeURL(m_parentFrame->document()->baseURL()))
     , m_status(PluginStatusLoadedSuccessfully)
     , m_requestTimer(this, &PluginViewWin::requestTimerFired)
+    , m_invalidateTimer(this, &PluginViewWin::invalidateTimerFired)
     , m_paramNames(0)
     , m_paramValues(0)
     , m_window(0)

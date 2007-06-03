@@ -1,3 +1,22 @@
+2007-06-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/5245016> 100A89+WebKit.dll: Can't select text in page location field at kids.yahoo.com
+        
+        Delay invalidates for windowless Flash to prevent Flash WM_PAINT and WM_USER+1 messages from
+        starving other HWNDs.
+        
+        This code defers the invalidate through a WebCore::Timer.  We could have used a Windows ::SetTimer
+        to further lessen CPU load, but this would have the additional risk of negatively impacting Flash
+        performance, since WebCore::Timer is set up to be more responsive than ::SetTimer.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::invalidateTimerFired): Added.
+        (WebCore::PluginViewWin::invalidateRect): Delay invalidates for windowless Flash.
+        (WebCore::PluginViewWin::determineQuirks): Add delayed invalidate quirk.
+        * plugins/win/PluginViewWin.h:
+
 2007-06-02  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.

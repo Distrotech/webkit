@@ -62,6 +62,7 @@ namespace WebCore {
     enum PluginQuirks {
         PluginQuirkWantsMozillaUserAgent = 1 << 0,
         PluginQuirkDeferFirstSetWindowCall = 1 << 1,
+        PluginQuirksThrottleInvalidate = 1 << 2
     };
 
     enum PluginStatus {
@@ -136,11 +137,14 @@ namespace WebCore {
         KURL m_url;
         KURL m_baseURL;
         PluginStatus m_status;
-        
+        IntRect m_invalidRect;
+
         void performRequest(PluginRequestWin*);
         void scheduleRequest(PluginRequestWin*);
         void requestTimerFired(Timer<PluginViewWin>*);
+        void invalidateTimerFired(Timer<PluginViewWin>*);
         Timer<PluginViewWin> m_requestTimer;
+        Timer<PluginViewWin> m_invalidateTimer;
 
         void updateWindow() const;
         void determineQuirks(const String& mimeType);
