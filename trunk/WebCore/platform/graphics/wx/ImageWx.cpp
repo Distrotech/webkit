@@ -124,6 +124,8 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
     wxWindowDC* context = ctxt->platformContext();
 #endif
 
+    ctxt->save();
+    ctxt->clip(IntRect(dstRect.x(), dstRect.y(), dstRect.width(), dstRect.height());
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
     if (!bitmap) // If it's too early we won't have an image yet.
         return;
@@ -151,6 +153,7 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
         currentW += srcRect.width();
         currentH = 0;
     }
+    ctxt->restore();
 
     startAnimation();
 
