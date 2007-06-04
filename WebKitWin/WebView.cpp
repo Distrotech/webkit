@@ -1558,11 +1558,13 @@ const String& WebView::userAgentForKURL(const KURL& url)
 
     static const DeprecatedString uaCustomHosts[] = {
         "flickr.com",                       // <rdar://problem/5081617> flickr does not recognize post-2.0.4 versions of Safari
-        "adobe.com"                         // <rdar://problem/5243655> Flash download page doesn't recognize Boomer
+        "adobe.com",                        // <rdar://problem/5243655> Flash download page doesn't recognize Boomer
+        "volvocars.us"                      // <rdar://problem/5246665> Drop down lists are not drawn on volvocars.us
     };
     static const String uaCustomValues[] = {
         "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/418.9.1 (KHTML, like Gecko) Safari/419.3",
-        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3"
+        "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3",
+        "Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/522.7 (KHTML, like Gecko) Version/3.0 Safari/522.7"
     };
 
     if (allowSiteSpecificHacks())

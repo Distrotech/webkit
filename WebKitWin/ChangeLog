@@ -1,3 +1,12 @@
+2007-06-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/5246665> Drop down lists are not drawn on volvocars.us
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL):
+
 2007-06-01  Kevin McCullough  <kmccullough@apple.com>
 
         Reviewed by Oliver.
