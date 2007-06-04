@@ -2,6 +2,18 @@
 
         Reviewed by Oliver.
 
+        Update to last fix.
+        Invalidate a list of rects rather than unioning them.
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWin::invalidateTimerFired):
+        (WebCore::PluginViewWin::invalidateRect):
+        * plugins/win/PluginViewWin.h:
+
+2007-06-03  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Oliver.
+
         <rdar://problem/5245016> 100A89+WebKit.dll: Can't select text in page location field at kids.yahoo.com
         
         Delay invalidates for windowless Flash to prevent Flash WM_PAINT and WM_USER+1 messages from

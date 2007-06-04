@@ -137,7 +137,7 @@ namespace WebCore {
         KURL m_url;
         KURL m_baseURL;
         PluginStatus m_status;
-        IntRect m_invalidRect;
+        Vector<IntRect> m_invalidRects;
 
         void performRequest(PluginRequestWin*);
         void scheduleRequest(PluginRequestWin*);

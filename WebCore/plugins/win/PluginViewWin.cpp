@@ -1065,8 +1065,9 @@ void PluginViewWin::invalidateTimerFired(Timer<PluginViewWin>* timer)
 {
     ASSERT(timer == &m_invalidateTimer);
 
-    Widget::invalidateRect(m_invalidRect);
-    m_invalidRect.setSize(IntSize());
+    for (int i = 0; i < m_invalidRects.size(); i++)
+        Widget::invalidateRect(m_invalidRects[i]);
+    m_invalidRects.clear();
 }
 
 
@@ -1084,13 +1085,9 @@ void PluginViewWin::invalidateRect(NPRect* rect)
         InvalidateRect(m_window, &invalidRect, FALSE);
     } else {
         if (m_quirks & PluginQuirksThrottleInvalidate) {
-            if (m_invalidateTimer.isActive())
-                m_invalidRect.unite(r);
-            else {
-                ASSERT(m_invalidRect.isEmpty());
-                m_invalidRect = r;
+            m_invalidRects.append(r);
+            if (!m_invalidateTimer.isActive())
                 m_invalidateTimer.startOneShot(0.0);
-            }
         } else
             Widget::invalidateRect(r);
     }
