@@ -1,3 +1,16 @@
+2007-06-05  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by olliej.
+
+        Commit files missing from previous commit, oops!
+        
+        * platform/graphics/svg/SVGResourceMasker.cpp:
+        (WebCore::SVGResourceMasker::SVGResourceMasker):
+        (WebCore::SVGResourceMasker::invalidate):
+        * platform/graphics/svg/SVGResourceMasker.h:
+        * platform/graphics/svg/cg/SVGResourceMaskerCg.mm:
+        (WebCore::SVGResourceMasker::applyMask):
+
 2007-06-01  Eric Seidel  <eric@webkit.org>
 
         Reviewed by olliej.
