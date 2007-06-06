@@ -34,7 +34,6 @@
 
 namespace WebCore {
 
-    class CSSStyleDeclaration;
     class RenderPath;
     class RenderView;
 
@@ -47,6 +46,8 @@ namespace WebCore {
         virtual bool supportsMarkers() const { return false; }
 
         // 'SVGStylable' functions
+        virtual PassRefPtr<CSSValue> getPresentationAttribute(const String& name);
+
         // These need to be implemented.
         virtual bool rendererIsNeeded(RenderStyle*);
         virtual Path toPathData() const { return Path(); }
