@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(WebKitOutputDir)\bin\TestNetscapePlugin"
+			OutputDirectory="$(WebKitOutputDir)\bin\TestNetscapePlugin$(WebKitConfigSuffix)"
 			IntermediateDirectory="$(WebKitOutputDir)\obj\$(ProjectName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="..\DumpRenderTree\debug.vsprops"
@@ -145,6 +145,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\np$(ProjectName)$(WebKitConfigSuffix).dll"
 				LinkIncremental="1"
+				GenerateManifest="false"
 				ModuleDefinitionFile="TestNetscapePlugin.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

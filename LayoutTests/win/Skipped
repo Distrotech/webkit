@@ -359,17 +359,6 @@ http/tests/navigation/anchor-frames.html
 # DRT doesn't support tests with multiple windows <rdar://problem/5133670>
 http/tests/navigation/new-window-redirect-history.html
 
-# TestNetscapePlugin failing on boomer release. <rdar://problem/5149673>
-http/tests/plugins/interrupted-get-url.html
-plugins/destroy-stream-twice.html
-plugins/get-empty-url.html
-plugins/geturl-replace-query.html
-plugins/inner-html-display-none.html
-plugins/invoke.html
-plugins/netscape-dom-access.html
-plugins/netscape-enumerate.html
-plugins/netscape-invoke-default.html
-
 # Console messages are not being printed out for failed canLoad checks <rdar://problem/5128314>
 http/tests/security/local-CSS-from-remote.html
 http/tests/security/local-JavaScript-from-remote.html
@@ -447,6 +436,7 @@ fast/loader/loadInProgress.html
 fast/loader/simultaneous-reloads-assert.html
 fast/parser/script-after-frameset-assert.html
 http/tests/misc/onload-remove-iframe-crash-2.html
+plugins/inner-html-display-none.html
 
 # Negatively-sized RenderView <rdar://problem/5230387>
 fast/events/focusingUnloadedFrame.html

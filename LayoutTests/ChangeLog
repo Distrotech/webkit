@@ -1,3 +1,13 @@
+2007-06-06  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5149673>
+        TestNetscapePlugin doesn't have the right version info
+        
+        * win/Skipped:
+        Remove tests that now succeed, move one test that fails for another reason.
+
 2007-05-29  Adam Roben  <aroben@apple.com>
 
         * win/Skipped: Added another failing test.

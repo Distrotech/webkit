@@ -53,6 +53,12 @@
 
 using std::wstring;
 
+#ifdef _DEBUG
+const LPWSTR TestPluginDir = L"TestNetscapePlugin_Debug";
+#else
+const LPWSTR TestPluginDir = L"TestNetscapePlugin";
+#endif
+
 #define USE_MAC_FONTS
 
 const LPCWSTR kDumpRenderTreeClassName = L"DumpRenderTreeWindow";
@@ -704,8 +710,11 @@ int main(int argc, char* argv[])
     // FIXME: options
 
     COMPtr<IWebView> webView;
-    if (FAILED(CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView)))
+    HRESULT hr = CoCreateInstance(CLSID_WebView, 0, CLSCTX_ALL, IID_IWebView, (void**)&webView);
+    if (FAILED(hr)) {
+        fprintf(stderr, "Failed to create CLSID_WebView instance, error 0x%x\n", hr);
         return -1;
+    }
 
     if (FAILED(webView->setHostWindow((OLE_HANDLE)(ULONG64)hostWindow)))
         return -1;
@@ -720,10 +729,10 @@ int main(int argc, char* argv[])
         return -1;
     webView->Release();
 
-    LPCTSTR testNetscapePluginStr = TEXT("testnetscapeplugin");
-    BSTR pluginPath = SysAllocStringLen(0, exePath.length() + _tcslen(testNetscapePluginStr));
+
+    BSTR pluginPath = SysAllocStringLen(0, exePath.length() + _tcslen(TestPluginDir));
     _tcscpy(pluginPath, exePath.c_str());
-    _tcscat(pluginPath, testNetscapePluginStr);
+    _tcscat(pluginPath, TestPluginDir);
     bool failed = FAILED(viewPrivate->addAdditionalPluginPath(pluginPath));
     SysFreeString(pluginPath);
     if (failed)
