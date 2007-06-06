@@ -1,3 +1,15 @@
+2007-04-26  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Hyatt.
+
+        <rdar://problem/4851944>
+        REGRESSION: With TOT, BMP images can no longer be opened in the browser window
+        
+        On Tiger, the MIME type for the com.microsoft.bmp UTI isn't in the registry, so add it manually.
+        
+        * platform/MimeTypeRegistry.cpp:
+        (WebCore::initialiseSupportedImageMIMETypes):
+
 2007-04-22  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin and Geoff.
