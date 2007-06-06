@@ -125,7 +125,7 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
 #endif
 
     ctxt->save();
-    ctxt->clip(IntRect(dstRect.x(), dstRect.y(), dstRect.width(), dstRect.height());
+    ctxt->clip(IntRect(dstRect.x(), dstRect.y(), dstRect.width(), dstRect.height()));
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
     if (!bitmap) // If it's too early we won't have an image yet.
         return;
