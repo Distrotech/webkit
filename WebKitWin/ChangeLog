@@ -1,3 +1,16 @@
+2007-06-06  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        <rdar://problem/5255861> REGRESSION: Can't download Adobe Acrobat Reader and plug-in
+        <rdar://problem/5243655> Flash download page doesn't recognize Boomer
+        
+        Refine user agent spoofing code to only spoof Flash download as Firefox without spoofing all of adobe.com.
+        This fixes the Acrobat Reader download.
+
+        * WebView.cpp:
+        (WebView::userAgentForKURL):
+
 2007-06-03  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.
