@@ -51,6 +51,13 @@ namespace KJS {
 
 const ClassInfo FunctionImp::info = {"Function", &InternalFunctionImp::info, 0, 0};
 
+  class Parameter {
+  public:
+    Parameter() {};
+    Parameter(const Identifier& n) : name(n) { }
+    Identifier name;
+  };
+
 FunctionImp::FunctionImp(ExecState* exec, const Identifier& n, FunctionBodyNode* b)
   : InternalFunctionImp(static_cast<FunctionPrototype*>
                         (exec->lexicalInterpreter()->builtinFunctionPrototype()), n)
@@ -81,7 +88,7 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
   ctx.setExecState(&newExec);
 
   // assign user supplied arguments to parameters
-  passInParameters(&newExec, args);
+  processParameters(&newExec, args);
   // add variable declarations (initialized to undefined)
   processVarDecls(&newExec);
 
@@ -145,10 +152,36 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
     return jsUndefined();
 }
 
-// ECMA 10.1.3q
-inline void FunctionImp::passInParameters(ExecState* exec, const List& args)
+void FunctionImp::addParameter(const Identifier& n)
 {
-    Vector<Parameter>& parameters = body->parameters();
+    if (!parameters)
+        parameters.set(new Vector<Parameter>);
+
+    parameters->append(Parameter(n));
+}
+
+UString FunctionImp::parameterString() const
+{
+    UString s;
+
+    if (!parameters)
+        return s;
+
+    for (size_t i = 0; i < parameters->size(); ++i) {
+        if (!s.isEmpty())
+            s += ", ";
+        s += parameters->at(i).name.ustring();
+    }
+
+    return s;
+}
+
+
+// ECMA 10.1.3q
+void FunctionImp::processParameters(ExecState* exec, const List& args)
+{
+    if (!parameters)
+        return;
 
     JSObject* variable = exec->context()->variableObject();
 
@@ -158,14 +191,26 @@ inline void FunctionImp::passInParameters(ExecState* exec, const List& args)
           name().isEmpty() ? "(internal)" : name().ascii());
 #endif
 
-    size_t size = parameters.size();
-    for (size_t i = 0; i < size; ++i) {
+    ListIterator it = args.begin();
+
+    JSValue * v = *it;
+    for (size_t i = 0; i < parameters->size(); ++i) {
+      if (it != args.end()) {
 #ifdef KJS_VERBOSE
-      fprintf(stderr, "setting parameter %s ", parameters->at(i).name.ascii());
-      printInfo(exec, "to", args[i]);
+        fprintf(stderr, "setting parameter %s ", parameters->at(i).name.ascii());
+        printInfo(exec, "to", *it);
 #endif
-      variable->put(exec, parameters[i].name, args[i]);
-    }
+        variable->put(exec, parameters->at(i).name, v);
+        v = ++it;
+      } else
+        variable->put(exec, parameters->at(i).name, jsUndefined());
+  }
+#ifdef KJS_VERBOSE
+  else {
+    for (int i = 0; i < args.size(); ++i)
+      printInfo(exec,"setting argument", args[i]);
+  }
+#endif
 }
 
 void FunctionImp::processVarDecls(ExecState*)
@@ -211,7 +256,7 @@ JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&
 JSValue* FunctionImp::lengthGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot)
 {
     FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
-    return jsNumber(thisObj->body->numParams());
+    return jsNumber(thisObj->parameters ? thisObj->parameters->size() : 0);
 }
 
 bool FunctionImp::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -259,17 +304,17 @@ bool FunctionImp::deleteProperty(ExecState* exec, const Identifier& propertyName
  */
 Identifier FunctionImp::getParameterName(int index)
 {
-    Vector<Parameter>& parameters = body->parameters();
+    if (!parameters)
+        return CommonIdentifiers::shared()->nullIdentifier;
 
-    if (static_cast<size_t>(index) >= body->numParams())
+    if (static_cast<size_t>(index) >= parameters->size())
         return CommonIdentifiers::shared()->nullIdentifier;
   
-    Identifier name = parameters[index].name;
+    Identifier name = parameters->at(index).name;
 
     // Are there any subsequent parameters with the same name?
-    size_t size = parameters.size();
-    for (size_t i = index + 1; i < size; ++i)
-        if (parameters[i].name == name)
+    for (size_t i = index + 1; i < parameters->size(); ++i)
+        if (parameters->at(i).name == name)
             return CommonIdentifiers::shared()->nullIdentifier;
 
     return name;
@@ -464,8 +509,9 @@ const ClassInfo ActivationImp::info = {"Activation", 0, 0, 0};
 
 // ECMA 10.1.6
 ActivationImp::ActivationImp(FunctionImp* function, const List& arguments)
-    : _function(function), _arguments(arguments), _argumentsObject(0)
+    : _function(function), _arguments(true), _argumentsObject(0)
 {
+  _arguments.copyFrom(arguments);
   // FIXME: Do we need to support enumerating the arguments property?
 }
 
@@ -524,16 +570,15 @@ void ActivationImp::mark()
 {
     if (_function && !_function->marked()) 
         _function->mark();
+    _arguments.mark();
     if (_argumentsObject && !_argumentsObject->marked())
         _argumentsObject->mark();
     JSObject::mark();
 }
 
-void ActivationImp::createArgumentsObject(ExecState* exec)
+void ActivationImp::createArgumentsObject(ExecState* exec) const
 {
   _argumentsObject = new Arguments(exec, _function, _arguments, const_cast<ActivationImp*>(this));
-  // The arguments list is only needed to create the arguments object, so discard it now
-  _arguments.reset();
 }
 
 // ------------------------------ GlobalFunc -----------------------------------

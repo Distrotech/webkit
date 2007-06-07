@@ -3236,7 +3236,7 @@ void FrameLoader::checkNavigationPolicy(const ResourceRequest& request, Document
         
     // Don't ask more than once for the same request or if we are loading an empty URL.
     // This avoids confusion on the part of the client.
-    if (request == loader->lastCheckedRequest() || (!request.isNull() && request.url().isEmpty())) {
+    if (request == loader->lastCheckedRequest() || request.url().isEmpty()) {
         function(argument, request, 0, true);
         return;
     }
@@ -3265,8 +3265,6 @@ void FrameLoader::continueAfterNavigationPolicy(PolicyAction policy)
     PolicyCheck check = m_policyCheck;
     m_policyCheck.clear();
 
-    bool shouldContinue = policy == PolicyUse;
-    
     switch (policy) {
         case PolicyIgnore:
             check.clearRequest();
@@ -3280,13 +3278,12 @@ void FrameLoader::continueAfterNavigationPolicy(PolicyAction policy)
             if (!m_client->canHandleRequest(request)) {
                 handleUnimplementablePolicy(m_client->cannotShowURLError(check.request()));
                 check.clearRequest();
-                shouldContinue = false;
             }
             break;
         }
     }
 
-    check.call(shouldContinue);
+    check.call(policy == PolicyUse);
 }
 
 void FrameLoader::callContinueLoadAfterNavigationPolicy(void* argument,

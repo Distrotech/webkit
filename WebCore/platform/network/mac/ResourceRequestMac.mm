@@ -67,11 +67,6 @@ void ResourceRequest::doUpdateResourceRequest()
 
 void ResourceRequest::doUpdatePlatformRequest()
 {
-    if (isNull()) {
-        m_nsRequest = nil;
-        return;
-    }
-    
     NSMutableURLRequest* nsRequest = [m_nsRequest.get() mutableCopy];
 
     if (nsRequest)
