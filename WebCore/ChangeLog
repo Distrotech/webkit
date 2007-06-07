@@ -2,7 +2,7 @@
 
         Reviewed by Steve.
 
-        <rdar://problem/5252908>
+        <rdar://problem/5252902>
         Shockwave plug-in content crashes.
         
         Add a new quirk for plug-ins that need their WNDPROCs to be ASCII. If someone uses SetWindowLongA to set the WNDPROC to an ASCII one
