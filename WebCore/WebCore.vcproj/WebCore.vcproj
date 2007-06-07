@@ -2223,10 +2223,6 @@
 				>
 			</File>
 			<File
-				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_traversal.lut.h"
-				>
-			</File>
-			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_window.lut.h"
 				>
 			</File>
@@ -6944,6 +6940,18 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSHTMLSelectElementCustom.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeFilterCondition.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeFilterCondition.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\JSNodeFilterCustom.cpp"
 					>
 				</File>
 				<File
