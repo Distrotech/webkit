@@ -353,7 +353,7 @@ void GraphicsContext::clip(const IntRect& r)
 {
     wxWindowDC* windc = dynamic_cast<wxWindowDC*>(m_data->context);
     wxPoint pos(0, 0);
-/*
+
     if (windc)
     {
 #ifndef __WXGTK__
@@ -361,10 +361,16 @@ void GraphicsContext::clip(const IntRect& r)
 #else
         wxWindow* window = windc->m_owner;
 #endif
-        if (window)
-            pos = window->GetPosition();
+        wxWindow* parent = window->GetParent();
+        // we need to convert from WebView "global" to WebFrame "local" coords.
+        // FIXME: We only want to go to the top WebView.  
+        while (parent)
+        {
+            pos += window->GetPosition();
+            parent = parent->GetParent();
+        }
     }
-*/
+
     m_data->context->SetClippingRegion(r.x() - pos.x, r.y() - pos.y, r.width() + pos.x, r.height() + pos.y);
 }
 
