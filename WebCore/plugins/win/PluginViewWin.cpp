@@ -136,7 +136,11 @@ static bool registerPluginView()
 static LRESULT CALLBACK PluginViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PluginViewWin* pluginView = reinterpret_cast<PluginViewWin*>(GetProp(hWnd, kWebPluginViewProperty));
-    return DefWindowProc(hWnd, message, wParam, lParam);
+
+    if (pluginView && (pluginView->quirks() & PluginQuirksWantsAsciiWindowProc))
+        return DefWindowProcA(hWnd, message, wParam, lParam);
+    else 
+        return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
 void PluginViewWin::updateWindow() const
@@ -1172,6 +1176,16 @@ void PluginViewWin::determineQuirks(const String& mimeType)
     // call SetWindow when the plugin view has a correct size
     if (m_plugin->name().contains("Microsoft") && m_plugin->name().contains("Windows Media"))
         m_quirks |= PluginQuirkDeferFirstSetWindowCall;
+
+    // Shockwave calls SetWindowLongA to set a new WNDPROC on its plugin window. The value returned from SetWindowLongA is the old WNDPROC.
+    // If the previous WNDPROC was an Unicode WNDPROC, the address of the WNDPROC will not be returned. Instead, a special
+    // value that indicates that the messages coming to the WNDPROC need to be translated to Unicode. If CallWndProc is used to 
+    // call the WNDPROC, it knows when the value is a real function pointer or not. If it's not, the message should be translated.
+    // The Shockwave plugin however blindly treats the WNDPROC as a function pointer and tries to call it. Because of this, we set an ASCII
+    // WNDPROC on the plugin window so that the value returned to Shockwave will be a real function pointer.
+    // For more info on this, see http://blogs.msdn.com/oldnewthing/archive/2003/12/01/55900.aspx
+    if (mimeType == "application/x-director")
+        m_quirks |= PluginQuirksWantsAsciiWindowProc;
 }
 
 PluginViewWin::PluginViewWin(Frame* parentFrame, PluginPackageWin* plugin, Element* element, const KURL& url, const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType)
@@ -1243,6 +1257,9 @@ void PluginViewWin::init()
 
         m_window = CreateWindowEx(0, kWebPluginViewWindowClassName, 0, flags,
                                   0, 0, 0, 0, m_parentFrame->view()->containingWindow(), 0, Page::instanceHandle(), 0);
+
+        if (m_quirks & PluginQuirksWantsAsciiWindowProc)
+            ::SetWindowLongPtrA(m_window, GWL_WNDPROC, (LONG)PluginViewWndProc);
 
         SetProp(m_window, kWebPluginViewProperty, this);
 

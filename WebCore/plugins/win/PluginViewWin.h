@@ -62,7 +62,8 @@ namespace WebCore {
     enum PluginQuirks {
         PluginQuirkWantsMozillaUserAgent = 1 << 0,
         PluginQuirkDeferFirstSetWindowCall = 1 << 1,
-        PluginQuirksThrottleInvalidate = 1 << 2
+        PluginQuirksThrottleInvalidate = 1 << 2, 
+        PluginQuirksWantsAsciiWindowProc = 1 << 3
     };
 
     enum PluginStatus {
@@ -123,6 +124,7 @@ namespace WebCore {
 
         virtual void setParent(ScrollView*);
 
+        int quirks() const { return m_quirks; }
     private:
         void init();
         bool start();

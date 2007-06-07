@@ -1,3 +1,23 @@
+2007-06-07  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Steve.
+
+        <rdar://problem/5252908>
+        Shockwave plug-in content crashes.
+        
+        Add a new quirk for plug-ins that need their WNDPROCs to be ASCII. If someone uses SetWindowLongA to set the WNDPROC to an ASCII one
+        and the previous one was an Unicode one, the value returned from SetWindowLongA (the old WNDPROC) will not be a function pointer, but instead
+        a special value. The Win32 API CallWndProc knows that when it encounters a special value it must convert the message to Unicode. Shockwave 
+        does not use CallWndProc but instead treats the WNDPROC as a function.
+        
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginViewWndProc):
+        (WebCore::PluginViewWin::determineQuirks):
+        (WebCore::PluginViewWin::init):
+        * plugins/win/PluginViewWin.h:
+        (WebCore::):
+        (WebCore::PluginViewWin::quirks):
+
 2007-06-07  Sam Weinig  <sam@webkit.org>
 
         Build fix for the build fix.
