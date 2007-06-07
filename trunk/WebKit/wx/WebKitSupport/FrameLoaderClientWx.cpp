@@ -819,6 +819,21 @@ bool FrameLoaderClientWx::willUseArchive(WebCore::ResourceLoader*, const WebCore
 Frame* FrameLoaderClientWx::createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
                                         const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight)
 {
+/*
+    FIXME: Temporarily disabling code for loading subframes. While most 
+    (i)frames load and are destroyed properly, the iframe created by
+    google.com in its new homepage does not get destroyed when 
+    document()->detach() is called, as other (i)frames do. It is destroyed on 
+    app shutdown, but until that point, this 'in limbo' frame will do things
+    like steal keyboard focus and crash when clicked on. (On some platforms,
+    it is actually a visible object, even though it's not in a valid state.)
+    
+    Since just about every user is probably going to test against Google at 
+    some point, I'm disabling this functionality until I have time to track down
+    why it is not being destroyed.
+*/
+
+/*
     wxWindow* parent = m_frame->view()->nativeWindow();
 
     WebViewFrameData* data = new WebViewFrameData();
@@ -851,6 +866,9 @@ Frame* FrameLoaderClientWx::createFrame(const KURL& url, const String& name, HTM
     delete data;
     
     return childFrame.get();
+*/
+
+    return 0;
 }
 
 ObjectContentType FrameLoaderClientWx::objectContentType(const KURL& url, const String& mimeType)
