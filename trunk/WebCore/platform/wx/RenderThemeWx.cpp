@@ -191,8 +191,7 @@ void RenderThemeWx::adjustButtonStyle(CSSStyleSelector* selector, RenderStyle* s
 bool RenderThemeWx::paintButton(RenderObject* o, const RenderObject::PaintInfo& i, const IntRect& r)
 {
     wxScrolledWindow* window = o->view()->frameView()->nativeWindow();
-    wxAutoBufferedPaintDC dc((wxWindow*)window);
-    window->DoPrepareDC(dc);
+    wxDC* dc = (wxDC*)i.context->platformContext();
 
     int flags = 0;
     
@@ -207,12 +206,12 @@ bool RenderThemeWx::paintButton(RenderObject* o, const RenderObject::PaintInfo& 
         flags |= wxCONTROL_PRESSED;
     
     if(appearance == PushButtonAppearance || appearance == ButtonAppearance)
-        wxRendererNative::Get().DrawPushButton(window, dc, r, flags);
+        wxRendererNative::Get().DrawPushButton(window, *dc, r, flags);
     // TODO: add a radio button rendering API to wx
     //else if(appearance == RadioAppearance)
     //    wxRendererNative::Get().
     else if(appearance == CheckboxAppearance)
-        wxRendererNative::Get().DrawCheckBox(window, dc, r, flags);
+        wxRendererNative::Get().DrawCheckBox(window, *dc, r, flags);
         
     return false;
 }
@@ -224,7 +223,6 @@ void RenderThemeWx::adjustTextFieldStyle(CSSStyleSelector*, RenderStyle* style, 
 
 bool RenderThemeWx::paintTextField(RenderObject* o, const RenderObject::PaintInfo& i, const IntRect& r)
 {
-    //wxPaintDC* dc = (wxPaintDC*)i.context->platformContext();
     i.context->setStrokeThickness(1);
     i.context->setStrokeColor(Color(0, 0, 0));
     i.context->drawRect(r);
