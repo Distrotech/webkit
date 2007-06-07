@@ -369,6 +369,11 @@ void wxWebView::OnPaint(wxPaintEvent& event)
         if (dc.IsOk())
         {
             wxRect paintRect = GetRect();
+            // GetRect() uses coordinates relative to the parent view,
+            // so correct them to 0,0 for the DC.
+            paintRect.x = 0;
+            paintRect.y = 0;
+        
             int x = 0;
             int y = 0;
             GetViewStart(&x, &y);
@@ -386,14 +391,10 @@ void wxWebView::OnPaint(wxPaintEvent& event)
                 m_impl->frame->paint(gc, paintRect);
         }
     }
-    //event.Skip();
 }
 
 void wxWebView::OnSize(wxSizeEvent& event)
-{
-    // FIXME: Even with the below test, on Win
-    // I get m_impl->frame vars in an undefined state
-    
+{ 
     // NOTE: this call can be expensive on heavy pages, particularly on Mac,
     // so we probably should set a timer not put x ms between layouts.
     
