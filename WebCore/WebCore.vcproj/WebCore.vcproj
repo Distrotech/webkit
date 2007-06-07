@@ -2231,10 +2231,6 @@
 				>
 			</File>
 			<File
-				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_dom.lut.h"
-				>
-			</File>
-			<File
 				RelativePath="$(WebKitOutputDir)\obj\$(ProjectName)\DerivedSources\kjs_events.lut.h"
 				>
 			</File>
@@ -7096,10 +7092,6 @@
 				</File>
 				<File
 					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\kjs_dom.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\..\..\OpenSource\WebCore\bindings\js\kjs_domnode.h"
 					>
 				</File>
 				<File
