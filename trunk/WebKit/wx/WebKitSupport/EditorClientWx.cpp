@@ -129,41 +129,41 @@ bool EditorClientWx::isEditable()
 
 bool EditorClientWx::shouldBeginEditing(Range*)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
 bool EditorClientWx::shouldEndEditing(Range*)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
 bool EditorClientWx::shouldInsertNode(Node*, Range*,
                                        EditorInsertAction)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
 bool EditorClientWx::shouldInsertText(String, Range*,
                                        EditorInsertAction)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
 bool EditorClientWx::shouldApplyStyle(CSSStyleDeclaration*,
                                        Range*)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
 bool EditorClientWx::shouldChangeSelectedRange(Range* fromRange, Range* toRange, 
                                 EAffinity, bool stillSelecting)
 {
-    //notImplemented();
+    notImplemented();
     return true;
 }
 
