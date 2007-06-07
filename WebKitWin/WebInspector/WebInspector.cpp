@@ -833,7 +833,7 @@ static JSValueRef setFocusedDOMNodeCallback(JSContextRef context, JSObjectRef /*
 
     KJS::JSLock lock;
 
-    Node* node = KJS::toNode(toJS(arguments[0]));
+    Node* node = toNode(toJS(arguments[0]));
     if (!node) {
         inspector->setFocusedDOMNode(0);
         return undefined;
@@ -865,7 +865,7 @@ static JSValueRef focusedDOMNodeCallback(JSContextRef context, JSObjectRef /*fun
 
     KJS::JSLock lock;
 
-    return toRef(KJS::toJS(toJS(context), node));
+    return toRef(toJS(toJS(context), node));
 }
 
 static JSValueRef setRootDOMNodeCallback(JSContextRef context, JSObjectRef /*function*/, JSObjectRef /*thisObject*/, size_t argumentCount, const JSValueRef arguments[], JSValueRef* /*exception*/)
@@ -879,7 +879,7 @@ static JSValueRef setRootDOMNodeCallback(JSContextRef context, JSObjectRef /*fun
 
     KJS::JSLock lock;
 
-    Node* node = KJS::toNode(toJS(arguments[0]));
+    Node* node = toNode(toJS(arguments[0]));
     if (!node) {
         inspector->setRootDOMNode(0);
         return undefined;
@@ -911,7 +911,7 @@ static JSValueRef rootDOMNodeCallback(JSContextRef context, JSObjectRef /*functi
 
     KJS::JSLock lock;
 
-    return toRef(KJS::toJS(toJS(context), node));
+    return toRef(toJS(toJS(context), node));
 }
 
 static JSValueRef showOptionsMenuCallback(JSContextRef context, JSObjectRef /*function*/, JSObjectRef /*thisObject*/, size_t /*argumentCount*/, const JSValueRef /*arguments*/[], JSValueRef* /*exception*/)

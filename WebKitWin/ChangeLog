@@ -1,3 +1,15 @@
+2007-06-07  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Make the inspector compile again.
+
+        * WebInspector/WebInspector.cpp:
+        (setFocusedDOMNodeCallback):
+        (focusedDOMNodeCallback):
+        (setRootDOMNodeCallback):
+        (rootDOMNodeCallback):
+
 2007-06-06  Steve Falkenburg  <sfalken@apple.com>
 
         Reviewed by Adam.
