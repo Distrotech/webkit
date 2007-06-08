@@ -164,12 +164,28 @@ static inline ListImp *allocateListImp()
     return imp;
 }
 
-List::List() : _impBase(allocateListImp())
+List::List() : _impBase(allocateListImp()), _needsMarking(false)
 {
     ListImp *imp = static_cast<ListImp *>(_impBase);
     imp->size = 0;
     imp->refCount = 1;
     imp->valueRefCount = 1;
+    imp->capacity = 0;
+    imp->overflow = 0;
+
+#if DUMP_STATISTICS
+    if (++numLists > numListsHighWaterMark)
+        numListsHighWaterMark = numLists;
+    imp->sizeHighWaterMark = 0;
+#endif
+}
+
+List::List(bool needsMarking) : _impBase(allocateListImp()), _needsMarking(needsMarking)
+{
+    ListImp *imp = static_cast<ListImp *>(_impBase);
+    imp->size = 0;
+    imp->refCount = 1;
+    imp->valueRefCount = !needsMarking;
     imp->capacity = 0;
     imp->overflow = 0;
 
@@ -330,7 +346,8 @@ List &List::operator=(const List &b)
 {
     ListImpBase *bImpBase = b._impBase;
     ++bImpBase->refCount;
-    ++bImpBase->valueRefCount;
+    if (!_needsMarking)
+        ++bImpBase->valueRefCount;
     deref();
     _impBase = bImpBase;
     return *this;

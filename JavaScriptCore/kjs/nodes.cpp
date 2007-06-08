@@ -187,7 +187,6 @@ void Node::clearNewNodes()
     newNodes = 0;
 }
 
-static void substitute(UString &string, const UString &substring) KJS_FAST_CALL;
 static void substitute(UString &string, const UString &substring)
 {
     int position = string.find("%s");
@@ -195,13 +194,11 @@ static void substitute(UString &string, const UString &substring)
     string = string.substr(0, position) + substring + string.substr(position + 2);
 }
 
-static inline int currentSourceId(ExecState* exec) KJS_FAST_CALL;
 static inline int currentSourceId(ExecState* exec)
 {
     return exec->context()->currentBody()->sourceId();
 }
 
-static inline const UString& currentSourceURL(ExecState* exec) KJS_FAST_CALL;
 static inline const UString& currentSourceURL(ExecState* exec)
 {
     return exec->context()->currentBody()->sourceURL();
@@ -744,14 +741,12 @@ JSValue *FunctionCallBracketNode::evaluate(ExecState *exec)
   return func->call(exec, thisObj, argList);
 }
 
-static const char *dotExprNotAnObjectString() KJS_FAST_CALL;
 static const char *dotExprNotAnObjectString()
 {
   return "Value %s (result of expression %s.%s) is not object.";
 }
 
-static const char *dotExprDoesNotAllowCallsString() KJS_FAST_CALL;
-static const char *dotExprDoesNotAllowCallsString()
+static const char *dotExprDoesNotAllowCallsString() 
 {
   return "Object %s (result of expression %s.%s) does not allow calls.";
 }
@@ -957,7 +952,6 @@ JSValue *VoidNode::evaluate(ExecState *exec)
 
 // ------------------------------ TypeOfValueNode -----------------------------------
 
-static JSValue *typeStringForValue(JSValue *v) KJS_FAST_CALL;
 static JSValue *typeStringForValue(JSValue *v)
 {
     switch (v->type()) {
@@ -1341,7 +1335,6 @@ JSValue *ConditionalNode::evaluate(ExecState *exec)
 
 // ECMA 11.13
 
-static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSValue *v1, JSValue *v2, Operator oper) KJS_FAST_CALL;
 static ALWAYS_INLINE JSValue *valueForReadModifyAssignment(ExecState * exec, JSValue *v1, JSValue *v2, Operator oper)
 {
   JSValue *v;
@@ -2365,32 +2358,7 @@ void FunctionBodyNode::processFuncDecl(ExecState *exec)
         source->processFuncDecl(exec);
 }
 
-void FunctionBodyNode::addParam(const Identifier& ident)
-{
-  m_parameters.append(Parameter(ident));
-}
-
-UString FunctionBodyNode::paramString() const
-{
-  UString s("");
-  size_t count = numParams();
-  for (size_t pos = 0; pos < count; ++pos) {
-    if (!s.isEmpty())
-        s += ", ";
-    s += paramName(pos).ustring();
-  }
-
-  return s;
-}
-
-
 // ------------------------------ FuncDeclNode ---------------------------------
-
-void FuncDeclNode::addParams() 
-{
-  for (ParameterNode *p = param.get(); p != 0L; p = p->nextParam())
-    body->addParam(p->ident());
-}
 
 // ECMA 13
 void FuncDeclNode::processFuncDecl(ExecState *exec)
@@ -2404,7 +2372,11 @@ void FuncDeclNode::processFuncDecl(ExecState *exec)
   proto->put(exec, exec->propertyNames().constructor, func, ReadOnly | DontDelete | DontEnum);
   func->put(exec, exec->propertyNames().prototype, proto, Internal|DontDelete);
 
-  func->put(exec, exec->propertyNames().length, jsNumber(body->numParams()), ReadOnly|DontDelete|DontEnum);
+  int plen = 0;
+  for(ParameterNode *p = param.get(); p != 0L; p = p->nextParam(), plen++)
+    func->addParameter(p->ident());
+
+  func->put(exec, exec->propertyNames().length, jsNumber(plen), ReadOnly|DontDelete|DontEnum);
 
   // ECMA 10.2.2
   context->variableObject()->put(exec, ident, func, Internal | (context->codeType() == EvalCode ? 0 : DontDelete));
@@ -2429,12 +2401,6 @@ Completion FuncDeclNode::execute(ExecState *)
 // ------------------------------ FuncExprNode ---------------------------------
 
 // ECMA 13
-void FuncExprNode::addParams()
-{
-  for (ParameterNode *p = param.get(); p != 0L; p = p->nextParam())
-    body->addParam(p->ident());
-}
-
 JSValue *FuncExprNode::evaluate(ExecState *exec)
 {
   Context *context = exec->context();
@@ -2453,6 +2419,10 @@ JSValue *FuncExprNode::evaluate(ExecState *exec)
   JSObject* proto = exec->lexicalInterpreter()->builtinObject()->construct(exec, List::empty());
   proto->put(exec, exec->propertyNames().constructor, func, ReadOnly | DontDelete | DontEnum);
   func->put(exec, exec->propertyNames().prototype, proto, Internal | DontDelete);
+
+  int plen = 0;
+  for(ParameterNode *p = param.get(); p != 0L; p = p->nextParam(), plen++)
+    func->addParameter(p->ident());
 
   if (named) {
     functionScopeObject->put(exec, ident, func, Internal | ReadOnly | (context->codeType() == EvalCode ? 0 : DontDelete));

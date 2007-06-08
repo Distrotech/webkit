@@ -36,8 +36,6 @@ class ImageDocument : public HTMLDocument
 public:
     ImageDocument(DOMImplementation*, FrameView* = 0);
 
-    virtual bool isImageDocument() const { return true; }
-
     virtual Tokenizer* createTokenizer();
 };
     
