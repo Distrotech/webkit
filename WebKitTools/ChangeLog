@@ -1,3 +1,11 @@
+2007-06-08  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Hyatt.
+
+        - Updated license.
+
+        * DumpRenderTree/DumpRenderTree.vcproj/DumpRenderTree/LayoutTestController.h:
+
 2007-06-06  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Adam.
