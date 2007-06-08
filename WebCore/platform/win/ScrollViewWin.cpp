@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
  * Copyright (C) 2006 Justin Haygood <jhaygood@spsu.edu>.
  *
  * Redistribution and use in source and binary forms, with or without

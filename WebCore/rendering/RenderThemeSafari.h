@@ -1,6 +1,4 @@
 /*
- * This file is part of the theme implementation for form controls in WebCore.
- *
  * Copyright (C) 2007 Apple Inc.
  *
  * This library is free software; you can redistribute it and/or

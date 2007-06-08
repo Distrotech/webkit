@@ -1,3 +1,77 @@
+2007-06-08  David Hyatt  <hyatt@apple.com>
+
+        Update licenses/copyrights for WebCoreWin.
+
+        Reviewed by mccullough
+
+        * WebCorePrefix.cpp:
+        * bridge/win/FrameWin.cpp:
+        * bridge/win/FrameWin.h:
+        * bridge/win/HistoryWin.cpp:
+        * bridge/win/PageWin.cpp:
+        * page/win/EventHandlerWin.cpp:
+        * platform/graphics/cg/ColorCG.cpp:
+        * platform/graphics/cg/GraphicsContextPlatformPrivate.h:
+        * platform/graphics/svg/cg/SVGResourceFilterCg.cpp:
+        * platform/graphics/svg/cg/SVGResourceMaskerCg.cpp:
+        * platform/graphics/win/IconWin.cpp:
+        * platform/graphics/win/ImageWin.cpp:
+        * platform/network/cf/FormDataStreamCFNet.cpp:
+        * platform/network/cf/FormDataStreamCFNet.h:
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        * platform/network/cf/ResourceResponseCFNet.cpp:
+        * platform/network/win/CookieJarWin.cpp:
+        * platform/network/win/ResourceHandleWin.cpp:
+        * platform/network/win/ResourceHandleWin.h:
+        * platform/win/BString.cpp:
+        * platform/win/BString.h:
+        * platform/win/ClipboardWin.h:
+        * platform/win/ContextMenuWin.cpp:
+        * platform/win/CursorWin.cpp:
+        * platform/win/EditorWin.cpp:
+        * platform/win/FontCacheWin.cpp:
+        * platform/win/FontDataWin.cpp:
+        * platform/win/FontPlatformData.h:
+        * platform/win/FontPlatformDataWin.cpp:
+        * platform/win/FontWin.cpp:
+        * platform/win/GlyphPageTreeNodeWin.cpp:
+        * platform/win/GraphicsContextWin.cpp:
+        * platform/win/KeyEventWin.cpp:
+        * platform/win/MimeTypeRegistryWin.cpp:
+        * platform/win/NotImplemented.h:
+        * platform/win/PlatformMouseEventWin.cpp:
+        * platform/win/PlatformScrollBar.h:
+        * platform/win/PlatformScrollBarWin.cpp:
+        * platform/win/PopupMenuWin.cpp:
+        * platform/win/ScreenWin.cpp:
+        * platform/win/ScrollViewWin.cpp:
+        * platform/win/SearchPopupMenuWin.cpp:
+        * platform/win/SoundWin.cpp:
+        * platform/win/TemporaryLinkStubs.cpp:
+        * platform/win/TextBoundariesWin.cpp:
+        * platform/win/WebCoreHistory.cpp:
+        * platform/win/WebCoreHistory.h:
+        * platform/win/WebCoreSystemInterface.cpp:
+        * platform/win/WebCoreSystemInterface.h:
+        * platform/win/WheelEventWin.cpp:
+        * platform/win/WidgetWin.cpp:
+        * plugins/win/PlugInInfoStoreWin.cpp:
+        * plugins/win/PluginDatabaseWin.cpp:
+        * plugins/win/PluginDatabaseWin.h:
+        * plugins/win/PluginDebug.h:
+        * plugins/win/PluginPackageWin.cpp:
+        * plugins/win/PluginPackageWin.h:
+        * plugins/win/PluginStreamWin.cpp:
+        * plugins/win/PluginStreamWin.h:
+        * plugins/win/PluginViewWin.cpp:
+        * plugins/win/PluginViewWin.h:
+        * plugins/win/npapi.cpp:
+        * plugins/win/npfunctions.h:
+        * rendering/RenderThemeSafari.cpp:
+        * rendering/RenderThemeSafari.h:
+        * rendering/RenderThemeWin.h:
+
 2007-06-07  Sam Weinig  <sam@webkit.org>
 
         Fix build.
