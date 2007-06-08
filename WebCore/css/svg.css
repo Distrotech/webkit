@@ -53,3 +53,9 @@ text, foreignObject {
 text, tspan, textPath {
    white-space: nowrap
 }
+
+/* states */
+
+:focus {
+    outline: auto 5px -webkit-focus-ring-color
+}
