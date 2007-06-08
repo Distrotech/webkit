@@ -16,8 +16,14 @@
         <app-type>gui</app-type>
         <debug-info>on</debug-info>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <set var="DEBUG_RUNTIME">
+                <if cond="WX_PYTHON=='1' and WX_DEBUG=='0'">off</if>
+                <if cond="WX_PYTHON=='0' and WX_DEBUG=='0'">off</if>
+                <if cond="WX_PYTHON=='1' and WX_DEBUG=='1'">off</if>
+                <if cond="WX_PYTHON=='0' and WX_DEBUG=='1'">on</if>
+            </set>
             <debug-runtime-libs>
-                $(substituteFromDict(WX_DEBUG, {'1':'on','0':'off'}))
+                $(DEBUG_RUNTIME)
             </debug-runtime-libs>
         </if>
         <runtime-libs>dynamic</runtime-libs>
