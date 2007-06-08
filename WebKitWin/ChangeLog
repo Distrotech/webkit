@@ -1,3 +1,58 @@
+2007-06-08  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Kevin Decker, and Sam.
+
+        - Added and updated licenses.
+
+        * CFDictionaryPropertyBag.cpp:
+        * CFDictionaryPropertyBag.h:
+        * DOMCSSClasses.cpp:
+        * DOMCSSClasses.h:
+        * DOMEventsClasses.cpp:
+        * DOMEventsClasses.h:
+        * DOMHTMLClasses.cpp:
+        * DOMHTMLClasses.h:
+        * MarshallingHelpers.cpp:
+        * MarshallingHelpers.h:
+        * MemoryStream.cpp:
+        * MemoryStream.h:
+        * WebBackForwardList.cpp:
+        * WebBackForwardList.h:
+        * WebCache.cpp:
+        * WebCache.h:
+        * WebChromeClient.cpp:
+        * WebChromeClient.h:
+        * WebContextMenuClient.cpp:
+        * WebContextMenuClient.h:
+        * WebDataSource.h:
+        * WebEditorClient.cpp:
+        * WebEditorClient.h:
+        * WebElementPropertyBag.cpp:
+        * WebElementPropertyBag.h:
+        * WebHTMLRepresentation.h:
+        * WebHistory.cpp:
+        * WebHistory.h:
+        * WebIconDatabase.cpp:
+        * WebIconDatabase.h:
+        * WebKit.vcproj/auto-version.sh:
+        * WebKitClassFactory.h:
+        * WebKitDLL.h:
+        * WebLocalizableStrings.cpp:
+        * WebLocalizableStrings.h:
+        * WebMutableURLRequest.cpp:
+        * WebMutableURLRequest.h:
+        * WebNotification.cpp:
+        * WebNotification.h:
+        * WebNotificationCenter.cpp:
+        * WebNotificationCenter.h:
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        * WebPreferences.h:
+        * WebScriptObject.cpp:
+        * WebScriptObject.h:
+        * WebURLResponse.cpp:
+        * WebURLResponse.h:
+
 2007-06-07  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Adam Roben.
