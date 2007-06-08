@@ -27,6 +27,7 @@
 
 #include "Document.h"
 #include "SVGNames.h"
+#include "SVGParserUtilities.h"
 #include "SVGPointList.h"
 
 namespace WebCore {
@@ -37,7 +38,6 @@ SVGPolyElement::SVGPolyElement(const QualifiedName& tagName, Document* doc)
     , SVGLangSpace()
     , SVGExternalResourcesRequired()
     , SVGAnimatedPoints()
-    , SVGPolyParser()
 {
     m_ignoreAttributeChanges = false;
 }
@@ -66,7 +66,7 @@ void SVGPolyElement::parseMappedAttribute(MappedAttribute* attr)
     if (attr->name() == SVGNames::pointsAttr) {
         ExceptionCode ec = 0;
         points()->clear(ec);
-        if (!parsePoints(value) && !m_ignoreAttributeChanges) {
+        if (!pointsListFromSVGData(points(), value) && !m_ignoreAttributeChanges) {
             points()->clear(ec);
             document()->accessSVGExtensions()->reportError("Problem parsing points=\"" + value + "\"");
         }
@@ -79,12 +79,6 @@ void SVGPolyElement::parseMappedAttribute(MappedAttribute* attr)
             return;
         SVGStyledTransformableElement::parseMappedAttribute(attr);
     }
-}
-
-void SVGPolyElement::svgPolyTo(double x1, double y1, int) const
-{
-    ExceptionCode ec = 0;
-    points()->appendItem(FloatPoint(x1, y1), ec);
 }
 
 void SVGPolyElement::notifyAttributeChange() const

@@ -26,6 +26,7 @@
 #include "SVGPathElement.h"
 
 #include "SVGNames.h"
+#include "SVGParserUtilities.h"
 #include "SVGPathSegArc.h"
 #include "SVGPathSegClosePath.h"
 #include "SVGPathSegCurvetoCubic.h"
@@ -46,7 +47,6 @@ SVGPathElement::SVGPathElement(const QualifiedName& tagName, Document* doc)
     , SVGTests()
     , SVGLangSpace()
     , SVGExternalResourcesRequired()
-    , SVGPathParser()
     , m_pathLength(0.0)
 {
 }
@@ -170,108 +170,12 @@ SVGPathSegCurvetoQuadraticSmoothRel* SVGPathElement::createSVGPathSegCurvetoQuad
     return new SVGPathSegCurvetoQuadraticSmoothRel(x, y);
 }
 
-void SVGPathElement::svgMoveTo(double x1, double y1, bool, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegMovetoAbs(x1, y1), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegMovetoRel(x1, y1), ec);
-}
-
-void SVGPathElement::svgLineTo(double x1, double y1, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegLinetoAbs(x1, y1), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegLinetoRel(x1, y1), ec);
-}
-
-void SVGPathElement::svgLineToHorizontal(double x, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegLinetoHorizontalAbs(x), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegLinetoHorizontalRel(x), ec);
-}
-
-void SVGPathElement::svgLineToVertical(double y, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegLinetoVerticalAbs(y), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegLinetoVerticalRel(y), ec);
-}
-
-void SVGPathElement::svgCurveToCubic(double x1, double y1, double x2, double y2, double x, double y, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegCurvetoCubicAbs(x, y, x1, y1, x2, y2), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegCurvetoCubicRel(x, y, x1, y1, x2, y2), ec);
-}
-
-void SVGPathElement::svgCurveToCubicSmooth(double x, double y, double x2, double y2, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegCurvetoCubicSmoothAbs(x2, y2, x, y), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegCurvetoCubicSmoothRel(x2, y2, x, y), ec);
-}
-
-void SVGPathElement::svgCurveToQuadratic(double x, double y, double x1, double y1, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegCurvetoQuadraticAbs(x1, y1, x, y), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegCurvetoQuadraticRel(x1, y1, x, y), ec);
-}
-
-void SVGPathElement::svgCurveToQuadraticSmooth(double x, double y, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegCurvetoQuadraticSmoothAbs(x, y), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegCurvetoQuadraticSmoothRel(x, y), ec);
-}
-
-void SVGPathElement::svgArcTo(double x, double y, double r1, double r2, double angle, bool largeArcFlag, bool sweepFlag, bool abs)
-{
-    ExceptionCode ec = 0;
-
-    if (abs)
-        pathSegList()->appendItem(createSVGPathSegArcAbs(x, y, r1, r2, angle, largeArcFlag, sweepFlag), ec);
-    else
-        pathSegList()->appendItem(createSVGPathSegArcRel(x, y, r1, r2, angle, largeArcFlag, sweepFlag), ec);
-}
-
-void SVGPathElement::svgClosePath()
-{
-    ExceptionCode ec = 0;
-    pathSegList()->appendItem(createSVGPathSegClosePath(), ec);
-}
-
 void SVGPathElement::parseMappedAttribute(MappedAttribute* attr)
 {
     if (attr->name() == SVGNames::dAttr) {
         ExceptionCode ec;
         pathSegList()->clear(ec);
-        if (!parseSVG(attr->value(), true))
+        if (!pathSegListFromSVGData(pathSegList(), attr->value(), true))
             document()->accessSVGExtensions()->reportError("Problem parsing d=\"" + attr->value() + "\"");
     } else if (attr->name() == SVGNames::pathLengthAttr) {
         m_pathLength = attr->value().toDouble();
