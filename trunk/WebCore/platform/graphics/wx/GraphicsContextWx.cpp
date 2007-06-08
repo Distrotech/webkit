@@ -361,13 +361,16 @@ void GraphicsContext::clip(const IntRect& r)
 #else
         wxWindow* window = windc->m_owner;
 #endif
-        wxWindow* parent = window->GetParent();
-        // we need to convert from WebView "global" to WebFrame "local" coords.
-        // FIXME: We only want to go to the top WebView.  
-        while (parent)
+        if (window)
         {
-            pos += window->GetPosition();
-            parent = parent->GetParent();
+            wxWindow* parent = window->GetParent();
+            // we need to convert from WebView "global" to WebFrame "local" coords.
+            // FIXME: We only want to go to the top WebView.  
+            while (parent)
+            {
+                pos += window->GetPosition();
+                parent = parent->GetParent();
+            }
         }
     }
 
