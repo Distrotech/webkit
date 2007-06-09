@@ -130,7 +130,7 @@ void WebContextMenuClient::searchWithGoogle(const Frame* frame)
     DeprecatedString encoded = KURL::encode_string(searchString.deprecatedString());
     encoded.replace(DeprecatedString("%20"), DeprecatedString("+"));
     
-    String url("http://www.google.com/search?client=safari&q=");
+    String url("http://www.google.com/search?q=");
     url.append(String(encoded));
     url.append("&ie=UTF-8&oe=UTF-8");
 
