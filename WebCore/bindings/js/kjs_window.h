@@ -80,8 +80,6 @@ namespace KJS {
     WebCore::Frame* m_frame;
   };
 
-  class WindowPrivate;
-
   class Window : public DOMObject {
     friend class Location;
     friend class WindowFunc;
@@ -158,16 +156,14 @@ namespace KJS {
     void setCurrentEvent(WebCore::Event*);
 
     // Set a place to put a dialog return value when the window is cleared.
-    void setReturnValueSlot(JSValue **slot);
+    void setReturnValueSlot(JSValue **slot) { m_returnValueSlot = slot; }
 
     typedef HashMap<JSObject*, JSEventListener*> ListenersMap;
     typedef HashMap<JSObject*, JSUnprotectedEventListener*> UnprotectedListenersMap;
-    
-    ListenersMap& jsEventListeners();
-    ListenersMap& jsHTMLEventListeners();
-    UnprotectedListenersMap& jsUnprotectedEventListeners();
-    UnprotectedListenersMap& jsUnprotectedHTMLEventListeners();
-    
+    ListenersMap jsEventListeners;
+    ListenersMap jsHTMLEventListeners;
+    UnprotectedListenersMap jsUnprotectedEventListeners;
+    UnprotectedListenersMap jsUnprotectedHTMLEventListeners;
     virtual const ClassInfo* classInfo() const { return &info; }
     static const ClassInfo info;
     enum { AToB, BToA, Closed, Crypto, DefaultStatus, Status, DOMException, Frames, History_, Event_, InnerHeight,
@@ -202,7 +198,21 @@ namespace KJS {
     int installTimeout(ScheduledAction*, int interval, bool singleShot);
 
     WebCore::Frame* m_frame;
-    OwnPtr<WindowPrivate> d;
+    mutable Screen* screen;
+    mutable History* history;
+    mutable FrameArray* frames;
+    mutable Location* loc;
+    mutable Selection* m_selection;
+    mutable BarInfo* m_locationbar;
+    mutable BarInfo* m_menubar;
+    mutable BarInfo* m_personalbar;
+    mutable BarInfo* m_scrollbars;
+    mutable BarInfo* m_statusbar;
+    mutable BarInfo* m_toolbar;
+    WebCore::Event *m_evt;
+    JSValue **m_returnValueSlot;
+    typedef HashMap<int, DOMWindowTimer*> TimeoutsMap;
+    TimeoutsMap m_timeouts;
   };
 
   /**

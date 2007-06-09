@@ -1,4 +1,4 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
+// -*- c-basic-offset: 2 -*-
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
@@ -58,7 +58,8 @@ namespace KJS {
         PropertyMapHashTableEntry() : key(0) { }
         UString::Rep *key;
         JSValue *value;
-        int attributes;
+        short attributes;
+        short globalGetterSetterFlag;
         int index;
     };
 
@@ -85,8 +86,8 @@ namespace KJS {
         void save(SavedProperties &) const;
         void restore(const SavedProperties &p);
 
-        bool hasGetterSetterProperties() const { return m_getterSetterFlag; }
-        void setHasGetterSetterProperties(bool f) { m_getterSetterFlag = f; }
+        bool hasGetterSetterProperties() const { return !!_singleEntry.globalGetterSetterFlag; }
+        void setHasGetterSetterProperties(bool f) { _singleEntry.globalGetterSetterFlag = f; }
 
         bool containsGettersOrSetters() const;
     private:
@@ -102,24 +103,15 @@ namespace KJS {
         typedef PropertyMapHashTableEntry Entry;
         typedef PropertyMapHashTable Table;
 
-        UString::Rep* m_singleEntryKey;
-        union {
-          JSValue* singleEntryValue;
-          Table* table;
-        } m_u;
-
-        short m_singleEntryAttributes;
-        bool m_getterSetterFlag : 1;
-        bool m_usingTable : 1;
+        Table *_table;
+        
+        Entry _singleEntry;
     };
 
-    inline PropertyMap::PropertyMap() 
-        : m_singleEntryKey(0)
-        , m_getterSetterFlag(false)
-        , m_usingTable(false)
-
-    {
-    }
+inline PropertyMap::PropertyMap() : _table(0)
+{
+    _singleEntry.globalGetterSetterFlag = 0;
+}
 
 } // namespace
 
