@@ -1,37 +1,3 @@
-2007-04-19  Anders Carlsson  <andersca@apple.com>
-
-        Reviewed by John.
-
-        <rdar://problem/5137002>
-        REGRESSION (r20812): [WebFrame DOMDocument] is returning non-nil value in bookmarks view, causing trouble in Safari
-
-        Put back the MIME type check as a workaround.
-        * WebView/WebFrame.mm:
-        (-[WebFrame DOMDocument]):
-
-2007-05-21  Anders Carlsson  <andersca@apple.com>
-
-        Reviewed by Ada.
-
-        <rdar://problem/5200816> REGRESSION: With Shiira 1.2.2 , I can't open embedded link in flash object by clicking (http:/www.adobe.com )
-        
-        Null check the request.
-        
-        * WebView/WebView.mm:
-        (+[WebView _canHandleRequest:]):
-
-2007-04-09  Anders Carlsson  <andersca@apple.com>
-
-        Reviewed by Darin.
-
-        <rdar://problem/5026893>
-        REGRESSION: "Mail Contents of this Page" for standalone image in Safari results in a broken image in Mail
-        
-        * WebView/WebFrame.mm:
-        (-[WebFrame DOMDocument]):
-        We can't check for _isHTMLDocument here since image and plugin documents inherit from HTMLDocument. Instead,
-        check for those two document types explicitly.
-
 2007-03-30  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Geoff.

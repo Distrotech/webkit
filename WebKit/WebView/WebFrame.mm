@@ -698,21 +698,9 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     Frame* coreFrame = core(self);
     if (!coreFrame)
         return nil;
-    
-    // FIXME: <rdar://problem/5145841> When loading a custom view/representation 
-    // into a web frame, the old document can still be around. This makes sure that
-    // we'll return nil in those cases.
-    if (![[self dataSource] _isDocumentHTML]) 
-        return nil; 
-
-    Document* document = coreFrame->document();
-    
-    // According to the documentation, we should return nil if the frame doesn't have a document.
-    // While full-frame images and plugins do have an underlying HTML document, we return nil here to be
-    // backwards compatible.
-    if (document && (document->isPluginDocument() || document->isImageDocument()))
+    // FIXME: Why do we need this check?
+    if (![[self dataSource] _isDocumentHTML])
         return nil;
-    
     return kit(coreFrame->document());
 }
 

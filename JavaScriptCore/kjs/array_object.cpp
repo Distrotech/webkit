@@ -42,40 +42,12 @@ const unsigned sparseArrayCutoff = 10000;
 
 const ClassInfo ArrayInstance::info = {"Array", 0, 0, 0};
 
-static inline JSValue** allocateStorage(size_t capacity)
-{
-  if (capacity == 0)
-      return 0;
-
-  // store capacity in extra space before the beginning of the storage array to save space
-  JSValue** storage = static_cast<JSValue**>(fastCalloc(capacity + 1, sizeof(JSValue *))) + 1;
-  storage[-1] = reinterpret_cast<JSValue*>(capacity);
-  return storage;
-}
-
-static inline void reallocateStorage(JSValue**& storage, size_t newCapacity)
-{
-  if (!storage) {
-    storage =  allocateStorage(newCapacity);
-    return;
-  }
-
-  // store capacity in extra space before the beginning of the storage array to save space
-  storage = static_cast<JSValue**>(fastRealloc(storage - 1, (newCapacity + 1) * sizeof (JSValue*))) + 1;
-  storage[-1] = reinterpret_cast<JSValue*>(newCapacity);
-}
-
-static inline void freeStorage(JSValue** storage)
-{
-  if (storage)
-    fastFree(storage - 1);
-}
-
 ArrayInstance::ArrayInstance(JSObject *proto, unsigned initialLength)
   : JSObject(proto)
   , length(initialLength)
   , storageLength(initialLength < sparseArrayCutoff ? initialLength : 0)
-  , storage(allocateStorage(storageLength))
+  , capacity(storageLength)
+  , storage(capacity ? (JSValue **)fastCalloc(capacity, sizeof(JSValue *)) : 0)
 {
 }
 
@@ -83,7 +55,8 @@ ArrayInstance::ArrayInstance(JSObject *proto, const List &list)
   : JSObject(proto)
   , length(list.size())
   , storageLength(length)
-  , storage(allocateStorage(storageLength))
+  , capacity(storageLength)
+  , storage(capacity ? (JSValue **)fastMalloc(sizeof(JSValue *) * capacity) : 0)
 {
   ListIterator it = list.begin();
   unsigned l = length;
@@ -94,7 +67,7 @@ ArrayInstance::ArrayInstance(JSObject *proto, const List &list)
 
 ArrayInstance::~ArrayInstance()
 {
-  freeStorage(storage);
+  fastFree(storage);
 }
 
 JSValue* ArrayInstance::getItem(unsigned i) const
@@ -258,8 +231,7 @@ void ArrayInstance::resizeStorage(unsigned newLength)
     if (newLength < storageLength) {
       memset(storage + newLength, 0, sizeof(JSValue *) * (storageLength - newLength));
     }
-    size_t cap = capacity();
-    if (newLength > cap) {
+    if (newLength > capacity) {
       unsigned newCapacity;
       if (newLength > sparseArrayCutoff) {
         newCapacity = newLength;
@@ -269,9 +241,9 @@ void ArrayInstance::resizeStorage(unsigned newLength)
           newCapacity = sparseArrayCutoff;
         }
       }
-      
-      reallocateStorage(storage, newCapacity);
-      memset(storage + cap, 0, sizeof(JSValue*) * (newCapacity - cap));
+      storage = (JSValue **)fastRealloc(storage, newCapacity * sizeof (JSValue *));
+      memset(storage + capacity, 0, sizeof(JSValue *) * (newCapacity - capacity));
+      capacity = newCapacity;
     }
     storageLength = newLength;
 }
@@ -330,30 +302,11 @@ static int compareByStringForQSort(const void *a, const void *b)
 
 void ArrayInstance::sort(ExecState *exec)
 {
-    size_t lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
-      
-    ExecState* oldExec = execForCompareByStringForQSort;
+    int lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
+    
     execForCompareByStringForQSort = exec;
-#if HAVE(MERGESORT)
-    // mergesort usually does fewer compares, so it is actually faster than qsort for JS sorts.
-    // however, becuase it requires extra copies of the storage buffer, don't use it for very
-    // large arrays
-    // FIXME: for sorting by string value, the fastest thing would actually be to convert all the
-    // values to string once up front, and then use a radix sort. That would be O(N) rather than 
-    // O(N log N).
-    if (lengthNotIncludingUndefined < sparseArrayCutoff) {
-        JSValue** storageCopy = allocateStorage(capacity());
-        memcpy(storageCopy, storage, capacity() * sizeof(JSValue*));
-        mergesort(storageCopy, lengthNotIncludingUndefined, sizeof(JSValue *), compareByStringForQSort);
-        freeStorage(storage);
-        storage = storageCopy;
-        execForCompareByStringForQSort = oldExec;
-        return;
-    }
-#endif
-
-    qsort(storage, lengthNotIncludingUndefined, sizeof(JSValue*), compareByStringForQSort);
-    execForCompareByStringForQSort = oldExec;
+    qsort(storage, lengthNotIncludingUndefined, sizeof(JSValue *), compareByStringForQSort);
+    execForCompareByStringForQSort = 0;
 }
 
 struct CompareWithCompareFunctionArguments {
@@ -397,29 +350,12 @@ static int compareWithCompareFunctionForQSort(const void *a, const void *b)
 
 void ArrayInstance::sort(ExecState *exec, JSObject *compareFunction)
 {
-    size_t lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
-
-    CompareWithCompareFunctionArguments* oldArgs = compareWithCompareFunctionArguments;
+    int lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
+    
     CompareWithCompareFunctionArguments args(exec, compareFunction);
     compareWithCompareFunctionArguments = &args;
-#if HAVE(MERGESORT)
-    // mergesort usually does fewer compares, so it is actually faster than qsort for JS sorts.
-    // however, becuase it requires extra copies of the storage buffer, don't use it for very
-    // large arrays
-    // FIXME: a tree sort using a perfectly balanced tree (e.g. an AVL tree) could do an even
-    // better job of minimizing compares
-    if (lengthNotIncludingUndefined < sparseArrayCutoff) {
-        JSValue** storageCopy = allocateStorage(capacity());
-        memcpy(storageCopy, storage, capacity() * sizeof(JSValue*));
-        mergesort(storageCopy, lengthNotIncludingUndefined, sizeof(JSValue *), compareWithCompareFunctionForQSort);
-        freeStorage(storage);
-        storage = storageCopy;
-        compareWithCompareFunctionArguments = oldArgs;
-        return;
-    }
-#endif
-    qsort(storage, lengthNotIncludingUndefined, sizeof(JSValue*), compareWithCompareFunctionForQSort);
-    compareWithCompareFunctionArguments = oldArgs;
+    qsort(storage, lengthNotIncludingUndefined, sizeof(JSValue *), compareWithCompareFunctionForQSort);
+    compareWithCompareFunctionArguments = 0;
 }
 
 unsigned ArrayInstance::pushUndefinedObjectsToEnd(ExecState *exec)

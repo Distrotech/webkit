@@ -25,7 +25,6 @@
 #define KJS_VALUE_H
 
 #include "JSImmediate.h"
-#include "collector.h"
 #include "ustring.h"
 #include <stddef.h> // for size_t
 
@@ -155,6 +154,10 @@ public:
     void *operator new(size_t);
     virtual void mark();
     bool marked() const;
+
+private:
+    bool m_collectOnMainThreadOnly : 1;
+    bool m_marked : 1;
 };
 
 JSValue *jsNumberCell(double);
@@ -201,6 +204,8 @@ inline JSValue::~JSValue()
 }
 
 inline JSCell::JSCell()
+    : m_collectOnMainThreadOnly(false)
+    , m_marked(false)
 {
 }
 
@@ -225,12 +230,12 @@ inline bool JSCell::isObject() const
 
 inline bool JSCell::marked() const
 {
-    return Collector::isCellMarked(this);
+    return m_marked;
 }
 
 inline void JSCell::mark()
 {
-    return Collector::markCell(this);
+    m_marked = true;
 }
 
 inline JSCell *JSValue::downcast()

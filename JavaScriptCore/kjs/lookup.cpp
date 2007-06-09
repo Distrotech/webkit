@@ -27,7 +27,7 @@
 #include "lookup.h"
 #include <wtf/Assertions.h>
 
-namespace KJS {
+using namespace KJS;
 
 static inline bool keysMatch(const UChar *c, unsigned len, const char *s)
 {
@@ -92,6 +92,3 @@ int Lookup::find(const struct HashTable *table, const Identifier &s)
     return entry->value;
   return -1;
 }
-
-}
-
