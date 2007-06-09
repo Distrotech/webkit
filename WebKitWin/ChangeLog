@@ -1,3 +1,12 @@
+2007-06-08  Ada Chan  <adachan@apple.com>
+
+        Reviewed by Hyatt, Adam, and Steve.
+
+        Fixed WebView::selectedText to get the selected text out of the focused frame or main frame.
+
+        * WebView.cpp:
+        (WebView::selectedText):
+
 2007-06-08  Adam Roben  <aroben@apple.com>
 
         Get rid of the Safari part of the query string used for Google searches.

@@ -2483,11 +2483,11 @@ HRESULT STDMETHODCALLTYPE WebView::selectedText(
 
     *text = 0;
 
-    Frame* coreFrame = core(m_mainFrame);
-    if (!coreFrame)
+    Frame* focusedFrame = (m_page && m_page->focusController()) ? m_page->focusController()->focusedOrMainFrame() : 0;
+    if (!focusedFrame)
         return E_FAIL;
 
-    String frameSelectedText = coreFrame->selectedText();
+    String frameSelectedText = focusedFrame->selectedText();
     *text = SysAllocStringLen(frameSelectedText.characters(), frameSelectedText.length());
     if (!*text && frameSelectedText.length())
         return E_OUTOFMEMORY;
