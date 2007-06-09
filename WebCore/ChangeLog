@@ -1,3 +1,13 @@
+2007-06-08  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        If both the old and new WMP plugins are present, remove the old one
+        so we won't end up choosing it.
+        
+        * plugins/win/PluginDatabaseWin.cpp:
+        (WebCore::PluginDatabaseWin::getPluginsInPaths):
+
 2007-06-08  David Hyatt  <hyatt@apple.com>
 
         Update licenses/copyrights for WebCoreWin.

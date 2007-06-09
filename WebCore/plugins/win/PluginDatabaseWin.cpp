@@ -168,6 +168,9 @@ PluginSet PluginDatabaseWin::getPluginsInPaths() const
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW findFileData;
 
+    PluginPackageWin* oldWMPPlugin = 0;
+    PluginPackageWin* newWMPPlugin = 0;
+
     Vector<String>::const_iterator end = m_pluginPaths.end();
     for (Vector<String>::const_iterator it = m_pluginPaths.begin(); it != end; ++it) {
         String pattern = *it + "\\*";
@@ -191,8 +194,14 @@ PluginSet PluginDatabaseWin::getPluginsInPaths() const
         
             PluginPackageWin* pluginPackage = PluginPackageWin::createPackage(fullPath, findFileData.ftLastWriteTime);
 
-            if (pluginPackage)
+            if (pluginPackage) {
                 plugins.add(pluginPackage);
+
+                if (equalIgnoringCase(filename, "npdsplay.dll"))
+                    oldWMPPlugin = pluginPackage;
+                else if (equalIgnoringCase(filename, "np-mswmp.dll"))
+                    newWMPPlugin = pluginPackage;
+            }
 
         } while (FindNextFileW(hFind, &findFileData) != 0);
 
@@ -200,6 +209,11 @@ PluginSet PluginDatabaseWin::getPluginsInPaths() const
     }
 
     addPluginsFromRegistry(plugins);
+
+    // If both the old and new WMP plugin are present in the plugins set, 
+    // we remove the old one so we don't end up choosing the old one.
+    if (oldWMPPlugin && newWMPPlugin)
+        plugins.remove(oldWMPPlugin);
 
     return plugins;
 }
