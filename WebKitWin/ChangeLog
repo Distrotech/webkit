@@ -1,3 +1,12 @@
+2007-06-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Reviewed by Adam.
+        
+        Workaround: <rdar://problem/5213266> schwab.com menu is ridiculously big.
+        
+        * WebView.cpp:
+        (WebView::userAgentForKURL): Add schwab to spoof list to fix gigantic menus.
+
 2007-06-08  Ada Chan  <adachan@apple.com>
 
         Reviewed by Hyatt, Adam, and Steve.
