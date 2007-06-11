@@ -937,10 +937,10 @@ JSValue* toJS(ExecState* exec, CSSValue *v)
     if (v->isValueList())
       ret = new JSCSSValueList(exec, static_cast<CSSValueList*>(v));
 #if ENABLE(SVG)
-    else if (v->isSVGColor())
-      ret = new JSSVGColor(exec, static_cast<SVGColor*>(v));
     else if (v->isSVGPaint())
       ret = new JSSVGPaint(exec, static_cast<SVGPaint*>(v));
+    else if (v->isSVGColor())
+      ret = new JSSVGColor(exec, static_cast<SVGColor*>(v));
 #endif
     else if (v->isPrimitiveValue())
       ret = new JSCSSPrimitiveValue(exec, static_cast<CSSPrimitiveValue*>(v));
