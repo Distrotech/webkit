@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2007 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005 Rob Buis <buis@kde.org>
+                  2004, 2005, 2007 Rob Buis <buis@kde.org>
 
     This file is part of the KDE project
 
@@ -20,8 +20,8 @@
     Boston, MA 02111-1307, USA.
 */
 
-#ifndef RenderSVGContainer_h
-#define RenderSVGContainer_h
+#ifndef RenderSVGRoot_h
+#define RenderSVGRoot_h
 
 #if ENABLE(SVG)
 
@@ -33,16 +33,10 @@ namespace WebCore {
 
 class SVGElement;
 
-class RenderSVGContainer : public RenderContainer {
+class RenderSVGRoot : public RenderContainer {
 public:
-    RenderSVGContainer(SVGStyledElement*);
-    ~RenderSVGContainer();
-
-    // Some containers do not want it's children
-    // to be drawn, because they may be 'referenced'
-    // Example: <marker> children in SVG
-    void setDrawsContents(bool);
-    bool drawsContents() const;
+    RenderSVGRoot(SVGStyledElement*);
+    ~RenderSVGRoot();
 
     virtual bool isSVGContainer() const { return true; }
     virtual const char* renderName() const { return "RenderSVGContainer"; }
@@ -87,7 +81,6 @@ private:
     AffineTransform getAspectRatio(const FloatRect& logical, const FloatRect& physical) const;
     void applyContentTransforms(PaintInfo&, int& parentX, int& parentY);
 
-    bool m_drawsContents : 1;
     bool m_slice : 1;
     AffineTransform m_matrix;
     
@@ -100,6 +93,6 @@ private:
 } // namespace WebCore
 
 #endif // ENABLE(SVG)
-#endif // RenderSVGContainer_h
+#endif // RenderSVGRoot_h
 
 // vim:ts=4:noet

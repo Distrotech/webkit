@@ -31,8 +31,8 @@
 #include "CgSupport.h"
 
 #include "GraphicsContext.h"
-#include "KCanvasRenderingStyle.h"
 #include "RenderStyle.h"
+#include "SVGPaintServer.h"
 #include <wtf/Assertions.h>
 #include "SVGRenderStyle.h"
 
@@ -53,15 +53,15 @@ CGAffineTransform CGAffineTransformMakeMapBetweenRects(CGRect source, CGRect des
 void applyStrokeStyleToContext(CGContextRef context, RenderStyle* style, const RenderObject* object)
 {
     /* Shouldn't all these be in the stroke painter? */
-    CGContextSetLineWidth(context, KSVGPainterFactory::cssPrimitiveToLength(object, style->svgStyle()->strokeWidth(), 1.0));
+    CGContextSetLineWidth(context, SVGRenderStyle::cssPrimitiveToLength(object, style->svgStyle()->strokeWidth(), 1.0));
 
     CGContextSetLineCap(context, CGLineCapFromKC(style->svgStyle()->capStyle()));
     CGContextSetLineJoin(context, CGLineJoinFromKC(style->svgStyle()->joinStyle()));
 
     CGContextSetMiterLimit(context, style->svgStyle()->strokeMiterLimit());
 
-    const KCDashArray& dashes = KSVGPainterFactory::dashArrayFromRenderingStyle(style);
-    double dashOffset = KSVGPainterFactory::cssPrimitiveToLength(object, style->svgStyle()->strokeDashOffset(), 0.0);
+    const DashArray& dashes = dashArrayFromRenderingStyle(style);
+    double dashOffset = SVGRenderStyle::cssPrimitiveToLength(object, style->svgStyle()->strokeDashOffset(), 0.0);
 
     CGContextSetLineDash(context, dashOffset, dashes.data(), dashes.size());
 }

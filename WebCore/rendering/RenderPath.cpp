@@ -29,7 +29,6 @@
 #include <math.h>
 
 #include "GraphicsContext.h"
-#include "KCanvasRenderingStyle.h"
 #include "RenderSVGContainer.h"
 #include "PointerEventsHitRules.h"
 #include "SVGPaintServer.h"
@@ -79,7 +78,7 @@ bool RenderPath::fillContains(const FloatPoint& point, bool requiresFill) const
     if (m_path.isEmpty())
         return false;
 
-    if (requiresFill && !KSVGPainterFactory::fillPaintServer(style(), this))
+    if (requiresFill && !SVGPaintServer::fillPaintServer(style(), this))
         return false;
 
     return m_path.contains(point, style()->svgStyle()->fillRule());
@@ -177,13 +176,13 @@ static inline void fillAndStrokePath(const Path& path, GraphicsContext* context,
 {
     context->beginPath();
 
-    SVGPaintServer* fillPaintServer = KSVGPainterFactory::fillPaintServer(style, object);
+    SVGPaintServer* fillPaintServer = SVGPaintServer::fillPaintServer(style, object);
     if (fillPaintServer) {
         context->addPath(path);
         fillPaintServer->draw(context, object, ApplyToFillTargetType);
     }
     
-    SVGPaintServer* strokePaintServer = KSVGPainterFactory::strokePaintServer(style, object);
+    SVGPaintServer* strokePaintServer = SVGPaintServer::strokePaintServer(style, object);
     if (strokePaintServer) {
         context->addPath(path); // path is cleared when filled.
         strokePaintServer->draw(context, object, ApplyToStrokeTargetType);
@@ -415,7 +414,7 @@ FloatRect RenderPath::drawMarkersIfNeeded(GraphicsContext* context, const FloatR
     if (!startMarker && !midMarker && !endMarker)
         return FloatRect();
 
-    double strokeWidth = KSVGPainterFactory::cssPrimitiveToLength(this, svgStyle->strokeWidth(), 1.0);
+    double strokeWidth = SVGRenderStyle::cssPrimitiveToLength(this, svgStyle->strokeWidth(), 1.0);
     DrawMarkersData data(context, startMarker, midMarker, strokeWidth);
 
     path.apply(&data, drawStartAndMidMarkers);

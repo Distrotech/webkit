@@ -30,7 +30,6 @@
 #include "Frame.h"
 #include "GraphicsContext.h"
 #include "InlineTextBox.h"
-#include "KCanvasRenderingStyle.h"
 #include "Range.h"
 #include "SVGInlineFlowBox.h"
 #include "SVGPaintServer.h"
@@ -133,7 +132,7 @@ void SVGRootInlineBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
         paintInfo.context->beginTransparencyLayer(opacity);
     }
 
-    SVGPaintServer* fillPaintServer = KSVGPainterFactory::fillPaintServer(object()->style(), object());
+    SVGPaintServer* fillPaintServer = SVGPaintServer::fillPaintServer(object()->style(), object());
     if (fillPaintServer) {
         if (fillPaintServer->setup(pi.context, object(), ApplyToFillTargetType, true)) {
             Vector<SVGChar>::iterator it = m_svgChars.begin();
@@ -144,7 +143,7 @@ void SVGRootInlineBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
         }
     }
 
-    SVGPaintServer* strokePaintServer = KSVGPainterFactory::strokePaintServer(object()->style(), object());
+    SVGPaintServer* strokePaintServer = SVGPaintServer::strokePaintServer(object()->style(), object());
     if (strokePaintServer) {
         if (strokePaintServer->setup(pi.context, object(), ApplyToStrokeTargetType, true)) {
             Vector<SVGChar>::iterator it = m_svgChars.begin();
@@ -1033,7 +1032,7 @@ void SVGRootInlineBox::paintInlineBoxes(RenderObject::PaintInfo& paintInfo, int 
             bool painted = false;
             Vector<SVGChar>::iterator savedIt = it;
     
-            SVGPaintServer* fillPaintServer = KSVGPainterFactory::fillPaintServer(object->style(), object);
+            SVGPaintServer* fillPaintServer = SVGPaintServer::fillPaintServer(object->style(), object);
             if (fillPaintServer) {
                 if (fillPaintServer->setup(pi.context, object, ApplyToFillTargetType, true)) {
                     painted = true;
@@ -1043,7 +1042,7 @@ void SVGRootInlineBox::paintInlineBoxes(RenderObject::PaintInfo& paintInfo, int 
                 }
             }
 
-            SVGPaintServer* strokePaintServer = KSVGPainterFactory::strokePaintServer(object->style(), object);
+            SVGPaintServer* strokePaintServer = SVGPaintServer::strokePaintServer(object->style(), object);
             if (strokePaintServer) {
                 if (strokePaintServer->setup(pi.context, object, ApplyToStrokeTargetType, true)) {
                     if (painted)
