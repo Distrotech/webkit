@@ -26,6 +26,7 @@
 #include "SVGSVGElement.h"
 
 #include "AffineTransform.h"
+#include "csshelper.h"
 #include "CSSPropertyNames.h"
 #include "Document.h"
 #include "EventListener.h"
@@ -121,14 +122,14 @@ FloatRect SVGSVGElement::viewport() const
 
 float SVGSVGElement::pixelUnitToMillimeterX() const
 {
-    // FIXME: Implement me (see bug 11273)
-    return .28;
+    // 2.54 / cssPixelsPerInch gives CM.
+    return (2.54 / cssPixelsPerInch) * 10.0;
 }
 
 float SVGSVGElement::pixelUnitToMillimeterY() const
 {
-    // FIXME: Implement me (see bug 11273)
-    return .28;
+    // 2.54 / cssPixelsPerInch gives CM.
+    return (2.54 / cssPixelsPerInch) * 10.0;
 }
 
 float SVGSVGElement::screenPixelToMillimeterX() const
