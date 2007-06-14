@@ -1,5 +1,11 @@
 2007-06-14  Rob Buis  <buis@kde.org>
 
+        Build fix.
+
+        * rendering/SVGCharacterLayoutInfo.cpp:
+
+2007-06-14  Rob Buis  <buis@kde.org>
+
         Reviewed by Eric.
 
         http://bugs.webkit.org/show_bug.cgi?id=12207
