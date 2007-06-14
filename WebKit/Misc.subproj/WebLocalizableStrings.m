@@ -1,4 +1,4 @@
-/*	
+/*    
     WebLocalizableStrings.m
     Copyright (C) 2003 Apple Computer, Inc. All rights reserved.    
 */
@@ -7,7 +7,7 @@
 
 #import <WebKit/WebAssertions.h>
 
-WebLocalizableStringsBundle WebKitLocalizableStringsBundle = { "com.apple.WebKit", 0 };
+WebLocalizableStringsBundle WebKitLocalizableStringsBundle = { "com.apple.WebKitForDashboard", 0 };
 
 NSString *WebLocalizedString(WebLocalizableStringsBundle *stringsBundle, const char *key)
 {

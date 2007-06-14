@@ -1,3 +1,14 @@
+2007-06-14  Kevin Decker <kdecker@apple.com>
+
+        Reviewed by John and Darin and Anders!
+
+        Fixed: <rdar://problem/5269008> REGRESSION (Safari 3 Beta 1): Package Tracker widget fails (can't find localized strings due to bundle ID)
+
+        * Misc.subproj/WebLocalizableStrings.m: The problem was that WebLocalizableStrings.m has the system WebKit bundle identifier,
+        not WebKitForDashboard's bundle identifier. The code therefore couldn't find the localizable string "Recent searches",  thus
+        returned a nil string and therefore triggered an assertion failure in NSMenuItem.  I fixed this by changing the bundle constant
+        to "com.apple.WebKitForDashboard".
+
 2007-05-09  Mark Rowe  <mrowe@apple.com>
 
        Merge fixes from ToT to Safari-2-0-branch.
