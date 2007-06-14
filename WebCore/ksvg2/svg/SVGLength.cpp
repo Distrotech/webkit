@@ -293,6 +293,11 @@ float SVGLength::PercentageOfViewport(float value, const SVGStyledElement* conte
             width = svg->width().value();
             height = svg->height().value();
         }
+    } else if (context->parent() && !context->parent()->isSVGElement()) {
+        if (RenderObject* renderer = context->renderer()) {
+            width = renderer->width();
+            height = renderer->height();
+        }
     }
 
     if (mode == LengthModeWidth)
