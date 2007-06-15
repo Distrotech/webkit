@@ -310,9 +310,7 @@ static void applyTextAnchorToTextChunk(SVGTextChunk& chunk)
 
         InlineBox* curBox = range.box;
         ASSERT(curBox->isInlineTextBox());
-
-        InlineBox* parentBox = curBox->parent();
-        ASSERT(parentBox && (parentBox->isRootInlineBox() || parentBox->isInlineFlowBox()));
+        ASSERT(curBox->parent() && (curBox->parent()->isRootInlineBox() || curBox->parent()->isInlineFlowBox()));
 
         // Move target box
         if (chunk.isVerticalText)
