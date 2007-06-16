@@ -11,7 +11,6 @@ WK_ROOTDIR=$WK_ROOT
 export WXWEBKIT=1
 WEBKITOUTPUTDIR=`perl -e "use webkitdirs; print baseProductDir()"`
 WINDEPS="pthreads/lib/pthreadVC2.dll icu/bin/icuuc34.dll icu/bin/icudt34.dll libcurl/*.dll sqlite3/sqlite3.dll"
-WINDEPS="$WINDEPS $WXWIN/lib/vc_dll/wxmsw28ud_core_vc.dll $WXWIN/lib/vc_dll/wxbase28ud_vc.dll"
 # TODO: check that we are running from the root of the source tree...
 
 # cygpath will bork if the dir doesn't exist...
@@ -24,10 +23,10 @@ if [ $OSTYPE == cygwin ]; then
     export WEBKITOUTPUTDIR
     if [ -z $WXWIN ]; then
         echo "Error, you must set WXWIN to your wxWidgets root directory."
-	exit 1
+        exit 1
     fi
     if [ -z $BAKEFILE_PATHS ]; then
-	export BAKEFILE_PATHS=$WXWIN/build/bakefiles/wxpresets
+        export BAKEFILE_PATHS=$WXWIN/build/bakefiles/wxpresets
     fi
     LINKER=`which link`
     if [ "$LINKER" = "/usr/bin/link" ]; then
@@ -43,12 +42,12 @@ else
     if [ ! -d "$WX_PREFIX" ]; then
         echo "ERROR: Cannot find your wxWidgets installation."
         echo "Make sure wx-config is on your PATH and points to a valid wxWidgets installation."
-	    exit 1
+        exit 1
     fi
     if [ ! -d "$WX_PREFIX/share/bakefile" ]; then
         echo "ERROR: wxWidgets installation does not have wxpresets."
         echo "wx-config is pointing to an installation that does not have Bakefile presets installed. Run `wx-config --version` to ensure your wxWidgets is of version 2.8+."
-	    exit 1
+        exit 1
     fi    
     
     if [ -z $BAKEFILE_PATHS ]; then
@@ -72,19 +71,23 @@ do_extras=0
 do_build=0
 do_clean=0
 use_wxgc=0
+wxdebug=0
+wxpython=0
 make_args=''
 other_args=''
 
 for flag in $*; do
     case $flag in
-	bake)   do_bake=1                                      ;;
-	prep)   do_prep=1                                      ;;
-	build)  do_build=1                                     ;;
-	extras) do_extras=1                                    ;;
-	all)    do_extras=1; do_bake=1; do_prep=1; do_build=1  ;;
-	clean)  other_args=clean; do_clean=1                   ;;
-	wxgc)   use_wxgc=1                                     ;;
-	*)      export $flag ;; #other_args='$other_args "$flag"'               ;;
+    bake)   do_bake=1                                      ;;
+    prep)   do_prep=1                                      ;;
+    build)  do_build=1                                     ;;
+    extras) do_extras=1                                    ;;
+    all)    do_extras=1; do_bake=1; do_prep=1; do_build=1  ;;
+    clean)  other_args=clean; do_clean=1                   ;;
+    wxgc)   use_wxgc=1                                     ;;
+    wxdebug) wxdebug=1                                     ;;
+    wxpython) wxpython=1                                   ;;
+    *)      export $flag ;; #other_args='$other_args "$flag"'               ;;
     esac
 done
 
@@ -165,10 +168,19 @@ else
         mkdir -p obj-msvc
         do_make . "" dftables$EXE
         ./make-generated-sources.sh
+        if [ $? != 0 ]; then
+            exit $? 
+        fi
     
         cd $WK_ROOT/WebCore
         ./move-js-headers.sh
+        if [ $? != 0 ]; then
+            exit $? 
+        fi
         ./make-generated-sources.sh platform/wx/wx-encodings.txt
+        if [ $? != 0 ]; then
+            exit $? 
+        fi
     fi
 fi
 
@@ -179,10 +191,22 @@ if [ $do_build == 1 -o $do_clean == 1 ]; then
     if [ $use_wxgc == 1 ]; then
         WXGC_DEFINE="-DWTF_USE_WXGC=1"
     fi
-    do_make $WK_ROOT/JavaScriptCore      "-DBUILDING_WX__=1 $WXGC_DEFINE" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
-    do_make $WK_ROOT/WebCore/Projects/wx "-DBUILDING_WX__=1 $WXGC_DEFINE" WEBKIT_ROOT=$WK_ROOTDIR $other_args
-    do_make $WK_ROOT/WebKit/wx "-DBUILDING_WX__=1 $WXGC_DEFINE" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
-    do_make $WK_ROOT/WebKitTools/wxBrowser  "-DBUILDING_WX__=1 $WXGC_DEFINE" WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+    WX_EXT=
+    if [ "$OSTYPE" == "cygwin" -a $wxdebug == 1 ]; then
+        WX_EXT=d
+    fi
+    if [ "$OSTYPE" == "cygwin" -a $wxpython == 1 ]; then
+        other_args=WX_PYTHON=1
+        WX_EXT=h
+        wxdebug=1
+    fi
+
+    WINDEPS="$WINDEPS $WXWIN/lib/vc_dll/wxmsw28u${WX_EXT}_core_vc.dll $WXWIN/lib/vc_dll/wxbase28u${WX_EXT}_vc.dll"
+    
+    do_make $WK_ROOT/JavaScriptCore      "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+    do_make $WK_ROOT/WebCore/Projects/wx "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR $other_args
+    do_make $WK_ROOT/WebKit/wx "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR $other_args 
+    do_make $WK_ROOT/WebKitTools/wxBrowser  "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR $other_args 
 
     if [ $do_build == 1 ]; then 
         if [ "${OSTYPE:0:6}" = "darwin" ]; then
