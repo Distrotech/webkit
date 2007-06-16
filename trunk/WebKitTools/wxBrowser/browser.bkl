@@ -8,6 +8,11 @@
     <include file="presets/wx.bkl"/>
     <include file="../../Bakefiles/presets.bkl"/>
     
+    <!-- the WX_PYTHON option was added to presets/wx.bkl in 2.8.5, so define 
+         it in case the presets/wx.bkl doesn't define it for us. -->
+    <if cond="not isdefined('WX_PYTHON')">
+        <set var="WX_PYTHON">0</set>
+    </if>
     <template id="wxwebkit">
         <lib-path>$(WKOUTPUTDIR)</lib-path>
         <sys-lib>wxwebkit</sys-lib>    

@@ -57,15 +57,6 @@ and WebCore. Include this file to use these settings.
             <!-- MSVC chokes on #import, so don't use ForwardingHeaders... -->
             <include>$(WK_ROOT)/JavaScriptCore/os-win32</include><!-- stdint.h is here -->
         </if>
-        
-        <if cond="FORMAT=='gnu'">
-            <ldflags>$(WKOUTPUTDIR)/libjscore.a</ldflags>
-        </if>
-        <if cond="FORMAT in ['msvc','msvs2005prj']">
-            <sys-lib>jscore</sys-lib>
-                        <sys-lib>winmm</sys-lib> <!-- for timeGetTime -->
-            <lib-path>$(WKOUTPUTDIR)</lib-path>
-        </if>
     </template>
 
     <template id="webcore">
@@ -116,14 +107,6 @@ and WebCore. Include this file to use these settings.
         <include>$(WK_ROOT)/WebCore/platform/network</include>
         <include>$(WK_ROOT)/WebCore/rendering</include>
         <include>$(WK_ROOT)/WebCore/xml</include>
-        
-        <if cond="FORMAT=='gnu'">
-            <ldflags>$(WKOUTPUTDIR)/libwebcore-wx.a</ldflags>
-        </if>
-        <if cond="FORMAT in ['msvc','msvs2005prj']">
-            <sys-lib>webcore-wx</sys-lib>
-            <lib-path>$(WKOUTPUTDIR)</lib-path>
-        </if>
     </template>
 
     <option name="SQLITE3_LIBS">

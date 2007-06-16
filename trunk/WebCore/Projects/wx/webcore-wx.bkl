@@ -39,6 +39,12 @@ wxWebCore port Bakefile project file.
     <include file="presets/wx.bkl"/>
     <include file="../../webcore-base.bkl"/>
     
+    <!-- the WX_PYTHON option was added to presets/wx.bkl in 2.8.5, so define 
+         it in case the presets/wx.bkl doesn't define it for us. -->
+    <if cond="not isdefined('WX_PYTHON')">
+        <set var="WX_PYTHON">0</set>
+    </if>
+    
     <action id="DerivedSources">
         <is-phony/>
         <command>cd $(SRCDIR);bash move-js-headers.sh; bash make-generated-sources.sh platform/wx/wx-encodings.txt;cd Projects/wx</command>
