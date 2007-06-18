@@ -2289,7 +2289,9 @@ void FrameLoader::commitProvisionalLoad(PassRefPtr<PageCache> prpPageCache)
         open(*pageState);
         pageState->clear();
     } else {        
-        KURL url = pdl->URL();
+        KURL url = pdl->substituteData().responseURL();
+        if (url.isEmpty())
+            url = pdl->URL();
         if (url.isEmpty())
             url = pdl->responseURL();
         if (url.isEmpty())
@@ -3277,6 +3279,7 @@ void FrameLoader::continueAfterNavigationPolicy(PolicyAction policy)
             break;
         case PolicyUse: {
             ResourceRequest request(check.request());
+            
             if (!m_client->canHandleRequest(request)) {
                 handleUnimplementablePolicy(m_client->cannotShowURLError(check.request()));
                 check.clearRequest();
