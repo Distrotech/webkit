@@ -1,3 +1,25 @@
+2007-06-18  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Kevin McCullough.
+
+        Merged fix from TOT to Safari-2-0-branch
+        
+  2007-06-05  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/5245555> REGRESSION: HTTP header injection in XMLHttpRequest.setRequestHeader
+        <rdar://problem/5246208> HTTP injection in XMLHttpRequest.open method parameter
+        <rdar://problem/5246242> HTTP header injection in HXMLHttpRequest.setRequestHeader header parameter
+
+        Check method names, header names and header values and throw exceptions if any of them are
+        invalid. This is what the new XMLHttpRequest spec states that we should do.
+
+        * khtml/ecma/xmlhttprequest.cpp:
+        (KJS::isValidToken):
+        (KJS::isValidHeaderValue):
+        (KJS::XMLHttpRequestProtoFunc::tryCall):
+
 2007-05-23  Timothy Hatcher  <timothy@apple.com>
 
         Merged fix from TOT to Safari-2-0-branch
