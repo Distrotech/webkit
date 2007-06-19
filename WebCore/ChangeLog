@@ -1,17 +1,3 @@
-2007-06-19  Kevin McCullough  <kmccullough@apple.com>
-
-        Reviewed by Tristan.
-
-        - Merged security fix for <rdar://problem/5277156> Tiger: Memory corruption in Apple Safari: WebKit (Rhys #2)
-        * khtml/rendering/render_frames.cpp:
-        (RenderFrameSet::layout):
-        * khtml/rendering/render_frames.h:
-        (khtml::RenderFrame::isFrame):
-        * khtml/rendering/render_object.cpp:
-        (RenderObject::isChildAllowed):
-        * khtml/rendering/render_object.h:
-        (khtml::RenderObject::isFrame):
-
 2007-06-18  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Kevin McCullough.

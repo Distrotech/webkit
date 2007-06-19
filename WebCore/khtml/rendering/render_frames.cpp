@@ -227,7 +227,7 @@ void RenderFrameSet::layout( )
 
     RenderObject *child = firstChild();
     if ( !child )
-        goto end2;
+    goto end2;
 
     if(!m_hSplitVar && !m_vSplitVar)
     {
@@ -251,15 +251,10 @@ void RenderFrameSet::layout( )
             {
                 bool fixed = false;
 
-                if ( child->isFrameSet() ) {
-                    DOM::HTMLFrameSetElementImpl* frameSetElement = static_cast<RenderFrameSet *>(child)->element();
-                    if (frameSetElement)
-                        fixed = frameSetElement->noResize();
-                } else {
-                    DOM::HTMLFrameElementImpl* frameElement = static_cast<RenderFrame *>(child)->element();
-                    if (frameElement)
-                        fixed = frameElement->noResize();
-                }
+                if ( child->isFrameSet() )
+                  fixed = static_cast<RenderFrameSet *>(child)->element()->noResize();
+                else
+                  fixed = static_cast<RenderFrame *>(child)->element()->noResize();
 
                 if(fixed)
                 {
@@ -320,7 +315,7 @@ void RenderFrameSet::positionFrames()
           child->setWidth( m_gridLayout[1][c] );
           child->setHeight( m_gridLayout[0][r] );
           child->setNeedsLayout(true);
-          child->layout();
+      child->layout();
       }
 
       xPos += m_gridLayout[1][c] + element()->border();
@@ -580,7 +575,7 @@ RenderPart::RenderPart(DOM::HTMLElementImpl* node)
 RenderPart::~RenderPart()
 {
     if (m_widget && m_widget->inherits("KHTMLView")) {
-        static_cast<KHTMLView *>(m_widget)->deref();
+    static_cast<KHTMLView *>(m_widget)->deref();
     }
 }
 
@@ -591,19 +586,19 @@ void RenderPart::setWidget( QWidget *widget )
 #endif
     
     if (widget == m_widget) {
-        return;
+    return;
     }
 
     if (m_widget && m_widget->inherits("KHTMLView")) {
-        static_cast<KHTMLView *>(m_widget)->deref();
+    static_cast<KHTMLView *>(m_widget)->deref();
     }
     
-    if (widget && widget->inherits("KHTMLView")) {        
-        static_cast<KHTMLView *>(widget)->ref();
-        setQWidget( widget, false );
-        connect( widget, SIGNAL( cleared() ), this, SLOT( slotViewCleared() ) );
+    if (widget && widget->inherits("KHTMLView")) {    
+    static_cast<KHTMLView *>(widget)->ref();
+    setQWidget( widget, false );
+    connect( widget, SIGNAL( cleared() ), this, SLOT( slotViewCleared() ) );
     } else {
-        setQWidget( widget );
+    setQWidget( widget );
     }
     setNeedsLayoutAndMinMaxRecalc();
     
@@ -675,7 +670,7 @@ static bool isURLAllowed(DOM::DocumentImpl *doc, const QString &url)
     newURL.setRef(QString::null);
     
     if (doc->part()->topLevelFrameCount() >= 200)
-        return false;
+    return false;
 
     // We allow one level of self-reference because some sites depend on that.
     // But we don't allow more than one.
@@ -872,14 +867,14 @@ void RenderPartObject::updateWidget()
       if (!isURLAllowed(document(), url))
           return;
       if (url.isEmpty())
-          url = "about:blank";
+      url = "about:blank";
       KHTMLView *v = static_cast<KHTMLView *>(m_view);
       bool requestSucceeded = v->part()->requestFrame( this, url, o->name.string(), QStringList(), QStringList(), true );
       if (requestSucceeded && url == "about:blank") {
-          KHTMLPart *newPart = v->part()->findFrame( o->name.string() );
-          if (newPart && newPart->xmlDocImpl()) {
-              newPart->xmlDocImpl()->setBaseURL( v->part()->baseURL().url() );
-          }
+      KHTMLPart *newPart = v->part()->findFrame( o->name.string() );
+      if (newPart && newPart->xmlDocImpl()) {
+          newPart->xmlDocImpl()->setBaseURL( v->part()->baseURL().url() );
+      }
       }
   }
 }
@@ -947,7 +942,7 @@ void RenderPartObject::slotPartLoadingErrorNotify()
         embed = static_cast<HTMLEmbedElementImpl *>(element());
     }
     if ( embed )
-        serviceType = embed->serviceType;
+    serviceType = embed->serviceType;
 
     KHTMLPart *part = static_cast<KHTMLView *>(m_view)->part();
     KParts::BrowserExtension *ext = part->browserExtension();
@@ -962,12 +957,12 @@ void RenderPartObject::slotPartLoadingErrorNotify()
         QString shortURL = pluginPageURL.protocol() == "http" ? pluginPageURL.host() : pluginPageURL.prettyURL();
         int res = KMessageBox::questionYesNo( m_view,
             i18n("No plugin found for '%1'.\nDo you want to download one from %2?").arg(mimeName).arg(shortURL),
-            i18n("Missing plugin"), QString::null, QString::null, QString("plugin-")+serviceType);
-        if ( res == KMessageBox::Yes )
-        {
+        i18n("Missing plugin"), QString::null, QString::null, QString("plugin-")+serviceType);
+    if ( res == KMessageBox::Yes )
+    {
           // Display vendor download page
           ext->createNewWindow( pluginPageURL );
-        }
+    }
     }
 #endif // APPLE_CHANGES
 }
@@ -1002,12 +997,12 @@ void RenderPartObject::slotViewCleared()
       int marginw = -1;
       int marginh = -1;
       if ( element()->id() == ID_IFRAME) {
-          HTMLIFrameElementImpl *frame = static_cast<HTMLIFrameElementImpl *>(element());
-          if(frame->frameBorder)
-              frameStyle = QFrame::Box;
+      HTMLIFrameElementImpl *frame = static_cast<HTMLIFrameElementImpl *>(element());
+      if(frame->frameBorder)
+          frameStyle = QFrame::Box;
           scroll = frame->scrolling;
-          marginw = frame->marginWidth;
-          marginh = frame->marginHeight;
+      marginw = frame->marginWidth;
+      marginh = frame->marginHeight;
       }
       view->setFrameStyle(frameStyle);
 
