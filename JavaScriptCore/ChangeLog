@@ -12,18 +12,7 @@
         * kjs/collector.cpp:
         (KJS::Collector::allocate):
 
-2007-02-02  Mark Rowe  <mrowe@apple.com>
-
-        * Info.plist: Update bundle identifier.
-
 === JavaScoreCore-419 ===
-
-2007-01-18  Mark Rowe  <mrowe@apple.com>
-
-        Adjust installation path.
-
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-
 === JavaScriptCore-418.3 ===
 
 2006-05-27  Geoffrey Garen  <ggaren@apple.com>

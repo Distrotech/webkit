@@ -1130,7 +1130,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1186,7 +1186,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1245,7 +1245,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
@@ -1304,7 +1304,7 @@
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				HEADER_SEARCH_PATHS = icu;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = /System/Library/PrivateFrameworks/WebKitDashboardSupport.framework/Frameworks/WebKit.framework/Versions/A/Frameworks;
+				INSTALL_PATH = /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = (
 					"$(STYLE_LDFLAGS)",
