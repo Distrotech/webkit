@@ -50,6 +50,7 @@ public:
 
   virtual const char *renderName() const { return "RenderFrameSet"; }
   virtual bool isFrameSet() const { return true; }
+  virtual bool isChildAllowed(RenderObject*, RenderStyle*) const;
 
   virtual void layout();
 

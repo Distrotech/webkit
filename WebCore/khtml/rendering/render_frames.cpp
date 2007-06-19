@@ -287,6 +287,11 @@ void RenderFrameSet::layout( )
     setNeedsLayout(false);
 }
 
+bool RenderFrameSet::isChildAllowed(RenderObject* child, RenderStyle* style) const
+{
+    return child->isFrame() || child->isFrameSet();
+}
+
 void RenderFrameSet::positionFrames()
 {
   int r;
