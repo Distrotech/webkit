@@ -508,8 +508,7 @@ sub GenerateHeader
 
 sub GenerateImplementation
 {
-    my $object = shift;
-    my $dataNode = shift;
+    my ($object, $dataNode) = @_;
 
     my $interfaceName = $dataNode->name;
     my $className = "JS$interfaceName";
@@ -831,15 +830,27 @@ sub GenerateImplementation
 
             if ($attribute->signature->extendedAttributes->{"Custom"}) {
                 push(@implContent, "    case " . WK_ucfirst($name) . "AttrNum:\n");
+                if ($dataNode->extendedAttributes->{"CheckDomainSecurity"} && !$attribute->signature->extendedAttributes->{"DoNotCheckDomainSecurity"}) {
+                    push(@implContent, "        if (!isSafeScript(exec))\n");
+                    push(@implContent, "            return jsUndefined();");
+                }
                 push(@implContent, "        return $name(exec);\n");
             } elsif ($attribute->signature->type =~ /Constructor$/) {
                 my $constructorType = $codeGenerator->StripModule($attribute->signature->type);
                 $constructorType =~ s/Constructor$//;
 
                 push(@implContent, "    case " . $name . "ConstructorAttrNum:\n");
+                if ($dataNode->extendedAttributes->{"CheckDomainSecurity"} && !$attribute->signature->extendedAttributes->{"DoNotCheckDomainSecurity"}) {
+                    push(@implContent, "        if (!isSafeScript(exec))\n");
+                    push(@implContent, "            return jsUndefined();\n");
+                }
                 push(@implContent, "        return JS" . $constructorType . "::getConstructor(exec);\n");
             } elsif (!@{$attribute->getterExceptions}) {
                 push(@implContent, "    case " . WK_ucfirst($name) . "AttrNum:\n");
+                if ($dataNode->extendedAttributes->{"CheckDomainSecurity"} && !$attribute->signature->extendedAttributes->{"DoNotCheckDomainSecurity"}) {
+                    push(@implContent, "        if (!isSafeScript(exec))\n");
+                    push(@implContent, "            return jsUndefined();\n");
+                }
         
                 if ($podType) {
                     if ($podType eq "double") { # Special case for JSSVGNumber
@@ -873,6 +884,10 @@ sub GenerateImplementation
                 }
             } else {
                 push(@implContent, "    case " . WK_ucfirst($name) . "AttrNum: {\n");
+                if ($dataNode->extendedAttributes->{"CheckDomainSecurity"} && !$attribute->signature->extendedAttributes->{"DoNotCheckDomainSecurity"}) {
+                    push(@implContent, "        if (!isSafeScript(exec))\n");
+                    push(@implContent, "            return jsUndefined();\n");
+                }
                 push(@implContent, "        ExceptionCode ec = 0;\n");
         
                 if ($podType) {
