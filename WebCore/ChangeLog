@@ -1,5 +1,19 @@
 2007-06-19  Timothy Hatcher  <timothy@apple.com>
 
+        Merge r23602 and r23607 from Safari-2-0-branch to Safari-1-3-branch
+
+        <rdar://problem/5279863> Panther: Memory corruption in Apple Safari: WebKit (Rhys #2)
+
+        * khtml/rendering/render_frames.cpp:
+        (RenderFrameSet::layout):
+        (RenderFrameSet::isChildAllowed):
+        * khtml/rendering/render_frames.h:
+        (khtml::RenderFrame::isFrame):
+        * khtml/rendering/render_object.h:
+        (khtml::RenderObject::isFrame):
+
+2007-06-19  Timothy Hatcher  <timothy@apple.com>
+
         Merged fix from Safari-2-0-branch to Safari-1-3-branch
 
   2007-06-05  Anders Carlsson  <andersca@apple.com>

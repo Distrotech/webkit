@@ -272,6 +272,7 @@ public:
     virtual bool isFormElement() const { return false; }
     virtual bool isImage() const { return false; }
     virtual bool isTextArea() const { return false; }
+    virtual bool isFrame() const { return false; }
     virtual bool isFrameSet() const { return false; }
     virtual bool isApplet() const { return false; }
     
