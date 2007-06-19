@@ -65,6 +65,35 @@ IMPLEMENT_PROTOTYPE(XMLHttpRequestProto,XMLHttpRequestProtoFunc)
 
 namespace KJS {
 
+// Determines if a string is a valid token, as defined by 
+// "token" in section 2.2 of RFC 2616. 
+static bool isValidToken(const QString& name) 
+{ 
+  unsigned length = name.length(); 
+  for (unsigned i = 0; i < length; i++) { 
+    ushort c = name[i].unicode(); 
+
+    if (c >= 127 || c <= 32) 
+      return false; 
+         
+    if (c == '(' || c == ')' || c == '<' || c == '>' || c == '@' || 
+        c == ',' || c == ';' || c == ':' || c == '\\' || c == '\"' || 
+        c == '/' || c == '[' || c == ']' || c == '?' || c == '=' || 
+        c == '{' || c == '}') 
+        return false; 
+   } 
+     
+  return true; 
+} 
+     
+static bool isValidHeaderValue(const QString& name) 
+{ 
+  // FIXME: This should really match name against  
+  // field-value in section 4.2 of RFC 2616. 
+         
+  return !name.contains("\r\n"); 
+} 
+
 XMLHttpRequestQObject::XMLHttpRequestQObject(XMLHttpRequest *_jsObject) 
 {
   jsObject = _jsObject; 
@@ -618,6 +647,14 @@ Value XMLHttpRequestProtoFunc::tryCall(ExecState *exec, Object &thisObj, const L
       }
     
       QString method = args[0].toString(exec).qstring();
+        
+      if (!isValidToken(method)) {
+        Object err = Error::create(exec, GeneralError, QString("DOM exception %1").arg(DOM::DOMException::SYNTAX_ERR).local8Bit());
+        err.put(exec, "code", Number(DOM::DOMException::SYNTAX_ERR));
+        exec->setException( err );
+        return err;
+      }
+      
       KURL url = KURL(Window::retrieveActive(exec)->part()->document().completeURL(args[1].toString(exec).qstring()).string());
 
       bool async = true;
@@ -678,7 +715,16 @@ Value XMLHttpRequestProtoFunc::tryCall(ExecState *exec, Object &thisObj, const L
       return Undefined();
     }
     
-    request->setRequestHeader(args[0].toString(exec).qstring(), args[1].toString(exec).qstring());
+    QString name = args[0].toString(exec).qstring();
+    QString value = args[1].toString(exec).qstring();
+    
+    if (!isValidToken(name) || !isValidHeaderValue(value)) {
+      Object err = Error::create(exec, GeneralError, QString("DOM exception %1").arg(DOM::DOMException::SYNTAX_ERR).local8Bit());
+      err.put(exec, "code", Number(DOM::DOMException::SYNTAX_ERR));
+      exec->setException( err );
+      return err;
+    } 
+    request->setRequestHeader(name, value);
     
     return Undefined();
   }
