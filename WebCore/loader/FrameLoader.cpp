@@ -2677,6 +2677,9 @@ void FrameLoader::checkLoadCompleteForThisFrame()
                     && m_frame->page() && m_frame->page()->backForwardList())
                 restoreScrollPositionAndViewState();
 
+            if (m_creatingInitialEmptyDocument || !m_committedFirstRealDocumentLoad)
+                return;
+
             const ResourceError& error = dl->mainDocumentError();
             if (!error.isNull())
                 m_client->dispatchDidFailLoad(error);
