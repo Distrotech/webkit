@@ -1,12 +1,3 @@
-2007-06-18  Anders Carlsson  <andersca@apple.com>
-
-        Reviewed by John Sullivan.
-
-        Assert that the frame has a dataSource.
-        
-        * DumpRenderTree/FrameLoadDelegate.m:
-        (-[FrameLoadDelegate webView:didFinishLoadForFrame:]):
-
 2007-03-22  Adam Roben  <aroben@apple.com>
 
         Reviewed by Geoff.
