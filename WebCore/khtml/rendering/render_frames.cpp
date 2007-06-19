@@ -251,10 +251,15 @@ void RenderFrameSet::layout( )
             {
                 bool fixed = false;
 
-                if ( child->isFrameSet() )
-                  fixed = static_cast<RenderFrameSet *>(child)->element()->noResize();
-                else
-                  fixed = static_cast<RenderFrame *>(child)->element()->noResize();
+                if ( child->isFrameSet() ) {
+                    DOM::HTMLFrameSetElementImpl* frameSetElement = static_cast<RenderFrameSet *>(child)->element();
+                    if (frameSetElement)
+                        fixed = frameSetElement->noResize();
+                } else {
+                    DOM::HTMLFrameElementImpl* frameElement = static_cast<RenderFrame *>(child)->element();
+                    if (frameElement)
+                        fixed = frameElement->noResize();
+                }
 
                 if(fixed)
                 {

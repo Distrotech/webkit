@@ -1,5 +1,18 @@
 2007-06-19  Kevin McCullough  <kmccullough@apple.com>
 
+        Reviewed by.
+
+        - Fixing my own merging mistake.
+
+        * khtml/rendering/render_frames.cpp:
+        (RenderFrameSet::layout):
+        * khtml/rendering/render_frames.h:
+        (khtml::RenderFrame::isFrame):
+        * khtml/rendering/render_object.h:
+        (khtml::RenderObject::isFrame):
+
+2007-06-19  Kevin McCullough  <kmccullough@apple.com>
+
         Reviewed by Tristan and Anders.
 
         - Changed location of isChildAllowed to avoid breaking rendering.
