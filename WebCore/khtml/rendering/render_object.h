@@ -276,6 +276,7 @@ public:
     virtual bool isImage() const { return false; }
     virtual bool isTextArea() const { return false; }
     virtual bool isTextField() const { return false; }
+    virtual bool isFrame() const { return false; }
     virtual bool isFrameSet() const { return false; }
     virtual bool isApplet() const { return false; }
     
@@ -406,6 +407,7 @@ public:
         QPtrDict<RenderFlow>* outlineObjects; // used to list which outlines should be painted by a block with inline children
     };
     virtual void paint(PaintInfo& i, int tx, int ty);
+    virtual bool isChildAllowed(RenderObject*, RenderStyle*) const;
     void paintBorder(QPainter *p, int _tx, int _ty, int w, int h, const RenderStyle* style, bool begin=true, bool end=true);
     void paintOutline(QPainter *p, int _tx, int _ty, int w, int h, const RenderStyle* style);
 

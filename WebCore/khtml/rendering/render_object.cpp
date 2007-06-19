@@ -1303,6 +1303,11 @@ void RenderObject::dirtyLinesFromChangedChild(RenderObject* child, bool adding)
 {
 }
 
+bool RenderObject::isChildAllowed(RenderObject* child, RenderStyle* style) const
+{
+    return child->isFrame() || child->isFrameSet();
+}
+
 #ifndef NDEBUG
 
 QString RenderObject::information() const
