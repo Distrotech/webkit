@@ -654,6 +654,11 @@ int RenderFrameSet::hitTestSplit(const GridAxis& axis, int position) const
     return noSplit;
 }
 
+bool RenderFrameSet::isChildAllowed(RenderObject* child, RenderStyle* style) const
+{
+    return child->isFrame() || child->isFrameSet();
+}
+
 #ifndef NDEBUG
 void RenderFrameSet::dump(TextStream* stream, DeprecatedString ind) const
 {
