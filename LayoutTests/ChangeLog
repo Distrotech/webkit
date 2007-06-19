@@ -1,3 +1,26 @@
+2007-06-20  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Reviewed by Eric & Oliver.
+
+        Adding new testcase assuring <use> on <foreignObject> doesn't work.
+
+        * svg/custom/use-on-disallowed-foreign-object-1-expected.checksum: Added.
+        * svg/custom/use-on-disallowed-foreign-object-1-expected.png: Added.
+        * svg/custom/use-on-disallowed-foreign-object-1-expected.txt: Added.
+        * svg/custom/use-on-disallowed-foreign-object-1.svg: Added.
+        * svg/custom/use-on-disallowed-foreign-object-2-expected.checksum: Added.
+        * svg/custom/use-on-disallowed-foreign-object-2-expected.png: Added.
+        * svg/custom/use-on-disallowed-foreign-object-2-expected.txt: Added.
+        * svg/custom/use-on-disallowed-foreign-object-2.svg: Added.
+        * svg/custom/use-on-disallowed-foreign-object-3-expected.checksum: Added.
+        * svg/custom/use-on-disallowed-foreign-object-3-expected.png: Added.
+        * svg/custom/use-on-disallowed-foreign-object-3-expected.txt: Added.
+        * svg/custom/use-on-disallowed-foreign-object-3.svg: Added.
+        * svg/custom/use-on-disallowed-foreign-object-4-expected.checksum: Added.
+        * svg/custom/use-on-disallowed-foreign-object-4-expected.png: Added.
+        * svg/custom/use-on-disallowed-foreign-object-4-expected.txt: Added.
+        * svg/custom/use-on-disallowed-foreign-object-4.svg: Added.
+
 2007-06-19  Rob Buis  <buis@kde.org>
 
         Reviewed by Oliver.
