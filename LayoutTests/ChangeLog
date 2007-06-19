@@ -1,5 +1,41 @@
 2007-06-20  Nikolas Zimmermann  <zimmermann@kde.org>
 
+        Not reviewed.
+        
+        Forgot to commit new layout tests results, now that <foreignObject> is enabled again.
+
+        * svg/W3C-SVG-1.1/masking-mask-01-b-expected.checksum:
+        * svg/W3C-SVG-1.1/masking-mask-01-b-expected.png:
+        * svg/custom/baseval-animval-equality-expected.checksum:
+        * svg/custom/baseval-animval-equality-expected.png:
+        * svg/custom/baseval-animval-equality-expected.txt:
+        * svg/custom/dynamic-svg-document-creation-expected.checksum:
+        * svg/custom/dynamic-svg-document-creation-expected.png:
+        * svg/custom/dynamic-svg-document-creation-expected.txt:
+        * svg/custom/foreign-object-skew-expected.checksum:
+        * svg/custom/foreign-object-skew-expected.png:
+        * svg/custom/foreign-object-skew-expected.txt:
+        * svg/custom/grayscale-gradient-mask-expected.checksum:
+        * svg/custom/grayscale-gradient-mask-expected.png:
+        * svg/custom/stroke-width-click-expected.txt:
+        * svg/hixie/mixed/006-expected.checksum:
+        * svg/hixie/mixed/006-expected.png:
+        * svg/hixie/mixed/006-expected.txt:
+        * svg/hixie/mixed/007-expected.checksum:
+        * svg/hixie/mixed/007-expected.png:
+        * svg/hixie/mixed/007-expected.txt:
+        * svg/hixie/mixed/008-expected.checksum:
+        * svg/hixie/mixed/008-expected.png:
+        * svg/hixie/mixed/008-expected.txt:
+        * svg/hixie/mixed/009-expected.checksum:
+        * svg/hixie/mixed/009-expected.png:
+        * svg/hixie/mixed/009-expected.txt:
+        * svg/hixie/mixed/011-expected.checksum:
+        * svg/hixie/mixed/011-expected.png:
+        * svg/hixie/mixed/011-expected.txt:
+
+2007-06-20  Nikolas Zimmermann  <zimmermann@kde.org>
+
         Reviewed by Eric & Oliver.
 
         Adding new testcase assuring <use> on <foreignObject> doesn't work.
