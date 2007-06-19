@@ -1,3 +1,13 @@
+2007-06-18  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        Fixed: <rdar://problem/5276135> With Safari 3 Tiger Beta installed, a crash occurs in BBEdit while mousing down and dragging outside of HTML preview window
+
+        * Carbon/HIWebView.m:
+        (WindowHandler): Because the fix for 5051616 causes Tiger to crash in HIToolbox (but not on Leopard), I reverted back to using GetControlKind
+        on Tiger only, instead of HIObjectIsOfClass.
+
 2007-05-16  Anders Carlsson  <andersca@apple.com>
 
         Reviewed by Darin.
