@@ -147,6 +147,10 @@ namespace WebCore {
         void addPlugInStreamLoader(ResourceLoader*);
         void removePlugInStreamLoader(ResourceLoader*);
 
+        bool deferMainResourceDataLoad() const { return m_deferMainResourceDataLoad; }
+    protected:
+        bool m_deferMainResourceDataLoad;
+
     private:
         void setupForReplace();
         void commitIfReady();
