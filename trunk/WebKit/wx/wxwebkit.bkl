@@ -64,6 +64,8 @@
         <include>$(WK_ROOT)/WebKit/wx</include>
         <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
         
+        <sys-lib>png</sys-lib>
+        
         <if cond="FORMAT=='gnu'">
             <ldflags>$(WKOUTPUTDIR)/libwebcore-wx.a</ldflags>
         </if>
