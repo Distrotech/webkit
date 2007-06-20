@@ -91,7 +91,7 @@ static bool isValidHeaderValue(const QString& name)
   // FIXME: This should really match name against  
   // field-value in section 4.2 of RFC 2616. 
          
-  return !name.contains("\r\n"); 
+  return !name.contains('\r') && !name.contains('\n'); 
 } 
 
 XMLHttpRequestQObject::XMLHttpRequestQObject(XMLHttpRequest *_jsObject) 
