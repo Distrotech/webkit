@@ -2,6 +2,7 @@
     Copyright (C) 2006 Alexander Kellett <lypanov@kde.org>
     Copyright (C) 2006 Apple Computer, Inc.
     Copyright (C) 2007 Nikolas Zimmermann <zimmermann@kde.org>
+    Copyright (C) 2007 Rob Buis <buis@kde.org>
 
     This file is part of the WebKit project
 
@@ -60,7 +61,7 @@ void RenderSVGImage::adjustRectsForAspectRatio(FloatRect& destRect, FloatRect& s
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-                    destRect.setY(origDestHeight / 2 - destRect.height() / 2);
+                    destRect.setY(origDestHeight / 2.0f - destRect.height() / 2.0f);
                     break;
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
@@ -75,7 +76,7 @@ void RenderSVGImage::adjustRectsForAspectRatio(FloatRect& destRect, FloatRect& s
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-                    destRect.setX(origDestWidth / 2 - destRect.width() / 2);
+                    destRect.setX(origDestWidth / 2.0f - destRect.width() / 2.0f);
                     break;
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
@@ -94,7 +95,7 @@ void RenderSVGImage::adjustRectsForAspectRatio(FloatRect& destRect, FloatRect& s
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-                    srcRect.setY(image()->height() / 2 - srcRect.height() / 2);
+                    srcRect.setY(image()->height() / 2.0f - srcRect.height() / 2.0f);
                     break;
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
@@ -111,7 +112,7 @@ void RenderSVGImage::adjustRectsForAspectRatio(FloatRect& destRect, FloatRect& s
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-                    srcRect.setX(image()->width() / 2 - srcRect.width() / 2);
+                    srcRect.setX(image()->width() / 2.0f - srcRect.width() / 2.0f);
                     break;
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
                 case SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
@@ -138,7 +139,7 @@ void RenderSVGImage::paint(PaintInfo& paintInfo, int, int)
 #else
         void* filter = 0;
 #endif
-        FloatRect boundingBox = FloatRect(0, 0, width(), height());
+        FloatRect boundingBox = FloatRect(0, 0, m_imageWidth, m_imageHeight);
         prepareToRenderSVGContent(this, paintInfo, boundingBox, filter);
 
         float opacity = style()->opacity();
@@ -152,7 +153,7 @@ void RenderSVGImage::paint(PaintInfo& paintInfo, int, int)
 
         SVGImageElement* imageElt = static_cast<SVGImageElement*>(node());
 
-        FloatRect destRect(m_x, m_y, contentWidth(), contentHeight());
+        FloatRect destRect(m_x, m_y, m_imageWidth, m_imageHeight);
         FloatRect srcRect(0, 0, image()->width(), image()->height());
 
         if (imageElt->preserveAspectRatio()->align() != SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE)
@@ -251,6 +252,20 @@ AffineTransform RenderSVGImage::translationForAttributes()
 {
     SVGImageElement* image = static_cast<SVGImageElement*>(node());
     return AffineTransform().translate(image->x().value(), image->y().value());
+}
+
+void RenderSVGImage::calcWidth()
+{
+    RenderImage::calcWidth();
+    SVGImageElement* image = static_cast<SVGImageElement*>(node());
+    m_imageWidth = image->width().value();
+}
+
+void RenderSVGImage::calcHeight()
+{
+    RenderImage::calcHeight();
+    SVGImageElement* image = static_cast<SVGImageElement*>(node());
+    m_imageHeight = image->height().value();
 }
 
 }
