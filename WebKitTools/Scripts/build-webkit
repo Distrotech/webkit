@@ -44,11 +44,13 @@ my $svgExperimentalSupport = 0;
 my $xpathSupport = 1;
 my $xsltSupport = 1;
 my $colorSupport = 1; # Default: colorize make output
+my $videoSupport = 1;
 
 GetOptions('svg!' => \$svgSupport,
            'svg-experimental!' => \$svgExperimentalSupport,
            'xpath!' => \$xpathSupport,
            'xslt!' => \$xsltSupport,
+           'video!' => \$videoSupport,
            'color!' => \$colorSupport);
 
 checkRequiredSystemConfig();
@@ -63,6 +65,7 @@ push @overrideFeatureDefinesOption, "ENABLE_SVG" if $svgSupport;
 push @overrideFeatureDefinesOption, "ENABLE_SVG_EXPERIMENTAL_FEATURES" if $svgExperimentalSupport;
 push @overrideFeatureDefinesOption, "ENABLE_XPATH" if $xpathSupport;
 push @overrideFeatureDefinesOption, "ENABLE_XSLT" if $xsltSupport;
+push @overrideFeatureDefinesOption, "ENABLE_VIDEO" if $videoSupport;
 my $overrideFeatureDefinesString = "FEATURE_DEFINES=" . join(" ", @overrideFeatureDefinesOption);
 
 # Check that all the project directories are there.
