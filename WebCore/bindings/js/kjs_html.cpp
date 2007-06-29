@@ -735,13 +735,15 @@ bool JSHTMLElement::getOwnPropertySlot(ExecState* exec, const Identifier& proper
     }
 
     const HashTable* table = classInfo()->propHashTable; // get the right hashtable
-    const HashEntry* entry = Lookup::findEntry(table, propertyName);
-    if (entry) {
-        if (entry->attr & Function)
-            slot.setStaticEntry(this, entry, staticFunctionGetter<HTMLElementFunction>); 
-        else
-            slot.setStaticEntry(this, entry, staticValueGetter<JSHTMLElement>);
-        return true;
+    if (table) {
+        const HashEntry* entry = Lookup::findEntry(table, propertyName);
+        if (entry) {
+            if (entry->attr & Function)
+                slot.setStaticEntry(this, entry, staticFunctionGetter<HTMLElementFunction>); 
+            else
+                slot.setStaticEntry(this, entry, staticValueGetter<JSHTMLElement>);
+            return true;
+        }
     }
 
     // Base JSHTMLElement stuff or parent class forward, as usual

@@ -65,6 +65,8 @@ CachedPage::CachedPage(Page* page)
     , m_locationProperties(new SavedProperties)
     , m_interpreterBuiltins(new SavedBuiltins)
 {
+    m_document->willMoveInToPageCache(); 
+        
     Frame* mainFrame = page->mainFrame();
     KJSProxy* proxy = mainFrame->scriptProxy();
     Window* window = Window::retrieveWindow(mainFrame);

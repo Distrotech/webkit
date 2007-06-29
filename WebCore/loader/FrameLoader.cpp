@@ -2556,6 +2556,8 @@ void FrameLoader::open(CachedPage& cachedPage)
 
     cachedPage.restore(m_frame->page());
 
+    document->movedOutFromPageCache();
+
     checkCompleted();
 }
 

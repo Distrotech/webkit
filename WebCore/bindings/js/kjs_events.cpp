@@ -37,6 +37,7 @@
 #include "JSMouseEvent.h"
 #include "JSMutationEvent.h"
 #include "JSOverflowEvent.h"
+#include "JSProgressEvent.h"
 #include "JSTextEvent.h"
 #include "JSWheelEvent.h"
 #include "KURL.h"
@@ -44,6 +45,7 @@
 #include "MouseEvent.h"
 #include "MutationEvent.h"
 #include "OverflowEvent.h"
+#include "ProgressEvent.h"
 #include "Page.h"
 #include "TextEvent.h"
 #include "UIEvent.h"
@@ -519,6 +521,8 @@ JSValue* toJS(ExecState* exec, Event* e)
       ret = new JSMutationEvent(exec, static_cast<MutationEvent*>(e));
     else if (e->isOverflowEvent())
       ret = new JSOverflowEvent(exec, static_cast<OverflowEvent*>(e));
+    else if (e->isProgressEvent())
+      ret = new JSProgressEvent(exec, static_cast<ProgressEvent*>(e));
     else
       ret = new JSEvent(exec, e);
 

@@ -42,6 +42,7 @@
 #include "JSCSSValue.h"
 #include "JSDOMWindow.h"
 #include "JSEvent.h"
+#include "JSHTMLAudioElementConstructor.h"
 #include "JSHTMLOptionElementConstructor.h"
 #include "JSMutationEvent.h"
 #include "JSNode.h"
@@ -313,6 +314,7 @@ const ClassInfo Window::info = { "Window", 0, &WindowTable, 0 };
   window        Window::Window_         DontDelete|ReadOnly
   top           Window::Top             DontDelete|ReadOnly
   screen        Window::Screen_         DontDelete|ReadOnly
+  Audio         Window::Audio           DontDelete
   Image         Window::Image           DontDelete
   Option        Window::Option          DontDelete
   XMLHttpRequest        Window::XMLHttpRequest  DontDelete
@@ -841,6 +843,12 @@ JSValue *Window::getValueProperty(ExecState *exec, int token) const
       return new JSHTMLOptionElementConstructor(exec, m_frame->document());
     case XMLHttpRequest:
       return new JSXMLHttpRequestConstructorImp(exec, m_frame->document());
+    case Audio:
+#if ENABLE(VIDEO)
+      return new JSHTMLAudioElementConstructor(exec, m_frame->document());
+#else
+      return jsUndefined();
+#endif
 #if ENABLE(XSLT)
     case XSLTProcessor_:
       return new XSLTProcessorConstructorImp(exec);

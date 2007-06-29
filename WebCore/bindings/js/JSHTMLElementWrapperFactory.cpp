@@ -22,6 +22,7 @@
 #include "HTMLAnchorElement.h"
 #include "HTMLAppletElement.h"
 #include "HTMLAreaElement.h"
+#include "HTMLAudioElement.h"
 #include "HTMLBaseElement.h"
 #include "HTMLBaseFontElement.h"
 #include "HTMLBlockquoteElement.h"
@@ -59,16 +60,19 @@
 #include "HTMLQuoteElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLSelectElement.h"
+#include "HTMLSourceElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTextAreaElement.h"
 #include "HTMLTitleElement.h"
 #include "HTMLUListElement.h"
+#include "HTMLVideoElement.h"
 
 #include "HTMLNames.h"
 
 #include "JSHTMLAnchorElement.h"
 #include "JSHTMLAppletElement.h"
 #include "JSHTMLAreaElement.h"
+#include "JSHTMLAudioElement.h"
 #include "JSHTMLBaseElement.h"
 #include "JSHTMLBaseFontElement.h"
 #include "JSHTMLBlockquoteElement.h"
@@ -106,10 +110,12 @@
 #include "JSHTMLQuoteElement.h"
 #include "JSHTMLScriptElement.h"
 #include "JSHTMLSelectElement.h"
+#include "JSHTMLSourceElement.h"
 #include "JSHTMLStyleElement.h"
 #include "JSHTMLTextAreaElement.h"
 #include "JSHTMLTitleElement.h"
 #include "JSHTMLUListElement.h"
+#include "JSHTMLVideoElement.h"
 
 #include "kjs_html.h"
 
@@ -170,12 +176,21 @@ typedef DOMNode* (*CreateHTMLElementWrapperFunction)(ExecState*, PassRefPtr<HTML
     macro(ul, UList) \
     // end of macro
 
+#define FOR_EACH_VIDEO_TAG(macro) \
+        macro(audio, Audio) \
+        macro(source, Source) \
+        macro(video, Video) \
+        // end of macro
+
 #define CREATE_WRAPPER_FUNCTION(tag, name) \
 static DOMNode* create##name##Wrapper(ExecState* exec, PassRefPtr<HTMLElement> element) \
 { \
     return new JSHTML##name##Element(exec, static_cast<HTML##name##Element*>(element.get())); \
 }
 FOR_EACH_TAG(CREATE_WRAPPER_FUNCTION)
+#if ENABLE(VIDEO)
+FOR_EACH_VIDEO_TAG(CREATE_WRAPPER_FUNCTION)
+#endif
 #undef CREATE_WRAPPER_FUNCTION
 
 DOMNode* createJSHTMLWrapper(ExecState* exec, PassRefPtr<HTMLElement> element)
@@ -184,6 +199,9 @@ DOMNode* createJSHTMLWrapper(ExecState* exec, PassRefPtr<HTMLElement> element)
     if (map.isEmpty()) {
 #define ADD_TO_HASH_MAP(tag, name) map.set(tag##Tag.localName().impl(), create##name##Wrapper);
 FOR_EACH_TAG(ADD_TO_HASH_MAP)
+#if ENABLE(VIDEO)
+FOR_EACH_VIDEO_TAG(ADD_TO_HASH_MAP)
+#endif
 #undef ADD_TO_HASH_MAP
         map.set(h2Tag.localName().impl(), createHeadingWrapper);
         map.set(h3Tag.localName().impl(), createHeadingWrapper);

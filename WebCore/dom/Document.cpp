@@ -76,6 +76,7 @@
 #include "OverflowEvent.h"
 #include "PlatformKeyboardEvent.h"
 #include "ProcessingInstruction.h"
+#include "ProgressEvent.h"
 #include "RegisteredEventListener.h"
 #include "RegularExpression.h"
 #include "RenderArena.h"
@@ -2306,6 +2307,8 @@ PassRefPtr<Event> Document::createEvent(const String &eventType, ExceptionCode& 
         return new KeyboardEvent;
     if (eventType == "HTMLEvents" || eventType == "Event" || eventType == "Events")
         return new Event;
+    if (eventType == "ProgressEvent")
+        return new ProgressEvent;
     if (eventType == "TextEvent")
         return new TextEvent;
     if (eventType == "OverflowEvent")
@@ -2676,6 +2679,30 @@ void Document::setInPageCache(bool flag)
         setRenderer(m_savedRenderer);
         m_savedRenderer = 0;
     }
+}
+
+void Document::willMoveInToPageCache() 
+{
+    HashSet<Node*>::iterator end = m_pageCacheNotificationNodes.end();
+    for (HashSet<Node*>::iterator i = m_pageCacheNotificationNodes.begin(); i != end; ++i)
+        (*i)->documentWillMoveInToPageCache();
+}
+
+void Document::movedOutFromPageCache() 
+{
+    HashSet<Node*>::iterator end = m_pageCacheNotificationNodes.end();
+    for (HashSet<Node*>::iterator i = m_pageCacheNotificationNodes.begin(); i != end; ++i)
+        (*i)->documentMovedOutFromPageCache();
+}
+
+void Document::registerForPageCacheNotifications(Node* node)
+{
+    m_pageCacheNotificationNodes.add(node);
+}
+
+void Document::unregisterForPageCacheNotifications(Node* node)
+{
+    m_pageCacheNotificationNodes.remove(node);
 }
 
 void Document::passwordFieldAdded()

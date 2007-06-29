@@ -51,6 +51,9 @@ public:
     // Check to see if a non-image mime type is suitable for being loaded as a
     // document in a frame.
     static bool isSupportedNonImageMIMEType(const String& mimeType);
+    
+    // Check to see if a mime type is suitable for being loaded using <movie>
+    static bool isSupportedMovieMIMEType(const String& mimeType);   
 
     static const HashSet<String>& getSupportedImageMIMETypes();
     static const HashSet<String>& getSupportedImageResourceMIMETypes();

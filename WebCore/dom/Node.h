@@ -448,6 +448,10 @@ public:
     PassRefPtr<NodeList> getElementsByTagName(const String&);
     PassRefPtr<NodeList> getElementsByTagNameNS(const String& namespaceURI, const String& localName);
 
+    // use Document::registerForPageCacheNotifications() to subscribe these
+    virtual void documentWillMoveInToPageCache() { }
+    virtual void documentMovedOutFromPageCache() { }
+
 private: // members
     DocPtr<Document> m_document;
     Node* m_previous;

@@ -147,6 +147,13 @@ module window {
 
         attribute XMLSerializerConstructor XMLSerializer;
 
+#if ENABLE_VIDEO
+        attribute HTMLAudioElementConstructor HTMLAudioElement;
+        attribute HTMLMediaElementConstructor HTMLMediaElement;
+        attribute HTMLVideoElementConstructor HTMLVideoElement;
+        attribute MediaErrorConstructor MediaError;
+#endif
+
 #if ENABLE_XPATH
         attribute XPathEvaluatorConstructor XPathEvaluator;
         attribute XPathResultConstructor XPathResult;

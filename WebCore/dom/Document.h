@@ -765,6 +765,10 @@ protected:
 public:
     bool inPageCache();
     void setInPageCache(bool flag);
+    void willMoveInToPageCache();
+    void movedOutFromPageCache();
+    void registerForPageCacheNotifications(Node*);
+    void unregisterForPageCacheNotifications(Node*);
 
     void passwordFieldAdded();
     void passwordFieldRemoved();
@@ -853,6 +857,8 @@ private:
     String m_iconURL;
 
     bool m_isAllowedToLoadLocalResources;
+    
+    HashSet<Node*> m_pageCacheNotificationNodes;
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
     bool m_inLowBandwidthDisplay;

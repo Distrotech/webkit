@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "MimeTypeRegistry.h"
+#include "Movie.h"
 #include "StringHash.h"
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
@@ -40,7 +41,8 @@ namespace WebCore
 static WTF::HashSet<String>* supportedImageResourceMIMETypes;
 static WTF::HashSet<String>* supportedImageMIMETypes;
 static WTF::HashSet<String>* supportedNonImageMIMETypes;
-    
+static WTF::HashSet<String>* supportedMovieMIMETypes;
+
 #if PLATFORM(CG)
 extern String getMIMETypeForUTI(const String& uti);
 #endif
@@ -120,14 +122,21 @@ static void initialiseSupportedNonImageMimeTypes()
       supportedNonImageMIMETypes->add(types[i]);
 }
 
+static void initialiseSupportedMovieMIMETypes()
+{
+    Movie::getSupportedTypes(*supportedMovieMIMETypes);
+}
+
 static void initialiseMimeTypeRegistry()
 {
     supportedImageResourceMIMETypes = new WTF::HashSet<String>();
     supportedImageMIMETypes = new WTF::HashSet<String>();
     supportedNonImageMIMETypes = new WTF::HashSet<String>();
+    supportedMovieMIMETypes = new WTF::HashSet<String>();
     
     initialiseSupportedNonImageMimeTypes();
     initialiseSupportedImageMIMETypes();
+    initialiseSupportedMovieMIMETypes();
 }
 
 String MimeTypeRegistry::getMIMETypeForPath(const String& path)
@@ -180,6 +189,13 @@ const HashSet<String> &MimeTypeRegistry::getSupportedNonImageMIMETypes()
     if (!supportedNonImageMIMETypes)
         initialiseMimeTypeRegistry();
     return *supportedNonImageMIMETypes;
+}
+
+bool MimeTypeRegistry::isSupportedMovieMIMEType(const String& mimeType)
+{
+    if (!supportedMovieMIMETypes)
+        initialiseMimeTypeRegistry();
+    return !mimeType.isEmpty() && supportedMovieMIMETypes->contains(mimeType);     
 }
 
 }

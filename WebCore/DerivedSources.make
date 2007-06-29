@@ -325,6 +325,7 @@ all : \
     JSHTMLAppletElement.h \
     JSHTMLAnchorElement.h \
     JSHTMLAreaElement.h \
+    JSHTMLAudioElement.h \
     JSHTMLBaseElement.h \
     JSHTMLBaseFontElement.h \
     JSHTMLBlockquoteElement.h \
@@ -353,6 +354,7 @@ all : \
     JSHTMLLIElement.h \
     JSHTMLLinkElement.h \
     JSHTMLMenuElement.h \
+    JSHTMLMediaElement.h \
     JSHTMLOptionElement.h \
     JSHTMLOptionsCollection.h \
     JSHTMLOptGroupElement.h \
@@ -366,11 +368,14 @@ all : \
     JSHTMLPreElement.h \
     JSHTMLScriptElement.h \
     JSHTMLSelectElement.h \
+    JSHTMLSourceElement.h \
     JSHTMLStyleElement.h \
     JSHTMLTextAreaElement.h \
     JSHTMLTitleElement.h \
     JSHTMLUListElement.h \
+    JSHTMLVideoElement.h \
     JSKeyboardEvent.h \
+    JSMediaError.h \
     JSMouseEvent.h \
     JSMutationEvent.h \
     JSNode.h \
@@ -379,6 +384,7 @@ all : \
     JSNotation.h \
     JSOverflowEvent.h \
     JSProcessingInstruction.h \
+    JSProgressEvent.h \
     JSRange.h \
     JSRangeException.h \
     JSSVGZoomEvent.h \
@@ -507,8 +513,10 @@ all : \
     JSSVGTransform.h \
     JSText.h \
     JSTextEvent.h \
+    JSTimeRanges.h \
     JSTreeWalker.h \
     JSUIEvent.h \
+    JSVoidCallback.h \
     JSXPathEvaluator.h \
     JSXPathExpression.h \
     JSXPathNSResolver.h \

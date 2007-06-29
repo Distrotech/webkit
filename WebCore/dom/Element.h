@@ -124,6 +124,7 @@ public:
 
     // convenience methods which ignore exceptions
     void setAttribute(const QualifiedName&, const String& value);
+    void setBooleanAttribute(const QualifiedName& name, bool);
 
     virtual NamedAttrMap* attributes() const;
     NamedAttrMap* attributes(bool readonly) const;
