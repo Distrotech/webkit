@@ -51,6 +51,16 @@ and WebCore. Include this file to use these settings.
         </option>
     </if>
     
+    <if cond="not isdefined('PLATFORM_OS')">
+        <option name="PLATFORM_OS">
+            <values>win,mac,linux</values>
+            <default-value>win</default-value>
+            <description>
+                The platform wxWebKit is being built on/for.
+            </description>
+        </option>
+    </if>
+    
     <template id="jscore">
         <include>$(WK_ROOT)/JavaScriptCore</include>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">

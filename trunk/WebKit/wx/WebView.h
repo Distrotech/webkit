@@ -36,15 +36,34 @@
 class WebViewPrivate;
 class WebViewFrameData;
 
-class WXEXPORT wxWebView : public wxScrolledWindow
+#ifndef SWIG
+#if WXMAKINGDLL
+#define WXDLLIMPEXP_WEBKIT WXEXPORT
+#endif
+
+#if WXUSINGDLL
+#define WXDLLIMPEXP_WEBKIT WXIMPORT
+#endif
+
+#else 
+#define WXDLLIMPEXP_WEBKIT 
+#endif // SWIG
+
+class WXDLLIMPEXP_WEBKIT wxWebView : public wxScrolledWindow
 {
 public:
     // ctor(s)
+#if SWIG
+    %pythonAppend wxWebView "self._setOORInfo(self)"
+#endif
     wxWebView(wxWindow* parent, int id = wxID_ANY, 
                 const wxPoint& point = wxDefaultPosition, 
                 const wxSize& size = wxDefaultSize, 
                 WebViewFrameData* data = NULL); // For wxWebView internal data passing
+
+#ifndef SWIG
     ~wxWebView();
+#endif
     
     void LoadURL(wxString url);
     bool GoBack();
@@ -90,7 +109,9 @@ protected:
 
 private:
     // any class wishing to process wxWindows events must use this macro
+#ifndef SWIG
     DECLARE_EVENT_TABLE()
+#endif
     float m_textMagnifier;
     bool m_isEditable;
     bool m_isInitialized;
@@ -125,6 +146,7 @@ class wxWebViewDOMElementInfo
 {
 public: 
     wxWebViewDOMElementInfo();
+
     ~wxWebViewDOMElementInfo() { }
     
     wxString GetTagName() { return m_tagName; }
@@ -153,8 +175,10 @@ protected:
 
 class wxWebViewBeforeLoadEvent : public wxCommandEvent
 {
+#ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewBeforeLoadEvent )
-    
+#endif
+
 public:
     bool IsCancelled() { return m_cancelled; }
     void Cancel(bool cancel = true) { m_cancelled = cancel; }
@@ -174,7 +198,9 @@ protected:
 
 class wxWebViewStateChangedEvent : public wxCommandEvent
 {
+#ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewStateChangedEvent )
+#endif
 
 public:
     int GetState() { return m_state; }
@@ -192,7 +218,9 @@ protected:
 
 class wxWebViewNewWindowEvent : public wxCommandEvent
 {
+#ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewNewWindowEvent )
+#endif
 
 public:
     wxString GetURL() { return m_url; }
@@ -207,7 +235,9 @@ protected:
 
 class wxWebViewRightClickEvent : public wxCommandEvent
 {
+#ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewRightClickEvent )
+#endif
 
 public:
     wxWebViewRightClickEvent( wxWindow* win = (wxWindow*) NULL );
@@ -229,12 +259,14 @@ typedef void (wxEvtHandler::*wxWebViewBeforeLoadEventFunction)(wxWebViewBeforeLo
 typedef void (wxEvtHandler::*wxWebViewNewWindowEventFunction)(wxWebViewNewWindowEvent&);
 typedef void (wxEvtHandler::*wxWebViewRightClickEventFunction)(wxWebViewRightClickEvent&);
 
+#ifndef SWIG
 BEGIN_DECLARE_EVENT_TYPES()
     DECLARE_LOCAL_EVENT_TYPE(wxEVT_WEBVIEW_BEFORE_LOAD, wxID_ANY)
     DECLARE_LOCAL_EVENT_TYPE(wxEVT_WEBVIEW_STATE_CHANGED, wxID_ANY)
     DECLARE_LOCAL_EVENT_TYPE(wxEVT_WEBVIEW_NEW_WINDOW, wxID_ANY)
     DECLARE_LOCAL_EVENT_TYPE(wxEVT_WEBVIEW_RIGHT_CLICK, wxID_ANY)
 END_DECLARE_EVENT_TYPES()
+#endif
 
 #define EVT_WEBVIEW_STATE_CHANGED(func) \
             DECLARE_EVENT_TABLE_ENTRY( wxEVT_WEBVIEW_STATE_CHANGED, \

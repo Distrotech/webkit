@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+<!-- $Id: minimal.bkl,v 1.1 2005/01/27 22:47:37 VS Exp $ -->
+
+<makefile>
+    <set var="WX_UNICODE">1</set>
+    <set var="WX_SHARED">1</set>
+    <include file="../../../../Bakefiles/presets.bkl"/>
+    <include file="presets/wx.bkl"/> 
+    
+    <!-- the WX_PYTHON option was added to presets/wx.bkl in 2.8.5, so define 
+         it in case the presets/wx.bkl doesn't define it for us. -->
+    <if cond="not isdefined('WX_PYTHON')">
+        <set var="WX_PYTHON">1</set>
+    </if>
+    
+    <if cond="not isdefined('PYTHON_LIBDIR')">
+        <option name="PYTHON_LIBDIR" category="path">
+            <default-value>`python -c "import distutils.sysconfig; print distutils.sysconfig.get_python_lib()"`</default-value>
+            <description>
+                The root directory for Python extensions.
+            </description>
+        </option>
+    </if>
+    
+    <module id="wxwebkit-python" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
+        <debug-info>on</debug-info>
+        <if cond="FORMAT in ['msvc', 'msvs2005prj']">
+            <!-- it's very unlikely someone will build a debug python, wxPython, etc.
+                 so just support the standard config for now -->
+            <debug-runtime-libs>off</debug-runtime-libs>
+        </if>
+        <!-- make sure we relink wxwebkit if either webcore or jscore change -->
+        <if cond="FORMAT=='gnu'">
+            <depends-on-file>$(WKOUTPUTDIR)/libjscore.a</depends-on-file>
+            <depends-on-file>$(WKOUTPUTDIR)/libwebcore-wx.a</depends-on-file>
+        </if>
+        <if cond="FORMAT=='msvc'">
+            <depends-on-file>$(WKOUTPUTDIR)/jscore.lib</depends-on-file>
+            <depends-on-file>$(WKOUTPUTDIR)/webcore-wx.lib</depends-on-file>
+        </if>
+        <runtime-libs>dynamic</runtime-libs>
+        <dirname>$(WKOUTPUTDIR)</dirname>
+        <dllname>_webview</dllname>
+        
+        <wx-lib>core</wx-lib>
+        <wx-lib>base</wx-lib>
+        
+        <if cond="PLATFORM_WIN32=='1'">
+            <define>WXUSINGDLL=1</define>
+        </if>
+        
+        <set var="BUILDDIR">obj-$(FORMAT)</set>
+        
+        <include>$(WK_ROOT)/WebCore/platform/wx</include>
+        <include>$(WK_ROOT)/WebCore/bridge/wx</include>
+        <include>$(WK_ROOT)/WebCore/page/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx</include>
+        <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
+        
+        <sys-lib>png</sys-lib>
+        
+        <if cond="FORMAT=='gnu'">
+            <set var="MAC_FLAGS">
+                <if cond="PLATFORM_OS=='mac'">-bundle</if>
+            </set>
+            
+            <ldflags>$(MAC_FLAGS) -undefined dynamic_lookup</ldflags>
+        </if>
+        
+        <sys-lib>wxwebkit</sys-lib>
+        <lib-path>$(WKOUTPUTDIR)</lib-path>
+        
+        <define>BUILDING_WX__=1</define>
+        <define>SWIG_TYPE_TABLE=_wxPython_table</define>
+        <define>WXP_USE_THREAD=1</define>
+        <define>SWIG_PYTHON_OUTPUT_TUPLE</define>
+        
+        <sources>
+            webview.cpp
+        </sources>   
+    </module>
+
+</makefile>

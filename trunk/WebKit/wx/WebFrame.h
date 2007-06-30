@@ -33,15 +33,22 @@
     #include "wx/wx.h"
 #endif
 
+#include "WebView.h"
 #include <wx/srchctrl.h>
 
-class WXEXPORT wxWebFrame : public wxFrame
+class WXDLLIMPEXP_WEBKIT wxWebFrame : public wxFrame
 {
 public:
     // ctor(s)
+#if SWIG
+    %pythonAppend wxWebFrame "self._setOORInfo(self)"
+#endif
     wxWebFrame(const wxString& title);
+
+#ifndef SWIG
     ~wxWebFrame();
-    
+#endif
+
     void ShowDebugMenu(bool show = true);
     wxWebView* webview;
 
@@ -74,7 +81,9 @@ private:
     bool m_checkBeforeLoad;
     wxMenu* m_debugMenu;
     // any class wishing to process wxWindows events must use this macro
+#ifndef SWIG
     DECLARE_EVENT_TABLE()
+#endif
 };
 
 class wxPageSourceViewFrame : public wxFrame
