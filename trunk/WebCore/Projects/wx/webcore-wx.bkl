@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+﻿<?xml version="1.0" ?>
 <!-- 
 Copyright (C) 2007 Kevin Ollivier <kevino@theolliviers.com>
 
@@ -71,6 +71,7 @@ wxWebCore port Bakefile project file.
 
         <define>BUILDING_WX__=1</define>
 		<define>WTF_USE_ICU_UNICODE=1</define>
+        <define>UNICODE=1</define>
         
         <if cond="PLATFORM_WIN32=='0'">
             <ldlibs>`$(WX_CONFIG) --libs`</ldlibs>
@@ -81,6 +82,8 @@ wxWebCore port Bakefile project file.
         <include>$(SRCDIR)/platform/wx/wxcode</include>
         <include>$(SRCDIR)/bridge/wx</include>
         <include>$(SRCDIR)/page/wx</include>
+        <include>$(WK_ROOT)/libpng</include>
+        <include>$(WK_ROOT)/libjpeg</include>
         
 	    <sources>
 	           editing/wx/EditorWx.cpp

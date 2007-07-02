@@ -98,18 +98,6 @@ for flag in $*; do
 done
 
 
-SWIG=`which swig`
-
-if [ $wxpython == 1 ]; then
-    # Run swig so that we can spit out an error if it doesn't exist.
-
-    if [ ! -f "$SWIG" ]; then
-        echo "ERROR: Cannot find SWIG. Make sure that SWIG 1.3.29 is located on your path.";
-        exit 1;
-    fi
-fi 
-
-
 #----------------------------------------------------------------------
 
 # if no arguments were passed, do a full build.
@@ -236,21 +224,39 @@ if [ $do_build == 1 -o $do_clean == 1 ]; then
     
     do_make $WK_ROOT/JavaScriptCore      "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args 
     do_make $WK_ROOT/WebCore/Projects/wx "-DBUILDING_WX__=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args
-    do_make $WK_ROOT/WebKit/wx "-DBUILDING_WX__=1 -DWXMAKINGDLL=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args 
-    do_make $WK_ROOT/WebKitTools/wxBrowser  "-DBUILDING_WX__=1 -DWXUSINGDLL=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args 
-
+    do_make $WK_ROOT/WebKit/wx "-DBUILDING_WX__=1 -DWXMAKINGDLL_WEBKIT=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args 
+    do_make $WK_ROOT/WebKitTools/wxBrowser  "-DBUILDING_WX__=1 -DWXUSINGDLL_WEBKIT=1 $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args 
     
     if [ $do_build == 1 ]; then 
         if [ $wxpython == 1 ]; then
+            SWIG=`which swig`
+
+            if [ ! -f "$SWIG" ]; then
+                echo "ERROR: Cannot find SWIG. Make sure that SWIG 1.3.29 is located on your path.";
+                exit 1;
+            fi
+    
             cd $WK_ROOT/WebKit/wx/bindings/python
             
-            WX_VERSION=`wx-config --version`
-            WX_VERSION="${WX_VERSION:0:3}"
             SWIG_FLAGS=`python -c "import wx.build.config; import string; print string.join(wx.build.config.swig_args, ' ')"`
-            $SWIG $SWIG_FLAGS -I$WK_ROOT/WebKit/wx -o webview.cpp webview.i
+            WEBKIT_INCLUDE="-I$WK_ROOT/WebKit/wx"
+            if [ "${OSTYPE:0:6}" == "cygwin" ]; then
+                WEBKIT_INCLUDE="-I`cygpath -d $WK_ROOT/WebKit/wx`"
+            fi
+            $SWIG $SWIG_FLAGS -I$WXWIN/include/wx/wxPython/i_files $WEBKIT_INCLUDE -o webview.cpp webview.i
             
             PY_INCLUDE=`python -c "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"`
-            do_make $WK_ROOT/WebKit/wx/bindings/python  "-DBUILDING_WX__=1 -DWXUSINGDLL=1 -I$PY_INCLUDE $WXGC_DEFINE" WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS $other_args
+            PY_VERSION=`python -c "import sys;  print str(sys.version_info[0]) + str(sys.version_info[1])"`
+            PY_LIBDIR=`python -c "import distutils.sysconfig; print distutils.sysconfig.PREFIX"`
+            
+            if [ "${OSTYPE:0:6}" == "cygwin" ]; then
+                PY_LIBDIR="$PY_LIBDIR\\Libs"
+            else
+                PY_LIBDIR="$PY_LIBDIR/lib"
+            fi
+            
+            do_make $WK_ROOT/WebKit/wx/bindings/python  "-DBUILDING_WX__=1 -DWXUSINGDLL=1 -DWXUSINGDLL_WEBKIT=1 -I$PY_INCLUDE $WXGC_DEFINE" \
+                    WX_DEBUG=$wxdebug WEBKIT_ROOT=$WK_ROOTDIR PLATFORM_OS=$PLATFORM_OS PYTHON_VERSION=$PY_VERSION PYTHON_LIBDIR=$PY_LIBDIR $other_args
         fi
         
     

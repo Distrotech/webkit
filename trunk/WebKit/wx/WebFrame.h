@@ -86,7 +86,7 @@ private:
 #endif
 };
 
-class wxPageSourceViewFrame : public wxFrame
+class WXDLLIMPEXP_WEBKIT wxPageSourceViewFrame : public wxFrame
 {
 public:
     wxPageSourceViewFrame(const wxString& source);

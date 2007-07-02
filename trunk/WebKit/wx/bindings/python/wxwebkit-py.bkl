@@ -13,11 +13,20 @@
         <set var="WX_PYTHON">1</set>
     </if>
     
+    <if cond="not isdefined('PYTHON_VERSION')">
+        <option name="PYTHON_VERSION" category="path">
+            <default-value>25</default-value>
+            <description>
+                Python version we're building against. 
+            </description>
+        </option>
+    </if>
+    
     <if cond="not isdefined('PYTHON_LIBDIR')">
         <option name="PYTHON_LIBDIR" category="path">
-            <default-value>`python -c "import distutils.sysconfig; print distutils.sysconfig.get_python_lib()"`</default-value>
+            <default-value>C:/Python25/Libs</default-value>
             <description>
-                The root directory for Python extensions.
+                The directory containing the Python library to link against.
             </description>
         </option>
     </if>
@@ -57,14 +66,19 @@
         <include>$(WK_ROOT)/WebKit/wx</include>
         <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
         
-        <sys-lib>png</sys-lib>
-        
         <if cond="FORMAT=='gnu'">
+            <sys-lib>png</sys-lib>
             <set var="MAC_FLAGS">
                 <if cond="PLATFORM_OS=='mac'">-bundle</if>
             </set>
             
             <ldflags>$(MAC_FLAGS) -undefined dynamic_lookup</ldflags>
+        </if>
+        <if cond="FORMAT in ['msvc','msvs2005prj']">
+            <sys-lib>libpng</sys-lib>
+            <sys-lib>python$(PYTHON_VERSION)</sys-lib>
+            <lib-path>$(WK_ROOT)/libpng</lib-path>
+            <lib-path>$(PYTHON_LIBDIR)</lib-path>
         </if>
         
         <sys-lib>wxwebkit</sys-lib>

@@ -64,14 +64,15 @@
         <include>$(WK_ROOT)/WebKit/wx</include>
         <include>$(WK_ROOT)/WebKit/wx/WebKitSupport</include>
         
-        <sys-lib>png</sys-lib>
-        
         <if cond="FORMAT=='gnu'">
+            <sys-lib>png</sys-lib>
             <ldflags>$(WKOUTPUTDIR)/libwebcore-wx.a</ldflags>
         </if>
         <if cond="FORMAT in ['msvc','msvs2005prj']">
             <sys-lib>webcore-wx</sys-lib>
+            <sys-lib>libpng</sys-lib>
             <lib-path>$(WKOUTPUTDIR)</lib-path>
+            <lib-path>$(WK_ROOT)/libpng</lib-path>
         </if>
         
         <define>BUILDING_WX__=1</define>

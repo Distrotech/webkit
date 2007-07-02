@@ -151,6 +151,22 @@ if (! -e "pthreads-w32-2-8-0-release.exe") {
 }
 `chmod 755 ../pthreads/lib/*.dll`;
 
+my $LIBPNG_ZIP="lpng1218.zip";
+my $LIBPNG_URL="ftp://ftp.simplesystems.org/pub/libpng/png/src/" . $LIBPNG_ZIP;
+
+if (! -e $LIBPNG_ZIP) {
+    print "Downloading " . $LIBPNG_ZIP . "...\n\n";
+    `rm -rf lpng*`;
+    `curl -O $LIBPNG_URL`;
+    print "\nInstalling " . $LIBPNG_ZIP . "...\n";
+    `unzip $LIBPNG_ZIP`;
+    `ls -la .`;
+    chdir "lpng1218";
+    `nmake -f scripts/makefile.vcwin32 CFLAGS="-I..\\zlib-1.2.3.win32\\include"`;
+    chdir "..";
+    `rm -rf ../libpng`;
+    `cp -rp lpng1218 ../libpng`;
+}
 
 my $PROGRAMFILES = $ENV{"PROGRAMFILES"};
 my $unixProgramFiles = `cygpath -u "$PROGRAMFILES"`;

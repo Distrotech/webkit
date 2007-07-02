@@ -37,16 +37,17 @@ class WebViewPrivate;
 class WebViewFrameData;
 
 #ifndef SWIG
-#if WXMAKINGDLL
-#define WXDLLIMPEXP_WEBKIT WXEXPORT
-#endif
 
-#if WXUSINGDLL
+#if WXMAKINGDLL_WEBKIT
+#define WXDLLIMPEXP_WEBKIT WXEXPORT
+#elif defined(WXUSINGDLL_WEBKIT)
 #define WXDLLIMPEXP_WEBKIT WXIMPORT
+#else
+#define WXDLLIMPEXP_WEBKIT
 #endif
 
 #else 
-#define WXDLLIMPEXP_WEBKIT 
+#define WXDLLIMPEXP_WEBKIT
 #endif // SWIG
 
 class WXDLLIMPEXP_WEBKIT wxWebView : public wxScrolledWindow
@@ -142,7 +143,7 @@ enum {
 
 };
 
-class wxWebViewDOMElementInfo
+class WXDLLIMPEXP_WEBKIT wxWebViewDOMElementInfo
 {
 public: 
     wxWebViewDOMElementInfo();
@@ -173,7 +174,7 @@ protected:
     wxString m_link;
 };
 
-class wxWebViewBeforeLoadEvent : public wxCommandEvent
+class WXDLLIMPEXP_WEBKIT wxWebViewBeforeLoadEvent : public wxCommandEvent
 {
 #ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewBeforeLoadEvent )
@@ -196,7 +197,7 @@ protected:
     int m_navType;
 };
 
-class wxWebViewStateChangedEvent : public wxCommandEvent
+class WXDLLIMPEXP_WEBKIT wxWebViewStateChangedEvent : public wxCommandEvent
 {
 #ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewStateChangedEvent )
@@ -216,7 +217,7 @@ protected:
     wxString m_url;
 };
 
-class wxWebViewNewWindowEvent : public wxCommandEvent
+class WXDLLIMPEXP_WEBKIT wxWebViewNewWindowEvent : public wxCommandEvent
 {
 #ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewNewWindowEvent )
@@ -233,7 +234,7 @@ protected:
     wxString m_url;
 };
 
-class wxWebViewRightClickEvent : public wxCommandEvent
+class WXDLLIMPEXP_WEBKIT wxWebViewRightClickEvent : public wxCommandEvent
 {
 #ifndef SWIG
     DECLARE_DYNAMIC_CLASS( wxWebViewRightClickEvent )
