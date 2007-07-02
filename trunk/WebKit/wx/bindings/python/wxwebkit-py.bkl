@@ -14,7 +14,8 @@
     </if>
     
     <if cond="not isdefined('PYTHON_VERSION')">
-        <option name="PYTHON_VERSION" category="path">
+        <option name="PYTHON_VERSION">
+            <values>24,25</values>
             <default-value>25</default-value>
             <description>
                 Python version we're building against. 
@@ -32,6 +33,8 @@
     </if>
     
     <module id="wxwebkit-python" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
+        <cxx-rtti>on</cxx-rtti>
+        <cxx-exceptions>on</cxx-exceptions>
         <debug-info>on</debug-info>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">
             <!-- it's very unlikely someone will build a debug python, wxPython, etc.
@@ -75,8 +78,16 @@
             <ldflags>$(MAC_FLAGS) -undefined dynamic_lookup</ldflags>
         </if>
         <if cond="FORMAT in ['msvc','msvs2005prj']">
+            <set var="PY_LIBNAME">
+                <if cond="PYTHON_VERSION=='24'">
+                    python24
+                </if>
+                <if cond="PYTHON_VERSION=='25'">
+                    python25
+                </if>
+            </set>
             <sys-lib>libpng</sys-lib>
-            <sys-lib>python$(PYTHON_VERSION)</sys-lib>
+            <sys-lib>$(PY_LIBNAME)</sys-lib>
             <lib-path>$(WK_ROOT)/libpng</lib-path>
             <lib-path>$(PYTHON_LIBDIR)</lib-path>
         </if>

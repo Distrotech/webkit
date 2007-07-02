@@ -14,7 +14,9 @@
     </if>
     
     <dll id="wxwebkit-dynamic" template="wx,webcore,xml2,iconv,xslt,icu,jscore,curl,sqlite3,gtk,pthreads">
-        <debug-info>on</debug-info>
+       <cxx-rtti>on</cxx-rtti>
+       <cxx-exceptions>on</cxx-exceptions>
+       <debug-info>on</debug-info>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">
             <set var="DEBUG_RUNTIME">
                 <if cond="WX_PYTHON=='1' and WX_DEBUG=='0'">off</if>
@@ -39,9 +41,6 @@
         <dirname>$(WKOUTPUTDIR)</dirname>
         <dllname>wxwebkit</dllname>
         <libname>wxwebkit</libname>
-        
-        <wx-lib>core</wx-lib>
-        <wx-lib>base</wx-lib>
         
         <if cond="FORMAT=='gnu'">
             <ldflags>$(WKOUTPUTDIR)/libjscore.a</ldflags>
@@ -71,10 +70,14 @@
         <if cond="FORMAT in ['msvc','msvs2005prj']">
             <sys-lib>webcore-wx</sys-lib>
             <sys-lib>libpng</sys-lib>
+            <sys-lib>libjpeg</sys-lib>
             <lib-path>$(WKOUTPUTDIR)</lib-path>
             <lib-path>$(WK_ROOT)/libpng</lib-path>
+            <lib-path>$(WK_ROOT)/libjpeg</lib-path>
         </if>
         
+        <wx-lib>core</wx-lib>
+        <wx-lib>base</wx-lib>
         <define>BUILDING_WX__=1</define>
         
         <sources>

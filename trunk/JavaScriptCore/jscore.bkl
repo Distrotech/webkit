@@ -50,8 +50,8 @@ JavaScriptCore Bakefile project file.
         <!-- <pre-build-target>DerivedSources</pre-build-target> -->
         <dirname>$(WKOUTPUTDIR)</dirname>
         <warnings>default</warnings>
-        <cxx-rtti>off</cxx-rtti>
-        <cxx-exceptions>off</cxx-exceptions>
+        <cxx-rtti>on</cxx-rtti>
+        <cxx-exceptions>on</cxx-exceptions>
         <debug-info>on</debug-info>
         <if cond="FORMAT in ['msvc', 'msvs2005prj']">
             <set var="DEBUG_RUNTIME">

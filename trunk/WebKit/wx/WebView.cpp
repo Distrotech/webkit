@@ -168,9 +168,14 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     WebCore::InitializeLoggingChannelsIfNecessary();    
     WebCore::HTMLFrameOwnerElement* parentFrame = 0;
     WebCore::Page* page = 0;
-    wxWebView* parentWebView = dynamic_cast<wxWebView*>(parent);
+
+    // FIXME: This cast is obviously not as safe as a dynamic
+    // cast, but this allows us to get around requiring RTTI
+    // support for the moment. This is only used for subframes
+    // in any case, which aren't currently supported.
+    wxWebView* parentWebView = static_cast<wxWebView*>(parent);
     
-    if ( parentWebView )
+    if ( data )
     {
         parentFrame = data->ownerElement;
         page = parentWebView->m_impl->frame->page();

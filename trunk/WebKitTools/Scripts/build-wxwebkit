@@ -247,7 +247,7 @@ if [ $do_build == 1 -o $do_clean == 1 ]; then
             
             PY_INCLUDE=`python -c "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"`
             PY_VERSION=`python -c "import sys;  print str(sys.version_info[0]) + str(sys.version_info[1])"`
-            PY_LIBDIR=`python -c "import distutils.sysconfig; print distutils.sysconfig.PREFIX"`
+            PY_LIBDIR=`python -c "import distutils.sysconfig; import sys; sys.stdout.write(distutils.sysconfig.PREFIX)"`
             
             if [ "${OSTYPE:0:6}" == "cygwin" ]; then
                 PY_LIBDIR="$PY_LIBDIR\\Libs"

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" ?>
+<?xml version="1.0" ?>
 <!-- 
 Copyright (C) 2007 Kevin Ollivier <kevino@theolliviers.com>
 
@@ -51,8 +51,8 @@ wxWebCore port Bakefile project file.
     </action>
       
     <template id="webcore-wx" template="webcore_base,curl,gtk,pthreads">
-        <cxx-rtti>off</cxx-rtti>
-        <cxx-exceptions>off</cxx-exceptions>
+        <cxx-rtti>on</cxx-rtti>
+        <cxx-exceptions>on</cxx-exceptions>
         <pic>on</pic>
         <threading>multi</threading>
         <debug-info>on</debug-info>
@@ -72,7 +72,7 @@ wxWebCore port Bakefile project file.
         <define>BUILDING_WX__=1</define>
 		<define>WTF_USE_ICU_UNICODE=1</define>
         <define>UNICODE=1</define>
-        
+
         <if cond="PLATFORM_WIN32=='0'">
             <ldlibs>`$(WX_CONFIG) --libs`</ldlibs>
         </if>
