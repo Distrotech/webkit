@@ -512,7 +512,9 @@ void Frame::setUseSecureKeyboardEntry(bool enable)
     if (enable == IsSecureEventInputEnabled())
         return;
     if (enable) {
+#ifndef __LP64__
         EnableSecureEventInput();
+#endif
 #ifdef BUILDING_ON_TIGER
         KeyScript(enableRomanKeyboardsOnly);
 #else
@@ -521,7 +523,9 @@ void Frame::setUseSecureKeyboardEntry(bool enable)
         CFRelease(inputSources);
 #endif
     } else {
+#ifndef __LP64__
         DisableSecureEventInput();
+#endif
 #ifdef BUILDING_ON_TIGER
         KeyScript(smKeyEnableKybds);
 #else
