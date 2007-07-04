@@ -200,8 +200,9 @@ NativeImagePtr ImageSource::createFrameAtIndex(size_t index)
         }
 
     }
-
-    return new wxBitmap(bmp);
+    wxBitmap* newbmp = new wxBitmap(bmp);
+    newbmp->UseAlpha();
+    return newbmp;
 }
 
 float ImageSource::frameDurationAtIndex(size_t index)

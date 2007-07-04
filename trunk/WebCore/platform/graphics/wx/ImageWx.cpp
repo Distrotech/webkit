@@ -107,7 +107,7 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
     wxMemoryDC* mydc = new wxMemoryDC(); 
     mydc->SelectObject(*bitmap); 
     context->Blit((wxCoord)dst.x(),(wxCoord)dst.y(), (wxCoord)dst.width(), (wxCoord)dst.height(), mydc, 
-                    (wxCoord)src.x(), (wxCoord)src.y()); 
+                    (wxCoord)src.x(), (wxCoord)src.y(), wxCOPY, true); 
     mydc->SelectObject(wxNullBitmap); 
     startAnimation();
 }
@@ -147,7 +147,7 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
         {
             context->Blit((wxCoord)dstRect.x() + currentW, (wxCoord)dstRect.y() + currentH,  
                             (wxCoord)srcRect.width(), (wxCoord)srcRect.height(), mydc, 
-                            (wxCoord)srcRect.x(), (wxCoord)srcRect.y()); 
+                            (wxCoord)srcRect.x(), (wxCoord)srcRect.y(), wxCOPY, true); 
             currentH += srcRect.height();
         }
         currentW += srcRect.width();
