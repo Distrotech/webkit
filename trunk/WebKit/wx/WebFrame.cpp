@@ -66,7 +66,8 @@ enum
     ID_LOADURL = wxID_HIGHEST + 13,
     ID_NEW_WINDOW = wxID_HIGHEST + 14,
     ID_BROWSE = wxID_HIGHEST + 15,
-    ID_EDIT = wxID_HIGHEST + 16
+    ID_EDIT = wxID_HIGHEST + 16,
+    ID_RUN_SCRIPT = wxID_HIGHEST + 17
 };
 
 BEGIN_EVENT_TABLE(wxWebFrame, wxFrame)
@@ -87,6 +88,7 @@ BEGIN_EVENT_TABLE(wxWebFrame, wxFrame)
     EVT_MENU(ID_SET_SOURCE, wxWebFrame::OnSetSource)
     EVT_MENU(ID_BROWSE, wxWebFrame::OnBrowse)
     EVT_MENU(ID_EDIT, wxWebFrame::OnEdit)
+    EVT_MENU(ID_RUN_SCRIPT, wxWebFrame::OnRunScript)
 END_EVENT_TABLE()
 
 
@@ -122,6 +124,7 @@ wxWebFrame::wxWebFrame(const wxString& title)
     
     m_debugMenu = new wxMenu;
     m_debugMenu->Append(ID_SET_SOURCE, _("Test SetPageSource"));
+    m_debugMenu->Append(ID_RUN_SCRIPT, _("Test RunScript"));
 
     // the "About" item should be in the help menu
     wxMenu *helpMenu = new wxMenu;
@@ -329,4 +332,15 @@ void wxWebFrame::OnEdit(wxCommandEvent& event)
 {
     if (webview)
         webview->MakeEditable(event.IsChecked());
+}
+
+void wxWebFrame::OnRunScript(wxCommandEvent& myEvent){
+    if (webview){
+        wxTextEntryDialog* dialog = new wxTextEntryDialog(this, _("Type in a JavaScript to exectute."));
+        if (dialog->ShowModal() == wxID_OK){
+            wxMessageBox(wxT("Result is: ") + webview->RunScript(dialog->GetValue()));
+        }
+    
+        dialog->Destroy();
+    }
 }

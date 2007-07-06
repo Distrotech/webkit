@@ -53,7 +53,9 @@
 #include "Logging.h"
 
 #include "kjs_proxy.h"
-//#include "value.h"
+#include "kjs_binding.h"
+#include <kjs/value.h>
+#include <kjs/ustring.h>
 
 #include "WebView.h"
 #include "WebViewPrivate.h"
@@ -271,14 +273,13 @@ void wxWebView::SetPageSource(const wxString& source, const wxString& baseUrl)
 
 wxString wxWebView::RunScript(const wxString& javascript)
 {
+    wxString returnValue = wxEmptyString;
     if (m_impl->frame)
     {
-        WebCore::KJSProxy* proxy = m_impl->frame->scriptProxy();
-        //if (proxy && proxy->haveInterpreter())
-        //    KJS::JSValue* result = proxy->interpreter()->evaluate(UString(), 0, );
-        
+        KJS::JSValue* result = m_impl->frame->loader()->executeScript(0, javascript, true);
+        returnValue = wxString(result->toString(m_impl->frame->scriptProxy()->interpreter()->globalExec()).UTF8String().c_str(), wxConvUTF8);        
     }
-    return wxEmptyString;
+    return returnValue;
 }
 
 void wxWebView::LoadURL(wxString url)

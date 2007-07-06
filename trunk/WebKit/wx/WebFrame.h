@@ -72,7 +72,10 @@ protected:
     void OnMakeTextLarger(wxCommandEvent& event);
     void OnMakeTextSmaller(wxCommandEvent& event);
     void OnGetSource(wxCommandEvent& event);
+    
+    // debug menu items
     void OnSetSource(wxCommandEvent& event);
+    void OnRunScript(wxCommandEvent& myEvent);
 
 private:
     wxTextCtrl* addressBar;
