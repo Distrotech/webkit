@@ -12,6 +12,9 @@
 %import core.i
 %import windows.i
 
+MustHaveApp(wxWebView);
+MustHaveApp(wxWebFrame);
+
 %include WebView.h
 %include WebFrame.h
 
