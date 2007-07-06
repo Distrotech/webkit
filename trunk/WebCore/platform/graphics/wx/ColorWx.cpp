@@ -32,7 +32,7 @@ namespace WebCore {
 
 Color::Color(const wxColour& color)
 {
-    Color(color.Red(), color.Green(), color.Blue(), color.Alpha());
+    m_color = makeRGBA((int)color.Red(), (int)color.Green(), (int)color.Blue(), (int)color.Alpha());
 }
 
 Color::operator wxColour() const
