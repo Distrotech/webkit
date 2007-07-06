@@ -241,19 +241,19 @@ Color RenderThemeWx::platformInactiveSelectionBackgroundColor() const
 
 Color RenderThemeWx::platformActiveSelectionForegroundColor() const
 {
-#if __WXGTK__
-    return Color(255, 255, 255);
-#else
+#if __WXMAC__
     return Color();
+#else
+    return Color(255, 255, 255);
 #endif
 }
 
 Color RenderThemeWx::platformInactiveSelectionForegroundColor() const
 {
-#if __WXGTK__
-    return Color(255, 255, 255);
-#else
+#if __WXMAC__
     return Color();
+#else
+    return Color(255, 255, 255);
 #endif
 }
 
