@@ -58,8 +58,22 @@ class TestPanel(wx.Panel):
 
         self.webview.LoadURL(self.current)
         self.location.Append(self.current)
+        
+        self.webview.Bind(wx.webview.EVT_WEBVIEW_STATE_CHANGED, self.OnStateChanged)
 
         self.SetSizer(sizer)
+
+    def OnStateChanged(self, event):
+        statusbar = self.GetParent().GetStatusBar() 
+        if statusbar:
+            if event.GetState() == wx.webview.WEBVIEW_STATE_NEGOTIATING:
+                statusbar.SetStatusText("Contacting " + event.GetURL())
+            elif event.GetState() == wx.webview.WEBVIEW_STATE_TRANSFERRING:
+                statusbar.SetStatusText("Loading " + event.GetURL())
+            elif event.GetState() == wx.webview.WEBVIEW_STATE_STOP:
+                statusbar.SetStatusText("")
+                self.location.SetValue(event.GetURL())
+                self.GetParent().SetTitle("wxWebView - " + self.webview.GetPageTitle())
 
     def OnLocationKey(self, evt):
         if evt.GetKeyCode() == wx.WXK_RETURN:
@@ -108,6 +122,7 @@ class wkFrame(wx.Frame):
         
         self.panel = TestPanel(self, -1)
         self.panel.webview.LoadURL("http://www.wxwidgets.org/")
+        self.CreateStatusBar()
 
 class wkApp(wx.App):
     def OnInit(self):
