@@ -1,5 +1,22 @@
 2007-07-09  Mark Rowe  <mrowe@apple.com>
 
+        Merge r19551 from ToT to Safari-2.0-dashboard.
+
+    2007-02-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by me, patch from Ian Eng (cleaned up by me some).
+
+        - fixed <rdar://problem/4988091> objects attached to Window not cleared (memory leak)
+        
+        Test case: fast/dom/Window/window-appendages-cleared.html
+
+        * bindings/js/kjs_window.cpp:
+        (KJS::Window::clearHelperObjectProperties):
+        (KJS::Window::clear):
+        * bindings/js/kjs_window.h:
+
+2007-07-09  Mark Rowe  <mrowe@apple.com>
+
         Merge r19126 from ToT to Safari-2.0-dashboard.
 
     2007-01-25  Dirk Mueller  <mueller@kde.org>

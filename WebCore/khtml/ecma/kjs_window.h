@@ -155,6 +155,8 @@ namespace KJS {
   private:
     void updateLayout(bool ignoreStylesheets = true) const;
 
+    void clearHelperObjectProperties();
+
     QGuardedPtr<KHTMLPart> m_part;
     Screen *screen;
     History *history;
