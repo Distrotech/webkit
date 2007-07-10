@@ -1,3 +1,22 @@
+2007-07-09  Mark Rowe  <mrowe@apple.com>
+
+        Merge r19126 from ToT to Safari-2.0-system.
+
+    2007-01-25  Dirk Mueller  <mueller@kde.org>
+
+        Reviewed and merged by Beth.
+
+        Fix for <rdar://problem/4921692> not processing comments inside a 
+        title element leads to XSS (for at least BlogSpot)
+
+        This is equivalent to commit 626791 in the KDE tree. Basically, the 
+        patch allows comment parsing in titles to avoid capturing a 
+        <script> tag by accident.
+
+        * html/HTMLTokenizer.cpp:
+        (WebCore::HTMLTokenizer::parseSpecial):
+        (WebCore::HTMLTokenizer::parseComment):
+
 === WebCore-418.22.2 ===
 
 2007-06-20  Anders Carlsson  <andersca@apple.com>

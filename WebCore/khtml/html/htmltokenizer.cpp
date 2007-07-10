@@ -434,7 +434,7 @@ void HTMLTokenizer::parseSpecial(TokenizerString &src)
     while ( !src.isEmpty() ) {
         checkScriptBuffer();
         unsigned char ch = src->latin1();
-        if ( !scriptCodeResync && !brokenComments && !textarea && !xmp && !title && ch == '-' && scriptCodeSize >= 3 && !src.escaped() && scriptCode[scriptCodeSize-3] == '<' && scriptCode[scriptCodeSize-2] == '!' && scriptCode[scriptCodeSize-1] == '-' ) {
+        if ( !scriptCodeResync && !brokenComments && !textarea && !xmp && ch == '-' && scriptCodeSize >= 3 && !src.escaped() && scriptCode[scriptCodeSize-3] == '<' && scriptCode[scriptCodeSize-2] == '!' && scriptCode[scriptCodeSize-1] == '-' ) {
             comment = true;
             parseComment( src );
             continue;
@@ -676,7 +676,7 @@ void HTMLTokenizer::parseComment(TokenizerString &src)
             }
             if (handleBrokenComments || endCharsCount > 1) {
                 ++src;
-                if (!( script || xmp || textarea || style)) {
+                if (!(title || script || xmp || textarea || style)) {
                     if (includesCommentsInDOM) {
                         checkScriptBuffer();
                         scriptCode[ scriptCodeSize ] = 0;
