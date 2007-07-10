@@ -1559,6 +1559,22 @@ JSLazyEventListener *Window::getJSLazyEventListener(const QString& code, DOM::No
   return new JSLazyEventListener(code, Object(this), node, lineNumber);
 }
 
+void Window::clearHelperObjectProperties()
+{
+    screen = 0;
+    history = 0;
+    frames = 0;
+    loc = 0;
+    m_selection = 0;
+    m_locationbar = 0;
+    m_menubar = 0;
+    m_personalbar = 0;
+    m_scrollbars = 0;
+    m_statusbar = 0;
+    m_toolbar = 0;
+    m_evt = 0;
+}
+
 void Window::clear( ExecState *exec )
 {
   KJS::Interpreter::lock();
@@ -1570,6 +1586,7 @@ void Window::clear( ExecState *exec )
   winq = new WindowQObject(this);
   // Get rid of everything, those user vars could hold references to DOM nodes
   deleteAllProperties( exec );
+  clearHelperObjectProperties();
   // Really delete those properties, so that the DOM nodes get deref'ed
   KJS::Collector::collect();
   // Now recreate a working global object for the next URL that will use us
