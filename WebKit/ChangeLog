@@ -1,3 +1,19 @@
+2007-07-09  Mark Rowe  <mrowe@apple.com>
+
+        Merge r23963 from ToT to Safari-2.0-system.
+
+    2007-07-03  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Fix for: <rdar://problem/5292988> domain names shouldn't contain ignorable characters
+
+        * Misc/WebNSURLExtras.m:
+        (isLookalikeCharacter): Renamed.  Also excludes any non-printable character, 
+         any character considered as whitespace that isn't already converted to a space by ICU, any ignorable character,
+         and any character excluded in Mozilla's blacklist: http://kb.mozillazine.org/Network.IDN.blacklist_chars
+        (allCharactersInIDNScriptWhiteList):
+
 === WebKit-419.2.1 ===
 
 2007-05-09  Mark Rowe  <mrowe@apple.com>
