@@ -2556,8 +2556,11 @@ Value Location::toPrimitive(ExecState *exec, Type) const
   return String(toString(exec));
 }
 
-UString Location::toString(ExecState *) const
+UString Location::toString(ExecState* exec) const
 {
+  if (!m_part || !Window::retrieveWindow(m_part)->isSafeScript(exec))
+    return UString();
+
   if (!m_part->url().hasPath())
     return m_part->url().prettyURL()+"/";
   else
