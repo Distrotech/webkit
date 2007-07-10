@@ -415,6 +415,7 @@ all : \
     JSSVGDefsElement.h \
     JSSVGDescElement.h \
     JSSVGDocument.h \
+    JSSVGException.h \
     JSSVGLength.h \
     JSSVGMatrix.h \
     JSSVGMetadataElement.h \
