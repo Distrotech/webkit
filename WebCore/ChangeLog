@@ -1,5 +1,22 @@
 2007-07-09  Mark Rowe  <mrowe@apple.com>
 
+        Merge r23529 from ToT to Safari-1-3-branch.
+
+    2007-06-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/5211677>
+        -[WebPreferences setJavaEnabled:] only disables java inside <applet>, not <object>
+        
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::requestObject):
+        If the object is a Java MIME type and Java is disabled, don't load the plug-in.
+        
+        * platform/MimeTypeRegistry.cpp:
+        (WebCore::MimeTypeRegistry::isJavaAppletMIMEType):
+        Clean this up and add another applet MIME type.
+
         Merge r19551 from ToT to Safari-1-3-branch.
 
     2007-02-10  Maciej Stachowiak  <mjs@apple.com>

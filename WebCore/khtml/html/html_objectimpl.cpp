@@ -53,6 +53,17 @@
 using namespace DOM;
 using namespace khtml;
 
+static bool isJavaAppletMIMEType(const QString& mimeType)
+{
+    // Since this set is very limited and is likely to remain so we won't bother with the overhead
+    // of using a hash set.
+    // Any of the MIME types below may be followed by any number of specific versions of the JVM,
+    // which is why we use startsWith()
+    return mimeType.startsWith("application/x-java-applet", false)
+        || mimeType.startsWith("application/x-java-bean", false)
+        || mimeType.startsWith("application/x-java-vm", false);
+}
+
 // -------------------------------------------------------------------------
 
 HTMLAppletElementImpl::HTMLAppletElementImpl(DocumentPtr *doc)
@@ -355,9 +366,9 @@ void HTMLEmbedElementImpl::parseHTMLAttribute(HTMLAttributeImpl *attr)
 bool HTMLEmbedElementImpl::rendererIsNeeded(RenderStyle *style)
 {
     KHTMLPart *part = getDocument()->part();
-    if (!part)
-	return false;
-    return part->pluginsEnabled() && parentNode()->id() != ID_OBJECT;
+    if (!part || !part->pluginsEnabled() || (!part->javaEnabled() && isJavaAppletMIMEType(serviceType)))
+        return false;
+    return parentNode()->id() != ID_OBJECT;
 }
 
 RenderObject *HTMLEmbedElementImpl::createRenderer(RenderArena *arena, RenderStyle *style)
@@ -510,9 +521,9 @@ bool HTMLObjectElementImpl::rendererIsNeeded(RenderStyle *style)
     }
 
     KHTMLPart* part = getDocument()->part();
-    if (!part || !part->pluginsEnabled()) {
+    if (!part || !part->pluginsEnabled() || (!part->javaEnabled() && isJavaAppletMIMEType(serviceType)))
         return false;
-    }
+
 #if APPLE_CHANGES
     // Eventually we will merge with the better version of this check on the tip of tree.
     // Until then, just leave it out.
