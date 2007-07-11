@@ -161,8 +161,6 @@ wxWebFrame::wxWebFrame(const wxString& title)
     // Create the wxWebView Window
     webview = new wxWebView((wxWindow*)this, 1001, wxDefaultPosition, wxSize(200, 200));
     webview->SetBackgroundColour(*wxWHITE);
-    
-    webview->LoadURL(wxT("http://www.google.com"));
 
     // create a status bar just for fun (by default with 1 pane only)
     CreateStatusBar(2);
