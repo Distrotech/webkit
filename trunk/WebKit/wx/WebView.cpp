@@ -277,7 +277,8 @@ wxString wxWebView::RunScript(const wxString& javascript)
     if (m_impl->frame)
     {
         KJS::JSValue* result = m_impl->frame->loader()->executeScript(0, javascript, true);
-        returnValue = wxString(result->toString(m_impl->frame->scriptProxy()->interpreter()->globalExec()).UTF8String().c_str(), wxConvUTF8);        
+        if (result)
+            returnValue = wxString(result->toString(m_impl->frame->scriptProxy()->interpreter()->globalExec()).UTF8String().c_str(), wxConvUTF8);        
     }
     return returnValue;
 }
