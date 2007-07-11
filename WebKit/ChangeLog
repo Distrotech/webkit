@@ -1,3 +1,9 @@
+2007-07-10  Darin Adler  <darin@apple.com>
+
+        - fix build
+
+        * WebView/WebHTMLView.mm: Add include of ContextMenu.h.
+
 2007-07-05  Timothy Hatcher  <timothy@apple.com>
 
         Reviewed by John.
