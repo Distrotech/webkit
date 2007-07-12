@@ -1,0 +1,2 @@
+XPathResult_invalidIteratorState_ANY_TYPE
+true: assertTrue failed
