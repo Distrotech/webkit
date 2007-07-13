@@ -368,6 +368,18 @@ sub isOSX()
     return ($^O eq "darwin");
 }
 
+sub isGdk()
+{
+    for my $i (0 .. $#ARGV) {
+        my $opt = $ARGV[$i];
+        if ($opt =~ /^--gdk$/i ) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 sub checkRequiredSystemConfig
 {
     if (isOSX()) {
