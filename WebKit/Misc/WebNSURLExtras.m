@@ -58,6 +58,57 @@ typedef void (* StringRangeApplierFunction)(NSString *string, NSRange range, voi
 static pthread_once_t IDNScriptWhiteListFileRead = PTHREAD_ONCE_INIT;
 static uint32_t IDNScriptWhiteList[(USCRIPT_CODE_LIMIT + 31) / 32];
 
+static inline BOOL isLookalikeCharacter(int charCode)
+{
+    // FIXME: Move this code down into WebCore so it can be shared with other platforms.
+    
+    // This function treats the following as unsafe, lookalike characters:
+    // any non-printable character, any character considered as whitespace that isn't already converted to a space by ICU,
+    // any ignorable character, and any character excluded in Mozilla's blacklist: http://kb.mozillazine.org/Network.IDN.blacklist_chars
+    
+    if (!u_isprint(charCode) || u_isUWhiteSpace(charCode) || u_hasBinaryProperty(charCode, UCHAR_DEFAULT_IGNORABLE_CODE_POINT))
+        return YES;
+    
+    switch (charCode) {
+        case 0x01C3: /* LATIN LETTER RETROFLEX CLICK */
+        case 0x0337: /* COMBINING SHORT SOLIDUS OVERLAY */
+        case 0x0338: /* COMBINING LONG SOLIDUS OVERLAY */
+        case 0x05B4: /* HEBREW POINT HIRIQ */
+        case 0x05BC: /* HEBREW POINT DAGESH OR MAPIQ */
+        case 0x05C3: /* HEBREW PUNCTUATION SOF PASUQ */
+        case 0x05F4: /* HEBREW PUNCTUATION GERSHAYIM */
+        case 0x0660: /* ARABIC INDIC DIGIT ZERO */
+        case 0x06D4: /* ARABIC FULL STOP */
+        case 0x06F0: /* EXTENDED ARABIC INDIC DIGIT ZERO */
+        case 0x2027: /* HYPHENATION POINT */
+        case 0x2039: /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
+        case 0x203A: /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
+        case 0x2044: /* FRACTION SLASH */
+        case 0x2215: /* DIVISION SLASH */
+        case 0x23ae: /* INTEGRAL EXTENSION */
+        case 0x2571: /* BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT */
+        case 0x29F8: /* BIG SOLIDUS */
+        case 0x29f6: /* SOLIDUS WITH OVERBAR */
+        case 0x2AFB: /* TRIPLE SOLIDUS BINARY RELATION */
+        case 0x2AFD: /* DOUBLE SOLIDUS OPERATOR */
+        case 0x3008: /* LEFT ANGLE BRACKET */
+        case 0x3014: /* LEFT TORTOISE SHELL BRACKET */
+        case 0x3015: /* RIGHT TORTOISE SHELL BRACKET */
+        case 0x3033: /* VERTICAL KANA REPEAT MARK UPPER HALF */
+        case 0x321D: /* PARENTHESIZED KOREAN CHARACTER OJEON */
+        case 0x321E: /* PARENTHESIZED KOREAN CHARACTER O HU */
+        case 0x33DF: /* SQUARE A OVER M */
+        case 0xFE14: /* PRESENTATION FORM FOR VERTICAL SEMICOLON */
+        case 0xFE15: /* PRESENTATION FORM FOR VERTICAL EXCLAMATION MARK */
+        case 0xFE3F: /* PRESENTATION FORM FOR VERTICAL LEFT ANGLE BRACKET */
+        case 0xFE5D: /* SMALL LEFT TORTOISE SHELL BRACKET */
+        case 0xFE5E: /* SMALL RIGHT TORTOISE SHELL BRACKET */
+            return YES;
+        default:
+            return NO;
+    }
+}
+
 static char hexDigit(int i)
 {
     if (i < 0 || i > 16) {
@@ -880,6 +931,9 @@ static BOOL allCharactersInIDNScriptWhiteList(const UChar *buffer, int32_t lengt
             string = substring;
             range = NSMakeRange(0, [string length]);
         }
+
+        if (isLookalikeCharacter(c))
+            return NO;
     }
     
     int length = range.length;
