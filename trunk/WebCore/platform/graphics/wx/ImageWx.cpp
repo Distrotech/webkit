@@ -93,8 +93,9 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
     if (!bitmap) // If it's too early we won't have an image yet.
         return;
-
-    IntSize selfSize = size();                       
+    ASSERT(bitmap->IsOk());
+    ASSERT(bitmap->GetRefData());
+    IntSize selfSize = size();                
     FloatRect srcRect(src);
     FloatRect dstRect(dst);
     
@@ -104,11 +105,18 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatR
     float scaleX = srcRect.width() / dstRect.width();
     float scaleY = srcRect.height() / dstRect.height();
    
-    wxMemoryDC* mydc = new wxMemoryDC(); 
-    mydc->SelectObject(*bitmap); 
-    context->Blit((wxCoord)dst.x(),(wxCoord)dst.y(), (wxCoord)dst.width(), (wxCoord)dst.height(), mydc, 
+    wxMemoryDC mydc; 
+    ASSERT(bitmap->GetRefData());
+    mydc.SelectObject(*bitmap); 
+    context->Blit((wxCoord)dst.x(),(wxCoord)dst.y(), (wxCoord)dst.width(), (wxCoord)dst.height(), &mydc, 
                     (wxCoord)src.x(), (wxCoord)src.y(), wxCOPY, true); 
-    mydc->SelectObject(wxNullBitmap); 
+    mydc.SelectObject(wxNullBitmap);
+    
+    // NB: delete is causing crashes during page load, but not during the deletion
+    // itself. It occurs later on when a valid bitmap created in frameAtIndex
+    // suddenly becomes invalid after returning. It's possible these errors deal
+    // with reentrancy and threding problems.
+    // delete bitmap;
     startAnimation();
 }
 
@@ -129,7 +137,9 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
     wxBitmap* bitmap = frameAtIndex(m_currentFrame);
     if (!bitmap) // If it's too early we won't have an image yet.
         return;
-   
+    ASSERT(bitmap->IsOk());
+    ASSERT(bitmap->GetRefData());
+    
     float currentW = 0;
     float currentH = 0;
     
@@ -138,15 +148,15 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
     gc->ConcatTransform(patternTransform);
 #endif
 
-    wxMemoryDC* mydc = new wxMemoryDC();
-    mydc->SelectObject(*bitmap);
+    wxMemoryDC mydc;
+    mydc.SelectObject(*bitmap);
 
     while ( currentW < dstRect.width() )
     {
         while ( currentH < dstRect.height() )
         {
             context->Blit((wxCoord)dstRect.x() + currentW, (wxCoord)dstRect.y() + currentH,  
-                            (wxCoord)srcRect.width(), (wxCoord)srcRect.height(), mydc, 
+                            (wxCoord)srcRect.width(), (wxCoord)srcRect.height(), &mydc, 
                             (wxCoord)srcRect.x(), (wxCoord)srcRect.y(), wxCOPY, true); 
             currentH += srcRect.height();
         }
@@ -154,6 +164,13 @@ void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& srcRect, c
         currentH = 0;
     }
     ctxt->restore();
+    mydc.SelectObject(wxNullBitmap);
+    
+    // NB: delete is causing crashes during page load, but not during the deletion
+    // itself. It occurs later on when a valid bitmap created in frameAtIndex
+    // suddenly becomes invalid after returning. It's possible these errors deal
+    // with reentrancy and threding problems.
+    // delete bitmap;
 
     startAnimation();
 

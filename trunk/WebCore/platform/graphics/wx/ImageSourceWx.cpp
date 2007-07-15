@@ -171,8 +171,9 @@ NativeImagePtr ImageSource::createFrameAtIndex(size_t index)
     int width = size().width();
     int height = size().height();
 
-    wxBitmap bmp(width, height, 32);
-    PixelData data(bmp);
+    wxBitmap* bmp = new wxBitmap(width, height, 32);
+    ASSERT(bmp->GetRefData());
+    PixelData data(*bmp);
     
     int rowCounter = 0;
     long pixelCounter = 0;
@@ -200,9 +201,11 @@ NativeImagePtr ImageSource::createFrameAtIndex(size_t index)
         }
 
     }
-    wxBitmap* newbmp = new wxBitmap(bmp);
-    newbmp->UseAlpha();
-    return newbmp;
+
+    bmp->UseAlpha();
+    ASSERT(bmp->IsOk());
+    ASSERT(bmp->GetRefData());
+    return bmp;
 }
 
 float ImageSource::frameDurationAtIndex(size_t index)
