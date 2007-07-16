@@ -901,8 +901,8 @@ static BOOL allCharactersInIDNScriptWhiteList(const UChar *buffer, int32_t lengt
         if (!(IDNScriptWhiteList[index] & mask)) {
             return NO;
         }
-        // Always disallow division slash since this looks like a forward slash.
-        if (c == DIVISION_SLASH)
+
+        if (isLookalikeCharacter(c))
             return NO;
     }
     return YES;
@@ -931,9 +931,6 @@ static BOOL allCharactersInIDNScriptWhiteList(const UChar *buffer, int32_t lengt
             string = substring;
             range = NSMakeRange(0, [string length]);
         }
-
-        if (isLookalikeCharacter(c))
-            return NO;
     }
     
     int length = range.length;
