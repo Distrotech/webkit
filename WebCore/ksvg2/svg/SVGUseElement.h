@@ -90,9 +90,11 @@ namespace WebCore
         // Shadow tree handling
         PassRefPtr<SVGSVGElement> buildShadowTreeForSymbolTag(SVGElement* target, SVGElementInstance* targetInstance);
         void alterShadowTreeForSVGTag(SVGElement* target);
+        void removeDisallowedElementsFromSubtree(Node* element);
 
         void buildShadowTree(SVGElement* target, SVGElementInstance* targetInstance);
         void expandUseElementsInShadowTree(Node* element);
+        void expandSymbolElementsInShadowTree(Node* element);
         void attachShadowTree();
 
         // "Tree connector" 
