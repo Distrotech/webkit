@@ -157,6 +157,17 @@ bool MimeTypeRegistry::isSupportedNonImageMIMEType(const String &mimeType)
     return !mimeType.isEmpty() && supportedNonImageMIMETypes->contains(mimeType);
 }
 
+bool MimeTypeRegistry::isJavaAppletMIMEType(const String& mimeType)
+{
+    // Since this set is very limited and is likely to remain so we won't bother with the overhead
+    // of using a hash set.
+    // Any of the MIME types below may be followed by any number of specific versions of the JVM,
+    // which is why we use startsWith()
+    return mimeType.startsWith("application/x-java-applet", false) 
+        || mimeType.startsWith("application/x-java-bean", false) 
+        || mimeType.startsWith("application/x-java-vm", false);
+}
+
 const HashSet<String> &MimeTypeRegistry::getSupportedImageMIMETypes()
 {
     if (!supportedImageMIMETypes)

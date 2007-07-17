@@ -52,6 +52,8 @@ public:
     // document in a frame.
     static bool isSupportedNonImageMIMEType(const String& mimeType);
 
+    static bool isJavaAppletMIMEType(const String& mimeType);
+
     static const HashSet<String>& getSupportedImageMIMETypes();
     static const HashSet<String>& getSupportedImageResourceMIMETypes();
     static const HashSet<String>& getSupportedNonImageMIMETypes();
