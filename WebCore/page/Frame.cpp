@@ -311,7 +311,7 @@ void Frame::setDocument(Document* newDoc)
     }
 }
 
-const Settings *Frame::settings() const
+Settings *Frame::settings() const
 {
   return d->m_settings;
 }
