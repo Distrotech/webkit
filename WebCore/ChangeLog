@@ -1,3 +1,12 @@
+2007-07-17  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Build fix. Not reviewed.
+
+        Rob forgot to land the changes to SVGResourceMarker in his last commit.
+
+        * platform/graphics/svg/SVGResourceMarker.cpp:
+        (WebCore::SVGResourceMarker::draw):
+
 2007-07-17  Rob Buis  <buis@kde.org>
 
         Reviewed by Nikolas.
