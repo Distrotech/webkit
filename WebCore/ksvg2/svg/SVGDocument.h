@@ -43,11 +43,11 @@ namespace WebCore {
         SVGSVGElement* rootElement() const;
         
         virtual PassRefPtr<Element> createElement(const String& tagName, ExceptionCode&);
-        
+
         void dispatchZoomEvent(float prevScale, float newScale);
         void dispatchScrollEvent();
 
-        virtual bool zoomAndPanEnabled() const;
+        bool zoomAndPanEnabled() const;
 
         void startPan(const FloatPoint& start);
         void updatePan(const FloatPoint& pos) const;

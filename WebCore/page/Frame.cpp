@@ -104,10 +104,10 @@
 #endif
 
 #if ENABLE(SVG)
-#include "SVGNames.h"
 #include "XLinkNames.h"
 #include "SVGDocument.h"
 #include "SVGDocumentExtensions.h"
+#include "SVGNames.h"
 #endif
 
 #include "XMLNames.h"
@@ -682,17 +682,19 @@ void Frame::setZoomFactor(int percent)
   if (d->m_zoomFactor == percent)
       return;
 
-  d->m_zoomFactor = percent;
-  if (d->m_doc) {
 #if ENABLE(SVG)
-    if (d->m_doc->isSVGDocument()) {
-         if (d->m_doc->renderer())
-             d->m_doc->renderer()->repaint();
-         return;
+    if (d->m_doc && d->m_doc->isSVGDocument()) {
+        if (!static_cast<SVGDocument*>(d->m_doc.get())->zoomAndPanEnabled())
+            return;
+        d->m_zoomFactor = percent;
+        if (d->m_doc->renderer())
+            d->m_doc->renderer()->repaint();
+        return;
     }
 #endif
+  d->m_zoomFactor = percent;
+  if (d->m_doc)
       d->m_doc->recalcStyle(Node::Force);
-  }
 
   for (Frame* child = tree()->firstChild(); child; child = child->tree()->nextSibling())
       child->setZoomFactor(d->m_zoomFactor);
