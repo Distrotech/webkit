@@ -173,7 +173,7 @@ public:
     static Frame* frameForWidget(const Widget*);
 
     void setSettings(Settings*);
-    const Settings* settings() const;
+    Settings* settings() const;
     void reparseConfiguration();
 
     // should move to FrameView
