@@ -101,6 +101,8 @@ namespace WebCore {
 
         ResourceHandle* handle() const { return m_handle.get(); }
 
+        void setShouldBufferData(bool shouldBufferData) { m_shouldBufferData = shouldBufferData; }
+
     protected:
         ResourceLoader(Frame*);
 
@@ -121,7 +123,7 @@ namespace WebCore {
         bool m_reachedTerminalState;
         bool m_cancelled;
         bool m_calledDidFinishLoad;
-
+        bool m_shouldBufferData;
 protected:
         // FIXME: Once everything is made cross platform, these can be private instead of protected
         RefPtr<Frame> m_frame;
