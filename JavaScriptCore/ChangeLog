@@ -1,3 +1,9 @@
+2007-07-25  Mark Rowe  <mrowe@apple.com>
+
+        Build fix for GCC 3.3.
+
+        * pcre/pcre_compile.c: Remove unused variables.
+
 == JavaScriptCore-419.2 ===
 
 2007-07-24  Mark Rowe  <mrowe@apple.com>

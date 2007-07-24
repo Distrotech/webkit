@@ -88,40 +88,6 @@ static const short int escapes[] = {
 };
 
 
-/* Tables of names of POSIX character classes and their lengths. The list is
-terminated by a zero length entry. The first three must be alpha, upper, lower,
-as this is assumed for handling case independence. */
-
-static const char * const posix_names[] = {
-  "alpha", "lower", "upper",
-  "alnum", "ascii", "blank", "cntrl", "digit", "graph",
-  "print", "punct", "space", "word",  "xdigit" };
-
-static const uschar posix_name_lengths[] = {
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 6, 0 };
-
-/* Table of class bit maps for each POSIX class; up to three may be combined
-to form the class. The table for [:blank:] is dynamically modified to remove
-the vertical space characters. */
-
-static const int posix_class_maps[] = {
-  cbit_lower, cbit_upper, -1,             /* alpha */
-  cbit_lower, -1,         -1,             /* lower */
-  cbit_upper, -1,         -1,             /* upper */
-  cbit_digit, cbit_lower, cbit_upper,     /* alnum */
-  cbit_print, cbit_cntrl, -1,             /* ascii */
-  cbit_space, -1,         -1,             /* blank - a GNU extension */
-  cbit_cntrl, -1,         -1,             /* cntrl */
-  cbit_digit, -1,         -1,             /* digit */
-  cbit_graph, -1,         -1,             /* graph */
-  cbit_print, -1,         -1,             /* print */
-  cbit_punct, -1,         -1,             /* punct */
-  cbit_space, -1,         -1,             /* space */
-  cbit_word,  -1,         -1,             /* word - a Perl extension */
-  cbit_xdigit,-1,         -1              /* xdigit */
-};
-
-
 /* The texts of compile-time error messages. These are "char *" because they
 are passed to the outside world. */
 
