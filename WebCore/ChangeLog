@@ -2,6 +2,16 @@
 
         Reviewed by Darin.
 
+        If the style sheet requested is a user style sheet, don't store it in the DocLoader's resource map;
+        user style sheets can outlive their doc loaders.
+
+        * loader/DocLoader.cpp:
+        (WebCore::DocLoader::requestCSSStyleSheet):
+
+2007-07-20  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
         <rdar://problem/5298816> Crash redirecting message, in -[SharedBufferData initWithSharedBuffer:]
         
         Have cached resources keep track of what DocLoader they belong to. This is so that they can remove themselves
