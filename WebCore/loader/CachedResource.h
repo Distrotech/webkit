@@ -34,6 +34,7 @@ namespace WebCore {
 
 class Cache;
 class CachedResourceClient;
+class DocLoader;
 class Request;
 
 // A resource that is held in the cache. Classes who want to use this object should derive
@@ -131,6 +132,8 @@ public:
     
     virtual void destroyDecodedData() {};
 
+    void setDocLoader(DocLoader* docLoader) { m_docLoader = docLoader; }
+    
 protected:
     void setEncodedSize(unsigned);
     
@@ -174,6 +177,8 @@ private:
     friend class Cache;
     
     bool m_shouldTreatAsLocal;
+
+    DocLoader* m_docLoader; // only non-0 for resources that are not in the cache
 };
 
 }
