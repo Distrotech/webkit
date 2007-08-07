@@ -26,6 +26,7 @@ layer at (0,0) size 800x600
       RenderSVGText {text} at (240,747) size 240x27 contains 2 chunk(s) [color=#696969]
         RenderSVGInlineText {#text} at (0,-10) size 240x12
           chunk 1 text run 1 at (240.00,747.00) startOffset 0 endOffset 38 width 180.00: "Click this text to remove the Flowers "
+          chunk 1 text run 2 at (420.00,747.00) startOffset 0 endOffset 13 width 60.00: "selectionList"
         RenderSVGTSpan {tspan} at (0,0) size 176x12
           RenderSVGInlineText {#text} at (0,5) size 176x12
             chunk 2 text run 1 at (240.00,762.00) startOffset 0 endOffset 38 width 176.00: "This list does not react on user input"
@@ -55,12 +56,17 @@ layer at (0,0) size 800x600
         RenderSVGTSpan {tspan} at (0,0) size 340x12
           RenderSVGInlineText {#text} at (0,10) size 340x12
             chunk 2 text run 1 at (220.00,232.00) startOffset 0 endOffset 23 width 112.00: "Note that one can also "
+            chunk 2 text run 2 at (332.00,232.00) startOffset 0 endOffset 49 width 228.00: "transform the group containing the selection list"
         RenderSVGTSpan {tspan} at (0,0) size 398x12
           RenderSVGInlineText {#text} at (0,30) size 398x12
             chunk 3 text run 1 at (220.00,252.00) startOffset 0 endOffset 5 width 24.00: "This "
+            chunk 3 text run 2 at (244.00,252.00) startOffset 0 endOffset 74 width 344.00: "selectionlist does not react on user input (functionToCall is a undefined "
+            chunk 3 text run 3 at (588.00,252.00) startOffset 0 endOffset 6 width 30.00: "value)"
         RenderSVGTSpan {tspan} at (0,0) size 421x12
           RenderSVGInlineText {#text} at (0,50) size 421x12
             chunk 4 text run 1 at (220.00,272.00) startOffset 0 endOffset 14 width 62.00: "Click on this "
+            chunk 4 text run 2 at (282.00,272.00) startOffset 0 endOffset 69 width 326.00: "text to toggle \"above\"/\"below\" mode to open the box either to top or "
+            chunk 4 text run 3 at (608.00,272.00) startOffset 0 endOffset 6 width 33.00: "bottom"
     RenderSVGContainer {g} at (38.67,38.67) size 547.66x536.72
       RenderSVGContainer {g} at (378.61,169.94) size 108.80x70.49 [transform={m=((0.87,0.50)(-0.50,0.87)) t=(550.00,20.00)}]
         RenderPath {rect} at (378.61,169.94) size 108.80x70.49 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#FFFFFF]}] [data="M50.00,200.00L200.00,200.00L200.00,216.00L50.00,216.00"]

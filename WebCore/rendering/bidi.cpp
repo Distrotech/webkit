@@ -1652,7 +1652,11 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
         }
 
         BidiContext *startEmbed;
-        if (style()->direction() == LTR) {
+        if (style()->direction() == LTR
+#if ENABLE(SVG)   
+            || (style()->unicodeBidi() == UBNormal && isSVGText())
+#endif
+           ) {
             startEmbed = new BidiContext(0, LeftToRight, NULL, style()->unicodeBidi() == Override);
             bidi.status.eor = LeftToRight;
         } else {
