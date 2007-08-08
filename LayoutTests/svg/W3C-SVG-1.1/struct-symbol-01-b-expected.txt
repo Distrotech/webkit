@@ -1,15 +1,15 @@
 layer at (0,0) size 480x360
   RenderView at (0,0) size 480x360
 layer at (0,0) size 480x360
-  RenderSVGRoot {svg} at (0,0) size 1240x1150
-    RenderSVGContainer {g} at (0,0) size 1240x1150
-      RenderSVGContainer {g} at (0,0) size 1240x1150
-        RenderSVGContainer {use} at (0,0) size 1000x1000
-          RenderSVGContainer {g} at (0,0) size 1000x1000
+  RenderSVGRoot {svg} at (0,0) size 480x359.50
+    RenderSVGContainer {g} at (0,0) size 480x300
+      RenderSVGContainer {g} at (0,0) size 480x300
+        RenderSVGContainer {use} at (0,0) size 240x150
+          RenderSVGContainer {g} at (0,0) size 240x150
             RenderSVGContainer {svg} at (0,0) size 240x150
               RenderImage {image} at (0,0) size 1000x1000
-        RenderSVGContainer {use} at (240,150) size 1000x1000
-          RenderSVGContainer {g} at (240,150) size 1000x1000 [transform={m=((1.00,0.00)(0.00,1.00)) t=(240.00,150.00)}]
+        RenderSVGContainer {use} at (240,150) size 240x150
+          RenderSVGContainer {g} at (240,150) size 240x150 [transform={m=((1.00,0.00)(0.00,1.00)) t=(240.00,150.00)}]
             RenderSVGContainer {svg} at (240,150) size 240x150
               RenderPath {rect} at (240,150) size 120x75 [fill={[type=SOLID] [color=#FFFF00]}] [data="M0.00,0.00L500.00,0.00L500.00,500.00L0.00,500.00"]
               RenderPath {rect} at (360,150) size 120x75 [fill={[type=SOLID] [color=#FF0000]}] [data="M500.00,0.00L1000.00,0.00L1000.00,500.00L500.00,500.00"]

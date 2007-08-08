@@ -6,8 +6,8 @@ KCanvasResource {id="LuminanceToAlpha" [type=FILTER]  [bounding box=at (-5.00%,-
 layer at (0,0) size 480x360
   RenderView at (0,0) size 480x360
 layer at (0,0) size 480x360
-  RenderSVGRoot {svg} at (0.50,0.50) size 799x502.50
-    RenderSVGContainer {g} at (0.50,0.50) size 799x502.50
+  RenderSVGRoot {svg} at (0.50,0.29) size 481.21x359.21
+    RenderSVGContainer {g} at (18.29,0.29) size 463.42x291.45
       RenderSVGContainer {svg} at (8.29,5.29) size 463.42x291.45
         RenderSVGHiddenContainer {defs} at (0,0) size 0x0
           RenderSVGHiddenContainer {linearGradient} at (0,0) size 0x0
