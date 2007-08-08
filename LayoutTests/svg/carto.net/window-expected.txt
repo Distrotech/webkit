@@ -18,29 +18,29 @@ layer at (0,0) size 800x600
       RenderSVGContainer {g} at (319.92,33.98) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(480.00,20.00)}]
         RenderSVGContainer {svg} at (319.92,33.98) size 110.16x16.41
           RenderPath {rect} at (319.92,33.98) size 110.16x16.41 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#DCDCDC]}] [data="M-70.00,-10.00L70.00,-10.00L70.00,10.00L-70.00,10.00"]
-    RenderSVGText {text} at (418,25) size 123x12 contains 1 chunk(s) [color=#696969]
-      RenderSVGInlineText {#text} at (0,-10) size 123x12
+    RenderSVGText {text} at (418,25) size 124x12 contains 1 chunk(s) [color=#696969]
+      RenderSVGInlineText {#text} at (0,-10) size 124x12
         chunk 1 (middle anchor) text run 1 at (418.50,25.00) startOffset 0 endOffset 23 width 123.00: "Close Navigation Window"
     RenderSVGContainer {use} at (437.11,33.98) size 110.16x16.41
       RenderSVGContainer {g} at (437.11,33.98) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(630.00,20.00)}]
         RenderSVGContainer {svg} at (437.11,33.98) size 110.16x16.41
           RenderPath {rect} at (437.11,33.98) size 110.16x16.41 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#DCDCDC]}] [data="M-70.00,-10.00L70.00,-10.00L70.00,10.00L-70.00,10.00"]
-    RenderSVGText {text} at (586,25) size 87x12 contains 1 chunk(s) [color=#696969]
-      RenderSVGInlineText {#text} at (0,-10) size 87x12
+    RenderSVGText {text} at (586,25) size 88x12 contains 1 chunk(s) [color=#696969]
+      RenderSVGInlineText {#text} at (0,-10) size 88x12
         chunk 1 (middle anchor) text run 1 at (586.50,25.00) startOffset 0 endOffset 16 width 87.00: "Close Big Window"
     RenderSVGContainer {use} at (554.30,33.98) size 110.16x16.41
       RenderSVGContainer {g} at (554.30,33.98) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(780.00,20.00)}]
         RenderSVGContainer {svg} at (554.30,33.98) size 110.16x16.41
           RenderPath {rect} at (554.30,33.98) size 110.16x16.41 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#DCDCDC]}] [data="M-70.00,-10.00L70.00,-10.00L70.00,10.00L-70.00,10.00"]
-    RenderSVGText {text} at (718,25) size 123x12 contains 1 chunk(s) [color=#696969]
-      RenderSVGInlineText {#text} at (0,-10) size 123x12
+    RenderSVGText {text} at (718,25) size 124x12 contains 1 chunk(s) [color=#696969]
+      RenderSVGInlineText {#text} at (0,-10) size 124x12
         chunk 1 (middle anchor) text run 1 at (718.50,25.00) startOffset 0 endOffset 23 width 123.00: "Close Middlesize Window"
     RenderSVGContainer {use} at (671.48,33.98) size 110.16x16.41
       RenderSVGContainer {g} at (671.48,33.98) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(930.00,20.00)}]
         RenderSVGContainer {svg} at (671.48,33.98) size 110.16x16.41
           RenderPath {rect} at (671.48,33.98) size 110.16x16.41 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#DCDCDC]}] [data="M-70.00,-10.00L70.00,-10.00L70.00,10.00L-70.00,10.00"]
-    RenderSVGText {text} at (881,25) size 97x12 contains 1 chunk(s) [color=#696969]
-      RenderSVGInlineText {#text} at (0,-10) size 97x12
+    RenderSVGText {text} at (881,25) size 98x12 contains 1 chunk(s) [color=#696969]
+      RenderSVGInlineText {#text} at (0,-10) size 98x12
         chunk 1 (middle anchor) text run 1 at (881.50,25.00) startOffset 0 endOffset 19 width 97.00: "Close Colour Picker"
     RenderSVGContainer {use} at (671.48,57.42) size 110.16x16.41
       RenderSVGContainer {g} at (671.48,57.42) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(930.00,50.00)}]
@@ -53,8 +53,8 @@ layer at (0,0) size 800x600
       RenderSVGContainer {g} at (319.92,57.42) size 110.16x16.41 [transform={m=((1.00,0.00)(0.00,1.00)) t=(480.00,50.00)}]
         RenderSVGContainer {svg} at (319.92,57.42) size 110.16x16.41
           RenderPath {rect} at (319.92,57.42) size 110.16x16.41 [stroke={[type=SOLID] [color=#696969]}] [fill={[type=SOLID] [color=#DCDCDC]}] [data="M-70.00,-10.00L70.00,-10.00L70.00,10.00L-70.00,10.00"]
-    RenderSVGText {text} at (415,55) size 129x12 contains 1 chunk(s) [color=#696969]
-      RenderSVGInlineText {#text} at (0,-10) size 129x12
+    RenderSVGText {text} at (415,55) size 130x12 contains 1 chunk(s) [color=#696969]
+      RenderSVGInlineText {#text} at (0,-10) size 130x12
         chunk 1 (middle anchor) text run 1 at (415.50,55.00) startOffset 0 endOffset 24 width 129.00: "Resize Navigation Window"
     RenderSVGContainer {g} at (38.67,92.58) size 758.59x442.19
       RenderSVGContainer {g} at (624.61,92.58) size 172.66x157.03 [transform={m=((1.00,0.00)(0.00,1.00)) t=(800.00,85.00)}]

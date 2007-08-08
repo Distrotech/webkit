@@ -12,33 +12,33 @@ layer at (0,0) size 800x600
     RenderSVGContainer {svg} at (40,60) size 2885.60x336
       RenderSVGContainer {g} at (40,60) size 2885.60x336
         RenderImage {image} at (0,0) size 3607x420
-        RenderSVGContainer {g} at (370.40,112.80) size 1625.60x259.20
-          RenderSVGText {text} at (413,88) size 85x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 85x17
+        RenderSVGContainer {g} at (370.40,112) size 1625.60x260
+          RenderSVGText {text} at (413,88) size 86x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 86x18
               chunk 1 (middle anchor) text run 1 at (413.50,88.80) startOffset 0 endOffset 13 width 85.00: "Furggeltihorn"
-          RenderSVGText {text} at (570,98) size 46x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 46x17
+          RenderSVGText {text} at (570,98) size 47x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 47x18
               chunk 1 (middle anchor) text run 1 at (570.80,98.80) startOffset 0 endOffset 6 width 46.00: "P 2821"
-          RenderSVGText {text} at (592,79) size 86x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 86x17
+          RenderSVGText {text} at (592,79) size 86x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 86x18
               chunk 1 (middle anchor) text run 1 at (592.00,79.80) startOffset 0 endOffset 13 width 86.00: "Zervreilahorn"
-          RenderSVGText {text} at (768,112) size 74x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 74x17
+          RenderSVGText {text} at (768,112) size 74x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 74x18
               chunk 1 (middle anchor) text run 1 at (768.00,112.80) startOffset 0 endOffset 11 width 74.00: "Plattenberg"
-          RenderSVGText {text} at (2191,178) size 58x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 58x17
+          RenderSVGText {text} at (2191,178) size 59x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 59x18
               chunk 1 (middle anchor) text run 1 at (2191.90,178.80) startOffset 0 endOffset 8 width 58.00: "Piz Fess"
-          RenderSVGText {text} at (2251,162) size 80x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 80x17
+          RenderSVGText {text} at (2251,162) size 80x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 80x18
               chunk 1 (middle anchor) text run 1 at (2251.40,162.60) startOffset 0 endOffset 11 width 80.00: "Crap Grisch"
-          RenderSVGText {text} at (2380,149) size 65x17 contains 1 chunk(s) [color=#FFFFFF]
-            RenderSVGInlineText {#text} at (0,-13) size 65x17
+          RenderSVGText {text} at (2380,149) size 65x18 contains 1 chunk(s) [color=#FFFFFF]
+            RenderSVGInlineText {#text} at (0,-14) size 65x18
               chunk 1 (middle anchor) text run 1 at (2380.20,149.60) startOffset 0 endOffset 9 width 65.00: "Piz Tom\x{FC}l"
-          RenderSVGText {text} at (1736,112) size 53x17 contains 1 chunk(s)
-            RenderSVGInlineText {#text} at (0,-13) size 53x17
+          RenderSVGText {text} at (1736,112) size 53x18 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-14) size 53x18
               chunk 1 (middle anchor) text run 1 at (1736.10,112.60) startOffset 0 endOffset 8 width 53.00: "Fruntalp"
-          RenderSVGText {text} at (963,386) size 81x17 contains 1 chunk(s)
-            RenderSVGInlineText {#text} at (0,-13) size 81x17
+          RenderSVGText {text} at (963,386) size 81x18 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-14) size 81x18
               chunk 1 (middle anchor) text run 1 at (963.30,386.50) startOffset 0 endOffset 12 width 81.00: "Zervreilasee"
     RenderSVGContainer {g} at (40,60) size 732.80x172.80
       RenderSVGContainer {g} at (40,220) size 720x12.80
@@ -86,7 +86,7 @@ layer at (0,0) size 800x600
         RenderPath {rect} at (40,484) size 88x16 [fill={[type=SOLID] [color=#DCDCDC]}] [data="M50.00,580.00L160.00,580.00L160.00,600.00L50.00,600.00"]
         RenderSVGText {text} at (66,595) size 78x14 contains 1 chunk(s) [color=#696969]
           RenderSVGTSpan {tspan} at (0,0) size 78x14
-            RenderSVGInlineText {#text} at (0,-10) size 78x14
+            RenderSVGInlineText {#text} at (0,-11) size 78x14
               chunk 1 (middle anchor) text run 1 at (66.00,595.40) startOffset 0 endOffset 14 width 78.00: "Hide Scrollbar"
       RenderSVGContainer {g} at (135.20,483.20) size 89.60x17.60
         RenderPath {rect} at (135.20,483.20) size 88x16 [fill={[type=SOLID] [color=#FFFFFF]}] [data="M169.00,579.00L279.00,579.00L279.00,599.00L169.00,599.00"]
@@ -94,5 +94,5 @@ layer at (0,0) size 800x600
         RenderPath {rect} at (136,484) size 88x16 [fill={[type=SOLID] [color=#DCDCDC]}] [data="M170.00,580.00L280.00,580.00L280.00,600.00L170.00,600.00"]
         RenderSVGText {text} at (176,595) size 98x14 contains 1 chunk(s) [color=#696969]
           RenderSVGTSpan {tspan} at (0,0) size 98x14
-            RenderSVGInlineText {#text} at (0,-10) size 98x14
+            RenderSVGInlineText {#text} at (0,-11) size 98x14
               chunk 1 (middle anchor) text run 1 at (176.00,595.40) startOffset 0 endOffset 16 width 98.00: "Remove Scrollbar"

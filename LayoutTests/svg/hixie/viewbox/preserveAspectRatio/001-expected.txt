@@ -11,6 +11,6 @@ layer at (0,0) size 800x600
     RenderSVGText {text} at (15,40) size 70x6 contains 1 chunk(s) [color=#FFFFFF]
       RenderSVGInlineText {#text} at (0,-5) size 70x6
         chunk 1 (middle anchor) text run 1 at (15.00,40.00) startOffset 0 endOffset 36 width 70.00: "It should stretch to fit the window."
-    RenderSVGText {text} at (31,48) size 37x3 contains 1 chunk(s) [color=#FFFFFF]
-      RenderSVGInlineText {#text} at (0,-2) size 37x3
+    RenderSVGText {text} at (31,48) size 38x3 contains 1 chunk(s) [color=#FFFFFF]
+      RenderSVGInlineText {#text} at (0,-2) size 38x3
         chunk 1 (middle anchor) text run 1 at (31.50,48.00) startOffset 0 endOffset 27 width 37.00: "(Whatever the window size.)"

@@ -12,8 +12,8 @@ layer at (0,0) size 480x360
       RenderSVGContainer {switch} at (30,160) size 420x130 [transform={m=((1.00,0.00)(0.00,1.00)) t=(0.00,140.00)}]
         RenderSVGContainer {g} at (30,160) size 420x130
           RenderPath {rect} at (30,160) size 420x130 [fill={[type=SOLID] [color=#FF0000]}] [data="M30.00,20.00L450.00,20.00L450.00,150.00L30.00,150.00"]
-          RenderSVGText {text} at (109,100) size 261x23 contains 1 chunk(s)
-            RenderSVGInlineText {#text} at (0,-18) size 261x23
+          RenderSVGText {text} at (109,100) size 262x23 contains 1 chunk(s)
+            RenderSVGInlineText {#text} at (0,-18) size 262x23
               chunk 1 (middle anchor) text run 1 at (109.50,100.00) startOffset 0 endOffset 30 width 261.00: "This is not an SVG Tiny Viewer"
     RenderSVGText {text} at (10,340) size 264x46 contains 1 chunk(s)
       RenderSVGInlineText {#text} at (0,-36) size 264x46
