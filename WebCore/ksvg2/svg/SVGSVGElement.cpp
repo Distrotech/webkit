@@ -33,7 +33,7 @@
 #include "EventNames.h"
 #include "Frame.h"
 #include "HTMLNames.h"
-#include "RenderSVGContainer.h"
+#include "RenderSVGViewportContainer.h"
 #include "RenderSVGRoot.h"
 #include "SVGAngle.h"
 #include "SVGLength.h"
@@ -374,7 +374,7 @@ RenderObject* SVGSVGElement::createRenderer(RenderArena* arena, RenderStyle*)
     if (!parentNode()->isSVGElement())
         return new (arena) RenderSVGRoot(this);
     else
-        return new (arena) RenderSVGContainer(this);
+        return new (arena) RenderSVGViewportContainer(this);
 }
 
 void SVGSVGElement::insertedIntoDocument()

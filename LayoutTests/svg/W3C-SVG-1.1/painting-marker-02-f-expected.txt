@@ -14,7 +14,7 @@ layer at (0,0) size 480x360
         RenderSVGInlineText {#text} at (0,-13) size 184x16
           chunk 1 text run 1 at (125.00,30.00) startOffset 0 endOffset 27 width 184.00: "Marker Rendering Properties"
       RenderSVGContainer {g} at (0,0) size 208x142
-        RenderSVGContainer {marker} at (0,0) size 2x2
+        RenderSVGViewportContainer {marker} at (0,0) size 2x2
           RenderPath {rect} at (0,0) size 2x2 [fill={[type=SOLID] [color=#000000]}] [data="M0.00,0.00L10.00,0.00L10.00,10.00L0.00,10.00"]
         RenderSVGText {text} at (100,140) size 54x11 contains 1 chunk(s)
           RenderSVGInlineText {#text} at (0,-9) size 54x11
@@ -35,7 +35,7 @@ layer at (0,0) size 480x360
               RenderSVGContainer {g} at (192,102) size 16x16 [transform={m=((0.20,0.00)(0.00,0.20)) t=(0.00,0.00)}]
                 RenderPath {rect} at (192,102) size 16x16 [fill={[type=SOLID] [color=#000000]}] [data="M0.00,0.00L10.00,0.00L10.00,10.00L0.00,10.00"]
       RenderSVGContainer {g} at (-0.40,-0.40) size 450x142.40
-        RenderSVGContainer {marker} at (-0.40,-0.40) size 4.80x4.80
+        RenderSVGViewportContainer {marker} at (-0.40,-0.40) size 4.80x4.80
           RenderPath {rect} at (-0.40,-0.40) size 4.80x4.80 [stroke={[type=SOLID] [color=#000000] [stroke width=4.00]}] [data="M0.00,0.00L20.00,0.00L20.00,20.00L0.00,20.00"]
         RenderSVGText {text} at (340,140) size 72x11 contains 1 chunk(s)
           RenderSVGInlineText {#text} at (0,-9) size 72x11
@@ -56,9 +56,9 @@ layer at (0,0) size 480x360
               RenderSVGContainer {g} at (430.40,100.40) size 19.20x19.20 [transform={m=((0.20,0.00)(0.00,0.20)) t=(0.00,0.00)}]
                 RenderPath {rect} at (430.40,100.40) size 19.20x19.20 [stroke={[type=SOLID] [color=#000000] [stroke width=4.00]}] [data="M0.00,0.00L20.00,0.00L20.00,20.00L0.00,20.00"]
       RenderSVGContainer {g} at (-0.80,-0.80) size 5.60x5.60
-        RenderSVGContainer {marker} at (-0.80,-0.80) size 5.60x5.60
+        RenderSVGViewportContainer {marker} at (-0.80,-0.80) size 5.60x5.60
           RenderPath {rect} at (-0.80,-0.80) size 5.60x5.60 [stroke={[type=SOLID] [color=#000000] [stroke width=8.00]}] [fill={[type=SOLID] [color=#008000]}] [data="M0.00,0.00L20.00,0.00L20.00,20.00L0.00,20.00"]
-        RenderSVGContainer {marker} at (-0.80,-0.80) size 5.60x5.60
+        RenderSVGViewportContainer {marker} at (-0.80,-0.80) size 5.60x5.60
           RenderPath {rect} at (-0.80,-0.80) size 5.60x5.60 [stroke={[type=SOLID] [color=#0000FF] [stroke width=4.00]}] [fill={[type=SOLID] [color=#000000]}] [data="M0.00,0.00L10.00,0.00L10.00,10.00L0.00,10.00"]
       RenderSVGContainer {g} at (25.17,178.80) size 186.03x93.20
         RenderSVGText {text} at (90,270) size 77x11 contains 1 chunk(s)
