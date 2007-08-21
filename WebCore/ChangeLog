@@ -2,6 +2,16 @@
 
         Reviewed by Oliver.
 
+        Allow to pass a filename to dumpOutputImage via debugger.
+        Make it only available in debug builds and remove the runtime define: DEBUG_OUTPUT_IMAGE.
+
+        * platform/graphics/svg/cg/SVGResourceFilterCg.mm:
+        (WebCore::SVGResourceFilter::applyFilter):
+
+2007-08-21  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Reviewed by Oliver.
+
         Large SVG filter rework. Bring it back in a useable state.
 
         Fixes: http://bugs.webkit.org/show_bug.cgi?id=5527 (Filters need subregion support)

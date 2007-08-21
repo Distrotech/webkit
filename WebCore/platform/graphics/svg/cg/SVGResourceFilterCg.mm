@@ -48,9 +48,6 @@
 
 #include <QuartzCore/CoreImage.h>
 
-// Setting to a value > 0 allows to dump the output image as JPEG.
-#define DEBUG_OUTPUT_IMAGE 0
-
 namespace WebCore {
 
 static const char* const SVGPreviousFilterOutputName = "__previousOutput__";
@@ -134,8 +131,8 @@ void SVGResourceFilter::prepareFilter(GraphicsContext*& context, const FloatRect
     context->translate(-filterRect.x(), -filterRect.y());
 }
 
-#if DEBUG_OUTPUT_IMAGE > 0
-void dumpOutputImage(CIImage* outputImage)
+#ifndef NDEBUG
+void dumpOutputImage(CIImage* outputImage, NSString* fileName)
 {
     CGSize extentSize = [outputImage extent].size;
     NSImage* image = [[[NSImage alloc] initWithSize:NSMakeSize(extentSize.width, extentSize.height)] autorelease];
@@ -145,10 +142,7 @@ void dumpOutputImage(CIImage* outputImage)
     NSBitmapImageRep* imageRep = [NSBitmapImageRep imageRepWithData:imageData];
     imageData = [imageRep representationUsingType:NSJPEGFileType properties:nil];
 
-    static unsigned int s_counter = 0;
-    s_counter++;
-
-    [imageData writeToFile:[NSString stringWithFormat:@"/Users/nikoz/outputImages/%d.jpeg", s_counter] atomically:YES];
+    [imageData writeToFile:fileName atomically:YES];
 }
 #endif
 
@@ -164,10 +158,6 @@ void SVGResourceFilter::applyFilter(GraphicsContext*& context, const FloatRect& 
         CIImage* outputImage = [[filterStack lastObject] valueForKey:@"outputImage"];
 
         if (outputImage) {
-#if DEBUG_OUTPUT_IMAGE > 0
-            dumpOutputImage(outputImage);
-#endif
-
             FloatRect filterRect = filterBBoxForItemBBox(bbox);
             FloatPoint destOrigin = filterRect.location();
             filterRect.setLocation(FloatPoint(0.0, 0.0));
