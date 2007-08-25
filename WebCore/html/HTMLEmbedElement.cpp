@@ -65,8 +65,6 @@ KJS::Bindings::Instance *HTMLEmbedElement::getInstance() const
     if (m_instance)
         return m_instance.get();
     
-    document()->updateLayoutIgnorePendingStylesheets();
-
     RenderObject *r = renderer();
     if (!r) {
         Node *p = parentNode();
@@ -155,7 +153,7 @@ void HTMLEmbedElement::attach()
     HTMLPlugInElement::attach();
 
     if (renderer())
-        static_cast<RenderPartObject*>(renderer())->updateWidget(true);
+        static_cast<RenderPartObject*>(renderer())->updateWidget();
 }
 
 void HTMLEmbedElement::detach()

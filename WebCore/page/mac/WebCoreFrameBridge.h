@@ -264,13 +264,12 @@ typedef enum ObjectElementType {
 
 - (void)setNeedsReapplyStyles;
 
-- (NSView *)viewForPluginWithFrame:(NSRect)frame
-                               URL:(NSURL *)URL
-                    attributeNames:(NSArray *)attributeNames
-                   attributeValues:(NSArray *)attributeValues
-                          MIMEType:(NSString *)MIMEType
-                        DOMElement:(DOMElement *)element
-                      loadManually:(BOOL)loadManually;
+- (NSView *)viewForPluginWithURL:(NSURL *)URL
+                  attributeNames:(NSArray *)attributeNames
+                 attributeValues:(NSArray *)attributeValues
+                        MIMEType:(NSString *)MIMEType
+                      DOMElement:(DOMElement *)element
+                    loadManually:(BOOL)loadManually;
 - (NSView *)viewForJavaAppletWithFrame:(NSRect)frame
                         attributeNames:(NSArray *)attributeNames
                        attributeValues:(NSArray *)attributeValues

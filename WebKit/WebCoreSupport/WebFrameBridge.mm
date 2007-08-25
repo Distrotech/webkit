@@ -432,13 +432,12 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
     return nil;
 }
 
-- (NSView *)viewForPluginWithFrame:(NSRect)frame
-                               URL:(NSURL *)URL
-                    attributeNames:(NSArray *)attributeNames
-                   attributeValues:(NSArray *)attributeValues
-                          MIMEType:(NSString *)MIMEType
-                        DOMElement:(DOMElement *)element
-                      loadManually:(BOOL)loadManually
+- (NSView *)viewForPluginWithURL:(NSURL *)URL
+                  attributeNames:(NSArray *)attributeNames
+                 attributeValues:(NSArray *)attributeValues
+                        MIMEType:(NSString *)MIMEType
+                      DOMElement:(DOMElement *)element
+                    loadManually:(BOOL)loadManually
 {
     ASSERT([attributeNames count] == [attributeValues count]);
 
@@ -492,7 +491,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
         }
 #ifndef __LP64__
         else if ([pluginPackage isKindOfClass:[WebNetscapePluginPackage class]]) {
-            WebNetscapePluginEmbeddedView *embeddedView = [[[WebNetscapePluginEmbeddedView alloc] initWithFrame:frame
+            WebNetscapePluginEmbeddedView *embeddedView = [[[WebNetscapePluginEmbeddedView alloc] initWithFrame:NSZeroRect
                                                            pluginPackage:(WebNetscapePluginPackage *)pluginPackage
                                                                      URL:URL
                                                                  baseURL:baseURL
@@ -518,7 +517,7 @@ NSString *WebPluginContainerKey =   @"WebPluginContainer";
                                                      pluginPageURL:pluginPageURL
                                                         pluginName:[pluginPackage name]
                                                           MIMEType:MIMEType];
-        WebNullPluginView *nullView = [[[WebNullPluginView alloc] initWithFrame:frame error:error DOMElement:element] autorelease];
+        WebNullPluginView *nullView = [[[WebNullPluginView alloc] initWithFrame:NSZeroRect error:error DOMElement:element] autorelease];
         view = nullView;
         [error release];
     }

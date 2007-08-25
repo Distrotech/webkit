@@ -121,7 +121,7 @@ void HTMLIFrameElement::attach()
     HTMLFrameElementBase::attach();
 
     if (RenderPartObject* renderPartObject = static_cast<RenderPartObject*>(renderer()))
-        renderPartObject->updateWidget(false);
+        renderPartObject->updateWidget();
 }
 
 bool HTMLIFrameElement::isURLAttribute(Attribute* attr) const

@@ -36,7 +36,7 @@ public:
     virtual const char* renderName() const { return "RenderPartObject"; }
 
     virtual void layout();
-    void updateWidget(bool onlyCreateNonPlugins);
+    virtual void updateWidget();
 
     virtual void viewCleared();
 };
