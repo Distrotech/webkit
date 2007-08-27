@@ -114,7 +114,7 @@ SVGChar* SVGInlineTextBox::closestCharacterToPosition(int x, int y, int& offset)
     // Iterate through the characters, respecting their individual placement
     // Find the character within the chunk with the smallest diagonal distance
     // to the current position. Check whether the passed x value hits that character.
-    Vector<SVGChar>::iterator character;
+    Vector<SVGChar>::iterator character = 0;
     float distance = FLT_MAX;
 
     RenderStyle* style = textObject()->style();
@@ -142,7 +142,7 @@ SVGChar* SVGInlineTextBox::closestCharacterToPosition(int x, int y, int& offset)
                 continue;
             }
 
-            Vector<SVGChar>::iterator closestCharacter;
+            Vector<SVGChar>::iterator closestCharacter = 0;
             unsigned int closestOffset = UINT_MAX;
 
             // Walk chunk finding closest character
