@@ -53,6 +53,7 @@ void FontData::platformInit()
     m_lineSpacing = static_cast<int>(font_extents.height);
     cairo_scaled_font_text_extents(m_font.m_scaledFont, "x", &text_extents);
     m_xHeight = text_extents.height;
+    m_unitsPerEm = 1; // FIXME!
     cairo_scaled_font_text_extents(m_font.m_scaledFont, " ", &text_extents);
     m_spaceWidth =  static_cast<int>(text_extents.x_advance);
     assert(m_spaceWidth != 0);

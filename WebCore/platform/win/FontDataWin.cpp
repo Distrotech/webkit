@@ -59,6 +59,7 @@ void FontData::platformInit()
     m_ascent = lroundf(tm.tmAscent * metricsMultiplier);
     m_descent = lroundf(tm.tmDescent * metricsMultiplier);
     m_xHeight = m_ascent * 0.56f;  // Best guess for xHeight for non-Truetype fonts.
+    m_unitsPerEm = 1; // FIXME!
     m_lineGap = lroundf(tm.tmExternalLeading * metricsMultiplier);
     m_lineSpacing = m_ascent + m_descent + m_lineGap;
 

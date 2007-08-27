@@ -52,6 +52,7 @@ void FontData::platformInit()
     m_lineSpacing = metrics.lineSpacing();
     m_lineGap = metrics.leading();
     m_xHeight = metrics.xHeight();
+    m_unitsPerEm = 1; // FIXME!
 }
 
 void FontData::platformDestroy()
