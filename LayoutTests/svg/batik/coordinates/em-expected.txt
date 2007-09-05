@@ -2,10 +2,10 @@ layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
 layer at (0,0) size 450x500
   RenderSVGRoot {svg} at (20,36) size 300x301
-    RenderSVGContainer {g} at (225,36) size 90x18
-      RenderSVGText {text} at (225,50) size 90x18 contains 1 chunk(s)
-        RenderSVGInlineText {#text} at (0,-14) size 90x18
-          chunk 1 text run 1 at (225.00,50.00) startOffset 0 endOffset 15 width 90.00: "Test 'em' units"
+    RenderSVGContainer {g} at (174,36) size 102x17
+      RenderSVGText {text} at (174,50) size 102x17 contains 1 chunk(s)
+        RenderSVGInlineText {#text} at (0,-14) size 102x17
+          chunk 1 (middle anchor) text run 1 at (174.50,50.00) startOffset 0 endOffset 15 width 101.00: "Test 'em' units"
     RenderSVGContainer {g} at (20,79.50) size 300x257.50 [transform={m=((1.00,0.00)(0.00,1.00)) t=(20.00,0.00)}]
       RenderPath {line} at (20,79.50) size 300x1 [stroke={[type=SOLID] [color=#000000]}] [data="M0.00,80.00L300.00,80.00"]
       RenderSVGText {text} at (0,94) size 51x14 contains 1 chunk(s)

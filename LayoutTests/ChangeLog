@@ -1,3 +1,33 @@
+2007-09-06  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Reviewed by Anders.
+
+        Fix paths to css style sheets in the last added files. Enable smallFonts.svg as it doesn't crash anymore.    
+        Fix paths to external <use> element reference, to make Batik happy. (We don't support it, yet.)
+
+        * svg/batik/coordinates/em-expected.checksum:
+        * svg/batik/coordinates/em-expected.png:
+        * svg/batik/coordinates/em-expected.txt:
+        * svg/batik/coordinates/em.svg:
+        * svg/batik/coordinates/percentagesAndUnits-expected.checksum:
+        * svg/batik/coordinates/percentagesAndUnits-expected.png:
+        * svg/batik/coordinates/percentagesAndUnits-expected.txt:
+        * svg/batik/coordinates/percentagesAndUnits.svg:
+        * svg/batik/filters/filterRegions-expected.checksum:
+        * svg/batik/filters/filterRegions-expected.png:
+        * svg/batik/filters/filterRegions-expected.txt:
+        * svg/batik/filters/filterRegions.svg:
+        * svg/batik/masking/maskRegions-expected.checksum:
+        * svg/batik/masking/maskRegions-expected.png:
+        * svg/batik/masking/maskRegions-expected.txt:
+        * svg/batik/masking/maskRegions.svg:
+        * svg/batik/text/smallFonts-expected.checksum: Added.
+        * svg/batik/text/smallFonts-expected.png: Added.
+        * svg/batik/text/smallFonts-expected.txt: Added.
+        * svg/batik/text/smallFonts.svg: Added.
+        * svg/batik/text/smallFonts.svg-disabled: Removed.
+        * svg/batik/text/textDecoration.svg-disabled:
+
 2007-09-05  Nikolas Zimmermann  <zimmermann@kde.org>
 
         Reviewed by Oliver.
