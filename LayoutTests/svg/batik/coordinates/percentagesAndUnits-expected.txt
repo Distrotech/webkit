@@ -1,0 +1,94 @@
+KRenderingPaintServer {id="svgPattern" [type=PATTERN] [bbox=at (0,0) size 1x1]}
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 450x500
+  RenderSVGRoot {svg} at (0,0) size 395.50x390.50
+    RenderSVGContainer {g} at (0,0) size 395.50x390.50
+      RenderSVGText {text} at (225,50) size 166x18 contains 1 chunk(s)
+        RenderSVGInlineText {#text} at (0,-14) size 166x18
+          chunk 1 text run 1 at (225.00,50.00) startOffset 0 endOffset 26 width 166.00: "Test percentages and units"
+      RenderSVGHiddenContainer {defs} at (0,0) size 0x0
+        RenderSVGContainer {pattern} at (0,0) size 10x10
+          RenderSVGContainer {g} at (0,0) size 10x10
+            RenderPath {rect} at (0,0) size 5x5 [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L5.00,0.00L5.00,5.00L0.00,5.00"]
+            RenderPath {rect} at (5,5) size 5x5 [fill={[type=SOLID] [color=#EEEEEE]}] [data="M5.00,5.00L10.00,5.00L10.00,10.00L5.00,10.00"]
+      RenderSVGContainer {g} at (174.50,99.50) size 101x131 [transform={m=((1.00,0.00)(0.00,1.00)) t=(175.00,100.00)}]
+        RenderSVGContainer {g} at (185,130.00) size 79.86x80.00 [transform={m=((1.00,0.00)(0.00,1.00)) t=(10.00,20.00)}]
+          RenderPath {rect} at (185,130) size 20x80 [fill={[type=SOLID] [color=#FFD700]}] [data="M0.00,10.00L20.00,10.00L20.00,90.00L0.00,90.00"]
+          RenderPath {rect} at (214.97,130) size 19.98x80 [fill={[type=SOLID] [color=#FFA500]}] [data="M29.97,10.00L49.95,10.00L49.95,90.00L29.97,90.00"]
+          RenderPath {rect} at (244.98,130.00) size 19.88x79.97 [fill={[type=SOLID] [color=#DC143C]}] [data="M59.98,10.00L79.86,10.00L79.86,89.97L59.98,89.97"]
+        RenderSVGText {text} at (15,120) size 10x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 10x13
+            chunk 1 (middle anchor) text run 1 at (15.00,120.00) startOffset 0 endOffset 2 width 10.00: "px"
+        RenderSVGText {text} at (46,120) size 8x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 8x13
+            chunk 1 (middle anchor) text run 1 at (46.00,120.00) startOffset 0 endOffset 1 width 8.00: "%"
+        RenderSVGText {text} at (72,120) size 16x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 16x13
+            chunk 1 (middle anchor) text run 1 at (72.00,120.00) startOffset 0 endOffset 2 width 16.00: "mm"
+        RenderPath {rect} at (174.50,99.50) size 101x21 [stroke={[type=SOLID] [color=#000000]}] [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L100.00,0.00L100.00,20.00L0.00,20.00"]
+        RenderPath {rect} at (174.50,119.50) size 101x111 [stroke={[type=SOLID] [color=#000000]}] [data="M0.00,20.00L100.00,20.00L100.00,130.00L0.00,130.00"]
+        RenderSVGText {text} at (31,14) size 38x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 38x13
+            chunk 1 (middle anchor) text run 1 at (31.00,14.00) startOffset 0 endOffset 8 width 38.00: "TopLevel"
+      RenderSVGViewportContainer {svg} at (55,280) size 100x110
+        RenderPath {rect} at (55,280) size 100x110 [fill={[type=PATTERN] [bbox=at (0,0) size 1x1]}] [data="M0.00,0.00L100.00,0.00L100.00,110.00L0.00,110.00"]
+        RenderPath {rect} at (65,290) size 20x80 [fill={[type=SOLID] [color=#FFD700]}] [data="M10.00,10.00L30.00,10.00L30.00,90.00L10.00,90.00"]
+        RenderPath {rect} at (95,290.00) size 20x79.99 [fill={[type=SOLID] [color=#FFA500]}] [data="M40.00,10.00L60.00,10.00L60.00,89.99L40.00,89.99"]
+        RenderPath {rect} at (124.96,289.98) size 19.99x79.97 [fill={[type=SOLID] [color=#DC143C]}] [data="M69.96,9.98L89.95,9.98L89.95,89.95L69.96,89.95"]
+      RenderSVGContainer {g} at (54.50,259.50) size 101x131 [transform={m=((1.00,0.00)(0.00,1.00)) t=(55.00,260.00)}]
+        RenderSVGText {text} at (15,120) size 10x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 10x13
+            chunk 1 (middle anchor) text run 1 at (15.00,120.00) startOffset 0 endOffset 2 width 10.00: "px"
+        RenderSVGText {text} at (46,120) size 8x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 8x13
+            chunk 1 (middle anchor) text run 1 at (46.00,120.00) startOffset 0 endOffset 1 width 8.00: "%"
+        RenderSVGText {text} at (72,120) size 16x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 16x13
+            chunk 1 (middle anchor) text run 1 at (72.00,120.00) startOffset 0 endOffset 2 width 16.00: "mm"
+        RenderPath {rect} at (54.50,259.50) size 101x21 [stroke={[type=SOLID] [color=#000000]}] [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L100.00,0.00L100.00,20.00L0.00,20.00"]
+        RenderPath {rect} at (54.50,279.50) size 101x111 [stroke={[type=SOLID] [color=#000000]}] [data="M0.00,20.00L100.00,20.00L100.00,130.00L0.00,130.00"]
+        RenderSVGText {text} at (19,14) size 62x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 62x13
+            chunk 1 (middle anchor) text run 1 at (19.50,14.00) startOffset 0 endOffset 14 width 61.00: "Viewport in px"
+      RenderSVGViewportContainer {svg} at (174.96,280) size 99.99x110
+        RenderPath {rect} at (174.96,280) size 99.99x110 [fill={[type=PATTERN] [bbox=at (0,0) size 1x1]}] [data="M0.00,0.00L99.99,0.00L99.99,110.00L0.00,110.00"]
+        RenderPath {rect} at (184.96,290) size 20x80 [fill={[type=SOLID] [color=#FFD700]}] [data="M10.00,10.00L30.00,10.00L30.00,90.00L10.00,90.00"]
+        RenderPath {rect} at (214.96,290.00) size 20.00x79.99 [fill={[type=SOLID] [color=#FFA500]}] [data="M40.00,10.00L59.99,10.00L59.99,89.99L40.00,89.99"]
+        RenderPath {rect} at (244.92,289.98) size 19.99x79.97 [fill={[type=SOLID] [color=#DC143C]}] [data="M69.96,9.98L89.95,9.98L89.95,89.95L69.96,89.95"]
+      RenderSVGContainer {g} at (174.50,259.50) size 101x131 [transform={m=((1.00,0.00)(0.00,1.00)) t=(175.00,260.00)}]
+        RenderSVGText {text} at (15,120) size 10x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 10x13
+            chunk 1 (middle anchor) text run 1 at (15.00,120.00) startOffset 0 endOffset 2 width 10.00: "px"
+        RenderSVGText {text} at (46,120) size 8x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 8x13
+            chunk 1 (middle anchor) text run 1 at (46.00,120.00) startOffset 0 endOffset 1 width 8.00: "%"
+        RenderSVGText {text} at (72,120) size 16x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 16x13
+            chunk 1 (middle anchor) text run 1 at (72.00,120.00) startOffset 0 endOffset 2 width 16.00: "mm"
+        RenderPath {rect} at (174.50,259.50) size 101x21 [stroke={[type=SOLID] [color=#000000]}] [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L100.00,0.00L100.00,20.00L0.00,20.00"]
+        RenderPath {rect} at (174.50,279.50) size 101x111 [stroke={[type=SOLID] [color=#000000]}] [data="M0.00,20.00L100.00,20.00L100.00,130.00L0.00,130.00"]
+        RenderSVGText {text} at (20,14) size 60x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 60x13
+            chunk 1 (middle anchor) text run 1 at (20.50,14.00) startOffset 0 endOffset 13 width 59.00: "Viewport in %"
+      RenderSVGViewportContainer {svg} at (294.88,279.91) size 99.97x109.95
+        RenderPath {rect} at (294.88,279.91) size 99.97x109.95 [fill={[type=PATTERN] [bbox=at (0,0) size 1x1]}] [data="M0.00,0.00L99.97,0.00L99.97,109.95L0.00,109.95"]
+        RenderPath {rect} at (304.88,289.91) size 20x80 [fill={[type=SOLID] [color=#FFD700]}] [data="M10.00,10.00L30.00,10.00L30.00,90.00L10.00,90.00"]
+        RenderPath {rect} at (334.87,289.91) size 19.99x79.95 [fill={[type=SOLID] [color=#FFA500]}] [data="M39.99,9.99L59.98,9.99L59.98,89.95L39.99,89.95"]
+        RenderPath {rect} at (364.84,289.89) size 19.99x79.97 [fill={[type=SOLID] [color=#DC143C]}] [data="M69.96,9.98L89.95,9.98L89.95,89.95L69.96,89.95"]
+      RenderSVGContainer {g} at (294.50,259.50) size 101x131 [transform={m=((1.00,0.00)(0.00,1.00)) t=(295.00,260.00)}]
+        RenderSVGText {text} at (15,120) size 10x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 10x13
+            chunk 1 (middle anchor) text run 1 at (15.00,120.00) startOffset 0 endOffset 2 width 10.00: "px"
+        RenderSVGText {text} at (46,120) size 8x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 8x13
+            chunk 1 (middle anchor) text run 1 at (46.00,120.00) startOffset 0 endOffset 1 width 8.00: "%"
+        RenderSVGText {text} at (72,120) size 16x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 16x13
+            chunk 1 (middle anchor) text run 1 at (72.00,120.00) startOffset 0 endOffset 2 width 16.00: "mm"
+        RenderPath {rect} at (294.50,259.50) size 101x21 [stroke={[type=SOLID] [color=#000000]}] [fill={[type=SOLID] [color=#EEEEEE]}] [data="M0.00,0.00L100.00,0.00L100.00,20.00L0.00,20.00"]
+        RenderPath {rect} at (294.50,279.50) size 101x111 [stroke={[type=SOLID] [color=#000000]}] [data="M0.00,20.00L100.00,20.00L100.00,130.00L0.00,130.00"]
+        RenderSVGText {text} at (16,14) size 68x13 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 68x13
+            chunk 1 (middle anchor) text run 1 at (16.50,14.00) startOffset 0 endOffset 14 width 67.00: "Viewport in mm"
+    RenderSVGContainer {use} at (0,0) size 0x0
