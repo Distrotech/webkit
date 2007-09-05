@@ -28,17 +28,13 @@
 #if ENABLE(SVG)
 #include "RenderSVGText.h"
 
-#include "GraphicsContext.h"
 #include "PointerEventsHitRules.h"
 #include "RenderSVGRoot.h"
-#include "SVGLength.h"
 #include "SVGLengthList.h"
-#include "SVGURIReference.h"
 #include "SVGResourceFilter.h"
 #include "SVGRootInlineBox.h"
 #include "SVGTextElement.h"
-
-#include <wtf/OwnPtr.h>
+#include "SVGURIReference.h"
 
 namespace WebCore {
 
