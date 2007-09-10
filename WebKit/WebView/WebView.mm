@@ -1685,10 +1685,6 @@ NSMutableDictionary *countInvocations;
 #endif
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationWillTerminate) name:NSApplicationWillTerminateNotification object:NSApp];
-
-    // Older versions of Safari use the pasteboard types without initializing them.
-    // But they create a WebView beforehand, so if we initialize here that should be fine.
-    WebURLPasteboardType();
 }
 
 + (void)_applicationWillTerminate
@@ -1802,7 +1798,7 @@ NSMutableDictionary *countInvocations;
 
 + (NSString *)URLTitleFromPasteboard:(NSPasteboard *)pasteboard
 {
-    return [pasteboard stringForType:WebURLNamePasteboardType()];
+    return [pasteboard stringForType:WebURLNamePboardType];
 }
 
 + (void)registerURLSchemeAsLocal:(NSString *)protocol
