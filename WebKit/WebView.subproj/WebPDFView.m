@@ -204,7 +204,14 @@ static void applicationInfoForMIMEType(NSString *type, NSString **name, NSImage 
     
     if (opath) {
         if (!written) {
-            [[dataSource data] writeToFile:opath atomically:YES];
+            // Create a PDF file with the minimal permissions (only accessible to the current user, see 4145714)
+            NSNumber *permissions = [[NSNumber alloc] initWithInteger:S_IRUSR];
+            NSDictionary *fileAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:permissions, NSFilePosixPermissions, nil];
+            [permissions release];
+            
+            [[NSFileManager defaultManager] createFileAtPath:opath contents:[dataSource data] attributes:fileAttributes];
+            
+            [fileAttributes release];
             written = YES;
         }
     

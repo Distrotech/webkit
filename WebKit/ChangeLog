@@ -1,3 +1,20 @@
+2007-09-13  Mark Rowe  <mrowe@apple.com>
+
+        Merge r18562 from trunk to Safari-2.0-dashboard.
+
+    2007-01-03  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Kevin Decker
+
+        - fixed <rdar://problem/4145714> WebKit's PDFView's "Open in Preview" puts the 
+          PDF in /tmp, both group and world-readable
+
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView _openWithFinder:]):
+        Make the file only readable by the current user
+
+=== WebKit-419.2 ===
+
 2007-07-09  Mark Rowe  <mrowe@apple.com>
 
         Merge r23963 from ToT to Safari-2.0-dashboard.
