@@ -1,3 +1,22 @@
+2007-09-13  Mark Rowe  <mrowe@apple.com>
+
+        Merge r24181 from trunk to Safari-2.0-dashboard.
+
+    2007-07-10  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoff.
+
+        Fix for <rdar://problem/5326791> XSS vulnerability: ability to set window.defaultStatus,
+        window.defaultstatus and window.status cross domains
+
+        Test: http/tests/security/cross-frame-access-put.html
+
+        * bindings/js/kjs_window.cpp:
+        (KJS::Window::put): Adds isSafeScript check for defaultStatus,
+        defaultstatus and status cases.
+
+=== WebCore-419.2 ===
+
 2007-07-09  Mark Rowe  <mrowe@apple.com>
 
         Merge r23529 from ToT to Safari-2.0-dashboard.

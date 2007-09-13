@@ -1184,13 +1184,17 @@ void Window::put(ExecState* exec, const Identifier &propertyName, const Value &v
 #endif
     switch( entry->value ) {
     case Status: {
-      String s = value.toString(exec);
-      m_part->setJSStatusBarText(s.value().qstring());
+      if (isSafeScript(exec)) {
+          String s = value.toString(exec);
+          m_part->setJSStatusBarText(s.value().qstring());
+      }
       return;
     }
     case DefaultStatus: {
-      String s = value.toString(exec);
-      m_part->setJSDefaultStatusBarText(s.value().qstring());
+      if (isSafeScript(exec)) {
+          String s = value.toString(exec);
+          m_part->setJSDefaultStatusBarText(s.value().qstring());
+      }
       return;
     }
     case _Location: {
