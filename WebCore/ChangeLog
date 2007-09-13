@@ -1,5 +1,21 @@
 2007-09-13  Mark Rowe  <mrowe@apple.com>
 
+        Merge r12652 from trunk to Safari-2.0-dashboard.
+
+    2006-02-07  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Maciej.
+
+        - Fixed <rdar://problem/3727939> Safari strips \0 characters from HTML tags making them valid 
+
+        Test: fast/encoding/decoder-allow-null-chars.html
+
+        * kwq/KWQTextCodec.cpp:
+        (KWQTextDecoder::convertLatin1): Removed stripping of null characters
+        (unwanted): ditto.
+
+2007-09-13  Mark Rowe  <mrowe@apple.com>
+
         Merge r24181 from trunk to Safari-2.0-dashboard.
 
     2007-07-10  Sam Weinig  <sam@webkit.org>

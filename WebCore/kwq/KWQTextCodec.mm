@@ -241,35 +241,7 @@ QString KWQTextDecoder::convertLatin1(const unsigned char *s, int length)
 {
     ASSERT(_numBufferedBytes == 0);
 
-    int i;
-    for (i = 0; i != length; ++i) {
-        if (s[i] == 0) {
-            break;
-        }
-    }
-    if (i == length) {
-        return QString(reinterpret_cast<const char *>(s), length);
-    }
-
-    QString result("");
-    
-    result.reserve(length);
-    
-    result.append(reinterpret_cast<const char *>(s), i);
-    int start = ++i;
-    for (; i != length; ++i) {
-        if (s[i] == 0) {
-            if (start != i) {
-                result.append(reinterpret_cast<const char *>(&s[start]), i - start);
-            }
-            start = i + 1;
-        }
-    }
-    if (start != length) {
-        result.append(reinterpret_cast<const char *>(&s[start]), length - start);
-    }
-
-    return result;
+    return QString(reinterpret_cast<const char *>(s), length);
 }
 
 QString KWQTextDecoder::convertUTF16(const unsigned char *s, int length)
