@@ -368,6 +368,8 @@ DocumentImpl::DocumentImpl(DOMImplementationImpl *_implementation, KHTMLView *v)
 
     m_markers.setAutoDelete(true);
     
+    initSecurityPolicyURL();
+    
     static int docID = 0;
     m_docID = docID++;
 }
@@ -3620,6 +3622,37 @@ void DocumentImpl::removeRadioButtonGroup(DOMString name, HTMLFormElementImpl *f
             }
         }
     }
+}
+
+void DocumentImpl::initSecurityPolicyURL()
+{
+    if (!part())
+        return;
+    
+    KHTMLPart *p = part();
+    m_securityPolicyURL = p->URL();
+    
+    if (!m_securityPolicyURL.isEmpty() && !equalIgnoringCase(m_securityPolicyURL.protocol(), "about"))
+        return;
+    
+    KHTMLPart *openerPart = 0;
+    
+    if (p->parentPart()) {
+        openerPart = p;
+        while (openerPart->parentPart())
+            openerPart = openerPart->parentPart();
+    } else if (p->opener()) {
+        openerPart = p->opener();
+    }
+    
+    if (!openerPart)
+        return;
+    
+    DocumentImpl *openerDocument = openerPart->xmlDocImpl();
+    if (!openerDocument)
+        return;
+    
+    m_securityPolicyURL = openerDocument->securityPolicyURL();    
 }
 
 #include "dom_docimpl.moc"

@@ -379,6 +379,7 @@ public:
   bool setCharset( const QString &, bool ) { return true; }
 
   KURL baseURL() const;
+  KURL URL() const;
   QString baseTarget() const;
 #endif
 
