@@ -1,3 +1,13 @@
+2007-09-22  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by NOBODY (Build fix).
+
+        * platform/graphics/svg/cg/SVGPaintServerGradientCg.cpp:
+        (WebCore::SVGPaintServerGradient::teardown):
+        (WebCore::SVGPaintServerGradient::renderPath):
+        * rendering/SVGRootInlineBox.cpp:
+        (WebCore::SVGRootInlineBoxPaintWalker::chunkPortionCallback):
+
 2007-09-09  Nikolas Zimmermann  <zimmermann@kde.org>
 
         Reviewed by Oliver.

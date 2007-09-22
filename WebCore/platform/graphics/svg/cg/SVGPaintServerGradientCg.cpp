@@ -177,13 +177,6 @@ void SVGPaintServerGradient::teardown(GraphicsContext*& context, const RenderObj
     CGContextRef contextRef = context->platformContext();
     ASSERT(contextRef);
 
-    RenderStyle* style = object->style();
-
-    bool isFilled = (type & ApplyToFillTargetType) && style->svgStyle()->hasFill();
-    bool isStroked = (type & ApplyToStrokeTargetType) && style->svgStyle()->hasStroke();
-
-    ASSERT(isFilled && !isStroked || !isFilled && isStroked);
-
     // As renderPath() is not used when painting text, special logic needed here.
     if (isPaintingText) {
         if (m_savedContext) {
@@ -222,9 +215,6 @@ void SVGPaintServerGradient::renderPath(GraphicsContext*& context, const RenderO
     ASSERT(contextRef);
 
     bool isFilled = (type & ApplyToFillTargetType) && style->svgStyle()->hasFill();
-    bool isStroked = (type & ApplyToStrokeTargetType) && style->svgStyle()->hasStroke();
-
-    ASSERT(isFilled && !isStroked || !isFilled && isStroked);
 
     // Compute destination object bounding box
     FloatRect objectBBox;
