@@ -34,7 +34,6 @@
 #include "SVGPaintServer.h"
 #include "SVGRootInlineBox.h"
 #include "TextStyle.h"
-#endif
 
 using std::max;
 
@@ -522,3 +521,5 @@ void SVGInlineTextBox::paintDecoration(ETextDecoration decoration, GraphicsConte
 }
 
 } // namespace WebCore
+
+#endif

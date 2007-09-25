@@ -543,6 +543,7 @@ all : \
     ksvgcssproperties.h \
     ksvgcssvalues.h \
     tokenizer.cpp \
+    WebCore.exp \
 #
 
 # CSS property names and value keywords
@@ -652,6 +653,12 @@ ksvgcssvalues.h : ksvg2/scripts/cssmakevalues css/CSSValueKeywords.in ksvg2/css/
 	perl -ne 'print lc' $(WebCore)/ksvg2/css/CSSValueKeywords.in > ksvgcssvalues.in
 	$(WebCore)/ksvg2/scripts/cssmakevalues -n SVG -f ksvgcssvalues.in
 
+
+# Add SVG Symbols to the WebCore exported symbols file
+
+WebCore.exp : WebCore.base.exp WebCore.SVG.exp
+	cat $(WebCore)/WebCore.base.exp $(WebCore)/WebCore.SVG.exp > WebCore.exp
+
 else
 
 SVGElementFactory.cpp :
@@ -668,6 +675,9 @@ ksvgcssproperties.h :
 
 ksvgcssvalues.h :
 	echo > ksvgcssvalues.h
+
+WebCore.exp : WebCore.base.exp
+	cp $(WebCore)/WebCore.base.exp WebCore.exp
 
 endif
 

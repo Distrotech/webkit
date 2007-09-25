@@ -791,7 +791,7 @@
 		854949120AC858D8008AB035 /* DOMSVGElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 854949100AC858D8008AB035 /* DOMSVGElement.h */; };
 		854949130AC858D8008AB035 /* DOMSVGElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 854949110AC858D8008AB035 /* DOMSVGElement.mm */; };
 		854949170AC85950008AB035 /* DOMSVGElementInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 854949160AC85950008AB035 /* DOMSVGElementInternal.h */; };
-		8549492F0AC85A32008AB035 /* DOMSVGExecption.h in Headers */ = {isa = PBXBuildFile; fileRef = 8549492E0AC85A32008AB035 /* DOMSVGExecption.h */; };
+		8549492F0AC85A32008AB035 /* DOMSVGException.h in Headers */ = {isa = PBXBuildFile; fileRef = 8549492E0AC85A32008AB035 /* DOMSVGException.h */; };
 		854949690AC87613008AB035 /* SVGException.h in Headers */ = {isa = PBXBuildFile; fileRef = 854949680AC87613008AB035 /* SVGException.h */; };
 		854FE7300A2297BE0058D7AD /* NodeFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 854FE7260A2297BE0058D7AD /* NodeFilter.cpp */; };
 		854FE7310A2297BE0058D7AD /* NodeFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 854FE7270A2297BE0058D7AD /* NodeFilter.h */; };
@@ -961,7 +961,7 @@
 		859D62EE0AD8892700012995 /* DOMSVGUseElementInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 859D62D90AD8892700012995 /* DOMSVGUseElementInternal.h */; };
 		859D62EF0AD8892700012995 /* DOMSVGViewElementInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 859D62DA0AD8892700012995 /* DOMSVGViewElementInternal.h */; };
 		859D62F00AD8892700012995 /* DOMSVGZoomEventInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 859D62DB0AD8892700012995 /* DOMSVGZoomEventInternal.h */; };
-		85A0F97E0AC7163D00161FDC /* DOMSVG.h in Headers */ = {isa = PBXBuildFile; fileRef = 85A0F97D0AC7163D00161FDC /* DOMSVG.h */; };
+		85A0F97E0AC7163D00161FDC /* DOMSVG.h in Headers */ = {isa = PBXBuildFile; fileRef = 85A0F97D0AC7163D00161FDC /* DOMSVG.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		85A795BA0AD754A30006B9D8 /* DOMRangePrivate.h in Copy Generated Headers */ = {isa = PBXBuildFile; fileRef = 85C320780AD7401500BC15C4 /* DOMRangePrivate.h */; };
 		85ACA9860A9B520300671E90 /* DOMCharacterData.h in Headers */ = {isa = PBXBuildFile; fileRef = 85ACA9840A9B520300671E90 /* DOMCharacterData.h */; settings = {ATTRIBUTES = (); }; };
 		85ACA9870A9B520300671E90 /* DOMCharacterData.mm in Sources */ = {isa = PBXBuildFile; fileRef = 85ACA9850A9B520300671E90 /* DOMCharacterData.mm */; };
@@ -3983,7 +3983,7 @@
 		854949100AC858D8008AB035 /* DOMSVGElement.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = DOMSVGElement.h; sourceTree = "<group>"; };
 		854949110AC858D8008AB035 /* DOMSVGElement.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = DOMSVGElement.mm; sourceTree = "<group>"; };
 		854949160AC85950008AB035 /* DOMSVGElementInternal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = DOMSVGElementInternal.h; sourceTree = "<group>"; };
-		8549492E0AC85A32008AB035 /* DOMSVGExecption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMSVGExecption.h; sourceTree = "<group>"; };
+		8549492E0AC85A32008AB035 /* DOMSVGException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMSVGException.h; sourceTree = "<group>"; };
 		854949680AC87613008AB035 /* SVGException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVGException.h; sourceTree = "<group>"; };
 		854FE7260A2297BE0058D7AD /* NodeFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = NodeFilter.cpp; sourceTree = "<group>"; };
 		854FE7270A2297BE0058D7AD /* NodeFilter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = NodeFilter.h; sourceTree = "<group>"; };
@@ -6286,7 +6286,7 @@
 		F58786B302DE3B8601EA4122 /* RegularExpression.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = RegularExpression.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
 		F58786BF02DE3B8601EA4122 /* TextStream.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = TextStream.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
 		F58786C202DE3B8601EA4122 /* DeprecatedValueList.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = DeprecatedValueList.h; sourceTree = "<group>"; tabWidth = 8; usesTabs = 0; };
-		F58EF58E02DFDFB7018635CA /* WebCore.exp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.exports; path = WebCore.exp; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
+		F58EF58E02DFDFB7018635CA /* WebCore.base.exp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.exports; path = WebCore.base.exp; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
 		F5C2869302846DCD018635CA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		F5C2869402846DCD018635CA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		F5C2869502846DCD018635CA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -6334,7 +6334,7 @@
 				EDEC98020AED7E170059137F /* WebCorePrefix.h */,
 				9307061309E0CA8200B17FE4 /* DerivedSources.make */,
 				93F19B1908245E59001E9ABC /* Info.plist */,
-				F58EF58E02DFDFB7018635CA /* WebCore.exp */,
+				F58EF58E02DFDFB7018635CA /* WebCore.base.exp */,
 				BC1A3790097C6F970019F3D8 /* bindings */,
 				65BF021F097480EF00C43196 /* bridge */,
 				F523D18402DE42E8018635CA /* css */,
@@ -7221,7 +7221,7 @@
 				85C78A670ABDE1B40044FC16 /* DOMException.h */,
 				851EE8100ABCA39600A6AA33 /* DOMEventException.h */,
 				851EE8200ABCA58100A6AA33 /* DOMRangeException.h */,
-				8549492E0AC85A32008AB035 /* DOMSVGExecption.h */,
+				8549492E0AC85A32008AB035 /* DOMSVGException.h */,
 				858015CD0ABCA75D0080588D /* DOMXPathException.h */,
 			);
 			name = DOMExceptions;
@@ -10974,7 +10974,7 @@
 				8541639E0AC718680001E01B /* DOMSVGAngleInternal.h in Headers */,
 				854949120AC858D8008AB035 /* DOMSVGElement.h in Headers */,
 				854949170AC85950008AB035 /* DOMSVGElementInternal.h in Headers */,
-				8549492F0AC85A32008AB035 /* DOMSVGExecption.h in Headers */,
+				8549492F0AC85A32008AB035 /* DOMSVGException.h in Headers */,
 				854949690AC87613008AB035 /* SVGException.h in Headers */,
 				8559F1140AC9BE9900A3439C /* DOMSVGAnimatedNumber.h in Headers */,
 				8559F1160AC9BE9900A3439C /* DOMSVGMetadataElement.h in Headers */,
@@ -11603,7 +11603,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/WebCore.exp",
+				"$(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/WebCore.exp",
 				"$(SRCROOT)/WebCore.LP64.exp",
 			);
 			name = "Generate 64-bit Export File";
@@ -11612,7 +11612,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "sed -e s/7_NSRect/6CGRect/ -e s/7_NSSize/6CGSize/ -e s/8_NSPoint/7CGPoint/ \"${SRCROOT}/WebCore.exp\" > \"${BUILT_PRODUCTS_DIR}/DerivedSources/WebCore/WebCore.LP64.exp\"\ncat \"${SRCROOT}/WebCore.LP64.exp\" >> \"${BUILT_PRODUCTS_DIR}/DerivedSources/WebCore/WebCore.LP64.exp\"\n";
+			shellScript = "sed -e s/7_NSRect/6CGRect/ -e s/7_NSSize/6CGSize/ -e s/8_NSPoint/7CGPoint/ \"${BUILT_PRODUCTS_DIR}/DerivedSources/WebCore/WebCore.exp\" > \"${BUILT_PRODUCTS_DIR}/DerivedSources/WebCore/WebCore.LP64.exp\"\ncat \"${SRCROOT}/WebCore.LP64.exp\" >> \"${BUILT_PRODUCTS_DIR}/DerivedSources/WebCore/WebCore.LP64.exp\"\n";
 		};
 		939D050109D9FF6B00984996 /* Check For Global Initializers */ = {
 			isa = PBXShellScriptBuildPhase;

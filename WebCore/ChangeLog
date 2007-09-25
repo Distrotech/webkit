@@ -1,5 +1,20 @@
 2007-09-25  Eric Seidel  <eric@webkit.org>
 
+        Reviewed by Oliver Hunt.
+
+        http://bugs.webkit.org/show_bug.cgi?id=15281
+        This only affects Debug builds, and the ability to save SVGs as WebArchives
+        neither are testable via DumpRenderTree.
+
+        * Configurations/WebCore.xcconfig: change where Xcode looks for WebCore.exp
+        * DerivedSources.make: adds SVG symbols to WebCore.exp when necessary
+        * WebCore.SVG.exp: Added.
+        * WebCore.exp: moved to WebCore.base.exp
+        * WebCore.xcodeproj/project.pbxproj: updated to reflect moved files
+        * bindings/objc/DOMSVGExecption.h: moved to DOMSVGException.h
+
+2007-09-25  Eric Seidel  <eric@webkit.org>
+
         Reviewed by Rob Buis.
 
         Already tested by SVG/W3C-SVG-1.1/linking-a-07-t.svg

@@ -97,7 +97,9 @@ using KJS::JSValue;
 
 namespace WebCore {
 
+#if ENABLE(SVG)
 using namespace SVGNames;
+#endif
 using namespace HTMLNames;
 using namespace EventNames;
 
@@ -1379,6 +1381,7 @@ bool FrameLoader::gotoAnchor(const String& name)
     if (!anchorNode)
         anchorNode = m_frame->document()->anchors()->namedItem(name, !m_frame->document()->inCompatMode());
 
+#if ENABLE(SVG)
     if (m_frame->document()->isSVGDocument()) {
         if (name.startsWith("xpointer(")) {
             // We need to parse the xpointer reference here
@@ -1399,6 +1402,7 @@ bool FrameLoader::gotoAnchor(const String& name)
         // FIXME: need to decide which <svg> to focus on, and zoom to that one
         // FIXME: need to actually "highlight" the viewTarget(s)
     }
+#endif
 
     m_frame->document()->setCSSTarget(anchorNode); // Setting to null will clear the current target.
   
