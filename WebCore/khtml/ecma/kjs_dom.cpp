@@ -81,6 +81,23 @@ DEFINE_PROTOTYPE("DOMNode",DOMNodeProto)
 IMPLEMENT_PROTOFUNC(DOMNodeProtoFunc)
 IMPLEMENT_PROTOTYPE(DOMNodeProto,DOMNodeProtoFunc)
 
+static inline bool allowSettingSrcToJavascriptURL(ExecState* exec, DOM::Element element, QString name, QString value)
+{
+    DOM::Document doc(false);
+
+    if (equalIgnoringCase(element.tagName().string(), "iframe"))
+        doc = static_cast<DOM::HTMLIFrameElement>(element).contentDocument();
+    else if (equalIgnoringCase(element.tagName().string(), "frame"))
+        doc = static_cast<DOM::HTMLFrameElement>(element).contentDocument();
+    
+    if (!doc.isNull() && value.startsWith("javascript:", false)) {
+        if (!checkNodeSecurity(exec, doc))
+            return false;
+    }
+    
+    return true;
+} 
+
 const ClassInfo DOMNode::info = { "Node", 0, &DOMNodeTable, 0 };
 
 DOMNode::DOMNode(ExecState *exec, const DOM::Node &n)
@@ -835,8 +852,16 @@ void DOMAttr::putValue(ExecState *exec, int token, const Value& value, int /*att
 {
   switch (token) {
   case ValueProperty:
-    static_cast<DOM::Attr>(node).setValue(value.toString(exec).string());
-    return;
+  {
+      DOM::Attr attr = static_cast<DOM::Attr>(node);
+      DOM::Element ownerElement = attr.ownerElement();
+      
+      if (!ownerElement.isNull() && !allowSettingSrcToJavascriptURL(exec, ownerElement, attr.name().string(), value.toString(exec).qstring()))
+          return;
+      
+      attr.setValue(value.toString(exec).string());
+      return;
+  }
   default:
     kdWarning() << "DOMAttr::putValue unhandled token " << token << endl;
   }
@@ -1187,15 +1212,30 @@ Value DOMElementProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List 
       // return null and not "".
       return getStringOrNull(element.getAttribute(args[0].toString(exec).string()));
     case DOMElement::SetAttribute:
-      element.setAttribute(args[0].toString(exec).string(),args[1].toString(exec).string());
-      return Undefined();
+    {
+        QString name = args[0].toString(exec).qstring();
+        QString value = args[1].toString(exec).qstring();
+        
+        if (!allowSettingSrcToJavascriptURL(exec, element, name, value))
+            return Undefined();
+        
+        element.setAttribute(args[0].toString(exec).string(),args[1].toString(exec).string());
+        return Undefined();
+    }
     case DOMElement::RemoveAttribute:
       element.removeAttribute(args[0].toString(exec).string());
       return Undefined();
     case DOMElement::GetAttributeNode:
       return getDOMNode(exec,element.getAttributeNode(args[0].toString(exec).string()));
     case DOMElement::SetAttributeNode:
-      return getDOMNode(exec,element.setAttributeNode((new DOMNode(exec,KJS::toNode(args[0])))->toNode()));
+    {
+        DOM::Node node = KJS::toNode(args[0]);
+        
+        if (!node.isNull() && !allowSettingSrcToJavascriptURL(exec, element, node.nodeName().string(), node.nodeValue().string()))
+            return Undefined();
+        
+        return getDOMNode(exec,element.setAttributeNode((new DOMNode(exec,node))->toNode()));
+    }
     case DOMElement::RemoveAttributeNode:
       return getDOMNode(exec,element.removeAttributeNode((new DOMNode(exec,KJS::toNode(args[0])))->toNode()));
     case DOMElement::GetElementsByTagName:
@@ -1205,15 +1245,30 @@ Value DOMElementProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List 
     case DOMElement::GetAttributeNS: // DOM2
       return String(element.getAttributeNS(args[0].toString(exec).string(),args[1].toString(exec).string()));
     case DOMElement::SetAttributeNS: // DOM2
-      element.setAttributeNS(args[0].toString(exec).string(),args[1].toString(exec).string(),args[2].toString(exec).string());
-      return Undefined();
+    {
+        QString qualifiedName = args[1].toString(exec).qstring();
+        QString value = args[2].toString(exec).qstring();
+        
+        if (!allowSettingSrcToJavascriptURL(exec, element, qualifiedName, value))
+            return Undefined();
+        
+        element.setAttributeNS(args[0].toString(exec).string(),args[1].toString(exec).string(),args[2].toString(exec).string());
+        return Undefined();
+    }
     case DOMElement::RemoveAttributeNS: // DOM2
       element.removeAttributeNS(args[0].toString(exec).string(),args[1].toString(exec).string());
       return Undefined();
     case DOMElement::GetAttributeNodeNS: // DOM2
       return getDOMNode(exec,element.getAttributeNodeNS(args[0].toString(exec).string(),args[1].toString(exec).string()));
     case DOMElement::SetAttributeNodeNS: // DOM2
-      return getDOMNode(exec,element.setAttributeNodeNS((new DOMNode(exec,KJS::toNode(args[0])))->toNode()));
+    {
+        DOM::Node node = KJS::toNode(args[0]);
+        
+        if (!node.isNull() && !allowSettingSrcToJavascriptURL(exec, element, node.nodeName().string(), node.nodeValue().string()))
+            return Undefined();
+        
+        return getDOMNode(exec,element.setAttributeNodeNS((new DOMNode(exec,node))->toNode()));
+    }
     case DOMElement::GetElementsByTagNameNS: // DOM2
       return getDOMNodeList(exec,element.getElementsByTagNameNS(args[0].toString(exec).string(),args[1].toString(exec).string()));
     case DOMElement::HasAttributeNS: // DOM2
@@ -1580,7 +1635,6 @@ bool KJS::checkNodeSecurity(ExecState *exec, const DOM::Node& n)
     return false;
   return true;
 }
-
 
 Value KJS::getDOMNode(ExecState *exec, const DOM::Node &n)
 {

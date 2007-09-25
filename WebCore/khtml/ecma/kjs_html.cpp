@@ -3049,8 +3049,16 @@ void KJS::HTMLElement::putValue(ExecState *exec, int token, const Value& value, 
       case FrameName:            { frameElement.setName(str); return; }
       case FrameNoResize:        { frameElement.setNoResize(value.toBoolean(exec)); return; }
       case FrameScrolling:       { frameElement.setScrolling(str); return; }
-      case FrameSrc:             { frameElement.setSrc(str); return; }
-      case FrameLocation:        {
+      case FrameSrc:             {                                  
+                                   if (str.string().startsWith("javascript:", false) && !checkNodeSecurity(exec, frameElement.contentDocument()))                                    
+                                       return;
+          
+                                    frameElement.setSrc(str); return;
+                                 }
+      case FrameLocation:        {                                  
+                                   if (str.string().startsWith("javascript:", false) && !checkNodeSecurity(exec, frameElement.contentDocument()))                                      
+                                        return;
+          
                                    static_cast<DOM::HTMLFrameElementImpl *>(frameElement.handle())->setLocation(str);
                                    return;
                                  }
@@ -3069,7 +3077,12 @@ void KJS::HTMLElement::putValue(ExecState *exec, int token, const Value& value, 
       case IFrameMarginWidth:     { iFrame.setMarginWidth(str); return; }
       case IFrameName:            { iFrame.setName(str); return; }
       case IFrameScrolling:       { iFrame.setScrolling(str); return; }
-      case IFrameSrc:             { iFrame.setSrc(str); return; }
+      case IFrameSrc:             {                                      
+                                    if (str.string().startsWith("javascript:", false) && !checkNodeSecurity(exec, iFrame.contentDocument()))
+                                        return;
+          
+                                    iFrame.setSrc(str); return;
+                                  }
       case IFrameWidth:           { iFrame.setWidth(str); return; }
       }
       break;
