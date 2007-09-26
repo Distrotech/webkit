@@ -1,3 +1,41 @@
+2007-09-26  Tristan O'Tierney   <tristan@apple.com>
+
+        Merge r25249 and r25284 from ToT to Safari-2.0-dashboard.
+        
+    2007-08-24  Sam Weinig  <sam@webkit.org>
+
+            Reviewed by Adele.
+
+            Fix for <rdar://problem/5426142>
+
+            Use the EventTarget's frame when creating the EventListener.
+
+            Tests: http/tests/security/listener/xss-JSTargetNode-onclick-addEventListener.html
+                   http/tests/security/listener/xss-JSTargetNode-onclick-shortcut.html
+                   http/tests/security/listener/xss-window-onclick-addEventListener.html
+                   http/tests/security/listener/xss-window-onclick-shortcut.html
+
+            * bindings/js/JSEventTargetNode.cpp:
+            (WebCore::JSEventTargetNode::setListener):
+            (WebCore::JSEventTargetNodePrototypeFunction::callAsFunction):
+            * bindings/js/kjs_window.cpp:
+            (KJS::WindowFunc::callAsFunction):
+                
+    2007-08-28  Sam Weinig  <sam@webkit.org>
+
+            Reviewed by Darin.
+
+            Update fix landed in r25249 to account for XMLHttpRequest, which can also be EventTargets.
+
+            Tests: http/tests/security/listener/xss-XMLHttpRequest-addEventListener.html
+                   http/tests/security/listener/xss-XMLHttpRequest-shortcut.html
+
+            * bindings/js/JSXMLHttpRequest.cpp:
+            (KJS::JSXMLHttpRequest::putValueProperty): Use the Window object associated with document's frame, not the active Window.
+            (KJS::JSXMLHttpRequestPrototypeFunction::callAsFunction): ditto
+            * xml/XMLHttpRequest.h:
+            (WebCore::XMLHttpRequest::document): Expose Document member so bindings can access the correct frame.
+
 2007-09-25  Tristan O'Tierney   <tristan@apple.com>
 
         Merge r24994 from ToT to Safari-2.0-dashboard.
