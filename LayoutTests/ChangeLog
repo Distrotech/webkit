@@ -1,3 +1,14 @@
+2007-09-29  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by Alexey Proskuryakov.
+        
+        WebArchives do not embed stylesheets referenced by xml-stylesheeet
+        http://bugs.webkit.org/show_bug.cgi?id=15320
+
+        * webarchive/resources/test-xml-stylesheet.css: Added.
+        * webarchive/test-xml-stylesheet-expected.txt: Added.
+        * webarchive/test-xml-stylesheet.xml: Added.
+
 2007-09-29  Rob Buis  <buis@kde.org>
 
         Reviewed by Adam.

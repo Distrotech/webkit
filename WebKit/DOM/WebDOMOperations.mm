@@ -205,6 +205,20 @@
 
 #endif
 
+@implementation DOMProcessingInstruction (WebDOMProcessingInstructionOperationsPrivate)
+
+- (NSString *)_stylesheetURL
+{
+    return [[self sheet] href];
+}
+
+- (NSArray *)_subresourceURLs
+{
+    return [self _URLsFromSelectors:@selector(_stylesheetURL), nil];
+}
+
+@end
+
 @implementation DOMHTMLEmbedElement (WebDOMHTMLEmbedElementOperationsPrivate)
 
 - (NSArray *)_subresourceURLs
