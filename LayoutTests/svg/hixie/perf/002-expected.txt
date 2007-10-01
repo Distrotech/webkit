@@ -2,12 +2,12 @@ layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
     RenderSVGContainer {svg} at (109.50,9.50) size 581x581
       RenderPath {rect} at (109.50,9.50) size 581x581 [stroke={[type=SOLID] [color=#000000]}] [data="M-150.00,-190.00L350.00,-190.00C372.08,-190.00,390.00,-172.08,390.00,-150.00L390.00,350.00C390.00,372.08,372.08,390.00,350.00,390.00L-150.00,390.00C-172.08,390.00,-190.00,372.08,-190.00,350.00L-190.00,-150.00C-190.00,-172.08,-172.08,-190.00,-150.00,-190.00"]
-      RenderSVGText {text} at (-150,-150) size 800x13
+      RenderSVGText {text} at (-150,-150) size 92x13 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-10) size 92x13
-          text run at (0,-10) width 92: "SVG Performance test."
-      RenderSVGText {text} at (200,350) size 800x13
+          chunk 1 text run 1 at (-150.00,-150.00) startOffset 0 endOffset 21 width 92.00: "SVG Performance test."
+      RenderSVGText {text} at (200,350) size 65x13 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-10) size 65x13
-          text run at (0,-10) width 65: "Test not started."
+          chunk 1 text run 1 at (200.00,350.00) startOffset 0 endOffset 17 width 65.00: "Test not started."
       RenderSVGContainer {g} at (116.00,51.40) size 495.43x514.73
         RenderPath {path} at (139.13,239.38) size 38.65x46.88 [stroke={[type=SOLID] [color=#000000] [stroke width=0.17]}] [fill={[type=SOLID] [color=#FFFFFF]}] [data="M-122.30,84.29C-122.30,84.29,-122.20,86.18,-123.03,86.16C-123.85,86.14,-140.30,38.07,-160.83,40.31C-160.83,40.31,-143.05,32.96,-122.30,84.29"]
         RenderPath {path} at (159.94,226.71) size 21.38x56.30 [stroke={[type=SOLID] [color=#000000] [stroke width=0.17]}] [fill={[type=SOLID] [color=#FFFFFF]}] [data="M-118.77,81.26C-118.77,81.26,-119.32,83.08,-120.09,82.78C-120.86,82.48,-119.98,31.67,-140.04,26.80C-140.04,26.80,-120.82,25.94,-118.77,81.26"]

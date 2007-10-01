@@ -13,7 +13,7 @@ layer at (0,0) size 480x360
         RenderPath {rect} at (200,300) size 4x4 [fill={[type=SOLID] [color=#0000FF]}] [data="M200.00,300.00L204.00,300.00L204.00,304.00L200.00,304.00"]
         RenderPath {rect} at (300,300) size 4x4 [fill={[type=SOLID] [color=#0000FF]}] [data="M300.00,300.00L304.00,300.00L304.00,304.00L300.00,304.00"]
         RenderPath {rect} at (300,250) size 4x4 [fill={[type=SOLID] [color=#0000FF]}] [data="M300.00,250.00L304.00,250.00L304.00,254.00L300.00,254.00"]
-      RenderSVGText {text} at (10,340) size 480x46
+      RenderSVGText {text} at (10,340) size 264x46 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-36) size 264x46
-          text run at (0,-36) width 264: "$Revision: 1.2 $"
+          chunk 1 text run 1 at (10.00,340.00) startOffset 0 endOffset 16 width 264.00: "$Revision: 1.2 $"
       RenderPath {rect} at (0.50,0.50) size 479x359 [stroke={[type=SOLID] [color=#000000]}] [data="M1.00,1.00L479.00,1.00L479.00,359.00L1.00,359.00"]
