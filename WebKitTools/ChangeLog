@@ -1,3 +1,13 @@
+2007-06-29  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Weinig.
+        
+        Add VIDEO flag for timed media features
+
+        * Scripts/build-webkit
+        
+=== Merged the following changes from branches/feature-branch ===
+
 2007-10-01  David Kilzer  <ddkilzer@webkit.org>
 
         Reviewed by Hyatt.
