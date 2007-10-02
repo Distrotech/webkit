@@ -1,10 +1,10 @@
 CONSOLE MESSAGE: line 13: TypeError: Null value
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
-    RenderSVGContainer {svg} at (0,0) size 363x124
-      RenderPath {rect} at (0,0) size 100x100 [fill={[type=SOLID] [color=#FF0000]}] [data="M0.00,0.00L100.00,0.00L100.00,100.00L0.00,100.00"]
-      RenderSVGText {text} at (10,120) size 353x18 contains 1 chunk(s)
-        RenderSVGInlineText {#text} at (0,-14) size 353x18
-          chunk 1 text run 1 at (10.00,120.00) startOffset 0 endOffset 53 width 353.00: "namespace of created rect: http://www.w3.org/2000/svg"
-      RenderPath {rect} at (0,0) size 100x100 [fill={[type=SOLID] [color=#008000]}] [data="M0.00,0.00L100.00,0.00L100.00,100.00L0.00,100.00"]
-      RenderSVGText {text} at (10,120) size 800x0
+layer at (0,0) size 800x600
+  RenderSVGRoot {svg} at (0,0) size 363x124
+    RenderPath {rect} at (0,0) size 100x100 [fill={[type=SOLID] [color=#FF0000]}] [data="M0.00,0.00L100.00,0.00L100.00,100.00L0.00,100.00"]
+    RenderSVGText {text} at (10,120) size 353x18 contains 1 chunk(s)
+      RenderSVGInlineText {#text} at (0,-14) size 353x18
+        chunk 1 text run 1 at (10.00,120.00) startOffset 0 endOffset 53 width 353.00: "namespace of created rect: http://www.w3.org/2000/svg"
+    RenderPath {rect} at (0,0) size 100x100 [fill={[type=SOLID] [color=#008000]}] [data="M0.00,0.00L100.00,0.00L100.00,100.00L0.00,100.00"]
