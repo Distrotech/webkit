@@ -1,3 +1,5 @@
+=== Merged changes from rebasing branches/feature-branch on to trunk r25817 ===
+
 2007-09-30  Julien  <julien.chaffraix@gmail.com>
 
         Reviewed by aroben & eseidel.
@@ -2927,7 +2929,7 @@
         * svg/custom/hit-test-unclosed-subpaths-expected.txt: Added.
         * svg/custom/hit-test-unclosed-subpaths.svg: Added.
 
-=== Merged the following changes from branches/feature-branch ===
+=== End of merged changes from rebasing branches/feature-branch on to trunk r25817 ===
 
 2007-10-01  Lars Knoll  <lars@trolltech.com>
 

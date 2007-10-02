@@ -1,3 +1,5 @@
+=== Merged changes from rebasing branches/feature-branch on to trunk r25817 ===
+
 2007-09-29  Rob Buis  <buis@kde.org>
 
         Reviewed by Adam.
@@ -37,7 +39,7 @@
         (WTF::FloatHashTraits::deletedValue):
         (WTF::):
 
-=== Merged the following changes from branches/feature-branch ===
+=== End of merged changes from rebasing branches/feature-branch on to trunk r25817 ===
 
 2007-09-29  Holger Hans Peter Freyther  <zecke@selfish.org>
 

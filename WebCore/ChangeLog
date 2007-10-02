@@ -1,3 +1,5 @@
+=== Merged changes from rebasing branches/feature-branch on to trunk r25817 ===
+
 2007-09-30  Julien  <julien.chaffraix@gmail.com>
 
         Reviewed by aroben & eseidel.
@@ -2106,7 +2108,7 @@
         (WebCore::copyCGPathClosingSubpaths):
         (WebCore::Path::contains): use new copy & close function
 
-=== Merged the following changes from branches/feature-branch ===
+=== End of merged changes from rebasing branches/feature-branch on to trunk r25817 ===
 
 2007-10-01  Eli Fidler  <eli@staikos.net>
 
