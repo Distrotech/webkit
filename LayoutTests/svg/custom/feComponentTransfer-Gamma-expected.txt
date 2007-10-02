@@ -6,8 +6,8 @@ KCanvasResource {id="GammaOrd" [type=FILTER]  [effects=[[type=COMPONENT-TRANSFER
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
 layer at (0,0) size 800x600
-  RenderSVGRoot {svg} at (0.83,0.83) size 1081.67x698.33
-    RenderSVGContainer {g} at (0.83,0.83) size 1081.67x698.33
+  RenderSVGRoot {svg} at (0.58,8.27) size 748.85x483.46
+    RenderSVGContainer {g} at (0.58,8.27) size 748.85x483.46
       RenderSVGContainer {svg} at (25.58,16.60) size 748.85x483.46
         RenderSVGHiddenContainer {defs} at (0,0) size 0x0
           RenderSVGHiddenContainer {linearGradient} at (0,0) size 0x0
