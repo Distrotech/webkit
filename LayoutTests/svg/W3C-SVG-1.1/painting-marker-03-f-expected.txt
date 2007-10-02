@@ -5,9 +5,9 @@ layer at (0,0) size 480x360
 layer at (0,0) size 480x360
   RenderSVGRoot {svg} at (0.50,0.50) size 479x359
     RenderSVGHiddenContainer {defs} at (0,0) size 0x0
-      RenderSVGContainer {marker} at (0,0) size 5x5
+      RenderSVGViewportContainer {marker} at (0,0) size 5x5
         RenderPath {rect} at (0,0) size 5x5 [fill={[type=SOLID] [color=#4169E1]}] [data="M0.00,0.00L100.00,0.00L100.00,100.00L0.00,100.00"]
-      RenderSVGContainer {marker} at (0,0) size 15x15
+      RenderSVGViewportContainer {marker} at (0,0) size 15x15
         RenderPath {rect} at (0,0) size 15x15 [fill={[type=SOLID] [color=#FF0000]}] [data="M0.00,0.00L200.00,0.00L200.00,200.00L0.00,200.00"]
     RenderSVGText {text} at (153,28) size 174x23 contains 1 chunk(s)
       RenderSVGInlineText {#text} at (0,-18) size 174x23

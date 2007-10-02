@@ -28,7 +28,7 @@ layer at (0,0) size 480x360
             RenderSVGInlineText {#text} at (0,-43) size 217x53
               chunk 1 text run 1 at (15.00,45.00) startOffset 0 endOffset 10 width 217.00: "Outer Clip"
       RenderPath {rect} at (112.50,97.50) size 255x165 [stroke={[type=SOLID] [color=#006600] [stroke width=5.00]}] [data="M115.00,100.00L365.00,100.00L365.00,260.00L115.00,260.00"]
-      RenderSVGContainer {svg} at (64,82) size 352x194
+      RenderSVGViewportContainer {svg} at (64,82) size 352x194
         RenderSVGContainer {g} at (64,82) size 352x194
           RenderSVGContainer {g} at (164,82) size 152x39 [transform={m=((1.00,0.00)(0.00,1.00)) t=(50.00,-15.00)}]
             RenderPath {rect} at (164,84) size 152x37 [stroke={[type=SOLID] [color=#6666FF] [stroke width=2.00]}] [fill={[type=SOLID] [color=#FFAAAA]}] [data="M0.00,0.00L150.00,0.00L150.00,35.00L0.00,35.00"]
