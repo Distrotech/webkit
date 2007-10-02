@@ -2,9 +2,9 @@ layer at (0,0) size 480x360
   RenderView at (0,0) size 480x360
 layer at (0,0) size 480x360
   RenderSVGRoot {svg} at (0.50,0.50) size 479x359
-    RenderSVGContainer {g} at (20,22) size 334x186
-      RenderSVGText {text} at (125,50) size 229x36 contains 1 chunk(s)
-        RenderSVGInlineText {#text} at (0,-28) size 229x36
+    RenderSVGContainer {g} at (20,22) size 335x186
+      RenderSVGText {text} at (125,50) size 230x36 contains 1 chunk(s)
+        RenderSVGInlineText {#text} at (0,-28) size 230x36
           chunk 1 (middle anchor) text run 1 at (125.50,50.00) startOffset 0 endOffset 18 width 229.00: "<font> horiz-adv-x"
       RenderSVGHiddenContainer {defs} at (0,0) size 0x0
         RenderSVGContainer {g} at (-4,-20) size 8x24

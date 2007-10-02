@@ -42,8 +42,8 @@ layer at (0,0) size 480x360
           RenderSVGInlineText {#text} at (0,-10) size 76x12
             chunk 1 (middle anchor) text run 1 at (337.00,141.00) startOffset 0 endOffset 12 width 76.00: "numOctaves=8"
         RenderPath {rect} at (25,180) size 100x75 [fill={[type=SOLID] [color=#000000]}] [filter=#Turb4] [data="M25.00,180.00L125.00,180.00L125.00,255.00L25.00,255.00"]
-        RenderSVGText {text} at (30,272) size 89x12 contains 1 chunk(s)
-          RenderSVGInlineText {#text} at (0,-10) size 89x12
+        RenderSVGText {text} at (30,272) size 90x12 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 90x12
             chunk 1 (middle anchor) text run 1 at (30.50,272.00) startOffset 0 endOffset 17 width 89.00: "type=fractalNoise"
         RenderSVGText {text} at (26,284) size 98x12 contains 1 chunk(s)
           RenderSVGInlineText {#text} at (0,-10) size 98x12
@@ -52,8 +52,8 @@ layer at (0,0) size 480x360
           RenderSVGInlineText {#text} at (0,-10) size 76x12
             chunk 1 (middle anchor) text run 1 at (37.00,296.00) startOffset 0 endOffset 12 width 76.00: "numOctaves=4"
         RenderPath {rect} at (175,180) size 100x75 [fill={[type=SOLID] [color=#000000]}] [filter=#Turb5] [data="M175.00,180.00L275.00,180.00L275.00,255.00L175.00,255.00"]
-        RenderSVGText {text} at (180,272) size 89x12 contains 1 chunk(s)
-          RenderSVGInlineText {#text} at (0,-10) size 89x12
+        RenderSVGText {text} at (180,272) size 90x12 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 90x12
             chunk 1 (middle anchor) text run 1 at (180.50,272.00) startOffset 0 endOffset 17 width 89.00: "type=fractalNoise"
         RenderSVGText {text} at (176,284) size 98x12 contains 1 chunk(s)
           RenderSVGInlineText {#text} at (0,-10) size 98x12
@@ -62,8 +62,8 @@ layer at (0,0) size 480x360
           RenderSVGInlineText {#text} at (0,-10) size 76x12
             chunk 1 (middle anchor) text run 1 at (187.00,296.00) startOffset 0 endOffset 12 width 76.00: "numOctaves=4"
         RenderPath {rect} at (325,180) size 100x75 [fill={[type=SOLID] [color=#000000]}] [filter=#Turb6] [data="M325.00,180.00L425.00,180.00L425.00,255.00L325.00,255.00"]
-        RenderSVGText {text} at (330,272) size 89x12 contains 1 chunk(s)
-          RenderSVGInlineText {#text} at (0,-10) size 89x12
+        RenderSVGText {text} at (330,272) size 90x12 contains 1 chunk(s)
+          RenderSVGInlineText {#text} at (0,-10) size 90x12
             chunk 1 (middle anchor) text run 1 at (330.50,272.00) startOffset 0 endOffset 17 width 89.00: "type=fractalNoise"
         RenderSVGText {text} at (326,284) size 98x12 contains 1 chunk(s)
           RenderSVGInlineText {#text} at (0,-10) size 98x12
