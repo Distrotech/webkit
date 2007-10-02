@@ -25,10 +25,12 @@
 
 #import "config.h"
 #import "WebScriptObjectPrivate.h"
-#import "WebScriptObjectPendingPublic.h"
 
 #import "DOMInternal.h"
+#import "Frame.h"
+#import "PlatformString.h"
 #import "WebCoreObjCExtras.h"
+#import "WebCoreFrameBridge.h"
 #import <JavaScriptCore/context.h>
 #import <JavaScriptCore/objc_instance.h>
 #import <JavaScriptCore/runtime_object.h>
@@ -36,10 +38,15 @@
 
 using namespace KJS;
 using namespace KJS::Bindings;
+using namespace WebCore;
 
 #define LOG_EXCEPTION(exec) \
     if (Interpreter::shouldPrintExceptions()) \
         printf("%s:%d:[%d]  JavaScript exception:  %s\n", __FILE__, __LINE__, getpid(), exec->exception()->toObject(exec)->get(exec, exec->propertyNames().message)->toString(exec).ascii());
+
+@interface WebFrame
+- (WebCoreFrameBridge *)_bridge; // implemented in WebKit
+@end
 
 namespace WebCore {
 
@@ -89,11 +96,6 @@ id createJSWrapper(KJS::JSObject* object, PassRefPtr<KJS::Bindings::RootObject> 
 }
 #endif
 
-+ (id)scriptObjectForJSObject:(JSObjectRef)jsObject
-{
-    return [WebScriptObject scriptObjectForJSObject:jsObject originRootObject:0 rootObject:0];
-}
-
 + (id)scriptObjectForJSObject:(JSObjectRef)jsObject originRootObject:(RootObject*)originRootObject rootObject:(RootObject*)rootObject
 {
     if (id domWrapper = WebCore::createDOMWrapper(toJS(jsObject), originRootObject, rootObject))
@@ -106,13 +108,14 @@ static void _didExecute(WebScriptObject *obj)
 {
     ASSERT(JSLock::lockCount() > 0);
     
-    if (![obj _rootObject] || ![obj _rootObject]->isValid())
+    RootObject* root = [obj _rootObject];
+    if (!root)
         return;
 
-    ExecState* exec = [obj _rootObject]->interpreter()->globalExec();
+    ExecState* exec = root->interpreter()->globalExec();
     KJSDidExecuteFunctionPtr func = Instance::didExecuteFunction();
     if (func)
-        func(exec, static_cast<JSObject*>([obj _rootObject]->interpreter()->globalObject()));
+        func(exec, static_cast<JSObject*>(root->interpreter()->globalObject()));
 }
 
 - (void)_setImp:(JSObject*)imp originRootObject:(PassRefPtr<RootObject>)originRootObject rootObject:(PassRefPtr<RootObject>)rootObject
@@ -129,8 +132,28 @@ static void _didExecute(WebScriptObject *obj)
 
     WebCore::addJSWrapper(self, imp);
 
-    if(_private->rootObject)
+    if (_private->rootObject)
         _private->rootObject->gcProtect(imp);
+}
+
+- (void)_setOriginRootObject:(PassRefPtr<RootObject>)originRootObject andRootObject:(PassRefPtr<RootObject>)rootObject
+{
+    ASSERT(_private->imp);
+
+    if (rootObject)
+        rootObject->gcProtect(_private->imp);
+
+    if (_private->rootObject && _private->rootObject->isValid())
+        _private->rootObject->gcUnprotect(_private->imp);
+
+    if (_private->rootObject)
+        _private->rootObject->deref();
+
+    if (_private->originRootObject)
+        _private->originRootObject->deref();
+
+    _private->rootObject = rootObject.releaseRef();
+    _private->originRootObject = originRootObject.releaseRef();
 }
 
 - (id)_initWithJSObject:(KJS::JSObject*)imp originRootObject:(PassRefPtr<KJS::Bindings::RootObject>)originRootObject rootObject:(PassRefPtr<KJS::Bindings::RootObject>)rootObject
@@ -144,13 +167,13 @@ static void _didExecute(WebScriptObject *obj)
     return self;
 }
 
-- (JSObject *)_imp
+- (JSObject*)_imp
 {
     // Associate the WebScriptObject with the JS wrapper for the ObjC DOM wrapper.
     // This is done on lazily, on demand.
     if (!_private->imp && _private->isCreatedByDOMWrapper)
         [self _initializeScriptDOMNodeImp];
-    return _private->imp;
+    return [self _rootObject] ? _private->imp : 0;
 }
 
 - (BOOL)_hasImp
@@ -158,6 +181,8 @@ static void _didExecute(WebScriptObject *obj)
     return _private->imp != nil;
 }
 
+// Node that DOMNode overrides this method. So you should almost always
+// use this method call instead of _private->rootObject directly.
 - (RootObject*)_rootObject
 {
     return _private->rootObject && _private->rootObject->isValid() ? _private->rootObject : 0;
@@ -170,13 +195,17 @@ static void _didExecute(WebScriptObject *obj)
 
 - (BOOL)_isSafeScript
 {
-    if (!_private->originRootObject || !_private->rootObject)
+    RootObject *root = [self _rootObject];
+    if (!root)
+        return false;
+
+    if (!_private->originRootObject)
         return true;
 
-    if (!_private->originRootObject->isValid() || !_private->rootObject->isValid())
+    if (!_private->originRootObject->isValid())
         return false;
-        
-    return _private->originRootObject->interpreter()->isSafeScript(_private->rootObject->interpreter());
+
+    return _private->originRootObject->interpreter()->isSafeScript(root->interpreter());
 }
 
 - (void)dealloc
@@ -245,35 +274,30 @@ static void _didExecute(WebScriptObject *obj)
     return NO;
 }
 
-static List listFromNSArray(ExecState *exec, NSArray *array)
+static List listFromNSArray(ExecState *exec, NSArray *array, RootObject* rootObject)
 {
     int i, numObjects = array ? [array count] : 0;
     List aList;
     
     for (i = 0; i < numObjects; i++) {
         id anObject = [array objectAtIndex:i];
-        aList.append(convertObjcValueToValue(exec, &anObject, ObjcObjectType));
+        aList.append(convertObjcValueToValue(exec, &anObject, ObjcObjectType, rootObject));
     }
     return aList;
 }
 
 - (id)callWebScriptMethod:(NSString *)name withArguments:(NSArray *)args
 {
-    if (![self _rootObject])
-        return nil;
-
     if (![self _isSafeScript])
         return nil;
 
-    // Lookup the function object.
+    // Look up the function object.
     ExecState* exec = [self _rootObject]->interpreter()->globalExec();
     ASSERT(!exec->hadException());
 
     JSLock lock;
     
-    JSValue *v = convertObjcValueToValue(exec, &name, ObjcObjectType);
-    Identifier identifier(v->toString(exec));
-    JSValue *func = [self _imp]->get(exec, identifier);
+    JSValue* func = [self _imp]->get(exec, String(name));
 
     if (!func || !func->isObject())
         // Maybe throw an exception here?
@@ -284,9 +308,14 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     if (!funcImp->implementsCall())
         return 0;
 
-    JSObject *thisObj = const_cast<JSObject*>([self _imp]);
-    List argList = listFromNSArray(exec, args);
-    JSValue *result = funcImp->call(exec, thisObj, argList);
+    List argList = listFromNSArray(exec, args, [self _rootObject]);
+
+    if (![self _isSafeScript])
+        return nil;
+
+    [self _rootObject]->interpreter()->startTimeoutCheck();
+    JSValue *result = funcImp->call(exec, [self _imp], argList);
+    [self _rootObject]->interpreter()->stopTimeoutCheck();
 
     if (exec->hadException()) {
         LOG_EXCEPTION(exec);
@@ -304,9 +333,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (id)evaluateWebScript:(NSString *)script
 {
-    if (![self _rootObject])
-        return nil;
-    
     if (![self _isSafeScript])
         return nil;
     
@@ -316,8 +342,9 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     JSValue *result;
     JSLock lock;
     
-    JSValue *v = convertObjcValueToValue(exec, &script, ObjcObjectType);
-    Completion completion = [self _rootObject]->interpreter()->evaluate(UString(), 0, v->toString(exec));
+    [self _rootObject]->interpreter()->startTimeoutCheck();
+    Completion completion = [self _rootObject]->interpreter()->evaluate(UString(), 0, String(script));
+    [self _rootObject]->interpreter()->stopTimeoutCheck();
     ComplType type = completion.complType();
     
     if (type == Normal) {
@@ -342,9 +369,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (void)setValue:(id)value forKey:(NSString *)key
 {
-    if (![self _rootObject])
-        return;
-
     if (![self _isSafeScript])
         return;
 
@@ -352,8 +376,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     ASSERT(!exec->hadException());
 
     JSLock lock;
-    JSValue *v = convertObjcValueToValue(exec, &key, ObjcObjectType);
-    [self _imp]->put(exec, Identifier(v->toString(exec)), convertObjcValueToValue(exec, &value, ObjcObjectType));
+    [self _imp]->put(exec, String(key), convertObjcValueToValue(exec, &value, ObjcObjectType, [self _rootObject]));
 
     if (exec->hadException()) {
         LOG_EXCEPTION(exec);
@@ -365,9 +388,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (id)valueForKey:(NSString *)key
 {
-    if (![self _rootObject])
-        return nil;
-        
     if (![self _isSafeScript])
         return nil;
 
@@ -375,8 +395,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     ASSERT(!exec->hadException());
 
     JSLock lock;
-    JSValue *v = convertObjcValueToValue(exec, &key, ObjcObjectType);
-    JSValue *result = [self _imp]->get(exec, Identifier(v->toString(exec)));
+    JSValue *result = [self _imp]->get(exec, String(key));
     
     if (exec->hadException()) {
         LOG_EXCEPTION(exec);
@@ -386,7 +405,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
     id resultObj = [WebScriptObject _convertValueToObjcValue:result originRootObject:[self _originRootObject] rootObject:[self _rootObject]];
     if ([resultObj isKindOfClass:[WebUndefined class]])
-        resultObj = [super valueForKey:key];    // ensure correct not-applicable key behavior
+        resultObj = [super valueForKey:key];    // defaults to throwing an exception
 
     _didExecute(self);
     
@@ -395,9 +414,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (void)removeWebScriptKey:(NSString *)key
 {
-    if (![self _rootObject])
-        return;
-        
     if (![self _isSafeScript])
         return;
 
@@ -405,8 +421,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     ASSERT(!exec->hadException());
 
     JSLock lock;
-    JSValue *v = convertObjcValueToValue(exec, &key, ObjcObjectType);
-    [self _imp]->deleteProperty(exec, Identifier(v->toString(exec)));
+    [self _imp]->deleteProperty(exec, String(key));
 
     if (exec->hadException()) {
         LOG_EXCEPTION(exec);
@@ -418,32 +433,24 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (NSString *)stringRepresentation
 {
-    if (![self _rootObject])
-        // This is a workaround for a gcc 3.3 internal compiler error.
-        return @"Undefined";
-
     if (![self _isSafeScript])
         // This is a workaround for a gcc 3.3 internal compiler error.
         return @"Undefined";
 
     JSLock lock;
-    JSObject *thisObj = const_cast<JSObject*>([self _imp]);
     ExecState* exec = [self _rootObject]->interpreter()->globalExec();
     
-    id result = convertValueToObjcValue(exec, thisObj, ObjcObjectType).objectValue;
+    id result = convertValueToObjcValue(exec, [self _imp], ObjcObjectType).objectValue;
 
-    id resultObj = [result description];
+    NSString *description = [result description];
 
     _didExecute(self);
 
-    return resultObj;
+    return description;
 }
 
 - (id)webScriptValueAtIndex:(unsigned)index
 {
-    if (![self _rootObject])
-        return nil;
-
     if (![self _isSafeScript])
         return nil;
 
@@ -468,9 +475,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 
 - (void)setWebScriptValueAtIndex:(unsigned)index value:(id)value
 {
-    if (![self _rootObject])
-        return;
-
     if (![self _isSafeScript])
         return;
 
@@ -478,7 +482,7 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
     ASSERT(!exec->hadException());
 
     JSLock lock;
-    [self _imp]->put(exec, index, convertObjcValueToValue(exec, &value, ObjcObjectType));
+    [self _imp]->put(exec, index, convertObjcValueToValue(exec, &value, ObjcObjectType, [self _rootObject]));
 
     if (exec->hadException()) {
         LOG_EXCEPTION(exec);
@@ -502,6 +506,14 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
         throwError(exec, GeneralError, description);
     } else
         throwError([self _rootObject]->interpreter()->globalExec(), GeneralError, description);
+}
+
+- (JSObjectRef)JSObject
+{
+    if (![self _isSafeScript])
+        return NULL;
+
+    return toRef([self _imp]);
 }
 
 + (id)_convertValueToObjcValue:(JSValue*)value originRootObject:(RootObject*)originRootObject rootObject:(RootObject*)rootObject
@@ -577,11 +589,6 @@ static List listFromNSArray(ExecState *exec, NSArray *array)
 - (id)objectAtIndex:(unsigned)index
 {
     return [self webScriptValueAtIndex:index];
-}
-
-- (JSObjectRef)JSObject
-{
-    return toRef([self _imp]);
 }
 
 @end

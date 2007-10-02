@@ -13,8 +13,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -22,6 +22,7 @@
 #ifndef QWEBPAGE_P_H
 #define QWEBPAGE_P_H
 
+#include <qnetworkproxy.h>
 #include <qpointer.h>
 
 #include "qwebpage.h"
@@ -35,7 +36,6 @@ namespace WebCore
     class Page;
 }
 
-class QVBoxLayout;
 class QUndoStack;
 
 class QWebPagePrivate
@@ -51,12 +51,22 @@ public:
     WebCore::Page *page;
 
     QPointer<QWebFrame> mainFrame;
-    QVBoxLayout *layout;
 
     QWebPage *q;
     QUndoStack *undoStack;
 
+    QWebNetworkInterface *networkInterface;
+
     bool modified;
+
+    bool insideOpenCall;
+    quint64 m_totalBytes;
+    quint64 m_bytesReceived;
+
+    QWebPage::NavigationRequestResponse navigationRequested(QWebFrame *frame, const QWebNetworkRequest &request, QWebPage::NavigationType type);
+#ifndef QT_NO_NETWORKPROXY
+    QNetworkProxy networkProxy;
+#endif
 };
 
 #endif

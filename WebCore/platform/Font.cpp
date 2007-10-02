@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -282,6 +282,7 @@ Font::Font()
     : m_pageZero(0)
     , m_letterSpacing(0)
     , m_wordSpacing(0)
+    , m_isPlatformFont(false)
 {
 }
 
@@ -290,6 +291,7 @@ Font::Font(const FontDescription& fd, short letterSpacing, short wordSpacing)
     , m_pageZero(0)
     , m_letterSpacing(letterSpacing)
     , m_wordSpacing(wordSpacing)
+    , m_isPlatformFont(false)
 {
 }
 
@@ -298,6 +300,7 @@ Font::Font(const FontPlatformData& fontData, bool isPrinterFont)
     , m_pageZero(0)
     , m_letterSpacing(0)
     , m_wordSpacing(0)
+    , m_isPlatformFont(true)
 {
     m_fontDescription.setUsePrinterFont(isPrinterFont);
     m_fontList->setPlatformFont(fontData);
@@ -310,6 +313,7 @@ Font::Font(const Font& other)
     , m_pageZero(other.m_pageZero)
     , m_letterSpacing(other.m_letterSpacing)
     , m_wordSpacing(other.m_wordSpacing)
+    , m_isPlatformFont(other.m_isPlatformFont)
 {
 }
 
@@ -321,6 +325,7 @@ Font& Font::operator=(const Font& other)
     m_pageZero = other.m_pageZero;
     m_letterSpacing = other.m_letterSpacing;
     m_wordSpacing = other.m_wordSpacing;
+    m_isPlatformFont = other.m_isPlatformFont;
     return *this;
 }
 

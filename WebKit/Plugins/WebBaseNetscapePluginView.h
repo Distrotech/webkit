@@ -26,6 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __LP64__
 #import <Cocoa/Cocoa.h>
 
 #import <AGL/agl.h>
@@ -92,6 +93,7 @@ typedef union PluginPort {
     BOOL isTransparent;
     BOOL isCompletelyObscured;
     BOOL shouldStopSoon;
+
     unsigned pluginFunctionCallDepth;
     
     DOMElement *element;
@@ -176,3 +178,5 @@ typedef union PluginPort {
 - (void)didCallPlugInFunction;
 
 @end
+#endif
+

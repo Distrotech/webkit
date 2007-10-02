@@ -16,21 +16,24 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
 #include "CSSMutableStyleDeclaration.h"
 
 #include "CSSImageValue.h"
-#include "cssparser.h"
-#include "CSSPropertyNames.h"
+#include "CSSParser.h"
 #include "CSSProperty.h"
+#include "CSSPropertyNames.h"
 #include "CSSStyleSheet.h"
+#include "CSSValueList.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "StyledElement.h"
+
+using namespace std;
 
 namespace WebCore {
 
@@ -81,13 +84,13 @@ String CSSMutableStyleDeclaration::getPropertyValue(int propertyID) const
             // FIXME: Is this correct? The code in cssparser.cpp is confusing
             const int properties[2] = { CSS_PROP_BACKGROUND_POSITION_X,
                                         CSS_PROP_BACKGROUND_POSITION_Y };
-            return getShorthandValue(properties, 2);
+            return getLayeredShorthandValue(properties, 2);
         }
         case CSS_PROP_BACKGROUND: {
-            const int properties[5] = { CSS_PROP_BACKGROUND_IMAGE, CSS_PROP_BACKGROUND_REPEAT,
-                                        CSS_PROP_BACKGROUND_ATTACHMENT, CSS_PROP_BACKGROUND_POSITION,
-                                        CSS_PROP_BACKGROUND_COLOR };
-            return getShorthandValue(properties, 5);
+            const int properties[6] = { CSS_PROP_BACKGROUND_IMAGE, CSS_PROP_BACKGROUND_REPEAT,
+                                        CSS_PROP_BACKGROUND_ATTACHMENT, CSS_PROP_BACKGROUND_POSITION_X,
+                                        CSS_PROP_BACKGROUND_POSITION_Y, CSS_PROP_BACKGROUND_COLOR };
+            return getLayeredShorthandValue(properties, 6);
         }
         case CSS_PROP_BORDER: {
             const int properties[3] = { CSS_PROP_BORDER_WIDTH, CSS_PROP_BORDER_STYLE,
@@ -169,6 +172,65 @@ String CSSMutableStyleDeclaration::get4Values( const int* properties ) const
             res += value->cssText();
         }
     }
+    return res;
+}
+
+String CSSMutableStyleDeclaration::getLayeredShorthandValue(const int* properties, unsigned number) const
+{
+    String res;
+    unsigned i;
+    unsigned j;
+
+    // Begin by collecting the properties into an array.
+    Vector< RefPtr<CSSValue> > values(number);
+    unsigned numLayers = 0;
+    
+    for (i = 0; i < number; ++i) {
+        values[i] = getPropertyCSSValue(properties[i]);
+        if (values[i]) {
+            if (values[i]->isValueList()) {
+                CSSValueList* valueList = static_cast<CSSValueList*>(values[i].get());
+                numLayers = max(valueList->length(), numLayers);
+            } else
+                numLayers = max(1U, numLayers);
+        }
+    }
+    
+    // Now stitch the properties together.  Implicit initial values are flagged as such and
+    // can safely be omitted.
+    for (i = 0; i < numLayers; i++) {
+        String layerRes;
+        for (j = 0; j < number; j++) {
+            RefPtr<CSSValue> value;
+            if (values[j]) {
+                if (values[j]->isValueList())
+                    value = static_cast<CSSValueList*>(values[j].get())->item(i);
+                else {
+                    value = values[j];
+                    
+                    // Color only belongs in the last layer.
+                    if (properties[j] == CSS_PROP_BACKGROUND_COLOR) {
+                        if (i != numLayers - 1)
+                            value = 0;
+                    } else if (i != 0) // Other singletons only belong in the first layer.
+                        value = 0;
+                }
+            }
+            
+            if (value && !value->isImplicitInitialValue()) {
+                if (!layerRes.isNull())
+                    layerRes += " ";
+                layerRes += value->cssText();
+            }
+        }
+        
+        if (!layerRes.isNull()) {
+            if (!res.isNull())
+                res += ", ";
+            res += layerRes;
+        }
+    }
+
     return res;
 }
 
@@ -540,10 +602,39 @@ String CSSMutableStyleDeclaration::item(unsigned i) const
 String CSSMutableStyleDeclaration::cssText() const
 {
     String result = "";
+    
+    const CSSProperty* positionXProp = 0;
+    const CSSProperty* positionYProp = 0;
 
     DeprecatedValueListConstIterator<CSSProperty> end;
-    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it)
-        result += (*it).cssText();
+    for (DeprecatedValueListConstIterator<CSSProperty> it = m_values.begin(); it != end; ++it) {
+        const CSSProperty& prop = *it;
+        if (prop.id() == CSS_PROP_BACKGROUND_POSITION_X)
+            positionXProp = &prop;
+        else if (prop.id() == CSS_PROP_BACKGROUND_POSITION_Y)
+            positionYProp = &prop;
+        else
+            result += prop.cssText();
+    }
+    
+    // FIXME: This is a not-so-nice way to turn x/y positions into single background-position in output.
+    // It is required because background-position-x/y are non-standard properties and WebKit generated output 
+    // would not work in Firefox (<rdar://problem/5143183>)
+    // It would be a better solution if background-position was CSS_PAIR.
+    if (positionXProp && positionYProp && positionXProp->isImportant() == positionYProp->isImportant()) {
+        String positionValue;
+        const int properties[2] = { CSS_PROP_BACKGROUND_POSITION_X, CSS_PROP_BACKGROUND_POSITION_Y };
+        if (positionXProp->value()->isValueList() || positionYProp->value()->isValueList()) 
+            positionValue = getLayeredShorthandValue(properties, 2);
+        else
+            positionValue = positionXProp->value()->cssText() + " " + positionYProp->value()->cssText();
+        result += "background-position: " + positionValue + (positionXProp->isImportant() ? " !important" : "") + "; ";
+    } else {
+        if (positionXProp) 
+            result += positionXProp->cssText();
+        if (positionYProp)
+            result += positionYProp->cssText();
+    }
 
     return result;
 }

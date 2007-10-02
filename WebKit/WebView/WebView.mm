@@ -39,7 +39,6 @@
 #import "WebDashboardRegion.h"
 #import "WebDataSourceInternal.h"
 #import "WebDefaultEditingDelegate.h"
-#import "WebDefaultFrameLoadDelegate.h"
 #import "WebDefaultPolicyDelegate.h"
 #import "WebDefaultScriptDebugDelegate.h"
 #import "WebDefaultUIDelegate.h"
@@ -59,11 +58,13 @@
 #import "WebHTMLViewInternal.h"
 #import "WebHistoryItemInternal.h"
 #import "WebIconDatabase.h"
-#import "WebInspector.h"
+#import "WebIconDatabaseInternal.h"
+#import "WebInspectorClient.h"
 #import "WebKitErrors.h"
 #import "WebKitLogging.h"
 #import "WebKitNSStringExtras.h"
 #import "WebKitStatisticsPrivate.h"
+#import "WebKitSystemBits.h"
 #import "WebKitVersionChecks.h"
 #import "WebLocalizableStrings.h"
 #import "WebNSDataExtras.h"
@@ -77,13 +78,13 @@
 #import "WebNSURLRequestExtras.h"
 #import "WebNSUserDefaultsExtras.h"
 #import "WebNSViewExtras.h"
+#import "WebPanelAuthenticationHandler.h"
 #import "WebPasteboardHelper.h"
 #import "WebPDFView.h"
 #import "WebPluginDatabase.h"
 #import "WebPolicyDelegate.h"
 #import "WebPreferenceKeysPrivate.h"
 #import "WebPreferencesPrivate.h"
-#import "WebResourceLoadDelegate.h"
 #import "WebScriptDebugDelegatePrivate.h"
 #import "WebScriptDebugServerPrivate.h"
 #import "WebUIDelegate.h"
@@ -91,6 +92,8 @@
 #import <CoreFoundation/CFSet.h>
 #import <Foundation/NSURLConnection.h>
 #import <JavaScriptCore/Assertions.h>
+#import <WebCore/Cache.h>
+#import <WebCore/ColorMac.h>
 #import <WebCore/Document.h>
 #import <WebCore/DocumentLoader.h>
 #import <WebCore/DragController.h>
@@ -103,7 +106,9 @@
 #import <WebCore/HTMLNames.h>
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Logging.h>
+#import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/Page.h>
+#import <WebCore/PageCache.h>
 #import <WebCore/PlatformMouseEvent.h>
 #import <WebCore/ProgressTracker.h>
 #import <WebCore/SelectionController.h>
@@ -117,6 +122,7 @@
 #import <WebKit/DOMExtensions.h>
 #import <WebKit/DOMPrivate.h>
 #import <WebKitSystemInterface.h>
+#import <mach-o/dyld.h>
 #import <objc/objc-runtime.h>
 #import <wtf/RefPtr.h>
 #import <wtf/HashTraits.h>
@@ -235,6 +241,9 @@ macro(yankAndSelect) \
 #define WebKitOriginalTopPrintingMarginKey @"WebKitOriginalTopMargin"
 #define WebKitOriginalBottomPrintingMarginKey @"WebKitOriginalBottomMargin"
 
+static BOOL s_didSetCacheModel;
+static WebCacheModel s_cacheModel = WebCacheModelDocumentViewer;
+
 static BOOL applicationIsTerminating;
 static int pluginDatabaseClientCount = 0;
 
@@ -248,8 +257,21 @@ static int pluginDatabaseClientCount = 0;
 - (BOOL)_shouldAutoscrollForDraggingInfo:(id)dragInfo;
 @end
 
+@interface NSWindow (AppKitSecretsIKnow) 
+- (id)_oldFirstResponderBeforeBecoming;
+@end
+
 @interface NSObject (ValidateWithoutDelegate)
 - (BOOL)validateUserInterfaceItemWithoutDelegate:(id <NSValidatedUserInterfaceItem>)item;
+@end
+
+@interface _WebSafeForwarder : NSObject
+{
+    id target; // Non-retained. Don't retain delegates.
+    id defaultTarget;
+    BOOL catchExceptions;
+}
+- (id)initWithTarget:(id)target defaultTarget:(id)defaultTarget catchExceptions:(BOOL)catchExceptions;
 @end
 
 @interface WebViewPrivate : NSObject
@@ -270,7 +292,7 @@ static int pluginDatabaseClientCount = 0;
     id editingDelegateForwarder;
     id scriptDebugDelegate;
     id scriptDebugDelegateForwarder;
-    
+
     BOOL allowsUndo;
         
     float textSizeMultiplier;
@@ -281,14 +303,13 @@ static int pluginDatabaseClientCount = 0;
     
     WebPreferences *preferences;
     BOOL useSiteSpecificSpoofing;
-        
-    BOOL lastElementWasNonNil;
 
     NSWindow *hostWindow;
 
     int programmaticFocusCount;
     
     WebResourceDelegateImplementationCache resourceLoadDelegateImplementations;
+    WebFrameLoadDelegateImplementationCache frameLoadDelegateImplementations;
 
     void *observationInfo;
     
@@ -299,14 +320,17 @@ static int pluginDatabaseClientCount = 0;
     BOOL editable;
     BOOL tabKeyCyclesThroughElementsChanged;
     BOOL becomingFirstResponder;
+    BOOL becomingFirstResponderFromOutside;
     BOOL hoverFeedbackSuspended;
+    BOOL usesPageCache;
+    BOOL catchesDelegateExceptions;
 
     NSColor *backgroundColor;
 
     NSString *mediaStyle;
     
     BOOL hasSpellCheckerDocumentTag;
-    WebNSInteger spellCheckerDocumentTag;
+    NSInteger spellCheckerDocumentTag;
 
     BOOL smartInsertDeleteEnabled;
         
@@ -314,8 +338,6 @@ static int pluginDatabaseClientCount = 0;
     BOOL dashboardBehaviorAlwaysSendActiveNullEventsToPlugIns;
     BOOL dashboardBehaviorAlwaysAcceptsFirstMouse;
     BOOL dashboardBehaviorAllowWheelScrolling;
-    
-    BOOL selectWordBeforeMenuEvent;
     
     // WebKit has both a global plug-in database and a separate, per WebView plug-in database. Dashboard uses the per WebView database.
     WebPluginDatabase *pluginDatabase;
@@ -325,17 +347,21 @@ static int pluginDatabaseClientCount = 0;
 @end
 
 @interface WebView (WebFileInternal)
++ (void)_setCacheModel:(WebCacheModel)cacheModel;
++ (WebCacheModel)_cacheModel;
 - (WebFrame *)_selectedOrMainFrame;
 - (WebFrameBridge *)_bridgeForSelectedOrMainFrame;
 - (BOOL)_isLoading;
 - (WebFrameView *)_frameViewAtWindowPoint:(NSPoint)point;
-- (WebFrameBridge *)_bridgeAtPoint:(NSPoint)point;
 - (WebFrame *)_focusedFrame;
 + (void)_preflightSpellChecker;
 - (BOOL)_continuousCheckingAllowed;
 - (NSResponder *)_responderForResponderOperations;
 - (BOOL)_performTextSizingSelector:(SEL)sel withObject:(id)arg onTrackingDocs:(BOOL)doTrackingViews selForNonTrackingDocs:(SEL)testSel newScaleFactor:(float)newScaleFactor;
 - (void)_notifyTextSizeMultiplierChanged;
+@end
+
+@interface WebView (WebCallDelegateFunctions)
 @end
 
 NSString *WebElementDOMNodeKey =            @"WebElementDOMNode";
@@ -364,7 +390,7 @@ NSString * const WebViewDidEndEditingNotification =           @"WebViewDidEndEdi
 NSString * const WebViewDidChangeTypingStyleNotification =    @"WebViewDidChangeTypingStyleNotification";
 NSString * const WebViewDidChangeSelectionNotification =      @"WebViewDidChangeSelectionNotification";
 
-enum { WebViewVersion = 3 };
+enum { WebViewVersion = 4 };
 
 #define timedLayoutSize 4096
 
@@ -420,6 +446,8 @@ static BOOL grammarCheckingEnabled;
 #endif
     userAgent = new String;
     
+    usesPageCache = YES;
+    
     identifierMap = new HashMap<unsigned long, RetainPtr<id> >();
     pluginDatabaseClientCount++;
 
@@ -429,6 +457,7 @@ static BOOL grammarCheckingEnabled;
 - (void)dealloc
 {
     ASSERT(!page);
+    ASSERT(!preferences);
 
     delete userAgent;
     delete identifierMap;
@@ -436,9 +465,8 @@ static BOOL grammarCheckingEnabled;
     [applicationNameForUserAgent release];
     [backgroundColor release];
     
-    [preferences release];
     [hostWindow release];
-    
+
     [policyDelegateForwarder release];
     [UIDelegateForwarder release];
     [frameLoadDelegateForwarder release];
@@ -453,7 +481,10 @@ static BOOL grammarCheckingEnabled;
 - (void)finalize
 {
     ASSERT_MAIN_THREAD();
+
     delete userAgent;
+    delete identifierMap;
+
     [super finalize];
 }
 
@@ -524,8 +555,10 @@ static bool debugWidget = true;
 
 + (BOOL)_developerExtrasEnabled
 {
-#ifdef NDEBUG
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults boolForKey:@"DisableWebKitDeveloperExtras"])
+        return NO;
+#ifdef NDEBUG
     BOOL enableDebugger = [defaults boolForKey:@"WebKitDeveloperExtras"];
     if (!enableDebugger)
         enableDebugger = [defaults boolForKey:@"IncludeDebugMenu"];
@@ -635,16 +668,26 @@ static bool debugWidget = true;
     return WKGetPreferredExtensionForMIMEType(type);
 }
 
+- (BOOL)_isClosed
+{
+    if (!_private || _private->closed)
+        return YES;
+    return NO;
+}
+
 - (void)_close
 {
     if (!_private || _private->closed)
         return;
-    _private->closed = YES;
+
+    FrameLoader* mainFrameLoader = [[self mainFrame] _frameLoader];
+    if (mainFrameLoader)
+        mainFrameLoader->detachFromParent();
 
     [self _removeFromAllWebViewsSet];
-
     [self setGroupName:nil];
     [self setHostWindow:nil];
+
     [self setDownloadDelegate:nil];
     [self setEditingDelegate:nil];
     [self setFrameLoadDelegate:nil];
@@ -652,14 +695,13 @@ static bool debugWidget = true;
     [self setResourceLoadDelegate:nil];
     [self setScriptDebugDelegate:nil];
     [self setUIDelegate:nil];
+    
+    // setHostWindow:nil must be called before this value is set (see 5408186)
+    _private->closed = YES;
 
     // To avoid leaks, call removeDragCaret in case it wasn't called after moveDragCaretToPoint.
     [self removeDragCaret];
 
-    FrameLoader* mainFrameLoader = [[self mainFrame] _frameLoader];
-    if (mainFrameLoader)
-        mainFrameLoader->detachFromParent();
-    
     // Deleteing the WebCore::Page will clear the page cache so we call destroy on 
     // all the plug-ins in the page cache to break any retain cycles.
     // See comment in HistoryItem::releaseAllPendingPageCaches() for more information.
@@ -672,7 +714,14 @@ static bool debugWidget = true;
     }
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [WebPreferences _removeReferenceForIdentifier: [self preferencesIdentifier]];
+
+    [WebPreferences _removeReferenceForIdentifier:[self preferencesIdentifier]];
+
+    WebPreferences *preferences = _private->preferences;
+    _private->preferences = nil;
+    [preferences didRemoveFromWebView];
+    [preferences release];
+
     pluginDatabaseClientCount--;
     
     // Make sure to close both sets of plug-ins databases because plug-ins need an opportunity to clean up files, etc.
@@ -686,7 +735,7 @@ static bool debugWidget = true;
     
     // Keep the global plug-in database active until the app terminates to avoid having to reload plug-in bundles.
     if (!pluginDatabaseClientCount && applicationIsTerminating)
-        [[WebPluginDatabase sharedDatabase] close];
+        [WebPluginDatabase closeSharedDatabase];
 }
 
 + (NSString *)_MIMETypeForFile:(NSString *)path
@@ -715,29 +764,26 @@ static bool debugWidget = true;
     return MIMEType;
 }
 
-- (void)_downloadURL:(NSURL *)URL
+- (WebDownload *)_downloadURL:(NSURL *)URL
 {
     ASSERT(URL);
     
     NSURLRequest *request = [[NSURLRequest alloc] initWithURL:URL];
-    [WebDownload _downloadWithRequest:request
-                             delegate:_private->downloadDelegate
-                            directory:nil];
+    WebDownload *download = [WebDownload _downloadWithRequest:request
+                                                     delegate:_private->downloadDelegate
+                                                    directory:nil];
     [request release];
+    
+    return download;
 }
 
 - (WebView *)_openNewWindowWithRequest:(NSURLRequest *)request
 {
-    id wd = [self UIDelegate];
-    WebView *newWindowWebView = nil;
-    if ([wd respondsToSelector:@selector(webView:createWebViewWithRequest:)])
-        newWindowWebView = [wd webView:self createWebViewWithRequest:request];
-    else {
-        newWindowWebView = [[WebDefaultUIDelegate sharedUIDelegate] webView:self createWebViewWithRequest: request];
-    }
+    WebView *newWindowWebView = CallUIDelegate(self, @selector(webView:createWebViewWithRequest:), request);
+    if (!newWindowWebView)
+        return nil;
 
-    [[newWindowWebView _UIDelegateForwarder] webViewShow: newWindowWebView];
-
+    CallUIDelegate(newWindowWebView, @selector(webViewShow:));
     return newWindowWebView;
 }
 
@@ -748,43 +794,39 @@ static bool debugWidget = true;
 
 - (NSMenu *)_menuForElement:(NSDictionary *)element defaultItems:(NSArray *)items
 {
-    NSArray *defaultMenuItems = [[WebDefaultUIDelegate sharedUIDelegate]
-          webView:self contextMenuItemsForElement:element defaultMenuItems:items];
-    NSArray *menuItems = defaultMenuItems;
-    NSMenu *menu = nil;
-    unsigned i;
+    NSArray *defaultMenuItems = [[WebDefaultUIDelegate sharedUIDelegate] webView:self contextMenuItemsForElement:element defaultMenuItems:items];
 
-    if ([_private->UIDelegate respondsToSelector:@selector(webView:contextMenuItemsForElement:defaultMenuItems:)])
-        menuItems = [_private->UIDelegate webView:self contextMenuItemsForElement:element defaultMenuItems:defaultMenuItems];
+    NSArray *menuItems = CallUIDelegate(self, @selector(webView:contextMenuItemsForElement:defaultMenuItems:), element, defaultMenuItems);
+    if (!menuItems)
+        return nil;
 
-    if (menuItems && [menuItems count] > 0) {
-        menu = [[[NSMenu alloc] init] autorelease];
+    unsigned count = [menuItems count];
+    if (!count)
+        return nil;
 
-        for (i=0; i<[menuItems count]; i++) {
-            [menu addItem:[menuItems objectAtIndex:i]];
-        }
-    }
+    NSMenu *menu = [[NSMenu alloc] init];
+    for (unsigned i = 0; i < count; i++)
+        [menu addItem:[menuItems objectAtIndex:i]];
 
-    return menu;
+    return [menu autorelease];
 }
 
-- (void)_mouseDidMoveOverElement:(NSDictionary *)dictionary modifierFlags:(WebNSUInteger)modifierFlags
+- (void)_mouseDidMoveOverElement:(NSDictionary *)dictionary modifierFlags:(NSUInteger)modifierFlags
 {
-    // When the mouse isn't over this view at all, we'll get called with a dictionary of nil over
-    // and over again. So it's a good idea to catch that here and not send multiple calls to the delegate
-    // for that case.
-    
-    if (dictionary && _private->lastElementWasNonNil) {
-        [[self _UIDelegateForwarder] webView:self mouseDidMoveOverElement:dictionary modifierFlags:modifierFlags];
-    }
-    _private->lastElementWasNonNil = dictionary != nil;
+    // We originally intended to call this delegate method sometimes with a nil dictionary, but due to
+    // a bug dating back to WebKit 1.0 this delegate was never called with nil! Unfortunately we can't
+    // start calling this with nil since it will break Adobe Help Viewer, and possibly other clients.
+    if (!dictionary)
+        return;
+    CallUIDelegate(self, @selector(webView:mouseDidMoveOverElement:modifierFlags:), dictionary, modifierFlags);
 }
-
-
 
 - (void)_loadBackForwardListFromOtherView:(WebView *)otherView
 {
     if (!_private->page)
+        return;
+    
+    if (!otherView->_private->page)
         return;
     
     // It turns out the right combination of behavior is done with the back/forward load
@@ -828,8 +870,40 @@ static bool debugWidget = true;
     return _private->formDelegate;
 }
 
-- (void)_updateWebCoreSettingsFromPreferences:(WebPreferences *)preferences
+- (BOOL)_needsAdobeFrameReloadingQuirk
 {
+    static BOOL checked = NO;
+    static BOOL needsQuirk = NO;
+
+    if (checked)
+        return needsQuirk;
+
+    needsQuirk = WKAppVersionCheckLessThan(@"com.adobe.Acrobat", -1, 9.0)
+        || WKAppVersionCheckLessThan(@"com.adobe.Acrobat.Pro", -1, 9.0)
+        || WKAppVersionCheckLessThan(@"com.adobe.Reader", -1, 9.0)
+        || WKAppVersionCheckLessThan(@"com.adobe.distiller", -1, 9.0)
+        || WKAppVersionCheckLessThan(@"com.adobe.Contribute", -1, 4.2)
+        || WKAppVersionCheckLessThan(@"com.adobe.dreamweaver-9.0", -1, 9.1)
+        || WKAppVersionCheckLessThan(@"com.macromedia.fireworks", -1, 9.1)
+        || WKAppVersionCheckLessThan(@"com.adobe.InCopy", -1, 5.1)
+        || WKAppVersionCheckLessThan(@"com.adobe.InDesign", -1, 5.1)
+        || WKAppVersionCheckLessThan(@"com.adobe.Soundbooth", -1, 2);
+
+    return needsQuirk;
+}
+
+- (void)_preferencesChangedNotification:(NSNotification *)notification
+{
+    WebPreferences *preferences = (WebPreferences *)[notification object];
+    ASSERT(preferences == [self preferences]);
+
+    if (!_private->userAgentOverridden)
+        *_private->userAgent = String();
+
+    // Cache this value so we don't have to read NSUserDefaults on each page load
+    _private->useSiteSpecificSpoofing = [preferences _useSiteSpecificSpoofing];
+
+    // Update corresponding WebCore Settings object.
     if (!_private->page)
         return;
     
@@ -841,6 +915,8 @@ static bool debugWidget = true;
     settings->setDefaultTextEncodingName([preferences defaultTextEncodingName]);
     settings->setFantasyFontFamily([preferences fantasyFontFamily]);
     settings->setFixedFontFamily([preferences fixedFontFamily]);
+    settings->setForceFTPDirectoryListings([preferences _forceFTPDirectoryListings]);
+    settings->setFTPDirectoryTemplatePath([preferences _ftpDirectoryTemplatePath]);
     settings->setJavaEnabled([preferences isJavaEnabled]);
     settings->setJavaScriptEnabled([preferences isJavaScriptEnabled]);
     settings->setJavaScriptCanOpenWindowsAutomatically([preferences javaScriptCanOpenWindowsAutomatically]);
@@ -854,86 +930,41 @@ static bool debugWidget = true;
     settings->setLoadsImagesAutomatically([preferences loadsImagesAutomatically]);
     settings->setShouldPrintBackgrounds([preferences shouldPrintBackgrounds]);
     settings->setTextAreasAreResizable([preferences textAreasAreResizable]);
+    settings->setShrinksStandaloneImagesToFit([preferences shrinksStandaloneImagesToFit]);
     settings->setEditableLinkBehavior(core([preferences editableLinkBehavior]));
     settings->setDOMPasteAllowed([preferences isDOMPasteAllowed]);
+    settings->setUsesPageCache([self usesPageCache]);
+    settings->setShowsURLsInToolTips([preferences showsURLsInToolTips]);
+    settings->setDeveloperExtrasEnabled([WebView _developerExtrasEnabled]);
     if ([preferences userStyleSheetEnabled]) {
         NSString* location = [[preferences userStyleSheetLocation] _web_originalDataAsString];
         settings->setUserStyleSheetLocation([NSURL URLWithString:(location ? location : @"")]);
     } else
         settings->setUserStyleSheetLocation([NSURL URLWithString:@""]);
-    settings->setNeedsAcrobatFrameReloadingQuirk(WKAppVersionCheckLessThan(@"com.adobe.Acrobat", -1, 9)
-        || WKAppVersionCheckLessThan(@"com.adobe.Acrobat.Pro", -1, 9)
-        || WKAppVersionCheckLessThan(@"com.adobe.Reader", -1, 9));
+    settings->setNeedsAdobeFrameReloadingQuirk([self _needsAdobeFrameReloadingQuirk]);
 }
 
-- (void)_preferencesChangedNotification: (NSNotification *)notification
+static inline IMP getMethod(id o, SEL s)
 {
-    WebPreferences *preferences = (WebPreferences *)[notification object];
-    
-    ASSERT(preferences == [self preferences]);
-    if (!_private->userAgentOverridden)
-        *_private->userAgent = String();
-    // Cache this value so we don't have to read NSUserDefaults on each page load
-    _private->useSiteSpecificSpoofing = [preferences _useSiteSpecificSpoofing];
-    [self _updateWebCoreSettingsFromPreferences: preferences];
-}
-
-- _frameLoadDelegateForwarder
-{
-    if (!_private->frameLoadDelegateForwarder)
-        _private->frameLoadDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self frameLoadDelegate]  defaultTarget: [WebDefaultFrameLoadDelegate sharedFrameLoadDelegate] templateClass: [WebDefaultFrameLoadDelegate class]];
-    return _private->frameLoadDelegateForwarder;
+    return [o respondsToSelector:s] ? [o methodForSelector:s] : 0;
 }
 
 - (void)_cacheResourceLoadDelegateImplementations
 {
     WebResourceDelegateImplementationCache *cache = &_private->resourceLoadDelegateImplementations;
-    id delegate = [self resourceLoadDelegate];
-    Class delegateClass = [delegate class];
+    id delegate = _private->resourceProgressDelegate;
 
-    cache->delegateImplementsDidCancelAuthenticationChallenge = [delegate respondsToSelector:@selector(webView:resource:didCancelAuthenticationChallenge:fromDataSource:)];
-    cache->delegateImplementsDidReceiveAuthenticationChallenge = [delegate respondsToSelector:@selector(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:)];
-    cache->delegateImplementsDidFinishLoadingFromDataSource = [delegate respondsToSelector:@selector(webView:resource:didFinishLoadingFromDataSource:)];
-    cache->delegateImplementsDidFailLoadingWithErrorFromDataSource = [delegate respondsToSelector:@selector(webView:resource:didFailLoadingWithError:fromDataSource:)];
-    cache->delegateImplementsDidReceiveContentLength = [delegate respondsToSelector:@selector(webView:resource:didReceiveContentLength:fromDataSource:)];
-    cache->delegateImplementsDidReceiveResponse = [delegate respondsToSelector:@selector(webView:resource:didReceiveResponse:fromDataSource:)];
-    cache->delegateImplementsWillSendRequest = [delegate respondsToSelector:@selector(webView:resource:willSendRequest:redirectResponse:fromDataSource:)];
-    cache->delegateImplementsIdentifierForRequest = [delegate respondsToSelector:@selector(webView:identifierForInitialRequest:fromDataSource:)];
-    cache->delegateImplementsDidLoadResourceFromMemoryCache = [delegate respondsToSelector:@selector(webView:didLoadResourceFromMemoryCache:response:length:fromDataSource:)];
-    cache->delegateImplementsWillCacheResponse = [delegate respondsToSelector:@selector(webView:resource:willCacheResponse:fromDataSource:)];
-
-#if defined(OBJC_API_VERSION) && OBJC_API_VERSION > 0
-#define GET_OBJC_METHOD_IMP(class,selector) class_getMethodImplementation(class, selector)
-#else
-#define GET_OBJC_METHOD_IMP(class,selector) class_getInstanceMethod(class, selector)->method_imp
-#endif
-
-    if (cache->delegateImplementsDidCancelAuthenticationChallenge)
-        cache->didCancelAuthenticationChallengeFunc = (WebDidCancelAuthenticationChallengeFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:));
-    if (cache->delegateImplementsDidReceiveAuthenticationChallenge)
-        cache->didReceiveAuthenticationChallengeFunc = (WebDidReceiveAuthenticationChallengeFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:));
-    if (cache->delegateImplementsDidFinishLoadingFromDataSource)
-        cache->didFinishLoadingFromDataSourceFunc = (WebDidFinishLoadingFromDataSourceFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didFinishLoadingFromDataSource:));
-    if (cache->delegateImplementsDidFailLoadingWithErrorFromDataSource)
-        cache->didFailLoadingWithErrorFromDataSourceFunc = (WebDidFailLoadingWithErrorFromDataSourceFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didFailLoadingWithError:fromDataSource:));
-    if (cache->delegateImplementsDidReceiveContentLength)
-        cache->didReceiveContentLengthFunc = (WebDidReceiveContentLengthFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didReceiveContentLength:fromDataSource:));
-    if (cache->delegateImplementsDidReceiveResponse)
-        cache->didReceiveResponseFunc = (WebDidReceiveResponseFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:didReceiveResponse:fromDataSource:));
-    if (cache->delegateImplementsWillSendRequest)
-        cache->willSendRequestFunc = (WebWillSendRequestFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:willSendRequest:redirectResponse:fromDataSource:));
-    if (cache->delegateImplementsIdentifierForRequest)
-        cache->identifierForRequestFunc = (WebIdentifierForRequestFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:identifierForInitialRequest:fromDataSource:));
-    if (cache->delegateImplementsDidLoadResourceFromMemoryCache)
-        cache->didLoadResourceFromMemoryCacheFunc = (WebDidLoadResourceFromMemoryCacheFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:didLoadResourceFromMemoryCache:response:length:fromDataSource:));
-    if (cache->delegateImplementsWillCacheResponse)
-        cache->willCacheResponseFunc = (WebWillCacheResponseFunc)GET_OBJC_METHOD_IMP(delegateClass, @selector(webView:resource:willCacheResponse:fromDataSource:));
-#undef GET_OBJC_METHOD_IMP
-}
-
-id WebViewGetResourceLoadDelegate(WebView *webView)
-{
-    return webView->_private->resourceProgressDelegate;
+    cache->didCancelAuthenticationChallengeFunc = getMethod(delegate, @selector(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:));
+    cache->didFailLoadingWithErrorFromDataSourceFunc = getMethod(delegate, @selector(webView:resource:didFailLoadingWithError:fromDataSource:));
+    cache->didFinishLoadingFromDataSourceFunc = getMethod(delegate, @selector(webView:resource:didFinishLoadingFromDataSource:));
+    cache->didLoadResourceFromMemoryCacheFunc = getMethod(delegate, @selector(webView:didLoadResourceFromMemoryCache:response:length:fromDataSource:));
+    cache->didReceiveAuthenticationChallengeFunc = getMethod(delegate, @selector(webView:resource:didReceiveAuthenticationChallenge:fromDataSource:));
+    cache->didReceiveContentLengthFunc = getMethod(delegate, @selector(webView:resource:didReceiveContentLength:fromDataSource:));
+    cache->didReceiveResponseFunc = getMethod(delegate, @selector(webView:resource:didReceiveResponse:fromDataSource:));
+    cache->identifierForRequestFunc = getMethod(delegate, @selector(webView:identifierForInitialRequest:fromDataSource:));
+    cache->plugInFailedWithErrorFunc = getMethod(delegate, @selector(webView:plugInFailedWithError:dataSource:));
+    cache->willCacheResponseFunc = getMethod(delegate, @selector(webView:resource:willCacheResponse:fromDataSource:));
+    cache->willSendRequestFunc = getMethod(delegate, @selector(webView:resource:willSendRequest:redirectResponse:fromDataSource:));
 }
 
 WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementations(WebView *webView)
@@ -941,35 +972,65 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
     return webView->_private->resourceLoadDelegateImplementations;
 }
 
-- _policyDelegateForwarder
+- (void)_cacheFrameLoadDelegateImplementations
+{
+    WebFrameLoadDelegateImplementationCache *cache = &_private->frameLoadDelegateImplementations;
+    id delegate = _private->frameLoadDelegate;
+
+    cache->didCancelClientRedirectForFrameFunc = getMethod(delegate, @selector(webView:didCancelClientRedirectForFrame:));
+    cache->didChangeLocationWithinPageForFrameFunc = getMethod(delegate, @selector(webView:didChangeLocationWithinPageForFrame:));
+    cache->didClearWindowObjectForFrameFunc = getMethod(delegate, @selector(webView:didClearWindowObject:forFrame:));
+    cache->didCommitLoadForFrameFunc = getMethod(delegate, @selector(webView:didCommitLoadForFrame:));
+    cache->didFailLoadWithErrorForFrameFunc = getMethod(delegate, @selector(webView:didFailLoadWithError:forFrame:));
+    cache->didFailProvisionalLoadWithErrorForFrameFunc = getMethod(delegate, @selector(webView:didFailProvisionalLoadWithError:forFrame:));
+    cache->didFinishDocumentLoadForFrameFunc = getMethod(delegate, @selector(webView:didFinishDocumentLoadForFrame:));
+    cache->didFinishLoadForFrameFunc = getMethod(delegate, @selector(webView:didFinishLoadForFrame:));
+    cache->didFirstLayoutInFrameFunc = getMethod(delegate, @selector(webView:didFirstLayoutInFrame:));
+    cache->didHandleOnloadEventsForFrameFunc = getMethod(delegate, @selector(webView:didHandleOnloadEventsForFrame:));
+    cache->didReceiveIconForFrameFunc = getMethod(delegate, @selector(webView:didReceiveIcon:forFrame:));
+    cache->didReceiveServerRedirectForProvisionalLoadForFrameFunc = getMethod(delegate, @selector(webView:didReceiveServerRedirectForProvisionalLoadForFrame:));
+    cache->didReceiveTitleForFrameFunc = getMethod(delegate, @selector(webView:didReceiveTitle:forFrame:));
+    cache->didStartProvisionalLoadForFrameFunc = getMethod(delegate, @selector(webView:didStartProvisionalLoadForFrame:));
+    cache->willCloseFrameFunc = getMethod(delegate, @selector(webView:willCloseFrame:));
+    cache->willPerformClientRedirectToURLDelayFireDateForFrameFunc = getMethod(delegate, @selector(webView:willPerformClientRedirectToURL:delay:fireDate:forFrame:));
+    cache->windowScriptObjectAvailableFunc = getMethod(delegate, @selector(webView:windowScriptObjectAvailable:));
+}
+
+WebFrameLoadDelegateImplementationCache WebViewGetFrameLoadDelegateImplementations(WebView *webView)
+{
+    return webView->_private->frameLoadDelegateImplementations;
+}
+
+- (id)_policyDelegateForwarder
 {
     if (!_private->policyDelegateForwarder)
-        _private->policyDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self policyDelegate] defaultTarget: [WebDefaultPolicyDelegate sharedPolicyDelegate] templateClass: [WebDefaultPolicyDelegate class]];
+        _private->policyDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget:_private->policyDelegate defaultTarget:[WebDefaultPolicyDelegate sharedPolicyDelegate] catchExceptions:_private->catchesDelegateExceptions];
     return _private->policyDelegateForwarder;
 }
 
-- _UIDelegateForwarder
+- (id)_UIDelegateForwarder
 {
     if (!_private->UIDelegateForwarder)
-        _private->UIDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self UIDelegate] defaultTarget: [WebDefaultUIDelegate sharedUIDelegate] templateClass: [WebDefaultUIDelegate class]];
+        _private->UIDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget:_private->UIDelegate defaultTarget:[WebDefaultUIDelegate sharedUIDelegate] catchExceptions:_private->catchesDelegateExceptions];
     return _private->UIDelegateForwarder;
 }
 
-- _editingDelegateForwarder
+- (id)_editingDelegateForwarder
 {
     // This can be called during window deallocation by QTMovieView in the QuickTime Cocoa Plug-in.
     // Not sure if that is a bug or not.
     if (!_private)
         return nil;
+
     if (!_private->editingDelegateForwarder)
-        _private->editingDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self editingDelegate] defaultTarget: [WebDefaultEditingDelegate sharedEditingDelegate] templateClass: [WebDefaultEditingDelegate class]];
+        _private->editingDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget:_private->editingDelegate defaultTarget:[WebDefaultEditingDelegate sharedEditingDelegate] catchExceptions:_private->catchesDelegateExceptions];
     return _private->editingDelegateForwarder;
 }
 
-- _scriptDebugDelegateForwarder
+- (id)_scriptDebugDelegateForwarder
 {
     if (!_private->scriptDebugDelegateForwarder)
-        _private->scriptDebugDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget: [self scriptDebugDelegate] defaultTarget: [WebDefaultScriptDebugDelegate sharedScriptDebugDelegate] templateClass: [WebDefaultScriptDebugDelegate class]];
+        _private->scriptDebugDelegateForwarder = [[_WebSafeForwarder alloc] initWithTarget:_private->scriptDebugDelegate defaultTarget:[WebDefaultScriptDebugDelegate sharedScriptDebugDelegate] catchExceptions:_private->catchesDelegateExceptions];
     return _private->scriptDebugDelegateForwarder;
 }
 
@@ -982,6 +1043,11 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 {
     [[WebFrameView _viewTypesAllowImageTypeOmission:NO] removeObjectForKey:MIMEType];
     [[WebDataSource _repTypesAllowImageTypeOmission:NO] removeObjectForKey:MIMEType];
+    
+    // FIXME: We also need to maintain MIMEType registrations (which can be dynamically changed)
+    // in the WebCore MIMEType registry.  For now we're doing this in a safe, limited manner
+    // to fix <rdar://problem/5372989> - a future revamping of the entire system is neccesary for future robustness
+    MIMETypeRegistry::getSupportedNonImageMIMETypes().remove(MIMEType);
 }
 
 + (void)_registerViewClass:(Class)viewClass representationClass:(Class)representationClass forURLScheme:(NSString *)URLScheme;
@@ -989,6 +1055,12 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
     NSString *MIMEType = [self _generatedMIMETypeForURLScheme:URLScheme];
     [self registerViewClass:viewClass representationClass:representationClass forMIMEType:MIMEType];
 
+    // FIXME: We also need to maintain MIMEType registrations (which can be dynamically changed)
+    // in the WebCore MIMEType registry.  For now we're doing this in a safe, limited manner
+    // to fix <rdar://problem/5372989> - a future revamping of the entire system is neccesary for future robustness
+    if ([viewClass class] == [WebHTMLView class])
+        MIMETypeRegistry::getSupportedNonImageMIMETypes().add(MIMEType);
+    
     // This is used to make _representationExistsForURLScheme faster.
     // Without this set, we'd have to create the MIME type each time.
     if (schemesWithRepresentationsSet == nil) {
@@ -1009,11 +1081,19 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
 + (BOOL)_canHandleRequest:(NSURLRequest *)request
 {
-    if ([NSURLConnection canHandleRequest:request]) {
-        return YES;
-    }
+    // FIXME: If <rdar://problem/5217309> gets fixed, this check can be removed
+    if (!request)
+        return NO;
 
-    return [self _representationExistsForURLScheme:[[request URL] scheme]];
+    if ([NSURLConnection canHandleRequest:request])
+        return YES;
+
+    NSString *scheme = [[request URL] scheme];
+
+    if ([self _representationExistsForURLScheme:scheme])
+        return YES;
+        
+    return ([scheme _webkit_isCaseInsensitiveEqualToString:@"applewebdata"]);
 }
 
 + (NSString *)_decodeData:(NSData *)data
@@ -1052,18 +1132,21 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
     [self willChangeValueForKey: key];
 }
 
-// Required to prevent automatic observer notifications.
 + (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key {
-    return NO;
+    static NSSet *manualNotifyKeys = nil;
+    if (!manualNotifyKeys)
+        manualNotifyKeys = [[NSSet alloc] initWithObjects:_WebMainFrameURLKey, _WebIsLoadingKey, _WebEstimatedProgressKey,
+            _WebCanGoBackKey, _WebCanGoForwardKey, _WebMainFrameTitleKey, _WebMainFrameIconKey, _WebMainFrameDocumentKey, nil];
+    if ([manualNotifyKeys containsObject:key])
+        return NO;
+    return YES;
 }
 
 - (NSArray *)_declaredKeys {
     static NSArray *declaredKeys = nil;
-    
-    if (!declaredKeys) {
-        declaredKeys = [[NSArray alloc] initWithObjects:_WebMainFrameURLKey, _WebIsLoadingKey, _WebEstimatedProgressKey, _WebCanGoBackKey, _WebCanGoForwardKey, _WebMainFrameTitleKey, _WebMainFrameIconKey, _WebMainFrameDocumentKey, nil];
-    }
-
+    if (!declaredKeys)
+        declaredKeys = [[NSArray alloc] initWithObjects:_WebMainFrameURLKey, _WebIsLoadingKey, _WebEstimatedProgressKey,
+            _WebCanGoBackKey, _WebCanGoForwardKey, _WebMainFrameTitleKey, _WebMainFrameIconKey, _WebMainFrameDocumentKey, nil];
     return declaredKeys;
 }
 
@@ -1099,14 +1182,14 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
         [self _willChangeValueForKey: _WebMainFrameURLKey];
     }
+
     [NSApp setWindowsNeedUpdate:YES];
 }
 
 - (void)_didCommitLoadForFrame:(WebFrame *)frame
 {
-    if (frame == [self mainFrame]){
+    if (frame == [self mainFrame])
         [self _didChangeValueForKey: _WebMainFrameURLKey];
-    }
     [NSApp setWindowsNeedUpdate:YES];
 }
 
@@ -1168,7 +1251,8 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
                             URL:linkURL ? linkURL : (NSURL *)[element objectForKey:WebElementImageURLKey]
                           title:[element objectForKey:WebElementImageAltStringKey] 
                         archive:[[element objectForKey:WebElementDOMNodeKey] webArchive]
-                          types:types];
+                          types:types
+                         source:nil];
 }
 
 - (void)_writeLinkElement:(NSDictionary *)element withPasteboardTypes:(NSArray *)types toPasteboard:(NSPasteboard *)pasteboard
@@ -1180,6 +1264,8 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
 - (void)_setInitiatedDrag:(BOOL)initiatedDrag
 {
+    if (!_private->page)
+        return;
     _private->page->dragController()->setDidInitiateDrag(initiatedDrag);
 }
 
@@ -1304,6 +1390,17 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
     return WebCoreShouldUseFontSmoothing();
 }
 
++ (void)_setUsesTestModeFocusRingColor:(BOOL)f
+{
+    setUsesTestModeFocusRingColor(f);
+}
+
++ (BOOL)_usesTestModeFocusRingColor
+{
+    return usesTestModeFocusRingColor();
+}
+
+
 + (NSString *)_minimumRequiredSafariBuildNumber
 {
     return @"420+";
@@ -1311,10 +1408,9 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
 - (void)setAlwaysShowVerticalScroller:(BOOL)flag
 {
-    WebDynamicScrollBarsView *scrollview = (WebDynamicScrollBarsView *)[[[self mainFrame] frameView] _scrollView];
+    WebDynamicScrollBarsView *scrollview = [[[self mainFrame] frameView] _scrollView];
     if (flag) {
-        [scrollview setVerticalScrollingMode:WebCoreScrollbarAlwaysOn];
-        [scrollview setVerticalScrollingModeLocked:YES];
+        [scrollview setVerticalScrollingMode:WebCoreScrollbarAlwaysOn andLock:YES];
     } else {
         [scrollview setVerticalScrollingModeLocked:NO];
         [scrollview setVerticalScrollingMode:WebCoreScrollbarAuto];
@@ -1323,16 +1419,15 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
 - (BOOL)alwaysShowVerticalScroller
 {
-    WebDynamicScrollBarsView *scrollview = (WebDynamicScrollBarsView *)[[[self mainFrame] frameView] _scrollView];
+    WebDynamicScrollBarsView *scrollview = [[[self mainFrame] frameView] _scrollView];
     return [scrollview verticalScrollingModeLocked] && [scrollview verticalScrollingMode] == WebCoreScrollbarAlwaysOn;
 }
 
 - (void)setAlwaysShowHorizontalScroller:(BOOL)flag
 {
-    WebDynamicScrollBarsView *scrollview = (WebDynamicScrollBarsView *)[[[self mainFrame] frameView] _scrollView];
+    WebDynamicScrollBarsView *scrollview = [[[self mainFrame] frameView] _scrollView];
     if (flag) {
-        [scrollview setHorizontalScrollingMode:WebCoreScrollbarAlwaysOn];
-        [scrollview setHorizontalScrollingModeLocked:YES];
+        [scrollview setHorizontalScrollingMode:WebCoreScrollbarAlwaysOn andLock:YES];
     } else {
         [scrollview setHorizontalScrollingModeLocked:NO];
         [scrollview setHorizontalScrollingMode:WebCoreScrollbarAuto];
@@ -1348,7 +1443,7 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 
 - (BOOL)alwaysShowHorizontalScroller
 {
-    WebDynamicScrollBarsView *scrollview = (WebDynamicScrollBarsView *)[[[self mainFrame] frameView] _scrollView];
+    WebDynamicScrollBarsView *scrollview = [[[self mainFrame] frameView] _scrollView];
     return [scrollview horizontalScrollingModeLocked] && [scrollview horizontalScrollingMode] == WebCoreScrollbarAlwaysOn;
 }
 
@@ -1363,6 +1458,21 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 {
     Frame* mainFrame = [[[self mainFrame] _bridge] _frame];
     return mainFrame && mainFrame->inViewSourceMode();
+}
+
+- (void)_setUseFastImageScalingMode:(BOOL)flag
+{
+    if (_private->page && _private->page->inLowQualityImageInterpolationMode() != flag) {
+        _private->page->setInLowQualityImageInterpolationMode(flag);
+        [self setNeedsDisplay:YES];
+    }
+}
+
+- (BOOL)_inFastImageScalingMode
+{
+    if (_private->page)
+        return _private->page->inLowQualityImageInterpolationMode();
+    return NO;
 }
 
 - (void)_setAdditionalWebPlugInPaths:(NSArray *)newPaths
@@ -1417,81 +1527,115 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
     return _private->page->setDefersLoading(defer);
 }
 
+// For backwards compatibility with the WebBackForwardList API, we honor both
+// a per-WebView and a per-preferences setting for whether to use the page cache.
+
+- (BOOL)usesPageCache
+{
+    return _private->usesPageCache && [[self preferences] usesPageCache];
+}
+
+- (void)setUsesPageCache:(BOOL)usesPageCache
+{
+    _private->usesPageCache = usesPageCache;
+
+    // Post a notification so the WebCore settings update.
+    [[self preferences] _postPreferencesChangesNotification];
+}
+
+- (void)handleAuthenticationForResource:(id)identifier challenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource 
+{
+    NSWindow *window = [self hostWindow] ? [self hostWindow] : [self window]; 
+    [[WebPanelAuthenticationHandler sharedHandler] startAuthentication:challenge window:window]; 
+} 
+
+- (void)_clearUndoRedoOperations
+{
+    if (!_private->page)
+        return;
+    _private->page->clearUndoRedoOperations();
+}
+
+- (void)_setCatchesDelegateExceptions:(BOOL)f
+{
+    _private->catchesDelegateExceptions = f;
+}
+
+- (BOOL)_catchesDelegateExceptions
+{
+    return _private->catchesDelegateExceptions;
+}
+
 @end
 
 @implementation _WebSafeForwarder
 
-- initWithTarget: t defaultTarget: dt templateClass: (Class)aClass
+// Used to send messages to delegates that implement informal protocols.
+
+- (id)initWithTarget:(id)t defaultTarget:(id)dt catchExceptions:(BOOL)c
 {
     self = [super init];
     if (!self)
         return nil;
-    
     target = t; // Non retained.
     defaultTarget = dt;
-    templateClass = aClass;
+    catchExceptions = c;
     return self;
 }
 
-// Used to send messages to delegates that implement informal protocols.
-+ safeForwarderWithTarget: t defaultTarget: dt templateClass: (Class)aClass;
+- (void)forwardInvocation:(NSInvocation *)invocation
 {
-    return [[[_WebSafeForwarder alloc] initWithTarget: t defaultTarget: dt templateClass: aClass] autorelease];
-}
-
-#ifndef NDEBUG
-NSMutableDictionary *countInvocations;
-#endif
-
-- (void)forwardInvocation:(NSInvocation *)anInvocation
-{
-#ifndef NDEBUG
-    if (!countInvocations){
-        countInvocations = [[NSMutableDictionary alloc] init];
+    if ([target respondsToSelector:[invocation selector]]) {
+        if (catchExceptions) {
+            @try {
+                [invocation invokeWithTarget:target];
+            } @catch(id exception) {
+                ReportDiscardedDelegateException([invocation selector], exception);
+            }
+        } else
+            [invocation invokeWithTarget:target];
+        return;
     }
-    NSNumber *count = [countInvocations objectForKey: NSStringFromSelector([anInvocation selector])];
-    if (!count)
-        count = [NSNumber numberWithInt: 1];
-    else
-        count = [NSNumber numberWithInt: [count intValue] + 1];
-    [countInvocations setObject: count forKey: NSStringFromSelector([anInvocation selector])];
-#endif
-    if ([target respondsToSelector: [anInvocation selector]])
-        [anInvocation invokeWithTarget: target];
-    else if ([defaultTarget respondsToSelector: [anInvocation selector]])
-        [anInvocation invokeWithTarget: defaultTarget];
+
+    if ([defaultTarget respondsToSelector:[invocation selector]])
+        [invocation invokeWithTarget:defaultTarget];
+
     // Do nothing quietly if method not implemented.
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
 {
-    return [templateClass instanceMethodSignatureForSelector: aSelector];
+    return [defaultTarget methodSignatureForSelector:aSelector];
 }
 
 @end
 
 @implementation WebView
+
 + (void)initialize
 {
-    static BOOL tooLate = NO;
-    if (!tooLate) {
+    static BOOL initialized = NO;
+    if (initialized)
+        return;
+    initialized = YES;
+
 #ifdef REMOVE_SAFARI_DOM_TREE_DEBUG_ITEM
-        // this prevents open source users from crashing when using the Show DOM Tree menu item in Safari
-        // FIXME: remove this when it is no longer needed to prevent Safari from crashing
-        if ([[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Safari"] && [[NSUserDefaults standardUserDefaults] boolForKey:@"IncludeDebugMenu"])
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_finishedLaunching) name:NSApplicationDidFinishLaunchingNotification object:NSApp];
+    // This prevents open source users from crashing when using the Show DOM Tree menu item in Safari 2.
+    // FIXME: remove this when we no longer need to support Safari 2.
+    if ([[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Safari"] && [[NSUserDefaults standardUserDefaults] boolForKey:@"IncludeDebugMenu"])
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_finishedLaunching) name:NSApplicationDidFinishLaunchingNotification object:NSApp];
 #endif
 
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationWillTerminate) name:NSApplicationWillTerminateNotification object:NSApp];
-        tooLate = YES;
-    }
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_applicationWillTerminate) name:NSApplicationWillTerminateNotification object:NSApp];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:) name:WebPreferencesChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesRemovedNotification:) name:WebPreferencesRemovedNotification object:nil];
 }
 
 + (void)_applicationWillTerminate
 {   
     applicationIsTerminating = YES;
     if (!pluginDatabaseClientCount)
-        [[WebPluginDatabase sharedDatabase] close];
+        [WebPluginDatabase closeSharedDatabase];
 }
 
 #ifdef REMOVE_SAFARI_DOM_TREE_DEBUG_ITEM
@@ -1574,7 +1718,7 @@ NSMutableDictionary *countInvocations;
 
 + (void)setMIMETypesShownAsHTML:(NSArray *)MIMETypes
 {
-    NSMutableDictionary *viewTypes = [WebFrameView _viewTypesAllowImageTypeOmission:YES];
+    NSDictionary *viewTypes = [[WebFrameView _viewTypesAllowImageTypeOmission:YES] copy];
     NSEnumerator *enumerator = [viewTypes keyEnumerator];
     id key;
     while ((key = [enumerator nextObject])) {
@@ -1588,6 +1732,7 @@ NSMutableDictionary *countInvocations;
                 representationClass:[WebHTMLRepresentation class] 
                 forMIMEType:[MIMETypes objectAtIndex:i]];
     }
+    [viewTypes release];
 }
 
 + (NSURL *)URLFromPasteboard:(NSPasteboard *)pasteboard
@@ -1617,11 +1762,16 @@ NSMutableDictionary *countInvocations;
 
 - (void)_commonInitializationWithFrameName:(NSString *)frameName groupName:(NSString *)groupName
 {
+    WebPreferences *standardPreferences = [WebPreferences standardPreferences];
+    [standardPreferences willAddToWebView];
+
+    _private->preferences = [standardPreferences retain];
+    _private->catchesDelegateExceptions = YES;
     _private->mainFrameDocumentReady = NO;
     _private->drawsBackground = YES;
     _private->smartInsertDeleteEnabled = YES;
     _private->backgroundColor = [[NSColor whiteColor] retain];
-    
+
     NSRect f = [self frame];
     WebFrameView *frameView = [[WebFrameView alloc] initWithFrame: NSMakeRect(0,0,f.size.width,f.size.height)];
     [frameView setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
@@ -1630,10 +1780,9 @@ NSMutableDictionary *countInvocations;
 
     WebKitInitializeLoggingChannelsIfNecessary();
     WebCore::InitializeLoggingChannelsIfNecessary();
-    [WebBackForwardList setDefaultPageCacheSizeIfNecessary];
     [WebHistoryItem initWindowWatcherIfNecessary];
 
-    _private->page = new Page(new WebChromeClient(self), new WebContextMenuClient(self), new WebEditorClient(self), new WebDragClient(self));
+    _private->page = new Page(new WebChromeClient(self), new WebContextMenuClient(self), new WebEditorClient(self), new WebDragClient(self), new WebInspectorClient(self));
     [[[WebFrameBridge alloc] initMainFrameWithPage:_private->page frameName:frameName frameView:frameView] release];
 
     [self _addToAllWebViewsSet];
@@ -1658,19 +1807,11 @@ NSMutableDictionary *countInvocations;
         [WebScriptDebugServer sharedScriptDebugServer];
 
     WebPreferences *prefs = [self preferences];
-    
-    // Update WebCore with preferences.  These values will either come from an archived WebPreferences,
-    // or from the standard preferences, depending on whether this method was called from initWithCoder:
-    // or initWithFrame, respectively.
-    [self _updateWebCoreSettingsFromPreferences:prefs];
-
-    // Initialize this cached value for the common case where we're using [WebPreferences standardPreferences],
-    // since neither setPreferences: nor _preferencesChangedNotification: will be called.
-    _private->useSiteSpecificSpoofing = [prefs _useSiteSpecificSpoofing];
-    
-    // Register to receive notifications whenever preference values change.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:)
                                                  name:WebPreferencesChangedNotification object:prefs];
+
+    // Post a notification so the WebCore settings update.
+    [[self preferences] _postPreferencesChangesNotification];
 
     if (WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_LOCAL_RESOURCE_SECURITY_RESTRICTION))
         FrameLoader::setRestrictAccessToLocal(true);
@@ -1739,7 +1880,9 @@ NS_DURING
         preferences = [decoder decodeObject];
         if (version > 1)
             [decoder decodeValuesOfObjCTypes:"c", &useBackForwardList];
-        if (version > 2)
+        // The allowsUndo field is no longer written out in encodeWithCoder, but since there are
+        // version 3 NIBs that have this field encoded, we still need to read it in.
+        if (version == 3)
             [decoder decodeValuesOfObjCTypes:"c", &allowsUndo];
     }
 
@@ -1769,31 +1912,39 @@ NS_ENDHANDLER
 
 - (void)encodeWithCoder:(NSCoder *)encoder
 {
+    // Set asside the subviews before we archive. We don't want to archive any subviews.
+    // The subviews will always be created in _commonInitializationFrameName:groupName:.
+    id originalSubviews = _subviews;
+    _subviews = nil;
+
     [super encodeWithCoder:encoder];
 
+    // Restore the subviews we set aside.
+    _subviews = originalSubviews;
+
+    BOOL useBackForwardList = _private->page && _private->page->backForwardList()->enabled();
     if ([encoder allowsKeyedCoding]) {
         [encoder encodeObject:[[self mainFrame] name] forKey:@"FrameName"];
         [encoder encodeObject:[self groupName] forKey:@"GroupName"];
         [encoder encodeObject:[self preferences] forKey:@"Preferences"];
-        [encoder encodeBool:_private->page->backForwardList()->enabled() forKey:@"UseBackForwardList"];
+        [encoder encodeBool:useBackForwardList forKey:@"UseBackForwardList"];
         [encoder encodeBool:_private->allowsUndo forKey:@"AllowsUndo"];
     } else {
         int version = WebViewVersion;
-        BOOL useBackForwardList = _private->page->backForwardList()->enabled();
         [encoder encodeValueOfObjCType:@encode(int) at:&version];
         [encoder encodeObject:[[self mainFrame] name]];
         [encoder encodeObject:[self groupName]];
         [encoder encodeObject:[self preferences]];
         [encoder encodeValuesOfObjCTypes:"c", &useBackForwardList];
-        [encoder encodeValuesOfObjCTypes:"c", &_private->allowsUndo];
+        // DO NOT encode any new fields here, doing so will break older WebKit releases.
     }
 
-    LOG(Encoding, "FrameName = %@, GroupName = %@, useBackForwardList = %d\n", [[self mainFrame] name], [self groupName], (int)_private->page->backForwardList()->enabled());
+    LOG(Encoding, "FrameName = %@, GroupName = %@, useBackForwardList = %d\n", [[self mainFrame] name], [self groupName], (int)useBackForwardList);
 }
 
 - (void)dealloc
 {
-    // call close to ensure we tear-down completly
+    // call close to ensure we tear-down completely
     // this maintains our old behavior for existing applications
     [self _close];
 
@@ -1857,23 +2008,33 @@ NS_ENDHANDLER
 
 - (void)setPreferences:(WebPreferences *)prefs
 {
-    if (_private->preferences != prefs) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:WebPreferencesChangedNotification object:[self preferences]];
-        [WebPreferences _removeReferenceForIdentifier:[_private->preferences identifier]];
-        [_private->preferences release];
-        _private->preferences = [prefs retain];
-        // Cache this value so we don't have to read NSUserDefaults on each page load
-        _private->useSiteSpecificSpoofing = [prefs _useSiteSpecificSpoofing];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:)
-            name:WebPreferencesChangedNotification object:[self preferences]];
-        [[NSNotificationCenter defaultCenter]
-            postNotificationName:WebPreferencesChangedNotification object:prefs userInfo:nil];
-    }
+    if (!prefs)
+        prefs = [WebPreferences standardPreferences];
+
+    if (_private->preferences == prefs)
+        return;
+
+    [prefs willAddToWebView];
+
+    WebPreferences *oldPrefs = _private->preferences;
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:WebPreferencesChangedNotification object:[self preferences]];
+    [WebPreferences _removeReferenceForIdentifier:[oldPrefs identifier]];
+
+    _private->preferences = [prefs retain];
+
+    // After registering for the notification, post it so the WebCore settings update.
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_preferencesChangedNotification:)
+        name:WebPreferencesChangedNotification object:[self preferences]];
+    [[self preferences] _postPreferencesChangesNotification];
+
+    [oldPrefs didRemoveFromWebView];
+    [oldPrefs release];
 }
 
 - (WebPreferences *)preferences
 {
-    return _private->preferences ? _private->preferences : [WebPreferences standardPreferences];
+    return _private->preferences;
 }
 
 - (void)setPreferencesIdentifier:(NSString *)anIdentifier
@@ -1909,7 +2070,6 @@ NS_ENDHANDLER
     [self _cacheResourceLoadDelegateImplementations];
 }
 
-
 - resourceLoadDelegate
 {
     return _private->resourceProgressDelegate;
@@ -1941,8 +2101,7 @@ NS_ENDHANDLER
 - (void)setFrameLoadDelegate:delegate
 {
     _private->frameLoadDelegate = delegate;
-    [_private->frameLoadDelegateForwarder release];
-    _private->frameLoadDelegateForwarder = nil;
+    [self _cacheFrameLoadDelegateImplementations];
 }
 
 - frameLoadDelegate
@@ -1976,13 +2135,17 @@ NS_ENDHANDLER
 
 - (WebBackForwardList *)backForwardList
 {
-    if (_private->page->backForwardList()->enabled())
-        return kit(_private->page->backForwardList());
-    return nil;
+    if (!_private->page)
+        return nil;
+    if (!_private->page->backForwardList()->enabled())
+        return nil;
+    return kit(_private->page->backForwardList());
 }
 
 - (void)setMaintainsBackForwardList: (BOOL)flag
 {
+    if (!_private->page)
+        return;
     _private->page->backForwardList()->setEnabled(flag);
 }
 
@@ -2087,10 +2250,10 @@ NS_ENDHANDLER
 {
     WebDataSource *dataSource = [[self mainFrame] provisionalDataSource];
     if (dataSource == nil)
-        dataSource = [[self mainFrame] dataSource];
+        dataSource = [[self mainFrame] _dataSource];
     if (dataSource == nil)
         return nil;
-    return [dataSource _documentLoader]->overrideEncoding();
+    return nsStringNilIfEmpty([dataSource _documentLoader]->overrideEncoding());
 }
 
 - (NSString *)customTextEncodingName
@@ -2108,7 +2271,13 @@ NS_ENDHANDLER
         if (returnStringRange.length != 0 && returnStringRange.location == 0)
             script = [script substringFromIndex: returnStringRange.location + returnStringRange.length];
     }
-    return [[[self mainFrame] _bridge] stringByEvaluatingJavaScriptFromString:script];
+    
+    NSString *result = [[[self mainFrame] _bridge] stringByEvaluatingJavaScriptFromString:script];
+    // The only way stringByEvaluatingJavaScriptFromString can return nil is if the frame was removed by the script
+    // Since there's no way to get rid of the main frame, result will never ever be nil here.
+    ASSERT(result);
+    
+    return result;
 }
 
 - (WebScriptObject *)windowScriptObject
@@ -2122,7 +2291,7 @@ NS_ENDHANDLER
 // Get the appropriate user-agent string for a particular URL.
 - (NSString *)userAgentForURL:(NSURL *)url
 {
-    return [self _userAgentForURL:KURL(url)];
+    return [self _userAgentForURL:KURL([url absoluteURL])];
 }
 
 - (void)setHostWindow:(NSWindow *)hostWindow
@@ -2257,12 +2426,17 @@ NS_ENDHANDLER
     // WebFrameView has very similar code.
     NSWindow *window = [self window];
     WebFrameView *mainFrameView = [[self mainFrame] frameView];
+
+    NSResponder *previousFirstResponder = [[self window] _oldFirstResponderBeforeBecoming];
+    BOOL fromOutside = ![previousFirstResponder isKindOfClass:[NSView class]] || (![(NSView *)previousFirstResponder isDescendantOf:self] && previousFirstResponder != self);
     
     if ([window keyViewSelectionDirection] == NSSelectingPrevious) {
         NSView *previousValidKeyView = [self previousValidKeyView];
         if ((previousValidKeyView != self) && (previousValidKeyView != mainFrameView)) {
             _private->becomingFirstResponder = YES;
+            _private->becomingFirstResponderFromOutside = fromOutside;
             [window makeFirstResponder:previousValidKeyView];
+            _private->becomingFirstResponderFromOutside = NO;
             _private->becomingFirstResponder = NO;
             return YES;
         } else {
@@ -2272,7 +2446,9 @@ NS_ENDHANDLER
     
     if ([mainFrameView acceptsFirstResponder]) {
         _private->becomingFirstResponder = YES;
+        _private->becomingFirstResponderFromOutside = fromOutside;
         [window makeFirstResponder:mainFrameView];
+        _private->becomingFirstResponderFromOutside = NO;
         _private->becomingFirstResponder = NO;
         return YES;
     } 
@@ -2316,6 +2492,12 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 {
     [[WebFrameView _viewTypesAllowImageTypeOmission:YES] setObject:viewClass forKey:MIMEType];
     [[WebDataSource _repTypesAllowImageTypeOmission:YES] setObject:representationClass forKey:MIMEType];
+    
+    // FIXME: We also need to maintain MIMEType registrations (which can be dynamically changed)
+    // in the WebCore MIMEType registry.  For now we're doing this in a safe, limited manner
+    // to fix <rdar://problem/5372989> - a future revamping of the entire system is neccesary for future robustness
+    if ([viewClass class] == [WebHTMLView class])
+        MIMETypeRegistry::getSupportedNonImageMIMETypes().add(MIMEType);
 }
 
 - (void)setGroupName:(NSString *)groupName
@@ -2384,14 +2566,14 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (void)moveDragCaretToPoint:(NSPoint)point
 {
-    [[[self mainFrame] _bridge] moveDragCaretToPoint:[self convertPoint:point toView:[[[self mainFrame] frameView] documentView]]];
+    if (Page* page = core(self))
+        page->dragController()->placeDragCaret(IntPoint([self convertPoint:point toView:nil]));
 }
 
 - (void)removeDragCaret
 {
-    if (!_private->page)
-        return;
-    _private->page->dragCaretController()->clear();
+    if (Page* page = core(self))
+        page->dragController()->dragEnded();
 }
 
 - (void)setMainFrameURL:(NSString *)URLString
@@ -2404,7 +2586,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     WebDataSource *ds;
     ds = [[self mainFrame] provisionalDataSource];
     if (!ds)
-        ds = [[self mainFrame] dataSource];
+        ds = [[self mainFrame] _dataSource];
     return [[[ds request] URL] _web_originalDataAsString];
 }
 
@@ -2416,13 +2598,13 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (NSString *)mainFrameTitle
 {
-    NSString *mainFrameTitle = [[[self mainFrame] dataSource] pageTitle];
+    NSString *mainFrameTitle = [[[self mainFrame] _dataSource] pageTitle];
     return (mainFrameTitle != nil) ? mainFrameTitle : (NSString *)@"";
 }
 
 - (NSImage *)mainFrameIcon
 {
-    return [[WebIconDatabase sharedIconDatabase] iconForURL:[[[[self mainFrame] dataSource] _URL] _web_originalDataAsString] withSize:WebIconSmallSize];
+    return [[WebIconDatabase sharedIconDatabase] iconForURL:[[[[self mainFrame] _dataSource] _URL] _web_originalDataAsString] withSize:WebIconSmallSize];
 }
 
 - (DOMDocument *)mainFrameDocument
@@ -2445,29 +2627,6 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 - (BOOL)drawsBackground
 {
     return _private->drawsBackground;
-}
-
-- (void)_inspectElement:(id)sender
-{
-    NSDictionary *element = [sender representedObject];
-    WebFrame *frame = [element objectForKey:WebElementFrameKey];
-    DOMNode *node = [element objectForKey:WebElementDOMNodeKey];
-    if (!node || !frame)
-        return;
-
-    if ([node nodeType] != DOM_ELEMENT_NODE || [node nodeType] != DOM_DOCUMENT_NODE)
-        node = [node parentNode];
-
-    WebInspector *inspector = [WebInspector sharedWebInspector];
-    [inspector setWebFrame:frame];
-    [inspector setFocusedDOMNode:node];
-
-    node = [node parentNode];
-    node = [node parentNode];
-    if (node) // set the root node to something relatively close to the focused node
-        [inspector setRootDOMNode:node];
-
-    [inspector showWindow:nil];
 }
 
 @end
@@ -2600,7 +2759,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     } else if (action == @selector(makeTextStandardSize:)) {
         return [self canMakeTextStandardSize];
     } else if (action == @selector(reload:)) {
-        return [[self mainFrame] dataSource] != nil;
+        return [[self mainFrame] _dataSource] != nil;
     } else if (action == @selector(stopLoading:)) {
         return [self _isLoading];
     } else if (action == @selector(toggleContinuousSpellChecking:)) {
@@ -2633,12 +2792,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)item
 {
     BOOL result = [self validateUserInterfaceItemWithoutDelegate:item];
-
-    id ud = [self UIDelegate];
-    if (ud && [ud respondsToSelector:@selector(webView:validateUserInterfaceItem:defaultValidation:)])
-        return [ud webView:self validateUserInterfaceItem:item defaultValidation:result];
-
-    return result;
+    return CallUIDelegateReturningBoolean(result, self, @selector(webView:validateUserInterfaceItem:defaultValidation:), item, result);
 }
 
 @end
@@ -2795,22 +2949,36 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     return [[[self mainFrame] _bridge] aeDescByEvaluatingJavaScriptFromString:script];
 }
 
-- (unsigned)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(unsigned)limit
+- (BOOL)canMarkAllTextMatches
+{
+    WebFrame *frame = [self mainFrame];
+    do {
+        id <WebDocumentView> view = [[frame frameView] documentView];
+        if (view && ![view conformsToProtocol:@protocol(WebMultipleTextMatches)])
+            return NO;
+        
+        frame = incrementFrame(frame, YES, NO);
+    } while (frame);
+    
+    return YES;
+}
+
+- (NSUInteger)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(NSUInteger)limit
 {
     WebFrame *frame = [self mainFrame];
     unsigned matchCount = 0;
     do {
         id <WebDocumentView> view = [[frame frameView] documentView];
-        // FIXME: introduce a protocol, or otherwise make this work with other types
-        if ([view isKindOfClass:[WebHTMLView class]])
-            [(WebHTMLView *)view setMarkedTextMatchesAreHighlighted:highlight];
+        if ([view conformsToProtocol:@protocol(WebMultipleTextMatches)]) {
+            [(NSView <WebMultipleTextMatches>*)view  setMarkedTextMatchesAreHighlighted:highlight];
         
-        ASSERT(limit == 0 || matchCount < limit);
-        matchCount += [(WebHTMLView *)view markAllMatchesForText:string caseSensitive:caseFlag limit:limit == 0 ? 0 : limit - matchCount];
+            ASSERT(limit == 0 || matchCount < limit);
+            matchCount += [(NSView <WebMultipleTextMatches>*)view markAllMatchesForText:string caseSensitive:caseFlag limit:limit == 0 ? 0 : limit - matchCount];
 
-        // Stop looking if we've reached the limit. A limit of 0 means no limit.
-        if (limit > 0 && matchCount >= limit)
-            break;
+            // Stop looking if we've reached the limit. A limit of 0 means no limit.
+            if (limit > 0 && matchCount >= limit)
+                break;
+        }
         
         frame = incrementFrame(frame, YES, NO);
     } while (frame);
@@ -2823,9 +2991,8 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     WebFrame *frame = [self mainFrame];
     do {
         id <WebDocumentView> view = [[frame frameView] documentView];
-        // FIXME: introduce a protocol, or otherwise make this work with other types
-        if ([view isKindOfClass:[WebHTMLView class]])
-            [(WebHTMLView *)view unmarkAllTextMatches];
+        if ([view conformsToProtocol:@protocol(WebMultipleTextMatches)])
+            [(NSView <WebMultipleTextMatches>*)view unmarkAllTextMatches];
         
         frame = incrementFrame(frame, YES, NO);
     } while (frame);
@@ -2837,20 +3004,22 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     WebFrame *frame = [self mainFrame];
     do {
         id <WebDocumentView> view = [[frame frameView] documentView];
-        // FIXME: introduce a protocol, or otherwise make this work with other types
-        if ([view isKindOfClass:[WebHTMLView class]]) {
-            WebHTMLView *htmlView = (WebHTMLView *)view;
-            NSArray *originalRects = [htmlView rectsForTextMatches];
+        if ([view conformsToProtocol:@protocol(WebMultipleTextMatches)]) {
+            NSView <WebMultipleTextMatches> *documentView = (NSView <WebMultipleTextMatches> *)view;
+            NSRect documentViewVisibleRect = [documentView visibleRect];
+            NSArray *originalRects = [documentView rectsForTextMatches];
             unsigned rectCount = [originalRects count];
             unsigned rectIndex;
             NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
             for (rectIndex = 0; rectIndex < rectCount; ++rectIndex) {
                 NSRect r = [[originalRects objectAtIndex:rectIndex] rectValue];
+                // Clip rect to document view's visible rect so rect is confined to subframe
+                r = NSIntersectionRect(r, documentViewVisibleRect);
                 if (NSIsEmptyRect(r))
                     continue;
                 
                 // Convert rect to our coordinate system
-                r = [htmlView convertRect:r toView:self];
+                r = [documentView convertRect:r toView:self];
                 [result addObject:[NSValue valueWithRect:r]];
                 if (rectIndex % 10 == 0) {
                     [pool drain];
@@ -2887,28 +3056,12 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (float)_headerHeight
 {
-    if ([[self UIDelegate] respondsToSelector:@selector(webViewHeaderHeight:)]) {
-        return [[self UIDelegate] webViewHeaderHeight:self];
-    }
-    
-#ifdef DEBUG_HEADER_AND_FOOTER
-    return 25;
-#else
-    return 0;
-#endif
+    return CallUIDelegateReturningFloat(self, @selector(webViewHeaderHeight:));
 }
 
 - (float)_footerHeight
 {
-    if ([[self UIDelegate] respondsToSelector:@selector(webViewFooterHeight:)]) {
-        return [[self UIDelegate] webViewFooterHeight:self];
-    }
-    
-#ifdef DEBUG_HEADER_AND_FOOTER
-    return 50;
-#else
-    return 0;
-#endif
+    return CallUIDelegateReturningFloat(self, @selector(webViewFooterHeight:));
 }
 
 - (void)_drawHeaderInRect:(NSRect)rect
@@ -2920,14 +3073,18 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     NSRectFill(rect);
     [currentContext restoreGraphicsState];
 #endif
-    
-    if ([[self UIDelegate] respondsToSelector:@selector(webView:drawHeaderInRect:)]) {
-        NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
-        [currentContext saveGraphicsState];
-        NSRectClip(rect);
-        [[self UIDelegate] webView:self drawHeaderInRect:rect]; 
-        [currentContext restoreGraphicsState];
-    }
+
+    SEL selector = @selector(webView:drawHeaderInRect:);
+    if (![_private->UIDelegate respondsToSelector:selector])
+        return;
+
+    NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+    [currentContext saveGraphicsState];
+
+    NSRectClip(rect);
+    CallUIDelegate(self, selector, rect);
+
+    [currentContext restoreGraphicsState];
 }
 
 - (void)_drawFooterInRect:(NSRect)rect
@@ -2940,13 +3097,17 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     [currentContext restoreGraphicsState];
 #endif
     
-    if ([[self UIDelegate] respondsToSelector:@selector(webView:drawFooterInRect:)]) {
-        NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
-        [currentContext saveGraphicsState];
-        NSRectClip(rect);
-        [[self UIDelegate] webView:self drawFooterInRect:rect];
-        [currentContext restoreGraphicsState];
-    }
+    SEL selector = @selector(webView:drawFooterInRect:);
+    if (![_private->UIDelegate respondsToSelector:selector])
+        return;
+
+    NSGraphicsContext *currentContext = [NSGraphicsContext currentContext];
+    [currentContext saveGraphicsState];
+
+    NSRectClip(rect);
+    CallUIDelegate(self, selector, rect);
+
+    [currentContext restoreGraphicsState];
 }
 
 - (void)_adjustPrintingMarginsForHeaderAndFooter
@@ -3036,8 +3197,10 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (DOMRange *)editableDOMRangeForPoint:(NSPoint)point
 {
-    WebFrameBridge *bridge = [self _bridgeAtPoint:point];
-    return [bridge editableDOMRangeForPoint:[self convertPoint:point toView:[[[bridge webFrame] frameView] documentView]]];
+    Page* page = core(self);
+    if (!page)
+        return nil;
+    return kit(page->mainFrame()->editor()->rangeForPoint(IntPoint([self convertPoint:point toView:nil])).get());
 }
 
 - (BOOL)_shouldChangeSelectedDOMRange:(DOMRange *)currentRange toDOMRange:(DOMRange *)proposedRange affinity:(NSSelectionAffinity)selectionAffinity stillSelecting:(BOOL)flag;
@@ -3045,7 +3208,6 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     // FIXME: This quirk is needed due to <rdar://problem/4985321> - We can phase it out once Aperture can adopt the new behavior on their end
     if (!WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITHOUT_APERTURE_QUIRK) && [[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Aperture"])
         return YES;
-        
     return [[self _editingDelegateForwarder] webView:self shouldChangeSelectedDOMRange:currentRange toDOMRange:proposedRange affinity:selectionAffinity stillSelecting:flag];
 }
 
@@ -3156,7 +3318,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
     return (continuousSpellCheckingEnabled && [self _continuousCheckingAllowed]);
 }
 
-- (WebNSInteger)spellCheckerDocumentTag
+- (NSInteger)spellCheckerDocumentTag
 {
     if (!_private->hasSpellCheckerDocumentTag) {
         _private->spellCheckerDocumentTag = [NSSpellChecker uniqueSpellDocumentTag];
@@ -3287,7 +3449,7 @@ static WebFrame *incrementFrame(WebFrame *curr, BOOL forward, BOOL wrapFlag)
 
 - (void)replaceSelectionWithArchive:(WebArchive *)archive
 {
-    [[[[self _bridgeForSelectedOrMainFrame] webFrame] dataSource] _replaceSelectionWithArchive:archive selectReplacement:YES];
+    [[[[self _bridgeForSelectedOrMainFrame] webFrame] _dataSource] _replaceSelectionWithArchive:archive selectReplacement:YES];
 }
 
 - (void)deleteSelection
@@ -3357,16 +3519,6 @@ FOR_EACH_RESPONDER_SELECTOR(FORWARD)
     [[self _bridgeForSelectedOrMainFrame] insertParagraphSeparatorInQuotedContent];
 }
 
-- (BOOL)_selectWordBeforeMenuEvent
-{
-    return _private->selectWordBeforeMenuEvent;
-}
-
-- (void)_setSelectWordBeforeMenuEvent:(BOOL)flag
-{
-    _private->selectWordBeforeMenuEvent = flag;
-}
-
 - (void)_replaceSelectionWithNode:(DOMNode *)node matchStyle:(BOOL)matchStyle
 {
     [[self _bridgeForSelectedOrMainFrame] replaceSelectionWithNode:node selectReplacement:YES smartReplace:NO matchStyle:matchStyle];
@@ -3382,6 +3534,252 @@ static WebFrameView *containingFrameView(NSView *view)
 }
 
 @implementation WebView (WebFileInternal)
+
++ (void)_setCacheModel:(WebCacheModel)cacheModel
+{
+    if (s_didSetCacheModel && cacheModel == s_cacheModel)
+        return;
+
+    NSString *nsurlCacheDirectory = [(NSString *)WKCopyFoundationCacheDirectory() autorelease];
+    if (!nsurlCacheDirectory)
+        nsurlCacheDirectory = NSHomeDirectory();
+
+    // As a fudge factor, use 1000 instead of 1024, in case the reported byte 
+    // count doesn't align exactly to a megabyte boundary.
+    vm_size_t memSize = WebMemorySize() / 1024 / 1000;
+    unsigned long long diskFreeSize = WebVolumeFreeSize(nsurlCacheDirectory) / 1024 / 1000;
+    NSURLCache *nsurlCache = [NSURLCache sharedURLCache];
+
+    unsigned cacheTotalCapacity = 0;
+    unsigned cacheMinDeadCapacity = 0;
+    unsigned cacheMaxDeadCapacity = 0;
+
+    unsigned pageCacheCapacity = 0;
+
+    NSUInteger nsurlCacheMemoryCapacity = 0;
+    NSUInteger nsurlCacheDiskCapacity = 0;
+
+    switch (cacheModel) {
+    case WebCacheModelDocumentViewer: {
+        // Page cache capacity (in pages)
+        pageCacheCapacity = 0;
+
+        // Object cache capacities (in bytes)
+        if (memSize >= 4096)
+            cacheTotalCapacity = 256 * 1024 * 1024;
+        else if (memSize >= 3072)
+            cacheTotalCapacity = 192 * 1024 * 1024;
+        else if (memSize >= 2048)
+            cacheTotalCapacity = 128 * 1024 * 1024;
+        else if (memSize >= 1536)
+            cacheTotalCapacity = 86 * 1024 * 1024;
+        else if (memSize >= 1024)
+            cacheTotalCapacity = 64 * 1024 * 1024;
+        else if (memSize >= 512)
+            cacheTotalCapacity = 32 * 1024 * 1024;
+        else if (memSize >= 256)
+            cacheTotalCapacity = 16 * 1024 * 1024; 
+
+        cacheMinDeadCapacity = 0;
+        cacheMaxDeadCapacity = 0;
+
+        // Foundation memory cache capacity (in bytes)
+        nsurlCacheMemoryCapacity = 0;
+
+        // Foundation disk cache capacity (in bytes)
+        nsurlCacheDiskCapacity = [nsurlCache diskCapacity];
+
+        break;
+    }
+    case WebCacheModelDocumentBrowser: {
+        // Page cache capacity (in pages)
+        if (memSize >= 1024)
+            pageCacheCapacity = 3;
+        else if (memSize >= 512)
+            pageCacheCapacity = 2;
+        else if (memSize >= 256)
+            pageCacheCapacity = 1;
+        else
+            pageCacheCapacity = 0;
+
+        // Object cache capacities (in bytes)
+        if (memSize >= 4096)
+            cacheTotalCapacity = 256 * 1024 * 1024;
+        else if (memSize >= 3072)
+            cacheTotalCapacity = 192 * 1024 * 1024;
+        else if (memSize >= 2048)
+            cacheTotalCapacity = 128 * 1024 * 1024;
+        else if (memSize >= 1536)
+            cacheTotalCapacity = 86 * 1024 * 1024;
+        else if (memSize >= 1024)
+            cacheTotalCapacity = 64 * 1024 * 1024;
+        else if (memSize >= 512)
+            cacheTotalCapacity = 32 * 1024 * 1024;
+        else if (memSize >= 256)
+            cacheTotalCapacity = 16 * 1024 * 1024; 
+
+        cacheMinDeadCapacity = cacheTotalCapacity / 8;
+        cacheMaxDeadCapacity = cacheTotalCapacity / 4;
+
+        // Foundation memory cache capacity (in bytes)
+        if (memSize >= 2048)
+            nsurlCacheMemoryCapacity = 4 * 1024 * 1024;
+        else if (memSize >= 1024)
+            nsurlCacheMemoryCapacity = 2 * 1024 * 1024;
+        else if (memSize >= 512)
+            nsurlCacheMemoryCapacity = 1 * 1024 * 1024;
+        else
+            nsurlCacheMemoryCapacity =      512 * 1024; 
+
+        // Foundation disk cache capacity (in bytes)
+        if (diskFreeSize >= 16384)
+            nsurlCacheDiskCapacity = 50 * 1024 * 1024;
+        else if (diskFreeSize >= 8192)
+            nsurlCacheDiskCapacity = 40 * 1024 * 1024;
+        else if (diskFreeSize >= 4096)
+            nsurlCacheDiskCapacity = 30 * 1024 * 1024;
+        else
+            nsurlCacheDiskCapacity = 20 * 1024 * 1024;
+
+        break;
+    }
+    case WebCacheModelPrimaryWebBrowser: {
+        // Page cache capacity (in pages)
+        // (Research indicates that value / page drops substantially after 3 pages.)
+        if (memSize >= 8192)
+            pageCacheCapacity = 7;
+        if (memSize >= 4096)
+            pageCacheCapacity = 6;
+        else if (memSize >= 2048)
+            pageCacheCapacity = 5;
+        else if (memSize >= 1024)
+            pageCacheCapacity = 4;
+        else if (memSize >= 512)
+            pageCacheCapacity = 3;
+        else if (memSize >= 256)
+            pageCacheCapacity = 2;
+        else
+            pageCacheCapacity = 1;
+
+        // Object cache capacities (in bytes)
+        // (Testing indicates that value / MB depends heavily on content and
+        // browsing pattern. Even growth above 128MB can have substantial 
+        // value / MB for some content / browsing patterns.)
+        if (memSize >= 4096)
+            cacheTotalCapacity = 512 * 1024 * 1024;
+        else if (memSize >= 3072)
+            cacheTotalCapacity = 384 * 1024 * 1024;
+        else if (memSize >= 2048)
+            cacheTotalCapacity = 256 * 1024 * 1024;
+        else if (memSize >= 1536)
+            cacheTotalCapacity = 172 * 1024 * 1024;
+        else if (memSize >= 1024)
+            cacheTotalCapacity = 128 * 1024 * 1024;
+        else if (memSize >= 512)
+            cacheTotalCapacity = 64 * 1024 * 1024;
+        else if (memSize >= 256)
+            cacheTotalCapacity = 32 * 1024 * 1024; 
+
+        cacheMinDeadCapacity = cacheTotalCapacity / 4;
+        cacheMaxDeadCapacity = cacheTotalCapacity / 2;
+
+        // This code is here to avoid a PLT regression. We can remove it if we
+        // can prove that the overall system gain would justify the regression.
+        cacheMaxDeadCapacity = max(24u, cacheMaxDeadCapacity);
+
+        // Foundation memory cache capacity (in bytes)
+        // (These values are small because WebCore does most caching itself.)
+        if (memSize >= 1024)
+            nsurlCacheMemoryCapacity = 4 * 1024 * 1024;
+        else if (memSize >= 512)
+            nsurlCacheMemoryCapacity = 2 * 1024 * 1024;
+        else if (memSize >= 256)
+            nsurlCacheMemoryCapacity = 1 * 1024 * 1024;
+        else
+            nsurlCacheMemoryCapacity =      512 * 1024; 
+
+        // Foundation disk cache capacity (in bytes)
+        if (diskFreeSize >= 16384)
+            nsurlCacheDiskCapacity = 175 * 1024 * 1024;
+        else if (diskFreeSize >= 8192)
+            nsurlCacheDiskCapacity = 150 * 1024 * 1024;
+        else if (diskFreeSize >= 4096)
+            nsurlCacheDiskCapacity = 125 * 1024 * 1024;
+        else if (diskFreeSize >= 2048)
+            nsurlCacheDiskCapacity = 100 * 1024 * 1024;
+        else if (diskFreeSize >= 1024)
+            nsurlCacheDiskCapacity = 75 * 1024 * 1024;
+        else
+            nsurlCacheDiskCapacity = 50 * 1024 * 1024;
+
+        break;
+    }
+    default:
+        ASSERT_NOT_REACHED();
+    };
+
+#ifdef BUILDING_ON_TIGER
+    // Don't use a big Foundation disk cache on Tiger because, according to the 
+    // PLT, the Foundation disk cache on Tiger is slower than the network. 
+    nsurlCacheDiskCapacity = [[NSURLCache sharedURLCache] diskCapacity];
+#else
+    // Don't use a big Foundation disk cache on older versions of Leopard because
+    // doing so causes a SPOD on launch (<rdar://problem/5465260>).
+    if (NSVersionOfRunTimeLibrary("CFNetwork") < WEBKIT_FIRST_CFNETWORK_VERSION_WITH_LARGE_DISK_CACHE_FIX)
+        nsurlCacheDiskCapacity = [[NSURLCache sharedURLCache] diskCapacity];
+#endif
+
+    // Don't shrink a big disk cache, since that would cause churn.
+    nsurlCacheDiskCapacity = max(nsurlCacheDiskCapacity, [nsurlCache diskCapacity]);
+
+    cache()->setCapacities(cacheMinDeadCapacity, cacheMaxDeadCapacity, cacheTotalCapacity);
+    pageCache()->setCapacity(pageCacheCapacity);
+    [nsurlCache setMemoryCapacity:nsurlCacheMemoryCapacity];
+    [nsurlCache setDiskCapacity:nsurlCacheDiskCapacity];
+
+    s_cacheModel = cacheModel;
+    s_didSetCacheModel = YES;
+}
+
++ (WebCacheModel)_cacheModel
+{
+    return s_cacheModel;
+}
+
++ (WebCacheModel)_didSetCacheModel
+{
+    return s_didSetCacheModel;
+}
+
++ (WebCacheModel)_maxCacheModelInAnyInstance
+{
+    WebCacheModel cacheModel = WebCacheModelDocumentViewer;
+    NSEnumerator *enumerator = [(NSMutableSet *)allWebViewsSet objectEnumerator];
+    while (WebPreferences *preferences = [[enumerator nextObject] preferences])
+        cacheModel = max(cacheModel, [preferences cacheModel]);
+    return cacheModel;
+}
+
++ (void)_preferencesChangedNotification:(NSNotification *)notification
+{
+    WebPreferences *preferences = (WebPreferences *)[notification object];
+    ASSERT([preferences isKindOfClass:[WebPreferences class]]);
+
+    WebCacheModel cacheModel = [preferences cacheModel];
+    if (![self _didSetCacheModel] || cacheModel > [self _cacheModel])
+        [self _setCacheModel:cacheModel];
+    else if (cacheModel < [self _cacheModel])
+        [self _setCacheModel:max([[WebPreferences standardPreferences] cacheModel], [self _maxCacheModelInAnyInstance])];
+}
+
++ (void)_preferencesRemovedNotification:(NSNotification *)notification
+{
+    WebPreferences *preferences = (WebPreferences *)[notification object];
+    ASSERT([preferences isKindOfClass:[WebPreferences class]]);
+
+    if ([preferences cacheModel] == [self _cacheModel])
+        [self _setCacheModel:max([[WebPreferences standardPreferences] cacheModel], [self _maxCacheModelInAnyInstance])];
+}
 
 - (WebFrame *)_focusedFrame
 {
@@ -3411,7 +3809,7 @@ static WebFrameView *containingFrameView(NSView *view)
 - (BOOL)_isLoading
 {
     WebFrame *mainFrame = [self mainFrame];
-    return [[mainFrame dataSource] isLoading]
+    return [[mainFrame _dataSource] isLoading]
         || [[mainFrame provisionalDataSource] isLoading];
 }
 
@@ -3425,11 +3823,6 @@ static WebFrameView *containingFrameView(NSView *view)
     WebFrameView *frameView = containingFrameView(view);
     ASSERT(frameView);
     return frameView;
-}
-
-- (WebFrameBridge *)_bridgeAtPoint:(NSPoint)point
-{
-    return [[[self _frameViewAtWindowPoint:[self convertPoint:point toView:nil]] webFrame] _bridge];
 }
 
 + (void)_preflightSpellCheckerNow:(id)sender
@@ -3474,6 +3867,20 @@ static WebFrameView *containingFrameView(NSView *view)
             responder = mainFrameView;
     }
     return responder;
+}
+
+- (void)_openFrameInNewWindowFromMenu:(NSMenuItem *)sender
+{
+    ASSERT_ARG(sender, [sender isKindOfClass:[NSMenuItem class]]);
+
+    NSDictionary *element = [sender representedObject];
+    ASSERT([element isKindOfClass:[NSDictionary class]]);
+    
+    NSURLRequest *request = [[[[element objectForKey:WebElementFrameKey] dataSource] request] copy];
+    ASSERT(request);
+    
+    [self _openNewWindowWithRequest:request];
+    [request release];
 }
 
 - (void)_searchWithGoogleFromMenu:(id)sender
@@ -3525,7 +3932,7 @@ static WebFrameView *containingFrameView(NSView *view)
 // to that new factor before we send sel to any of them. 
 - (BOOL)_performTextSizingSelector:(SEL)sel withObject:(id)arg onTrackingDocs:(BOOL)doTrackingViews selForNonTrackingDocs:(SEL)testSel newScaleFactor:(float)newScaleFactor
 {
-    if ([[self mainFrame] dataSource] == nil)
+    if ([[self mainFrame] _dataSource] == nil)
         return NO;
     
     BOOL foundSome = NO;
@@ -3561,7 +3968,7 @@ static WebFrameView *containingFrameView(NSView *view)
 
 - (void)_notifyTextSizeMultiplierChanged
 {
-    if ([[self mainFrame] dataSource] == nil)
+    if ([[self mainFrame] _dataSource] == nil)
         return;
 
     NSArray *docViews = [[self mainFrame] _documentViews];
@@ -3580,6 +3987,52 @@ static WebFrameView *containingFrameView(NSView *view)
 @end
 
 @implementation WebView (WebViewInternal)
+
+- (BOOL)_becomingFirstResponderFromOutside
+{
+    return _private->becomingFirstResponderFromOutside;
+}
+
+- (void)_receivedIconChangedNotification:(NSNotification *)notification
+{
+    // Get the URL for this notification
+    NSDictionary *userInfo = [notification userInfo];
+    ASSERT([userInfo isKindOfClass:[NSDictionary class]]);
+    NSString *urlString = [userInfo objectForKey:WebIconNotificationUserInfoURLKey];
+    ASSERT([urlString isKindOfClass:[NSString class]]);
+    
+    // If that URL matches the current main frame, dispatch the delegate call, which will also unregister
+    // us for this notification
+    if ([[self mainFrameURL] isEqualTo:urlString])
+        [self _dispatchDidReceiveIconFromWebFrame:[self mainFrame]];
+}
+
+- (void)_registerForIconNotification:(BOOL)listen
+{
+    if (listen)
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_receivedIconChangedNotification:) name:WebIconDatabaseDidAddIconNotification object:nil];        
+    else
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:WebIconDatabaseDidAddIconNotification object:nil];
+}
+
+- (void)_dispatchDidReceiveIconFromWebFrame:(WebFrame *)webFrame
+{
+    // FIXME: This willChangeValueForKey call is too late, because the icon has already changed by now.
+    [self _willChangeValueForKey:_WebMainFrameIconKey];
+    
+    // Since we definitely have an icon and are about to send out the delegate call for that, this WebView doesn't need to listen for the general
+    // notification any longer
+    [self _registerForIconNotification:NO];
+
+    WebFrameLoadDelegateImplementationCache implementations = WebViewGetFrameLoadDelegateImplementations(self);
+    if (implementations.didReceiveIconForFrameFunc) {
+        Image* image = iconDatabase()->iconForPageURL(core(webFrame)->loader()->url().url(), IntSize(16, 16));
+        if (NSImage *icon = webGetNSImage(image, NSMakeSize(16, 16)))
+            CallFrameLoadDelegate(implementations.didReceiveIconForFrameFunc, self, @selector(webView:didReceiveIcon:forFrame:), icon, webFrame);
+    }
+
+    [self _didChangeValueForKey:_WebMainFrameIconKey];
+}
 
 - (NSString *)_userVisibleBundleVersionFromFullVersion:(NSString *)fullVersion
 {
@@ -3663,6 +4116,461 @@ static WebFrameView *containingFrameView(NSView *view)
     // and we should release the web view.
     if (_private->identifierMap->isEmpty())
         CFRelease(self);
+}
+
+@end
+
+// We use these functions to call the delegates and block exceptions. These functions are
+// declared inside a WebView category to get direct access to the delegate data memebers,
+// preventing more ObjC message dispatch and compensating for the expense of the @try/@catch.
+
+@implementation WebView (WebCallDelegateFunctions)
+
+#if !(defined(__i386__) || defined(__x86_64__))
+typedef double (*ObjCMsgSendFPRet)(id, SEL, ...);
+static const ObjCMsgSendFPRet objc_msgSend_fpret = reinterpret_cast<ObjCMsgSendFPRet>(objc_msgSend);
+#endif
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self);
+    @try {
+        return objc_msgSend(delegate, selector, self);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, id object)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self, object);
+    @try {
+        return objc_msgSend(delegate, selector, self, object);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, NSRect rect)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<id (*)(id, SEL, WebView *, NSRect)>(objc_msgSend)(delegate, selector, self, rect);
+    @try {
+        return reinterpret_cast<id (*)(id, SEL, WebView *, NSRect)>(objc_msgSend)(delegate, selector, self, rect);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, id object1, id object2)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self, object1, object2);
+    @try {
+        return objc_msgSend(delegate, selector, self, object1, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, id object, BOOL boolean)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self, object, boolean);
+    @try {
+        return objc_msgSend(delegate, selector, self, object, boolean);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, id object1, id object2, id object3)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self, object1, object2, object3);
+    @try {
+        return objc_msgSend(delegate, selector, self, object1, object2, object3);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(WebView *self, id delegate, SEL selector, id object, NSUInteger integer)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, self, object, integer);
+    @try {
+        return objc_msgSend(delegate, selector, self, object, integer);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline float CallDelegateReturningFloat(WebView *self, id delegate, SEL selector)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return 0.0f;
+    if (!self->_private->catchesDelegateExceptions)
+        return static_cast<float>(objc_msgSend_fpret(delegate, selector, self));
+    @try {
+        return static_cast<float>(objc_msgSend_fpret(delegate, selector, self));
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return 0.0f;
+}
+
+static inline BOOL CallDelegateReturningBoolean(BOOL result, WebView *self, id delegate, SEL selector)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return result;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *)>(objc_msgSend)(delegate, selector, self);
+    @try {
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *)>(objc_msgSend)(delegate, selector, self);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return result;
+}
+
+static inline BOOL CallDelegateReturningBoolean(BOOL result, WebView *self, id delegate, SEL selector, id object)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return result;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id)>(objc_msgSend)(delegate, selector, self, object);
+    @try {
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id)>(objc_msgSend)(delegate, selector, self, object);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return result;
+}
+
+static inline BOOL CallDelegateReturningBoolean(BOOL result, WebView *self, id delegate, SEL selector, id object, BOOL boolean)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return result;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id, BOOL)>(objc_msgSend)(delegate, selector, self, object, boolean);
+    @try {
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id, BOOL)>(objc_msgSend)(delegate, selector, self, object, boolean);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return result;
+}
+
+static inline BOOL CallDelegateReturningBoolean(BOOL result, WebView *self, id delegate, SEL selector, id object1, id object2)
+{
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return result;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id, id)>(objc_msgSend)(delegate, selector, self, object1, object2);
+    @try {
+        return reinterpret_cast<BOOL (*)(id, SEL, WebView *, id, id)>(objc_msgSend)(delegate, selector, self, object1, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return result;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self);
+    @try {
+        return implementation(delegate, selector, self);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object);
+    @try {
+        return implementation(delegate, selector, self, object);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, id object2)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, object2);
+    @try {
+        return implementation(delegate, selector, self, object1, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, id object2, id object3)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, object2, object3);
+    @try {
+        return implementation(delegate, selector, self, object1, object2, object3);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, id object2, id object3, id object4)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, object2, object3, object4);
+    @try {
+        return implementation(delegate, selector, self, object1, object2, object3, object4);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, NSInteger integer, id object2)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, integer, object2);
+    @try {
+        return implementation(delegate, selector, self, object1, integer, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, id object2, NSInteger integer, id object3)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, object2, integer, object3);
+    @try {
+        return implementation(delegate, selector, self, object1, object2, integer, object3);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+static inline id CallDelegate(IMP implementation, WebView *self, id delegate, SEL selector, id object1, NSTimeInterval interval, id object2, id object3)
+{
+    if (!delegate)
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return implementation(delegate, selector, self, object1, interval, object2, object3);
+    @try {
+        return implementation(delegate, selector, self, object1, interval, object2, object3);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+id CallUIDelegate(WebView *self, SEL selector)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, id object)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, object);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, id object, BOOL boolean)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, object, boolean);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, NSRect rect)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, rect);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, id object1, id object2)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, object1, object2);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, id object1, id object2, id object3)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, object1, object2, object3);
+}
+
+id CallUIDelegate(WebView *self, SEL selector, id object, NSUInteger integer)
+{
+    return CallDelegate(self, self->_private->UIDelegate, selector, object, integer);
+}
+
+float CallUIDelegateReturningFloat(WebView *self, SEL selector)
+{
+    return CallDelegateReturningFloat(self, self->_private->UIDelegate, selector);
+}
+
+BOOL CallUIDelegateReturningBoolean(BOOL result, WebView *self, SEL selector)
+{
+    return CallDelegateReturningBoolean(result, self, self->_private->UIDelegate, selector);
+}
+
+BOOL CallUIDelegateReturningBoolean(BOOL result, WebView *self, SEL selector, id object)
+{
+    return CallDelegateReturningBoolean(result, self, self->_private->UIDelegate, selector, object);
+}
+
+BOOL CallUIDelegateReturningBoolean(BOOL result, WebView *self, SEL selector, id object, BOOL boolean)
+{
+    return CallDelegateReturningBoolean(result, self, self->_private->UIDelegate, selector, object, boolean);
+}
+
+BOOL CallUIDelegateReturningBoolean(BOOL result, WebView *self, SEL selector, id object1, id object2)
+{
+    return CallDelegateReturningBoolean(result, self, self->_private->UIDelegate, selector, object1, object2);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector, id object)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector, object);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector, object1, object2);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2, id object3)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector, object1, object2, object3);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2, id object3, id object4)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector, object1, object2, object3, object4);
+}
+
+id CallFrameLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, NSTimeInterval interval, id object2, id object3)
+{
+    return CallDelegate(implementation, self, self->_private->frameLoadDelegate, selector, object1, interval, object2, object3);
+}
+
+id CallResourceLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2)
+{
+    return CallDelegate(implementation, self, self->_private->resourceProgressDelegate, selector, object1, object2);
+}
+
+id CallResourceLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2, id object3)
+{
+    return CallDelegate(implementation, self, self->_private->resourceProgressDelegate, selector, object1, object2, object3);
+}
+
+id CallResourceLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2, id object3, id object4)
+{
+    return CallDelegate(implementation, self, self->_private->resourceProgressDelegate, selector, object1, object2, object3, object4);
+}
+
+id CallResourceLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, NSInteger integer, id object2)
+{
+    return CallDelegate(implementation, self, self->_private->resourceProgressDelegate, selector, object1, integer, object2);
+}
+
+id CallResourceLoadDelegate(IMP implementation, WebView *self, SEL selector, id object1, id object2, NSInteger integer, id object3)
+{
+    return CallDelegate(implementation, self, self->_private->resourceProgressDelegate, selector, object1, object2, integer, object3);
+}
+
+// The form delegate needs to have it's own implementation, because the first argument is never the WebView
+
+id CallFormDelegate(WebView *self, SEL selector, id object1, id object2)
+{
+    id delegate = self->_private->formDelegate;
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, object1, object2);
+    @try {
+        return objc_msgSend(delegate, selector, object1, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+id CallFormDelegate(WebView *self, SEL selector, id object1, id object2, id object3, id object4, id object5)
+{
+    id delegate = self->_private->formDelegate;
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return nil;
+    if (!self->_private->catchesDelegateExceptions)
+        return objc_msgSend(delegate, selector, object1, object2, object3, object4, object5);
+    @try {
+        return objc_msgSend(delegate, selector, object1, object2, object3, object4, object5);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return nil;
+}
+
+BOOL CallFormDelegateReturningBoolean(BOOL result, WebView *self, SEL selector, id object1, SEL selectorArg, id object2)
+{
+    id delegate = self->_private->formDelegate;
+    if (!delegate || ![delegate respondsToSelector:selector])
+        return result;
+    if (!self->_private->catchesDelegateExceptions)
+        return reinterpret_cast<BOOL (*)(id, SEL, id, SEL, id)>(objc_msgSend)(delegate, selector, object1, selectorArg, object2);
+    @try {
+        return reinterpret_cast<BOOL (*)(id, SEL, id, SEL, id)>(objc_msgSend)(delegate, selector, object1, selectorArg, object2);
+    } @catch(id exception) {
+        ReportDiscardedDelegateException(selector, exception);
+    }
+    return result;
 }
 
 @end

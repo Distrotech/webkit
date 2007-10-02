@@ -5,6 +5,7 @@
  * Copyright (C) 2005, 2006 Apple Computer, Inc.
  * Copyright (C) 2006 Alexey Proskuryakov (ap@webkit.org)
  * Copyright (C) 2007 Samuel Weinig (sam@webkit.org)
+ * Copyright (C) 2007 Trolltech ASA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +19,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -40,14 +41,19 @@
 #include "FrameView.h"
 #include "HTMLNames.h"
 #include "HTMLScriptElement.h"
+#include "HTMLStyleElement.h"
 #include "HTMLTableSectionElement.h"
 #include "HTMLTokenizer.h"
 #include "ProcessingInstruction.h"
 #include "ResourceHandle.h"
 #include "ResourceRequest.h"
 #include "ResourceResponse.h"
+#ifndef USE_QXMLSTREAM
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
+#else
+#include <QDebug>
+#endif
 #include <wtf/Platform.h>
 #include <wtf/Vector.h>
 
@@ -57,6 +63,7 @@
 
 #if ENABLE(SVG)
 #include "SVGNames.h"
+#include "SVGStyleElement.h"
 #include "XLinkNames.h"
 #endif
 
@@ -69,6 +76,7 @@ using namespace HTMLNames;
 
 const int maxErrors = 25;
 
+#ifndef USE_QXMLSTREAM
 class PendingCallbacks {
 public:
     PendingCallbacks()
@@ -76,7 +84,8 @@ public:
         m_callbacks.setAutoDelete(true);
     }
     
-    void appendStartElementNSCallback(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces, const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** attributes)
+    void appendStartElementNSCallback(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces,
+                                      const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** attributes)
     {
         PendingStartElementNSCallback* callback = new PendingStartElementNSCallback;
         
@@ -328,7 +337,7 @@ private:
 public:
     DeprecatedPtrList<PendingCallback> m_callbacks;
 };
-
+#endif
 // --------------------------------
 
 static int globalDescriptor = 0;
@@ -359,6 +368,7 @@ private:
     unsigned m_currentOffset;
 };
 
+#ifndef USE_QXMLSTREAM
 static bool shouldAllowExternalLoad(const char* inURI)
 {
     if (strstr(inURI, "/etc/xml/catalog")
@@ -367,7 +377,6 @@ static bool shouldAllowExternalLoad(const char* inURI)
         return false;
     return true;
 }
-
 static void* openFunc(const char* uri)
 {
     if (!globalDocLoader || !shouldAllowExternalLoad(uri))
@@ -436,13 +445,16 @@ static xmlParserCtxtPtr createStringParser(xmlSAXHandlerPtr handlers, void* user
     xmlSwitchEncoding(parser, BOMHighByte == 0xFF ? XML_CHAR_ENCODING_UTF16LE : XML_CHAR_ENCODING_UTF16BE);
     return parser;
 }
+#endif
 
 // --------------------------------
 
 XMLTokenizer::XMLTokenizer(Document* _doc, FrameView* _view)
     : m_doc(_doc)
     , m_view(_view)
+#ifndef USE_QXMLSTREAM
     , m_context(0)
+#endif
     , m_currentNode(_doc)
     , m_currentNodeIsReferenced(false)
     , m_sawError(false)
@@ -458,14 +470,18 @@ XMLTokenizer::XMLTokenizer(Document* _doc, FrameView* _view)
     , m_pendingScript(0)
     , m_scriptStartLine(0)
     , m_parsingFragment(false)
+#ifndef USE_QXMLSTREAM
     , m_pendingCallbacks(new PendingCallbacks)
+#endif
 {
 }
 
 XMLTokenizer::XMLTokenizer(DocumentFragment* fragment, Element* parentElement)
     : m_doc(fragment->document())
     , m_view(0)
+#ifndef USE_QXMLSTREAM
     , m_context(0)
+#endif
     , m_currentNode(fragment)
     , m_currentNodeIsReferenced(fragment)
     , m_sawError(false)
@@ -481,7 +497,9 @@ XMLTokenizer::XMLTokenizer(DocumentFragment* fragment, Element* parentElement)
     , m_pendingScript(0)
     , m_scriptStartLine(0)
     , m_parsingFragment(true)
+#ifndef USE_QXMLSTREAM
     , m_pendingCallbacks(new PendingCallbacks)
+#endif
 {
     if (fragment)
         fragment->ref();
@@ -550,6 +568,7 @@ bool XMLTokenizer::write(const SegmentedString& s, bool /*appendData*/)
         return false;
     }
     
+#ifndef USE_QXMLSTREAM
     if (!m_context)
         initializeParserContext();
     
@@ -565,16 +584,40 @@ bool XMLTokenizer::write(const SegmentedString& s, bool /*appendData*/)
 
         xmlParseChunk(m_context, reinterpret_cast<const char*>(parseString.characters()), sizeof(UChar) * parseString.length(), 0);
     }
+#else
+    QString data(parseString);
+    if (!data.isEmpty()) {
+        if (!m_sawFirstElement) {
+            int idx = data.indexOf(QLatin1String("<?xml"));
+            if (idx != -1) {
+                int start = idx + 5;
+                int end = data.indexOf(QLatin1String("?>"), start);
+                QString content = data.mid(start, end-start);
+                bool ok = true;
+                HashMap<String, String> attrs = parseAttributes(content, ok);
+                String version = attrs.get("version");
+                String encoding = attrs.get("encoding");
+                ExceptionCode ec = 0;
+                if (!version.isEmpty())
+                    m_doc->setXMLVersion(version, ec);
+                if (!encoding.isEmpty())
+                    m_doc->setXMLEncoding(encoding);
+            }
+        }
+        m_stream.addData(data);
+        parse();
+    }
+#endif
     
     return false;
 }
-
-inline String toString(const xmlChar* str, unsigned len)
+#ifndef USE_QXMLSTREAM
+static inline String toString(const xmlChar* str, unsigned len)
 {
     return UTF8Encoding().decode(reinterpret_cast<const char*>(str), len);
 }
 
-inline String toString(const xmlChar* str)
+static inline String toString(const xmlChar* str)
 {
     if (!str)
         return String();
@@ -628,13 +671,15 @@ static inline void handleElementAttributes(Element* newElement, const xmlChar** 
     }
 }
 
-void XMLTokenizer::startElementNs(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces, const xmlChar** libxmlNamespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
+void XMLTokenizer::startElementNs(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces,
+                                  const xmlChar** libxmlNamespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
 {
     if (m_parserStopped)
         return;
     
-    if (m_parserPaused) {        
-        m_pendingCallbacks->appendStartElementNSCallback(xmlLocalName, xmlPrefix, xmlURI, nb_namespaces, libxmlNamespaces, nb_attributes, nb_defaulted, libxmlAttributes);
+    if (m_parserPaused) {
+        m_pendingCallbacks->appendStartElementNSCallback(xmlLocalName, xmlPrefix, xmlURI, nb_namespaces, libxmlNamespaces,
+                                                         nb_attributes, nb_defaulted, libxmlAttributes);
         return;
     }
     
@@ -675,6 +720,12 @@ void XMLTokenizer::startElementNs(const xmlChar* xmlLocalName, const xmlChar* xm
 
     if (newElement->hasTagName(scriptTag))
         static_cast<HTMLScriptElement*>(newElement.get())->setCreatedByParser(true);
+    else if (newElement->hasTagName(HTMLNames::styleTag))
+        static_cast<HTMLStyleElement*>(newElement.get())->setCreatedByParser(true);
+#if ENABLE(SVG)
+    else if (newElement->hasTagName(SVGNames::styleTag))
+        static_cast<SVGStyleElement*>(newElement.get())->setCreatedByParser(true);
+#endif
     
     if (newElement->hasTagName(HTMLNames::scriptTag)
 #if ENABLE(SVG)
@@ -707,7 +758,7 @@ void XMLTokenizer::endElementNs()
 
     Node* n = m_currentNode;
     RefPtr<Node> parent = n->parentNode();
-    n->closeRenderer();
+    n->finishedParsing();
     
     // don't load external scripts for standalone documents (for now)
     if (n->isElementNode() && m_view && (static_cast<Element*>(n)->hasTagName(scriptTag) 
@@ -750,7 +801,7 @@ void XMLTokenizer::endElementNs()
                 if (child->isTextNode() || child->nodeType() == Node::CDATA_SECTION_NODE)
                     scriptCode += static_cast<CharacterData*>(child)->data();
             }
-            m_view->frame()->loader()->executeScript(m_doc->URL(), m_scriptStartLine - 1, 0, scriptCode);
+            m_view->frame()->loader()->executeScript(m_doc->URL(), m_scriptStartLine - 1, scriptCode);
         }
         
         m_requestingScript = false;
@@ -773,56 +824,6 @@ void XMLTokenizer::characters(const xmlChar* s, int len)
         ExceptionCode ec = 0;
         static_cast<Text*>(m_currentNode)->appendData(toString(s, len), ec);
     }
-}
-
-bool XMLTokenizer::enterText()
-{
-    RefPtr<Node> newNode = new Text(m_doc, "");
-    if (!m_currentNode->addChild(newNode.get()))
-        return false;
-    setCurrentNode(newNode.get());
-    return true;
-}
-
-void XMLTokenizer::exitText()
-{
-    if (m_parserStopped)
-        return;
-
-    if (!m_currentNode || !m_currentNode->isTextNode())
-        return;
-
-    if (m_view && m_currentNode && !m_currentNode->attached())
-        m_currentNode->attach();
-
-    // FIXME: What's the right thing to do if the parent is really 0?
-    // Just leaving the current node set to the text node doesn't make much sense.
-    if (Node* par = m_currentNode->parentNode())
-        setCurrentNode(par);
-}
-
-void XMLTokenizer::handleError(ErrorType type, const char* m, int lineNumber, int columnNumber)
-{
-    if (type == fatal || (m_errorCount < maxErrors && m_lastErrorLine != lineNumber && m_lastErrorColumn != columnNumber)) {
-        switch (type) {
-            case warning:
-                m_errorMessages += String::format("warning on line %d at column %d: %s", lineNumber, columnNumber, m);
-                break;
-            case fatal:
-            case nonFatal:
-                m_errorMessages += String::format("error on line %d at column %d: %s", lineNumber, columnNumber, m);
-        }
-        
-        m_lastErrorLine = lineNumber;
-        m_lastErrorColumn = columnNumber;
-        ++m_errorCount;
-    }
-    
-    if (type != warning)
-        m_sawError = true;
-    
-    if (type == fatal)
-        stopParsing();    
 }
 
 void XMLTokenizer::error(ErrorType type, const char* message, va_list args)
@@ -951,7 +952,7 @@ void XMLTokenizer::internalSubset(const xmlChar* name, const xmlChar* externalID
     doc->setDocType(new DocumentType(doc, toString(name), toString(externalID), toString(systemID)));
 }
 
-inline XMLTokenizer* getTokenizer(void* closure)
+static inline XMLTokenizer* getTokenizer(void* closure)
 {
     xmlParserCtxtPtr ctxt = static_cast<xmlParserCtxtPtr>(closure);
     return static_cast<XMLTokenizer*>(ctxt->_private);
@@ -1118,9 +1119,61 @@ static void ignorableWhitespaceHandler(void* ctx, const xmlChar* ch, int len)
     // http://bugzilla.gnome.org/show_bug.cgi?id=172255
     // http://bugs.webkit.org/show_bug.cgi?id=5792
 }
+#endif
+
+void XMLTokenizer::handleError(ErrorType type, const char* m, int lineNumber, int columnNumber)
+{
+    if (type == fatal || (m_errorCount < maxErrors && m_lastErrorLine != lineNumber && m_lastErrorColumn != columnNumber)) {
+        switch (type) {
+            case warning:
+                m_errorMessages += String::format("warning on line %d at column %d: %s", lineNumber, columnNumber, m);
+                break;
+            case fatal:
+            case nonFatal:
+                m_errorMessages += String::format("error on line %d at column %d: %s", lineNumber, columnNumber, m);
+        }
+        
+        m_lastErrorLine = lineNumber;
+        m_lastErrorColumn = columnNumber;
+        ++m_errorCount;
+    }
+    
+    if (type != warning)
+        m_sawError = true;
+    
+    if (type == fatal)
+        stopParsing();    
+}
+
+bool XMLTokenizer::enterText()
+{
+    RefPtr<Node> newNode = new Text(m_doc, "");
+    if (!m_currentNode->addChild(newNode.get()))
+        return false;
+    setCurrentNode(newNode.get());
+    return true;
+}
+
+void XMLTokenizer::exitText()
+{
+    if (m_parserStopped)
+        return;
+
+    if (!m_currentNode || !m_currentNode->isTextNode())
+        return;
+
+    if (m_view && m_currentNode && !m_currentNode->attached())
+        m_currentNode->attach();
+
+    // FIXME: What's the right thing to do if the parent is really 0?
+    // Just leaving the current node set to the text node doesn't make much sense.
+    if (Node* par = m_currentNode->parentNode())
+        setCurrentNode(par);
+}
 
 void XMLTokenizer::initializeParserContext()
 {
+#ifndef USE_QXMLSTREAM
     xmlSAXHandler sax;
     memset(&sax, 0, sizeof(sax));
     sax.error = normalErrorHandler;
@@ -1139,12 +1192,15 @@ void XMLTokenizer::initializeParserContext()
     sax.ignorableWhitespace = ignorableWhitespaceHandler;
     sax.entityDecl = xmlSAX2EntityDecl;
     sax.initialized = XML_SAX2_MAGIC;
-    
+#endif
     m_parserStopped = false;
     m_sawError = false;
     m_sawXSLTransform = false;
     m_sawFirstElement = false;
+    
+#ifndef USE_QXMLSTREAM
     m_context = createStringParser(&sax, this);
+#endif
 }
 
 void XMLTokenizer::end()
@@ -1160,6 +1216,7 @@ void XMLTokenizer::end()
     }
 #endif
 
+#ifndef USE_QXMLSTREAM
     if (m_context) {
         // Tell libxml we're done.
         xmlParseChunk(m_context, 0, 0, 1);
@@ -1169,6 +1226,12 @@ void XMLTokenizer::end()
         xmlFreeParserCtxt(m_context);
         m_context = 0;
     }
+#else
+    if (m_stream.error() == QXmlStreamReader::PrematureEndOfDocumentError) {
+        handleError(fatal, qPrintable(m_stream.errorString()), lineNumber(),
+                    columnNumber());
+    }
+#endif
     
     if (m_sawError)
         insertErrorMessageBlock();
@@ -1272,7 +1335,7 @@ void XMLTokenizer::notifyFinished(CachedResource* finishedObj)
     if (errorOccurred) 
         EventTargetNodeCast(e.get())->dispatchHTMLEvent(errorEvent, true, false);
     else {
-        m_view->frame()->loader()->executeScript(cachedScriptUrl, 0, 0, scriptSource);
+        m_view->frame()->loader()->executeScript(cachedScriptUrl, 0, scriptSource);
         EventTargetNodeCast(e.get())->dispatchHTMLEvent(loadEvent, false, false);
     }
     
@@ -1320,18 +1383,28 @@ void* xmlDocPtrForString(DocLoader* docLoader, const String& source, const Depre
 
 int XMLTokenizer::lineNumber() const
 {
+#ifndef USE_QXMLSTREAM
     return m_context->input->line;
+#else
+    return m_stream.lineNumber();
+#endif
 }
 
 int XMLTokenizer::columnNumber() const
 {
+#ifndef USE_QXMLSTREAM
     return m_context->input->col;
+#else
+    return m_stream.columnNumber();
+#endif
 }
 
 void XMLTokenizer::stopParsing()
 {
     Tokenizer::stopParsing();
+#ifndef USE_QXMLSTREAM
     xmlStopParser(m_context);
+#endif
 }
 
 void XMLTokenizer::pauseParsing()
@@ -1347,8 +1420,9 @@ void XMLTokenizer::resumeParsing()
     ASSERT(m_parserPaused);
     
     m_parserPaused = false;
-    
+
     // First, execute any pending callbacks
+#ifndef USE_QXMLSTREAM
     while (!m_pendingCallbacks->isEmpty()) {
         m_pendingCallbacks->callAndRemoveFirstCallback(this);
         
@@ -1356,7 +1430,12 @@ void XMLTokenizer::resumeParsing()
         if (m_parserPaused)
             return;
     }
-    
+#else
+    parse();
+    if (m_parserPaused)
+        return;
+#endif
+
     // Then, write any pending data
     SegmentedString rest = m_pendingSrc;
     m_pendingSrc.clear();
@@ -1364,11 +1443,19 @@ void XMLTokenizer::resumeParsing()
 
     // Finally, if finish() has been called and write() didn't result
     // in any further callbacks being queued, call end()
-    if (m_finishCalled && m_pendingCallbacks->isEmpty())
+    if (m_finishCalled
+#ifndef USE_QXMLSTREAM
+        && m_pendingCallbacks->isEmpty())
+#else
+        )
+#endif
         end();
 }
 
-static void balancedStartElementNsHandler(void* closure, const xmlChar* localname, const xmlChar* prefix, const xmlChar* uri, int nb_namespaces, const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
+#ifndef USE_QXMLSTREAM
+static void balancedStartElementNsHandler(void* closure, const xmlChar* localname, const xmlChar* prefix,
+                                          const xmlChar* uri, int nb_namespaces, const xmlChar** namespaces,
+                                          int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
 {
    static_cast<XMLTokenizer*>(closure)->startElementNs(localname, prefix, uri, nb_namespaces, namespaces, nb_attributes, nb_defaulted, libxmlAttributes);
 }
@@ -1405,11 +1492,12 @@ static void balancedWarningHandler(void* closure, const char* message, ...)
     static_cast<XMLTokenizer*>(closure)->error(XMLTokenizer::warning, message, args);
     va_end(args);
 }
-
+#endif
 bool parseXMLDocumentFragment(const String& string, DocumentFragment* fragment, Element* parent)
 {
     XMLTokenizer tokenizer(fragment, parent);
     
+#ifndef USE_QXMLSTREAM
     xmlSAXHandler sax;
     memset(&sax, 0, sizeof(sax));
 
@@ -1423,8 +1511,13 @@ bool parseXMLDocumentFragment(const String& string, DocumentFragment* fragment, 
     sax.warning = balancedWarningHandler;
     sax.initialized = XML_SAX2_MAGIC;
     
-    int result = xmlParseBalancedChunkMemory(0, &sax, &tokenizer, 0, (const xmlChar*)(const char*)(string.utf8()), 0);
+    int result = xmlParseBalancedChunkMemory(0, &sax, &tokenizer, 0, (const xmlChar*)string.utf8().data(), 0);
     return result == 0;
+#else
+    tokenizer.write(string, false);
+    tokenizer.finish();
+    return tokenizer.hasError();
+#endif
 }
 
 // --------------------------------
@@ -1434,8 +1527,10 @@ struct AttributeParseState {
     bool gotAttributes;
 };
 
-
-static void attributesStartElementNsHandler(void* closure, const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces, const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
+#ifndef USE_QXMLSTREAM
+static void attributesStartElementNsHandler(void* closure, const xmlChar* xmlLocalName, const xmlChar* xmlPrefix,
+                                            const xmlChar* xmlURI, int nb_namespaces, const xmlChar** namespaces,
+                                            int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes)
 {
     if (strcmp(reinterpret_cast<const char*>(xmlLocalName), "attrs") != 0)
         return;
@@ -1456,12 +1551,31 @@ static void attributesStartElementNsHandler(void* closure, const xmlChar* xmlLoc
         state->attributes.set(attrQName, attrValue);
     }
 }
+#else
+static void attributesStartElementNsHandler(AttributeParseState* state, const QXmlStreamAttributes& attrs)
+{
+    if (attrs.count() <= 0)
+        return;
+
+    state->gotAttributes = true;
+
+    for(int i = 0; i < attrs.count(); i++) {
+        const QXmlStreamAttribute& attr = attrs[i];
+        String attrLocalName = attr.name();
+        String attrValue     = attr.value();
+        String attrURI       = attr.namespaceUri();
+        String attrQName     = attr.qualifiedName();
+        state->attributes.set(attrQName, attrValue);
+    }
+}
+#endif
 
 HashMap<String, String> parseAttributes(const String& string, bool& attrsOK)
 {
     AttributeParseState state;
     state.gotAttributes = false;
 
+#ifndef USE_QXMLSTREAM
     xmlSAXHandler sax;
     memset(&sax, 0, sizeof(sax));
     sax.startElementNs = attributesStartElementNsHandler;
@@ -1472,9 +1586,401 @@ HashMap<String, String> parseAttributes(const String& string, bool& attrsOK)
     if (parser->myDoc)
         xmlFreeDoc(parser->myDoc);
     xmlFreeParserCtxt(parser);
-
+#else
+    QXmlStreamReader stream;
+    QString dummy = QString("<?xml version=\"1.0\"?><attrs %1 />").arg(string);
+    stream.addData(dummy);
+    while (!stream.atEnd()) {
+        stream.readNext();
+        if (stream.isStartElement()) {
+            attributesStartElementNsHandler(&state, stream.attributes());
+        }
+    }
+#endif
     attrsOK = state.gotAttributes;
     return state.attributes;
 }
 
+#ifdef USE_QXMLSTREAM
+static inline String prefixFromQName(const QString& qName)
+{
+    const int offset = qName.indexOf(QLatin1Char(':'));
+    if (offset <= 0)
+        return String();
+    else
+        return qName.left(offset);
 }
+
+static inline void handleElementNamespaces(Element* newElement, const QXmlStreamNamespaceDeclarations &ns,
+                                           ExceptionCode& ec)
+{
+    for (int i = 0; i < ns.count(); ++i) {
+        const QXmlStreamNamespaceDeclaration &decl = ns[i];
+        String namespaceURI = decl.namespaceUri();
+        String namespaceQName = decl.prefix().isEmpty() ? String("xmlns") : String("xmlns:") + decl.prefix();
+        newElement->setAttributeNS("http://www.w3.org/2000/xmlns/", namespaceQName, namespaceURI, ec);
+        if (ec) // exception setting attributes
+            return;
+    }
+}
+
+static inline void handleElementAttributes(Element* newElement, const QXmlStreamAttributes &attrs, ExceptionCode& ec)
+{
+    for (int i = 0; i < attrs.count(); ++i) {
+        const QXmlStreamAttribute &attr = attrs[i];
+        String attrLocalName = attr.name();
+        String attrValue     = attr.value();
+        String attrURI       = attr.namespaceUri().isEmpty() ? String() : String(attr.namespaceUri());
+        String attrQName     = attr.qualifiedName();
+        newElement->setAttributeNS(attrURI, attrQName, attrValue, ec);
+        if (ec) // exception setting attributes
+            return;
+    }
+}
+
+void XMLTokenizer::parse()
+{
+    while (!m_parserStopped && !m_parserPaused && !m_stream.atEnd()) {
+        m_stream.readNext();
+        switch (m_stream.tokenType()) {
+        case QXmlStreamReader::StartDocument: {
+            startDocument();
+        }
+            break;
+        case QXmlStreamReader::EndDocument: {
+            endDocument();
+        }
+            break;
+        case QXmlStreamReader::StartElement: {
+            parseStartElement();
+        }
+            break;
+        case QXmlStreamReader::EndElement: {
+            parseEndElement();
+        }
+            break;
+        case QXmlStreamReader::Characters: {
+            if (m_stream.isCDATA()) {
+                //cdata
+                parseCdata();
+            } else {
+                //characters
+                parseCharacters();
+            }
+        }
+            break;
+        case QXmlStreamReader::Comment: {
+            parseComment();
+        }
+            break;
+        case QXmlStreamReader::DTD: {
+            //qDebug()<<"------------- DTD";
+            parseDtd();
+        }
+            break;
+        case QXmlStreamReader::EntityReference: {
+            //qDebug()<<"---------- ENTITY = "<<m_stream.name().toString()
+            //        <<", t = "<<m_stream.text().toString();
+            if (isXHTMLDocument()) {
+                QString entity = m_stream.name().toString();
+                UChar c = decodeNamedEntity(entity.toUtf8().constData());
+                if (m_currentNode->isTextNode() || enterText()) {
+                    ExceptionCode ec = 0;
+                    String str(&c, 1);
+                    //qDebug()<<" ------- adding entity "<<str;
+                    static_cast<Text*>(m_currentNode)->appendData(str, ec);
+                }
+            }
+        }
+            break;
+        case QXmlStreamReader::ProcessingInstruction: {
+            parseProcessingInstruction();
+        }
+            break;
+        default: {
+            if (m_stream.error() != QXmlStreamReader::PrematureEndOfDocumentError) {
+                ErrorType type = (m_stream.error() == QXmlStreamReader::NotWellFormedError) ?
+                                 fatal : warning;
+                handleError(type, qPrintable(m_stream.errorString()), lineNumber(),
+                            columnNumber());
+            }
+        }
+            break;
+        }
+    }
+}
+
+void XMLTokenizer::startDocument()
+{
+    initializeParserContext();
+    ExceptionCode ec = 0;
+
+    m_doc->setXMLStandalone(m_stream.isStandaloneDocument(), ec);
+}
+
+void XMLTokenizer::parseStartElement()
+{
+    m_sawFirstElement = true;
+
+    exitText();
+
+    String localName = m_stream.name();
+    String uri       = m_stream.namespaceUri();
+    String prefix    = prefixFromQName(m_stream.qualifiedName().toString());
+
+    if (m_parsingFragment && uri.isNull()) {
+        if (!prefix.isNull())
+            uri = m_prefixToNamespaceMap.get(prefix);
+        else
+            uri = m_defaultNamespaceURI;
+    }
+
+    ExceptionCode ec = 0;
+    QualifiedName qName(prefix, localName, uri);
+    RefPtr<Element> newElement = m_doc->createElement(qName, true, ec);
+    if (!newElement) {
+        stopParsing();
+        return;
+    }
+
+    handleElementNamespaces(newElement.get(), m_stream.namespaceDeclarations(), ec);
+    if (ec) {
+        stopParsing();
+        return;
+    }
+
+    handleElementAttributes(newElement.get(), m_stream.attributes(), ec);
+    if (ec) {
+        stopParsing();
+        return;
+    }
+
+    if (newElement->hasTagName(scriptTag))
+        static_cast<HTMLScriptElement*>(newElement.get())->setCreatedByParser(true);
+
+    if (newElement->hasTagName(HTMLNames::scriptTag)
+#if ENABLE(SVG)
+        || newElement->hasTagName(SVGNames::scriptTag)
+#endif
+        )
+        m_scriptStartLine = lineNumber();
+
+    if (!m_currentNode->addChild(newElement.get())) {
+        stopParsing();
+        return;
+    }
+
+    setCurrentNode(newElement.get());
+    if (m_view && !newElement->attached())
+        newElement->attach();
+}
+
+void XMLTokenizer::parseEndElement()
+{
+    exitText();
+
+    Node* n = m_currentNode;
+    RefPtr<Node> parent = n->parentNode();
+    n->finishedParsing();
+
+    // don't load external scripts for standalone documents (for now)
+    if (n->isElementNode() && m_view && (static_cast<Element*>(n)->hasTagName(scriptTag) 
+#if ENABLE(SVG)
+                                         || static_cast<Element*>(n)->hasTagName(SVGNames::scriptTag)
+#endif
+                                         )) {
+
+
+        ASSERT(!m_pendingScript);
+
+        m_requestingScript = true;
+
+        Element* scriptElement = static_cast<Element*>(n);
+        String scriptHref;
+
+        if (static_cast<Element*>(n)->hasTagName(scriptTag))
+            scriptHref = scriptElement->getAttribute(srcAttr);
+#if ENABLE(SVG)
+        else if (static_cast<Element*>(n)->hasTagName(SVGNames::scriptTag))
+            scriptHref = scriptElement->getAttribute(XLinkNames::hrefAttr);
+#endif
+        if (!scriptHref.isEmpty()) {
+            // we have a src attribute
+            const AtomicString& charset = scriptElement->getAttribute(charsetAttr);
+            if ((m_pendingScript = m_doc->docLoader()->requestScript(scriptHref, charset))) {
+                m_scriptElement = scriptElement;
+                m_pendingScript->ref(this);
+
+                // m_pendingScript will be 0 if script was already loaded and ref() executed it
+                if (m_pendingScript)
+                    pauseParsing();
+            } else
+                m_scriptElement = 0;
+
+        } else {
+            String scriptCode = "";
+            for (Node* child = scriptElement->firstChild(); child; child = child->nextSibling()) {
+                if (child->isTextNode() || child->nodeType() == Node::CDATA_SECTION_NODE)
+                    scriptCode += static_cast<CharacterData*>(child)->data();
+            }
+            m_view->frame()->loader()->executeScript(m_doc->URL(), m_scriptStartLine - 1, scriptCode);
+        }
+        m_requestingScript = false;
+    }
+
+    setCurrentNode(parent.get());
+}
+
+void XMLTokenizer::parseCharacters()
+{
+    if (m_currentNode->isTextNode() || enterText()) {
+        ExceptionCode ec = 0;
+        static_cast<Text*>(m_currentNode)->appendData(m_stream.text(), ec);
+    }
+}
+
+void XMLTokenizer::parseProcessingInstruction()
+{
+    exitText();
+
+    // ### handle exceptions
+    int exception = 0;
+    RefPtr<ProcessingInstruction> pi = m_doc->createProcessingInstruction(
+        m_stream.processingInstructionTarget(),
+        m_stream.processingInstructionData(), exception);
+    if (exception)
+        return;
+
+    if (!m_currentNode->addChild(pi.get()))
+        return;
+    if (m_view && !pi->attached())
+        pi->attach();
+
+    // don't load stylesheets for standalone documents
+    if (m_doc->frame()) {
+        m_sawXSLTransform = !m_sawFirstElement && !pi->checkStyleSheet();
+        if (m_sawXSLTransform)
+            stopParsing();
+    }
+}
+
+void XMLTokenizer::parseCdata()
+{
+    exitText();
+
+    RefPtr<Node> newNode = new CDATASection(m_doc, m_stream.text());
+    if (!m_currentNode->addChild(newNode.get()))
+        return;
+    if (m_view && !newNode->attached())
+        newNode->attach();
+}
+
+void XMLTokenizer::parseComment()
+{
+    exitText();
+
+    RefPtr<Node> newNode = new Comment(m_doc, m_stream.text());
+    m_currentNode->addChild(newNode.get());
+    if (m_view && !newNode->attached())
+        newNode->attach();
+}
+
+void XMLTokenizer::endDocument()
+{
+}
+
+bool XMLTokenizer::hasError() const
+{
+    return m_stream.hasError();
+}
+
+static QString parseId(const QString &dtd, int *pos, bool *ok)
+{
+    *ok = true;
+    int start = *pos + 1;
+    int end = start;
+    if (dtd.at(*pos) == QLatin1Char('\''))
+        while (start < dtd.length() && dtd.at(end) != QLatin1Char('\''))
+            ++end;
+    else if (dtd.at(*pos) == QLatin1Char('\"'))
+        while (start < dtd.length() && dtd.at(end) != QLatin1Char('\"'))
+            ++end;
+    else {
+        *ok = false;
+        return QString();
+    }
+    *pos = end + 1;
+    return dtd.mid(start, end - start);
+}
+
+void XMLTokenizer::parseDtd()
+{
+    QString dtd = m_stream.text().toString();
+
+    int start = dtd.indexOf("<!DOCTYPE ") + 10;
+    while (start < dtd.length() && dtd.at(start).isSpace())
+        ++start;
+    int end = start;
+    while (start < dtd.length() && !dtd.at(end).isSpace())
+        ++end;
+    QString name = dtd.mid(start, end - start);
+
+    start = end;
+    while (start < dtd.length() && dtd.at(start).isSpace())
+        ++start;
+    end = start;
+    while (start < dtd.length() && !dtd.at(end).isSpace())
+        ++end;
+    QString id = dtd.mid(start, end - start);
+    start = end;
+    while (start < dtd.length() && dtd.at(start).isSpace())
+        ++start;
+    QString publicId;
+    QString systemId;
+    if (id == QLatin1String("PUBLIC")) {
+        bool ok;
+        publicId = parseId(dtd, &start, &ok);
+        if (!ok) {
+            handleError(fatal, "Invalid DOCTYPE", lineNumber(), columnNumber());
+            return;
+        }
+        while (start < dtd.length() && dtd.at(start).isSpace())
+            ++start;
+        systemId = parseId(dtd, &start, &ok);
+        if (!ok) {
+            handleError(fatal, "Invalid DOCTYPE", lineNumber(), columnNumber());
+            return;
+        }
+    } else if (id == QLatin1String("SYSTEM")) {
+        bool ok;
+        systemId = parseId(dtd, &start, &ok);
+        if (!ok) {
+            handleError(fatal, "Invalid DOCTYPE", lineNumber(), columnNumber());
+            return;
+        }
+    } else if (id == QLatin1String("[") || id == QLatin1String(">")) {
+    } else {
+        handleError(fatal, "Invalid DOCTYPE", lineNumber(), columnNumber());
+        return;
+    }
+    
+    //qDebug() << dtd << name << publicId << systemId;
+    const QXmlStreamNotationDeclarations& decls = m_stream.notationDeclarations();
+
+    if ((publicId == "-//W3C//DTD XHTML 1.0 Transitional//EN")
+        || (publicId == "-//W3C//DTD XHTML 1.1//EN")
+        || (publicId == "-//W3C//DTD XHTML 1.0 Strict//EN")
+        || (publicId == "-//W3C//DTD XHTML 1.0 Frameset//EN")
+        || (publicId == "-//W3C//DTD XHTML Basic 1.0//EN")
+        || (publicId == "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN")
+        || (publicId == "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN")
+        || (publicId == "-//WAPFORUM//DTD XHTML Mobile 1.0//EN")) {
+        setIsXHTMLDocument(true); // controls if we replace entities or not.
+    }
+    m_doc->setDocType(new DocumentType(m_doc, name, publicId, systemId));
+    
+}
+#endif
+}
+
+

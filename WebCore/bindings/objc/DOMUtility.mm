@@ -28,20 +28,29 @@
 
 #import "DOMImplementationFront.h"
 #import "DOMInternal.h"
+#import "JSCSSRule.h"
 #import "JSCSSRuleList.h"
+#import "JSCSSStyleDeclaration.h"
+#import "JSCSSValue.h"
 #import "JSCounter.h"
 #import "JSDOMImplementation.h"
 #import "JSEvent.h"
+#import "JSHTMLCollection.h"
 #import "JSHTMLOptionsCollection.h"
+#import "JSMediaList.h"
+#import "JSNamedNodeMap.h"
+#import "JSNode.h"
 #import "JSNodeIterator.h"
+#import "JSNodeList.h"
 #import "JSRange.h"
+#import "JSRect.h"
+#import "JSStyleSheet.h"
 #import "JSTreeWalker.h"
 #import "JSXPathExpression.h"
 #import "JSXPathResult.h"
 #import "Node.h"
 #import "WebScriptObjectPrivate.h"
 #import "kjs_css.h"
-#import "kjs_dom.h"
 #import "kjs_html.h"
 #import "kjs_window.h"
 #import <objc/objc-runtime.h>
@@ -64,31 +73,28 @@ static inline id createDOMWrapper(KJS::JSObject* object)
         if (object->inherits(&WebCore::JS##className::info)) \
             return [DOM##className _wrap##className:static_cast<WebCore::JS##className*>(object)->impl()];
 
-    WRAP(CSSRuleList)
-    WRAP(Counter)
-    WRAP(HTMLOptionsCollection)
-    WRAP(Range)
-    WRAP(XPathExpression)
-    WRAP(XPathResult)
-
-    #undef WRAP
-
-    #define WRAP(className) \
-        if (object->inherits(&DOM##className::info)) \
-            return [objc_getClass("DOM" #className) _wrap##className:static_cast<DOM##className*>(object)->impl()];
-
     WRAP(CSSRule)
+    WRAP(CSSRuleList)
     WRAP(CSSStyleDeclaration)
     WRAP(CSSValue)
+    WRAP(Counter)
     WRAP(Event)
+    WRAP(HTMLOptionsCollection)
     WRAP(MediaList)
     WRAP(NamedNodeMap)
     WRAP(Node)
     WRAP(NodeList)
     WRAP(RGBColor)
+    WRAP(Range)
     WRAP(Rect)
     WRAP(StyleSheet)
     WRAP(StyleSheetList)
+    WRAP(XPathExpression)
+    WRAP(XPathResult)
+
+    // This must be after the HTMLOptionsCollection check, because it's a subclass in the JavaScript
+    // binding, but not a subclass in the ObjC binding.
+    WRAP(HTMLCollection)
 
     #undef WRAP
 
@@ -100,11 +106,6 @@ static inline id createDOMWrapper(KJS::JSObject* object)
         return [DOMNodeIterator _wrapNodeIterator:static_cast<WebCore::JSNodeIterator*>(object)->impl() filter:nil];
     if (object->inherits(&WebCore::JSTreeWalker::info))
         return [DOMTreeWalker _wrapTreeWalker:static_cast<WebCore::JSTreeWalker*>(object)->impl() filter:nil];
-
-    // This must be after the HTMLOptionsCollection check, because it's a subclass in the JavaScript
-    // binding, but not a subclass in the ObjC binding.
-    if (object->inherits(&JSHTMLCollection::info))
-        return [DOMHTMLCollection _wrapHTMLCollection:static_cast<JSHTMLCollection*>(object)->impl()];
 
     return nil;
 }

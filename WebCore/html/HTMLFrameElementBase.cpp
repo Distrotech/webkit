@@ -19,12 +19,13 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 #include "config.h"
 #include "HTMLFrameElementBase.h"
 
+#include "CSSHelper.h"
 #include "Document.h"
 #include "EventNames.h"
 #include "FocusController.h"
@@ -38,7 +39,6 @@
 #include "Page.h"
 #include "RenderFrame.h"
 #include "Settings.h"
-#include "csshelper.h"
 
 namespace WebCore {
 
@@ -52,6 +52,7 @@ HTMLFrameElementBase::HTMLFrameElementBase(const QualifiedName& tagName, Documen
     , m_marginHeight(-1)
     , m_noResize(false)
     , m_viewSource(false)
+    , m_shouldOpenURLAfterAttach(false)
 {
 }
 
@@ -93,6 +94,8 @@ bool HTMLFrameElementBase::isURLAllowed(const AtomicString& URLString) const
 
 void HTMLFrameElementBase::openURL()
 {
+    ASSERT(!m_name.isEmpty());
+
     if (!isURLAllowed(m_URL))
         return;
 
@@ -114,7 +117,7 @@ void HTMLFrameElementBase::parseMappedAttribute(MappedAttribute *attr)
         setLocation(parseURL(attr->value()));
     else if (attr->name() == idAttr) {
         // Important to call through to base for the id attribute so the hasID bit gets set.
-        HTMLElement::parseMappedAttribute(attr);
+        HTMLFrameOwnerElement::parseMappedAttribute(attr);
         m_name = attr->value();
     } else if (attr->name() == nameAttr) {
         m_name = attr->value();
@@ -149,34 +152,51 @@ void HTMLFrameElementBase::parseMappedAttribute(MappedAttribute *attr)
     } else if (attr->name() == onunloadAttr) {
         setHTMLEventListener(unloadEvent, attr);
     } else
-        HTMLElement::parseMappedAttribute(attr);
+        HTMLFrameOwnerElement::parseMappedAttribute(attr);
 }
 
-void HTMLFrameElementBase::openURLCallback(Node* n)
+void HTMLFrameElementBase::setNameAndOpenURL()
 {
-    static_cast<HTMLFrameElementBase*>(n)->openURL();
+    m_name = getAttribute(nameAttr);
+    if (m_name.isNull())
+        m_name = getAttribute(idAttr);
+    
+    if (Frame* parentFrame = document()->frame())
+        m_name = parentFrame->tree()->uniqueChildName(m_name);
+    
+    openURL();
+}
+
+void HTMLFrameElementBase::setNameAndOpenURLCallback(Node* n)
+{
+    static_cast<HTMLFrameElementBase*>(n)->setNameAndOpenURL();
 }
 
 void HTMLFrameElementBase::insertedIntoDocument()
 {
-    HTMLElement::insertedIntoDocument();
+    HTMLFrameOwnerElement::insertedIntoDocument();
     
-    m_name = getAttribute(nameAttr);
-    if (m_name.isNull())
-        m_name = getAttribute(idAttr);
-
-    if (Frame* parentFrame = document()->frame())
-        m_name = parentFrame->tree()->uniqueChildName(m_name);
-
     // We delay frame loading until after the render tree is fully constructed.
     // Othewise, a synchronous load that executed JavaScript would see incorrect 
     // (0) values for the frame's renderer-dependent properties, like width.
-    queuePostAttachCallback(&HTMLFrameElementBase::openURLCallback, this);
+    m_shouldOpenURLAfterAttach = true;
+}
+
+void HTMLFrameElementBase::removedFromDocument()
+{
+    m_shouldOpenURLAfterAttach = false;
+
+    HTMLFrameOwnerElement::removedFromDocument();
 }
 
 void HTMLFrameElementBase::attach()
 {
-    HTMLElement::attach();
+    if (m_shouldOpenURLAfterAttach) {
+        m_shouldOpenURLAfterAttach = false;
+        queuePostAttachCallback(&HTMLFrameElementBase::setNameAndOpenURLCallback, this);
+    }
+
+    HTMLFrameOwnerElement::attach();
     
     if (RenderPart* renderPart = static_cast<RenderPart*>(renderer()))
         if (Frame* frame = contentFrame())
@@ -190,15 +210,19 @@ void HTMLFrameElementBase::willRemove()
         frame->loader()->frameDetached();
     }
 
-    HTMLElement::willRemove();
+    HTMLFrameOwnerElement::willRemove();
+}
+
+String HTMLFrameElementBase::location() const
+{
+    return src();
 }
 
 void HTMLFrameElementBase::setLocation(const String& str)
 {
-    if (m_URL == str)
-        if (Frame* frame = document()->frame())
-            if (frame->settings()->needsAcrobatFrameReloadingQuirk())
-                return;
+    Settings* settings = document()->settings();
+    if (settings && settings->needsAcrobatFrameReloadingQuirk() && m_URL == str)
+        return;
 
     m_URL = AtomicString(str);
 
@@ -213,7 +237,7 @@ bool HTMLFrameElementBase::isFocusable() const
 
 void HTMLFrameElementBase::setFocus(bool received)
 {
-    HTMLElement::setFocus(received);
+    HTMLFrameOwnerElement::setFocus(received);
     if (Page* page = document()->page())
         page->focusController()->setFocusedFrame(received ? contentFrame() : 0);
 }

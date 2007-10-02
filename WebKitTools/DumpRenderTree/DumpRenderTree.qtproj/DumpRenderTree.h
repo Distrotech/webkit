@@ -33,12 +33,14 @@
 #include <QObject>
 #include <QTextStream>
 #include <QSocketNotifier>
+
 class QUrl;
 class QFile;
 class QWebPage;
 class QWebFrame;
 
 class LayoutTestController;
+class EventSender;
 
 namespace WebCore {
 
@@ -47,7 +49,7 @@ Q_OBJECT
 
 public:
     DumpRenderTree();
-    ~DumpRenderTree();
+    virtual ~DumpRenderTree();
 
     // Initialize in multi-file mode, used by run-webkit-tests.
     void open();
@@ -56,26 +58,27 @@ public:
     void open(const QUrl& url);
 
     void resetJSObjects();
-   
+
+    LayoutTestController *layoutTestController() const { return m_controller; }
+    EventSender *eventSender() const { return m_eventSender; }
+
 public Q_SLOTS:
     void initJSObjects();
     void readStdin(int);
-    void maybeDump(bool);
     void dump();
 
 Q_SIGNALS:
     void quit();
 
 private:
-    QWebPage *page;
-    QWebFrame *frame;
-    
     LayoutTestController *m_controller;
+
+    QWebPage *m_page;
+
+    EventSender *m_eventSender;
 
     QFile *m_stdin;
     QSocketNotifier* m_notifier;
-
-    bool m_loading;
 };
 
 }

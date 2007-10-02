@@ -63,6 +63,7 @@ enum {
     WebMenuItemTagRightToLeft,
     WebMenuItemPDFSinglePageScrolling,
     WebMenuItemPDFFacingPagesScrolling,
+    WebMenuItemTagInspectElement,
     WebMenuItemTagBaseApplication = 10000
 };
 
@@ -78,8 +79,10 @@ enum {
 - (void)webView:(WebView *)sender dragImage:(NSImage *)anImage at:(NSPoint)viewLocation offset:(NSSize)initialOffset event:(NSEvent *)event pasteboard:(NSPasteboard *)pboard source:(id)sourceObj slideBack:(BOOL)slideFlag forView:(NSView *)view;
 - (void)webView:(WebView *)sender didDrawRect:(NSRect)rect;
 - (void)webView:(WebView *)sender didScrollDocumentInFrameView:(WebFrameView *)frameView;
+// FIXME: If we ever make this method public, it should include a WebFrame parameter.
 - (BOOL)webViewShouldInterruptJavaScript:(WebView *)sender;
 - (void)webView:(WebView *)sender willPopupMenu:(NSMenu *)menu;
 - (void)webView:(WebView *)sender contextMenuItemSelected:(NSMenuItem *)item forElement:(NSDictionary *)element;
+- (void)webView:(WebView *)sender saveFrameView:(WebFrameView *)frameView showingPanel:(BOOL)showingPanel;
 
 @end

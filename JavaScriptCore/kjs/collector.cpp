@@ -1,7 +1,7 @@
 // -*- mode: c++; c-basic-offset: 4 -*-
 /*
  *  This file is part of the KDE libraries
- *  Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,18 +22,19 @@
 #include "config.h"
 #include "collector.h"
 
-#include <wtf/FastMalloc.h>
-#include <wtf/FastMallocInternal.h>
-#include <wtf/HashCountedSet.h>
-#include <wtf/UnusedParam.h>
 #include "internal.h"
 #include "list.h"
 #include "value.h"
-
-#include <setjmp.h>
 #include <algorithm>
+#include <setjmp.h>
+#include <stdlib.h>
+#include <wtf/FastMalloc.h>
+#include <wtf/HashCountedSet.h>
+#include <wtf/UnusedParam.h>
 
+#if USE(MULTIPLE_THREADS)
 #include <pthread.h>
+#endif
 
 #if PLATFORM(DARWIN)
 
@@ -42,6 +43,8 @@
 #include <mach/task.h>
 #include <mach/thread_act.h>
 #include <mach/vm_map.h>
+
+#include "CollectorHeapIntrospector.h"
 
 #elif PLATFORM(WIN_OS)
 
@@ -64,7 +67,6 @@ using std::max;
 
 namespace KJS {
 
-
 // tunable parameters
 
 const size_t SPARE_EMPTY_BLOCKS = 2;
@@ -73,55 +75,41 @@ const size_t GROWTH_FACTOR = 2;
 const size_t LOW_WATER_FACTOR = 4;
 const size_t ALLOCATIONS_PER_COLLECTION = 4000;
 
+enum OperationInProgress { NoOperation, Allocation, Collection };
+
 struct CollectorHeap {
-  CollectorBlock **blocks;
+  CollectorBlock** blocks;
   size_t numBlocks;
   size_t usedBlocks;
   size_t firstBlockWithPossibleSpace;
   
   size_t numLiveObjects;
   size_t numLiveObjectsAtLastCollect;
+  size_t extraCost;
+
+  OperationInProgress operationInProgress;
 };
 
-static CollectorHeap heap = {NULL, 0, 0, 0, 0, 0};
+static CollectorHeap heap = { 0, 0, 0, 0, 0, 0, 0, NoOperation };
 
+// FIXME: I don't think this needs to be a static data member of the Collector class.
+// Just a private global like "heap" above would be fine.
 size_t Collector::mainThreadOnlyObjectCount = 0;
+
 bool Collector::memoryFull = false;
-
-#ifndef NDEBUG
-
-class GCLock {
-    static bool isLocked;
-
-public:
-    GCLock()
-    {
-        ASSERT(!isLocked);
-        isLocked = true;
-    }
-    
-    ~GCLock()
-    {
-        ASSERT(isLocked);
-        isLocked = false;
-    }
-};
-
-bool GCLock::isLocked = false;
-#endif
 
 static CollectorBlock* allocateBlock()
 {
 #if PLATFORM(DARWIN)    
     vm_address_t address = 0;
     vm_map(current_task(), &address, BLOCK_SIZE, BLOCK_OFFSET_MASK, VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0, FALSE, VM_PROT_DEFAULT, VM_PROT_DEFAULT, VM_INHERIT_DEFAULT);
-#elif PLATFORM(WIN)
+#elif PLATFORM(WIN_OS)
      // windows virtual address granularity is naturally 64k
     LPVOID address = VirtualAlloc(NULL, BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #elif HAVE(POSIX_MEMALIGN)
     void* address;
-    posix_memalign(address, BLOCK_SIZE, BLOCK_SIZE);
-    memset(reinterpret_cast<void*>(address), 0, BLOCK_SIZE);
+    posix_memalign(&address, BLOCK_SIZE, BLOCK_SIZE);
+    memset(address, 0, BLOCK_SIZE);
 #else
     static size_t pagesize = getpagesize();
     
@@ -153,13 +141,29 @@ static void freeBlock(CollectorBlock* block)
 {
 #if PLATFORM(DARWIN)    
     vm_deallocate(current_task(), reinterpret_cast<vm_address_t>(block), BLOCK_SIZE);
-#elif PLATFORM(WIN)
+#elif PLATFORM(WIN_OS)
     VirtualFree(block, BLOCK_SIZE, MEM_RELEASE);
 #elif HAVE(POSIX_MEMALIGN)
     free(block);
 #else
     munmap(block, BLOCK_SIZE);
 #endif
+}
+
+void Collector::recordExtraCost(size_t cost)
+{
+    // Our frequency of garbage collection tries to balance memory use against speed
+    // by collecting based on the number of newly created values. However, for values
+    // that hold on to a great deal of memory that's not in the form of other JS values,
+    // that is not good enough - in some cases a lot of those objects can pile up and
+    // use crazy amounts of memory without a GC happening. So we track these extra
+    // memory costs. Only unusually large objects are noted, and we only keep track
+    // of this extra cost until the next GC. In garbage collected languages, most values
+    // are either very short lived temporaries, or have extremely long lifetimes. So
+    // if a large value survives one garbage collection, there is not much point to
+    // collecting more frequently as long as it stays alive.
+
+    heap.extraCost += cost;
 }
 
 void* Collector::allocate(size_t s)
@@ -169,18 +173,27 @@ void* Collector::allocate(size_t s)
   ASSERT(s <= CELL_SIZE);
   UNUSED_PARAM(s); // s is now only used for the above assert
 
+  ASSERT(heap.operationInProgress == NoOperation);
+  // FIXME: If another global variable access here doesn't hurt performance
+  // too much, we could abort() in NDEBUG builds, which could help ensure we
+  // don't spend any time debugging cases where we allocate inside an object's
+  // deallocation code.
+
   // collect if needed
   size_t numLiveObjects = heap.numLiveObjects;
   size_t numLiveObjectsAtLastCollect = heap.numLiveObjectsAtLastCollect;
   size_t numNewObjects = numLiveObjects - numLiveObjectsAtLastCollect;
+  size_t newCost = numNewObjects + heap.extraCost;
 
-  if (numNewObjects >= ALLOCATIONS_PER_COLLECTION && numNewObjects >= numLiveObjectsAtLastCollect) {
+  if (newCost >= ALLOCATIONS_PER_COLLECTION && newCost >= numLiveObjectsAtLastCollect) {
     collect();
     numLiveObjects = heap.numLiveObjects;
   }
   
+  ASSERT(heap.operationInProgress == NoOperation);
 #ifndef NDEBUG
-  GCLock lock;
+  // FIXME: Consider doing this in NDEBUG builds too (see comment above).
+  heap.operationInProgress = Allocation;
 #endif
   
   // slab allocator
@@ -230,6 +243,11 @@ allocateNewBlock:
   targetBlock->usedCells = static_cast<uint32_t>(targetBlockUsedCells + 1);
   heap.numLiveObjects = numLiveObjects + 1;
 
+#ifndef NDEBUG
+  // FIXME: Consider doing this in NDEBUG builds too (see comment above).
+  heap.operationInProgress = NoOperation;
+#endif
+
   return newCell;
 }
 
@@ -246,6 +264,14 @@ static inline void* currentThreadStackBase()
         MOV EAX, FS:[18h]
         MOV pTib, EAX
     }
+    return (void*)pTib->StackBase;
+#elif PLATFORM(WIN_OS) && PLATFORM(X86) && COMPILER(GCC)
+    // offset 0x18 from the FS segment register gives a pointer to
+    // the thread information block for the current thread
+    NT_TIB* pTib;
+    asm ( "movl %%fs:0x18, %0\n"
+          : "=r" (pTib)
+        );
     return (void*)pTib->StackBase;
 #elif PLATFORM(UNIX)
     static void *stackBase = 0;
@@ -274,19 +300,27 @@ static inline void* currentThreadStackBase()
 #endif
 }
 
+#if USE(MULTIPLE_THREADS)
 static pthread_t mainThread;
+#endif
 
 void Collector::registerAsMainThread()
 {
+#if USE(MULTIPLE_THREADS)
     mainThread = pthread_self();
+#endif
 }
 
 static inline bool onMainThread()
 {
+#if USE(MULTIPLE_THREADS)
 #if PLATFORM(DARWIN)
     return pthread_main_np();
 #else
     return !!pthread_equal(pthread_self(), mainThread);
+#endif
+#else
+    return true;
 #endif
 }
 
@@ -365,8 +399,11 @@ void Collector::registerThread()
   pthread_once(&registeredThreadKeyOnce, initializeRegisteredThreadKey);
 
   if (!pthread_getspecific(registeredThreadKey)) {
-    if (!onMainThread())
-        WTF::fastMallocSetIsMultiThreaded();
+#if PLATFORM(DARWIN)
+      if (onMainThread())
+          CollectorHeapIntrospector::init(&heap);
+#endif
+
     Collector::Thread *thread = new Collector::Thread(pthread_self(), getCurrentPlatformThread());
 
     thread->next = registeredThreads;
@@ -630,7 +667,7 @@ void Collector::protect(JSValue *k)
     if (JSImmediate::isImmediate(k))
       return;
 
-    protectedValues().add(k->downcast());
+    protectedValues().add(k->asCell());
 }
 
 void Collector::unprotect(JSValue *k)
@@ -642,7 +679,7 @@ void Collector::unprotect(JSValue *k)
     if (JSImmediate::isImmediate(k))
       return;
 
-    protectedValues().remove(k->downcast());
+    protectedValues().remove(k->asCell());
 }
 
 void Collector::collectOnMainThreadOnly(JSValue* value)
@@ -654,7 +691,7 @@ void Collector::collectOnMainThreadOnly(JSValue* value)
     if (JSImmediate::isImmediate(value))
       return;
 
-    JSCell* cell = value->downcast();
+    JSCell* cell = value->asCell();
     cellBlock(cell)->collectOnMainThreadOnly.set(cellOffset(cell));
     ++mainThreadOnlyObjectCount;
 }
@@ -716,17 +753,14 @@ bool Collector::collect()
   ASSERT(JSLock::lockCount() > 0);
   ASSERT(JSLock::currentThreadIsHoldingLock());
 
+  ASSERT(heap.operationInProgress == NoOperation);
+  if (heap.operationInProgress != NoOperation)
+    abort();
 
-#ifndef NDEBUG
-  GCLock lock;
-#endif
-  
-#if USE(MULTIPLE_THREADS)
-    bool currentThreadIsMainThread = onMainThread();
-#else
-    bool currentThreadIsMainThread = true;
-#endif
-    
+  heap.operationInProgress = Collection;
+
+  bool currentThreadIsMainThread = onMainThread();
+
   // MARK: first mark all referenced objects recursively starting out from the set of root objects
 
 #ifndef NDEBUG
@@ -853,8 +887,11 @@ bool Collector::collect()
 
   heap.numLiveObjects = numLiveObjects;
   heap.numLiveObjectsAtLastCollect = numLiveObjects;
+  heap.extraCost = 0;
   
   memoryFull = (numLiveObjects >= KJS_MEM_LIMIT);
+
+  heap.operationInProgress = NoOperation;
 
   return deleted;
 }
@@ -863,12 +900,6 @@ size_t Collector::size()
 {
   return heap.numLiveObjects; 
 }
-
-#ifdef KJS_DEBUG_MEM
-void Collector::finalCheck()
-{
-}
-#endif
 
 size_t Collector::numInterpreters()
 {
@@ -931,6 +962,11 @@ HashCountedSet<const char*>* Collector::rootObjectTypeCounts()
         counts->add(typeName(it->first));
 
     return counts;
+}
+
+bool Collector::isBusy()
+{
+    return heap.operationInProgress != NoOperation;
 }
 
 } // namespace KJS

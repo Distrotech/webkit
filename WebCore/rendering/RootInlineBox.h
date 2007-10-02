@@ -15,19 +15,20 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
 #ifndef RootInlineBox_h
 #define RootInlineBox_h
 
-#include "bidi.h"
+#include "BidiContext.h"
 #include "InlineFlowBox.h"
 
 namespace WebCore {
 
+class BidiStatus;
 class EllipsisBox;
 class HitTestResult;
 struct GapRects;
@@ -39,7 +40,6 @@ public:
         , m_overflow(0)
         , m_lineBreakObj(0)
         , m_lineBreakPos(0)
-        , m_lineBreakContext(0)
     {
     }
 
@@ -68,15 +68,8 @@ public:
 #endif
 
     RenderObject* lineBreakObj() const { return m_lineBreakObj; }
-    BidiStatus lineBreakBidiStatus() const { 
-        BidiStatus status;
-        status.eor = m_lineBreakBidiStatusEor;
-        status.lastStrong = m_lineBreakBidiStatusLastStrong;
-        status.last = m_lineBreakBidiStatusLast;
-        return status;
-    }
-    BidiContext* lineBreakBidiContext() const { return m_lineBreakContext.get(); }
-    void setLineBreakInfo(RenderObject*, unsigned breakPos, BidiStatus*, BidiContext*);
+    BidiStatus lineBreakBidiStatus() const;
+    void setLineBreakInfo(RenderObject*, unsigned breakPos, const BidiStatus&);
 
     unsigned lineBreakPos() const { return m_lineBreakPos; }
     void setLineBreakPos(unsigned p) { m_lineBreakPos = p; }
@@ -124,7 +117,7 @@ public:
     int selectionBottom() { return m_overflow ? m_overflow->m_selectionBottom : m_y + m_height; }
     int selectionHeight() { return max(0, selectionBottom() - selectionTop()); }
 
-    InlineBox* closestLeafChildForXPos(int x);
+    InlineBox* closestLeafChildForXPos(int x, bool onlyEditableLeaves = false);
 
 protected:
     // Normally we are only as tall as the style on our block dictates, but we might have content
@@ -162,7 +155,6 @@ protected:
     // we can create a BidiIterator beginning just after the end of this line.
     RenderObject* m_lineBreakObj;
     unsigned m_lineBreakPos;
-
     RefPtr<BidiContext> m_lineBreakContext;
 
     // The height of the block at the end of this line.  This is where the next line starts.

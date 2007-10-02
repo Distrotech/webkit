@@ -16,7 +16,7 @@
 
    You should have received a copy of the GNU General Public License
    along with PHP-gettext; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
 
@@ -105,7 +105,14 @@ class FileReader {
   function read($bytes) {
     if ($bytes) {
       fseek($this->_fd, $this->_pos);
-      $data = fread($this->_fd, $bytes);
+
+      // PHP 5.1.1 does not read more than 8192 bytes in one fread()
+      // the discussions at PHP Bugs suggest it's the intended behaviour
+      while ($bytes > 0) {
+        $chunk  = fread($this->_fd, $bytes);
+        $data  .= $chunk;
+        $bytes -= strlen($chunk);
+      }
       $this->_pos = ftell($this->_fd);
       
       return $data;

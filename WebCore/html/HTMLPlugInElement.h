@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -28,11 +28,11 @@
 #include "HTMLFrameOwnerElement.h"
 
 #if USE(JAVASCRIPTCORE_BINDINGS)
-#include <JavaScriptCore/runtime.h>
+#include <bindings/runtime.h>
 #endif
 
 #if USE(NPOBJECT)
-#include <JavaScriptCore/npruntime.h>
+#include <bindings/npruntime.h>
 #endif
 
 namespace WebCore {
@@ -45,8 +45,8 @@ public:
     virtual bool mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const;
     virtual void parseMappedAttribute(MappedAttribute*);
 
-    virtual void detach();
-    
+    virtual void willRemove();
+
     virtual HTMLTagStatus endTagRequirement() const { return TagStatusRequired; }
     virtual bool checkDTD(const Node* newChild);
 

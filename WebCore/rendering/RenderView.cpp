@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -161,8 +161,8 @@ void RenderView::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
         return;
 
     // This code typically only executes if the root element's visibility has been set to hidden.
-    // Only fill with white if we're the root document, since iframes/frames with
-    // no background in the child document should show the parent's background.
+    // Only fill with the base background color (typically white) if we're the root document, 
+    // since iframes/frames with no background in the child document should show the parent's background.
     if (view()->isTransparent())
         frameView()->setUseSlowRepaints(); // The parent must show behind the child.
     else {
@@ -214,7 +214,7 @@ void RenderView::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
         rect.move(m_frameView->contentsX(), m_frameView->contentsY());
 }
 
-void RenderView::absoluteRects(Vector<IntRect>& rects, int tx, int ty)
+void RenderView::absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool)
 {
     rects.append(IntRect(tx, ty, m_layer->width(), m_layer->height()));
 }
@@ -228,7 +228,7 @@ RenderObject* rendererAfterPosition(RenderObject* object, unsigned offset)
     return child ? child : object->nextInPreOrderAfterChildren();
 }
 
-IntRect RenderView::selectionRect() const
+IntRect RenderView::selectionRect(bool clipToVisibleContent) const
 {
     document()->updateRendering();
 
@@ -240,13 +240,13 @@ IntRect RenderView::selectionRect() const
     while (os && os != stop) {
         if ((os->canBeSelectionLeaf() || os == m_selectionStart || os == m_selectionEnd) && os->selectionState() != SelectionNone) {
             // Blocks are responsible for painting line gaps and margin gaps. They must be examined as well.
-            selectedObjects.set(os, new SelectionInfo(os));
+            selectedObjects.set(os, new SelectionInfo(os, clipToVisibleContent));
             RenderBlock* cb = os->containingBlock();
             while (cb && !cb->isRenderView()) {
                 SelectionInfo* blockInfo = selectedObjects.get(cb);
                 if (blockInfo)
                     break;
-                selectedObjects.set(cb, new SelectionInfo(cb));
+                selectedObjects.set(cb, new SelectionInfo(cb, clipToVisibleContent));
                 cb = cb->containingBlock();
             }
         }
@@ -299,7 +299,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     while (os && os != stop) {
         if ((os->canBeSelectionLeaf() || os == m_selectionStart || os == m_selectionEnd) && os->selectionState() != SelectionNone) {
             // Blocks are responsible for painting line gaps and margin gaps.  They must be examined as well.
-            oldSelectedObjects.set(os, new SelectionInfo(os));
+            oldSelectedObjects.set(os, new SelectionInfo(os, false));
             RenderBlock* cb = os->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = oldSelectedBlocks.get(cb);
@@ -348,7 +348,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     o = start;
     while (o && o != stop) {
         if ((o->canBeSelectionLeaf() || o == start || o == end) && o->selectionState() != SelectionNone) {
-            newSelectedObjects.set(o, new SelectionInfo(o));
+            newSelectedObjects.set(o, new SelectionInfo(o, false));
             RenderBlock* cb = o->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = newSelectedBlocks.get(cb);

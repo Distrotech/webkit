@@ -17,8 +17,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -37,14 +37,14 @@
 
 namespace WebCore {
 
-CachedCSSStyleSheet::CachedCSSStyleSheet(DocLoader* dl, const String& url, const String& charset, bool skipCanLoadCheck)
-    : CachedResource(url, CSSStyleSheet)
+CachedCSSStyleSheet::CachedCSSStyleSheet(DocLoader* dl, const String& url, const String& charset, bool skipCanLoadCheck, bool sendResourceLoadCallbacks)
+    : CachedResource(url, CSSStyleSheet, true, sendResourceLoadCallbacks)
     , m_decoder(new TextResourceDecoder("text/css", charset))
 {
     // Prefer text/css but accept any type (dell.com serves a stylesheet
     // as text/html; see <http://bugs.webkit.org/show_bug.cgi?id=11451>).
     setAccept("text/css,*/*;q=0.1");
-    cache()->loader()->load(dl, this, false, skipCanLoadCheck);
+    cache()->loader()->load(dl, this, false, skipCanLoadCheck, sendResourceLoadCallbacks);
     m_loading = true;
 }
 

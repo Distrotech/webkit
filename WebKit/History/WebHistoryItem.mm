@@ -47,6 +47,7 @@
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Image.h>
 #import <WebCore/KURL.h>
+#import <WebCore/PageCache.h>
 #import <WebCore/PlatformString.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/WebCoreObjCExtras.h>
@@ -63,8 +64,7 @@ static NSString *WebDisplayTitleKey = @"displayTitle";
 // Notification strings.
 NSString *WebHistoryItemChangedNotification = @"WebHistoryItemChangedNotification";
 
-using WebCore::HistoryItem;
-using WebCore::HistoryItemVector;
+using namespace WebCore;
 
 static inline WebHistoryItemPrivate* kitPrivate(WebCoreHistoryItem* list) { return (WebHistoryItemPrivate*)list; }
 static inline WebCoreHistoryItem* core(WebHistoryItemPrivate* list) { return (WebCoreHistoryItem*)list; }
@@ -115,7 +115,7 @@ void WKNotifyHistoryItemChanged()
 - (void)finalize
 {
     WebCoreThreadViolationCheck();
-    // FIXME: The WebCore::HistoryItem d'tor is what releases the history item's icon from the icon database
+    // FIXME: ~HistoryItem is what releases the history item's icon from the icon database
     // It's probably not good to release icons from the database only when the object is garbage-collected. 
     // Need to change design so this happens at a predictable time.
     if (_private) {
@@ -240,14 +240,14 @@ void WKNotifyHistoryItemChanged()
 
 @implementation WebHistoryItem (WebInternal)
 
-WebCore::HistoryItem* core(WebHistoryItem *item)
+HistoryItem* core(WebHistoryItem *item)
 {
     if (!item)
         return 0;
     return core(item->_private);
 }
 
-WebHistoryItem *kit(WebCore::HistoryItem* item)
+WebHistoryItem *kit(HistoryItem* item)
 {
     if (!item)
         return nil;
@@ -278,6 +278,11 @@ static WebWindowWatcher *_windowWatcher = nil;
 - (id)initWithURL:(NSURL *)URL target:(NSString *)target parent:(NSString *)parent title:(NSString *)title
 {
     return [self initWithWebCoreHistoryItem:(new HistoryItem(URL, target, parent, title))];
+}
+
+- (id)initWithURLString:(NSString *)URLString title:(NSString *)title displayTitle:(NSString *)displayTitle lastVisitedTimeInterval:(NSTimeInterval)time
+{
+    return [self initWithWebCoreHistoryItem:(new HistoryItem(URLString, title, displayTitle, time))];
 }
 
 - (id)initWithWebCoreHistoryItem:(PassRefPtr<HistoryItem>)item
@@ -330,7 +335,7 @@ static WebWindowWatcher *_windowWatcher = nil;
     NSString *timeIntervalString = [dict _webkit_stringForKey:WebLastVisitedTimeIntervalKey];
     NSTimeInterval lastVisited = timeIntervalString == nil ? 0 : [timeIntervalString doubleValue];
 
-    self = [self initWithURLString:URLString title:title lastVisitedTimeInterval:lastVisited];
+    self = [self initWithURLString:URLString title:title displayTitle:[dict _webkit_stringForKey:WebDisplayTitleKey] lastVisitedTimeInterval:lastVisited];
     
     // Check if we've read a broken URL from the file that has non-Latin1 chars.  If so, try to convert
     // as if it was from user typing.
@@ -342,7 +347,6 @@ static WebWindowWatcher *_windowWatcher = nil;
         core(_private)->setOriginalURLString(newURLString);
     } 
 
-    core(_private)->setAlternateTitle([dict _webkit_stringForKey:WebDisplayTitleKey]);
     core(_private)->setVisitCount([dict _webkit_intForKey:WebVisitCountKey]);
 
     NSArray *childDicts = [dict objectForKey:WebChildrenKey];
@@ -459,7 +463,7 @@ static WebWindowWatcher *_windowWatcher = nil;
 - (NSURL *)URL
 {
     ASSERT_MAIN_THREAD();
-    WebCore::KURL url = core(_private)->url();
+    KURL url = core(_private)->url();
     return url.isEmpty() ? nil : url.getNSURL();
 }
 
@@ -489,7 +493,7 @@ static WebWindowWatcher *_windowWatcher = nil;
 
 + (void)_releaseAllPendingPageCaches
 {
-    HistoryItem::performPendingReleaseOfCachedPages();
+    pageCache()->releaseAutoreleasedPagesNow();
 }
 
 - (id)_transientPropertyForKey:(NSString *)key
@@ -510,6 +514,6 @@ static WebWindowWatcher *_windowWatcher = nil;
 @implementation WebWindowWatcher
 -(void)windowWillClose:(NSNotification *)notification
 {
-    WebCoreHistoryItem::performPendingReleaseOfCachedPages();
+    pageCache()->releaseAutoreleasedPagesNow();
 }
 @end

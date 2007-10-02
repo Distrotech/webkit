@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -43,7 +43,7 @@ public:
     virtual void setLocalTransform(const AffineTransform& transform) { m_transform = transform; }
     virtual void paint(PaintInfo&, int tx, int ty);
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
-    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty);
+    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
     virtual IntRect absoluteClippedOverflowRect();
     virtual bool requiresLayer();
     virtual void layout();

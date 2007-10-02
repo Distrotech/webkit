@@ -28,18 +28,20 @@
 
 #include "CachedPage.h"
 #include "DocumentLoader.h"
+#include "EditCommand.h"
 #include "FloatRect.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
+#include "ImageObserver.h"
+#include "NotImplemented.h"
 #include "Page.h"
 #include "ResourceError.h"
 #include "SVGDocument.h"
 #include "SVGImage.h"
 #include "SVGLength.h"
 #include "SVGSVGElement.h"
-#include "Settings.h"
 
 #include "SVGImageEmptyClients.h"
 
@@ -100,6 +102,9 @@ void SVGImage::draw(GraphicsContext* context, const FloatRect& dstRect, const Fl
     context->scale(FloatSize(dstRect.width()/srcRect.width(), dstRect.height()/srcRect.height()));
     m_frame->paint(context, enclosingIntRect(srcRect));
     context->restore();
+
+    if (imageObserver())
+        imageObserver()->didDraw(this);
 }
 
 NativeImagePtr SVGImage::nativeImageForCurrentFrame()
@@ -115,6 +120,11 @@ NativeImagePtr SVGImage::nativeImageForCurrentFrame()
     return m_frameCache->cgImage();
 #elif PLATFORM(QT)
     return m_frameCache->pixmap();
+#elif PLATFORM(CAIRO)
+    return m_frameCache->surface();
+#else
+    notImplemented();
+    return 0;
 #endif
 }
 
@@ -130,16 +140,16 @@ bool SVGImage::dataChanged(bool allDataReceived)
         static EditorClient* dummyEditorClient = new SVGEmptyEditorClient;
         static ContextMenuClient* dummyContextMenuClient = new SVGEmptyContextMenuClient;
         static DragClient* dummyDragClient = new SVGEmptyDragClient;
-        static Settings* dummySettings = new Settings;
+        static InspectorClient* dummyInspectorClient = new SVGEmptyInspectorClient;
 
         // FIXME: If this SVG ends up loading itself, we'll leak this Frame (and associated DOM & render trees).
         // The Cache code does not know about CachedImages holding Frames and won't know to break the cycle.
-        m_page.set(new Page(dummyChromeClient, dummyContextMenuClient, dummyEditorClient, dummyDragClient));
+        m_page.set(new Page(dummyChromeClient, dummyContextMenuClient, dummyEditorClient, dummyDragClient, dummyInspectorClient));
         m_frame = new Frame(m_page.get(), 0, dummyFrameLoaderClient);
+        m_frame->init();
         m_frameView = new FrameView(m_frame.get());
         m_frameView->deref(); // FIXME: FrameView starts with a refcount of 1
         m_frame->setView(m_frameView.get());
-        m_frame->setSettings(dummySettings);
         ResourceRequest fakeRequest(KURL(""));
         m_frame->loader()->load(fakeRequest); // Make sure the DocumentLoader is created
         m_frame->loader()->cancelContentPolicyCheck(); // cancel any policy checks

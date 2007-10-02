@@ -32,6 +32,11 @@ typedef struct CGPath PlatformPath;
 #elif PLATFORM(QT)
 class QPainterPath;
 typedef QPainterPath PlatformPath;
+#elif PLATFORM(CAIRO)
+namespace WebCore {
+    struct CairoPath;
+}
+typedef WebCore::CairoPath PlatformPath;
 #else
 typedef void PlatformPath;
 #endif
@@ -103,6 +108,7 @@ namespace WebCore {
         PlatformPath* platformPath() const { return m_path; }
 
         static Path createRoundedRectangle(const FloatRect&, const FloatSize& roundingRadii);
+        static Path createRoundedRectangle(const FloatRect&, const FloatSize& topLeftRadius, const FloatSize& topRightRadius, const FloatSize& bottomLeftRadius, const FloatSize& bottomRightRadius);
         static Path createRectangle(const FloatRect&);
         static Path createEllipse(const FloatPoint& center, float rx, float ry);
         static Path createCircle(const FloatPoint& center, float r);

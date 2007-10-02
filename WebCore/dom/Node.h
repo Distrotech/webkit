@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -94,6 +94,7 @@ public:
     virtual void setNodeValue(const String&, ExceptionCode&);
     virtual NodeType nodeType() const = 0;
     Node* parentNode() const { return parent(); }
+    Node* parentElement() const { return parent(); } // IE extension
     Node* previousSibling() const { return m_previous; }
     Node* nextSibling() const { return m_next; }
     virtual PassRefPtr<NodeList> childNodes();
@@ -207,7 +208,7 @@ public:
     // until they know all of their nested <param>s. [Radar 3603191, 4040848].
     // Also used for script elements and some SVG elements for similar purposes,
     // but making parsing a special case in this respect should be avoided if possible.
-    virtual void closeRenderer() { }
+    virtual void finishedParsing() { }
 
     // Called by the frame right before dispatching an unloadEvent. [Radar 4532113]
     // This is needed for HTMLInputElements to tell the frame that it is done editing 
@@ -227,7 +228,7 @@ public:
     bool attached() const { return m_attached; }
     void setAttached(bool b = true) { m_attached = b; }
     bool changed() const { return m_styleChange != NoStyleChange; }
-    StyleChangeType styleChangeType() const { return m_styleChange; }
+    StyleChangeType styleChangeType() const { return static_cast<StyleChangeType>(m_styleChange); }
     bool hasChangedChild() const { return m_hasChangedChild; }
     bool isLink() const { return m_isLink; }
     void setHasID(bool b = true) { m_hasId = b; }
@@ -260,6 +261,7 @@ public:
 
     virtual bool isContentEditable() const;
     virtual bool isContentRichlyEditable() const;
+    virtual bool shouldUseInputMethod() const;
     virtual IntRect getRect() const;
 
     enum StyleChange { NoChange, NoInherit, Inherit, Detach, Force };
@@ -360,6 +362,9 @@ public:
     virtual bool canSelectAll() const { return false; }
     virtual void selectAll() { }
 
+    // Whether or not a selection can be started in this object
+    virtual bool canStartSelection() const;
+
 #ifndef NDEBUG
     virtual void dump(TextStream*, DeprecatedString indent = "") const;
 #endif
@@ -392,6 +397,8 @@ public:
     // Wrapper for nodes that don't have a renderer, but still cache the style (like HTMLOptionElement).
     virtual RenderStyle* renderStyle() const;
     virtual void setRenderStyle(RenderStyle*);
+
+    virtual RenderStyle* computedStyle();
 
     // -----------------------------------------------------------------------------
     // Notification of document structure changes
@@ -448,10 +455,6 @@ public:
     PassRefPtr<NodeList> getElementsByTagName(const String&);
     PassRefPtr<NodeList> getElementsByTagNameNS(const String& namespaceURI, const String& localName);
 
-    // use Document::registerForPageCacheNotifications() to subscribe these
-    virtual void documentWillMoveInToPageCache() { }
-    virtual void documentMovedOutFromPageCache() { }
-
 private: // members
     DocPtr<Document> m_document;
     Node* m_previous;
@@ -459,6 +462,9 @@ private: // members
     RenderObject* m_renderer;
 
 protected:
+    virtual void willMoveToNewOwnerDocument() { }
+    virtual void didMoveToNewOwnerDocument() { }
+    
     NodeListsNodeData* m_nodeLists;
 
     short m_tabIndex;
@@ -468,7 +474,7 @@ protected:
     bool m_hasId : 1;
     bool m_hasClass : 1;
     bool m_attached : 1;
-    StyleChangeType m_styleChange : 2;
+    unsigned m_styleChange : 2;
     bool m_hasChangedChild : 1;
     bool m_inDocument : 1;
 
@@ -480,9 +486,11 @@ protected:
     bool m_inActiveChain : 1;
 
     bool m_inDetach : 1;
+    bool m_dispatchingSimulatedEvent : 1;
 
 public:
     bool m_inSubtreeMark : 1;
+    // 0 bits left
 
 private:
     Element* ancestorElement() const;

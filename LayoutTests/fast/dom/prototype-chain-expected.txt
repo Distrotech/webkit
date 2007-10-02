@@ -2,55 +2,57 @@ This page prints out the prototype chains of select DOM objects. Older versions 
 
 NOTE: This test will start failing if you change the layout of a related prototype chain in WebCore. That does not necessarily mean that you have done something wrong; you may just need to check in new results.
 
------ [object HTMLDocument] (7 prototypes) -----
+----- [object HTMLDocument] (5 prototypes) -----
 
 [object Object]
 
-[object DOMNodePrototype]
-
 [object NodePrototype]
 
-[object DOMEventTargetNodePrototype]
+[object EventTargetNodePrototype]
 
 [object DocumentPrototype]
 
-[object DOMHTMLDocumentPrototype]
-
 [object HTMLDocumentPrototype]
 
------ [object HTMLDivElement] (8 prototypes) -----
+----- [object HTMLDivElement] (6 prototypes) -----
 
 [object Object]
 
-[object DOMNodePrototype]
-
 [object NodePrototype]
 
-[object DOMEventTargetNodePrototype]
+[object EventTargetNodePrototype]
 
 [object ElementPrototype]
 
 [object HTMLElementPrototype]
 
-[object HTMLElementPrototype]
-
 [object HTMLDivElementPrototype]
 
------ [object UIEvent] (4 prototypes) -----
+----- [object HTMLFormElement] (6 prototypes) -----
 
 [object Object]
 
-[object DOMEventPrototype]
+[object NodePrototype]
+
+[object EventTargetNodePrototype]
+
+[object ElementPrototype]
+
+[object HTMLElementPrototype]
+
+[object HTMLFormElementPrototype]
+
+----- [object UIEvent] (3 prototypes) -----
+
+[object Object]
 
 [object EventPrototype]
 
 [object UIEventPrototype]
 
------ [object MouseEvent] (5 prototypes) -----
+----- [object MouseEvent] (4 prototypes) -----
 
 [object Object]
-
-[object DOMEventPrototype]
 
 [object EventPrototype]
 
@@ -58,11 +60,9 @@ NOTE: This test will start failing if you change the layout of a related prototy
 
 [object MouseEventPrototype]
 
------ [object KeyboardEvent] (5 prototypes) -----
+----- [object KeyboardEvent] (4 prototypes) -----
 
 [object Object]
-
-[object DOMEventPrototype]
 
 [object EventPrototype]
 

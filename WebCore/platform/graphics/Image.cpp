@@ -30,7 +30,7 @@
 #include "AffineTransform.h"
 #include "GraphicsContext.h"
 #include "IntRect.h"
-#include "MimeTypeRegistry.h"
+#include "MIMETypeRegistry.h"
 
 #include <math.h>
 
@@ -51,7 +51,7 @@ Image::~Image()
 
 bool Image::supportsType(const String& type)
 {
-    return MimeTypeRegistry::isSupportedImageResourceMIMEType(type); 
+    return MIMETypeRegistry::isSupportedImageResourceMIMEType(type); 
 } 
 
 bool Image::isNull() const
@@ -174,13 +174,19 @@ void Image::drawTiled(GraphicsContext* ctxt, const FloatRect& dstRect, const Flo
         return;
     }
     
+    // FIXME: We do not support 'round' yet.  For now just map it to 'repeat'.
+    if (hRule == RoundTile)
+        hRule = RepeatTile;
+    if (vRule == RoundTile)
+        vRule = RepeatTile;
+
     FloatSize scale = calculatePatternScale(dstRect, srcRect, hRule, vRule);
     AffineTransform patternTransform = AffineTransform().scale(scale.width(), scale.height());
 
     // We want to construct the phase such that the pattern is centered (when stretch is not
     // set for a particular rule).
     float hPhase = scale.width() * srcRect.x();
-    float vPhase = scale.height() * (srcRect.height() - srcRect.y());
+    float vPhase = scale.height() * srcRect.y();
     if (hRule == Image::RepeatTile)
         hPhase -= fmodf(dstRect.width(), scale.width() * srcRect.width()) / 2.0f;
     if (vRule == Image::RepeatTile)

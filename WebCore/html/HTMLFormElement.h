@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -27,12 +27,15 @@
 #include "HTMLCollection.h" 
 #include "HTMLElement.h"
 
+#include <wtf/OwnPtr.h>
+
 namespace WebCore {
 
 class Event;
 class FormData;
 class HTMLGenericFormElement;
 class HTMLImageElement;
+class HTMLInputElement;
 class HTMLFormCollection;
 
 class HTMLFormElement : public HTMLElement {
@@ -77,9 +80,6 @@ public:
 
     void setMalformed(bool malformed) { m_malformed = malformed; }
     virtual bool isMalformed() { return m_malformed; }
-    
-    void setPreserveAcrossRemove(bool b) { m_preserveAcrossRemove = b; }
-    bool preserveAcrossRemove() const { return m_preserveAcrossRemove; }
 
     virtual bool isURLAttribute(Attribute*) const;
     
@@ -107,6 +107,19 @@ public:
     // FIXME: Change this to be private after getting rid of all the clients.
     Vector<HTMLGenericFormElement*> formElements;
 
+    class CheckedRadioButtons {
+    public:
+        void addButton(HTMLGenericFormElement*);
+        void removeButton(HTMLGenericFormElement*);
+        HTMLInputElement* checkedButtonForGroup(const AtomicString& name) const;
+
+    private:
+        typedef HashMap<AtomicStringImpl*, HTMLInputElement*> NameToInputMap;
+        OwnPtr<NameToInputMap> m_nameToCheckedRadioButtonMap;
+    };
+    
+    CheckedRadioButtons& checkedRadioButtons() { return m_checkedRadioButtons; }
+    
 private:
     void parseEnctype(const String&);
     PassRefPtr<FormData> formData(const char* boundary) const;
@@ -119,6 +132,8 @@ private:
     AliasMap* m_elementAliases;
     HTMLCollection::CollectionInfo* collectionInfo;
 
+    CheckedRadioButtons m_checkedRadioButtons;
+    
     Vector<HTMLImageElement*> imgElements;
     String m_url;
     String m_target;
@@ -131,8 +146,6 @@ private:
     bool m_doingsubmit : 1;
     bool m_inreset : 1;
     bool m_malformed : 1;
-    bool m_preserveAcrossRemove : 1;
-
     String oldNameAttr;
 };
 

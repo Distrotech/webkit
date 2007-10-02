@@ -29,8 +29,10 @@
 #if PLATFORM(CG)
 
 #include "AffineTransform.h"
+#include "FloatConversion.h"
 #include "FloatRect.h"
 #include "GraphicsContext.h"
+#include "ImageObserver.h"
 #include "PDFDocumentImage.h"
 #include "PlatformString.h"
 #include <ApplicationServices/ApplicationServices.h>
@@ -43,7 +45,7 @@ void FrameData::clear()
     if (m_frame) {
         CGImageRelease(m_frame);
         m_frame = 0;
-        m_duration = 0.;
+        m_duration = 0.0f;
         m_hasAlpha = true;
     }
 }
@@ -63,10 +65,10 @@ void BitmapImage::checkForSolidColor()
         
         // Currently we only check for solid color in the important special case of a 1x1 image.
         if (image && CGImageGetWidth(image) == 1 && CGImageGetHeight(image) == 1) {
-            CGFloat pixel[4]; // RGBA
+            unsigned char pixel[4]; // RGBA
             CGColorSpaceRef space = CGColorSpaceCreateDeviceRGB();
-            CGContextRef bmap = CGBitmapContextCreate(&pixel, 1, 1, 8*sizeof(float), sizeof(pixel), space,
-                kCGImageAlphaPremultipliedLast | kCGBitmapFloatComponents | kCGBitmapByteOrder32Host);
+            CGContextRef bmap = CGBitmapContextCreate(pixel, 1, 1, 8, sizeof(pixel), space,
+                kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
             if (bmap) {
                 GraphicsContext(bmap).setCompositeOperation(CompositeCopy);
                 CGRect dst = { {0, 0}, {1, 1} };
@@ -74,7 +76,7 @@ void BitmapImage::checkForSolidColor()
                 if (pixel[3] == 0)
                     m_solidColor = Color(0, 0, 0, 0);
                 else
-                    m_solidColor = Color(int(pixel[0] / pixel[3] * 255), int(pixel[1] / pixel[3] * 255), int(pixel[2] / pixel[3] * 255), int(pixel[3] * 255));
+                    m_solidColor = Color(pixel[0] * 255 / pixel[3], pixel[1] * 255 / pixel[3], pixel[2] * 255 / pixel[3], pixel[3]);
                 m_isSolidColor = true;
                 CFRelease(bmap);
             } 
@@ -156,11 +158,13 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dstRect, const Fl
         }
     } else // Draw the whole image.
         CGContextDrawImage(context, ir, image);
-
+        
     ctxt->restore();
     
     startAnimation();
 
+    if (imageObserver())
+        imageObserver()->didDraw(this);
 }
 
 void Image::drawPatternCallback(void* info, CGContextRef context)
@@ -169,20 +173,57 @@ void Image::drawPatternCallback(void* info, CGContextRef context)
     CGImageRef image = data->nativeImageForCurrentFrame();
     float w = CGImageGetWidth(image);
     float h = CGImageGetHeight(image);
-    CGContextDrawImage(context, GraphicsContext(context).roundToDevicePixels(FloatRect(0, data->size().height() - h, w, h)), image);
+    CGContextDrawImage(context, GraphicsContext(context).roundToDevicePixels(FloatRect(0, -h, w, h)), image);
 }
 
 void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const AffineTransform& patternTransform,
-                                const FloatPoint& phase, CompositeOperator op, const FloatRect& destRect)
+                        const FloatPoint& phase, CompositeOperator op, const FloatRect& destRect)
 {
+    CGContextRef context = ctxt->platformContext();
+
+#ifndef BUILDING_ON_TIGER
+    // Leopard has an optimized call for the tiling of image patterns, but we can only use it if the image has been decoded enough that
+    // its buffer is the same size as the overall image.  Because a partially decoded CGImageRef with a smaller width or height than the
+    // overall image buffer needs to tile with "gaps", we can't use the optimized tiling call in that case.  We also avoid this optimization
+    // when tiling portions of an image, since until we can actually cache the subimage we want to tile, this code won't be any faster.
+    // FIXME: Could create WebKitSystemInterface SPI for CGCreatePatternWithImage2 and probably make Tiger tile faster as well.
+    CGImageRef tileImage = nativeImageForCurrentFrame();
+    float w = CGImageGetWidth(tileImage);
+    float h = CGImageGetHeight(tileImage);
+    if (w == size().width() && h == size().height() && tileRect.size() == size()) {
+        ctxt->save();
+        CGContextClipToRect(context, destRect);
+        ctxt->setCompositeOperation(op);
+        CGContextTranslateCTM(context, destRect.x(), destRect.y());
+        CGContextScaleCTM(context, 1, -1);
+        CGContextTranslateCTM(context, 0, -destRect.height());
+        
+        // Compute the scaled tile size.
+        float scaledTileWidth = tileRect.width() * narrowPrecisionToCGFloat(patternTransform.a());
+        float scaledTileHeight = tileRect.height() * narrowPrecisionToCGFloat(patternTransform.d());
+    
+        // We have to adjust the phase to deal with the fact we're in Cartesian space now (with the bottom left corner of destRect being
+        // the origin).
+        float adjustedX = phase.x() - destRect.x(); // We translated the context so that destRect.x() is the origin, so subtract it out.
+        float adjustedY = destRect.height() - (phase.y() - destRect.y() + scaledTileHeight);
+
+        CGContextDrawTiledImage(context, FloatRect(adjustedX, adjustedY, scaledTileWidth, scaledTileHeight), tileImage);
+        ctxt->restore();
+    } else {
+#endif
+
+    // On Leopard, this code now only runs for partially decoded images whose buffers do not yet match the overall size of the image or for
+    // tiling a portion of an image (i.e., a subimage like the ones used by CSS border-image).
+    // On Tiger this code runs all the time.  This code is suboptimal because the pattern does not reference the image directly, and the
+    // pattern is destroyed before exiting the function.  This means any decoding the pattern does doesn't end up cached anywhere, so we
+    // redecode every time we paint.
     static const CGPatternCallbacks patternCallbacks = { 0, drawPatternCallback, NULL };
-    CGPatternRef pattern = CGPatternCreate(this, tileRect,
+    CGPatternRef pattern = CGPatternCreate(this, FloatRect(tileRect.x(), -tileRect.y() - tileRect.height(), tileRect.width(), tileRect.height()),
                                            CGAffineTransform(patternTransform), tileRect.width(), tileRect.height(), 
                                            kCGPatternTilingConstantSpacing, true, &patternCallbacks);
     if (!pattern)
         return;
     
-    CGContextRef context = ctxt->platformContext();
     ctxt->save();
     
     // FIXME: Really want a public API for this.
@@ -201,6 +242,13 @@ void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const 
     
     ctxt->restore();
     CGPatternRelease(pattern);
+
+#ifndef BUILDING_ON_TIGER
+    }
+#endif
+
+    if (imageObserver())
+        imageObserver()->didDraw(this);
 }
 
 

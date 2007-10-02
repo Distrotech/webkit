@@ -722,7 +722,7 @@ IfStatement:
 
 IterationStatement:
     DO Statement WHILE '(' Expr ')' ';'    { $$ = new DoWhileNode($2, $5); DBG($$, @1, @3);}
-  | DO Statement WHILE '(' Expr ')' error    { $$ = new DoWhileNode($2, $5); DBG($$, @1, @3); AUTO_SEMICOLON;}
+  | DO Statement WHILE '(' Expr ')'     { $$ = new DoWhileNode($2, $5); DBG($$, @1, @3);}
   | WHILE '(' Expr ')' Statement        { $$ = new WhileNode($3, $5); DBG($$, @1, @4); }
   | FOR '(' ExprNoInOpt ';' ExprOpt ';' ExprOpt ')' Statement
                                         { $$ = new ForNode($3, $5, $7, $9); DBG($$, @1, @8); }
@@ -895,7 +895,7 @@ static Node* makePrefixNode(Node *expr, Operator op)
     Node *n = expr->nodeInsideAllParens();
 
     if (!n->isLocation())
-        return new PrefixErrorNode(n, op);
+        return new PrefixErrorNode(expr, op);
     
     if (n->isResolveNode()) {
         ResolveNode *resolve = static_cast<ResolveNode *>(n);
@@ -915,7 +915,7 @@ static Node* makePostfixNode(Node* expr, Operator op)
     Node *n = expr->nodeInsideAllParens();
 
     if (!n->isLocation())
-        return new PostfixErrorNode(n, op);
+        return new PostfixErrorNode(expr, op);
     
     if (n->isResolveNode()) {
         ResolveNode *resolve = static_cast<ResolveNode *>(n);
@@ -963,7 +963,7 @@ static Node *makeTypeOfNode(Node *expr)
         ResolveNode *resolve = static_cast<ResolveNode *>(n);
         return new TypeOfResolveNode(resolve->identifier());
     } else
-        return new TypeOfValueNode(n);
+        return new TypeOfValueNode(expr);
 }
 
 static Node *makeDeleteNode(Node *expr)

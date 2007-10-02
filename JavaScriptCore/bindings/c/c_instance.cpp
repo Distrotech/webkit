@@ -24,6 +24,9 @@
  */
 
 #include "config.h"
+
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "c_instance.h"
 
 #include "c_class.h"
@@ -39,11 +42,11 @@
 namespace KJS {
 namespace Bindings {
 
-CInstance::CInstance(NPObject* o) 
+CInstance::CInstance(NPObject* o, PassRefPtr<RootObject> rootObject)
+    : Instance(rootObject)
 {
     _object = _NPN_RetainObject(o);
     _class = 0;
-    setRootObject(0);
 }
 
 CInstance::~CInstance() 
@@ -77,9 +80,9 @@ JSValue* CInstance::invokeMethod(ExecState* exec, const MethodList& methodList, 
 {
     // Overloading methods are not allowed by NPObjects.  Should only be one
     // name match for a particular method.
-    assert(methodList.length() == 1);
+    assert(methodList.size() == 1);
 
-    CMethod* method = static_cast<CMethod*>(methodList.methodAt(0));
+    CMethod* method = static_cast<CMethod*>(methodList[0]);
 
     NPIdentifier ident = _NPN_GetStringIdentifier(method->name());
     if (!_object->_class->hasMethod(_object, ident))
@@ -98,13 +101,13 @@ JSValue* CInstance::invokeMethod(ExecState* exec, const MethodList& methodList, 
 
     {
        JSLock::DropAllLocks dropAllLocks;
-        _object->_class->invoke(_object, ident, cArgs, count, &resultVariant);
+        _object->_class->invoke(_object, ident, cArgs.data(), count, &resultVariant);
     }
 
     for (i = 0; i < count; i++)
         _NPN_ReleaseVariantValue(&cArgs[i]);
 
-    JSValue* resultValue = convertNPVariantToValue(exec, &resultVariant);
+    JSValue* resultValue = convertNPVariantToValue(exec, &resultVariant, _rootObject.get());
     _NPN_ReleaseVariantValue(&resultVariant);
     return resultValue;
 }
@@ -127,13 +130,13 @@ JSValue* CInstance::invokeDefaultMethod(ExecState* exec, const List& args)
     VOID_TO_NPVARIANT(resultVariant);
     {
        JSLock::DropAllLocks dropAllLocks;
-        _object->_class->invokeDefault(_object, cArgs, count, &resultVariant);
+        _object->_class->invokeDefault(_object, cArgs.data(), count, &resultVariant);
     }
     
     for (i = 0; i < count; i++)
         _NPN_ReleaseVariantValue(&cArgs[i]);
 
-    JSValue* resultValue = convertNPVariantToValue(exec, &resultVariant);
+    JSValue* resultValue = convertNPVariantToValue(exec, &resultVariant, _rootObject.get());
     _NPN_ReleaseVariantValue(&resultVariant);
     return resultValue;
 }
@@ -204,3 +207,5 @@ void CInstance::getPropertyNames(ExecState*, PropertyNameArray& nameArray)
 
 }
 }
+
+#endif

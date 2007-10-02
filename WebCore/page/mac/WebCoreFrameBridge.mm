@@ -29,20 +29,24 @@
 #import "WebCoreFrameBridge.h"
 
 #import "AXObjectCache.h"
+#import "CSSHelper.h"
 #import "Cache.h"
 #import "ClipboardMac.h"
+#import "ColorMac.h"
 #import "DOMImplementation.h"
 #import "DOMInternal.h"
-#import "TextResourceDecoder.h"
+#import "DOMWindow.h"
 #import "DeleteSelectionCommand.h"
 #import "DocLoader.h"
 #import "DocumentFragment.h"
+#import "DocumentLoader.h"
 #import "DocumentType.h"
 #import "Editor.h"
 #import "EditorClient.h"
 #import "EventHandler.h"
 #import "FloatRect.h"
 #import "FontData.h"
+#import "FormDataStreamMac.h"
 #import "Frame.h"
 #import "FrameLoader.h"
 #import "FrameLoaderClient.h"
@@ -59,6 +63,7 @@
 #import "MoveSelectionCommand.h"
 #import "Page.h"
 #import "PlatformMouseEvent.h"
+#import "PlatformScreen.h"
 #import "PlugInInfoStore.h"
 #import "RenderImage.h"
 #import "RenderPart.h"
@@ -67,24 +72,24 @@
 #import "RenderWidget.h"
 #import "ReplaceSelectionCommand.h"
 #import "ResourceRequest.h"
-#import "Screen.h"
 #import "SelectionController.h"
+#import "SmartReplace.h"
+#import "SubresourceLoader.h"
 #import "SystemTime.h"
+#import "Text.h"
 #import "TextEncoding.h"
 #import "TextIterator.h"
+#import "TextResourceDecoder.h"
 #import "TypingCommand.h"
 #import "WebCoreSystemInterface.h"
 #import "WebCoreViewFactory.h"
-#import "DocumentLoader.h"
-#import "FormDataStreamMac.h"
-#import "SubresourceLoader.h"
 #import "XMLTokenizer.h"
-#import "csshelper.h"
 #import "htmlediting.h"
 #import "kjs_proxy.h"
 #import "kjs_window.h"
 #import "markup.h"
 #import "visible_units.h"
+#import <OpenScripting/ASRegistry.h>
 #import <JavaScriptCore/array_instance.h>
 #import <JavaScriptCore/date_object.h>
 #import <JavaScriptCore/runtime_root.h>
@@ -101,6 +106,7 @@ using KJS::BooleanType;
 using KJS::DateInstance;
 using KJS::ExecState;
 using KJS::GetterSetterType;
+using KJS::JSImmediate;
 using KJS::JSLock;
 using KJS::JSObject;
 using KJS::JSValue;
@@ -140,9 +146,10 @@ static void updateRenderingForBindings(ExecState* exec, JSObject* rootObject)
     Window* window = static_cast<Window*>(rootObject);
     if (!window)
         return;
-        
-    if (Document* doc = window->frame()->document())
-        doc->updateRendering();
+
+    if (Frame* frame = window->impl()->frame())
+        if (Document* doc = frame->document())
+            doc->updateRendering();
 }
 
 static NSAppleEventDescriptor* aeDescFromJSValue(ExecState* exec, JSValue* jsValue)
@@ -358,14 +365,26 @@ static inline WebCoreFrameBridge *bridge(Frame *frame)
 {
     String text = m_frame->selectedText();
     text.replace('\\', m_frame->backslashAsCurrencySymbol());
-    return [[(NSString*)text copy] autorelease];
+    return text;
 }
 
 - (NSString *)stringForRange:(DOMRange *)range
 {
-    String text = plainText([range _range]);
-    text.replace('\\', m_frame->backslashAsCurrencySymbol());
-    return [[(NSString*)text copy] autorelease];
+    // This will give a system malloc'd buffer that can be turned directly into an NSString
+    unsigned length;
+    UChar* buf = plainTextToMallocAllocatedBuffer([range _range], length);
+    
+    if (!buf)
+        return [NSString string];
+    
+    UChar backslashAsCurrencySymbol = m_frame->backslashAsCurrencySymbol();
+    if (backslashAsCurrencySymbol != '\\')
+        for (unsigned n = 0; n < length; n++) 
+            if (buf[n] == '\\')
+                buf[n] = backslashAsCurrencySymbol;
+
+    // Transfer buffer ownership to NSString
+    return [[[NSString alloc] initWithCharactersNoCopy:buf length:length freeWhenDone:YES] autorelease];
 }
 
 - (void)reapplyStylesForDeviceType:(WebCoreDeviceType)deviceType
@@ -681,18 +700,28 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 
 - (NSString *)stringByEvaluatingJavaScriptFromString:(NSString *)string forceUserGesture:(BOOL)forceUserGesture
 {
-    m_frame->loader()->createEmptyDocument();
-    JSValue* result = m_frame->loader()->executeScript(0, string, forceUserGesture);
-    if (!result)
-        return 0;
+    ASSERT(m_frame->document());
+    
+    JSValue* result = m_frame->loader()->executeScript(string, forceUserGesture);
+
+    if (!m_frame) // In case the script removed our frame from the page.
+        return @"";
+
+    // This bizarre set of rules matches behavior from WebKit for Safari 2.0.
+    // If you don't like it, use -[WebScriptObject evaluateWebScript:] or 
+    // JSEvaluateScript instead, since they have less surprising semantics.
+    if (!result || !result->isBoolean() && !result->isString() && !result->isNumber())
+        return @"";
+
     JSLock lock;
-    return nsStringNilIfEmpty(result->isString() ? result->getString() : result->toString(m_frame->scriptProxy()->interpreter()->globalExec()));
+    return String(result->toString(m_frame->scriptProxy()->interpreter()->globalExec()));
 }
 
 - (NSAppleEventDescriptor *)aeDescByEvaluatingJavaScriptFromString:(NSString *)string
 {
-    m_frame->loader()->createEmptyDocument();
-    JSValue* result = m_frame->loader()->executeScript(0, string, true);
+    ASSERT(m_frame->document());
+    ASSERT(m_frame == m_frame->page()->mainFrame());
+    JSValue* result = m_frame->loader()->executeScript(string, true);
     if (!result) // FIXME: pass errors
         return 0;
     JSLock lock;
@@ -706,23 +735,7 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 
 - (NSRect)firstRectForDOMRange:(DOMRange *)range
 {
-    int extraWidthToEndOfLine = 0;
-    IntRect startCaretRect = [[range startContainer] _node]->renderer()->caretRect([range startOffset], DOWNSTREAM, &extraWidthToEndOfLine);
-    IntRect endCaretRect = [[range endContainer] _node]->renderer()->caretRect([range endOffset], UPSTREAM);
-
-    if (startCaretRect.y() == endCaretRect.y()) {
-        // start and end are on the same line
-        return IntRect(MIN(startCaretRect.x(), endCaretRect.x()), 
-                     startCaretRect.y(), 
-                     abs(endCaretRect.x() - startCaretRect.x()),
-                     MAX(startCaretRect.height(), endCaretRect.height()));
-    }
-
-    // start and end aren't on the same line, so go from start to the end of its line
-    return IntRect(startCaretRect.x(), 
-                 startCaretRect.y(),
-                 startCaretRect.width() + extraWidthToEndOfLine,
-                 startCaretRect.height());
+   return m_frame->firstRectForRange([range _range]);
 }
 
 - (void)scrollDOMRangeToVisible:(DOMRange *)range
@@ -806,11 +819,7 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 - (void)setBaseBackgroundColor:(NSColor *)backgroundColor
 {
     if (m_frame && m_frame->view()) {
-        NSColor *deviceColor = [backgroundColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-        Color color = Color(makeRGBA((int)(255 * [deviceColor redComponent]),
-                                     (int)(255 * [deviceColor blueComponent]),
-                                     (int)(255 * [deviceColor greenComponent]),
-                                     (int)(255 * [deviceColor alphaComponent])));
+        Color color = colorFromNSColor([backgroundColor colorUsingColorSpaceName:NSDeviceRGBColorSpace]);
         m_frame->view()->setBaseBackgroundColor(color);
     }
 }
@@ -857,10 +866,13 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     Element* selectionRoot = m_frame->selectionController()->rootEditableElement();
     Element* scope = selectionRoot ? selectionRoot : m_frame->document()->documentElement();
     
-    // our critical assumption is that we are only called by input methods that
-    // concentrate on a given area containing the selection.  See comments in convertToDOMRange.
-    ASSERT(range->startContainer(exception) == scope || range->startContainer(exception)->isDescendantOf(scope));
-    ASSERT(range->endContainer(exception) == scope || range->endContainer(exception)->isDescendantOf(scope));
+    // Mouse events may cause TSM to attempt to create an NSRange for a portion of the view
+    // that is not inside the current editable region.  These checks ensure we don't produce
+    // potentially invalid data when responding to such requests.
+    if (range->startContainer(exception) != scope && !range->startContainer(exception)->isDescendantOf(scope))
+        return NSMakeRange(NSNotFound, 0);
+    if(range->endContainer(exception) != scope && !range->endContainer(exception)->isDescendantOf(scope))
+        return NSMakeRange(NSNotFound, 0);
     
     RefPtr<Range> testRange = new Range(scope->document(), scope, 0, range->startContainer(exception), range->startOffset(exception));
     ASSERT(testRange->startContainer(exception) == scope);
@@ -903,7 +915,9 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 
 - (void)selectNSRange:(NSRange)range
 {
-    m_frame->selectionController()->setSelection(Selection([self convertToDOMRange:range].get(), SEL_DEFAULT_AFFINITY));
+    RefPtr<Range> domRange = [self convertToDOMRange:range];
+    if (domRange)
+        m_frame->selectionController()->setSelection(Selection(domRange.get(), SEL_DEFAULT_AFFINITY));
 }
 
 - (NSRange)selectedNSRange
@@ -922,36 +936,9 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     return [DOMRange _wrapRange:m_frame->mark().toRange().get()];
 }
 
-- (void)setMarkedTextDOMRange:(DOMRange *)range customAttributes:(NSArray *)attributes ranges:(NSArray *)ranges
-{
-    m_frame->setMarkedTextRange([range _range], attributes, ranges);
-}
-
-- (DOMRange *)markedTextDOMRange
-{
-    return [DOMRange _wrapRange:m_frame->markedTextRange()];
-}
-
 - (NSRange)markedTextNSRange
 {
-    return [self convertToNSRange:m_frame->markedTextRange()];
-}
-
-- (void)replaceMarkedTextWithText:(NSString *)text
-{
-    if (m_frame->selectionController()->isNone())
-        return;
-    
-    int exception = 0;
-
-    Range *markedTextRange = m_frame->markedTextRange();
-    if (markedTextRange && !markedTextRange->collapsed(exception))
-        TypingCommand::deleteKeyPressed(m_frame->document(), NO);
-    
-    if ([text length] > 0)
-        TypingCommand::insertText(m_frame->document(), text, YES);
-    
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    return [self convertToNSRange:m_frame->editor()->compositionRange().get()];
 }
 
 // Given proposedRange, returns an extended range that includes adjacent whitespace that should
@@ -1013,12 +1000,12 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     bool addLeadingSpace = startPos.leadingWhitespacePosition(VP_DEFAULT_AFFINITY, true).isNull() && !isStartOfParagraph(startVisiblePos);
     if (addLeadingSpace)
         if (UChar previousChar = startVisiblePos.previous().characterAfter())
-            addLeadingSpace = !m_frame->isCharacterSmartReplaceExempt(previousChar, true);
+            addLeadingSpace = !isCharacterSmartReplaceExempt(previousChar, true);
     
     bool addTrailingSpace = endPos.trailingWhitespacePosition(VP_DEFAULT_AFFINITY, true).isNull() && !isEndOfParagraph(endVisiblePos);
     if (addTrailingSpace)
         if (UChar thisChar = endVisiblePos.characterAfter())
-            addTrailingSpace = !m_frame->isCharacterSmartReplaceExempt(thisChar, false);
+            addTrailingSpace = !isCharacterSmartReplaceExempt(thisChar, false);
     
     // inspect source
     bool hasWhitespaceAtStart = false;
@@ -1133,12 +1120,6 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     return visiblePos;
 }
 
-- (void)moveDragCaretToPoint:(NSPoint)point
-{   
-    Selection dragCaret([self _visiblePositionForPoint:point]);
-    m_frame->dragCaretController()->setSelection(dragCaret);
-}
-
 - (DOMRange *)dragCaretDOMRange
 {
     return [DOMRange _wrapRange:m_frame->dragCaretController()->toRange().get()];
@@ -1147,12 +1128,6 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
 - (BOOL)isDragCaretRichlyEditable
 {
     return m_frame->dragCaretController()->isContentRichlyEditable();
-}
-
-- (DOMRange *)editableDOMRangeForPoint:(NSPoint)point
-{
-    VisiblePosition position = [self _visiblePositionForPoint:point];
-    return position.isNull() ? nil : [DOMRange _wrapRange:Selection(position).toRange().get()];
 }
 
 - (DOMRange *)characterRangeAtPoint:(NSPoint)point
@@ -1285,62 +1260,6 @@ static HTMLFormElement *formElementFromDOMElement(DOMElement *element)
     return [DOMRange _wrapRange:makeRange(previous, next).get()];
 }
 
-// FIXME: The following 2 functions are copied from AppKit. It would be best to share code.
-
-// MF:!!! For now we will use static character sets for the computation, but we should eventually probably make these keys in the language dictionaries.
-// MF:!!! The following characters (listed with their nextstep encoding values) were in the preSmartTable in the old text objet, but aren't yet in the new text object: NS_FIGSPACE (0x80), exclamdown (0xa1), sterling (0xa3), yen (0xa5), florin (0xa6) section (0xa7), currency (0xa8), quotesingle (0xa9), quotedblleft (0xaa), guillemotleft (0xab), guilsinglleft (0xac), endash (0xb1), quotesinglbase (0xb8), quotedblbase (0xb9), questiondown (0xbf), emdash (0xd0), plusminus (0xd1).
-// MF:!!! The following characters (listed with their nextstep encoding values) were in the postSmartTable in the old text objet, but aren't yet in the new text object: NS_FIGSPACE (0x80), cent (0xa2), guilsinglright (0xad), registered (0xb0), dagger (0xa2), daggerdbl (0xa3), endash (0xb1), quotedblright (0xba), guillemotright (0xbb), perthousand (0xbd), onesuperior (0xc0), twosuperior (0xc9), threesuperior (0xcc), emdash (0xd0), ordfeminine (0xe3), ordmasculine (0xeb).
-// MF:!!! Another difference in both of these sets from the old text object is we include all the whitespace in whitespaceAndNewlineCharacterSet.
-#define _preSmartString @"([\"\'#$/-`{"
-#define _postSmartString @")].,;:?\'!\"%*-/}"
-
-static NSCharacterSet *_getPreSmartSet(void)
-{
-    static RetainPtr<NSMutableCharacterSet> _preSmartSet = nil;
-    if (!_preSmartSet) {
-        _preSmartSet = [[NSMutableCharacterSet characterSetWithCharactersInString:_preSmartString] retain];
-        [_preSmartSet.get() formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        // Adding CJK ranges
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x1100, 256)]; // Hangul Jamo (0x1100 - 0x11FF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x2E80, 352)]; // CJK & Kangxi Radicals (0x2E80 - 0x2FDF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x2FF0, 464)]; // Ideograph Descriptions, CJK Symbols, Hiragana, Katakana, Bopomofo, Hangul Compatibility Jamo, Kanbun, & Bopomofo Ext (0x2FF0 - 0x31BF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x3200, 29392)]; // Enclosed CJK, CJK Ideographs (Uni Han & Ext A), & Yi (0x3200 - 0xA4CF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0xAC00, 11183)]; // Hangul Syllables (0xAC00 - 0xD7AF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0xF900, 352)]; // CJK Compatibility Ideographs (0xF900 - 0xFA5F)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0xFE30, 32)]; // CJK Compatibility From (0xFE30 - 0xFE4F)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0xFF00, 240)]; // Half/Full Width Form (0xFF00 - 0xFFEF)
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x20000, 0xA6D7)]; // CJK Ideograph Exntension B
-        [_preSmartSet.get() addCharactersInRange:NSMakeRange(0x2F800, 0x021E)]; // CJK Compatibility Ideographs (0x2F800 - 0x2FA1D)
-    }
-    return _preSmartSet.get();
-}
-
-static NSCharacterSet *_getPostSmartSet(void)
-{
-    static RetainPtr<NSMutableCharacterSet> _postSmartSet = nil;
-    if (!_postSmartSet) {
-        _postSmartSet = [[NSMutableCharacterSet characterSetWithCharactersInString:_postSmartString] retain];
-        [_postSmartSet.get() formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x1100, 256)]; // Hangul Jamo (0x1100 - 0x11FF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x2E80, 352)]; // CJK & Kangxi Radicals (0x2E80 - 0x2FDF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x2FF0, 464)]; // Ideograph Descriptions, CJK Symbols, Hiragana, Katakana, Bopomofo, Hangul Compatibility Jamo, Kanbun, & Bopomofo Ext (0x2FF0 - 0x31BF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x3200, 29392)]; // Enclosed CJK, CJK Ideographs (Uni Han & Ext A), & Yi (0x3200 - 0xA4CF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0xAC00, 11183)]; // Hangul Syllables (0xAC00 - 0xD7AF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0xF900, 352)]; // CJK Compatibility Ideographs (0xF900 - 0xFA5F)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0xFE30, 32)]; // CJK Compatibility From (0xFE30 - 0xFE4F)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0xFF00, 240)]; // Half/Full Width Form (0xFF00 - 0xFFEF)
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x20000, 0xA6D7)]; // CJK Ideograph Exntension B
-        [_postSmartSet.get() addCharactersInRange:NSMakeRange(0x2F800, 0x021E)]; // CJK Compatibility Ideographs (0x2F800 - 0x2FA1D)        
-        [_postSmartSet.get() formUnionWithCharacterSet:[NSCharacterSet punctuationCharacterSet]];
-    }
-    return _postSmartSet.get();
-}
-
-- (BOOL)isCharacterSmartReplaceExempt:(unichar)c isPreviousCharacter:(BOOL)isPreviousCharacter
-{
-    return [isPreviousCharacter ? _getPreSmartSet() : _getPostSmartSet() characterIsMember:c];
-}
-
 - (BOOL)getData:(NSData **)data andResponse:(NSURLResponse **)response forURL:(NSString *)URL
 {
     Document* doc = m_frame->document();
@@ -1386,6 +1305,9 @@ static NSCharacterSet *_getPostSmartSet(void)
         else
             data = nil;
         
+        // It's clearly a bug to pass a nil value for data here, and doing so is part of the problem in
+        // <rdar://problem/5268311>. However, fixing this in the obvious ways makes the symptom in 5268311
+        // worse, so don't just fix this without investigating that bug further.
         [d addObject:data];
         [data release];
         [r addObject:it->second->response().nsURLResponse()];

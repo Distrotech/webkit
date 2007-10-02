@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -311,6 +311,7 @@ input, textarea, keygen, select, button, isindex {
     line-height: normal;
     text-transform: none;
     text-indent: 0;
+    text-shadow: none;
     display: inline-block;
     text-align: -webkit-auto;
 }
@@ -383,7 +384,6 @@ input:-webkit-autofill {
 
 input[type="radio"], input[type="checkbox"] {
     margin: 3px 0.5ex;
-    -webkit-user-select: ignore;
     padding: initial;
     background-color: initial;
     border: initial;
@@ -409,13 +409,11 @@ input[type="range"] {
     -webkit-appearance: slider-horizontal;
     padding: initial;
     border: initial;
-    -webkit-user-select: ignore;
     margin: 2px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: sliderthumb-horizontal;
-    -webkit-user-select: ignore
 }
 
 input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled, input[type="file"]:disabled::-webkit-file-upload-button, button:disabled, select:disabled, keygen:disabled, optgroup:disabled, option:disabled {
@@ -428,10 +426,6 @@ input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:ac
 
 input[type="button"]:active:disabled, input[type="submit"]:active:disabled, input[type="reset"]:active:disabled, input[type="file"]:active:disabled::-webkit-file-upload-button, button:active:disabled {
     border-style: outset
-}
-
-select, keygen, button, input[type="button"], input[type="image"], input[type="submit"], input[type="reset"], input[type="checkbox"], input[type="radio"], input[type="file"]::-webkit-file-upload-button, img {
-    -webkit-user-select: ignore
 }
 
 area, param {
@@ -465,7 +459,6 @@ select[size],
 select[multiple],
 select[size][multiple] {
     -webkit-appearance: listbox;
-    -webkit-box-sizing: initial;
     -webkit-box-align: start;
     border: 1px inset gray;
     -webkit-border-radius: initial;
@@ -475,7 +468,6 @@ select[size][multiple] {
 select[size="0"],
 select[size="1"] {
     -webkit-appearance: menulist;
-    -webkit-box-sizing: border-box;
     -webkit-box-align: center;
     border: 1px solid;
     -webkit-border-radius: 5px;
@@ -541,10 +533,6 @@ nobr {
     white-space: nowrap
 }
 
-wbr {
-    white-space: normal
-}
-
 /* states */
 
 :focus { 
@@ -576,7 +564,6 @@ input[type="file"]:focus::-webkit-file-upload-button {
 a:-webkit-any-link {
     color: -webkit-link;
     text-decoration: underline;
-    -webkit-user-select: ignore
 }
 
 a:-webkit-any-link:active {

@@ -25,6 +25,9 @@
  */
 
 #include "config.h"
+
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "c_utility.h"
 
 #include "NP_jsobject.h"
@@ -116,9 +119,11 @@ void convertValueToNPVariant(ExecState *exec, JSValue *value, NPVariant *result)
         if (object->classInfo() == &RuntimeObjectImp::info) {
             RuntimeObjectImp* imp = static_cast<RuntimeObjectImp *>(value);
             CInstance* instance = static_cast<CInstance*>(imp->getInternalInstance());
-            NPObject* obj = instance->getObject();
-            _NPN_RetainObject(obj);
-            OBJECT_TO_NPVARIANT(obj, *result);
+            if (instance) {
+                NPObject* obj = instance->getObject();
+                _NPN_RetainObject(obj);
+                OBJECT_TO_NPVARIANT(obj, *result);
+            }
         } else {
             Interpreter* originInterpreter = exec->dynamicInterpreter();
             RootObject* originRootObject = findRootObject(originInterpreter);
@@ -140,7 +145,7 @@ void convertValueToNPVariant(ExecState *exec, JSValue *value, NPVariant *result)
     }
 }
 
-JSValue *convertNPVariantToValue(ExecState*, const NPVariant* variant)
+JSValue *convertNPVariantToValue(ExecState*, const NPVariant* variant, RootObject* rootObject)
 {
     JSLock lock;
     
@@ -172,7 +177,7 @@ JSValue *convertNPVariantToValue(ExecState*, const NPVariant* variant)
             return ((JavaScriptObject *)obj)->imp;
 
         // Wrap NPObject in a CInstance.
-        return Instance::createRuntimeObject(Instance::CLanguage, obj);
+        return Instance::createRuntimeObject(Instance::CLanguage, obj, rootObject);
     }
     
     return jsUndefined();
@@ -189,3 +194,5 @@ Identifier identifierFromNPIdentifier(const NPUTF8* name)
 }
 
 } }
+
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,10 +28,7 @@
 
 #import "WebDocumentLoaderMac.h"
 
-#import <JavaScriptCore/Assertions.h>
-#import <WebCore/SubstituteData.h>
-#import <WebCore/FoundationExtras.h>
-
+#import "WebKitVersionChecks.h"
 #import "WebView.h"
 
 using namespace WebCore;
@@ -39,18 +36,48 @@ using namespace WebCore;
 WebDocumentLoaderMac::WebDocumentLoaderMac(const ResourceRequest& request, const SubstituteData& substituteData)
     : DocumentLoader(request, substituteData)
     , m_dataSource(nil)
-    , m_hasEverBeenDetached(false)
+    , m_isDataSourceRetained(false)
 {
 }
 
-void WebDocumentLoaderMac::setDataSource(WebDataSource *dataSource, WebView* webView)
+static inline bool needsDataLoadWorkaround(WebView *webView)
+{
+#ifdef BUILDING_ON_TIGER
+    // Tiger has to be a little less efficient.
+    id frameLoadDelegate = [webView frameLoadDelegate];
+    if (!frameLoadDelegate)
+        return false;
+
+    NSString *bundleIdentifier = [[NSBundle bundleForClass:[frameLoadDelegate class]] bundleIdentifier];
+
+    if ([bundleIdentifier isEqualToString:@"com.apple.AppKit"])
+        return true;
+    if ([bundleIdentifier isEqualToString:@"com.adobe.Installers.Setup"])
+        return true;
+    return false;
+#else
+    static bool needsWorkaround = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITHOUT_VITALSOURCE_QUIRK) 
+                                  && [[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.adobe.Installers.Setup"];
+    return needsWorkaround;
+#endif
+}
+
+void WebDocumentLoaderMac::setDataSource(WebDataSource *dataSource, WebView *webView)
 {
     ASSERT(!m_dataSource);
-    HardRetain(dataSource);
+    ASSERT(!m_isDataSourceRetained);
+
     m_dataSource = dataSource;
-    
+    retainDataSource();
+
     m_resourceLoadDelegate = [webView resourceLoadDelegate];
     m_downloadDelegate = [webView downloadDelegate];
+    
+    // Some clients run the run loop in a way that prevents the data load timer
+    // from firing. We work around that issue here. See <rdar://problem/5266289>
+    // and <rdar://problem/5049509>.
+    if (needsDataLoadWorkaround(webView))
+        m_deferMainResourceDataLoad = false;
 }
 
 WebDataSource *WebDocumentLoaderMac::dataSource() const
@@ -61,42 +88,69 @@ WebDataSource *WebDocumentLoaderMac::dataSource() const
 void WebDocumentLoaderMac::attachToFrame()
 {
     DocumentLoader::attachToFrame();
-    ASSERT(m_loadingResources.isEmpty());
 
-    if (m_hasEverBeenDetached)
-        HardRetain(m_dataSource);
+    retainDataSource();
 }
 
 void WebDocumentLoaderMac::detachFromFrame()
 {
     DocumentLoader::detachFromFrame();
-  
-    m_hasEverBeenDetached = true;
-    HardRelease(m_dataSource);
+
+    if (m_loadingResources.isEmpty())
+        releaseDataSource();
+
+    // FIXME: What prevents the data source from getting deallocated while the
+    // frame is not attached?
 }
 
 void WebDocumentLoaderMac::increaseLoadCount(unsigned long identifier)
 {
     ASSERT(m_dataSource);
-    
+
     if (m_loadingResources.contains(identifier))
         return;
-
-    if (m_loadingResources.isEmpty())
-        HardRetain(m_dataSource);
-
     m_loadingResources.add(identifier);
+
+    retainDataSource();
 }
 
 void WebDocumentLoaderMac::decreaseLoadCount(unsigned long identifier)
 {
-    ASSERT(m_loadingResources.contains(identifier));
+    HashSet<unsigned long>::iterator it = m_loadingResources.find(identifier);
     
-    m_loadingResources.remove(identifier);
+    // It is valid for a load to be cancelled before it's started.
+    if (it == m_loadingResources.end())
+        return;
+    
+    m_loadingResources.remove(it);
     
     if (m_loadingResources.isEmpty()) {
         m_resourceLoadDelegate = 0;
         m_downloadDelegate = 0;
-        HardRelease(m_dataSource);
+        if (!frame())
+            releaseDataSource();
     }
+}
+
+void WebDocumentLoaderMac::retainDataSource()
+{
+    if (m_isDataSourceRetained || !m_dataSource)
+        return;
+    m_isDataSourceRetained = true;
+    CFRetain(m_dataSource);
+}
+
+void WebDocumentLoaderMac::releaseDataSource()
+{
+    if (!m_isDataSourceRetained)
+        return;
+    ASSERT(m_dataSource);
+    m_isDataSourceRetained = false;
+    CFRelease(m_dataSource);
+}
+
+void WebDocumentLoaderMac::detachDataSource()
+{
+    ASSERT(!m_isDataSourceRetained);
+    m_dataSource = nil;
 }

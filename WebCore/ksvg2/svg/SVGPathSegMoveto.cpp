@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -29,7 +29,7 @@
 
 namespace WebCore {
 
-SVGPathSegMovetoAbs::SVGPathSegMovetoAbs(double x, double y)
+SVGPathSegMovetoAbs::SVGPathSegMovetoAbs(float x, float y)
     : SVGPathSeg()
     , m_x(x)
     , m_y(y)
@@ -40,22 +40,22 @@ SVGPathSegMovetoAbs::~SVGPathSegMovetoAbs()
 {
 }
 
-void SVGPathSegMovetoAbs::setX(double x)
+void SVGPathSegMovetoAbs::setX(float x)
 {
     m_x = x;
 }
 
-double SVGPathSegMovetoAbs::x() const
+float SVGPathSegMovetoAbs::x() const
 {
     return m_x;
 }
 
-void SVGPathSegMovetoAbs::setY(double y)
+void SVGPathSegMovetoAbs::setY(float y)
 {
     m_y = y;
 }
 
-double SVGPathSegMovetoAbs::y() const
+float SVGPathSegMovetoAbs::y() const
 {
     return m_y;
 }
@@ -63,7 +63,7 @@ double SVGPathSegMovetoAbs::y() const
 
 
 
-SVGPathSegMovetoRel::SVGPathSegMovetoRel(double x, double y)
+SVGPathSegMovetoRel::SVGPathSegMovetoRel(float x, float y)
     : SVGPathSeg()
     , m_x(x)
     , m_y(y)
@@ -74,22 +74,22 @@ SVGPathSegMovetoRel::~SVGPathSegMovetoRel()
 {
 }
 
-void SVGPathSegMovetoRel::setX(double x)
+void SVGPathSegMovetoRel::setX(float x)
 {
     m_x = x;
 }
 
-double SVGPathSegMovetoRel::x() const
+float SVGPathSegMovetoRel::x() const
 {
     return m_x;
 }
 
-void SVGPathSegMovetoRel::setY(double y)
+void SVGPathSegMovetoRel::setY(float y)
 {
     m_y = y;
 }
 
-double SVGPathSegMovetoRel::y() const
+float SVGPathSegMovetoRel::y() const
 {
     return m_y;
 }

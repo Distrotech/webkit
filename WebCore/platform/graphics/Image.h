@@ -51,7 +51,7 @@ typedef struct HBITMAP__ *HBITMAP;
 #endif
 
 #if PLATFORM(QT)
-class QPixmap;
+#include <QPixmap>
 #endif
 
 namespace WebCore {
@@ -104,7 +104,7 @@ public:
     // Typically the CachedImage that owns us.
     ImageObserver* imageObserver() const { return m_imageObserver; }
 
-    enum TileRule { StretchTile, RepeatTile };
+    enum TileRule { StretchTile, RoundTile, RepeatTile };
     
 #if PLATFORM(MAC)
     // Accessors for native image formats.
@@ -122,12 +122,16 @@ public:
 
 #if PLATFORM(WIN)
     virtual bool getHBITMAP(HBITMAP) { return false; }
+    virtual bool getHBITMAPOfSize(HBITMAP, LPSIZE) { return false; }
 #endif
 
 protected:
     static void fillWithSolidColor(GraphicsContext* ctxt, const FloatRect& dstRect, const Color& color, CompositeOperator op);
 
 private:
+#if PLATFORM(WIN)
+    virtual void drawFrameMatchingSourceSize(GraphicsContext*, const FloatRect& dstRect, const IntSize& srcSize, CompositeOperator) { }
+#endif
     virtual void draw(GraphicsContext*, const FloatRect& dstRect, const FloatRect& srcRect, CompositeOperator) = 0;
     void drawTiled(GraphicsContext*, const FloatRect& dstRect, const FloatPoint& srcPoint, const FloatSize& tileSize, CompositeOperator);
     void drawTiled(GraphicsContext*, const FloatRect& dstRect, const FloatRect& srcRect, TileRule hRule, TileRule vRule, CompositeOperator);

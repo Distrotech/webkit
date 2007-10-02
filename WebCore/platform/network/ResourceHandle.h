@@ -86,11 +86,11 @@ template <typename T> class Timer;
 
 class ResourceHandle : public Shared<ResourceHandle> {
 private:
-    ResourceHandle(const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool mightDownloadFromHandle);
+    ResourceHandle(const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool shouldContentSniff, bool mightDownloadFromHandle);
 
 public:
     // FIXME: should not need the Frame
-    static PassRefPtr<ResourceHandle> create(const ResourceRequest&, ResourceHandleClient*, Frame*, bool defersLoading, bool mightDownloadFromHandle = false);
+    static PassRefPtr<ResourceHandle> create(const ResourceRequest&, ResourceHandleClient*, Frame*, bool defersLoading, bool shouldContentSniff, bool mightDownloadFromHandle = false);
 
     static void loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
     static bool willLoadFromCache(ResourceRequest&);
@@ -139,7 +139,7 @@ public:
     friend LRESULT __stdcall ResourceHandleWndProc(HWND, unsigned message, WPARAM, LPARAM);
 #endif
 
-#if PLATFORM(GDK) || PLATFORM(QT)
+#if PLATFORM(GTK) || PLATFORM(QT)
     ResourceHandleInternal* getInternal() { return d.get(); }
 #endif
 
@@ -148,14 +148,13 @@ public:
     
     void clearAuthentication();
     void cancel();
-    
+
+    // The client may be 0, in which case no callbacks will be made.
     ResourceHandleClient* client() const;
+    void setClient(ResourceHandleClient*);
+
     void setDefersLoading(bool);
       
-    const HTTPHeaderMap& requestHeaders() const;
-    const KURL& url() const;
-    const String& method() const;
-    PassRefPtr<FormData> postData() const;
     const ResourceRequest& request() const;
 
     void fireBlockedFailure(Timer<ResourceHandle>*);

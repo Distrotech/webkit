@@ -1,3 +1,209 @@
+2007-09-25  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Adam.
+
+        - Fix http://bugs.webkit.org/show_bug.cgi?id=14885
+          LGPL'ed files contain incorrect FSF address
+
+        * blog/wp-content/plugins/wp-cache/wp-cache.php:
+        * blog/wp-includes/class-snoopy.php:
+        * blog/wp-includes/gettext.php:
+        * blog/wp-includes/js/tinymce/license.html:
+        * blog/wp-includes/streams.php:
+
+2007-09-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Mark Rowe.
+        
+        - Limit custom list bullets to ordered lists only
+
+        * css/blue.css:
+        * css/gray.css:
+        * css/green.css:
+        * css/ie.css:
+        * css/main.css:
+        * css/pink.css:
+        * css/purple.css:
+        * css/yellow.css:
+
+2007-09-22  Jan Michael Alonzo  <jmalonzo@unpluggable.com>
+
+        Reviewed by Adam.
+
+        * coding/coding-style.html:
+          - in section Other Punctuation
+            - syntax instead of synatax
+            - fix sample code alignment
+
+2007-09-06  Maciej Stachowiak  <mjs@apple.com>
+
+        Forgot the JS file.
+
+        * misc/WebKitDetect.js: Added.
+
+2007-09-06  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed - copy of WebKitDetect script from wiki
+
+        * misc/WebKitDetect.html: Added.
+
+2007-08-20  Adam Roben  <aroben@apple.com>
+
+        Remove any mention of drwtsn32.log, as it is almost never useful for tracking down crashes
+
+        Reviewed by Oliver.
+
+        * quality/crashlogs.html:
+
+2007-07-26  Maciej Stachowiak  <mjs@apple.com>
+
+        - grammar fix pointed out by Mitz.
+
+        * projects/goals.html:
+
+2007-07-25  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Adam.
+        
+        Added WebKit Project Goals.
+
+        * nav.inc: added a nav link.
+        * projects/goals.html: Added.
+
+2007-07-22  Matt Lilek  <pewtermoose@gmail.com>
+
+        Reviewed by Adam Roben.
+
+        Add information on getting a useful crash log on Mac and Windows.
+
+        * nav.inc:
+        * quality/crashlogs.html: Added.
+        * quality/mac_reportbox.jpg: Added.
+        * quality/mac_viewtrace.jpg: Added.
+        * quality/win_installwatson.jpg: Added.
+        * quality/win_watsongui.jpg: Added.
+        * quality/win_watsoninstalled.jpg: Added.
+
+2007-07-20  Mark Rowe  <mrowe@apple.com>
+
+        Replace symlink with a PHP-level include to allow use of git on Windows without cygwin.
+        WordPress will replace the file with a symlink when it's first accessed, and the PHP-level
+        include is functionally identical for our purposes on the first use.
+
+        * blog/wp-content/advanced-cache.php:
+
+2007-07-16  Charles Gaudette  <charles@gaudette-net.com>
+
+        Reviewed by Niko.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=14628
+          broken link on webkit.org home page - "KHTML" points to http://khtml.info/
+
+        * index.html:
+
+2007-07-06  Matt Lilek  <pewtermoose@gmail.com>
+
+        Reviewed by Adam Roben.
+
+        Add info about VC++ Express forgetting SDK paths.
+
+        * building/build.html:
+
+2007-07-02  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=14482
+          Add information about the NeedsReduction and HasReduction keywords to quality/reduction.html
+
+        * quality/reduction.html:
+
+2007-07-01  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Darin.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=14481
+        Broken links on coding/lgpl-license.html
+
+        * coding/lgpl-license.html:
+
+2007-06-24  Mitz Pettel  <mitz@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Fix broken link.
+
+        * building/build.html:
+
+2007-06-23  Mark Rowe  <mrowe@apple.com>
+
+        Not reviewed.
+
+        * building/checkout.html: Update link to bypass caching proxy as it has a habit of breaking huge downloads.
+
+2007-06-12  Adam Roben  <aroben@apple.com>
+
+        Update the location of cygwin-downloader.zip.
+
+        Rubberstamped by Hyatt.
+
+        * building/tools.html:
+
+2007-06-12  Dave Hyatt  <hyatt@apple.com>
+  
+        Add Windows checkout/build instructions to the website.
+ 
+        * building/build.html:
+        * building/checkout.html:
+        * building/debug.html:
+        * building/tools.html: Added.
+        * building/run.html:
+        * css/main.css:
+        * index.html:
+        * nav.inc:
+
+2007-06-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Cleaned up formatting on the check out page.
+
+        * building/checkout.html:
+
+2007-06-08  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Hyatt.
+
+        Switch to using Internet Explorer's conditional comments to target IE-specific styles rather
+        than doing server-side user agent checks.  This resolves an issue some people were seeing where
+        caching would lead to a page generated for an Internet Explorer user being served to a Safari
+        user.  The visible symptom of this was many of the graphics were missing.
+
+        * blog/wp-content/themes/webkit/header.php:
+        * header.inc:
+
+2007-05-04  Mark Rowe  <mrowe@apple.com>
+
+        Upgrade to WordPress 2.2.  I didn't go to the effort of tracking down files
+        present in the old version which have since been removed, but it's unlikely
+        they'll ever cause a problem.
+
+2007-05-04  Mark Rowe  <mrowe@apple.com>
+
+        Add graphics used by existing blog posts into SVN.
+
+        * blog/wp-content/rotate.png: Added.
+        * blog/wp-content/drosera.png: Added.
+        * blog/wp-content/hitlist.png: Added.
+        * blog/wp-content/svgtextmini.png: Added.
+        * blog/wp-content/svgtextmini_01.png: Added.
+        * blog/wp-content/textfield_screenshot.jpg: Added.
+        * blog/wp-content/Picture9.png: Added.
+        * blog/wp-content/svgtext.png: Added.
+        * blog/wp-content/webInspector.png: Added.
+        * blog/wp-content/rotate.svg: Added.
+        * blog/wp-content/chucknorris.png: Added.
+
 2007-04-21  Mitz Pettel  <mitz@webkit.org>
 
         Reviewed by Darin.

@@ -56,6 +56,17 @@ class Range;
 class SelectionController;
 class Selection;
 
+struct CompositionUnderline {
+    CompositionUnderline() 
+        : startOffset(0), endOffset(0), thick(false) { }
+    CompositionUnderline(unsigned s, unsigned e, const Color& c, bool t) 
+        : startOffset(s), endOffset(e), color(c), thick(t) { }
+    unsigned startOffset;
+    unsigned endOffset;
+    Color color;
+    bool thick;
+};
+
 class Editor {
 public:
     Editor(Frame*);
@@ -144,7 +155,6 @@ public:
     
     bool selectionStartHasStyle(CSSStyleDeclaration*) const;
 
-    bool selectWordBeforeMenuEvent() const;
     bool clientIsEditable() const;
     
     bool execCommand(const AtomicString&, Event* triggeringEvent = 0);
@@ -194,26 +204,45 @@ public:
 
     bool smartInsertDeleteEnabled();
     
-    void selectMarkedText();
-    void unmarkText();
-    void discardMarkedText();
+    // international text input composition
+    bool hasComposition() const { return m_compositionNode; }
+    void setComposition(const String&, const Vector<CompositionUnderline>&, unsigned selectionStart, unsigned selectionEnd);
+    void confirmComposition();
+    void confirmComposition(const String&); // if no existing composition, replaces selection
+    void confirmCompositionWithoutDisturbingSelection();
+    PassRefPtr<Range> compositionRange() const;
+    bool getCompositionSelection(unsigned& selectionStart, unsigned& selectionEnd) const;
 
-    bool ignoreMarkedTextSelectionChange() const { return m_ignoreMarkedTextSelectionChange; }
-    void setIgnoreMarkedTextSelectionChange(bool ignore) { m_ignoreMarkedTextSelectionChange = ignore; }
+    // getting international text input composition state (for use by InlineTextBox)
+    Text* compositionNode() const { return m_compositionNode.get(); }
+    unsigned compositionStart() const { return m_compositionStart; }
+    unsigned compositionEnd() const { return m_compositionEnd; }
+    bool compositionUsesCustomUnderlines() const { return !m_customCompositionUnderlines.isEmpty(); }
+    const Vector<CompositionUnderline>& customCompositionUnderlines() const { return m_customCompositionUnderlines; }
+
+    bool ignoreCompositionSelectionChange() const { return m_ignoreCompositionSelectionChange; }
+
+    void setStartNewKillRingSequence(bool);
 
 #if PLATFORM(MAC)
     NSString* userVisibleString(NSURL*);
-    void setStartNewKillRingSequence(bool flag) { m_startNewKillRingSequence = flag; }
-#else 
-    void setStartNewKillRingSequence(bool) { }
 #endif
+
+    PassRefPtr<Range> rangeForPoint(const IntPoint& windowPoint);
+
+    void clear();
 
 private:
     Frame* m_frame;
     OwnPtr<DeleteButtonController> m_deleteButtonController;
     RefPtr<EditCommand> m_lastEditCommand;
     RefPtr<Node> m_removedAnchor;
-    bool m_ignoreMarkedTextSelectionChange;
+
+    RefPtr<Text> m_compositionNode;
+    unsigned m_compositionStart;
+    unsigned m_compositionEnd;
+    Vector<CompositionUnderline> m_customCompositionUnderlines;
+    bool m_ignoreCompositionSelectionChange;
 
     bool canDeleteRange(Range*) const;
     bool canSmartCopyOrDelete();
@@ -225,15 +254,32 @@ private:
     void replaceSelectionWithFragment(PassRefPtr<DocumentFragment>, bool selectReplacement, bool smartReplace, bool matchStyle);
     void replaceSelectionWithText(const String&, bool selectReplacement, bool smartReplace);
     void writeSelectionToPasteboard(Pasteboard*);
+    void revealSelectionAfterEditingOperation();
+
+    void selectComposition();
+    void confirmComposition(const String&, bool preserveSelection);
+    void setIgnoreCompositionSelectionChange(bool ignore);
+
+    void addToKillRing(Range*, bool prepend);
 
 #if PLATFORM(MAC)
-    void addToKillRing(Range*, bool prepend);
     bool m_startNewKillRingSequence;
-#else
-    void addToKillRing(Range*, bool) { }
 #endif
-
 };
+
+#if PLATFORM(MAC)
+
+inline void Editor::setStartNewKillRingSequence(bool flag)
+{
+    m_startNewKillRingSequence = flag;
+}
+
+#else
+
+inline void Editor::setStartNewKillRingSequence(bool) { }
+inline void Editor::addToKillRing(Range*, bool) { }
+
+#endif
 
 } // namespace WebCore
 

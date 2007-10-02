@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -26,6 +26,7 @@
 #define RenderObject_h
 
 #include "CachedResourceClient.h"
+#include "Document.h"
 #include "RenderStyle.h"
 #include "ScrollTypes.h"
 #include "VisiblePosition.h"
@@ -83,7 +84,7 @@ enum PaintPhase {
 enum PaintRestriction {
     PaintRestrictionNone,
     PaintRestrictionSelectionOnly,
-    PaintRestrictionSelectionOnlyWhiteText
+    PaintRestrictionSelectionOnlyBlackText
 };
 
 enum HitTestFilter {
@@ -244,7 +245,7 @@ private:
     void* operator new(size_t) throw();
 
 public:
-    RenderArena* renderArena() const;
+    RenderArena* renderArena() const { return document()->renderArena(); }
 
     virtual bool isRenderBlock() const { return false; }
     virtual bool isRenderInline() const { return false; }
@@ -266,12 +267,14 @@ public:
     virtual bool isImage() const { return false; }
     virtual bool isTextArea() const { return false; }
     virtual bool isTextField() const { return false; }
+    virtual bool isFrame() const { return false; }
     virtual bool isFrameSet() const { return false; }
     virtual bool isApplet() const { return false; }
     virtual bool isMenuList() const { return false; }
     virtual bool isListBox() const { return false; }
+    virtual bool isSlider() const { return false; }
 
-    bool isRoot() const;
+    bool isRoot() const { return document()->documentElement() == node(); }
     bool isBody() const;
     bool isHR() const;
 
@@ -422,12 +425,12 @@ public:
      * (tx|ty) is the calculated position of the parent
      */
     struct PaintInfo {
-        PaintInfo(GraphicsContext* newContext, const IntRect& newRect, PaintPhase newPhase, bool newForceWhiteText,
+        PaintInfo(GraphicsContext* newContext, const IntRect& newRect, PaintPhase newPhase, bool newForceBlackText,
                   RenderObject* newPaintingRoot, RenderFlowSequencedSet* newOutlineObjects)
             : context(newContext)
             , rect(newRect)
             , phase(newPhase)
-            , forceWhiteText(newForceWhiteText)
+            , forceBlackText(newForceBlackText)
             , paintingRoot(newPaintingRoot)
             , outlineObjects(newOutlineObjects)
         {
@@ -436,7 +439,7 @@ public:
         GraphicsContext* context;
         IntRect rect;
         PaintPhase phase;
-        bool forceWhiteText;
+        bool forceBlackText;
         RenderObject* paintingRoot; // used to draw just one element and its visual kids
         RenderFlowSequencedSet* outlineObjects; // used to list outlines that should be painted by a block with inline children
     };
@@ -646,9 +649,9 @@ public:
     virtual int borderLeft() const { return style()->borderLeftWidth(); }
     virtual int borderRight() const { return style()->borderRightWidth(); }
 
-    virtual void addLineBoxRects(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX);
+    virtual void addLineBoxRects(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false);
 
-    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty);
+    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
     IntRect absoluteBoundingBoxRect();
 
     // the rect that will be painted if this object is passed as the paintingRoot
@@ -679,8 +682,6 @@ public:
                        int angleSpan, BorderSide, Color, const Color& textcolor, EBorderStyle, bool firstCorner);
     void drawBorder(GraphicsContext*, int x1, int y1, int x2, int y2, BorderSide,
                     Color, const Color& textcolor, EBorderStyle, int adjbw1, int adjbw2);
-
-    virtual void setTable(RenderTable*) { }
 
     // Repaint the entire object.  Called when, e.g., the color of a border changes, or when a border
     // style changes.
@@ -749,20 +750,13 @@ public:
 
     // A single rectangle that encompasses all of the selected objects within this object.  Used to determine the tightest
     // possible bounding box for the selection.
-    virtual IntRect selectionRect() { return IntRect(); }
+    virtual IntRect selectionRect(bool) { return IntRect(); }
 
     // Whether or not an object can be part of the leaf elements of the selection.
     virtual bool canBeSelectionLeaf() const { return false; }
 
     // Whether or not a block has selected children.
     virtual bool hasSelectedChildren() const { return false; }
-
-    // Whether or not a selection can be attempted on this object.
-    bool canSelect() const;
-
-    // Whether or not a selection can be attempted on this object.  Should only be called right before actually beginning a selection,
-    // since it fires the selectstart DOM event.
-    bool shouldSelect() const;
 
     // Obtains the selection colors that should be used when painting a selection.
     Color selectionBackgroundColor() const;
@@ -779,9 +773,9 @@ public:
         {
         }
 
-        SelectionInfo(RenderObject* o)
+        SelectionInfo(RenderObject* o, bool clipToVisibleContent)
             : m_object(o)
-            , m_rect(o->needsLayout() ? IntRect() : o->selectionRect())
+            , m_rect(o->needsLayout() ? IntRect() : o->selectionRect(clipToVisibleContent))
             , m_state(o->selectionState())
         {
         }
@@ -856,15 +850,18 @@ public:
     
     void remove() { if (parent()) parent()->removeChild(this); }
 
+    void invalidateVerticalPosition() { m_verticalPosition = PositionUndefined; }
+    
+    virtual void removeLeftoverAnonymousBlock(RenderBlock* child);
+
 protected:
     virtual void printBoxDecorations(GraphicsContext*, int /*x*/, int /*y*/, int /*w*/, int /*h*/, int /*tx*/, int /*ty*/) { }
 
     virtual IntRect viewRect() const;
 
-    void invalidateVerticalPositions();
     short getVerticalPosition(bool firstLine) const;
 
-    virtual void removeLeftoverAnonymousBoxes();
+    void adjustRectForOutlineAndShadow(IntRect&) const;
 
     void arenaDelete(RenderArena*, void* objectBase);
 

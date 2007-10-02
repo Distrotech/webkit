@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -69,6 +69,11 @@ public:
     virtual int minimumMenuListSize(RenderStyle*) const;
 
     virtual void adjustSliderThumbSize(RenderObject*) const;
+    
+    virtual int popupInternalPaddingLeft(RenderStyle*) const;
+    virtual int popupInternalPaddingRight(RenderStyle*) const;
+    virtual int popupInternalPaddingTop(RenderStyle*) const;
+    virtual int popupInternalPaddingBottom(RenderStyle*) const;
 
 protected:
     // Methods for each appearance value.
@@ -95,7 +100,10 @@ protected:
     virtual void adjustMenuListButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
 
     virtual bool paintSliderTrack(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual void adjustSliderTrackStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+
     virtual bool paintSliderThumb(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual void adjustSliderThumbStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
 
     virtual bool paintSearchField(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
     virtual void adjustSearchFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
@@ -143,7 +151,6 @@ private:
     const int* buttonMargins() const;
     void setButtonCellState(const RenderObject*, const IntRect&);
 
-    void setPopupPaddingFromControlSize(RenderStyle*, NSControlSize) const;
     void setPopupButtonCellState(const RenderObject*, const IntRect&);
     const IntSize* popupButtonSizes() const;
     const int* popupButtonMargins() const;
@@ -162,6 +169,7 @@ private:
     NSButtonCell* button() const;
     NSPopUpButtonCell* popupButton() const;
     NSSearchFieldCell* search() const;
+    NSMenu* searchMenuTemplate() const;
     NSSliderCell* sliderThumbHorizontal() const;
     NSSliderCell* sliderThumbVertical() const;
     Image* resizeCornerImage() const;
@@ -172,6 +180,7 @@ private:
     mutable RetainPtr<NSButtonCell> m_button;
     mutable RetainPtr<NSPopUpButtonCell> m_popupButton;
     mutable RetainPtr<NSSearchFieldCell> m_search;
+    mutable RetainPtr<NSMenu> m_searchMenuTemplate;
     mutable RetainPtr<NSSliderCell> m_sliderThumbHorizontal;
     mutable RetainPtr<NSSliderCell> m_sliderThumbVertical;
     mutable Image* m_resizeCornerImage;

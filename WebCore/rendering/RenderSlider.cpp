@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -166,18 +166,23 @@ void RenderSlider::setStyle(RenderStyle* newStyle)
 {
     RenderBlock::setStyle(newStyle);
     
-    RenderStyle* thumbStyle = createThumbStyle(newStyle);
-
-    if (m_thumb)
+    if (m_thumb) {
+        RenderStyle* thumbStyle = createThumbStyle(newStyle);
         m_thumb->renderer()->setStyle(thumbStyle);
+    }
         
     setReplaced(isInline());
 }
 
 RenderStyle* RenderSlider::createThumbStyle(RenderStyle* parentStyle)
 {
-    RenderStyle* style = getPseudoStyle(RenderStyle::SLIDER_THUMB);
-    if (!style)
+    RenderStyle* style;
+
+    RenderStyle* pseudoStyle = getPseudoStyle(RenderStyle::SLIDER_THUMB);
+    if (pseudoStyle)
+        // We may be sharing style with another slider, but we must not share the thumb style.
+        style = new (renderArena()) RenderStyle(*pseudoStyle);
+    else
         style = new (renderArena()) RenderStyle();
 
     if (parentStyle)
@@ -279,7 +284,7 @@ void RenderSlider::setValueForPosition(int position)
 
     // Force integer value if not float.
     if (!equalIgnoringCase(precision, "float"))
-        val = lroundf(val);
+        val = lround(val);
 
     static_cast<HTMLInputElement*>(node())->setValueFromRenderer(String::number(val));
     
@@ -309,7 +314,7 @@ double RenderSlider::setPositionFromValue(bool inLayout)
         
     // Force integer value if not float.
     if (!equalIgnoringCase(precision, "float"))
-        val = lroundf(val);
+        val = lround(val);
 
     // Calculate the new position based on the value
     double factor = (val - minVal) / (maxVal - minVal);

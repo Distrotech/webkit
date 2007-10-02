@@ -1,6 +1,7 @@
 /*
     Copyright (C) 2004, 2005, 2006 Nikolas Zimmermann <zimmermann@kde.org>
                   2004, 2005, 2006, 2007 Rob Buis <buis@kde.org>
+                  2007 Apple Inc.  All rights reserved.
 
     This file is part of the KDE project
 
@@ -16,8 +17,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -31,6 +32,8 @@
 #include "Document.h"
 #include "EventListener.h"
 #include "EventNames.h"
+#include "FloatConversion.h"
+#include "FloatRect.h"
 #include "Frame.h"
 #include "HTMLNames.h"
 #include "RenderSVGViewportContainer.h"
@@ -114,14 +117,21 @@ void SVGSVGElement::setContentStyleType(const AtomicString& type)
 
 FloatRect SVGSVGElement::viewport() const
 {
-    double _x = x().value();
-    double _y = y().value();
-    double w = width().value();
-    double h = height().value();
+    double _x = 0.0;
+    double _y = 0.0;
+    if (renderer() && renderer()->parent() &&
+       !renderer()->parent()->isSVGContainer()) {
+        _x = x().value();
+        _y = y().value();
+    }
+    float w = width().value();
+    float h = height().value();
     AffineTransform viewBox = viewBoxToViewTransform(w, h);
+    double wDouble = w;
+    double hDouble = h;
     viewBox.map(_x, _y, &_x, &_y);
-    viewBox.map(w, h, &w, &h);
-    return FloatRect(_x, _y, w, h);
+    viewBox.map(w, h, &wDouble, &hDouble);
+    return FloatRect::narrowPrecision(_x, _y, wDouble, hDouble);
 }
 
 float SVGSVGElement::pixelUnitToMillimeterX() const
@@ -345,7 +355,9 @@ SVGTransform SVGSVGElement::createSVGTransformFromMatrix(const AffineTransform& 
 AffineTransform SVGSVGElement::getCTM() const
 {
     AffineTransform mat;
-    mat.translate(x().value(), y().value());
+    if (renderer() && renderer()->parent() &&
+       !renderer()->parent()->isSVGContainer())
+        mat.translate(x().value(), y().value());
 
     if (attributes()->getNamedItem(SVGNames::viewBoxAttr)) {
         AffineTransform viewBox = viewBoxToViewTransform(width().value(), height().value());
@@ -357,8 +369,28 @@ AffineTransform SVGSVGElement::getCTM() const
 
 AffineTransform SVGSVGElement::getScreenCTM() const
 {
+    // FIXME: This assumes that any <svg> element not immediately descending from another SVGElement 
+    // has *no* svg ancestors
+    document()->updateLayoutIgnorePendingStylesheets();
+    float rootX = 0.0f;
+    float rootY = 0.0f;
+    
+    if (RenderObject* renderer = this->renderer()) {
+        renderer = renderer->parent();
+        if (renderer && !(renderer->element() && renderer->element()->isSVGElement())) {
+            int tx = 0;
+            int ty = 0;
+            renderer->absolutePosition(tx, ty, true);
+            rootX += tx;
+            rootY += ty;
+        } else {
+            rootX += x().value();
+            rootY += y().value();
+        }
+    }
+    
     AffineTransform mat = SVGStyledLocatableElement::getScreenCTM();
-    mat.translate(x().value(), y().value());
+    mat.translate(rootX, rootY);
 
     if (attributes()->getNamedItem(SVGNames::viewBoxAttr)) {
         AffineTransform viewBox = viewBoxToViewTransform(width().value(), height().value());
@@ -408,7 +440,7 @@ bool SVGSVGElement::animationsPaused() const
 
 float SVGSVGElement::getCurrentTime() const
 {
-    return m_timeScheduler->elapsed();
+    return narrowPrecisionToFloat(m_timeScheduler->elapsed());
 }
 
 void SVGSVGElement::setCurrentTime(float /* seconds */)

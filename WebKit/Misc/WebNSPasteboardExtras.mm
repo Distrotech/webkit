@@ -30,58 +30,32 @@
 
 #import "WebArchive.h"
 #import "WebFrameBridge.h"
+#import "WebFrameInternal.h"
+#import "WebHTMLViewInternal.h"
 #import "WebNSURLExtras.h"
 #import "WebResourcePrivate.h"
 #import "WebURLsWithTitles.h"
 #import "WebViewPrivate.h"
 #import <JavaScriptCore/Assertions.h>
-#import <WebCore/MimeTypeRegistry.h>
+#import <WebCore/Element.h>
+#import <WebCore/MIMETypeRegistry.h>
+#import <WebCore/RenderImage.h>
+#import <WebKit/DOMExtensions.h>
 #import <WebKit/DOMPrivate.h>
 #import <wtf/RetainPtr.h>
 #import <WebKitSystemInterface.h>
-
-using namespace WebCore;
-
-NSString *WebURLPboardType = nil;
-NSString *WebURLNamePboardType = nil;
 
 @interface NSFilePromiseDragSource : NSObject
 - initWithSource:(id)draggingSource;
 - (void)setTypes:(NSArray *)types onPasteboard:(NSPasteboard *)pboard;
 @end
 
-@implementation NSPasteboard (WebExtras)
+using namespace WebCore;
 
-+ (void)initialize
-{
-    // FIXME  The code below addresses 3446192.  It was awaiting a fix for 3446669. Now that bug has been fixed,
-    // but this code still does not work; UTTypeCopyPreferredTagWithClass returns nil, which caused 4145214. Some
-    // day we'll need to investigate why this code is still not working.
-#ifdef UTI_PB_API
-    CFStringRef osTypeString = UTCreateStringForOSType('url ');
-    CFStringRef utiTypeString = UTTypeCreatePreferredIdentifierForTag( kUTTagClassOSType, osTypeString, NULL );
-    WebURLPboardType = (NSString *)UTTypeCopyPreferredTagWithClass( kUTTagClassNSPboardType, utiTypeString );
-    if (osTypeString != NULL) {
-        CFRelease(osTypeString);
-    }
-    if (utiTypeString != NULL) {
-        CFRelease(utiTypeString);
-    }
-    
-    osTypeString = UTCreateStringForOSType('urln');
-    utiTypeString = UTTypeCreatePreferredIdentifierForTag( kUTTagClassOSType, osTypeString, NULL );
-    WebURLNamePboardType = (NSString *)UTTypeCopyPreferredTagWithClass( kUTTagClassNSPboardType, utiTypeString );
-    if (osTypeString != NULL) {
-        CFRelease(osTypeString);
-    }
-    if (utiTypeString != NULL) {
-        CFRelease(utiTypeString);
-    }
-#else
-    WebURLPboardType = WKCreateURLPasteboardFlavorTypeName();
-    WebURLNamePboardType = WKCreateURLNPasteboardFlavorTypeName();
-#endif
-}
+NSString *WebURLPboardType = @"public.url";
+NSString *WebURLNamePboardType = @"public.url-name";
+
+@implementation NSPasteboard (WebExtras)
 
 + (NSArray *)_web_writableTypesForURL
 {
@@ -177,29 +151,23 @@ static NSArray *_writableTypesForImageWithArchive (void)
 - (void)_web_writeURL:(NSURL *)URL andTitle:(NSString *)title types:(NSArray *)types
 {
     ASSERT(URL);
-    
+
     if ([title length] == 0) {
         title = [[URL path] lastPathComponent];
-        if ([title length] == 0) {
+        if ([title length] == 0)
             title = [URL _web_userVisibleString];
-        }
     }
     
-    if ([types containsObject:NSURLPboardType]) {
+    if ([types containsObject:NSURLPboardType])
         [URL writeToPasteboard:self];
-    }
-    if ([types containsObject:WebURLPboardType]) {
+    if ([types containsObject:WebURLPboardType])
         [self setString:[URL _web_originalDataAsString] forType:WebURLPboardType];
-    }
-    if ([types containsObject:WebURLNamePboardType]) {
+    if ([types containsObject:WebURLNamePboardType])
         [self setString:title forType:WebURLNamePboardType];
-    }
-    if ([types containsObject:NSStringPboardType]) {
+    if ([types containsObject:NSStringPboardType])
         [self setString:[URL _web_userVisibleString] forType:NSStringPboardType];
-    }
-    if ([types containsObject:WebURLsWithTitlesPboardType]) {
+    if ([types containsObject:WebURLsWithTitlesPboardType])
         [WebURLsWithTitles writeURLs:[NSArray arrayWithObject:URL] andTitles:[NSArray arrayWithObject:title] toPasteboard:self];
-    }
 }
 
 + (int)_web_setFindPasteboardString:(NSString *)string withOwner:(id)owner
@@ -221,12 +189,44 @@ static NSArray *_writableTypesForImageWithArchive (void)
     [self setData:RTFDData forType:NSRTFDPboardType];
 }
 
+
+- (void)_web_writePromisedRTFDFromArchive:(WebArchive*)archive containsImage:(BOOL)containsImage
+{
+    ASSERT(archive);
+    // This image data is either the only subresource of an archive (HTML image case)
+    // or the main resource (standalone image case).
+    NSArray *subresources = [archive subresources];
+    WebResource *resource = [archive mainResource];
+    if (containsImage && [subresources count] > 0 
+        && MIMETypeRegistry::isSupportedImageResourceMIMEType([[subresources objectAtIndex:0] MIMEType]))
+        resource = (WebResource *)[subresources objectAtIndex:0];
+    ASSERT(resource != nil);
+    
+    ASSERT(!containsImage || MIMETypeRegistry::isSupportedImageResourceMIMEType([resource MIMEType]));
+    if (!containsImage || MIMETypeRegistry::isSupportedImageResourceMIMEType([resource MIMEType]))
+        [self _web_writeFileWrapperAsRTFDAttachment:[resource _fileWrapperRepresentation]];
+    
+}
+
+CachedImage* imageFromElement(DOMElement *domElement) {
+    Element* element = core(domElement);
+    if (!element)
+        return 0;
+    
+    RenderObject* renderer = element->renderer();
+    RenderImage* imageRenderer = static_cast<RenderImage*>(renderer);
+    if (!imageRenderer->cachedImage() || imageRenderer->cachedImage()->errorOccurred()) 
+        return 0;        
+    return imageRenderer->cachedImage();
+}
+
 - (void)_web_writeImage:(NSImage *)image
                 element:(DOMElement *)element
                     URL:(NSURL *)URL 
                   title:(NSString *)title
                 archive:(WebArchive *)archive
                   types:(NSArray *)types
+                 source:(WebHTMLView *)source
 {
     ASSERT(image || element);
     ASSERT(URL);
@@ -236,28 +236,16 @@ static NSArray *_writableTypesForImageWithArchive (void)
     if ([types containsObject:NSTIFFPboardType]) {
         if (image)
             [self setData:[image TIFFRepresentation] forType:NSTIFFPboardType];
+        else if (source && element)
+            [source setPromisedDragTIFFDataSource:imageFromElement(element)];
         else if (element)
             [self setData:[element _imageTIFFRepresentation] forType:NSTIFFPboardType];
     }
     
-    if (archive) {
-        if ([types containsObject:NSRTFDPboardType]) {
-            // This image data is either the only subresource of an archive (HTML image case)
-            // or the main resource (standalone image case).
-            NSArray *subresources = [archive subresources];
-            WebResource *mainResource = [archive mainResource];
-            WebResource *resource = (!MimeTypeRegistry::isSupportedImageResourceMIMEType([mainResource MIMEType])
-                && [subresources count] > 0) ? (WebResource *)[subresources objectAtIndex:0] : mainResource;
-            ASSERT(resource != nil);
-            
-            ASSERT(MimeTypeRegistry::isSupportedImageResourceMIMEType([resource MIMEType]));
-            if (MimeTypeRegistry::isSupportedImageResourceMIMEType([resource MIMEType]))
-                [self _web_writeFileWrapperAsRTFDAttachment:[resource _fileWrapperRepresentation]];
-        }
-        if ([types containsObject:WebArchivePboardType]) {
+    if (archive)
+        if ([types containsObject:WebArchivePboardType])
             [self setData:[archive data] forType:WebArchivePboardType];
-        }
-    } else {
+    else {
         // We should not have declared types that we aren't going to write (4031826).
         ASSERT(![types containsObject:NSRTFDPboardType]);
         ASSERT(![types containsObject:WebArchivePboardType]);
@@ -268,22 +256,26 @@ static NSArray *_writableTypesForImageWithArchive (void)
                                        URL:(NSURL *)URL 
                                      title:(NSString *)title
                                    archive:(WebArchive *)archive
-                                    source:(id)source
+                                    source:(WebHTMLView *)source
 {
     ASSERT(self == [NSPasteboard pasteboardWithName:NSDragPboard]);
+
     NSMutableArray *types = [[NSMutableArray alloc] initWithObjects:NSFilesPromisePboardType, nil];
     [types addObjectsFromArray:[NSPasteboard _web_writableTypesForImageIncludingArchive:(archive != nil)]];
     [self declareTypes:types owner:source];    
-    [self _web_writeImage:nil element:element URL:URL title:title archive:archive types:types];
+    [self _web_writeImage:nil element:element URL:URL title:title archive:archive types:types source:source];
     [types release];
 
-    // FIXME: This has been broken for a while.
-    // There's no way to get the MIME type for the image from a DOM element.
-    // The old code used WKGetPreferredExtensionForMIMEType([image MIMEType]);
     NSString *extension = @"";
-    NSArray *extensions = [NSArray arrayWithObject:extension];
+    if (RenderObject* renderer = core(element)->renderer())
+        if (renderer->isImage())
+            if (CachedImage* image = static_cast<RenderImage*>(renderer)->cachedImage())
+                extension = WKGetPreferredExtensionForMIMEType(image->response().mimeType());
 
+    NSArray *extensions = [[NSArray alloc] initWithObjects:extension, nil];
     [self setPropertyList:extensions forType:NSFilesPromisePboardType];
+    [extensions release];
+
     return source;
 }
 

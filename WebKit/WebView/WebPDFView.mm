@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,45 +45,50 @@
 #import "WebUIDelegatePrivate.h"
 #import "WebView.h"
 #import "WebViewInternal.h"
+#import <JavaScriptCore/Assertions.h>
+#import <PDFKit/PDFKit.h>
 #import <WebCore/EventNames.h>
+#import <WebCore/FrameLoader.h>
+#import <WebCore/KURL.h>
 #import <WebCore/KeyboardEvent.h>
 #import <WebCore/MouseEvent.h>
 #import <WebCore/PlatformKeyboardEvent.h>
-#import <JavaScriptCore/Assertions.h>
-#import <PDFKit/PDFKit.h>
-#import <WebCore/FrameLoader.h>
-#import <WebCore/KURL.h>
 #import <WebKitSystemInterface.h>
 
 using namespace WebCore;
 using namespace EventNames;
 
 // Redeclarations of PDFKit notifications. We can't use the API since we use a weak link to the framework.
-#define _webkit_PDFKitLaunchNotification @"PDFPreviewLaunchPreview"
 #define _webkit_PDFViewDisplayModeChangedNotification @"PDFViewDisplayModeChanged"
 #define _webkit_PDFViewScaleChangedNotification @"PDFViewScaleChanged"
+#define _webkit_PDFViewPageChangedNotification @"PDFViewChangedPage"
 
-// QuartzPrivate.h doesn't include the PDFKit private headers, so we can't get at PDFViewPriv.h. (3957971)
-// Even if that was fixed, we'd have to tweak compile options to include QuartzPrivate.h. (3957839)
+@interface PDFDocument (PDFKitSecretsIKnow)
+- (NSPrintOperation *)getPrintOperationForPrintInfo:(NSPrintInfo *)printInfo autoRotate:(BOOL)doRotate;
+@end
+
+extern "C" NSString *_NSPathForSystemFramework(NSString *framework);
 
 @interface WebPDFView (FileInternal)
 + (Class)_PDFPreviewViewClass;
 + (Class)_PDFViewClass;
 - (BOOL)_anyPDFTagsFoundInMenu:(NSMenu *)menu;
 - (void)_applyPDFDefaults;
-- (void)_cancelUpdatePreferencesTimer;
 - (BOOL)_canLookUpInDictionary;
+- (NSClipView *)_clipViewForPDFDocumentView;
 - (NSEvent *)_fakeKeyEventWithFunctionKey:(unichar)functionKey;
 - (NSMutableArray *)_menuItemsFromPDFKitForEvent:(NSEvent *)theEvent;
+- (PDFSelection *)_nextMatchFor:(NSString *)string direction:(BOOL)forward caseSensitive:(BOOL)caseFlag wrap:(BOOL)wrapFlag fromSelection:(PDFSelection *)initialSelection startInSelection:(BOOL)startInSelection;
 - (void)_openWithFinder:(id)sender;
 - (NSString *)_path;
-- (PDFView *)_PDFSubview;
+- (void)_PDFDocumentViewMightHaveScrolled:(NSNotification *)notification;
 - (BOOL)_pointIsInSelection:(NSPoint)point;
-- (void)_receivedPDFKitLaunchNotification:(NSNotification *)notification;
 - (NSAttributedString *)_scaledAttributedString:(NSAttributedString *)unscaledAttributedString;
+- (void)_setTextMatches:(NSArray *)array;
 - (NSString *)_temporaryPDFDirectoryPath;
 - (void)_trackFirstResponder;
 - (void)_updatePreferencesSoon;
+- (NSSet *)_visiblePDFPages;
 @end;
 
 // PDFPrefUpdatingProxy is a class that forwards everything it gets to a target and updates the PDF viewing prefs
@@ -93,12 +98,6 @@ using namespace EventNames;
 }
 - (id)initWithView:(WebPDFView *)view;
 @end
-
-@interface PDFDocument (PDFKitSecretsIKnow)
-- (NSPrintOperation *)getPrintOperationForPrintInfo:(NSPrintInfo *)printInfo autoRotate:(BOOL)doRotate;
-@end
-
-extern "C" NSString *_NSPathForSystemFramework(NSString *framework);
 
 #pragma mark C UTILITY FUNCTIONS
 
@@ -173,10 +172,10 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
 {
     // Both setDocument: and _applyPDFDefaults will trigger scale and mode-changed notifications.
     // Those aren't reflecting user actions, so we need to ignore them.
-    _ignoreScaleAndDisplayModeNotifications = YES;
+    _ignoreScaleAndDisplayModeAndPageNotifications = YES;
     [PDFSubview setDocument:doc];
     [self _applyPDFDefaults];
-    _ignoreScaleAndDisplayModeNotifications = NO;
+    _ignoreScaleAndDisplayModeAndPageNotifications = NO;
 }
 
 #pragma mark NSObject OVERRIDES
@@ -184,11 +183,11 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
 - (void)dealloc
 {
     ASSERT(!trackedFirstResponder);
-    [self _cancelUpdatePreferencesTimer];
     [previewView release];
     [PDFSubview release];
     [path release];
     [PDFSubviewProxy release];
+    [textMatches release];
     [super dealloc];
 }
 
@@ -424,20 +423,24 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
                              object:newWindow];
     
     [notificationCenter addObserver:self
-                           selector:@selector(_scaleOrDisplayModeChanged:) 
+                           selector:@selector(_scaleOrDisplayModeOrPageChanged:) 
                                name:_webkit_PDFViewScaleChangedNotification
                              object:PDFSubview];
     
     [notificationCenter addObserver:self
-                           selector:@selector(_scaleOrDisplayModeChanged:) 
+                           selector:@selector(_scaleOrDisplayModeOrPageChanged:) 
                                name:_webkit_PDFViewDisplayModeChangedNotification
                              object:PDFSubview];
     
-    if (previewView)
-        [notificationCenter addObserver:self
-                               selector:@selector(_receivedPDFKitLaunchNotification:)
-                                   name:_webkit_PDFKitLaunchNotification
-                                 object:previewView];
+    [notificationCenter addObserver:self
+                           selector:@selector(_scaleOrDisplayModeOrPageChanged:) 
+                               name:_webkit_PDFViewPageChangedNotification
+                             object:PDFSubview];
+    
+    [notificationCenter addObserver:self 
+                           selector:@selector(_PDFDocumentViewMightHaveScrolled:)
+                               name:NSViewBoundsDidChangeNotification 
+                             object:[self _clipViewForPDFDocumentView]];
 }
 
 - (void)viewWillMoveToWindow:(NSWindow *)window
@@ -458,10 +461,13 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [notificationCenter removeObserver:self
                                   name:_webkit_PDFViewDisplayModeChangedNotification
                                 object:PDFSubview];
-    if (previewView)
-        [notificationCenter removeObserver:self
-                                      name:_webkit_PDFKitLaunchNotification
-                                    object:previewView];
+    [notificationCenter removeObserver:self
+                                  name:_webkit_PDFViewPageChangedNotification
+                                object:PDFSubview];
+    
+    [notificationCenter removeObserver:self
+                                  name:NSViewBoundsDidChangeNotification 
+                                object:[self _clipViewForPDFDocumentView]];
     
     [trackedFirstResponder release];
     trackedFirstResponder = nil;
@@ -487,12 +493,7 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)item
 {
     BOOL result = [self validateUserInterfaceItemWithoutDelegate:item];
-
-    id ud = [[self _webView] UIDelegate];
-    if (ud && [ud respondsToSelector:@selector(webView:validateUserInterfaceItem:defaultValidation:)])
-        return [ud webView:[self _webView] validateUserInterfaceItem:item defaultValidation:result];
-
-    return result;
+    return CallUIDelegateReturningBoolean(result, [self _webView], @selector(webView:validateUserInterfaceItem:defaultValidation:), item, result);
 }
 
 #pragma mark INTERFACE BUILDER ACTIONS FOR SAFARI
@@ -582,55 +583,83 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
 
 - (BOOL)searchFor:(NSString *)string direction:(BOOL)forward caseSensitive:(BOOL)caseFlag wrap:(BOOL)wrapFlag startInSelection:(BOOL)startInSelection
 {
-    if (![string length])
+    PDFSelection *selection = [self _nextMatchFor:string direction:forward caseSensitive:caseFlag wrap:wrapFlag fromSelection:[PDFSubview currentSelection] startInSelection:startInSelection];
+    if (!selection)
         return NO;
 
-    // Our search algorithm, used in WebCore also, is to search in the selection first. If the found text is the
-    // entire selection, then we search again from just past the selection.
+    [PDFSubview setCurrentSelection:selection];
+    [PDFSubview scrollSelectionToVisible:nil];
+    return YES;
+}
 
-    int options = 0;
-    if (!forward)
-        options |= NSBackwardsSearch;
+#pragma mark WebMultipleTextMatches PROTOCOL IMPLEMENTATION
 
-    if (!caseFlag)
-        options |= NSCaseInsensitiveSearch;
+- (void)setMarkedTextMatchesAreHighlighted:(BOOL)newValue
+{
+    // This method is part of the WebMultipleTextMatches algorithm, but this class doesn't support
+    // highlighting text matches inline.
+#ifndef NDEBUG
+    if (newValue)
+        LOG_ERROR("[WebPDFView setMarkedTextMatchesAreHighlighted:] called with YES, which isn't supported");
+#endif
+}
 
-    PDFDocument *document = [PDFSubview document];
-    PDFSelection *oldSelection = [PDFSubview currentSelection];
+- (BOOL)markedTextMatchesAreHighlighted
+{
+    return NO;
+}
+
+- (NSUInteger)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag limit:(NSUInteger)limit
+{
+    PDFSelection *previousMatch = nil;
+    PDFSelection *nextMatch = nil;
+    NSMutableArray *matches = [[NSMutableArray alloc] initWithCapacity:limit];
     
-    PDFSelection *selectionForInitialSearch = [oldSelection copy];
-    if (startInSelection) {
-        // Initially we want to include the selected text in the search. PDFDocument's API always searches from just
-        // past the passed-in selection, so we need to pass a selection that's modified appropriately. 
-        // FIXME 4182863: Ideally we'd use a zero-length selection at the edge of the current selection, but zero-length
-        // selections don't work in PDFDocument. So instead we make a one-length selection just before or after the
-        // current selection, which works for our purposes even when the current selection is at an edge of the
-        // document.
-        int oldSelectionLength = [[oldSelection string] length];
-        if (forward) {
-            [selectionForInitialSearch extendSelectionAtStart:1];
-            [selectionForInitialSearch extendSelectionAtEnd:-oldSelectionLength];
-        } else {
-            [selectionForInitialSearch extendSelectionAtEnd:1];
-            [selectionForInitialSearch extendSelectionAtStart:-oldSelectionLength];
+    for (;;) {
+        nextMatch = [self _nextMatchFor:string direction:YES caseSensitive:caseFlag wrap:NO fromSelection:previousMatch startInSelection:NO];
+        if (!nextMatch)
+            break;
+        
+        [matches addObject:nextMatch];
+        previousMatch = nextMatch;
+
+        if ([matches count] >= limit)
+            break;
+    }
+    
+    [self _setTextMatches:matches];
+    [matches release];
+    
+    return [matches count];
+}
+
+- (void)unmarkAllTextMatches
+{
+    [self _setTextMatches:nil];
+}
+
+- (NSArray *)rectsForTextMatches
+{
+    NSMutableArray *result = [NSMutableArray arrayWithCapacity:[textMatches count]];
+    NSSet *visiblePages = [self _visiblePDFPages];
+    NSEnumerator *matchEnumerator = [textMatches objectEnumerator];
+    PDFSelection *match;
+    
+    while ((match = [matchEnumerator nextObject]) != nil) {
+        NSEnumerator *pages = [[match pages] objectEnumerator];
+        PDFPage *page;
+        while ((page = [pages nextObject]) != nil) {
+            
+            // Skip pages that aren't visible (needed for non-continuous modes, see 5362989)
+            if (![visiblePages containsObject:page])
+                continue;
+            
+            NSRect selectionOnPageInPDFViewCoordinates = [PDFSubview convertRect:[match boundsForPage:page] fromPage:page];
+            [result addObject:[NSValue valueWithRect:selectionOnPageInPDFViewCoordinates]];
         }
     }
-    PDFSelection *foundSelection = [document findString:string fromSelection:selectionForInitialSearch withOptions:options];
-    [selectionForInitialSearch release];
-    
-    // If we first searched in the selection, and we found the selection, search again from just past the selection
-    if (startInSelection && _PDFSelectionsAreEqual(foundSelection, oldSelection))
-        foundSelection = [document findString:string fromSelection:oldSelection withOptions:options];
-    
-    if (!foundSelection && wrapFlag)
-        foundSelection = [document findString:string fromSelection:nil withOptions:options];
 
-    if (foundSelection) {
-        [PDFSubview setCurrentSelection:foundSelection];
-        [PDFSubview scrollSelectionToVisible:nil];
-        return YES;
-    }
-    return NO;
+    return result;
 }
 
 #pragma mark WebDocumentText PROTOCOL IMPLEMENTATION
@@ -811,12 +840,18 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     return result;
 }
 
+- (NSArray *)selectionTextRects
+{
+    // FIXME: We'd need new PDFKit API/SPI to get multiple text rects for selections that intersect more than one line
+    return [NSArray arrayWithObject:[NSValue valueWithRect:[self selectionRect]]];
+}
+
 - (NSView *)selectionView
 {
     return [PDFSubview documentView];
 }
 
-- (NSImage *)selectionImageForcingWhiteText:(BOOL)forceWhiteText
+- (NSImage *)selectionImageForcingBlackText:(BOOL)forceBlackText
 {
     // Convert the selection to an attributed string, and draw that.
     // FIXME 4621154: this doesn't handle italics (and maybe other styles)
@@ -824,16 +859,16 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     NSMutableAttributedString *attributedString = [[self selectedAttributedString] mutableCopy];
     NSRange wholeStringRange = NSMakeRange(0, [attributedString length]);
     
-    // Modify the styles in the attributed string to draw white text, no background, and no underline. We draw 
+    // Modify the styles in the attributed string to draw black text, no background, and no underline. We draw 
     // no underline because it would look ugly.
     [attributedString beginEditing];
     [attributedString removeAttribute:NSBackgroundColorAttributeName range:wholeStringRange];
     [attributedString removeAttribute:NSUnderlineStyleAttributeName range:wholeStringRange];
-    if (forceWhiteText)
-        [attributedString addAttribute:NSForegroundColorAttributeName value:[NSColor colorWithDeviceWhite:1.0f alpha:1.0f] range:wholeStringRange];
+    if (forceBlackText)
+        [attributedString addAttribute:NSForegroundColorAttributeName value:[NSColor colorWithDeviceWhite:0.0f alpha:1.0f] range:wholeStringRange];
     [attributedString endEditing];
     
-    NSImage* selectionImage = [[[NSImage alloc] initWithSize:[self selectionImageRect].size] autorelease];
+    NSImage* selectionImage = [[[NSImage alloc] initWithSize:[self selectionRect].size] autorelease];
     
     [selectionImage lockFocus];
     [attributedString drawAtPoint:NSZeroPoint];
@@ -842,6 +877,13 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [attributedString release];
 
     return selectionImage;
+}
+
+- (NSImage *)selectionImageForcingWhiteText:(BOOL)forceWhiteText
+{
+    // NOTE: this method is obsolete and doesn't behave as its name suggests.
+    // See comment in WebDocumentPrivate.h.
+    return [self selectionImageForcingBlackText:forceWhiteText];
 }
 
 - (NSRect)selectionImageRect
@@ -919,6 +961,25 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [[dataSource webFrame] _frameLoader]->load(URL, event.get());
 }
 
+- (void)PDFViewOpenPDFInNativeApplication:(PDFView *)sender
+{
+    // Delegate method sent when the user requests opening the PDF file in the system's default app
+    [self _openWithFinder:sender];
+}
+
+- (void)PDFViewSavePDFToDownloadFolder:(PDFView *)sender
+{
+    // We don't want to write the file until we have a document to write (see 5267607).
+    if (![PDFSubview document]) {
+        NSBeep();
+        return;
+    }
+
+    // Delegate method sent when the user requests downloading the PDF file to disk. We pass NO for
+    // showingPanel: so that the PDF file is saved to the standard location without user intervention.
+    CallUIDelegate([self _webView], @selector(webView:saveFrameView:showingPanel:), [[dataSource webFrame] frameView], NO);
+}
+
 @end
 
 @implementation WebPDFView (FileInternal)
@@ -986,16 +1047,16 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [PDFSubview setDisplayMode:[prefs PDFDisplayMode]];
 }
 
-- (void)_cancelUpdatePreferencesTimer
-{
-    [_updatePreferencesTimer invalidate];
-    [_updatePreferencesTimer release];
-    _updatePreferencesTimer = nil;
-}
-
 - (BOOL)_canLookUpInDictionary
 {
     return [PDFSubview respondsToSelector:@selector(_searchInDictionary:)];
+}
+
+- (NSClipView *)_clipViewForPDFDocumentView
+{
+    NSClipView *clipView = (NSClipView *)[[PDFSubview documentView] _web_superviewOfClass:[NSClipView class]];
+    ASSERT(clipView);
+    return clipView;
 }
 
 - (NSEvent *)_fakeKeyEventWithFunctionKey:(unichar)functionKey
@@ -1104,6 +1165,50 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     return copiedItems;
 }
 
+- (PDFSelection *)_nextMatchFor:(NSString *)string direction:(BOOL)forward caseSensitive:(BOOL)caseFlag wrap:(BOOL)wrapFlag fromSelection:(PDFSelection *)initialSelection startInSelection:(BOOL)startInSelection
+{
+    if (![string length])
+        return nil;
+    
+    int options = 0;
+    if (!forward)
+        options |= NSBackwardsSearch;
+    
+    if (!caseFlag)
+        options |= NSCaseInsensitiveSearch;
+    
+    PDFDocument *document = [PDFSubview document];
+    
+    PDFSelection *selectionForInitialSearch = [initialSelection copy];
+    if (startInSelection) {
+        // Initially we want to include the selected text in the search. PDFDocument's API always searches from just
+        // past the passed-in selection, so we need to pass a selection that's modified appropriately. 
+        // FIXME 4182863: Ideally we'd use a zero-length selection at the edge of the current selection, but zero-length
+        // selections don't work in PDFDocument. So instead we make a one-length selection just before or after the
+        // current selection, which works for our purposes even when the current selection is at an edge of the
+        // document.
+        int initialSelectionLength = [[initialSelection string] length];
+        if (forward) {
+            [selectionForInitialSearch extendSelectionAtStart:1];
+            [selectionForInitialSearch extendSelectionAtEnd:-initialSelectionLength];
+        } else {
+            [selectionForInitialSearch extendSelectionAtEnd:1];
+            [selectionForInitialSearch extendSelectionAtStart:-initialSelectionLength];
+        }
+    }
+    PDFSelection *foundSelection = [document findString:string fromSelection:selectionForInitialSearch withOptions:options];
+    [selectionForInitialSearch release];
+
+    // If we first searched in the selection, and we found the selection, search again from just past the selection
+    if (startInSelection && _PDFSelectionsAreEqual(foundSelection, initialSelection))
+        foundSelection = [document findString:string fromSelection:initialSelection withOptions:options];
+    
+    if (!foundSelection && wrapFlag)
+        foundSelection = [document findString:string fromSelection:nil withOptions:options];
+    
+    return foundSelection;
+}
+
 - (void)_openWithFinder:(id)sender
 {
     // We don't want to write the file until we have a document to write (see 4892525).
@@ -1173,6 +1278,20 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     return path;
 }
 
+- (void)_PDFDocumentViewMightHaveScrolled:(NSNotification *)notification
+{ 
+    NSClipView *clipView = [self _clipViewForPDFDocumentView];
+    ASSERT([notification object] == clipView);
+    
+    NSPoint scrollPosition = [clipView bounds].origin;
+    if (NSEqualPoints(scrollPosition, lastScrollPosition))
+        return;
+    
+    lastScrollPosition = scrollPosition;
+    WebView *webView = [self _webView];
+    [[webView _UIDelegateForwarder] webView:webView didScrollDocumentInFrameView:[[dataSource webFrame] frameView]];
+}
+
 - (PDFView *)_PDFSubview
 {
     return PDFSubview;
@@ -1189,17 +1308,16 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     return NSPointInRect(point, selectionRect);
 }
 
-- (void)_receivedPDFKitLaunchNotification:(NSNotification *)notification
-{
-    ASSERT([notification object] == previewView);
-    [self _openWithFinder:self];
-}
-
-- (void)_scaleOrDisplayModeChanged:(NSNotification *)notification
+- (void)_scaleOrDisplayModeOrPageChanged:(NSNotification *)notification
 {
     ASSERT([notification object] == PDFSubview);
-    if (!_ignoreScaleAndDisplayModeNotifications)
+    if (!_ignoreScaleAndDisplayModeAndPageNotifications) {
         [self _updatePreferencesSoon];
+        // Notify UI delegate that the entire page has been redrawn, since (unlike for WebHTMLView)
+        // we can't hook into the drawing mechanism itself. This fixes 5337529.
+        WebView *webView = [self _webView];
+        [[webView _UIDelegateForwarder] webView:webView didDrawRect:[webView bounds]];
+    }
 }
 
 - (NSAttributedString *)_scaledAttributedString:(NSAttributedString *)unscaledAttributedString
@@ -1233,6 +1351,13 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     [result endEditing];
     
     return result;
+}
+
+- (void)_setTextMatches:(NSArray *)array
+{
+    [array retain];
+    [textMatches release];
+    textMatches = array;
 }
 
 - (NSString *)_temporaryPDFDirectoryPath
@@ -1279,27 +1404,66 @@ static BOOL _PDFSelectionsAreEqual(PDFSelection *selectionA, PDFSelection *selec
     trackedFirstResponder = [newFirstResponder retain];
 }
 
-- (void)_updatePreferencesNow
+- (void)_updatePreferences:(WebPreferences *)prefs
 {
-    [self _cancelUpdatePreferencesTimer];
-
-    WebPreferences *prefs = [[dataSource _webView] preferences];
     float scaleFactor = [PDFSubview autoScales] ? 0.0f : [PDFSubview scaleFactor];
     [prefs setPDFScaleFactor:scaleFactor];
     [prefs setPDFDisplayMode:[PDFSubview displayMode]];
+    _willUpdatePreferencesSoon = NO;
+    [prefs release];
+    [self release];
 }
 
 - (void)_updatePreferencesSoon
 {   
     // Consolidate calls; due to the PDFPrefUpdatingProxy method, this can be called multiple times with a single user action
     // such as showing the context menu.
-    if (_updatePreferencesTimer)
+    if (_willUpdatePreferencesSoon)
         return;
 
-    _updatePreferencesTimer = [[NSTimer scheduledTimerWithTimeInterval:0 target:self selector:@selector(_updatePreferencesNow) userInfo:nil repeats:NO] retain];
+    WebPreferences *prefs = [[dataSource _webView] preferences];
+
+    [self retain];
+    [prefs retain];
+    [self performSelector:@selector(_updatePreferences:) withObject:prefs afterDelay:0];
+    _willUpdatePreferencesSoon = YES;
 }
 
-@end;
+- (NSSet *)_visiblePDFPages
+{
+    // Returns the set of pages that are at least partly visible, used to avoid processing non-visible pages
+    PDFDocument *pdfDocument = [PDFSubview document];
+    if (!pdfDocument)
+        return nil;
+    
+    NSRect pdfViewBounds = [PDFSubview bounds];
+    PDFPage *topLeftPage = [PDFSubview pageForPoint:NSMakePoint(NSMinX(pdfViewBounds), NSMaxY(pdfViewBounds)) nearest:YES];
+    PDFPage *bottomRightPage = [PDFSubview pageForPoint:NSMakePoint(NSMaxX(pdfViewBounds), NSMinY(pdfViewBounds)) nearest:YES];
+    
+    // only page-free documents should return nil for either of these two since we passed YES for nearest:
+    if (!topLeftPage) {
+        ASSERT(!bottomRightPage);
+        return nil;
+    }
+    
+    NSUInteger firstVisiblePageIndex = [pdfDocument indexForPage:topLeftPage];
+    NSUInteger lastVisiblePageIndex = [pdfDocument indexForPage:bottomRightPage];
+    
+    if (firstVisiblePageIndex > lastVisiblePageIndex) {
+        NSUInteger swap = firstVisiblePageIndex;
+        firstVisiblePageIndex = lastVisiblePageIndex;
+        lastVisiblePageIndex = swap;
+    }
+    
+    NSMutableSet *result = [NSMutableSet set];
+    NSUInteger pageIndex;
+    for (pageIndex = firstVisiblePageIndex; pageIndex <= lastVisiblePageIndex; ++pageIndex)
+        [result addObject:[pdfDocument pageAtIndex:pageIndex]];
+
+    return result;
+}
+
+@end
 
 @implementation PDFPrefUpdatingProxy
 

@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  * Portions are Copyright (C) 2002 Netscape Communications Corporation.
  * Other contributors: David Baron <dbaron@fas.harvard.edu>
@@ -33,7 +33,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Alternatively, the document type parsing portions of this file may be used
  * under the terms of either the Mozilla Public License Version 1.1, found at
@@ -54,6 +54,7 @@
 #include "HTMLDocument.h"
 
 #include "CSSPropertyNames.h"
+#include "CSSStyleSelector.h"
 #include "CString.h"
 #include "CookieJar.h"
 #include "DocumentLoader.h"
@@ -61,12 +62,15 @@
 #include "ExceptionCode.h"
 #include "Frame.h"
 #include "FrameLoader.h"
+#include "FrameView.h"
+#include "HTMLBodyElement.h"
 #include "HTMLElement.h"
 #include "HTMLElementFactory.h"
 #include "HTMLNames.h"
 #include "HTMLTokenizer.h"
+#include "InspectorController.h"
 #include "KURL.h"
-#include "cssstyleselector.h"
+#include "Page.h"
 
 #include "DocTypeStrings.cpp"
 
@@ -77,7 +81,7 @@ using namespace HTMLNames;
 HTMLDocument::HTMLDocument(DOMImplementation* implementation, Frame* frame)
     : Document(implementation, frame)
 {
-    m_xmlVersion = String();
+    clearXMLVersion();
 }
 
 HTMLDocument::~HTMLDocument()
@@ -100,7 +104,7 @@ String HTMLDocument::cookie() const
 
 void HTMLDocument::setCookie(const String& value)
 {
-    setCookies(URL(), m_policyBaseURL.deprecatedString(), value);
+    setCookies(URL(), policyBaseURL().deprecatedString(), value);
 }
 
 void HTMLDocument::setBody(HTMLElement* newBody, ExceptionCode& ec)
@@ -116,18 +120,187 @@ void HTMLDocument::setBody(HTMLElement* newBody, ExceptionCode& ec)
         documentElement()->replaceChild(newBody, b, ec);
 }
 
+int HTMLDocument::width()
+{
+    updateLayoutIgnorePendingStylesheets();
+    FrameView* frameView = view();
+    return frameView ? frameView->contentsWidth() : 0;
+}
+
+int HTMLDocument::height()
+{
+    updateLayoutIgnorePendingStylesheets();
+    FrameView* frameView = view();
+    return frameView ? frameView->contentsHeight() : 0;
+}
+
+String HTMLDocument::dir()
+{
+    HTMLElement* b = body();
+    if (!b)
+        return String();
+    return b->dir();
+}
+
+void HTMLDocument::setDir(const String& value)
+{
+    HTMLElement* b = body();
+    if (b)
+        b->setDir(value);
+}
+
+String HTMLDocument::designMode() const
+{
+    return inDesignMode() ? "on" : "off";
+}
+
+void HTMLDocument::setDesignMode(const String& value)
+{
+    InheritedBool mode;
+    if (equalIgnoringCase(value, "on"))
+        mode = on;
+    else if (equalIgnoringCase(value, "off"))
+        mode = off;
+    else
+        mode = inherit;
+    Document::setDesignMode(mode);
+}
+
+String HTMLDocument::bgColor()
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (!bodyElement)
+        return String();
+    return bodyElement->bgColor();
+}
+
+void HTMLDocument::setBgColor(const String& value)
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (bodyElement)
+        bodyElement->setBgColor(value);
+}
+
+String HTMLDocument::fgColor()
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (!bodyElement)
+        return String();
+    return bodyElement->text();
+}
+
+void HTMLDocument::setFgColor(const String& value)
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (bodyElement)
+        bodyElement->setText(value);
+}
+
+String HTMLDocument::alinkColor()
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (!bodyElement)
+        return String();
+    return bodyElement->aLink();
+}
+
+void HTMLDocument::setAlinkColor(const String& value)
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (bodyElement) {
+        // This check is a bit silly, but some benchmarks like to set the
+        // document's link colors over and over to the same value and we
+        // don't want to incur a style update each time.
+        if (bodyElement->aLink() != value)
+            bodyElement->setALink(value);
+    }
+}
+
+String HTMLDocument::linkColor()
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (!bodyElement)
+        return String();
+    return bodyElement->link();
+}
+
+void HTMLDocument::setLinkColor(const String& value)
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (bodyElement) {
+        // This check is a bit silly, but some benchmarks like to set the
+        // document's link colors over and over to the same value and we
+        // don't want to incur a style update each time.
+        if (bodyElement->link() != value)
+            bodyElement->setLink(value);
+    }
+}
+
+String HTMLDocument::vlinkColor()
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (!bodyElement)
+        return String();
+    return bodyElement->vLink();
+}
+
+void HTMLDocument::setVlinkColor(const String& value)
+{
+    HTMLElement* b = body();
+    HTMLBodyElement* bodyElement = (b && b->hasTagName(bodyTag)) ? static_cast<HTMLBodyElement*>(b) : 0;
+
+    if (bodyElement) {
+        // This check is a bit silly, but some benchmarks like to set the
+        // document's link colors over and over to the same value and we
+        // don't want to incur a style update each time.
+        if (bodyElement->vLink() != value)
+            bodyElement->setVLink(value);
+    }
+}
+
+void HTMLDocument::captureEvents()
+{
+}
+
+void HTMLDocument::releaseEvents()
+{
+}
+
 Tokenizer *HTMLDocument::createTokenizer()
 {
-    return new HTMLTokenizer(this);
+    bool reportErrors = false;
+    if (frame())
+        if (Page* page = frame()->page())
+            reportErrors = page->inspectorController()->windowVisible();
+
+    return new HTMLTokenizer(this, reportErrors);
 }
 
 // --------------------------------------------------------------------------
 // not part of the DOM
 // --------------------------------------------------------------------------
 
-bool HTMLDocument::childAllowed( Node *newChild )
+bool HTMLDocument::childAllowed(Node *newChild)
 {
-    return newChild->hasTagName(htmlTag);
+    return newChild->hasTagName(htmlTag) || newChild->isCommentNode();
 }
 
 PassRefPtr<Element> HTMLDocument::createElement(const String &name, ExceptionCode& ec)
@@ -369,15 +542,15 @@ void HTMLDocument::determineParseMode(const String& str)
             setDocType(new DocumentType(this, name, publicID, systemID));
         if (!(resultFlags & PARSEMODE_HAVE_DOCTYPE)) {
             // No doctype found at all.  Default to quirks mode and Html4.
-            pMode = Compat;
-            hMode = Html4;
+            setParseMode(Compat);
+            setHTMLMode(Html4);
         }
         else if ((resultFlags & PARSEMODE_HAVE_INTERNAL) ||
                  !(resultFlags & PARSEMODE_HAVE_PUBLIC_ID)) {
             // Internal subsets always denote full standards, as does
             // a doctype without a public ID.
-            pMode = Strict;
-            hMode = Html4;
+            setParseMode(Strict);
+            setHTMLMode(Html4);
         }
         else {
             // We have to check a list of public IDs to see what we
@@ -386,11 +559,11 @@ void HTMLDocument::determineParseMode(const String& str)
             CString pubIDStr = lowerPubID.latin1();
            
             // Look up the entry in our gperf-generated table.
-            const PubIDInfo* doctypeEntry = findDoctypeEntry(pubIDStr, pubIDStr.length());
+            const PubIDInfo* doctypeEntry = findDoctypeEntry(pubIDStr.data(), pubIDStr.length());
             if (!doctypeEntry) {
                 // The DOCTYPE is not in the list.  Assume strict mode.
-                pMode = Strict;
-                hMode = Html4;
+                setParseMode(Strict);
+                setHTMLMode(Html4);
                 return;
             }
 
@@ -399,16 +572,16 @@ void HTMLDocument::determineParseMode(const String& str)
                     doctypeEntry->mode_if_no_sysid)
             {
                 case PubIDInfo::eQuirks3:
-                    pMode = Compat;
-                    hMode = Html3;
+                    setParseMode(Compat);
+                    setHTMLMode(Html3);
                     break;
                 case PubIDInfo::eQuirks:
-                    pMode = Compat;
-                    hMode = Html4;
+                    setParseMode(Compat);
+                    setHTMLMode(Html4);
                     break;
                 case PubIDInfo::eAlmostStandards:
-                    pMode = AlmostStrict;
-                    hMode = Html4;
+                    setParseMode(AlmostStrict);
+                    setHTMLMode(Html4);
                     break;
                  default:
                     ASSERT(false);
@@ -417,11 +590,11 @@ void HTMLDocument::determineParseMode(const String& str)
     }
     else {
         // Malformed doctype implies quirks mode.
-        pMode = Compat;
-        hMode = Html3;
+        setParseMode(Compat);
+        setHTMLMode(Html3);
     }
   
-    m_styleSelector->strictParsing = !inCompatMode();
+    styleSelector()->strictParsing = !inCompatMode();
  
 }
     

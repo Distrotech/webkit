@@ -14,7 +14,7 @@
  *
  *  You should have received a copy of the GNU Library General Public License
  *  along with this library; see the file COPYING.LIB.  If not, write to
- *  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+ *  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301, USA.
  *
  */
@@ -24,12 +24,16 @@
 // that see a significant speed gain from this.
 
 #define KDE_USE_FINAL 1
+#include "config.h"
 
 #include "function.cpp"
 #include "debugger.cpp"
 #include "array_object.cpp"
 #include "bool_object.cpp"
 #include "collector.cpp"
+#if PLATFORM(DARWIN)
+#include "CollectorHeapIntrospector.cpp"
+#endif
 #include "CommonIdentifiers.cpp"
 #include "Context.cpp"
 #include "date_object.cpp"

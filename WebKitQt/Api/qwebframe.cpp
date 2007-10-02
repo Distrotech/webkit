@@ -14,8 +14,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -25,17 +25,15 @@
 #include "qwebpage_p.h"
 #include "qwebframe_p.h"
 
+#include "FocusController.h"
 #include "FrameLoaderClientQt.h"
 #include "Frame.h"
 #include "FrameTree.h"
 #include "FrameView.h"
-#include "GraphicsContext.h"
-#include "HitTestResult.h"
 #include "Page.h"
-#include "PlatformMouseEvent.h"
-#include "PlatformKeyboardEvent.h"
-#include "PlatformWheelEvent.h"
 #include "ResourceRequest.h"
+#include "SelectionController.h"
+#include "PlatformScrollBar.h"
 
 #include "markup.h"
 #include "RenderTreeAsText.h"
@@ -43,18 +41,26 @@
 #include "Document.h"
 #include "DragData.h"
 #include "RenderObject.h"
+#include "GraphicsContext.h"
+#include "PlatformScrollBar.h"
+#include "PlatformMouseEvent.h"
+#include "PlatformWheelEvent.h"
+#include "GraphicsContext.h"
+#include "HitTestResult.h"
 
 #include "bindings/runtime.h"
 #include "bindings/runtime_root.h"
+#include "kjs_proxy.h"
+#include "kjs_window.h"
+#include "kjs_binding.h"
 #include "ExecState.h"
 #include "object.h"
 
 #include "wtf/HashMap.h"
 
-#include <qpainter.h>
-#include <qevent.h>
-#include <qscrollbar.h>
 #include <qdebug.h>
+#include <qevent.h>
+#include <qpainter.h>
 
 using namespace WebCore;
 
@@ -62,55 +68,44 @@ void QWebFramePrivate::init(QWebFrame *qframe, WebCore::Page *page, QWebFrameDat
 {
     q = qframe;
 
-    q->setLineWidth(0);
-    q->setMidLineWidth(0);
-    q->setFrameShape(QFrame::NoFrame);
-    q->setMouseTracking(true);
-    q->setFocusPolicy(Qt::StrongFocus);
-    q->verticalScrollBar()->setSingleStep(20);
-    q->horizontalScrollBar()->setSingleStep(20);
-
     frameLoaderClient = new FrameLoaderClientQt();
     frame = new Frame(page, frameData->ownerElement, frameLoaderClient);
     frameLoaderClient->setFrame(qframe, frame.get());
 
     frameView = new FrameView(frame.get());
     frameView->deref();
-    frameView->setScrollArea(qframe);
-    frameView->setAllowsScrolling(frameData->allowsScrolling);
+    frameView->setQWebFrame(qframe);
+    if (!frameData->allowsScrolling)
+        frameView->setScrollbarsMode(ScrollbarAlwaysOff);
+    if (frameData->marginWidth != -1)
+        frameView->setMarginWidth(frameData->marginWidth);
+    if (frameData->marginHeight != -1)
+        frameView->setMarginHeight(frameData->marginHeight);
+
     frame->setView(frameView.get());
+    frame->init();
     eventHandler = frame->eventHandler();
 }
 
-void QWebFramePrivate::_q_adjustScrollbars()
+QWebFrame *QWebFramePrivate::parentFrame()
 {
-    QAbstractSlider *hbar = q->horizontalScrollBar();
-    QAbstractSlider *vbar = q->verticalScrollBar();
-
-    const QSize viewportSize = q->viewport()->size();
-    QSize docSize = QSize(frameView->contentsWidth(), frameView->contentsHeight());
-
-    hbar->setRange(0, docSize.width() - viewportSize.width());
-    hbar->setPageStep(viewportSize.width());
-
-    vbar->setRange(0, docSize.height() - viewportSize.height());
-    vbar->setPageStep(viewportSize.height());
+    return qobject_cast<QWebFrame*>(q->parent());
 }
 
-void QWebFramePrivate::_q_handleKeyEvent(QKeyEvent *ev, bool isKeyUp)
+WebCore::PlatformScrollbar *QWebFramePrivate::horizontalScrollBar() const
 {
-    PlatformKeyboardEvent kevent(ev, isKeyUp);
+    Q_ASSERT(frameView);
+    return frameView->horizontalScrollBar();
+}
 
-    if (!eventHandler)
-        return;
-
-    bool handled = eventHandler->keyEvent(kevent);
-
-    ev->setAccepted(handled);
+WebCore::PlatformScrollbar *QWebFramePrivate::verticalScrollBar() const
+{
+    Q_ASSERT(frameView);
+    return frameView->verticalScrollBar();
 }
 
 QWebFrame::QWebFrame(QWebPage *parent, QWebFrameData *frameData)
-    : QAbstractScrollArea(parent)
+    : QObject(parent)
     , d(new QWebFramePrivate)
 {
     d->page = parent;
@@ -122,15 +117,10 @@ QWebFrame::QWebFrame(QWebPage *parent, QWebFrameData *frameData)
     }
 }
 
-
 QWebFrame::QWebFrame(QWebFrame *parent, QWebFrameData *frameData)
-    : QAbstractScrollArea(parent->viewport())
+    : QObject(parent)
     , d(new QWebFramePrivate)
 {
-    QPalette pal = palette();
-    pal.setBrush(QPalette::Background, Qt::white);
-    setPalette(pal);
-
     d->page = parent->d->page;
     d->init(this, parent->d->page->d->page, frameData);
 }
@@ -144,20 +134,19 @@ QWebFrame::~QWebFrame()
 
 void QWebFrame::addToJSWindowObject(const QByteArray &name, QObject *object)
 {
-    KJS::Bindings::RootObject *root = d->frame->bindingRootObject();
-    KJS::ExecState *exec = root->interpreter()->globalExec();
-    KJS::JSObject *rootObject = root->interpreter()->globalObject();
-    KJS::JSObject *window = rootObject->get(exec, KJS::Identifier("window"))->getObject();
-    if (!window) {
-        qDebug() << "Warning: couldn't get window object";
-        return;
-    }
+      KJS::JSLock lock;
+      KJS::Window *window = KJS::Window::retrieveWindow(d->frame.get());
+      KJS::Bindings::RootObject *root = d->frame->bindingRootObject();
+      if (!window) {
+          qDebug() << "Warning: couldn't get window object";
+          return;
+      }
 
-    KJS::JSObject *testController =
+      KJS::JSObject *runtimeObject =
         KJS::Bindings::Instance::createRuntimeObject(KJS::Bindings::Instance::QtLanguage,
                                                      object, root);
 
-    window->put(exec, KJS::Identifier(name.constData()), testController);
+      window->put(window->interpreter()->globalExec(), KJS::Identifier(name.constData()), runtimeObject);
 }
 
 
@@ -202,16 +191,6 @@ QString QWebFrame::selectedText() const
     return d->frame->selectedText();
 }
 
-void QWebFrame::resizeEvent(QResizeEvent *e)
-{
-    QAbstractScrollArea::resizeEvent(e);
-    if (d->frame && d->frameView) {
-        d->frame->forceLayout();
-        d->frame->view()->adjustViewSize();
-    }
-    d->_q_adjustScrollbars();
-}
-
 QList<QWebFrame*> QWebFrame::childFrames() const
 {
     QList<QWebFrame*> rc;
@@ -228,36 +207,75 @@ QList<QWebFrame*> QWebFrame::childFrames() const
     return rc;
 }
 
-void QWebFrame::paintEvent(QPaintEvent *ev)
+
+Qt::ScrollBarPolicy QWebFrame::verticalScrollBarPolicy() const
+{
+    return (Qt::ScrollBarPolicy) d->frameView->vScrollbarMode();
+}
+
+void QWebFrame::setVerticalScrollBarPolicy(Qt::ScrollBarPolicy policy)
+{
+    Q_ASSERT(ScrollbarAuto == Qt::ScrollBarAsNeeded);
+    Q_ASSERT(ScrollbarAlwaysOff == Qt::ScrollBarAlwaysOff);
+    Q_ASSERT(ScrollbarAlwaysOn == Qt::ScrollBarAlwaysOn);
+    d->frameView->setVScrollbarMode((ScrollbarMode)policy);
+}
+
+Qt::ScrollBarPolicy QWebFrame::horizontalScrollBarPolicy() const
+{
+    return (Qt::ScrollBarPolicy) d->frameView->hScrollbarMode();
+}
+
+void QWebFrame::setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy policy)
+{
+    d->frameView->setHScrollbarMode((ScrollbarMode)policy);
+}
+
+void QWebFrame::render(QPainter *painter, const QRect &source)
 {
     if (!d->frameView || !d->frame->renderer())
         return;
 
-#ifdef QWEBKIT_TIME_RENDERING
-    QTime time;
-    time.start();
-#endif
-    QRect clip = ev->rect();
+    layout();
 
+    GraphicsContext ctx(painter);
+    d->frameView->paint(&ctx, source);
+}
+
+void QWebFrame::layout()
+{
     if (d->frameView->needsLayout()) {
         d->frameView->layout();
     }
-    QPainter p(viewport());
-    GraphicsContext ctx(&p);
 
-    const int xOffset = horizontalScrollBar()->value();
-    const int yOffset = verticalScrollBar()->value();
+    foreach (QWebFrame *child, childFrames()) {
+        child->layout();
+    }
+}
 
-    ctx.translate(-xOffset, -yOffset);
-    clip.translate(xOffset, yOffset);
+QPoint QWebFrame::pos() const
+{
+    Q_ASSERT(d->frameView);
+    return d->frameView->frameGeometry().topLeft();
+}
 
-    d->frame->paint(&ctx, clip);
-    p.end();
+QRect QWebFrame::geometry() const
+{
+    Q_ASSERT(d->frameView);
+    return d->frameView->frameGeometry();
+}
 
-#ifdef    QWEBKIT_TIME_RENDERING
-    int elapsed = time.elapsed();
-    qDebug()<<"paint event on "<<clip<<", took to render =  "<<elapsed;
-#endif
+QString QWebFrame::evaluateJavaScript(const QString& scriptSource)
+{
+    KJSProxy *proxy = d->frame->scriptProxy();
+    QString rc;
+    if (proxy) {
+        KJS::JSValue *v = proxy->evaluate(String(), 0, scriptSource);
+        if (v) {
+            rc = String(v->toString(proxy->interpreter()->globalExec()));
+        }
+    }
+    return rc;
 }
 
 void QWebFrame::mouseMoveEvent(QMouseEvent *ev)
@@ -265,9 +283,11 @@ void QWebFrame::mouseMoveEvent(QMouseEvent *ev)
     if (!d->frameView)
         return;
 
-    d->frameView->handleMouseMoveEvent(PlatformMouseEvent(ev, 0));
-    const int xOffset = horizontalScrollBar()->value();
-    const int yOffset = verticalScrollBar()->value();
+    d->eventHandler->handleMouseMoveEvent(PlatformMouseEvent(ev, 0));
+    const int xOffset =
+        d->horizontalScrollBar() ? d->horizontalScrollBar()->value() : 0;
+    const int yOffset =
+        d->verticalScrollBar() ? d->verticalScrollBar()->value() : 0;
     IntPoint pt(ev->x() + xOffset, ev->y() + yOffset);
     WebCore::HitTestResult result = d->eventHandler->hitTestResultAtPoint(pt, false);
     WebCore::Element *link = result.URLElement();
@@ -282,7 +302,24 @@ void QWebFrame::mousePressEvent(QMouseEvent *ev)
     if (!d->eventHandler)
         return;
 
-    d->eventHandler->handleMousePressEvent(PlatformMouseEvent(ev, 1));
+    if (ev->button() == Qt::RightButton)
+        d->eventHandler->sendContextMenuEvent(PlatformMouseEvent(ev, 1));
+    else
+        d->eventHandler->handleMousePressEvent(PlatformMouseEvent(ev, 1));
+
+    //FIXME need to keep track of subframe focus for key events!
+    d->page->setFocus();
+}
+
+void QWebFrame::mouseDoubleClickEvent(QMouseEvent *ev)
+{
+    if (!d->eventHandler)
+        return;
+
+    d->eventHandler->handleMousePressEvent(PlatformMouseEvent(ev, 2));
+
+    //FIXME need to keep track of subframe focus for key events!
+    d->page->setFocus();
 }
 
 void QWebFrame::mouseReleaseEvent(QMouseEvent *ev)
@@ -290,36 +327,22 @@ void QWebFrame::mouseReleaseEvent(QMouseEvent *ev)
     if (!d->frameView)
         return;
 
-    d->frameView->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+    d->eventHandler->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+
+    //FIXME need to keep track of subframe focus for key events!
+    d->page->setFocus();
 }
 
-void QWebFrame::wheelEvent(QWheelEvent *e)
+void QWebFrame::wheelEvent(QWheelEvent *ev)
 {
-    PlatformWheelEvent wkEvent(e);
+    PlatformWheelEvent wkEvent(ev);
     bool accepted = false;
     if (d->eventHandler)
         accepted = d->eventHandler->handleWheelEvent(wkEvent);
 
-    e->setAccepted(accepted);
-    if (!accepted)
-        QAbstractScrollArea::wheelEvent(e);
+    ev->setAccepted(accepted);
+
+    //FIXME need to keep track of subframe focus for key events!
+    d->page->setFocus();
 }
 
-void QWebFrame::keyPressEvent(QKeyEvent *ev)
-{
-    d->_q_handleKeyEvent(ev, false);
-}
-
-void QWebFrame::keyReleaseEvent(QKeyEvent *ev)
-{
-    d->_q_handleKeyEvent(ev, true);
-}
-
-/*!\reimp
-*/
-void QWebFrame::scrollContentsBy(int dx, int dy)
-{
-    viewport()->scroll(dx, dy);
-}
-
-#include "qwebframe.moc"

@@ -34,6 +34,7 @@
 #include "EditorClient.h"
 #include "FocusDirection.h"
 #include "FrameLoaderClient.h"
+#include "InspectorClient.h"
 #include "SharedBuffer.h"
 
 /*
@@ -109,7 +110,12 @@ public:
     virtual void addToDirtyRegion(const IntRect&) { }
     virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect) { }
     virtual void updateBackingStore() { }
+
+    virtual void mouseDidMoveOverElement(const HitTestResult&, unsigned modifierFlags) { }
     
+    virtual void setToolTip(const String&) { }
+
+    virtual void print(Frame*) { }
 };
 
 class SVGEmptyFrameLoaderClient : public FrameLoaderClient {
@@ -149,9 +155,7 @@ public:
     virtual void detachedFromParent3() { }
     virtual void detachedFromParent4() { }
     
-    virtual void loadedFromCachedPage() { }
-    
-    virtual void download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&) { }
+    virtual void download(ResourceHandle*, const ResourceRequest&, const ResourceRequest&, const ResourceResponse&) { }
     
     virtual void assignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader*, const ResourceRequest&) { }
     virtual void dispatchWillSendRequest(DocumentLoader*, unsigned long identifier, ResourceRequest&, const ResourceResponse& redirectResponse) { }
@@ -260,7 +264,7 @@ public:
 
     virtual Frame* createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
                                const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight) { return 0; }
-    virtual Widget* createPlugin(Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool) { return 0; }
+    virtual Widget* createPlugin(const IntSize&,Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool) { return 0; }
     virtual Widget* createJavaAppletWidget(const IntSize&, Element*, const KURL&, const Vector<String>&, const Vector<String>&) { return 0; }
     
     virtual ObjectContentType objectContentType(const KURL& url, const String& mimeType) { return ObjectContentType(); }
@@ -268,6 +272,9 @@ public:
 
     virtual void redirectDataToPlugin(WebCore::Widget*) {}
     virtual void windowObjectCleared() const {}
+    virtual void didPerformFirstNavigation() const {}
+
+    virtual void registerForIconNotification(bool listen) {}
 
 #if PLATFORM(MAC)
     virtual NSCachedURLResponse* willCacheResponse(DocumentLoader*, unsigned long identifier, NSCachedURLResponse* response) const { return response; }
@@ -300,6 +307,7 @@ public:
     virtual bool shouldChangeSelectedRange(Range* fromRange, Range* toRange, EAffinity, bool stillSelecting) { return false; }
 
     virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*) { return false; }
+    virtual bool shouldMoveRangeAfterDelete(Range*, Range*) { return false; }
     //  virtual bool shouldChangeTypingStyle(CSSStyleDeclaration* fromStyle, CSSStyleDeclaration* toStyle) { return false; }
     //  virtual bool doCommandBySelector(SEL selector) { return false; }
     //
@@ -353,6 +361,7 @@ public:
     virtual void showSpellingUI(bool show) { }
     virtual bool spellingUIIsShowing() { return false; }
     virtual void getGuessesForWord(const String&, Vector<String>& guesses) { }
+    virtual void setInputMethodState(bool enabled) { }
   
     
 };
@@ -371,7 +380,7 @@ public:
     virtual void lookUpInDictionary(Frame*) { }
     virtual void speak(const String&) { }
     virtual void stopSpeaking() { }
-    
+
 #if PLATFORM(MAC)
     virtual void searchWithSpotlight() { }
 #endif
@@ -387,6 +396,25 @@ public:
     virtual void startDrag(DragImageRef, const IntPoint&, const IntPoint&, Clipboard*, Frame*, bool) { }
     virtual DragImageRef createDragImageForLink(KURL&, const String& label, Frame*) { return 0; } 
     virtual void dragControllerDestroyed() { }
+};
+
+class SVGEmptyInspectorClient : public InspectorClient {
+public:
+    virtual ~SVGEmptyInspectorClient() {}
+
+    virtual void inspectorDestroyed() {};
+
+    virtual WebCore::Page* createPage() { return 0; };
+
+    virtual void showWindow() {};
+    virtual void closeWindow() {};
+
+    virtual void attachWindow() {};
+    virtual void detachWindow() {};
+
+    virtual void highlight(WebCore::Node*) {};
+    virtual void hideHighlight() {};
+    virtual void inspectedURLChanged(const WebCore::String& newURL) {};
 };
     
 }

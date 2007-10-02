@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #import "config.h"
@@ -133,7 +133,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
         // Adjust for fonts other than the system font.
         NSFont* defaultFont = [NSFont systemFontOfSize:[font pointSize]];
         vertOffset += [font descender] - [defaultFont descender];
-        vertOffset = fmin(NSHeight(r), vertOffset);
+        vertOffset = fminf(NSHeight(r), vertOffset);
     
         location = NSMakePoint(NSMinX(r) + popOverHorizontalAdjust, NSMaxY(r) - vertOffset);
     } else
@@ -153,6 +153,7 @@ void PopupMenu::show(const IntRect& r, FrameView* v, int index)
     frame->willPopupMenu(menu);
     wkPopupMenu(menu, location, roundf(NSWidth(r)), dummyView.get(), index, font);
 
+    [m_popup.get() dismissPopUp];
     [dummyView.get() removeFromSuperview];
 
     if (client()) {
@@ -181,6 +182,11 @@ void PopupMenu::hide()
     
 void PopupMenu::updateFromElement()
 {
+}
+
+bool PopupMenu::itemWritingDirectionIsNatural()
+{
+    return true;
 }
 
 }

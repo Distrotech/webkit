@@ -1,5 +1,5 @@
-MAJOR_VERSION = 522;
-MINOR_VERSION = 8;
+MAJOR_VERSION = 523;
+MINOR_VERSION = 11;
 TINY_VERSION = 0;
 FULL_VERSION = $(MAJOR_VERSION).$(MINOR_VERSION);
 
@@ -7,7 +7,7 @@ FULL_VERSION = $(MAJOR_VERSION).$(MINOR_VERSION);
 BUNDLE_VERSION = $(BUNDLE_VERSION_$(CONFIGURATION));
 
 // The local builds are always just the major version with a Plus suffix.
-BUNDLE_VERSION_Release = $(MAJOR_VERSION)+;
+BUNDLE_VERSION_Release = $(FULL_VERSION)+;
 BUNDLE_VERSION_Debug = $(BUNDLE_VERSION_Release);
 
 // The system version prefix is based on the current system version.

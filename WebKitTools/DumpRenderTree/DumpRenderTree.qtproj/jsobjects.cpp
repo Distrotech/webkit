@@ -26,37 +26,78 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <jsobjects.h>
+#include <qwebpage.h>
+#include <qwebframe.h>
+#include <qevent.h>
+#include <qapplication.h>
+
+class HackWebFrame : public QWebFrame
+{
+public:
+    void mousePressEvent(QMouseEvent *e) {
+        QWebFrame::mousePressEvent(e);
+    }
+    void mouseReleaseEvent(QMouseEvent *e) {
+        QWebFrame::mouseReleaseEvent(e);
+    }
+
+protected:
+    HackWebFrame(QWebPage *parent, QWebFrameData *frameData) : QWebFrame(parent, frameData) {}
+    HackWebFrame(QWebFrame *parent, QWebFrameData *frameData) : QWebFrame(parent, frameData) {}
+    ~HackWebFrame() {}
+};
 
 LayoutTestController::LayoutTestController() : QObject()
 {
-    textDump = false;
-    waitForDone = false;
-    timeoutTimer = 0;
+    m_isLoading = true;
+    m_textDump = false;
+    m_waitForDone = false;
+    m_timeoutTimer = 0;
+    m_topLoadingFrame = 0;
 }
 
 void LayoutTestController::reset()
 {
-    textDump = false;
-    waitForDone = false;
-    if (timeoutTimer)
-        killTimer(timeoutTimer);
+    m_isLoading = true;
+    m_textDump = false;
+    m_waitForDone = false;
+    if (m_timeoutTimer) {
+        killTimer(m_timeoutTimer);
+        m_timeoutTimer = 0;
+    }
+    m_topLoadingFrame = 0;
+}
+
+void LayoutTestController::maybeDump(bool ok)
+{
+    QWebFrame *frame = qobject_cast<QWebFrame*>(sender());
+    if (frame != m_topLoadingFrame)
+        return;
+
+    m_topLoadingFrame = 0;
+
+    if (!ok || !shouldWaitUntilDone()) {
+        emit done();
+        m_isLoading = false;
+    }
 }
 
 void LayoutTestController::waitUntilDone()
 {
     //qDebug() << ">>>>waitForDone";
-    waitForDone = true;
-    timeoutTimer = startTimer(5000);
+    m_waitForDone = true;
+    m_timeoutTimer = startTimer(5000);
 }
 
 void LayoutTestController::notifyDone()
 {
     //qDebug() << ">>>>notifyDone";
-    if (!timeoutTimer)
+    if (!m_timeoutTimer)
         return;
-    killTimer(timeoutTimer);
-    timeoutTimer = 0;
+    killTimer(m_timeoutTimer);
+    m_timeoutTimer = 0;
     emit done();
+    m_isLoading = false;
 }
 
 void LayoutTestController::dumpEditingCallbacks()
@@ -64,8 +105,81 @@ void LayoutTestController::dumpEditingCallbacks()
     //qDebug() << ">>>dumpEditingCallbacks";
 }
 
+void LayoutTestController::queueReload()
+{
+    //qDebug() << ">>>queueReload";
+}
+
+void LayoutTestController::provisionalLoad()
+{
+    QWebFrame *frame = qobject_cast<QWebFrame*>(sender());
+    if (!m_topLoadingFrame && m_isLoading)
+        m_topLoadingFrame = frame;
+}
+
 void LayoutTestController::timerEvent(QTimerEvent *)
 {
     qDebug() << ">>>>>>>>>>>>> timeout";
     notifyDone();
+}
+
+
+EventSender::EventSender(QWebPage *parent)
+    : QObject(parent)
+{
+    m_page = parent;
+}
+
+void EventSender::mouseDown()
+{
+    QWebFrame *frame = frameUnderMouse();
+//     qDebug() << "EventSender::mouseDown" << frame;
+    if (!frame)
+        return;
+    QMouseEvent event(QEvent::MouseButtonPress, m_mousePos - frame->pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    static_cast<HackWebFrame *>(frame)->mousePressEvent(&event);
+}
+
+void EventSender::mouseUp()
+{
+    QWebFrame *frame = frameUnderMouse();
+//     qDebug() << "EventSender::mouseUp" << frame;
+    if (!frame)
+        return;
+    QMouseEvent event(QEvent::MouseButtonRelease, m_mousePos - frame->pos(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    static_cast<HackWebFrame *>(frame)->mouseReleaseEvent(&event);
+}
+
+void EventSender::mouseMoveTo(int x, int y)
+{
+//     qDebug() << "EventSender::mouseMoveTo" << x << y;
+    m_mousePos = QPoint(x, y);
+}
+
+void EventSender::leapForward(int ms)
+{
+    m_timeLeap += ms;
+    qDebug() << "EventSender::leapForward" << ms;
+}
+
+void EventSender::keyDown(const QString &string, const QStringList &modifiers)
+{
+    qDebug() << "EventSender::keyDown" << string << modifiers;
+}
+
+QWebFrame *EventSender::frameUnderMouse() const
+{
+    QWebFrame *frame = m_page->mainFrame();
+
+redo:
+    QList<QWebFrame*> children = frame->childFrames();
+    for (int i = 0; i < children.size(); ++i) {
+        if (children.at(i)->geometry().contains(m_mousePos)) {
+            frame = children.at(i);
+            goto redo;
+        }
+    }
+    if (frame->geometry().contains(m_mousePos))
+        return frame;
+    return 0;
 }

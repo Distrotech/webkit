@@ -38,8 +38,6 @@ class RuntimeMethod : public InternalFunctionImp
 public:
     RuntimeMethod(ExecState *exec, const Identifier &n, Bindings::MethodList &methodList);
     
-    virtual ~RuntimeMethod();
-
     virtual bool getOwnPropertySlot(ExecState *, const Identifier&, PropertySlot&);
 
     virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
@@ -51,7 +49,7 @@ public:
 private:
     static JSValue *lengthGetter(ExecState *, JSObject *, const Identifier&, const PropertySlot&);
 
-    Bindings::MethodList _methodList;
+    OwnPtr<Bindings::MethodList> _methodList;
 };
 
 } // namespace KJS

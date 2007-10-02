@@ -49,7 +49,7 @@ namespace WebCore {
     
     class SubresourceLoader : public ResourceLoader {
     public:
-        static PassRefPtr<SubresourceLoader> create(Frame*, SubresourceLoaderClient*, const ResourceRequest&, bool skipCanLoadCheck = false);
+        static PassRefPtr<SubresourceLoader> create(Frame*, SubresourceLoaderClient*, const ResourceRequest&, bool skipCanLoadCheck = false, bool sendResourceLoadCallbacks = true, bool shouldContentSniff = true);
         
         virtual ~SubresourceLoader();
 
@@ -60,9 +60,10 @@ namespace WebCore {
         virtual void didReceiveData(const char*, int, long long lengthReceived, bool allAtOnce);
         virtual void didFinishLoading();
         virtual void didFail(const ResourceError&);
+        virtual void receivedCancellation(const AuthenticationChallenge&);
 
     private:
-        SubresourceLoader(Frame*, SubresourceLoaderClient*);
+        SubresourceLoader(Frame*, SubresourceLoaderClient*, bool sendResourceLoadCallbacks, bool shouldContentSniff);
 
         virtual void didCancel(const ResourceError&);
         SubresourceLoaderClient* m_client;

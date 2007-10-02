@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -33,7 +33,7 @@ namespace WebCore {
 
 SVGStopElement::SVGStopElement(const QualifiedName& tagName, Document* doc)
     : SVGStyledElement(tagName, doc)
-    , m_offset(0.0)
+    , m_offset(0.0f)
 {
 }
 
@@ -41,16 +41,16 @@ SVGStopElement::~SVGStopElement()
 {
 }
 
-ANIMATED_PROPERTY_DEFINITIONS(SVGStopElement, double, Number, number, Offset, offset, SVGNames::offsetAttr.localName(), m_offset)
+ANIMATED_PROPERTY_DEFINITIONS(SVGStopElement, float, Number, number, Offset, offset, SVGNames::offsetAttr.localName(), m_offset)
 
 void SVGStopElement::parseMappedAttribute(MappedAttribute* attr)
 {
     if (attr->name() == SVGNames::offsetAttr) {
         const String& value = attr->value();
         if (value.endsWith("%"))
-            setOffsetBaseValue(value.left(value.length() - 1).toDouble() / 100.);
+            setOffsetBaseValue(value.left(value.length() - 1).toFloat() / 100.0f);
         else
-            setOffsetBaseValue(value.toDouble());
+            setOffsetBaseValue(value.toFloat());
     } else
         SVGStyledElement::parseMappedAttribute(attr);
 }

@@ -46,7 +46,7 @@ typedef enum {
     WebFrameLoadTypeReload,
     WebFrameLoadTypeReloadAllowingStaleData,
     WebFrameLoadTypeSame,               // user loads same URL again (but not reload button)
-    WebFrameLoadTypeInternal,
+    WebFrameLoadTypeInternal,           // maps to WebCore::FrameLoadTypeRedirectWithLockedHistory
     WebFrameLoadTypeReplace
 } WebFrameLoadType;
 
@@ -57,8 +57,10 @@ typedef enum {
 - (BOOL)_isFrameSet;
 - (BOOL)_firstLayoutDone;
 - (WebFrameLoadType)_loadType;
+#ifndef __LP64__
 - (void)_recursive_resumeNullEventsForAllNetscapePlugins;
 - (void)_recursive_pauseNullEventsForAllNetscapePlugins;
+#endif
 
 // These methods take and return NSRanges based on the root editable element as the positional base.
 // This fits with AppKit's idea of an input context. These methods are slow compared to their DOMRange equivalents.
@@ -67,21 +69,5 @@ typedef enum {
 - (void)_selectNSRange:(NSRange)range;
 
 - (BOOL)_isDisplayingStandaloneImage;
-
-@end
-
-@interface WebFrame (WebPendingPublic)
-
-/*!
-    @method windowObject
-    @result The WebScriptObject representing the frame's JavaScript window object.
-*/
-- (WebScriptObject *)windowObject;
-
-/*!
-    @method globalContext
-    @result The frame's global JavaScript execution context.
-*/
-- (JSGlobalContextRef)globalContext;
 
 @end

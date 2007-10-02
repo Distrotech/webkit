@@ -334,6 +334,8 @@ static NPObject *pluginAllocate(NPP npp, NPClass *theClass)
     newInstance->testObject = browser->createobject(npp, getTestClass());
     newInstance->eventLogging = FALSE;
     newInstance->logDestroy = FALSE;
+    newInstance->logSetWindow = FALSE;
+    newInstance->returnErrorFromNewStream = FALSE;
     newInstance->stream = 0;
     
     newInstance->firstUrl = NULL;

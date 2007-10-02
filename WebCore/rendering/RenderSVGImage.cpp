@@ -18,8 +18,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -28,15 +28,16 @@
 #include "RenderSVGImage.h"
 
 #include "Attr.h"
+#include "FloatConversion.h"
 #include "GraphicsContext.h"
 #include "PointerEventsHitRules.h"
+#include "SVGImageElement.h"
+#include "SVGLength.h"
+#include "SVGPreserveAspectRatio.h"
+#include "SVGRenderSupport.h"
 #include "SVGResourceClipper.h"
 #include "SVGResourceFilter.h"
 #include "SVGResourceMasker.h"
-#include "SVGLength.h"
-#include "SVGRenderSupport.h"
-#include "SVGPreserveAspectRatio.h"
-#include "SVGImageElement.h"
 
 namespace WebCore {
 
@@ -176,7 +177,7 @@ bool RenderSVGImage::nodeAtPoint(const HitTestRequest& request, HitTestResult& r
         translationForAttributes().inverse().map(localX, localY, &localX, &localY);
 
         if (hitRules.canHitFill) {
-            if (FloatRect(0, 0, m_width, m_height).contains(localX, localY)) {
+            if (FloatRect(0.0f, 0.0f, m_width, m_height).contains(narrowPrecisionToFloat(localX), narrowPrecisionToFloat(localY))) {
                 updateHitTestResult(result, IntPoint(_x, _y));
                 return true;
             }
@@ -227,7 +228,7 @@ void RenderSVGImage::addFocusRingRects(GraphicsContext* graphicsContext, int tx,
     graphicsContext->addFocusRingRect(m_absoluteBounds);
 }
 
-void RenderSVGImage::absoluteRects(Vector<IntRect>& rects, int, int)
+void RenderSVGImage::absoluteRects(Vector<IntRect>& rects, int, int, bool)
 {
     rects.append(absoluteClippedOverflowRect());
 }

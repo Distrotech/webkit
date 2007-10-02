@@ -24,6 +24,9 @@
  */
 
 #include "config.h"
+
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "c_runtime.h"
 
 #include "c_instance.h"
@@ -63,7 +66,7 @@ JSValue* CField::valueFromInstance(ExecState* exec, const Instance* inst) const
             result = obj->_class->getProperty(obj, _fieldIdentifier, &property);
         }
         if (result) {
-            JSValue* result = convertNPVariantToValue(exec, &property);
+            JSValue* result = convertNPVariantToValue(exec, &property, instance->rootObject());
             _NPN_ReleaseVariantValue(&property);
             return result;
         }
@@ -89,3 +92,5 @@ void CField::setValueToInstance(ExecState *exec, const Instance *inst, JSValue *
 }
 
 } }
+
+#endif

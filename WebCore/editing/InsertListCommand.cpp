@@ -65,6 +65,14 @@ bool InsertListCommand::modifyRange()
     VisiblePosition visibleEnd = endingSelection().visibleEnd();
     VisiblePosition startOfLastParagraph = startOfParagraph(visibleEnd);
     
+    // If the end of the selection to modify is just after a table, and
+    // if the start of the selection is inside that table, the last paragraph
+    // that we'll want modify is the last one inside the table, not the table itself.
+    // Adjust startOfLastParagraph here to avoid infinite recursion.
+    if (Node* table = isFirstPositionAfterTable(visibleEnd))
+        if (visibleStart.deepEquivalent().node()->isDescendantOf(table))
+            startOfLastParagraph = startOfParagraph(visibleEnd.previous(true));
+        
     if (startOfParagraph(visibleStart) == startOfLastParagraph)
         return false;
     
@@ -182,15 +190,16 @@ void InsertListCommand::doApply()
         appendNode(placeholder.get(), listItemElement.get());
         Node* previousList = outermostEnclosingList(previousPosition.deepEquivalent().node());
         Node* nextList = outermostEnclosingList(nextPosition.deepEquivalent().node());
-        if (previousList && !previousList->hasTagName(listTag))
+        Node* startNode = start.deepEquivalent().node();
+        if (previousList && (!previousList->hasTagName(listTag) || startNode->isDescendantOf(previousList)))
             previousList = 0;
-        if (nextList && !nextList->hasTagName(listTag))
+        if (nextList && (!nextList->hasTagName(listTag) || startNode->isDescendantOf(nextList)))
             nextList = 0;
-        // Stitch matching adjoining lists together.
+        // Place list item into adjoining lists.
         if (previousList)
             appendNode(listItemElement.get(), previousList);
         else if (nextList)
-            appendNode(listItemElement.get(), nextList);
+            insertNodeAt(listItemElement.get(), Position(nextList, 0));
         else {
             // Create the list.
             RefPtr<Element> listElement = m_type == OrderedList ? createOrderedListElement(document()) : createUnorderedListElement(document());
@@ -208,7 +217,18 @@ void InsertListCommand::doApply()
                 end = start;
             }
             
-            insertNodeAt(listElement.get(), start.deepEquivalent());
+            // Insert the list at a position visually equivalent to start of the
+            // paragraph that is being moved into the list. 
+            // Try to avoid inserting it somewhere where it will be surrounded by 
+            // inline ancestors of start, since it is easier for editing to produce 
+            // clean markup when inline elements are pushed down as far as possible.
+            Position insertionPos(start.deepEquivalent().upstream());
+            // Also avoid the containing list item.
+            Node* listChild = enclosingListChild(insertionPos.node());
+            if (listChild && listChild->hasTagName(liTag))
+                insertionPos = positionBeforeNode(listChild);
+                
+            insertNodeAt(listElement.get(), insertionPos);
         }
         moveParagraph(start, end, VisiblePosition(Position(placeholder.get(), 0)), true);
         if (nextList && previousList)

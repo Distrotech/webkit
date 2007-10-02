@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -54,10 +54,12 @@ RenderTableCell::RenderTableCell(Node* node)
 
 void RenderTableCell::destroy()
 {
-    if (parent() && section())
-        section()->setNeedsCellRecalc();
+    RenderTableSection* recalcSection = parent() ? section() : 0;
 
     RenderBlock::destroy();
+
+    if (recalcSection)
+        recalcSection->setNeedsCellRecalc();
 }
 
 void RenderTableCell::updateFromElement()
@@ -328,18 +330,25 @@ CollapsedBorderValue RenderTableCell::collapsedLeftBorder(bool rtl) const
             return result;
     }
     
-    // (5) Our column's left border.
-    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? colSpan() - 1 : 0));
-    if (colElt) {
+    // (5) Our column and column group's left borders.
+    bool startColEdge;
+    bool endColEdge;
+    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? colSpan() - 1 : 0), &startColEdge, &endColEdge);
+    if (colElt && (!rtl ? startColEdge : endColEdge)) {
         result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderLeft(), BCOL));
         if (!result.exists())
             return result;
+        if (colElt->parent()->isTableCol() && (!rtl ? !colElt->previousSibling() : !colElt->nextSibling())) {
+            result = compareBorders(result, CollapsedBorderValue(&colElt->parent()->style()->borderLeft(), BCOLGROUP));
+            if (!result.exists())
+                return result;
+        }
     }
     
     // (6) The right border of the column to the left.
     if (!leftmostColumn) {
-        colElt = tableElt->colElement(col() + (rtl ? colSpan() : -1));
-        if (colElt) {
+        colElt = tableElt->colElement(col() + (rtl ? colSpan() : -1), &startColEdge, &endColEdge);
+        if (colElt && (!rtl ? endColEdge : startColEdge)) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderRight(), BCOL));
             if (!result.exists())
                 return result;
@@ -389,18 +398,25 @@ CollapsedBorderValue RenderTableCell::collapsedRightBorder(bool rtl) const
             return result;
     }
     
-    // (5) Our column's right border.
-    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? 0 : colSpan() - 1));
-    if (colElt) {
+    // (5) Our column and column group's right borders.
+    bool startColEdge;
+    bool endColEdge;
+    RenderTableCol* colElt = tableElt->colElement(col() + (rtl ? 0 : colSpan() - 1), &startColEdge, &endColEdge);
+    if (colElt && (!rtl ? endColEdge : startColEdge)) {
         result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderRight(), BCOL));
         if (!result.exists())
             return result;
+        if (colElt->parent()->isTableCol() && (!rtl ? !colElt->nextSibling() : !colElt->previousSibling())) {
+            result = compareBorders(result, CollapsedBorderValue(&colElt->parent()->style()->borderRight(), BCOLGROUP));
+            if (!result.exists())
+                return result;
+        }
     }
     
     // (6) The left border of the column to the right.
     if (!rightmostColumn) {
-        colElt = tableElt->colElement(col() + (rtl ? -1 : colSpan()));
-        if (colElt) {
+        colElt = tableElt->colElement(col() + (rtl ? -1 : colSpan()), &startColEdge, &endColEdge);
+        if (colElt && (!rtl ? startColEdge : endColEdge)) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderLeft(), BCOL));
             if (!result.exists())
                 return result;
@@ -467,12 +483,17 @@ CollapsedBorderValue RenderTableCell::collapsedTopBorder() const
     }
     
     if (!currSection) {
-        // (8) Our column's top border.
+        // (8) Our column and column group's top borders.
         RenderTableCol* colElt = table()->colElement(col());
         if (colElt) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderTop(), BCOL));
             if (!result.exists())
                 return result;
+            if (colElt->parent()->isTableCol()) {
+                result = compareBorders(result, CollapsedBorderValue(&colElt->parent()->style()->borderTop(), BCOLGROUP));
+                if (!result.exists())
+                    return result;
+            }
         }
         
         // (9) The table's top border.
@@ -528,11 +549,16 @@ CollapsedBorderValue RenderTableCell::collapsedBottomBorder() const
     }
     
     if (!currSection) {
-        // (8) Our column's bottom border.
+        // (8) Our column and column group's bottom borders.
         RenderTableCol* colElt = table()->colElement(col());
         if (colElt) {
             result = compareBorders(result, CollapsedBorderValue(&colElt->style()->borderBottom(), BCOL));
             if (!result.exists()) return result;
+            if (colElt->parent()->isTableCol()) {
+                result = compareBorders(result, CollapsedBorderValue(&colElt->parent()->style()->borderBottom(), BCOLGROUP));
+                if (!result.exists())
+                    return result;
+            }
         }
         
         // (9) The table's bottom border.

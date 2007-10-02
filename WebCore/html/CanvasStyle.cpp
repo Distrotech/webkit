@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Trolltech ASA
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,11 +27,18 @@
 #include "config.h"
 #include "CanvasStyle.h"
 
+#include "CSSParser.h"
 #include "CanvasGradient.h"
 #include "CanvasPattern.h"
 #include "GraphicsContext.h"
-#include "cssparser.h"
 #include <wtf/PassRefPtr.h>
+
+#if PLATFORM(QT)
+#include <QPainter>
+#include <QBrush>
+#include <QPen>
+#include <QColor>
+#endif
 
 namespace WebCore {
 
@@ -78,6 +86,9 @@ void CanvasStyle::applyStrokeColor(GraphicsContext* context)
 {
     if (!context)
         return;
+#if PLATFORM(QT)
+    QPainter* p = static_cast<QPainter*>(context->platformContext());
+#endif
     switch (m_type) {
         case ColorString: {
             RGBA32 color = 0; // default is transparant black
@@ -85,10 +96,14 @@ void CanvasStyle::applyStrokeColor(GraphicsContext* context)
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBStrokeColor(context->platformContext(),
-                ((color >> 16) & 0xFF) / 255.0,
-                ((color >> 8) & 0xFF) / 255.0,
-                (color & 0xFF) / 255.0,
-                ((color >> 24) & 0xFF) / 255.0);
+                ((color >> 16) & 0xFF) / 255.0f,
+                ((color >> 8) & 0xFF) / 255.0f,
+                (color & 0xFF) / 255.0f,
+                ((color >> 24) & 0xFF) / 255.0f);
+#elif PLATFORM(QT)
+            QPen currentPen = p->pen();
+            currentPen.setColor((QColor(QRgb(color))));
+            p->setPen(currentPen);
 #endif
             break;
         }
@@ -98,31 +113,58 @@ void CanvasStyle::applyStrokeColor(GraphicsContext* context)
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBStrokeColor(context->platformContext(),
-                ((color >> 16) & 0xFF) / 255.0,
-                ((color >> 8) & 0xFF) / 255.0,
-                (color & 0xFF) / 255.0,
+                ((color >> 16) & 0xFF) / 255.0f,
+                ((color >> 8) & 0xFF) / 255.0f,
+                (color & 0xFF) / 255.0f,
                 m_alpha);
+#elif PLATFORM(QT)
+            QPen currentPen = p->pen();
+            QColor clr = QColor(QRgb(color));
+            clr.setAlphaF(m_alpha);
+            currentPen.setColor(clr);
+            p->setPen(currentPen);
 #endif
             break;
         }
-        case GrayLevel:
+        case GrayLevel: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetGrayStrokeColor(context->platformContext(), m_grayLevel, m_alpha);
+#elif PLATFORM(QT)
+            QColor clr;
+            QPen currentPen = p->pen();
+            clr.setRgbF(m_grayLevel, m_grayLevel, m_grayLevel, m_alpha);
+            currentPen.setColor(clr);
+            p->setPen(currentPen);
 #endif
             break;
-        case RGBA:
+        }
+        case RGBA: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBStrokeColor(context->platformContext(), m_red, m_green, m_blue, m_alpha);
+#elif PLATFORM(QT)
+            QPen currentPen = p->pen();
+            QColor clr;
+            clr.setRgbF(m_red, m_green, m_blue, m_alpha);
+            currentPen.setColor(clr);
+            p->setPen(currentPen);
 #endif
             break;
-        case CMYKA:
+        }
+        case CMYKA: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetCMYKStrokeColor(context->platformContext(), m_cyan, m_magenta, m_yellow, m_black, m_alpha);
+#elif PLATFORM(QT)
+            QPen currentPen = p->pen();
+            QColor clr;
+            clr.setCmykF(m_cyan, m_magenta, m_yellow, m_black, m_alpha);
+            currentPen.setColor(clr);
+            p->setPen(currentPen);
 #endif
             break;
+        }
         case Gradient:
         case ImagePattern:
             break;
@@ -133,6 +175,9 @@ void CanvasStyle::applyFillColor(GraphicsContext* context)
 {
     if (!context)
         return;
+#if PLATFORM(QT)
+    QPainter* p = static_cast<QPainter*>(context->platformContext());
+#endif
     switch (m_type) {
         case ColorString: {
             RGBA32 color = 0; // default is transparant black
@@ -140,10 +185,16 @@ void CanvasStyle::applyFillColor(GraphicsContext* context)
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBFillColor(context->platformContext(),
-                ((color >> 16) & 0xFF) / 255.0,
-                ((color >> 8) & 0xFF) / 255.0,
-                (color & 0xFF) / 255.0,
-                ((color >> 24) & 0xFF) / 255.0);
+                ((color >> 16) & 0xFF) / 255.0f,
+                ((color >> 8) & 0xFF) / 255.0f,
+                (color & 0xFF) / 255.0f,
+                ((color >> 24) & 0xFF) / 255.0f);
+#elif PLATFORM(QT)
+            QBrush currentBrush = p->brush();
+            QColor clr;
+            clr.setRgb(QRgb(color));
+            currentBrush.setColor(clr);
+            p->setBrush(currentBrush);
 #endif
             break;
         }
@@ -153,31 +204,59 @@ void CanvasStyle::applyFillColor(GraphicsContext* context)
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBFillColor(context->platformContext(),
-                ((color >> 16) & 0xFF) / 255.0,
-                ((color >> 8) & 0xFF) / 255.0,
-                (color & 0xFF) / 255.0,
+                ((color >> 16) & 0xFF) / 255.0f,
+                ((color >> 8) & 0xFF) / 255.0f,
+                (color & 0xFF) / 255.0f,
                 m_alpha);
+#elif PLATFORM(QT)
+            QBrush currentBrush = p->brush();
+            QColor clr;
+            clr.setRgb(QRgb(color));
+            clr.setAlphaF(m_alpha);
+            currentBrush.setColor(clr);
+            p->setBrush(currentBrush);
 #endif
             break;
         }
-        case GrayLevel:
+        case GrayLevel: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetGrayFillColor(context->platformContext(), m_grayLevel, m_alpha);
+#elif PLATFORM(QT)
+            QBrush currentBrush = p->brush();
+            QColor clr;
+            clr.setRgbF(m_grayLevel, m_grayLevel, m_grayLevel, m_alpha);
+            currentBrush.setColor(clr);
+            p->setBrush(currentBrush);
 #endif
             break;
-        case RGBA:
+        }
+        case RGBA: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetRGBFillColor(context->platformContext(), m_red, m_green, m_blue, m_alpha);
+#elif PLATFORM(QT)
+            QBrush currentBrush = p->brush();
+            QColor clr;
+            clr.setRgbF(m_red, m_green, m_blue, m_alpha);
+            currentBrush.setColor(clr);
+            p->setBrush(currentBrush);
 #endif
             break;
-        case CMYKA:
+        }
+        case CMYKA: {
             // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
             CGContextSetCMYKFillColor(context->platformContext(), m_cyan, m_magenta, m_yellow, m_black, m_alpha);
+#elif PLATFORM(QT)
+            QBrush currentBrush = p->brush();
+            QColor clr;
+            clr.setCmykF(m_cyan, m_magenta, m_yellow, m_black, m_alpha);
+            currentBrush.setColor(clr);
+            p->setBrush(currentBrush);
 #endif
             break;
+        }
         case Gradient:
         case ImagePattern:
             break;

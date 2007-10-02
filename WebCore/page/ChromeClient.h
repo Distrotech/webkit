@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #ifndef ChromeClient_h
@@ -27,6 +27,7 @@ namespace WebCore {
 
     class FloatRect;
     class Frame;
+    class HitTestResult;
     class IntRect;
     class Page;
     class String;
@@ -95,6 +96,12 @@ namespace WebCore {
         virtual void addToDirtyRegion(const IntRect&) = 0;
         virtual void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect) = 0;
         virtual void updateBackingStore() = 0;
+
+        virtual void mouseDidMoveOverElement(const HitTestResult&, unsigned modifierFlags) = 0;
+
+        virtual void setToolTip(const String&) = 0;
+
+        virtual void print(Frame*) = 0;
 };
 
 }

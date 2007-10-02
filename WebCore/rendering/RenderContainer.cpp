@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -86,47 +86,24 @@ void RenderContainer::addChild(RenderObject* newChild, RenderObject* beforeChild
 {
     bool needsTable = false;
 
-    if(!newChild->isText() && !newChild->isReplaced()) {
-        switch(newChild->style()->display()) {
-        case LIST_ITEM:
-            updateListMarkerNumbers(beforeChild ? beforeChild : m_lastChild);
-            break;
-        case INLINE:
-        case BLOCK:
-        case INLINE_BLOCK:
-        case RUN_IN:
-        case COMPACT:
-        case BOX:
-        case INLINE_BOX:
-        case TABLE:
-        case INLINE_TABLE:
-        case TABLE_COLUMN:
-            break;
-        case TABLE_COLUMN_GROUP:
-        case TABLE_CAPTION:
-        case TABLE_ROW_GROUP:
-        case TABLE_HEADER_GROUP:
-        case TABLE_FOOTER_GROUP:
-            if (!isTable())
-                needsTable = true;
-            break;
-        case TABLE_ROW:
-            if (!isTableSection())
-                needsTable = true;
-            break;
-        case TABLE_CELL:
-            if (!isTableRow())
-                needsTable = true;
-            // I'm not 100% sure this is the best way to fix this, but without this
-            // change we recurse infinitely when trying to render the CSS2 test page:
-            // http://www.bath.ac.uk/%7Epy8ieh/internet/eviltests/htmlbodyheadrendering2.html.
-            // See Radar 2925291.
-            if (isTableCell() && !m_firstChild && !newChild->isTableCell())
-                needsTable = false;
-            break;
-        case NONE:
-            break;
-        }
+    if (newChild->isListItem())
+        updateListMarkerNumbers(beforeChild ? beforeChild : m_lastChild);
+    else if (newChild->isTableCol() && newChild->style()->display() == TABLE_COLUMN_GROUP)
+        needsTable = !isTable();
+    else if (newChild->isRenderBlock() && newChild->style()->display() == TABLE_CAPTION)
+        needsTable = !isTable();
+    else if (newChild->isTableSection())
+        needsTable = !isTable();
+    else if (newChild->isTableRow())
+        needsTable = !isTableSection();
+    else if (newChild->isTableCell()) {
+        needsTable = !isTableRow();
+        // I'm not 100% sure this is the best way to fix this, but without this
+        // change we recurse infinitely when trying to render the CSS2 test page:
+        // http://www.bath.ac.uk/%7Epy8ieh/internet/eviltests/htmlbodyheadrendering2.html.
+        // See Radar 2925291.
+        if (needsTable && isTableCell() && !m_firstChild && !newChild->isTableCell())
+            needsTable = false;
     }
 
     if (needsTable) {
@@ -185,13 +162,6 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild, bool full
             oldChild->removeLayers(layer);
         }
         
-        // If oldChild is the start or end of the selection, then clear the selection to
-        // avoid problems of invalid pointers.
-        // FIXME: The SelectionController should be responsible for this when it
-        // is notified of DOM mutations.
-        if (oldChild->isSelectionBorder())
-            view()->clearSelection();
-
         // renumber ordered lists
         if (oldChild->isListItem())
             updateListMarkerNumbers(oldChild->nextSibling());
@@ -200,6 +170,13 @@ RenderObject* RenderContainer::removeChildNode(RenderObject* oldChild, bool full
             dirtyLinesFromChangedChild(oldChild);
     }
     
+    // If oldChild is the start or end of the selection, then clear the selection to
+    // avoid problems of invalid pointers.
+    // FIXME: The SelectionController should be responsible for this when it
+    // is notified of DOM mutations.
+    if (!documentBeingDestroyed() && oldChild->isSelectionBorder())
+        view()->clearSelection();
+
     // remove the child
     if (oldChild->previousSibling())
         oldChild->previousSibling()->setNextSibling(oldChild->nextSibling());
@@ -330,12 +307,14 @@ void RenderContainer::updateBeforeAfterContentForContainer(RenderStyle::PseudoId
                 if (genChild->isText())
                     // Generated text content is a child whose style also needs to be set to the pseudo-element style.
                     genChild->setStyle(pseudoElementStyle);
-                else {
+                else if (genChild->isImage()) {
                     // Images get an empty style that inherits from the pseudo.
                     RenderStyle* style = new (renderArena()) RenderStyle;
                     style->inheritFrom(pseudoElementStyle);
                     genChild->setStyle(style);
-                }
+                } else
+                    // Must be a first-letter container. updateFirstLetter() will take care of it.
+                    ASSERT(genChild->style()->styleType() == RenderStyle::FIRST_LETTER);
             }
         }
         return; // We've updated the generated content. That's all we needed to do.
@@ -523,55 +502,47 @@ void RenderContainer::layout()
     setNeedsLayout(false);
 }
 
-void RenderContainer::removeLeftoverAnonymousBoxes()
+void RenderContainer::removeLeftoverAnonymousBlock(RenderBlock* child)
 {
-    // we have to go over all child nodes and remove anonymous boxes, that do _not_
-    // have inline children to keep the tree flat
-    RenderObject* child = m_firstChild;
-    while( child ) {
-        RenderObject* next = child->nextSibling();
-        
-        if ( child->isRenderBlock() && child->isAnonymousBlock() && !child->continuation() && !child->childrenInline() && !child->isTableCell() ) {
-            RenderObject* firstAnChild = child->firstChild();
-            RenderObject* lastAnChild = child->lastChild();
-            if ( firstAnChild ) {
-                RenderObject* o = firstAnChild;
-                while( o ) {
-                    o->setParent( this );
-                    o = o->nextSibling();
-                }
-                firstAnChild->setPreviousSibling( child->previousSibling() );
-                lastAnChild->setNextSibling( child->nextSibling() );
-                if ( child->previousSibling() )
-                    child->previousSibling()->setNextSibling( firstAnChild );
-                if ( child->nextSibling() )
-                    child->nextSibling()->setPreviousSibling( lastAnChild );
-            } else {
-                if ( child->previousSibling() )
-                    child->previousSibling()->setNextSibling( child->nextSibling() );
-                if ( child->nextSibling() )
-                    child->nextSibling()->setPreviousSibling( child->previousSibling() );
-                
-            }
-            if (child == m_firstChild)
-                m_firstChild = firstAnChild;
-            if (child == m_lastChild)
-                m_lastChild = lastAnChild;
-            child->setParent( 0 );
-            child->setPreviousSibling( 0 );
-            child->setNextSibling( 0 );
-            if ( !child->isText() ) {
-                RenderContainer *c = static_cast<RenderContainer*>(child);
-                c->m_firstChild = 0;
-                c->m_next = 0;
-            }
-            child->destroy();
+    ASSERT(child->isAnonymousBlock());
+    ASSERT(!child->childrenInline());
+    
+    if (child->continuation()) 
+        return;
+    
+    RenderObject* firstAnChild = child->firstChild();
+    RenderObject* lastAnChild = child->lastChild();
+    if (firstAnChild) {
+        RenderObject* o = firstAnChild;
+        while(o) {
+            o->setParent(this);
+            o = o->nextSibling();
         }
-        child = next;
+        firstAnChild->setPreviousSibling(child->previousSibling());
+        lastAnChild->setNextSibling(child->nextSibling());
+        if (child->previousSibling())
+            child->previousSibling()->setNextSibling(firstAnChild);
+        if (child->nextSibling())
+            child->nextSibling()->setPreviousSibling(lastAnChild);
+    } else {
+        if (child->previousSibling())
+            child->previousSibling()->setNextSibling(child->nextSibling());
+        if (child->nextSibling())
+            child->nextSibling()->setPreviousSibling(child->previousSibling());
     }
-
-    if (parent()) // && isAnonymousBlock() && !continuation() && !childrenInline() && !isTableCell())
-        parent()->removeLeftoverAnonymousBoxes();
+    if (child == m_firstChild)
+        m_firstChild = firstAnChild;
+    if (child == m_lastChild)
+        m_lastChild = lastAnChild;
+    child->setParent(0);
+    child->setPreviousSibling(0);
+    child->setNextSibling(0);
+    if (!child->isText()) {
+        RenderContainer *c = static_cast<RenderContainer*>(child);
+        c->m_firstChild = 0;
+        c->m_next = 0;
+    }
+    child->destroy();
 }
 
 VisiblePosition RenderContainer::positionForCoordinates(int x, int y)
@@ -606,9 +577,9 @@ VisiblePosition RenderContainer::positionForCoordinates(int x, int y)
             || renderer->style()->visibility() != VISIBLE)
             continue;
         
-        int top = borderTop() + paddingTop() + isTableRow() ? 0 : renderer->xPos();
+        int top = borderTop() + paddingTop() + (isTableRow() ? 0 : renderer->yPos());
         int bottom = top + renderer->contentHeight();
-        int left = borderLeft() + paddingLeft() + isTableRow() ? 0 : renderer->yPos();
+        int left = borderLeft() + paddingLeft() + (isTableRow() ? 0 : renderer->xPos());
         int right = left + renderer->contentWidth();
         
         if (x <= right && x >= left && y <= top && y >= bottom) {

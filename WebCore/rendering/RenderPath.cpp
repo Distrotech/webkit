@@ -17,8 +17,8 @@
 
     You should have received a copy of the GNU Library General Public License
     aint with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -28,13 +28,15 @@
 
 #include <math.h>
 
+#include "FloatPoint.h"
 #include "GraphicsContext.h"
-#include "RenderSVGContainer.h"
 #include "PointerEventsHitRules.h"
+#include "RenderSVGContainer.h"
 #include "SVGPaintServer.h"
 #include "SVGRenderSupport.h"
 #include "SVGResourceFilter.h"
 #include "SVGResourceMarker.h"
+#include "SVGResourceMasker.h"
 #include "SVGStyledElement.h"
 #include "SVGURIReference.h"
 
@@ -70,7 +72,7 @@ FloatPoint RenderPath::mapAbsolutePointToLocal(const FloatPoint& point) const
     double localX;
     double localY;
     absoluteTransform().inverse().map(point.x(), point.y(), &localX, &localY);
-    return FloatPoint(localX, localY);
+    return FloatPoint::narrowPrecision(localX, localY);
 }
 
 bool RenderPath::fillContains(const FloatPoint& point, bool requiresFill) const
@@ -224,7 +226,7 @@ void RenderPath::addFocusRingRects(GraphicsContext* graphicsContext, int, int)
     graphicsContext->addFocusRingRect(IntRect(boundingBox.x(), boundingBox.y(), boundingBox.width(), boundingBox.height()));
 }
 
-void RenderPath::absoluteRects(Vector<IntRect>& rects, int, int)
+void RenderPath::absoluteRects(Vector<IntRect>& rects, int, int, bool)
 {
     rects.append(absoluteClippedOverflowRect());
 }
@@ -296,7 +298,7 @@ static void drawMarkerWithData(GraphicsContext* context, MarkerData &data)
     FloatPoint inslopeChange = data.inslopePoints[1] - FloatSize(data.inslopePoints[0].x(), data.inslopePoints[0].y());
     FloatPoint outslopeChange = data.outslopePoints[1] - FloatSize(data.outslopePoints[0].x(), data.outslopePoints[0].y());
 
-    static const double deg2rad = M_PI / 180.0;
+    static const double deg2rad = piDouble / 180.0;
     double inslope = atan2(inslopeChange.y(), inslopeChange.x()) / deg2rad;
     double outslope = atan2(outslopeChange.y(), outslopeChange.x()) / deg2rad;
 

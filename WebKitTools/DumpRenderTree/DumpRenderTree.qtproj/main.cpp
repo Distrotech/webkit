@@ -42,8 +42,12 @@
 
 #include <signal.h>
 
-void messageHandler(QtMsgType, const char *)
+void messageHandler(QtMsgType type, const char *message)
 {
+    if (type == QtCriticalMsg) {
+        fprintf(stderr, "%s\n", message);
+        return;
+    }
     // do nothing
 }
 
@@ -81,6 +85,11 @@ int main(int argc, char* argv[])
     FcConfigSetCurrent(config);
 #endif
     QApplication app(argc, argv);
+#ifdef Q_WS_X11
+    QX11Info::setAppDpiY(0, 96);
+    QX11Info::setAppDpiX(0, 96);
+#endif
+
     QFont f("Sans Serif");
     f.setPointSize(9);
     f.setWeight(QFont::Normal);
@@ -88,10 +97,6 @@ int main(int argc, char* argv[])
     app.setFont(f);
     app.setStyle(QLatin1String("Plastique"));
 
-#ifdef Q_WS_X11
-    QX11Info::setAppDpiY(0, 96);
-    QX11Info::setAppDpiX(0, 96);
-#endif
 
     signal(SIGILL, crashHandler);    /* 4:   illegal instruction (not reset when caught) */
     signal(SIGTRAP, crashHandler);   /* 5:   trace trap (not reset when caught) */
@@ -115,9 +120,9 @@ int main(int argc, char* argv[])
 
     WebCore::DumpRenderTree dumper;
     
-    if (args.last() == QLatin1String("-"))
+    if (args.last() == QLatin1String("-")) {
         dumper.open();
-    else {
+    } else {
         if (!args.last().startsWith("/")
             && !args.last().startsWith("file:")) {
             QString path = QDir::currentPath();
@@ -128,4 +133,7 @@ int main(int argc, char* argv[])
         dumper.open(QUrl(args.last()));
     }
     return app.exec();
+#ifdef Q_WS_X11
+    FcConfigSetCurrent(0);
+#endif
 }

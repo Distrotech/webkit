@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -30,7 +30,8 @@
 #include <wtf/HashMap.h>
 
 #if PLATFORM(QT)
-class QFont;
+#include <QtGui/qfont.h>
+#include <QtGui/qfontmetrics.h>
 #endif
 
 namespace WebCore {
@@ -73,7 +74,9 @@ class Font {
 public:
     Font();
     Font(const FontDescription&, short letterSpacing, short wordSpacing);
+#if !PLATFORM(QT)
     Font(const FontPlatformData&, bool isPrinting); // This constructor is only used if the platform wants to start with a native font.
+#endif
     ~Font();
     
     Font(const Font&);
@@ -126,8 +129,13 @@ public:
     unsigned weight() const { return m_fontDescription.weight(); }
     bool bold() const { return m_fontDescription.bold(); }
 
+#if !PLATFORM(QT)
+    bool isPlatformFont() const { return m_isPlatformFont; }
+#endif
+    
 #if PLATFORM(QT)
-    operator QFont() const;
+    inline const QFont &font() const { return m_font; }
+    inline const QFont &scFont() const { return m_scFont; }
 #endif
     
     // Metrics that we query the FontFallbackList for.
@@ -140,6 +148,7 @@ public:
     int spaceWidth() const;
     int tabWidth() const { return 8 * spaceWidth(); }
 
+#if !PLATFORM(QT)
     const FontData* primaryFont() const;
     const FontData* fontDataAt(unsigned) const;
     const GlyphData& glyphDataForCharacter(UChar32, const UChar* cluster, unsigned clusterLength, bool mirror, bool attemptFontSubstitution) const;
@@ -158,30 +167,40 @@ private:
     int offsetForPositionForComplexText(const TextRun&, const TextStyle&, int position, bool includePartialGlyphs) const;
     FloatRect selectionRectForSimpleText(const TextRun&, const TextStyle&, const IntPoint&, int h, int from, int to) const;
     FloatRect selectionRectForComplexText(const TextRun&, const TextStyle&, const IntPoint&, int h, int from, int to) const;
-
+#endif
     friend struct WidthIterator;
     
     // Useful for debugging the different font rendering code paths.
 public:
+#if !PLATFORM(QT)
     enum CodePath { Auto, Simple, Complex };
     static void setCodePath(CodePath);
     static CodePath codePath;
     
     static const uint8_t gRoundingHackCharacterTable[256];
-    static bool treatAsSpace(UChar c) { return c == ' ' || c == '\t' || c == '\n' || c == 0x00A0; }
-    static bool treatAsZeroWidthSpace(UChar c) { return c < 0x20 || (c >= 0x7F && c < 0xA0) || c == 0x200e || c == 0x200f; }
     static bool isRoundingHackCharacter(UChar32 c)
     {
         return (((c & ~0xFF) == 0 && gRoundingHackCharacterTable[c])); 
     }
-
+#endif
+    static bool treatAsSpace(UChar c) { return c == ' ' || c == '\t' || c == '\n' || c == 0x00A0; }
+    static bool treatAsZeroWidthSpace(UChar c) { return c < 0x20 || (c >= 0x7F && c < 0xA0) || c == 0x200e || c == 0x200f; }
 private:
     FontDescription m_fontDescription;
+#if !PLATFORM(QT)
     mutable RefPtr<FontFallbackList> m_fontList;
     mutable HashMap<int, GlyphPageTreeNode*> m_pages;
     mutable GlyphPageTreeNode* m_pageZero;
+#endif
     short m_letterSpacing;
     short m_wordSpacing;
+#if !PLATFORM(QT)
+    bool m_isPlatformFont;
+#else
+    QFont m_font;
+    QFont m_scFont;
+    int m_spaceWidth;
+#endif
 };
 
 }

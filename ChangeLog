@@ -1,3 +1,176 @@
+2007-09-29  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark.
+
+        -Fix http://bugs.webkit.org/show_bug.cgi?id=13226.
+        Remove Bakefiles from svn.
+
+        * Bakefiles/Bakefiles.bkgen: Removed.
+        * Bakefiles/ChangeLog: Removed.
+        * Bakefiles/Readme.txt: Removed.
+        * Bakefiles/presets.bkl: Removed.
+        * Bakefiles/update-file-lists.py: Removed.
+
+2007-09-20  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber stamped by Adam.
+
+        Renamed files from *Gdk to *Gtk (see #14732) using the
+        work of Juan A. Suarez Romero as a base.
+
+        GDK -> GTK
+
+        * WebKit.pri:
+        * WebKit.pro:
+
+2007-07-29  Brian Mastenbrook  <brian@mastenbrook.net>
+
+        Build fix for WebKit/Gtk to compile on Fedora 7 as described in
+        http://bugs.webkit.org/show_bug.cgi?id=14557
+
+        * WebKit.pri: cairo-ft is used by the WebKit/Gtk port
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Exclude DumpRenderTree from the Qt build on Windows for now.
+
+        * WebKit.pro:
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Temporarily disable the ICO support for the Qt build on Windows.
+
+        * WebKit.pro:
+
+2007-07-26  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Lars.
+
+        Use QMAKE_LIBDIR instead of QMAKE_LFLAGS to specify the library search path for QtWebKit, as the former is portable and correctly transformed to /LIBPATH: with msvc for example.
+
+        * WebKit.pri:
+
+2007-07-22  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Adam.
+
+        Add WebKit/gtk/Api and WebCoreSupport API to the INCLUDEPATH to allow GdkLauncher to be
+        build against it.
+
+        * WebKit.pri:
+
+2007-07-18  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Don't call gcc directly when building the dftables tool but use a separate .pro file for the Qt build.
+
+        * WebKit.pro:
+
+2007-07-18  Timothy Hatcher  <timothy@apple.com>
+
+        Add a SCRIPTS_PATH variable so Makefiles of differnet nested directories can
+        still use this one Makefile.shared as an include.
+
+        * Makefile.shared:
+
+2007-07-12  George Staikos  <staikos@kde.org>
+
+        Fix build in debug mode.
+
+        * WebKit.pri:
+
+2007-07-11  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Darin.
+
+        As of http://bugs.webkit.org/show_bug.cgi?id=14527 move the
+        WebCore/ForwardingHeader/JavaScriptCore to JavaScriptCore
+
+        * WebKit.pri: Adjust INCLUDEPATH
+
+2007-06-25  Adam Roben  <aroben@apple.com>
+
+        Really remove LayoutTestResults.
+
+        * LayoutTestResults: Removed.
+
+2007-06-25  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 14405: LayoutTestResults/qt should be in LayoutTests/qt
+        http://bugs.webkit.org/show_bug.cgi?id=14405
+
+        Reviewed by Anders.
+
+        * LayoutTestResults: Removed.
+
+2007-06-25  Alp Toker  <alp.toker@collabora.co.uk>
+
+        Reviewed by Mark.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13975
+        Use system-provided libjpeg and libpng
+
+        * WebKit.pri: Link against external libjpeg and libpng.
+
+2007-06-20  Adam Roben  <aroben@apple.com>
+
+        Reviewed by Simon Hausmann.
+
+        More Gdk build fixing.
+
+        * WebKit.pro:
+
+2007-06-15  Adam Treat  <adam@staikos.net>
+
+        Reviewed by George Staikos.
+
+        Add ICO support to the Qt build.
+
+        * WebKit.pro:
+
+2007-06-13  George Staikos  <staikos@kde.org>
+
+        Reviewed by Lars.
+
+        Compile without self-linking.
+
+        * WebKit.pri:
+
+2007-06-13  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Lars.
+
+        * WebKit.pri: WebKitQt is now called QtWebKit.
+
+2007-05-31  Alp Toker  <alp.toker@collabora.co.uk>
+
+        Reviewed by Eric Seidel.
+
+        http://bugs.webkit.org/show_bug.cgi?id=13941
+        Rename WebCore/platform/network/gdk to WebCore/platform/network/curl
+
+        * WebKit.pri:
+
+2007-05-18  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * WebKit.pro: Build testkjs for Gdk and Qt
+
+2007-05-11  Holger Freyther <freyther@kde.org>
+
+        Reviewed by Mark Rowe.
+
+        Move libcurl configuration into WebKit.pri so it will be used by GdkLauncher,
+        and add ICU configuration to QMAKE_CXXFLAGS.
+
+        * WebKit.pri:
+
 2007-05-06  Erik Bunce  <kde@bunce.us>
 
         Reviewed by Mark Rowe.

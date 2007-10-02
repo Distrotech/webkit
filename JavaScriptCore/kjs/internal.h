@@ -47,7 +47,9 @@ namespace KJS {
 
   class StringImp : public JSCell {
   public:
-    StringImp(const UString& v) : val(v) { }
+    StringImp(const UString& v) : val(v) { Collector::reportExtraMemoryCost(v.cost()); }
+    enum HasOtherOwnerType { HasOtherOwner };
+    StringImp(const UString& value, HasOtherOwnerType) : val(value) { }
     UString value() const { return val; }
 
     JSType type() const { return StringType; }
@@ -83,7 +85,7 @@ namespace KJS {
 
     double val;
   };
-  
+
 
   /**
    * @short The "label set" in Ecma-262 spec
@@ -109,7 +111,7 @@ namespace KJS {
      * Removes from the stack the last pushed id (what else?)
      */
     void pop();
-    
+
   private:
     struct StackElem {
       Identifier id;
@@ -123,11 +125,6 @@ namespace KJS {
   // ---------------------------------------------------------------------------
   //                            Evaluation
   // ---------------------------------------------------------------------------
-
-  enum CodeType { GlobalCode,
-                  EvalCode,
-                  FunctionCode,
-                  AnonymousCode };
 
   struct AttachedInterpreter;
   class DebuggerImp {
@@ -143,24 +140,6 @@ namespace KJS {
 
     AttachedInterpreter *interps;
     bool isAborted;
-  };
-
-  class InternalFunctionImp : public JSObject {
-  public:
-    InternalFunctionImp();
-    InternalFunctionImp(FunctionPrototype*);
-    InternalFunctionImp(FunctionPrototype*, const Identifier&);
-
-    virtual bool implementsCall() const;
-    virtual JSValue* callAsFunction(ExecState*, JSObject* thisObjec, const List& args) = 0;
-    virtual bool implementsHasInstance() const;
-
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
-    const Identifier& functionName() const { return m_name; }
-
-  private:
-    Identifier m_name;
   };
 
   // helper function for toInteger, toInt32, toUInt32 and toUInt16

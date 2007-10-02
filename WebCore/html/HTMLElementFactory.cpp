@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -26,7 +26,6 @@
 #include "HTMLAnchorElement.h"
 #include "HTMLAppletElement.h"
 #include "HTMLAreaElement.h"
-#include "HTMLAudioElement.h"
 #include "HTMLBaseFontElement.h"
 #include "HTMLBaseElement.h"
 #include "HTMLBlockquoteElement.h"
@@ -71,7 +70,6 @@
 #include "HTMLPreElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLSelectElement.h"
-#include "HTMLSourceElement.h"
 #include "HTMLStyleElement.h"
 #include "HTMLTextAreaElement.h"
 #include "HTMLTableElement.h"
@@ -81,7 +79,6 @@
 #include "HTMLTableRowElement.h"
 #include "HTMLTableSectionElement.h"
 #include "HTMLTitleElement.h"
-#include "HTMLVideoElement.h"
 #include "HTMLUListElement.h"
 #include "HTMLQuoteElement.h"
 
@@ -123,9 +120,11 @@ static PassRefPtr<HTMLElement> metaConstructor(const AtomicString&, Document* do
     return new HTMLMetaElement(doc);
 }
 
-static PassRefPtr<HTMLElement> styleConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool)
+static PassRefPtr<HTMLElement> styleConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool createdByParser)
 {
-    return new HTMLStyleElement(doc);
+    RefPtr<HTMLStyleElement> style = new HTMLStyleElement(doc);
+    style->setCreatedByParser(createdByParser);
+    return style.release();
 }
 
 static PassRefPtr<HTMLElement> titleConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool)
@@ -382,23 +381,6 @@ static PassRefPtr<HTMLElement> marqueeConstructor(const AtomicString&, Document*
     return new HTMLMarqueeElement(doc);
 }
 
-#if ENABLE(VIDEO)
-static PassRefPtr<HTMLElement> audioConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool)
-{
-    return new HTMLAudioElement(doc);
-}
-
-static PassRefPtr<HTMLElement> videoConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool)
-{
-    return new HTMLVideoElement(doc);
-}
-
-static PassRefPtr<HTMLElement> sourceConstructor(const AtomicString&, Document* doc, HTMLFormElement*, bool)
-{
-    return new HTMLSourceElement(doc);
-}
-#endif
-
 static void addTag(const QualifiedName& tag, ConstructorFunc func)
 {
     gFunctionMap->set(tag.localName().impl(), func);
@@ -480,11 +462,6 @@ static void createFunctionMap()
     addTag(trTag, tableRowConstructor);
     addTag(ulTag, ulConstructor);
     addTag(xmpTag, preConstructor);
-#if ENABLE(VIDEO)
-    addTag(audioTag, audioConstructor);
-    addTag(sourceTag, sourceConstructor);
-    addTag(videoTag, videoConstructor);
-#endif
 }
 
 PassRefPtr<HTMLElement> HTMLElementFactory::createHTMLElement(const AtomicString& tagName, Document* doc, HTMLFormElement* form, bool createdByParser)

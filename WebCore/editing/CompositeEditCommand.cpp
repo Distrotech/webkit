@@ -117,9 +117,9 @@ void CompositeEditCommand::removeStyledElement(Element* element)
     applyCommandToComposite(new ApplyStyleCommand(element, true));
 }
 
-void CompositeEditCommand::insertParagraphSeparator()
+void CompositeEditCommand::insertParagraphSeparator(bool useDefaultParagraphElement)
 {
-    applyCommandToComposite(new InsertParagraphSeparatorCommand(document()));
+    applyCommandToComposite(new InsertParagraphSeparatorCommand(document(), useDefaultParagraphElement));
 }
 
 void CompositeEditCommand::insertNodeBefore(Node* insertChild, Node* refChild)
@@ -703,13 +703,13 @@ void CompositeEditCommand::moveParagraphs(const VisiblePosition& startOfParagrap
             
             startIndex = 0;
             if (startInParagraph) {
-                RefPtr<Range> startRange = new Range(document(), startOfParagraphToMove.deepEquivalent(), visibleStart.deepEquivalent());
+                RefPtr<Range> startRange = new Range(document(), rangeCompliantEquivalent(startOfParagraphToMove.deepEquivalent()), rangeCompliantEquivalent(visibleStart.deepEquivalent()));
                 startIndex = TextIterator::rangeLength(startRange.get(), true);
             }
 
             endIndex = 0;
             if (endInParagraph) {
-                RefPtr<Range> endRange = new Range(document(), startOfParagraphToMove.deepEquivalent(), visibleEnd.deepEquivalent());
+                RefPtr<Range> endRange = new Range(document(), rangeCompliantEquivalent(startOfParagraphToMove.deepEquivalent()), rangeCompliantEquivalent(visibleEnd.deepEquivalent()));
                 endIndex = TextIterator::rangeLength(endRange.get(), true);
             }
         }
@@ -783,7 +783,7 @@ void CompositeEditCommand::moveParagraphs(const VisiblePosition& startOfParagrap
     destinationIndex = TextIterator::rangeLength(startToDestinationRange.get(), true);
     
     setEndingSelection(destination);
-    applyCommandToComposite(new ReplaceSelectionCommand(document(), fragment.get(), true, false, !preserveStyle, false));
+    applyCommandToComposite(new ReplaceSelectionCommand(document(), fragment.get(), true, false, !preserveStyle, false, true));
     
     if (preserveSelection && startIndex != -1) {
         // Fragment creation (using createMarkup) incorrectly uses regular
@@ -855,6 +855,8 @@ Position CompositeEditCommand::positionAvoidingSpecialElementBoundary(const Posi
             if (original.node() != enclosingAnchor && original.node()->parentNode() != enclosingAnchor) {
                 pushAnchorElementDown(enclosingAnchor);
                 enclosingAnchor = enclosingAnchorElement(original);
+                if (!enclosingAnchor)
+                    return original;
             }
             // Don't insert outside an anchor if doing so would skip over a line break.  It would
             // probably be safe to move the line break so that we could still avoid the anchor here.

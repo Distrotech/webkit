@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -25,17 +25,16 @@
 #if ENABLE(SVG)
 #include "SVGGradientElement.h"
 
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 #include "RenderPath.h"
 #include "RenderSVGHiddenContainer.h"
-#include "RenderView.h"
 #include "SVGNames.h"
+#include "SVGPaintServerLinearGradient.h"
+#include "SVGPaintServerRadialGradient.h"
 #include "SVGStopElement.h"
 #include "SVGTransformList.h"
 #include "SVGTransformable.h"
 #include "SVGUnitTypes.h"
-#include "SVGPaintServerLinearGradient.h"
-#include "SVGPaintServerRadialGradient.h"
 
 namespace WebCore {
 
@@ -134,12 +133,12 @@ Vector<SVGGradientStop> SVGGradientElement::buildStops() const
             
             stops.append(makeGradientStop(stopOffset, makeRGBA(c.red(), c.green(), c.blue(), int(opacity * 255.))));
             if (!stop->renderer())
-                stopStyle->deref(view()->renderArena());
+                stopStyle->deref(document()->renderArena());
         }
     }
 
     if (gradientStyle)
-        gradientStyle->deref(view()->renderArena());
+        gradientStyle->deref(document()->renderArena());
     return stops;
 }
 

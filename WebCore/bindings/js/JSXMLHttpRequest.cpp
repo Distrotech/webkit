@@ -1,6 +1,6 @@
 /*
  *  This file is part of the KDE libraries
- *  Copyright (C) 2004 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2007 Apple Inc. All rights reserved.
  *  Copyright (C) 2005, 2006 Alexey Proskuryakov <ap@nypop.com>
  *
  *  This library is free software; you can redistribute it and/or
@@ -15,25 +15,28 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
 #include "JSXMLHttpRequest.h"
 
+#include "DOMWindow.h"
 #include "Event.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "HTMLDocument.h"
+#include "JSDocument.h"
+#include "JSEvent.h"
+#include "XMLHttpRequest.h"
 #include "kjs_events.h"
 #include "kjs_window.h"
-#include "xmlhttprequest.h"
 
 #include "JSXMLHttpRequest.lut.h"
 
-using namespace WebCore;
-
 namespace KJS {
+
+using namespace WebCore;
 
 ////////////////////// JSXMLHttpRequest Object ////////////////////////
 
@@ -101,7 +104,7 @@ JSValue* JSXMLHttpRequest::getValueProperty(ExecState* exec, int token) const
         case ReadyState:
             return jsNumber(m_impl->getReadyState());
         case ResponseText:
-            return jsStringOrNull(m_impl->getResponseText());
+            return jsOwnedStringOrNull(m_impl->getResponseText());
         case ResponseXML:
             if (Document* responseXML = m_impl->getResponseXML())
                 return toJS(exec, responseXML);
@@ -139,12 +142,26 @@ void JSXMLHttpRequest::put(ExecState* exec, const Identifier& propertyName, JSVa
 void JSXMLHttpRequest::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
 {
     switch (token) {
-        case Onreadystatechange:
-            m_impl->setOnReadyStateChangeListener(Window::retrieveActive(exec)->findOrCreateJSUnprotectedEventListener(value, true));
+        case Onreadystatechange: {
+            Document* doc = m_impl->document();
+            if (!doc)
+                return;
+            Frame* frame = doc->frame();
+            if (!frame)
+                return;
+            m_impl->setOnReadyStateChangeListener(KJS::Window::retrieveWindow(frame)->findOrCreateJSUnprotectedEventListener(value, true));
             break;
-        case Onload:
-            m_impl->setOnLoadListener(Window::retrieveActive(exec)->findOrCreateJSUnprotectedEventListener(value, true));
+        }
+        case Onload: {
+            Document* doc = m_impl->document();
+            if (!doc)
+                return;
+            Frame* frame = doc->frame();
+            if (!frame)
+                return;
+            m_impl->setOnLoadListener(KJS::Window::retrieveWindow(frame)->findOrCreateJSUnprotectedEventListener(value, true));
             break;
+        }
     }
 }
 
@@ -216,24 +233,27 @@ JSValue* JSXMLHttpRequestPrototypeFunction::callAsFunction(ExecState* exec, JSOb
                 return throwError(exec, SyntaxError, "Not enough arguments");
 
             String method = args[0]->toString(exec);
-            KURL url = Window::retrieveActive(exec)->frame()->loader()->completeURL(DeprecatedString(args[1]->toString(exec)));
+            Frame* frame = Window::retrieveActive(exec)->impl()->frame();
+            if (!frame)
+                return jsUndefined();
+            KURL url = frame->loader()->completeURL(DeprecatedString(args[1]->toString(exec)));
 
             bool async = true;
             if (args.size() >= 3)
                 async = args[2]->toBoolean(exec);
 
-            String user;
-            String password;
             if (args.size() >= 4 && !args[3]->isUndefined()) {
-                user = args[3]->toString(exec);
+                String user = valueToStringWithNullCheck(exec, args[3]);
 
-                if (args.size() >= 5 && !args[4]->isUndefined())
-                    password = args[4]->toString(exec);
-            }
+                if (args.size() >= 5 && !args[4]->isUndefined()) {
+                    String password = valueToStringWithNullCheck(exec, args[4]);
+                    request->m_impl->open(method, url, async, user, password, ec);
+                } else
+                    request->m_impl->open(method, url, async, user, ec);
+            } else
+                request->m_impl->open(method, url, async, ec);
 
-            request->m_impl->open(method, url, async, user, password, ec);
             setDOMException(exec, ec);
-
             return jsUndefined();
         }
         case JSXMLHttpRequest::Send: {
@@ -273,15 +293,29 @@ JSValue* JSXMLHttpRequestPrototypeFunction::callAsFunction(ExecState* exec, JSOb
             return jsUndefined();
         
         case JSXMLHttpRequest::AddEventListener: {
-            JSUnprotectedEventListener* listener = Window::retrieveActive(exec)->findOrCreateJSUnprotectedEventListener(args[1], true);
-            if (listener)
-                request->m_impl->addEventListener(args[0]->toString(exec), listener, args[2]->toBoolean(exec));
+            Document* doc = request->m_impl->document();
+            if (!doc)
+                return jsUndefined();
+            Frame* frame = doc->frame();
+            if (!frame)
+                return jsUndefined();
+            JSUnprotectedEventListener* listener = KJS::Window::retrieveWindow(frame)->findOrCreateJSUnprotectedEventListener(args[1], true);
+            if (!listener)
+                return jsUndefined();
+            request->m_impl->addEventListener(args[0]->toString(exec), listener, args[2]->toBoolean(exec));
             return jsUndefined();
         }
         case JSXMLHttpRequest::RemoveEventListener: {
-            JSUnprotectedEventListener* listener = Window::retrieveActive(exec)->findJSUnprotectedEventListener(args[1], true);
-            if (listener)
-                request->m_impl->removeEventListener(args[0]->toString(exec), listener, args[2]->toBoolean(exec));
+            Document* doc = request->m_impl->document();
+            if (!doc)
+                return jsUndefined();
+            Frame* frame = doc->frame();
+            if (!frame)
+                return jsUndefined();
+            JSUnprotectedEventListener* listener = KJS::Window::retrieveWindow(frame)->findOrCreateJSUnprotectedEventListener(args[1], true);
+            if (!listener)
+                return jsUndefined();
+            request->m_impl->removeEventListener(args[0]->toString(exec), listener, args[2]->toBoolean(exec));
             return jsUndefined();
         }
         case JSXMLHttpRequest::DispatchEvent: {

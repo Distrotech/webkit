@@ -198,7 +198,8 @@ void IndentOutdentCommand::indentRegion()
     
     RefPtr<Range> startRange = TextIterator::rangeFromLocationAndLength(document()->documentElement(), 0, startIndex);
     RefPtr<Range> endRange = TextIterator::rangeFromLocationAndLength(document()->documentElement(), 0, endIndex);
-    setEndingSelection(Selection(startRange->endPosition(), endRange->endPosition(), DOWNSTREAM));
+    if (startRange && endRange)
+        setEndingSelection(Selection(startRange->endPosition(), endRange->endPosition(), DOWNSTREAM));
 }
 
 void IndentOutdentCommand::outdentParagraph()
@@ -228,6 +229,8 @@ void IndentOutdentCommand::outdentParagraph()
         // The blockquote doesn't contain anything outside the paragraph, so it can be totally removed.
         removeNodePreservingChildren(enclosingNode);
         updateLayout();
+        visibleStartOfParagraph = VisiblePosition(visibleStartOfParagraph.deepEquivalent());
+        visibleEndOfParagraph = VisiblePosition(visibleEndOfParagraph.deepEquivalent());
         if (visibleStartOfParagraph.isNotNull() && !isStartOfParagraph(visibleStartOfParagraph))
             insertNodeAt(createBreakElement(document()).get(), visibleStartOfParagraph.deepEquivalent());
         if (visibleEndOfParagraph.isNotNull() && !isEndOfParagraph(visibleEndOfParagraph))

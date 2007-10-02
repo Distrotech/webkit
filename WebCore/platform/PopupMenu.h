@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -44,6 +44,12 @@ typedef struct HBITMAP__* HBITMAP;
 namespace WebCore {
     class QWebPopup;
 }
+#elif PLATFORM(GTK)
+typedef struct _GtkMenu GtkMenu;
+typedef struct _GtkMenuItem GtkMenuItem;
+typedef struct _GtkWidget GtkWidget;
+#include <wtf/HashMap.h>
+#include <glib.h>
 #endif
 
 namespace WebCore {
@@ -68,6 +74,8 @@ public:
     void updateFromElement();
     
     PopupMenuClient* client() const { return m_popupClient; }
+
+    static bool itemWritingDirectionIsNatural();
 
 #if PLATFORM(WIN)
     PlatformScrollbar* scrollBar() const { return m_scrollBar.get(); }
@@ -144,6 +152,14 @@ private:
     int m_wheelDelta;
     int m_focusedIndex;
     bool m_scrollbarCapturingMouse;
+#elif PLATFORM(GTK)
+    IntPoint m_menuPosition;
+    GtkMenu* m_popup;
+    HashMap<GtkWidget*, int> m_indexMap;
+    static void menuItemActivated(GtkMenuItem* item, PopupMenu*);
+    static void menuUnmapped(GtkWidget*, PopupMenu*);
+    static void menuPositionFunction(GtkMenu*, gint*, gint*, gboolean*, PopupMenu*);
+    static void menuRemoveItem(GtkWidget*, PopupMenu*);
 #endif
 
 };

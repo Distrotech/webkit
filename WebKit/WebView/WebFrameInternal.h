@@ -40,7 +40,6 @@
 @class DOMElement;
 @class DOMNode;
 @class DOMRange;
-@class WebInspector;
 @class WebFrameView;
 @class WebFrameBridge;
 @class WebHistoryItem;
@@ -103,8 +102,6 @@ WebView *getWebView(WebFrame *webFrame);
 
     WebScriptDebugger *scriptDebugger;
     id internalLoadDelegate;
-    
-    NSMutableSet *inspectors;
 }
 @end
 
@@ -134,9 +131,6 @@ struct WebCoreHistoryItem;
 
 - (BOOL)_isMainFrame;
 
-- (void)_addInspector:(WebInspector *)inspector;
-- (void)_removeInspector:(WebInspector *)inspector;
-
 #ifdef __cplusplus
 
 - (WebCore::FrameLoader*)_frameLoader;
@@ -163,6 +157,12 @@ struct WebCoreHistoryItem;
 
 - (void)_attachScriptDebugger;
 - (void)_detachScriptDebugger;
+
+// dataSource reports null for the initial empty document's data source; this is needed
+// to preserve compatibility with Mail and Safari among others. But internal to WebKit,
+// we need to be able to get the initial data source as well, so the _dataSource method
+// should be used instead.
+- (WebDataSource *)_dataSource;
 
 @end
 

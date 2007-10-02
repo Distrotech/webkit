@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -29,7 +29,7 @@
 
 namespace WebCore {
 
-SVGPathSegLinetoHorizontalAbs::SVGPathSegLinetoHorizontalAbs(double x)
+SVGPathSegLinetoHorizontalAbs::SVGPathSegLinetoHorizontalAbs(float x)
     : SVGPathSeg()
     , m_x(x)
 {
@@ -39,19 +39,19 @@ SVGPathSegLinetoHorizontalAbs::~SVGPathSegLinetoHorizontalAbs()
 {
 }
 
-void SVGPathSegLinetoHorizontalAbs::setX(double x)
+void SVGPathSegLinetoHorizontalAbs::setX(float x)
 {
     m_x = x;
 }
 
-double SVGPathSegLinetoHorizontalAbs::x() const
+float SVGPathSegLinetoHorizontalAbs::x() const
 {
     return m_x;
 }
 
 
 
-SVGPathSegLinetoHorizontalRel::SVGPathSegLinetoHorizontalRel(double x)
+SVGPathSegLinetoHorizontalRel::SVGPathSegLinetoHorizontalRel(float x)
     : SVGPathSeg()
     , m_x(x)
 {
@@ -61,12 +61,12 @@ SVGPathSegLinetoHorizontalRel::~SVGPathSegLinetoHorizontalRel()
 {
 }
 
-void SVGPathSegLinetoHorizontalRel::setX(double x)
+void SVGPathSegLinetoHorizontalRel::setX(float x)
 {
     m_x = x;
 }
 
-double SVGPathSegLinetoHorizontalRel::x() const
+float SVGPathSegLinetoHorizontalRel::x() const
 {
     return m_x;
 }

@@ -30,6 +30,7 @@
 #include "BeforeTextInsertedEvent.h"
 #include "CSSComputedStyleDeclaration.h"
 #include "CSSPropertyNames.h"
+#include "CSSValueKeywords.h"
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "EditingText.h"
@@ -41,6 +42,7 @@
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
 #include "SelectionController.h"
+#include "SmartReplace.h"
 #include "TextIterator.h"
 #include "htmlediting.h"
 #include "markup.h"
@@ -187,7 +189,8 @@ PassRefPtr<Node> ReplacementFragment::insertFragmentForTestRendering(Node* conte
     
     ExceptionCode ec = 0;
 
-    // Copy the whitespace style from the context onto this element.
+    // Copy the whitespace and user-select style from the context onto this element.
+    // FIXME: We should examine other style properties to see if they would be appropriate to consider during the test rendering.
     Node* n = context;
     while (n && !n->isElementNode())
         n = n->parentNode();
@@ -195,6 +198,8 @@ PassRefPtr<Node> ReplacementFragment::insertFragmentForTestRendering(Node* conte
         RefPtr<CSSComputedStyleDeclaration> contextStyle = new CSSComputedStyleDeclaration(static_cast<Element*>(n));
         CSSStyleDeclaration* style = holder->style();
         style->setProperty(CSS_PROP_WHITE_SPACE, contextStyle->getPropertyValue(CSS_PROP_WHITE_SPACE), false, ec);
+        ASSERT(ec == 0);
+        style->setProperty(CSS_PROP__WEBKIT_USER_SELECT, contextStyle->getPropertyValue(CSS_PROP__WEBKIT_USER_SELECT), false, ec);
         ASSERT(ec == 0);
     }
     
@@ -273,7 +278,7 @@ void ReplacementFragment::removeInterchangeNodes(Node* startNode)
 }
 
 ReplaceSelectionCommand::ReplaceSelectionCommand(Document* document, PassRefPtr<DocumentFragment> fragment,
-        bool selectReplacement, bool smartReplace, bool matchStyle, bool preventNesting,
+        bool selectReplacement, bool smartReplace, bool matchStyle, bool preventNesting, bool movingParagraph,
         EditAction editAction) 
     : CompositeEditCommand(document),
       m_selectReplacement(selectReplacement), 
@@ -281,6 +286,7 @@ ReplaceSelectionCommand::ReplaceSelectionCommand(Document* document, PassRefPtr<
       m_matchStyle(matchStyle),
       m_documentFragment(fragment),
       m_preventNesting(preventNesting),
+      m_movingParagraph(movingParagraph),
       m_editAction(editAction)
 {
 }
@@ -317,7 +323,7 @@ static bool isMailPasteAsQuotationNode(Node* node)
     return node && node->hasTagName(blockquoteTag) && node->isElementNode() && static_cast<Element*>(node)->getAttribute(classAttr) == ApplePasteAsQuotation;
 }
 
-// Virtual method used so that ReplaceSelectionCommand can update the node's it tracks.
+// Wrap CompositeEditCommand::removeNodePreservingChildren() so we can update the nodes we track
 void ReplaceSelectionCommand::removeNodePreservingChildren(Node* node)
 {
     if (m_firstNodeInserted == node)
@@ -325,6 +331,23 @@ void ReplaceSelectionCommand::removeNodePreservingChildren(Node* node)
     if (m_lastLeafInserted == node)
         m_lastLeafInserted = node->lastChild() ? node->lastChild() : node->traverseNextSibling();
     CompositeEditCommand::removeNodePreservingChildren(node);
+}
+
+// Wrap CompositeEditCommand::removeNodeAndPruneAncestors() so we can update the nodes we track
+void ReplaceSelectionCommand::removeNodeAndPruneAncestors(Node* node)
+{
+    // prepare in case m_firstNodeInserted and/or m_lastLeafInserted get removed
+    // FIXME: shouldn't m_lastLeafInserted be adjusted using traversePreviousNode()?
+    Node* afterFirst = m_firstNodeInserted ? m_firstNodeInserted->traverseNextSibling() : 0;
+    Node* afterLast = m_lastLeafInserted ? m_lastLeafInserted->traverseNextSibling() : 0;
+    
+    CompositeEditCommand::removeNodeAndPruneAncestors(node);
+    
+    // adjust m_firstNodeInserted and m_lastLeafInserted since either or both may have been removed
+    if (m_lastLeafInserted && !m_lastLeafInserted->inDocument())
+        m_lastLeafInserted = afterLast;
+    if (m_firstNodeInserted && !m_firstNodeInserted->inDocument())
+        m_firstNodeInserted = m_lastLeafInserted && m_lastLeafInserted->inDocument() ? afterFirst : 0;
 }
 
 bool ReplaceSelectionCommand::shouldMerge(const VisiblePosition& from, const VisiblePosition& to)
@@ -342,6 +365,30 @@ bool ReplaceSelectionCommand::shouldMerge(const VisiblePosition& from, const Vis
            // Don't merge to or from a position before or after a block because it would
            // be a no-op and cause infinite recursion.
            !isBlock(fromNode) && !isBlock(toNode);
+}
+
+// Style rules that match just inserted elements could change their appearance, like
+// a div inserted into a document with div { display:inline; }.
+void ReplaceSelectionCommand::negateStyleRulesThatAffectAppearance()
+{
+    for (RefPtr<Node> node = m_firstNodeInserted.get(); node; node = node->traverseNextNode()) {
+        // FIXME: <rdar://problem/5371536> Style rules that match pasted content can change it's appearance
+        if (isStyleSpan(node.get())) {
+            HTMLElement* e = static_cast<HTMLElement*>(node.get());
+            // There are other styles that style rules can give to style spans,
+            // but these are the two important ones because they'll prevent
+            // inserted content from appearing in the right paragraph.
+            // FIXME: Hyatt is concerned that selectively using display:inline will give inconsistent
+            // results. We already know one issue because td elements ignore their display property
+            // in quirks mode (which Mail.app is always in). We should look for an alternative.
+            if (isBlock(e))
+                e->getInlineStyleDecl()->setProperty(CSS_PROP_DISPLAY, CSS_VAL_INLINE);
+            if (e->renderer() && e->renderer()->style()->floating() != FNONE)
+                e->getInlineStyleDecl()->setProperty(CSS_PROP_FLOAT, CSS_VAL_NONE);
+        }
+        if (node == m_lastLeafInserted)
+            break;
+    }
 }
 
 void ReplaceSelectionCommand::removeRedundantStyles(Node* mailBlockquoteEnclosingSelectionStart)
@@ -366,7 +413,12 @@ void ReplaceSelectionCommand::removeRedundantStyles(Node* mailBlockquoteEnclosin
             RefPtr<CSSMutableStyleDeclaration> parentStyle = computedStyle(node->parentNode())->copyInheritableProperties();
             RefPtr<CSSMutableStyleDeclaration> style = computedStyle(node)->copyInheritableProperties();
             parentStyle->diff(style.get());
-            
+
+            // Remove any inherited block properties that are now in the span's style. This cuts out meaningless properties
+            // and prevents properties from magically affecting blocks later if the style is cloned for a new block element
+            // during a future editing operation.
+            style->removeBlockProperties();
+
             styles.append(style.release());
         }
         if (node == m_lastLeafInserted)
@@ -386,10 +438,6 @@ void ReplaceSelectionCommand::removeRedundantStyles(Node* mailBlockquoteEnclosin
 
         // Remove empty style spans.
         if (isStyleSpan(element) && !element->hasChildNodes()) {
-            if (m_firstNodeInserted == element)
-                m_firstNodeInserted = element->traverseNextSibling();
-            if (m_lastLeafInserted == element)
-                m_lastLeafInserted = element->traverseNextSibling();
             removeNodeAndPruneAncestors(element);
             continue;
         }
@@ -413,6 +461,36 @@ void ReplaceSelectionCommand::removeRedundantStyles(Node* mailBlockquoteEnclosin
             inlineStyleDecl->merge(style, true);
             setNodeAttribute(element, styleAttr, inlineStyleDecl->cssText());
         }
+    }
+}
+
+// Removes unrendered nodes after insertion but before paragraph merging.  Fixed <rdar://problem/5483567>,
+// where unrendered whitespace before and after the incoming fragment would prevent paragraph merging.
+void ReplaceSelectionCommand::removeUnrenderedNodes()
+{
+    RefPtr<Node> next;
+    for (RefPtr<Node> node = m_firstNodeInserted; node; node = next) {
+        
+        next = node->traverseNextNode();
+        
+        if (node == m_lastLeafInserted)
+            next = 0;
+        
+        if (node->hasTagName(selectTag))
+            next = node->traverseNextSibling();
+        
+        if (node->renderer())
+            continue;
+            
+        RefPtr<Node> afterFirst = m_firstNodeInserted ? m_firstNodeInserted->traverseNextSibling() : 0;
+        RefPtr<Node> beforeLast = m_lastLeafInserted ? m_lastLeafInserted->traversePreviousNode() : 0;
+        
+        removeNode(node.get());
+        
+        if (m_lastLeafInserted && !m_lastLeafInserted->inDocument())
+            m_lastLeafInserted = beforeLast;
+        if (m_firstNodeInserted && !m_firstNodeInserted->inDocument())
+            m_firstNodeInserted = m_lastLeafInserted && m_lastLeafInserted->inDocument() ? afterFirst : 0;
     }
 }
 
@@ -518,6 +596,9 @@ void ReplaceSelectionCommand::doApply()
     // p that maps to the same visible position as p (since in the case where a br is at the end of a block and collapsed 
     // away, there are positions after the br which map to the same visible position as [br, 0]).  
     Node* endBR = insertionPos.downstream().node()->hasTagName(brTag) ? insertionPos.downstream().node() : 0;
+    VisiblePosition originalVisPosBeforeEndBR;
+    if (endBR)
+        originalVisPosBeforeEndBR = VisiblePosition(endBR, 0, DOWNSTREAM).previous();
     
     startBlock = enclosingBlock(insertionPos.node());
     
@@ -583,7 +664,14 @@ void ReplaceSelectionCommand::doApply()
         node = next;
     }
     
+    negateStyleRulesThatAffectAppearance();
+    
     removeRedundantStyles(mailBlockquoteEnclosingSelectionStart);
+    
+    removeUnrenderedNodes();
+    
+    if (!m_firstNodeInserted)
+        return;
     
     endOfInsertedContent = positionAtEndOfInsertedContent();
     startOfInsertedContent = positionAtStartOfInsertedContent();
@@ -597,16 +685,16 @@ void ReplaceSelectionCommand::doApply()
     
     bool interchangeNewlineAtEnd = fragment.hasInterchangeNewlineAtEnd();
 
-    if (shouldRemoveEndBR(endBR)) {
-        if (interchangeNewlineAtEnd) {
-            interchangeNewlineAtEnd = false;
-            m_lastLeafInserted = endBR;
-            lastPositionToSelect = VisiblePosition(Position(m_lastLeafInserted.get(), 0)).deepEquivalent();
-        } else
-            removeNodeAndPruneAncestors(endBR);
-    }
-        
+    if (shouldRemoveEndBR(endBR, originalVisPosBeforeEndBR))
+        removeNodeAndPruneAncestors(endBR);
+    
     if (shouldMergeStart(selectionStartWasStartOfParagraph, fragment.hasInterchangeNewlineAtStart())) {
+        // Bail to avoid infinite recursion.
+        if (m_movingParagraph) {
+            // setting display:inline does not work for td elements in quirks mode
+            ASSERT(m_firstNodeInserted->hasTagName(tdTag));
+            return;
+        }
         VisiblePosition destination = startOfInsertedContent.previous();
         VisiblePosition startOfParagraphToMove = startOfInsertedContent;
         
@@ -627,7 +715,9 @@ void ReplaceSelectionCommand::doApply()
         if (selectionEndWasEndOfParagraph || !isEndOfParagraph(endOfInsertedContent) || next.isNull()) {
             if (!isStartOfParagraph(endOfInsertedContent)) {
                 setEndingSelection(endOfInsertedContent);
-                insertParagraphSeparator();
+                // Use a default paragraph element (a plain div) for the empty paragraph, using the last paragraph
+                // block's style seems to annoy users.
+                insertParagraphSeparator(true);
 
                 // Select up to the paragraph separator that was added.
                 lastPositionToSelect = endingSelection().visibleStart().deepEquivalent();
@@ -637,17 +727,13 @@ void ReplaceSelectionCommand::doApply()
             // Select up to the beginning of the next paragraph.
             lastPositionToSelect = next.deepEquivalent().downstream();
         }
-
-    } else if (m_lastLeafInserted->hasTagName(brTag)) {
-        // We want to honor the last incoming line break, so, if it will collapse away because of quirks mode, 
-        // add an extra one.
-        // FIXME: This will expand a br inside a block: <div><br></div>
-        // FIXME: Should we expand all incoming brs that collapse because of quirks mode?
-        if (!document()->inStrictMode() && isEndOfBlock(endOfInsertedContent) && !isStartOfParagraph(endOfInsertedContent))
-            insertNodeBeforeAndUpdateNodesInserted(createBreakElement(document()).get(), m_lastLeafInserted.get());
             
     } else if (shouldMergeEnd(selectionEndWasEndOfParagraph)) {
-    
+        // Bail to avoid infinite recursion.
+        if (m_movingParagraph) {
+            ASSERT_NOT_REACHED();
+            return;
+        }
         // Merging two paragraphs will destroy the moved one's block styles.  Always move forward to preserve
         // the block style of the paragraph already in the document, unless the paragraph to move would include the
         // what was the start of the selection that was pasted into.
@@ -681,7 +767,7 @@ void ReplaceSelectionCommand::doApply()
     }
     if (m_smartReplace) {
         bool needsTrailingSpace = !isEndOfParagraph(endOfInsertedContent) &&
-                                  !frame->isCharacterSmartReplaceExempt(endOfInsertedContent.characterAfter(), false);
+                                  !isCharacterSmartReplaceExempt(endOfInsertedContent.characterAfter(), false);
         if (needsTrailingSpace) {
             RenderObject* renderer = m_lastLeafInserted->renderer();
             bool collapseWhiteSpace = !renderer || renderer->style()->collapseWhiteSpace();
@@ -696,7 +782,7 @@ void ReplaceSelectionCommand::doApply()
         }
     
         bool needsLeadingSpace = !isStartOfParagraph(startOfInsertedContent) &&
-                                 !frame->isCharacterSmartReplaceExempt(startOfInsertedContent.previous().characterAfter(), true);
+                                 !isCharacterSmartReplaceExempt(startOfInsertedContent.previous().characterAfter(), true);
         if (needsLeadingSpace) {
             RenderObject* renderer = m_lastLeafInserted->renderer();
             bool collapseWhiteSpace = !renderer || renderer->style()->collapseWhiteSpace();
@@ -718,19 +804,24 @@ void ReplaceSelectionCommand::doApply()
     completeHTMLReplacement(lastPositionToSelect);
 }
 
-bool ReplaceSelectionCommand::shouldRemoveEndBR(Node* endBR)
+bool ReplaceSelectionCommand::shouldRemoveEndBR(Node* endBR, const VisiblePosition& originalVisPosBeforeEndBR)
 {
     if (!endBR || !endBR->inDocument())
         return false;
         
     VisiblePosition visiblePos(Position(endBR, 0));
     
-    return
-        // The br is collapsed away and so is unnecessary.
-        !document()->inStrictMode() && isEndOfBlock(visiblePos) && !isStartOfParagraph(visiblePos) ||
-        // A br that was originally holding a line open should be displaced by inserted content or turned into a line break.
-        // A br that was originally acting as a line break should still be acting as a line break, not as a placeholder.
-        isStartOfParagraph(visiblePos) && isEndOfParagraph(visiblePos) && !m_lastLeafInserted->hasTagName(brTag);
+    // Don't remove the br if nothing was inserted.
+    if (visiblePos.previous() == originalVisPosBeforeEndBR)
+        return false;
+    
+    // Remove the br if it is collapsed away and so is unnecessary.
+    if (!document()->inStrictMode() && isEndOfBlock(visiblePos) && !isStartOfParagraph(visiblePos))
+        return true;
+        
+    // A br that was originally holding a line open should be displaced by inserted content or turned into a line break.
+    // A br that was originally acting as a line break should still be acting as a line break, not as a placeholder.
+    return isStartOfParagraph(visiblePos) && isEndOfParagraph(visiblePos);
 }
 
 void ReplaceSelectionCommand::completeHTMLReplacement(const Position &lastPositionToSelect)

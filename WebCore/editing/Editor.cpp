@@ -47,7 +47,7 @@
 #include "EventHandler.h"
 #include "EventNames.h"
 #include "FocusController.h"
-#include "FontData.h"
+#include "FrameView.h"
 #include "HTMLElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
@@ -64,6 +64,7 @@
 #include "ReplaceSelectionCommand.h"
 #include "SelectionController.h"
 #include "Sound.h"
+#include "Text.h"
 #include "TextIterator.h"
 #include "TypingCommand.h"
 #include "htmlediting.h"
@@ -72,6 +73,9 @@
 
 namespace WebCore {
 
+class FontData;
+
+using namespace std;
 using namespace EventNames;
 using namespace HTMLNames;
 
@@ -250,7 +254,7 @@ void Editor::deleteRange(Range* range, bool killRing, bool prepend, bool smartDe
                 return;
             if (m_frame->document()) {
                 TypingCommand::deleteKeyPressed(m_frame->document(), smartDelete, granularity);
-                m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+                revealSelectionAfterEditingOperation();
             }
             break;
         case forwardDeleteKeyAction:
@@ -259,7 +263,7 @@ void Editor::deleteRange(Range* range, bool killRing, bool prepend, bool smartDe
                 return;
             if (m_frame->document()) {
                 TypingCommand::forwardDeleteKeyPressed(m_frame->document(), smartDelete, granularity);
-                m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+                revealSelectionAfterEditingOperation();
             }
             break;
     }
@@ -366,7 +370,7 @@ void Editor::replaceSelectionWithFragment(PassRefPtr<DocumentFragment> fragment,
         return;
     
     applyCommand(new ReplaceSelectionCommand(m_frame->document(), fragment, selectReplacement, smartReplace, matchStyle));
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
 }
 
 void Editor::replaceSelectionWithText(const String& text, bool selectReplacement, bool smartReplace)
@@ -454,11 +458,11 @@ void Editor::respondToChangedContents(const Selection& endingSelection)
     
     if (client())
         client()->respondToChangedContents();  
-    m_deleteButtonController->respondToChangedContents();
 }
 
 const FontData* Editor::fontForSelection(bool& hasMultipleFonts) const
 {
+#if !PLATFORM(QT)
     hasMultipleFonts = false;
 
     if (!m_frame->selectionController()->isRange()) {
@@ -502,6 +506,9 @@ const FontData* Editor::fontForSelection(bool& hasMultipleFonts) const
     }
 
     return font;
+#else
+    return 0;
+#endif
 }
 
 Frame::TriState Editor::selectionUnorderedListState() const
@@ -542,7 +549,7 @@ PassRefPtr<Node> Editor::insertOrderedList()
         return 0;
         
     RefPtr<Node> newList = InsertListCommand::insertList(m_frame->document(), InsertListCommand::OrderedList);
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return newList;
 }
 
@@ -552,7 +559,7 @@ PassRefPtr<Node> Editor::insertUnorderedList()
         return 0;
         
     RefPtr<Node> newList = InsertListCommand::insertList(m_frame->document(), InsertListCommand::UnorderedList);
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return newList;
 }
 
@@ -572,7 +579,7 @@ PassRefPtr<Node> Editor::increaseSelectionListLevel()
         return 0;
     
     RefPtr<Node> newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevel(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return newList;
 }
 
@@ -582,7 +589,7 @@ PassRefPtr<Node> Editor::increaseSelectionListLevelOrdered()
         return 0;
     
     PassRefPtr<Node> newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevelOrdered(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return newList;
 }
 
@@ -592,7 +599,7 @@ PassRefPtr<Node> Editor::increaseSelectionListLevelUnordered()
         return 0;
     
     PassRefPtr<Node> newList = IncreaseSelectionListLevelCommand::increaseSelectionListLevelUnordered(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return newList;
 }
 
@@ -602,7 +609,7 @@ void Editor::decreaseSelectionListLevel()
         return;
     
     DecreaseSelectionListLevelCommand::decreaseSelectionListLevel(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
 }
 
 void Editor::removeFormattingAndStyle()
@@ -711,11 +718,6 @@ void Editor::applyParagraphStyleToSelection(CSSStyleDeclaration* style, EditActi
     
     if (client() && client()->shouldApplyStyle(style, m_frame->selectionController()->toRange().get()))
         applyParagraphStyle(style, editingAction);
-}
-
-bool Editor::selectWordBeforeMenuEvent() const
-{
-    return client() && client()->selectWordBeforeMenuEvent();
 }
 
 bool Editor::clientIsEditable() const
@@ -1355,12 +1357,18 @@ static CommandMap* createCommandMap()
 Editor::Editor(Frame* frame)
     : m_frame(frame)
     , m_deleteButtonController(new DeleteButtonController(frame))
-    , m_ignoreMarkedTextSelectionChange(false)
+    , m_ignoreCompositionSelectionChange(false)
 { 
 }
 
 Editor::~Editor()
 {
+}
+
+void Editor::clear()
+{
+    m_compositionNode = 0;
+    m_customCompositionUnderlines.clear();
 }
 
 bool Editor::execCommand(const AtomicString& command, Event* triggeringEvent)
@@ -1396,28 +1404,18 @@ bool Editor::insertTextWithoutSendingTextEvent(const String& text, bool selectIn
     if (text.isEmpty())
         return false;
 
-    RefPtr<Range> range = m_frame->markedTextRange();
-    if (!range) {
-        Selection selection = selectionForEvent(m_frame, triggeringEvent);
-        if (!selection.isContentEditable())
-            return false;
-        range = selection.toRange();
-    }
+    Selection selection = selectionForEvent(m_frame, triggeringEvent);
+    if (!selection.isContentEditable())
+        return false;
+    RefPtr<Range> range = selection.toRange();
 
-    if (!shouldInsertText(text, range.get(), EditorInsertActionTyped)) {
-        discardMarkedText();
+    if (!shouldInsertText(text, range.get(), EditorInsertActionTyped))
         return true;
-    }
-
-    setIgnoreMarkedTextSelectionChange(true);
-
-    // If we had marked text, replace that instead of the selection/caret.
-    selectMarkedText();
 
     // Get the selection to use for the event that triggered this insertText.
     // If the event handler changed the selection, we may want to use a different selection
     // that is contained in the event target.
-    Selection selection = selectionForEvent(m_frame, triggeringEvent);
+    selection = selectionForEvent(m_frame, triggeringEvent);
     if (selection.isContentEditable()) {
         if (Node* selectionStart = selection.start().node()) {
             RefPtr<Document> document = selectionStart->document();
@@ -1432,11 +1430,6 @@ bool Editor::insertTextWithoutSendingTextEvent(const String& text, bool selectIn
         }
     }
 
-    setIgnoreMarkedTextSelectionChange(false);
-
-    // Inserting unmarks any marked text.
-    unmarkText();
-
     return true;
 }
 
@@ -1449,7 +1442,7 @@ bool Editor::insertLineBreak()
         return true;
 
     TypingCommand::insertLineBreak(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return true;
 }
 
@@ -1465,7 +1458,7 @@ bool Editor::insertParagraphSeparator()
         return true;
 
     TypingCommand::insertParagraphSeparator(m_frame->document());
-    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+    revealSelectionAfterEditingOperation();
     return true;
 }
 
@@ -1665,38 +1658,107 @@ void Editor::setBaseWritingDirection(String direction)
     applyParagraphStyleToSelection(style.get(), EditActionSetWritingDirection);
 }
 
-void Editor::selectMarkedText()
+void Editor::selectComposition()
 {
-    Range* range = m_frame->markedTextRange();
+    RefPtr<Range> range = compositionRange();
     if (!range)
         return;
     ExceptionCode ec = 0;
-    m_frame->selectionController()->setSelectedRange(m_frame->markedTextRange(), DOWNSTREAM, false, ec);
+    m_frame->selectionController()->setSelectedRange(range.get(), DOWNSTREAM, false, ec);
 }
 
-void Editor::discardMarkedText()
+void Editor::confirmComposition()
 {
-    if (!m_frame->markedTextRange())
+    if (!m_compositionNode)
         return;
+    confirmComposition(m_compositionNode->data().substring(m_compositionStart, m_compositionEnd - m_compositionStart), false);
+}
 
-    setIgnoreMarkedTextSelectionChange(true);
+void Editor::confirmCompositionWithoutDisturbingSelection()
+{
+    if (!m_compositionNode)
+        return;
+    confirmComposition(m_compositionNode->data().substring(m_compositionStart, m_compositionEnd - m_compositionStart), true);
+}
 
-    selectMarkedText();
-    unmarkText();
-#if PLATFORM(MAC)
-    if (EditorClient* c = client())
-        c->markedTextAbandoned(m_frame);
-#endif
+void Editor::confirmComposition(const String& text)
+{
+    confirmComposition(text, false);
+}
+
+void Editor::confirmComposition(const String& text, bool preserveSelection)
+{
+    setIgnoreCompositionSelectionChange(true);
+
+    Selection oldSelection = m_frame->selectionController()->selection();
+
+    selectComposition();
+
+    if (m_frame->selectionController()->isNone()) {
+        setIgnoreCompositionSelectionChange(false);
+        return;
+    }
+
     deleteSelectionWithSmartDelete(false);
 
-    setIgnoreMarkedTextSelectionChange(false);
+    m_compositionNode = 0;
+    m_customCompositionUnderlines.clear();
+
+    insertText(text, 0);
+
+    if (preserveSelection)
+        m_frame->selectionController()->setSelection(oldSelection, false, false);
+
+    setIgnoreCompositionSelectionChange(false);
 }
 
-#if !PLATFORM(MAC)
-void Editor::unmarkText()
+void Editor::setComposition(const String& text, const Vector<CompositionUnderline>& underlines, unsigned selectionStart, unsigned selectionEnd)
 {
+    setIgnoreCompositionSelectionChange(true);
+
+    selectComposition();
+
+    if (m_frame->selectionController()->isNone()) {
+        setIgnoreCompositionSelectionChange(false);
+        return;
+    }
+
+    deleteSelectionWithSmartDelete(false);
+
+    m_compositionNode = 0;
+    m_customCompositionUnderlines.clear();
+
+    if (!text.isEmpty()) {
+        TypingCommand::insertText(m_frame->document(), text, true, true);
+
+        Node* baseNode = m_frame->selectionController()->baseNode();
+        unsigned baseOffset = m_frame->selectionController()->base().offset();
+        Node* extentNode = m_frame->selectionController()->extentNode();
+        unsigned extentOffset = m_frame->selectionController()->extent().offset();
+
+        if (baseNode && baseNode == extentNode && baseNode->isTextNode() && baseOffset + text.length() == extentOffset) {
+            m_compositionNode = static_cast<Text*>(baseNode);
+            m_compositionStart = baseOffset;
+            m_compositionEnd = extentOffset;
+            m_customCompositionUnderlines = underlines;
+            size_t numUnderlines = m_customCompositionUnderlines.size();
+            for (size_t i = 0; i < numUnderlines; ++i) {
+                m_customCompositionUnderlines[i].startOffset += baseOffset;
+                m_customCompositionUnderlines[i].endOffset += baseOffset;
+            }
+            if (baseNode->renderer())
+                baseNode->renderer()->repaint();
+
+            unsigned start = min(baseOffset + selectionStart, extentOffset);
+            unsigned end = min(max(start, baseOffset + selectionEnd), extentOffset);
+            RefPtr<Range> selectedRange = new Range(baseNode->document(), baseNode, start, baseNode, end);                
+            ExceptionCode ec = 0;
+            m_frame->selectionController()->setSelectedRange(selectedRange.get(), DOWNSTREAM, false, ec);
+        }
+    }
+
+    setIgnoreCompositionSelectionChange(false);
 }
-#endif
 
 void Editor::ignoreSpelling()
 {
@@ -1736,17 +1798,26 @@ static String findFirstMisspellingInRange(EditorClient* client, Range* searchRan
         // Skip some work for one-space-char hunks
         if (!(len == 1 && chars[0] == ' ')) {
             
-            int misspellingLocation;
-            int misspellingLength;
+            int misspellingLocation = -1;
+            int misspellingLength = 0;
             client->checkSpellingOfString(chars, len, &misspellingLocation, &misspellingLength);
-            String misspelledWord = String(chars + misspellingLocation, misspellingLength);
+
+            // 5490627 shows that there was some code path here where the String constructor below crashes.
+            // We don't know exactly what combination of bad input caused this, so we're making this much
+            // more robust against bad input on release builds.
+            ASSERT(misspellingLength >= 0);
+            ASSERT(misspellingLocation >= -1);
+            ASSERT(misspellingLength == 0 || misspellingLocation >= 0);
+            ASSERT(misspellingLocation < len);
+            ASSERT(misspellingLength <= len);
+            ASSERT(misspellingLocation + misspellingLength <= len);
             
-            if (!misspelledWord.isEmpty()) {
+            if (misspellingLocation >= 0 && misspellingLength > 0 && misspellingLocation < len && misspellingLength <= len && misspellingLocation + misspellingLength <= len) {
                 
                 // Remember first-encountered misspelling and its offset
                 if (!firstMisspelling) {
                     firstMisspellingOffset = currentChunkOffset + misspellingLocation;
-                    firstMisspelling = misspelledWord;
+                    firstMisspelling = String(chars + misspellingLocation, misspellingLength);
                 }
                 
                 // Mark this instance if we're marking all instances. Otherwise bail out because we found the first one.
@@ -1754,7 +1825,7 @@ static String findFirstMisspellingInRange(EditorClient* client, Range* searchRan
                     break;
                 
                 // Compute range of misspelled word
-                RefPtr<Range> misspellingRange = TextIterator::subrange(searchRange, currentChunkOffset + misspellingLocation, misspelledWord.length());
+                RefPtr<Range> misspellingRange = TextIterator::subrange(searchRange, currentChunkOffset + misspellingLocation, misspellingLength);
                 
                 // Store marker for misspelled word
                 ExceptionCode ec = 0;
@@ -1864,10 +1935,12 @@ static String findFirstBadGrammarInRange(EditorClient* client, Range* searchRang
         int badGrammarPhraseLength = 0;
         client->checkGrammarOfString(paragraphString.characters() + startOffset, paragraphString.length() - startOffset, grammarDetails, &badGrammarPhraseLocation, &badGrammarPhraseLength);
         
-        if (badGrammarPhraseLocation == -1) {
-            ASSERT(badGrammarPhraseLength == 0);
+        if (badGrammarPhraseLength == 0) {
+            ASSERT(badGrammarPhraseLocation == -1);
             return String();
         }
+
+        ASSERT(badGrammarPhraseLocation >= 0);
         badGrammarPhraseLocation += startOffset;
 
         
@@ -1924,8 +1997,12 @@ void Editor::advanceToNextMisspelling(bool startBeforeSelection)
 
     Position position = spellingSearchRange->startPosition();
     if (!isEditablePosition(position)) {
-        // This shouldn't happen in practice because the Spelling menu items aren't enabled unless the
+        // This shouldn't happen in very often because the Spelling menu items aren't enabled unless the
         // selection is editable.
+        // This can happen in Mail for a mix of non-editable and editable content (like Stationary), 
+        // when spell checking the whole document before sending the message.
+        // In that case the document might not be editable, but there are editable pockets that need to be spell checked.
+
         position = firstEditablePositionAfterPositionInRoot(position, frame()->document()->documentElement()).deepEquivalent();
         if (position.isNull())
             return;
@@ -1966,7 +2043,7 @@ void Editor::advanceToNextMisspelling(bool startBeforeSelection)
     String badGrammarPhrase;
 
 #ifndef BUILDING_ON_TIGER
-    int grammarPhraseOffset;
+    int grammarPhraseOffset = 0;
     GrammarDetail grammarDetail;
 
     // Search for bad grammar that occurs prior to the next misspelled word (if any)
@@ -2250,6 +2327,73 @@ void Editor::markBadGrammar(const Selection& selection)
 #ifndef BUILDING_ON_TIGER
     markMisspellingsOrBadGrammar(this, selection, false);
 #endif
+}
+
+PassRefPtr<Range> Editor::rangeForPoint(const IntPoint& windowPoint)
+{
+    Document* document = m_frame->documentAtPoint(windowPoint);
+    if (!document)
+        return 0;
+    
+    Frame* frame = document->frame();
+    ASSERT(frame);
+    FrameView* frameView = frame->view();
+    if (!frameView)
+        return 0;
+    IntPoint framePoint = frameView->windowToContents(windowPoint);
+    Selection selection(frame->visiblePositionForPoint(framePoint));
+    return avoidIntersectionWithNode(selection.toRange().get(), deleteButtonController() ? deleteButtonController()->containerElement() : 0);
+}
+
+void Editor::revealSelectionAfterEditingOperation()
+{
+    if (m_ignoreCompositionSelectionChange)
+        return;
+
+    m_frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
+}
+
+void Editor::setIgnoreCompositionSelectionChange(bool ignore)
+{
+    if (m_ignoreCompositionSelectionChange == ignore)
+        return;
+
+    m_ignoreCompositionSelectionChange = ignore;
+    if (!ignore)
+        revealSelectionAfterEditingOperation();
+}
+
+PassRefPtr<Range> Editor::compositionRange() const
+{
+    if (!m_compositionNode)
+        return 0;
+    unsigned length = m_compositionNode->length();
+    unsigned start = min(m_compositionStart, length);
+    unsigned end = min(max(start, m_compositionEnd), length);
+    if (start >= end)
+        return 0;
+    return new Range(m_compositionNode->document(), m_compositionNode.get(), start, m_compositionNode.get(), end);
+}
+
+bool Editor::getCompositionSelection(unsigned& selectionStart, unsigned& selectionEnd) const
+{
+    if (!m_compositionNode)
+        return false;
+    Position start = m_frame->selectionController()->start();
+    if (start.node() != m_compositionNode)
+        return false;
+    Position end = m_frame->selectionController()->end();
+    if (end.node() != m_compositionNode)
+        return false;
+
+    if (static_cast<unsigned>(start.offset()) < m_compositionStart)
+        return false;
+    if (static_cast<unsigned>(end.offset()) > m_compositionEnd)
+        return false;
+
+    selectionStart = start.offset() - m_compositionStart;
+    selectionEnd = start.offset() - m_compositionEnd;
+    return true;
 }
 
 } // namespace WebCore

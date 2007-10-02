@@ -48,7 +48,6 @@ public:
     virtual int spellCheckerDocumentTag();
 
     virtual bool smartInsertDeleteEnabled();
-    virtual bool selectWordBeforeMenuEvent();
     virtual bool isEditable();
 
     virtual bool shouldDeleteRange(WebCore::Range*);    
@@ -61,6 +60,8 @@ public:
     virtual bool shouldChangeSelectedRange(WebCore::Range* fromRange, WebCore::Range* toRange, WebCore::EAffinity, bool stillSelecting);
 
     virtual bool shouldApplyStyle(WebCore::CSSStyleDeclaration*, WebCore::Range*);
+    
+    virtual bool shouldMoveRangeAfterDelete(WebCore::Range* range, WebCore::Range* rangeToBeReplaced); 
 
     virtual void didBeginEditing();
     virtual void didEndEditing();
@@ -89,8 +90,6 @@ public:
     virtual void handleKeypress(WebCore::KeyboardEvent*);
     virtual void handleInputMethodKeypress(WebCore::KeyboardEvent*);
 
-    virtual void markedTextAbandoned(WebCore::Frame*);
-
     virtual void textFieldDidBeginEditing(WebCore::Element*);
     virtual void textFieldDidEndEditing(WebCore::Element*);
     virtual void textDidChangeInTextField(WebCore::Element*);
@@ -107,7 +106,7 @@ public:
     virtual void showSpellingUI(bool show);
     virtual bool spellingUIIsShowing();
     virtual void getGuessesForWord(const WebCore::String&, WTF::Vector<WebCore::String>& guesses);
-
+    virtual void setInputMethodState(bool enabled);
 private:
     void registerCommandForUndoOrRedo(PassRefPtr<WebCore::EditCommand>, bool isRedo);
     WebEditorClient();

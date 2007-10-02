@@ -26,6 +26,8 @@
 
 #if ENABLE(SVG)
 
+#include "SVGRenderSupport.h"
+
 #include "AffineTransform.h"
 #include "RenderObject.h"
 #include "SVGResourceClipper.h"

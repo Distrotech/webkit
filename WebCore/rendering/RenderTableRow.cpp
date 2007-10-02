@@ -20,8 +20,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -46,10 +46,12 @@ RenderTableRow::RenderTableRow(Node* node)
 
 void RenderTableRow::destroy()
 {
-    if (RenderTableSection* s = section())
-        s->setNeedsCellRecalc();
+    RenderTableSection* recalcSection = section();
     
     RenderContainer::destroy();
+    
+    if (recalcSection)
+        recalcSection->setNeedsCellRecalc();
 }
 
 void RenderTableRow::setStyle(RenderStyle* newStyle)
@@ -130,6 +132,18 @@ void RenderTableRow::layout()
                 cell->calcVerticalMargins();
                 cell->layout();
             }
+        }
+    }
+
+    // We only ever need to repaint if our cells didn't, which menas that they didn't need
+    // layout, so we know that our bounds didn't change. This code is just making up for
+    // the fact that we did not repaint in setStyle() because we had a layout hint.
+    // We cannot call repaint() because our absoluteClippedOverflowRect() is taken from the
+    // parent table, and being mid-layout, that is invalid. Instead, we repaint our cells.
+    if (selfNeedsLayout() && checkForRepaintDuringLayout()) {
+        for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
+            if (child->isTableCell())
+                child->repaint();
         }
     }
 

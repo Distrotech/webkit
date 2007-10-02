@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 #include "config.h"
 #include "HTMLPlugInElement.h"
@@ -27,8 +27,10 @@
 #include "CSSPropertyNames.h"
 #include "Document.h"
 #include "Frame.h"
+#include "FrameLoader.h"
 #include "FrameTree.h"
 #include "HTMLNames.h"
+#include "Page.h"
 #include "RenderWidget.h"
 #include "Settings.h"
 #include "Widget.h"
@@ -36,9 +38,9 @@
 #include "kjs_proxy.h"
 
 #if USE(NPOBJECT)
-#include <JavaScriptCore/NP_jsobject.h>
-#include <JavaScriptCore/npruntime_impl.h>
-#include <JavaScriptCore/runtime_root.h>
+#include <bindings/NP_jsobject.h>
+#include <bindings/npruntime_impl.h>
+#include <bindings/runtime_root.h>
 #endif
 
 using KJS::ExecState;
@@ -123,7 +125,7 @@ bool HTMLPlugInElement::mapToEntry(const QualifiedName& attrName, MappedAttribut
         return false;
     }
     
-    return HTMLElement::mapToEntry(attrName, result);
+    return HTMLFrameOwnerElement::mapToEntry(attrName, result);
 }
 
 void HTMLPlugInElement::parseMappedAttribute(MappedAttribute* attr)
@@ -141,23 +143,24 @@ void HTMLPlugInElement::parseMappedAttribute(MappedAttribute* attr)
     } else if (attr->name() == alignAttr)
         addHTMLAlignment(attr);
     else
-        HTMLElement::parseMappedAttribute(attr);
+        HTMLFrameOwnerElement::parseMappedAttribute(attr);
 }    
 
 bool HTMLPlugInElement::checkDTD(const Node* newChild)
 {
-    return newChild->hasTagName(paramTag) || HTMLElement::checkDTD(newChild);
+    return newChild->hasTagName(paramTag) || HTMLFrameOwnerElement::checkDTD(newChild);
 }
 
-void HTMLPlugInElement::detach()
+void HTMLPlugInElement::willRemove()
 {
     if (Frame* parentFrame = document()->frame()) {
-        Frame* contentFrame = parentFrame->tree()->child(m_frameName);
-        if (contentFrame)
+        if (Frame* contentFrame = parentFrame->tree()->child(m_frameName)) {
             contentFrame->disconnectOwnerElement();
+            contentFrame->loader()->frameDetached();
+        }
     }
-    
-    HTMLElement::detach();
+
+    HTMLFrameOwnerElement::willRemove();
 }
 
 void HTMLPlugInElement::defaultEventHandler(Event* event)
@@ -174,13 +177,22 @@ void HTMLPlugInElement::defaultEventHandler(Event* event)
 
 NPObject* HTMLPlugInElement::createNPObject()
 {
-    // This shouldn't ever happen, but might as well check anyway
-    if (!document()->frame())
+    Frame* frame = document()->frame();
+    if (!frame) {
+        // This shouldn't ever happen, but might as well check anyway.
+        ASSERT_NOT_REACHED();
         return _NPN_CreateNoScriptObject();
+    }
+
+    Settings* settings = frame->settings();
+    if (!settings) {
+        // This shouldn't ever happen, but might as well check anyway.
+        ASSERT_NOT_REACHED();
+        return _NPN_CreateNoScriptObject();
+    }
 
     // Can't create NPObjects when JavaScript is disabled
-    Frame* frame = document()->frame();
-    if (!frame->settings()->isJavaScriptEnabled())
+    if (!settings->isJavaScriptEnabled())
         return _NPN_CreateNoScriptObject();
     
     // Create a JSObject bound to this element

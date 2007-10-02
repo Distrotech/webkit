@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2007 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,6 @@
  */
 
 #import <WebKit/WebPreferences.h>
-
 #import <Quartz/Quartz.h>
 
 // WebKitEditableLinkBehavior needs to match the EditableLinkBehavior enum in WebCore
@@ -38,6 +37,9 @@ typedef enum {
     WebKitEditableLinkLiveWhenNotFocused,
     WebKitEditableLinkNeverLive
 } WebKitEditableLinkBehavior;
+
+extern NSString *WebPreferencesChangedNotification;
+extern NSString *WebPreferencesRemovedNotification;
 
 @interface WebPreferences (WebPrivate)
 
@@ -53,6 +55,12 @@ typedef enum {
 
 - (PDFDisplayMode)PDFDisplayMode;
 - (void)setPDFDisplayMode:(PDFDisplayMode)mode;
+
+- (BOOL)shrinksStandaloneImagesToFit;
+- (void)setShrinksStandaloneImagesToFit:(BOOL)flag;
+
+- (BOOL)automaticallyDetectsCacheModel;
+- (void)setAutomaticallyDetectsCacheModel:(BOOL)automaticallyDetectsCacheModel;
 
 // zero means do AutoScale
 - (float)PDFScaleFactor;
@@ -75,9 +83,12 @@ typedef enum {
 - (BOOL)isDOMPasteAllowed;
 - (void)setDOMPasteAllowed:(BOOL)DOMPasteAllowed;
 
+- (NSString *)_ftpDirectoryTemplatePath;
+- (void)_setFTPDirectoryTemplatePath:(NSString *)path;
+- (void)_setForceFTPDirectoryListings:(BOOL)force;
+- (BOOL)_forceFTPDirectoryListings;
+
 // Other private methods
-- (size_t)_pageCacheSize;
-- (size_t)_objectCacheSize;
 - (void)_postPreferencesChangesNotification;
 + (WebPreferences *)_getInstanceForIdentifier:(NSString *)identifier;
 + (void)_setInstance:(WebPreferences *)instance forIdentifier:(NSString *)identifier;
@@ -86,5 +97,9 @@ typedef enum {
 + (CFStringEncoding)_systemCFStringEncoding;
 + (void)_setInitialDefaultTextEncodingToSystemEncoding;
 + (void)_setIBCreatorID:(NSString *)string;
+
+// For WebView's use only.
+- (void)willAddToWebView;
+- (void)didRemoveFromWebView;
 
 @end

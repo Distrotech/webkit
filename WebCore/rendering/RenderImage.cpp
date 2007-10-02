@@ -20,8 +20,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -36,6 +36,7 @@
 #include "HTMLMapElement.h"
 #include "HTMLNames.h"
 #include "HitTestResult.h"
+#include "Page.h"
 #include "RenderView.h"
 #include "TextStyle.h"
 
@@ -217,7 +218,7 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
     if (isPrinting && !view()->printImages())
         return;
 
-    if (!m_cachedImage || image()->isNull() || errorOccurred()) {
+    if (!m_cachedImage || errorOccurred()) {
         if (paintInfo.phase == PaintPhaseSelection)
             return;
 
@@ -270,7 +271,7 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
                     context->drawText(textRun, IntPoint(ax, ay + ascent));
             }
         }
-    } else if (m_cachedImage) {
+    } else if (m_cachedImage && !image()->isNull()) {
 #if PLATFORM(MAC)
         if (style()->highlight() != nullAtom && !paintInfo.context->paintingDisabled())
             paintCustomHighlight(tx - m_x, ty - m_y, style()->highlight(), true);
@@ -280,9 +281,7 @@ void RenderImage::paint(PaintInfo& paintInfo, int tx, int ty)
 
         HTMLImageElement* imageElt = (element() && element()->hasTagName(imgTag)) ? static_cast<HTMLImageElement*>(element()) : 0;
         CompositeOperator compositeOperator = imageElt ? imageElt->compositeOperator() : CompositeSourceOver;
-        context->drawImage(image(), rect, compositeOperator);
-        if (!context->paintingDisabled())
-            m_cachedImage->liveResourceAccessed();
+        context->drawImage(image(), rect, compositeOperator, document()->page()->inLowQualityImageInterpolationMode());
     }
 
     // draw the selection tint even if the image itself is not available
@@ -307,6 +306,7 @@ void RenderImage::layout()
 
     calcWidth();
     calcHeight();
+    adjustOverflowForBoxShadow();
 
     if (checkForRepaint)
         repaintAfterLayoutIfNeeded(oldBounds, oldOutlineBox);
@@ -359,8 +359,6 @@ bool RenderImage::isWidthSpecified() const
         default:
             return false;
     }
-    ASSERT(false);
-    return false;
 }
 
 bool RenderImage::isHeightSpecified() const
@@ -372,8 +370,6 @@ bool RenderImage::isHeightSpecified() const
         default:
             return false;
     }
-    ASSERT(false);
-    return false;
 }
 
 int RenderImage::calcReplacedWidth() const

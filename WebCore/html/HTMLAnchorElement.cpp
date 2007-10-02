@@ -1,10 +1,8 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2000 Simon Hausmann <hausmann@kde.org>
- * Copyright (C) 2003, 2006 Apple Computer, Inc.
+ * Copyright (C) 2003, 2006, 2007 Apple Inc. All rights reserved.
  *           (C) 2006 Graham Dennis (graham.dennis@gmail.com)
  *
  * This library is free software; you can redistribute it and/or
@@ -19,13 +17,14 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
 #include "HTMLAnchorElement.h"
 
+#include "CSSHelper.h"
 #include "Document.h"
 #include "Event.h"
 #include "EventHandler.h"
@@ -43,7 +42,6 @@
 #include "SelectionController.h"
 #include "Settings.h"
 #include "UIEvent.h"
-#include "csshelper.h"
 
 namespace WebCore {
 
@@ -142,8 +140,8 @@ void HTMLAnchorElement::defaultEventHandler(Event* evt)
         // If the link is editable, then we need to check the settings to see whether or not to follow the link
         if (isContentEditable()) {
             EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-            if (document()->frame() && document()->frame()->settings())
-                editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+            if (Settings* settings = document()->settings())
+                editableLinkBehavior = settings->editableLinkBehavior();
                 
             switch (editableLinkBehavior) {
                 // Always follow the link (Safari 2.0 behavior)
@@ -187,10 +185,6 @@ void HTMLAnchorElement::defaultEventHandler(Event* evt)
 
         String url = parseURL(getAttribute(hrefAttr));
 
-        String target = getAttribute(targetAttr);
-        if (e && e->button() == MiddleButton)
-            target = "_blank";
-
         ASSERT(evt->target());
         ASSERT(evt->target()->toNode());
         if (evt->target()->toNode()->hasTagName(imgTag)) {
@@ -215,7 +209,7 @@ void HTMLAnchorElement::defaultEventHandler(Event* evt)
         }
 
         if (!evt->defaultPrevented() && document()->frame())
-            document()->frame()->loader()->urlSelected(document()->completeURL(url), target, evt, false, true);
+            document()->frame()->loader()->urlSelected(document()->completeURL(url), getAttribute(targetAttr), evt, false, true);
 
         evt->setDefaultHandled();
     } else if (m_isLink && isContentEditable()) {
@@ -241,8 +235,8 @@ void HTMLAnchorElement::setActive(bool down, bool pause)
 {
     if (isContentEditable()) {
         EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-        if (document()->frame() && document()->frame()->settings())
-            editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+        if (Settings* settings = document()->settings())
+            editableLinkBehavior = settings->editableLinkBehavior();
             
         switch(editableLinkBehavior) {
             default:
@@ -294,6 +288,14 @@ void HTMLAnchorElement::accessKeyAction(bool sendToAnyElement)
 bool HTMLAnchorElement::isURLAttribute(Attribute *attr) const
 {
     return attr->name() == hrefAttr;
+}
+
+bool HTMLAnchorElement::canStartSelection() const
+{
+    // FIXME: We probably want this same behavior in SVGAElement too
+    if (!isLink())
+        return HTMLElement::canStartSelection();
+    return isContentEditable();
 }
 
 String HTMLAnchorElement::accessKey() const
@@ -455,8 +457,12 @@ String HTMLAnchorElement::search() const
 
 String HTMLAnchorElement::text() const
 {
-    document()->updateLayoutIgnorePendingStylesheets();
     return innerText();
+}
+
+String HTMLAnchorElement::toString() const
+{
+    return href();
 }
 
 bool HTMLAnchorElement::isLiveLink() const
@@ -467,8 +473,8 @@ bool HTMLAnchorElement::isLiveLink() const
         return true;
     
     EditableLinkBehavior editableLinkBehavior = EditableLinkDefaultBehavior;
-    if (document() && document()->frame() && document()->frame()->settings())
-        editableLinkBehavior = document()->frame()->settings()->editableLinkBehavior();
+    if (Settings* settings = document()->settings())
+        editableLinkBehavior = settings->editableLinkBehavior();
         
     switch(editableLinkBehavior) {
         default:
@@ -487,9 +493,6 @@ bool HTMLAnchorElement::isLiveLink() const
         case EditableLinkOnlyLiveWithShiftKey:
             return m_wasShiftKeyDownOnMouseDown;
     }
-    // not reached
-    ASSERT(0);
-    return false;
 }
 
 }

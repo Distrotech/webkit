@@ -25,21 +25,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifndef __LP64__
 #import <WebKit/WebBaseNetscapePluginStream.h>
 #import <WebKit/npapi.h>
 
 namespace WebCore {
+    class FrameLoader;
     class NetscapePlugInStreamLoader;
 }
 @class NSURLRequest;
 
 @interface WebNetscapePluginStream : WebBaseNetscapePluginStream 
 {    
+    WebCore::FrameLoader* _frameLoader;
     WebCore::NetscapePlugInStreamLoader* _loader;
     NSURLRequest *request;
 }
 
+- (id)initWithFrameLoader:(WebCore::FrameLoader *)frameLoader;
 - (id)initWithRequest:(NSURLRequest *)theRequest
                plugin:(NPP)thePlugin
            notifyData:(void *)theNotifyData
@@ -48,3 +51,4 @@ namespace WebCore {
 - (void)stop;
 
 @end
+#endif

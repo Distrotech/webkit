@@ -23,26 +23,26 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
 #if ENABLE(SVG)
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 
+#include "CSSValueKeywords.h"
+#include "CSSValueList.h"
 #include "SVGColor.h"
 #include "SVGNames.h"
 #include "SVGPaint.h"
 #include "SVGRenderStyle.h"
 #include "SVGRenderStyleDefs.h"
 #include "SVGStyledElement.h"
-#include "CSSValueKeywords.h"
-#include "CSSValueList.h"
-#include "ksvgcssvalues.h"
 #include "ksvgcssproperties.h"
-#include <stdlib.h>
+#include "ksvgcssvalues.h"
 #include <math.h>
+#include <stdlib.h>
 #include <wtf/MathExtras.h>
 
 #define HANDLE_INHERIT(prop, Prop) \
@@ -459,10 +459,10 @@ void CSSStyleSelector::applySVGProperty(int id, CSSValue* value)
             if (!primitiveValue)
                 return;
         
-            float f = 0.0;    
+            float f = 0.0f;    
             int type = primitiveValue->primitiveType();
             if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
-                f = primitiveValue->getFloatValue() / 100.;
+                f = primitiveValue->getFloatValue() / 100.0f;
             else if (type == CSSPrimitiveValue::CSS_NUMBER)
                 f = primitiveValue->getFloatValue();
             else
@@ -477,10 +477,10 @@ void CSSStyleSelector::applySVGProperty(int id, CSSValue* value)
             if (!primitiveValue)
                 return;
         
-            float f = 0.0;    
+            float f = 0.0f;    
             int type = primitiveValue->primitiveType();
             if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
-                f = primitiveValue->getFloatValue() / 100.;
+                f = primitiveValue->getFloatValue() / 100.0f;
             else if (type == CSSPrimitiveValue::CSS_NUMBER)
                 f = primitiveValue->getFloatValue();
             else
@@ -495,10 +495,10 @@ void CSSStyleSelector::applySVGProperty(int id, CSSValue* value)
             if (!primitiveValue)
                 return;
         
-            float f = 0.0;    
+            float f = 0.0f;    
             int type = primitiveValue->primitiveType();
             if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
-                f = primitiveValue->getFloatValue() / 100.;
+                f = primitiveValue->getFloatValue() / 100.0f;
             else if (type == CSSPrimitiveValue::CSS_NUMBER)
                 f = primitiveValue->getFloatValue();
             else
@@ -583,7 +583,7 @@ void CSSStyleSelector::applySVGProperty(int id, CSSValue* value)
             if (!primitiveValue)
                 return;
 
-            float f = 0.0;
+            float f = 0.0f;
             int type = primitiveValue->primitiveType();
             if (type == CSSPrimitiveValue::CSS_NUMBER)
                 f = primitiveValue->getFloatValue();
@@ -730,10 +730,10 @@ void CSSStyleSelector::applySVGProperty(int id, CSSValue* value)
             if (!primitiveValue)
                 return;
 
-            float f = 0.0;    
+            float f = 0.0f;
             int type = primitiveValue->primitiveType();
             if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
-                f = primitiveValue->getFloatValue() / 100.;
+                f = primitiveValue->getFloatValue() / 100.0f;
             else if (type == CSSPrimitiveValue::CSS_NUMBER)
                 f = primitiveValue->getFloatValue();
             else

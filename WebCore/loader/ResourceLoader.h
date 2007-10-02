@@ -84,7 +84,7 @@ namespace WebCore {
 
         void didReceiveAuthenticationChallenge(const AuthenticationChallenge&);
         void didCancelAuthenticationChallenge(const AuthenticationChallenge&);
-        void receivedCancellation(const AuthenticationChallenge&);
+        virtual void receivedCancellation(const AuthenticationChallenge&);
 
         // ResourceHandleClient
         virtual void willSendRequest(ResourceHandle*, ResourceRequest&, const ResourceResponse& redirectResponse);        
@@ -103,9 +103,12 @@ namespace WebCore {
 #endif
 
         ResourceHandle* handle() const { return m_handle.get(); }
+        bool sendResourceLoadCallbacks() const { return m_sendResourceLoadCallbacks; }
+
+        void setShouldBufferData(bool shouldBufferData) { m_shouldBufferData = shouldBufferData; }
 
     protected:
-        ResourceLoader(Frame*);
+        ResourceLoader(Frame*, bool sendResourceLoadCallbacks, bool shouldContentSniff);
 
         virtual void didCancel(const ResourceError&);
         void didFinishLoadingOnePart();
@@ -125,6 +128,9 @@ namespace WebCore {
         bool m_cancelled;
         bool m_calledDidFinishLoad;
 
+        bool m_sendResourceLoadCallbacks;
+        bool m_shouldContentSniff;
+        bool m_shouldBufferData;
 protected:
         // FIXME: Once everything is made cross platform, these can be private instead of protected
         RefPtr<Frame> m_frame;

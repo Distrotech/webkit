@@ -1,9 +1,7 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2003 Apple Computer, Inc.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -57,6 +55,9 @@ public:
         , m_isContinuation(false)
     {
     }
+#ifndef NDEBUG
+    virtual ~RenderFlow();
+#endif
 
     virtual RenderFlow* continuation() const { return m_continuation; }
     void setContinuation(RenderFlow* c) { m_continuation = c; }
@@ -101,6 +102,10 @@ public:
 
     virtual bool hasColumns() const { return m_hasColumns; }
 
+    virtual bool isWordBreak() const { ASSERT(isInlineFlow()); return false; }
+
+    void checkConsistency() const;
+
 private:
     // An inline can be split with blocks occurring in between the inline content.
     // When this occurs we need a pointer to our next object.  We can basically be
@@ -131,6 +136,12 @@ protected:
     // from RenderInline
     bool m_isContinuation : 1; // Whether or not we're a continuation of an inline.
 };
+
+#ifdef NDEBUG
+inline void RenderFlow::checkConsistency() const
+{
+}
+#endif
 
 } // namespace WebCore
 

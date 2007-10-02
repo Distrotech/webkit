@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,8 +57,8 @@ unsigned SubresourceLoaderCounter::count = 0;
 static SubresourceLoaderCounter subresourceLoaderCounter;
 #endif
 
-SubresourceLoader::SubresourceLoader(Frame* frame, SubresourceLoaderClient* client)
-    : ResourceLoader(frame)
+SubresourceLoader::SubresourceLoader(Frame* frame, SubresourceLoaderClient* client, bool sendResourceLoadCallbacks, bool shouldContentSniff)
+    : ResourceLoader(frame, sendResourceLoadCallbacks, shouldContentSniff)
     , m_client(client)
     , m_loadingMultipartContent(false)
 {
@@ -82,20 +82,20 @@ bool SubresourceLoader::load(const ResourceRequest& r)
     return ResourceLoader::load(r);
 }
 
-PassRefPtr<SubresourceLoader> SubresourceLoader::create(Frame* frame, SubresourceLoaderClient* client, const ResourceRequest& request, bool skipCanLoadCheck)
+PassRefPtr<SubresourceLoader> SubresourceLoader::create(Frame* frame, SubresourceLoaderClient* client, const ResourceRequest& request, bool skipCanLoadCheck, bool sendResourceLoadCallbacks, bool shouldContentSniff)
 {
     if (!frame)
         return 0;
 
     FrameLoader* fl = frame->loader();
-    if (fl->state() == FrameStateProvisional)
+    if (!skipCanLoadCheck && fl->state() == FrameStateProvisional)
         return 0;
 
     ResourceRequest newRequest = request;
 
     if (!skipCanLoadCheck
-    && FrameLoader::restrictAccessToLocal()
-    && !FrameLoader::canLoad(request.url(), frame->document())) {
+            && FrameLoader::restrictAccessToLocal()
+            && !FrameLoader::canLoad(request.url(), frame->document())) {
         FrameLoader::reportLocalLoadFailed(frame->page(), request.url().url());
         return 0;
     }
@@ -118,7 +118,7 @@ PassRefPtr<SubresourceLoader> SubresourceLoader::create(Frame* frame, Subresourc
 
     fl->addExtraFieldsToRequest(newRequest, false, false);
 
-    RefPtr<SubresourceLoader> subloader(new SubresourceLoader(frame, client));
+    RefPtr<SubresourceLoader> subloader(new SubresourceLoader(frame, client, sendResourceLoadCallbacks, shouldContentSniff));
     if (!subloader->load(newRequest))
         return 0;
 
@@ -161,6 +161,7 @@ void SubresourceLoader::didReceiveResponse(const ResourceResponse& r)
         clearResourceData();
         
         // After the first multipart section is complete, signal to delegates that this load is "finished" 
+        m_documentLoader->subresourceLoaderFinishedLoadingOnePart(this);
         didFinishLoadingOnePart();
     }
 }
@@ -234,5 +235,18 @@ void SubresourceLoader::didCancel(const ResourceError& error)
     m_documentLoader->removeSubresourceLoader(this);
     ResourceLoader::didCancel(error);
 }
+
+void SubresourceLoader::receivedCancellation(const AuthenticationChallenge& challenge)
+{
+    ASSERT(!reachedTerminalState());
+        
+    RefPtr<SubresourceLoader> protect(this);
+
+    if (m_client)
+        m_client->receivedCancellation(this, challenge);
     
+    ResourceLoader::receivedCancellation(challenge);
+}
+    
+
 }

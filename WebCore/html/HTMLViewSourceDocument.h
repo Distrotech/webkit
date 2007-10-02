@@ -33,18 +33,25 @@ class Token;
 class HTMLViewSourceDocument : public HTMLDocument
 {
 public:
-    HTMLViewSourceDocument(DOMImplementation*, Frame*);
+    HTMLViewSourceDocument(DOMImplementation*, Frame*, const String& mimeType);
     
     virtual Tokenizer* createTokenizer();
     
-    void addViewSourceToken(Token*);
-    void addViewSourceAttribute(Attribute*);
+    void addViewSourceToken(Token*); // Used by the HTML tokenizer.
+    void addViewSourceText(const String&); // Used by the plaintext tokenizer.
     
 private:
+    void createContainingTable();
     Element* addSpanWithClassName(const String&);
+    void addLine(const String& className);
+    void addText(const String& text, const String& className);
+    Element* addLink(const String& url, bool isAnchor);
 
 private:
-    Node* m_current;
+    String m_type;
+    Element* m_current;
+    Element* m_tbody;
+    Element* m_td;
 };
 
 }

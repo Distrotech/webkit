@@ -37,7 +37,7 @@
 #import "Image.h"
 #import "KURL.h"
 #import "LoaderNSURLExtras.h"
-#import "MimeTypeRegistry.h"
+#import "MIMETypeRegistry.h"
 #import "RenderImage.h"
 #import "WebCoreNSStringExtras.h"
 #import "WebCoreSystemInterface.h"
@@ -51,11 +51,12 @@
 
 namespace WebCore {
 
-NSString *WebArchivePboardType;
-NSString *WebSmartPastePboardType;
-NSString *WebURLNamePboardType;
-NSString *WebURLPboardType;
-NSString *WebURLsWithTitlesPboardType;
+// FIXME: It's not great to have these both here and in WebKit.
+NSString *WebArchivePboardType = @"Apple Web Archive pasteboard type";
+NSString *WebSmartPastePboardType = @"NeXT smart paste pasteboard type";
+NSString *WebURLNamePboardType = @"public.url-name";
+NSString *WebURLPboardType = @"public.url";
+NSString *WebURLsWithTitlesPboardType = @"WebURLsWithTitlesPboardType";
 
 #ifndef BUILDING_ON_TIGER
 static NSArray* selectionPasteboardTypes(bool canSmartCopyOrDelete, bool selectionContainsAttachments)
@@ -109,11 +110,6 @@ Pasteboard* Pasteboard::generalPasteboard()
 Pasteboard::Pasteboard(NSPasteboard* pboard)
     : m_pasteboard(pboard)
 {
-    WebArchivePboardType          = @"Apple Web Archive pasteboard type";
-    WebSmartPastePboardType       = @"NeXT smart paste pasteboard type";
-    WebURLNamePboardType          = wkCreateURLNPasteboardFlavorTypeName();
-    WebURLPboardType              = wkCreateURLPasteboardFlavorTypeName();
-    WebURLsWithTitlesPboardType   = @"WebURLsWithTitlesPboardType";
 }
 
 void Pasteboard::clear()
@@ -291,7 +287,7 @@ void Pasteboard::writeImage(Node* node, const KURL& url, const String& title)
     [m_pasteboard.get() setData:[image->getNSImage() TIFFRepresentation] forType:NSTIFFPboardType];
 
     String MIMEType = cachedImage->response().mimeType();
-    ASSERT(MimeTypeRegistry::isSupportedImageResourceMIMEType(MIMEType));
+    ASSERT(MIMETypeRegistry::isSupportedImageResourceMIMEType(MIMEType));
 
     writeFileWrapperAsRTFDAttachment(fileWrapperForImage(cachedImage, URL));
 }

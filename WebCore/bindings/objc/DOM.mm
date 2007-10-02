@@ -29,6 +29,7 @@
 #import "DOM.h"
 
 #import "CDATASection.h"
+#import "CSSHelper.h"
 #import "CSSStyleSheet.h"
 #import "Comment.h"
 #import "DOMHTMLCanvasElement.h"
@@ -45,6 +46,7 @@
 #import "FontData.h"
 #import "FoundationExtras.h"
 #import "Frame.h"
+#import "FrameView.h"
 #import "HTMLDocument.h"
 #import "HTMLNames.h"
 #import "HTMLPlugInElement.h"
@@ -58,10 +60,10 @@
 #import "QualifiedName.h"
 #import "Range.h"
 #import "RenderImage.h"
+#import "RenderView.h"
 #import "Text.h"
 #import "TreeWalker.h"
 #import "WebScriptObjectPrivate.h"
-#import "csshelper.h"
 #import <objc/objc-class.h>
 #import <wtf/HashMap.h>
 
@@ -156,6 +158,7 @@ static void createElementClassMap()
     addElementClass(HTMLNames::linkTag, [DOMHTMLLinkElement class]);
     addElementClass(HTMLNames::listingTag, [DOMHTMLPreElement class]);
     addElementClass(HTMLNames::mapTag, [DOMHTMLMapElement class]);
+    addElementClass(HTMLNames::marqueeTag, [DOMHTMLMarqueeElement class]);
     addElementClass(HTMLNames::menuTag, [DOMHTMLMenuElement class]);
     addElementClass(HTMLNames::metaTag, [DOMHTMLMetaElement class]);
     addElementClass(HTMLNames::objectTag, [DOMHTMLObjectElement class]);
@@ -409,6 +412,7 @@ static NSArray *kit(const Vector<IntRect>& rects)
 // If it was, we could even autogenerate.
 - (NSRect)boundingBox
 {
+    [self _node]->document()->updateLayoutIgnorePendingStylesheets();
     WebCore::RenderObject *renderer = [self _node]->renderer();
     if (renderer)
         return renderer->absoluteBoundingBoxRect();
@@ -419,6 +423,7 @@ static NSArray *kit(const Vector<IntRect>& rects)
 // If it was, we could even autogenerate.
 - (NSArray *)lineBoxRects
 {
+    [self _node]->document()->updateLayoutIgnorePendingStylesheets();
     WebCore::RenderObject *renderer = [self _node]->renderer();
     if (renderer) {
         Vector<WebCore::IntRect> rects;
@@ -434,12 +439,14 @@ static NSArray *kit(const Vector<IntRect>& rects)
 
 - (NSRect)boundingBox
 {
+    [self _range]->ownerDocument()->updateLayoutIgnorePendingStylesheets();
     return [self _range]->boundingBox();
 }
 
 - (NSArray *)lineBoxRects
 {
     Vector<WebCore::IntRect> rects;
+    [self _range]->ownerDocument()->updateLayoutIgnorePendingStylesheets();
     [self _range]->addLineBoxRects(rects);
     return kit(rects);
 }
@@ -536,6 +543,18 @@ static NSArray *kit(const Vector<IntRect>& rects)
     return nil;
 }
 
+- (NSRect)_windowClipRect
+{
+    WebCore::RenderObject* renderer = [self _element]->renderer();
+    if (renderer && renderer->view()) {
+        WebCore::FrameView* frameView = renderer->view()->frameView();
+        if (!frameView)
+            return WebCore::IntRect();
+        return frameView->windowClipRectForLayer(renderer->enclosingLayer(), true);
+    }
+    return WebCore::IntRect();
+}
+
 // FIXME: this should be implemented in the implementation
 - (NSURL *)_getURLAttribute:(NSString *)name
 {
@@ -548,9 +567,11 @@ static NSArray *kit(const Vector<IntRect>& rects)
 // FIXME: this should be implemented in the implementation
 - (void *)_NPObject
 {
+#if USE(NPOBJECT)
     WebCore::Element* element = [self _element];
     if (element->hasTagName(WebCore::HTMLNames::appletTag) || element->hasTagName(WebCore::HTMLNames::embedTag) || element->hasTagName(WebCore::HTMLNames::objectTag))
         return static_cast<WebCore::HTMLPlugInElement*>(element)->getNPObject();
+#endif
     return 0;
 }
 
@@ -691,7 +712,7 @@ short ObjCNodeFilterCondition::acceptNode(WebCore::Node* node) const
 
 - (DOMNodeIterator *)createNodeIterator:(DOMNode *)root whatToShow:(unsigned)whatToShow filter:(id <DOMNodeFilter>)filter expandEntityReferences:(BOOL)expandEntityReferences
 {
-    RefPtr<WebCore::NodeFilter> cppFilter;
+    WebCore::NodeFilter* cppFilter = 0;
     if (filter)
         cppFilter = new WebCore::NodeFilter(new ObjCNodeFilterCondition(filter));
     WebCore::ExceptionCode ec = 0;
@@ -702,7 +723,7 @@ short ObjCNodeFilterCondition::acceptNode(WebCore::Node* node) const
 
 - (DOMTreeWalker *)createTreeWalker:(DOMNode *)root whatToShow:(unsigned)whatToShow filter:(id <DOMNodeFilter>)filter expandEntityReferences:(BOOL)expandEntityReferences
 {
-    RefPtr<WebCore::NodeFilter> cppFilter;
+    WebCore::NodeFilter* cppFilter = 0;
     if (filter)
         cppFilter = new WebCore::NodeFilter(new ObjCNodeFilterCondition(filter));
     WebCore::ExceptionCode ec = 0;

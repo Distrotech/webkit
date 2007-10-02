@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -27,13 +27,16 @@
 #include "SVGInlineTextBox.h"
 
 #include "Document.h"
+#include "Editor.h"
 #include "Frame.h"
 #include "GraphicsContext.h"
 #include "InlineFlowBox.h"
 #include "Range.h"
 #include "SVGPaintServer.h"
 #include "SVGRootInlineBox.h"
+#include "Text.h"
 #include "TextStyle.h"
+#endif
 
 using std::max;
 
@@ -325,11 +328,9 @@ void SVGInlineTextBox::paintCharacters(RenderObject::PaintInfo& paintInfo, int t
         // When only painting the selection, don't bother to paint if there is none.
         return;
 
-    // Determine whether or not we have marked text.
-    Range* markedTextRange = text->document()->frame()->markedTextRange();
-    int exception = 0;
-    bool haveMarkedText = markedTextRange && markedTextRange->startContainer(exception) == text->node();
-    bool markedTextUsesUnderlines = text->document()->frame()->markedTextUsesUnderlines();
+    // Determine whether or not we have a composition.
+    bool containsComposition = text->document()->frame()->editor()->compositionNode() == text->node();
+    bool useCustomUnderlines = containsComposition && text->document()->frame()->editor()->compositionUsesCustomUnderlines();
 
     // Set our font
     RenderStyle* styleToUse = text->style(isFirstLineStyle());
@@ -349,12 +350,14 @@ void SVGInlineTextBox::paintCharacters(RenderObject::PaintInfo& paintInfo, int t
             paintCustomHighlight(tx, ty, styleToUse->highlight());
 #endif
 
-        if (haveMarkedText  && !markedTextUsesUnderlines)
-            paintMarkedTextBackground(paintInfo.context, tx, ty, styleToUse, font, markedTextRange->startOffset(exception), markedTextRange->endOffset(exception));
-
+        if (containsComposition && !useCustomUnderlines)
+            paintCompositionBackground(paintInfo.context, tx, ty, styleToUse, font, 
+                                                text->document()->frame()->editor()->compositionStart(),
+                                                text->document()->frame()->editor()->compositionEnd());
+        
         paintDocumentMarkers(paintInfo.context, tx, ty, styleToUse, font, true);
 
-        if (haveSelection && !markedTextUsesUnderlines) {
+        if (haveSelection && !useCustomUnderlines) {
             int boxStartOffset = chars - text->characters() - start();
             paintSelection(boxStartOffset, svgChar, chars, length, paintInfo.context, styleToUse, font);
         }
@@ -379,32 +382,31 @@ void SVGInlineTextBox::paintCharacters(RenderObject::PaintInfo& paintInfo, int t
     if (paintInfo.phase != PaintPhaseSelection) {
         paintDocumentMarkers(paintInfo.context, tx, ty, styleToUse, font, false);
 
-        const Vector<MarkedTextUnderline>* underlines = 0;
-        size_t numUnderlines = 0;
-        if (haveMarkedText && markedTextUsesUnderlines) {
-            underlines = &text->document()->frame()->markedTextUnderlines();
-            numUnderlines = underlines->size();
-        }
-
-        for (size_t index = 0; index < numUnderlines; ++index) {
-            const MarkedTextUnderline& underline = (*underlines)[index];
-
-            if (underline.endOffset <= start())
-                // underline is completely before this run.  This might be an underline that sits
-                // before the first run we draw, or underlines that were within runs we skipped 
-                // due to truncation.
-                continue;
-
-            if (underline.startOffset <= end()) {
-                // underline intersects this run.  Paint it.
-                paintMarkedTextUnderline(paintInfo.context, tx, ty, underline);
-                if (underline.endOffset > end() + 1)
-                    // underline also runs into the next run. Bail now, no more marker advancement.
+        if (useCustomUnderlines) {
+            const Vector<CompositionUnderline>& underlines = text->document()->frame()->editor()->customCompositionUnderlines();
+            size_t numUnderlines = underlines.size();
+            
+            for (size_t index = 0; index < numUnderlines; ++index) {
+                const CompositionUnderline& underline = underlines[index];
+                
+                if (underline.endOffset <= start())
+                    // underline is completely before this run.  This might be an underline that sits
+                    // before the first run we draw, or underlines that were within runs we skipped 
+                    // due to truncation.
+                    continue;
+                
+                if (underline.startOffset <= end()) {
+                    // underline intersects this run.  Paint it.
+                    paintCompositionUnderline(paintInfo.context, tx, ty, underline);
+                    if (underline.endOffset > end() + 1)
+                        // underline also runs into the next run. Bail now, no more marker advancement.
+                        break;
+                } else
+                    // underline is completely after this run, bail.  A later run will paint it.
                     break;
-            } else
-                // underline is completely after this run, bail.  A later run will paint it.
-                break;
+            }
         }
+        
     }
 
     if (setShadow)
@@ -521,5 +523,3 @@ void SVGInlineTextBox::paintDecoration(ETextDecoration decoration, GraphicsConte
 }
 
 } // namespace WebCore
-
-#endif

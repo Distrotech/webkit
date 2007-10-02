@@ -21,8 +21,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #ifndef Frame_h
@@ -33,6 +33,7 @@
 #include "DragImage.h"
 #include "RenderLayer.h"
 #include "TextGranularity.h"
+#include "VisiblePosition.h"
 #include <wtf/unicode/Unicode.h>
 #include <wtf/Forward.h>
 #include <wtf/Vector.h>
@@ -106,23 +107,16 @@ struct FrameLoadRequest;
 
 template <typename T> class Timer;
 
-struct MarkedTextUnderline {
-    MarkedTextUnderline() 
-        : startOffset(0), endOffset(0), thick(false) { }
-    MarkedTextUnderline(unsigned s, unsigned e, const Color& c, bool t) 
-        : startOffset(s), endOffset(e), color(c), thick(t) { }
-    unsigned startOffset;
-    unsigned endOffset;
-    Color color;
-    bool thick;
-};
-
 class Frame : public Shared<Frame> {
 public:
+    static double currentPaintTimeStamp() { return s_currentPaintTimeStamp; } // returns 0 if not painting
+    
     Frame(Page*, HTMLFrameOwnerElement*, FrameLoaderClient*);
     virtual void setView(FrameView*);
     virtual ~Frame();
     
+    void init();
+
 #if PLATFORM(MAC)    
     void setBridge(WebCoreFrameBridge*);
     WebCoreFrameBridge* bridge() const;
@@ -153,6 +147,8 @@ public:
     DragImageRef dragImageForSelection();
     
 private:
+    static double s_currentPaintTimeStamp; // used for detecting decoded resource thrash in the cache
+    
     FramePrivate* d;
     
 // === undecided, may or may not belong here
@@ -160,13 +156,13 @@ private:
 public:
     static Frame* frameForWidget(const Widget*);
 
-    void setSettings(Settings*);
-    const Settings* settings() const;
+    Settings* settings() const; // can be NULL
     void reparseConfiguration();
 
     // should move to FrameView
     void paint(GraphicsContext*, const IntRect&);
     void setPaintRestriction(PaintRestriction);
+    bool isPainting() const;
 
     void setUserStyleSheetLocation(const KURL&);
     void setUserStyleSheet(const String& styleSheetData);
@@ -197,7 +193,10 @@ public:
 #if PLATFORM(MAC)
     WebScriptObject* windowScriptObject();
 #endif
+
+#if USE(NPOBJECT)
     NPObject* windowScriptNPObject();
+#endif    
     
     void setDocument(PassRefPtr<Document>);
 
@@ -231,10 +230,14 @@ public:
 
     void dashboardRegionsChanged();
 
-    void cleanupScriptObjects();
+    void clearScriptProxy();
+    void clearDOMWindow();
+
+    void clearScriptObjects();
+    void cleanupScriptObjectsForPlugin(void*);
 
 private:
-    void cleanupPlatformScriptObjects();
+    void clearPlatformScriptObjects();
 
     void lifeSupportTimerFired(Timer<Frame>*);
     
@@ -243,7 +246,6 @@ private:
 public:
     void focusWindow();
     void unfocusWindow();
-    void print();
     bool shouldClose();
     void scheduleClose();
 
@@ -267,7 +269,8 @@ public:
     void applyEditingStyleToElement(Element*) const;
     void removeEditingStyleFromElement(Element*) const;
 
-    Range* markedTextRange() const;
+    IntRect firstRectForRange(Range*) const;
+    
 #if PLATFORM(MAC)
     void issuePasteCommand();
 #endif
@@ -277,9 +280,6 @@ public:
 
     RenderStyle* styleForSelectionStart(Node*& nodeToRemove) const;
 
-    const Vector<MarkedTextUnderline>& markedTextUnderlines() const;  
-    bool markedTextUsesUnderlines() const;
-  
     unsigned markAllMatchesForText(const String&, bool caseFlag, unsigned limit);
     bool markedTextMatchesAreHighlighted() const;
     void setMarkedTextMatchesAreHighlighted(bool flag);
@@ -314,14 +314,14 @@ public:
 
     bool isContentEditable() const; // if true, everything in frame is editable
 
-    void setUseSecureKeyboardEntryWhenActive(bool);
+    void updateSecureKeyboardEntryIfActive();
 
     CSSMutableStyleDeclaration* typingStyle() const;
     void setTypingStyle(CSSMutableStyleDeclaration*);
     void clearTypingStyle();
 
-    IntRect selectionRect() const;
-    FloatRect visibleSelectionRect() const;
+    FloatRect selectionRect(bool clipToVisibleContent = true) const;
+    void selectionTextRects(Vector<FloatRect>&, bool clipToVisibleContent = true) const;
 
     HTMLFormElement* currentForm() const;
 
@@ -333,20 +333,15 @@ private:
     void caretBlinkTimerFired(Timer<Frame>*);
     void setUseSecureKeyboardEntry(bool);
 
-// === to be moved into the Platform directory
-
-public:
-    bool isCharacterSmartReplaceExempt(UChar, bool);
-
-// === to be deleted
-
 public:
     SelectionController* dragCaretController() const;
 
     String searchForLabelsAboveCell(RegularExpression*, HTMLTableCellElement*);
     String searchForLabelsBeforeElement(const Vector<String>& labels, Element*);
     String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
-
+    
+    VisiblePosition visiblePositionForPoint(const IntPoint& framePoint);
+    Document* documentAtPoint(const IntPoint& windowPoint);
 #if PLATFORM(MAC)
 
 // === undecided, may or may not belong here
@@ -360,7 +355,7 @@ public:
 
     void willPopupMenu(NSMenu*);
 
-    NSImage* selectionImage(bool forceWhiteText = false) const;
+    NSImage* selectionImage(bool forceBlackText = false) const;
     NSImage* snapshotDragImage(Node*, NSRect* imageRect, NSRect* elementRect) const;
 
 private:    
@@ -377,8 +372,6 @@ public:
 public:
     NSDictionary* fontAttributesForSelectionStart() const;
     NSWritingDirection baseWritingDirectionForSelectionStart() const;
-
-    void setMarkedTextRange(const Range* , NSArray* attributes, NSArray* ranges);
 
 #endif
 

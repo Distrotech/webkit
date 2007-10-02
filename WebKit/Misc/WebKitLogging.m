@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,6 +28,7 @@
 
 #import "WebKitLogging.h"
 
+WTFLogChannel WebKitLogTextInput =              { 0x00000010, "WebKitLogLevel", WTFLogChannelOff };
 WTFLogChannel WebKitLogTiming =                 { 0x00000020, "WebKitLogLevel", WTFLogChannelOff };
 WTFLogChannel WebKitLogLoading =                { 0x00000040, "WebKitLogLevel", WTFLogChannelOff };
 WTFLogChannel WebKitLogFontCache =              { 0x00000100, "WebKitLogLevel", WTFLogChannelOff };
@@ -95,9 +96,20 @@ void WebKitInitializeLoggingChannelsIfNecessary()
     initializeLogChannel(&WebKitLogProgress);
     initializeLogChannel(&WebKitLogPluginEvents);
     initializeLogChannel(&WebKitLogIconDatabase);
+    initializeLogChannel(&WebKitLogTextInput);
 }
 
 BOOL WebKitRunningOnMainThread()
 {
     return pthread_main_np() != 0;
+}
+
+void ReportDiscardedDelegateException(SEL delegateSelector, id exception)
+{
+    if ([exception isKindOfClass:[NSException class]])
+        NSLog(@"*** WebKit discarded an uncaught exception in the %s delegate: <%@> %@",
+            sel_getName(delegateSelector), [exception name], [exception reason]);
+    else
+        NSLog(@"*** WebKit discarded an uncaught exception in the %s delegate: %@",
+            sel_getName(delegateSelector), exception);
 }

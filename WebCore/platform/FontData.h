@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -74,7 +74,7 @@ public:
     const GlyphData& missingGlyphData() const { return m_missingGlyphData; }
 
 #if PLATFORM(MAC)
-    NSFont* getNSFont() const { return m_font.font; }
+    NSFont* getNSFont() const { return m_font.font(); }
     void checkShapesArabic() const;
     bool shapesArabic() const
     {
@@ -86,14 +86,12 @@ public:
 
 #if PLATFORM(WIN)
     bool isSystemFont() const { return m_isSystemFont; }
-    void setIsMLangFont() { m_isMLangFont = true; }
     SCRIPT_FONTPROPERTIES* scriptFontProperties() const;
     SCRIPT_CACHE* scriptCache() const { return &m_scriptCache; }
 #endif
 
-#if PLATFORM(GDK)
+#if PLATFORM(GTK)
     void setFont(cairo_t*) const;
-    Glyph getGlyphIndex(UChar c) const { return m_font.index(c); }
 #endif
 
 private:
@@ -134,7 +132,6 @@ public:
 #endif
 
 #if PLATFORM(WIN)
-    bool m_isMLangFont;
     bool m_isSystemFont;
     mutable SCRIPT_CACHE m_scriptCache;
     mutable SCRIPT_FONTPROPERTIES* m_scriptFontProperties;

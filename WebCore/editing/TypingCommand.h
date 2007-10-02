@@ -45,8 +45,8 @@ public:
 
     static void deleteKeyPressed(Document*, bool smartDelete = false, TextGranularity = CharacterGranularity);
     static void forwardDeleteKeyPressed(Document*, bool smartDelete = false, TextGranularity = CharacterGranularity);
-    static void insertText(Document*, const String&, bool selectInsertedText = false);
-    static void insertText(Document*, const String&, const Selection&, bool selectInsertedText = false);
+    static void insertText(Document*, const String&, bool selectInsertedText = false, bool insertedTextIsComposition = false);
+    static void insertText(Document*, const String&, const Selection&, bool selectInsertedText = false, bool insertedTextIsComposition = false);
     static void insertLineBreak(Document*);
     static void insertParagraphSeparator(Document*);
     static void insertParagraphSeparatorInQuotedContent(Document*);
@@ -84,6 +84,11 @@ private:
     bool m_selectInsertedText;
     bool m_smartDelete;
     TextGranularity m_granularity;
+    
+    // Undoing a series of backward deletes will restore a selection around all of the
+    // characters that were deleted, but only if the typing command being undone
+    // was opened with a backward delete.
+    bool m_openedByBackwardDelete;
 };
 
 } // namespace WebCore

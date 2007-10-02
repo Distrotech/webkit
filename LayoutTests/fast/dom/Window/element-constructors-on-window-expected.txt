@@ -30,9 +30,9 @@ HTMLFontElement: [object HTMLFontElementConstructor]
 
 HTMLFormElement: [object HTMLFormElementConstructor]
 
-HTMLFrameElement: undefined
+HTMLFrameElement: [object HTMLFrameElementConstructor]
 
-HTMLFrameSetElement: undefined
+HTMLFrameSetElement: [object HTMLFrameSetElementConstructor]
 
 HTMLHeadElement: [object HTMLHeadElementConstructor]
 
@@ -42,7 +42,7 @@ HTMLHRElement: [object HTMLHRElementConstructor]
 
 HTMLHtmlElement: [object HTMLHtmlElementConstructor]
 
-HTMLIFrameElement: undefined
+HTMLIFrameElement: [object HTMLIFrameElementConstructor]
 
 HTMLImageElement: [object HTMLImageElementConstructor]
 
@@ -66,7 +66,7 @@ HTMLMetaElement: [object HTMLMetaElementConstructor]
 
 HTMLModElement: [object HTMLModElementConstructor]
 
-HTMLObjectElement: undefined
+HTMLObjectElement: [object HTMLObjectElementConstructor]
 
 HTMLOListElement: [object HTMLOListElementConstructor]
 
@@ -88,17 +88,17 @@ HTMLSelectElement: [object HTMLSelectElementConstructor]
 
 HTMLStyleElement: [object HTMLStyleElementConstructor]
 
-HTMLTableCaptionElement: undefined
+HTMLTableCaptionElement: [object HTMLTableCaptionElementConstructor]
 
-HTMLTableCellElement: undefined
+HTMLTableCellElement: [object HTMLTableCellElementConstructor]
 
-HTMLTableColElement: undefined
+HTMLTableColElement: [object HTMLTableColElementConstructor]
 
-HTMLTableElement: undefined
+HTMLTableElement: [object HTMLTableElementConstructor]
 
-HTMLTableRowElement: undefined
+HTMLTableRowElement: [object HTMLTableRowElementConstructor]
 
-HTMLTableSectionElement: undefined
+HTMLTableSectionElement: [object HTMLTableSectionElementConstructor]
 
 HTMLTextAreaElement: [object HTMLTextAreaElementConstructor]
 
@@ -112,6 +112,6 @@ HTMLInsElement: undefined
 
 HTMLDelElement: undefined
 
-HTMLEmbedElement: undefined
+HTMLEmbedElement: [object HTMLEmbedElementConstructor]
 
-
+HTMLMarqueeElement: [object HTMLMarqueeElementConstructor]

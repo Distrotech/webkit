@@ -2,7 +2,7 @@
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,12 @@ StringInstance::StringInstance(JSObject *proto)
   : JSWrapperObject(proto)
 {
   setInternalValue(jsString(""));
+}
+
+StringInstance::StringInstance(JSObject *proto, StringImp* string)
+  : JSWrapperObject(proto)
+{
+  setInternalValue(string);
 }
 
 StringInstance::StringInstance(JSObject *proto, const UString &string)
@@ -285,36 +291,31 @@ static inline UString substituteBackreferences(const UString &replacement, const
 
   return substitutedReplacement;
 }
-
+static inline int localeCompare(const UString& a, const UString& b)
+{
 #if PLATFORM(WIN_OS)
-static inline int localeCompare(const UString& a, const UString& b)
-{
-    return CompareStringW(LOCALE_USER_DEFAULT, 0, 
-                          reinterpret_cast<LPCWSTR>(a.data()), a.size(),
-                          reinterpret_cast<LPCWSTR>(b.data()), b.size());
-}
+    int retval = CompareStringW(LOCALE_USER_DEFAULT, 0,
+                                reinterpret_cast<LPCWSTR>(a.data()), a.size(),
+                                reinterpret_cast<LPCWSTR>(b.data()), b.size());
+    return !retval ? retval : retval - 2;
 #elif PLATFORM(CF)
-static inline int localeCompare(const UString& a, const UString& b)
-{
     CFStringRef sa = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, reinterpret_cast<const UniChar*>(a.data()), a.size(), kCFAllocatorNull);
     CFStringRef sb = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, reinterpret_cast<const UniChar*>(b.data()), b.size(), kCFAllocatorNull);
-    
+
     int retval = CFStringCompare(sa, sb, kCFCompareLocalized);
-    
+
     CFRelease(sa);
     CFRelease(sb);
-    
-    return retval;
-}
-#else
-static inline int localeCompare(const UString& a, const UString& b)
-{
-    return compare(a, b);
-}
-#endif
 
-static JSValue *replace(ExecState *exec, const UString &source, JSValue *pattern, JSValue *replacement)
+    return retval;
+#else
+    return compare(a, b);
+#endif
+}
+
+static JSValue *replace(ExecState *exec, StringImp* sourceVal, JSValue *pattern, JSValue *replacement)
 {
+  UString source = sourceVal->value();
   JSObject *replacementFunction = 0;
   UString replacementString;
 
@@ -350,27 +351,31 @@ static JSValue *replace(ExecState *exec, const UString &source, JSValue *pattern
 
       pushSourceRange(sourceRanges, sourceRangeCount, sourceRangeCapacity, UString::Range(lastIndex, matchIndex - lastIndex));
 
+      UString substitutedReplacement;
       if (replacementFunction) {
           int completeMatchStart = ovector[0];
           List args;
 
           args.append(jsString(matchString));
-          
+
           for (unsigned i = 0; i < reg->subPatterns(); i++) {
               int matchStart = ovector[(i + 1) * 2];
               int matchLen = ovector[(i + 1) * 2 + 1] - matchStart;
-              
-              args.append(jsString(source.substr(matchStart, matchLen)));
+
+              if (matchStart < 0)
+                args.append(jsUndefined());
+              else
+                args.append(jsString(source.substr(matchStart, matchLen)));
           }
           
           args.append(jsNumber(completeMatchStart));
-          args.append(jsString(source));
+          args.append(sourceVal);
 
-          replacementString = replacementFunction->call(exec, exec->dynamicInterpreter()->globalObject(), 
-                                                        args)->toString(exec);
-      }
-      
-      UString substitutedReplacement = substituteBackreferences(replacementString, source, ovector, reg);
+          substitutedReplacement = replacementFunction->call(exec, exec->dynamicInterpreter()->globalObject(), 
+                                                             args)->toString(exec);
+      } else
+          substitutedReplacement = substituteBackreferences(replacementString, source, ovector, reg);
+
       pushReplacement(replacements, replacementCount, replacementCapacity, substitutedReplacement);
 
       lastIndex = matchIndex + matchLen;
@@ -388,11 +393,15 @@ static JSValue *replace(ExecState *exec, const UString &source, JSValue *pattern
       pushSourceRange(sourceRanges, sourceRangeCount, sourceRangeCapacity, UString::Range(lastIndex, source.size() - lastIndex));
 
     UString result;
+
     if (sourceRanges)
         result = source.spliceSubstringsWithSeparators(sourceRanges, sourceRangeCount, replacements, replacementCount);
 
     delete [] sourceRanges;
     delete [] replacements;
+
+    if (result == source)
+      return sourceVal;
 
     return jsString(result);
   }
@@ -403,14 +412,14 @@ static JSValue *replace(ExecState *exec, const UString &source, JSValue *pattern
   int matchLen = patternString.size();
   // Do the replacement
   if (matchPos == -1)
-    return jsString(source);
+    return sourceVal;
   
   if (replacementFunction) {
       List args;
       
       args.append(jsString(source.substr(matchPos, matchLen)));
       args.append(jsNumber(matchPos));
-      args.append(jsString(source));
+      args.append(sourceVal);
       
       replacementString = replacementFunction->call(exec, exec->dynamicInterpreter()->globalObject(), 
                                                     args)->toString(exec);
@@ -429,7 +438,7 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
     if (!thisObj || !thisObj->inherits(&StringInstance::info))
       return throwError(exec, TypeError);
 
-    return jsString(static_cast<StringInstance*>(thisObj)->internalValue()->toString(exec));
+    return static_cast<StringInstance*>(thisObj)->internalValue();
   }
 
   UString u, u2, u3;
@@ -551,7 +560,7 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
           // if there are no matches at all, it's important to return
           // Null instead of an empty array, because this matches
           // other browsers and because Null is a false value.
-          result = jsNull(); 
+          result = jsNull();
         } else {
           result = exec->lexicalInterpreter()->builtinArray()->construct(exec, list);
         }
@@ -560,9 +569,14 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
     delete tmpReg;
     break;
   }
-  case Replace:
-    result = replace(exec, s, a0, a1);
+  case Replace: {
+    StringImp* sVal = thisObj->inherits(&StringInstance::info) ?
+      static_cast<StringInstance*>(thisObj)->internalValue() :
+      static_cast<StringImp*>(jsString(s));
+
+    result = replace(exec, sVal, a0, a1);
     break;
+  }
   case Slice:
     {
       // The arg processing is very much like ArrayProtoFunc::Slice
@@ -597,19 +611,27 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
       }
       pos = 0;
       while (static_cast<uint32_t>(i) != limit && pos < u.size()) {
-        // TODO: back references
         int mpos;
-        int *ovector = 0L;
+        int* ovector;
         UString mstr = reg->match(u, pos, &mpos, &ovector);
-        delete [] ovector; ovector = 0L;
-        if (mpos < 0)
+        if (mpos < 0) {
+          delete [] ovector;
           break;
+        }
         pos = mpos + (mstr.isEmpty() ? 1 : mstr.size());
         if (mpos != p0 || !mstr.isEmpty()) {
           res->put(exec,i, jsString(u.substr(p0, mpos-p0)));
           p0 = mpos + mstr.size();
           i++;
         }
+        for (unsigned si = 1; si <= reg->subPatterns(); ++si) {
+          int spos = ovector[si * 2];
+          if (spos < 0)
+            res->put(exec, i++, jsUndefined());
+          else
+            res->put(exec, i++, jsString(u.substr(spos, ovector[si * 2 + 1] - spos)));
+        }
+        delete [] ovector;
       }
     } else {
       u2 = a0->toString(exec);
@@ -682,37 +704,49 @@ JSValue* StringProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, con
     break;
   case ToLowerCase:
   case ToLocaleLowerCase: { // FIXME: See http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt for locale-sensitive mappings that aren't implemented.
-    u = s;
-    u.copyForWriting();
-    ::UChar* dataPtr = reinterpret_cast< ::UChar*>(u.rep()->data());
-    ::UChar* destIfNeeded;
-
-    int len = Unicode::toLower(dataPtr, u.size(), destIfNeeded);
-    if (len >= 0)
-        result = jsString(UString(reinterpret_cast<UChar*>(destIfNeeded ? destIfNeeded : dataPtr), len));
-    else
-        result = jsString(s);
-
-    free(destIfNeeded);
-    break;
+    StringImp* sVal = thisObj->inherits(&StringInstance::info)
+        ? static_cast<StringInstance*>(thisObj)->internalValue()
+        : static_cast<StringImp*>(jsString(s));
+    int ssize = s.size();
+    if (!ssize)
+        return sVal;
+    Vector< ::UChar> buffer(ssize);
+    bool error;
+    int length = Unicode::toLower(buffer.data(), ssize, reinterpret_cast<const ::UChar*>(s.data()), ssize, &error);
+    if (error) {
+        buffer.resize(length);
+        length = Unicode::toLower(buffer.data(), length, reinterpret_cast<const ::UChar*>(s.data()), ssize, &error);
+        if (error)
+            return sVal;
+    }
+    if (length == ssize && memcmp(buffer.data(), s.data(), length * sizeof(UChar)) == 0)
+        return sVal;
+    return jsString(UString(reinterpret_cast<UChar*>(buffer.releaseBuffer()), length, false));
   }
   case ToUpperCase:
   case ToLocaleUpperCase: { // FIXME: See http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt for locale-sensitive mappings that aren't implemented.
-    u = s;
-    u.copyForWriting();
-    ::UChar* dataPtr = reinterpret_cast< ::UChar*>(u.rep()->data());
-    ::UChar* destIfNeeded;
-
-    int len = Unicode::toUpper(dataPtr, u.size(), destIfNeeded);
-    if (len >= 0)
-        result = jsString(UString(reinterpret_cast<UChar *>(destIfNeeded ? destIfNeeded : dataPtr), len));
-    else
-        result = jsString(s);
-
-    free(destIfNeeded);
-    break;
+    StringImp* sVal = thisObj->inherits(&StringInstance::info)
+        ? static_cast<StringInstance*>(thisObj)->internalValue()
+        : static_cast<StringImp*>(jsString(s));
+    int ssize = s.size();
+    if (!ssize)
+        return sVal;
+    Vector< ::UChar> buffer(ssize);
+    bool error;
+    int length = Unicode::toUpper(buffer.data(), ssize, reinterpret_cast<const ::UChar*>(s.data()), ssize, &error);
+    if (error) {
+        buffer.resize(length);
+        length = Unicode::toUpper(buffer.data(), length, reinterpret_cast<const ::UChar*>(s.data()), ssize, &error);
+        if (error)
+            return sVal;
+    }
+    if (length == ssize && memcmp(buffer.data(), s.data(), length * sizeof(UChar)) == 0)
+        return sVal;
+    return jsString(UString(reinterpret_cast<UChar*>(buffer.releaseBuffer()), length, false));
   }
   case LocaleCompare:
+    if (args.size() < 1)
+      return jsNumber(0);
     return jsNumber(localeCompare(s, a0->toString(exec)));
 #ifndef KJS_PURE_ECMA
   case Big:

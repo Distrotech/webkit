@@ -1,11 +1,9 @@
 /*
-    This file is part of the KDE libraries
-
     Copyright (C) 1998 Lars Knoll (knoll@mpi-hd.mpg.de)
     Copyright (C) 2001 Dirk Mueller (mueller@kde.org)
     Copyright (C) 2002 Waldo Bastian (bastian@kde.org)
     Copyright (C) 2006 Samuel Weinig (sam.weinig@gmail.com)
-    Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+    Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -19,11 +17,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -56,43 +51,50 @@ Loader::~Loader()
     deleteAllValues(m_requestsLoading);
 }
 
-void Loader::load(DocLoader* dl, CachedResource* object, bool incremental, bool skipCanLoadCheck)
+void Loader::load(DocLoader* dl, CachedResource* object, bool incremental, bool skipCanLoadCheck, bool sendResourceLoadCallbacks)
 {
     ASSERT(dl);
-    Request* req = new Request(dl, object, incremental);
+    Request* req = new Request(dl, object, incremental, skipCanLoadCheck, sendResourceLoadCallbacks);
     m_requestsPending.append(req);
     dl->incrementRequestCount();
-    servePendingRequests(skipCanLoadCheck);
+    servePendingRequests();
 }
 
-void Loader::servePendingRequests(bool skipCanLoadCheck)
+void Loader::servePendingRequests()
 {
-    if (m_requestsPending.count() == 0)
-        return;
+    while (!m_requestsPending.isEmpty()) {
+        // get the first pending request
+        Request* req = m_requestsPending.take(0);
+        DocLoader* dl = req->docLoader();
+        dl->decrementRequestCount();
 
-    // get the first pending request
-    Request* req = m_requestsPending.take(0);
-    DocLoader* dl = req->docLoader();
-    dl->decrementRequestCount();
+        ResourceRequest request(req->cachedResource()->url());
 
-    ResourceRequest request(req->cachedResource()->url());
+        if (!req->cachedResource()->accept().isEmpty())
+            request.setHTTPAccept(req->cachedResource()->accept());
 
-    if (!req->cachedResource()->accept().isEmpty())
-        request.setHTTPAccept(req->cachedResource()->accept());
+        KURL r = dl->doc()->URL();
+        if (r.protocol().startsWith("http") && r.path().isEmpty())
+            r.setPath("/");
+        request.setHTTPReferrer(r.url());
+        DeprecatedString domain = r.host();
+        if (dl->doc()->isHTMLDocument())
+            domain = static_cast<HTMLDocument*>(dl->doc())->domain().deprecatedString();
+        
+        RefPtr<SubresourceLoader> loader = SubresourceLoader::create(dl->doc()->frame(),
+            this, request, req->shouldSkipCanLoadCheck(), req->sendResourceLoadCallbacks());
 
-    KURL r = dl->doc()->URL();
-    if (r.protocol().startsWith("http") && r.path().isEmpty())
-        r.setPath("/");
-    request.setHTTPReferrer(r.url());
-    DeprecatedString domain = r.host();
-    if (dl->doc()->isHTMLDocument())
-        domain = static_cast<HTMLDocument*>(dl->doc())->domain().deprecatedString();
-    
-    RefPtr<SubresourceLoader> loader = SubresourceLoader::create(dl->doc()->frame(), this, request, skipCanLoadCheck);
+        if (loader) {
+            m_requestsLoading.add(loader.release(), req);
+            dl->incrementRequestCount();
+            break;
+        }
 
-    if (loader) {
-        m_requestsLoading.add(loader.release(), req);
-        dl->incrementRequestCount();
+        dl->setLoadInProgress(true);
+        req->cachedResource()->error();
+        dl->setLoadInProgress(false);
+
+        delete req;
     }
 }
 
@@ -155,7 +157,15 @@ void Loader::didFail(SubresourceLoader* loader, bool cancelled)
 void Loader::didReceiveResponse(SubresourceLoader* loader, const ResourceResponse& response)
 {
     Request* req = m_requestsLoading.get(loader);
-    ASSERT(req);
+    
+    // FIXME: This is a workaround for <rdar://problem/5236843>
+    // If a load starts while the frame is still in the provisional state 
+    // (this can be the case when loading the user style sheet), committing the load then causes all
+    // requests to be removed from the m_requestsLoading map. This means that req might be null here.
+    // In that case we just return early. 
+    // ASSERT(req);
+    if (!req)
+        return;
     req->cachedResource()->setResponse(response);
     
     String encoding = response.textEncodingName();
@@ -189,10 +199,12 @@ void Loader::didReceiveData(SubresourceLoader* loader, const char* data, int siz
     CachedResource* object = request->cachedResource();    
 
     // Set the data.
-    if (request->isMultipart())
+    if (request->isMultipart()) {
         // The loader delivers the data in a multipart section all at once, send eof.
-        object->data(loader->resourceData(), true);
-    else if (request->isIncremental())
+        // The resource data will change as the next part is loaded, so we need to make a copy.
+        SharedBuffer* copiedData = new SharedBuffer(data, size);
+        object->data(copiedData, true);
+    } else if (request->isIncremental())
         object->data(loader->resourceData(), false);
 }
 

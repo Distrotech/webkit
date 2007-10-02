@@ -17,8 +17,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #ifndef HTMLParser_h
@@ -27,6 +27,7 @@
 #include "QualifiedName.h"
 #include <wtf/Forward.h>
 #include <wtf/RefPtr.h>
+#include "HTMLParserErrorCodes.h"
 
 namespace WebCore {
 
@@ -47,7 +48,7 @@ struct HTMLStackElem;
  */
 class HTMLParser : Noncopyable {
 public:
-    HTMLParser(HTMLDocument*);
+    HTMLParser(HTMLDocument*, bool reportErrors);
     HTMLParser(DocumentFragment*);
     virtual ~HTMLParser();
 
@@ -67,6 +68,7 @@ public:
     void reset();
 
     bool skipMode() const { return !m_skipModeTag.isNull(); }
+    bool isHandlingResidualStyleAcrossBlocks() const { return m_handlingResidualStyleAcrossBlocks; }
 
 private:
     void setCurrent(Node*);
@@ -102,8 +104,8 @@ private:
     bool handleError(Node*, bool flat, const AtomicString& localName, int tagPriority);
     
     void pushBlock(const AtomicString& tagName, int level);
-    void popBlock(const AtomicString& tagName);
-    void popBlock(const QualifiedName& qName) { return popBlock(qName.localName()); } // Convenience function for readability.
+    void popBlock(const AtomicString& tagName, bool reportErrors = false);
+    void popBlock(const QualifiedName& qName, bool reportErrors = false) { return popBlock(qName.localName(), reportErrors); } // Convenience function for readability.
     void popOneBlock();
     void moveOneBlockToStack(HTMLStackElem*& head);
     inline HTMLStackElem* popOneBlockCommon();
@@ -128,6 +130,11 @@ private:
     void startBody(); // inserts the isindex element
     PassRefPtr<Node> handleIsindex(Token*);
 
+    void reportError(HTMLParserErrorCode errorCode, const AtomicString* tagName1 = 0, const AtomicString* tagName2 = 0, bool closeTags = false)
+    { if (!m_reportErrors) return; reportErrorToConsole(errorCode, tagName1, tagName2, closeTags); }
+
+    void reportErrorToConsole(HTMLParserErrorCode, const AtomicString* tagName1, const AtomicString* tagName2, bool closeTags);
+    
     Document* document;
 
     // The currently active element (the one new elements will be added to). Can be a document fragment, a document or an element.
@@ -149,6 +156,8 @@ private:
     AtomicString m_skipModeTag; // tells the parser to discard all tags until it reaches the one specified
 
     bool m_isParsingFragment;
+    bool m_reportErrors;
+    bool m_handlingResidualStyleAcrossBlocks;
     int inStrayTableContent;
 };
 

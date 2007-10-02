@@ -89,6 +89,7 @@
 - (NSString *)contextMenuItemTagDefaultDirection;
 - (NSString *)contextMenuItemTagLeftToRight;
 - (NSString *)contextMenuItemTagRightToLeft;
+- (NSString *)contextMenuItemTagInspectElement;
 
 - (NSString *)searchMenuNoRecentSearchesText;
 - (NSString *)searchMenuRecentSearchesText;
@@ -118,6 +119,9 @@
 - (NSString *)AXListMarkerText;
 - (NSString *)AXImageMapText;
 - (NSString *)AXHeadingText;
+
+// FTP Directory Related
+- (NSString *)unknownFileSizeText;
 
 @end
 

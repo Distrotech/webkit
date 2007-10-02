@@ -65,9 +65,9 @@
 #include "JSLock.h"
 #include "kjs_window.h"
 #include "runtime_root.h"
+#include "runtime.h"
 #include <QScrollArea>
-
-#define notImplemented() qDebug("FIXME: UNIMPLEMENTED: %s:%d (%s)", __FILE__, __LINE__, __FUNCTION__)
+#include "NotImplemented.h"
 
 namespace WebCore {
 
@@ -102,24 +102,15 @@ void Frame::issueTransposeCommand()
     notImplemented();
 }
 
-void Frame::print()
-{
-    notImplemented();
-}
-
 KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(WebCore::Widget* widget)
 {
-    return 0;
+    return KJS::Bindings::Instance::createBindingForLanguageInstance(KJS::Bindings::Instance::QtLanguage,
+                                                                     widget->qwidget(),
+                                                                     bindingRootObject());
 }
 
-void Frame::cleanupPlatformScriptObjects()
+void Frame::clearPlatformScriptObjects()
 {
-}
-
-bool Frame::isCharacterSmartReplaceExempt(UChar, bool)
-{
-    // no smart replace
-    return true;
 }
 
 DragImageRef Frame::dragImageForSelection() 

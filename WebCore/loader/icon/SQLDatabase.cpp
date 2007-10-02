@@ -40,8 +40,11 @@ const int SQLResultRow = SQLITE_ROW;
 
 SQLDatabase::SQLDatabase()
     : m_db(0)
+    , m_transactionInProgress(false)
 {
-
+#ifndef NDEBUG
+    memset(&m_openingThread, 0, sizeof(pthread_t));
+#endif
 }
 
 bool SQLDatabase::open(const String& filename)
@@ -49,16 +52,22 @@ bool SQLDatabase::open(const String& filename)
     close();
     
     //SQLite expects a null terminator on its UTF16 strings
-    m_path = filename;
-    m_path.append(UChar(0));
+    m_path = filename.copy();
     
-    m_lastError = sqlite3_open16(m_path.characters(), &m_db);
+    m_lastError = sqlite3_open16(m_path.charactersWithNullTermination(), &m_db);
     if (m_lastError != SQLITE_OK) {
         LOG_ERROR("SQLite database failed to load from %s\nCause - %s", filename.ascii().data(),
             sqlite3_errmsg(m_db));
         sqlite3_close(m_db);
         m_db = 0;
+        return false;
     }
+
+#ifndef NDEBUG
+    if (isOpen())
+        m_openingThread = pthread_self();
+#endif
+    
     if (!SQLStatement(*this, "PRAGMA temp_store = MEMORY;").executeCommand())
         LOG_ERROR("SQLite database could not set temp_store to memory");
 
@@ -72,6 +81,9 @@ void SQLDatabase::close()
         m_path.truncate(0);
         m_db = 0;
     }
+#ifndef NDEBUG
+    memset(&m_openingThread, 0, sizeof(pthread_t));
+#endif
 }
 
 void SQLDatabase::setFullsync(bool fsync) 

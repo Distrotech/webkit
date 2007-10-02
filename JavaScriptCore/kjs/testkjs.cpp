@@ -1,8 +1,7 @@
 // -*- c-basic-offset: 2 -*-
 /*
- *  This file is part of the KDE libraries
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004-2006 Apple Computer, Inc.
+ *  Copyright (C) 2004-2007 Apple Inc.
  *  Copyright (C) 2006 Bjoern Graf (bjoern.graf@gmail.com)
  *
  *  This library is free software; you can redistribute it and/or
@@ -41,8 +40,13 @@
 #include "protect.h"
 
 #if PLATFORM(WIN_OS)
-#include <windows.h>
+#include <WebKitInitializer/WebKitInitializer.h>
 #include <crtdbg.h>
+#include <windows.h>
+#endif
+
+#if PLATFORM(QT)
+#include <QDateTime>
 #endif
 
 using namespace KJS;
@@ -59,7 +63,10 @@ public:
     long getElapsedMS(); // call stop() first
     
 private:
-#if PLATFORM(WIN_OS)
+#if PLATFORM(QT)
+    uint m_startTime;
+    uint m_stopTime;
+#elif PLATFORM(WIN_OS)
     DWORD m_startTime;
     DWORD m_stopTime;
 #else
@@ -71,7 +78,10 @@ private:
 
 void StopWatch::start()
 {
-#if PLATFORM(WIN_OS)
+#if PLATFORM(QT)
+    QDateTime t = QDateTime::currentDateTime();
+    m_startTime = t.toTime_t() * 1000 + t.time().msec();
+#elif PLATFORM(WIN_OS)
     m_startTime = timeGetTime();
 #else
     gettimeofday(&m_startTime, 0);
@@ -80,7 +90,10 @@ void StopWatch::start()
 
 void StopWatch::stop()
 {
-#if PLATFORM(WIN_OS)
+#if PLATFORM(QT)
+    QDateTime t = QDateTime::currentDateTime();
+    m_stopTime = t.toTime_t() * 1000 + t.time().msec();
+#elif PLATFORM(WIN_OS)
     m_stopTime = timeGetTime();
 #else
     gettimeofday(&m_stopTime, 0);
@@ -89,13 +102,13 @@ void StopWatch::stop()
 
 long StopWatch::getElapsedMS()
 {
-#if PLATFORM(WIN_OS)
+#if PLATFORM(WIN_OS) || PLATFORM(QT)
     return m_stopTime - m_startTime;
 #else
     timeval elapsedTime;
     timersub(&m_stopTime, &m_startTime, &elapsedTime);
     
-    return elapsedTime.tv_sec * 1000 + lroundf(elapsedTime.tv_usec / 1000.0);
+    return elapsedTime.tv_sec * 1000 + lroundf(elapsedTime.tv_usec / 1000.0f);
 #endif
 }
 
@@ -191,6 +204,12 @@ int kjsmain(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
+#if PLATFORM(WIN_OS)
+    if (!initializeWebKit()) {
+        fprintf(stderr, "Failed to initialize WebKit\n");
+        abort();
+    }
+#endif
 #if defined(_DEBUG) && PLATFORM(WIN_OS)
     _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

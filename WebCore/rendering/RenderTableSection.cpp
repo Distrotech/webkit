@@ -21,8 +21,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -72,12 +72,14 @@ RenderTableSection::~RenderTableSection()
 
 void RenderTableSection::destroy()
 {
+    RenderTable* recalcTable = table();
+    
+    RenderContainer::destroy();
+    
     // recalc cell info because RenderTable has unguarded pointers
     // stored that point to this RenderTableSection.
-    if (table())
-        table()->setNeedsSectionRecalc();
-
-    RenderContainer::destroy();
+    if (recalcTable)
+        recalcTable->setNeedsSectionRecalc();
 }
 
 void RenderTableSection::setStyle(RenderStyle* newStyle)
@@ -177,7 +179,7 @@ bool RenderTableSection::ensureRows(int numRows)
             m_grid[r].row = new Row(nCols);
             m_grid[r].row->fill(emptyCellStruct);
             m_grid[r].rowRenderer = 0;
-            m_grid[r].baseLine = 0;
+            m_grid[r].baseline = 0;
             m_grid[r].height = Length();
         }
     }
@@ -319,7 +321,7 @@ void RenderTableSection::calcRowHeight()
 
     for (int r = 0; r < m_gridRows; r++) {
         m_rowPos[r + 1] = 0;
-
+        m_grid[r].baseline = 0;
         int baseline = 0;
         int bdesc = 0;
         int ch = m_grid[r].height.calcMinValue(0);
@@ -378,7 +380,7 @@ void RenderTableSection::calcRowHeight()
         if (baseline) {
             // increase rowheight if baseline requires
             m_rowPos[r + 1] = max(m_rowPos[r + 1], baseline + bdesc + (m_grid[r].rowRenderer ? spacing : 0));
-            m_grid[r].baseLine = baseline;
+            m_grid[r].baseline = baseline;
         }
 
         m_rowPos[r + 1] = max(m_rowPos[r + 1], m_rowPos[r]);
@@ -525,6 +527,14 @@ int RenderTableSection::layoutRows(int toAdd)
                                            rHeight - cell->borderTop() - cell->paddingTop() - 
                                                      cell->borderBottom() - cell->paddingBottom()));
                 cell->layoutIfNeeded();
+                
+                // If the baseline moved, we may have to update the data for our row. Find out the new baseline.
+                EVerticalAlign va = cell->style()->verticalAlign();
+                if (va == BASELINE || va == TEXT_BOTTOM || va == TEXT_TOP || va == SUPER || va == SUB) {
+                    int b = cell->baselinePosition();
+                    if (b > cell->borderTop() + cell->paddingTop())
+                        m_grid[r].baseline = max(m_grid[r].baseline, b);
+                }
             }
             
             int te = 0;
@@ -534,7 +544,7 @@ int RenderTableSection::layoutRows(int toAdd)
                 case TEXT_TOP:
                 case TEXT_BOTTOM:
                 case BASELINE:
-                    te = getBaseline(r) - cell->baselinePosition() ;
+                    te = getBaseline(r) - cell->baselinePosition();
                     break;
                 case TOP:
                     te = 0;
@@ -846,6 +856,12 @@ void RenderTableSection::recalcOuterBorder()
 
 void RenderTableSection::paint(PaintInfo& paintInfo, int tx, int ty)
 {
+    // put this back in when all layout tests can handle it
+    // ASSERT(!needsLayout());
+    // avoid crashing on bugs that cause us to paint with dirty layout
+    if (needsLayout())
+        return;
+    
     unsigned totalRows = m_gridRows;
     unsigned totalCols = table()->columns().size();
 

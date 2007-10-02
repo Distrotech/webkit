@@ -19,8 +19,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -713,7 +713,7 @@ enum EUserDrag {
 // CSS3 User Select Values
 
 enum EUserSelect {
-    SELECT_AUTO, SELECT_NONE, SELECT_TEXT, SELECT_IGNORE
+    SELECT_NONE, SELECT_TEXT
 };
 
 // Word Break Values. Matches WinIE, rather than CSS3
@@ -847,7 +847,6 @@ public:
     CounterDirectiveMap* m_counterDirectives;
 
     unsigned userDrag : 2; // EUserDrag
-    unsigned userSelect : 2;  // EUserSelect
     bool textOverflow : 1; // Whether or not lines that spill out should be truncated with "..."
     unsigned marginTopCollapse : 2; // EMarginCollapse
     unsigned marginBottomCollapse : 2; // EMarginCollapse
@@ -890,6 +889,7 @@ public:
     unsigned khtmlLineBreak : 1; // EKHTMLLineBreak
     bool textSizeAdjust : 1; // An Apple extension.
     unsigned resize : 2; // EResize
+    unsigned userSelect : 1;  // EUserSelect
 };
 
 //------------------------------------------------
@@ -962,7 +962,7 @@ enum EVisibility { VISIBLE, HIDDEN, COLLAPSE };
 
 enum ECursor {
     CURSOR_AUTO, CURSOR_CROSS, CURSOR_DEFAULT, CURSOR_POINTER, CURSOR_MOVE, CURSOR_VERTICAL_TEXT, CURSOR_CELL, CURSOR_CONTEXT_MENU,
-    CURSOR_ALIAS, CURSOR_PROGRESS, CURSOR_NO_DROP, CURSOR_NOT_ALLOWED,
+    CURSOR_ALIAS, CURSOR_PROGRESS, CURSOR_NO_DROP, CURSOR_NOT_ALLOWED, CURSOR_WEBKIT_ZOOM_IN, CURSOR_WEBKIT_ZOOM_OUT,
     CURSOR_E_RESIZE, CURSOR_NE_RESIZE, CURSOR_NW_RESIZE, CURSOR_N_RESIZE, CURSOR_SE_RESIZE, CURSOR_SW_RESIZE,
     CURSOR_S_RESIZE, CURSOR_W_RESIZE, CURSOR_EW_RESIZE, CURSOR_NS_RESIZE, CURSOR_NESW_RESIZE, CURSOR_NWSE_RESIZE,
     CURSOR_COL_RESIZE, CURSOR_ROW_RESIZE, CURSOR_TEXT, CURSOR_WAIT, CURSOR_HELP, CURSOR_ALL_SCROLL, 
@@ -1461,7 +1461,7 @@ public:
     EMarqueeDirection marqueeDirection() const { return static_cast<EMarqueeDirection>(rareNonInheritedData->marquee->direction); }
     EUserModify userModify() const { return static_cast<EUserModify>(rareInheritedData->userModify); }
     EUserDrag userDrag() const { return static_cast<EUserDrag>(rareNonInheritedData->userDrag); }
-    EUserSelect userSelect() const { return static_cast<EUserSelect>(rareNonInheritedData->userSelect); }
+    EUserSelect userSelect() const { return static_cast<EUserSelect>(rareInheritedData->userSelect); }
     bool textOverflow() const { return rareNonInheritedData->textOverflow; }
     EMarginCollapse marginTopCollapse() const { return static_cast<EMarginCollapse>(rareNonInheritedData->marginTopCollapse); }
     EMarginCollapse marginBottomCollapse() const { return static_cast<EMarginCollapse>(rareNonInheritedData->marginBottomCollapse); }
@@ -1703,7 +1703,7 @@ public:
     void setMarqueeLoopCount(int i) { SET_VAR(rareNonInheritedData.access()->marquee, loops, i); }
     void setUserModify(EUserModify u) { SET_VAR(rareInheritedData, userModify, u); }
     void setUserDrag(EUserDrag d) { SET_VAR(rareNonInheritedData, userDrag, d); }
-    void setUserSelect(EUserSelect s) { SET_VAR(rareNonInheritedData, userSelect, s); }
+    void setUserSelect(EUserSelect s) { SET_VAR(rareInheritedData, userSelect, s); }
     void setTextOverflow(bool b) { SET_VAR(rareNonInheritedData, textOverflow, b); }
     void setMarginTopCollapse(EMarginCollapse c) { SET_VAR(rareNonInheritedData, marginTopCollapse, c); }
     void setMarginBottomCollapse(EMarginCollapse c) { SET_VAR(rareNonInheritedData, marginBottomCollapse, c); }
@@ -1810,8 +1810,8 @@ public:
     static ETextTransform initialTextTransform() { return TTNONE; }
     static EVisibility initialVisibility() { return VISIBLE; }
     static EWhiteSpace initialWhiteSpace() { return NORMAL; }
-    static Length initialBackgroundXPosition() { return Length(); }
-    static Length initialBackgroundYPosition() { return Length(); }
+    static Length initialBackgroundXPosition() { return Length(0.0, Percent); }
+    static Length initialBackgroundYPosition() { return Length(0.0, Percent); }
     static short initialHorizontalBorderSpacing() { return 0; }
     static short initialVerticalBorderSpacing() { return 0; }
     static ECursor initialCursor() { return CURSOR_AUTO; }
@@ -1851,7 +1851,7 @@ public:
     static EMarqueeDirection initialMarqueeDirection() { return MAUTO; }
     static EUserModify initialUserModify() { return READ_ONLY; }
     static EUserDrag initialUserDrag() { return DRAG_AUTO; }
-    static EUserSelect initialUserSelect() { return SELECT_AUTO; }
+    static EUserSelect initialUserSelect() { return SELECT_TEXT; }
     static bool initialTextOverflow() { return false; }
     static EMarginCollapse initialMarginTopCollapse() { return MCOLLAPSE; }
     static EMarginCollapse initialMarginBottomCollapse() { return MCOLLAPSE; }

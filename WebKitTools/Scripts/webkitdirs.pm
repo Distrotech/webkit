@@ -48,6 +48,9 @@ my $configuration;
 my $configurationProductDir;
 my $sourceDir;
 my $currentSVNRevision;
+my $osXVersion;
+my $isQt;
+my $isGtk;
 
 # Variables for Win32 support
 my $vcBuildPath;
@@ -81,12 +84,21 @@ sub determineBaseProductDir
     return if defined $baseProductDir;
     determineSourceDir();
     if (isOSX()) {
-        open PRODUCT, "defaults read com.apple.Xcode PBXProductDirectory 2> /dev/null |" or die;
-        $baseProductDir = <PRODUCT>;
+        open PRODUCT, "defaults read com.apple.Xcode PBXApplicationwideBuildSettings 2> /dev/null |" or die;
+        $baseProductDir = join '', <PRODUCT>;
         close PRODUCT;
-        if ($baseProductDir) {
-            chomp $baseProductDir;
-            undef $baseProductDir unless $baseProductDir =~ /^\//;
+
+        $baseProductDir = $1 if $baseProductDir =~ /SYMROOT\s*=\s*\"(.*?)\";/s;
+        undef $baseProductDir unless $baseProductDir =~ /^\//;
+
+        if (!defined($baseProductDir)) {
+            open PRODUCT, "defaults read com.apple.Xcode PBXProductDirectory 2> /dev/null |" or die;
+            $baseProductDir = <PRODUCT>;
+            close PRODUCT;
+            if ($baseProductDir) {
+                chomp $baseProductDir;
+                undef $baseProductDir unless $baseProductDir =~ /^\//;
+            }
         }
     } else {
         $baseProductDir = $ENV{"WEBKITOUTPUTDIR"};
@@ -108,13 +120,18 @@ sub determineBaseProductDir
 
     if (!defined($baseProductDir)) {
         $baseProductDir = "$sourceDir/WebKitBuild";
-        @baseProductDirOption = ("SYMROOT=$baseProductDir") if (isOSX());
+        @baseProductDirOption = ("SYMROOT=$baseProductDir", "OBJROOT=$baseProductDir") if (isOSX());
         if (isCygwin()) {
             my $dosBuildPath = `cygpath --windows \"$baseProductDir\"`;
             chomp $dosBuildPath;
             $ENV{"WEBKITOUTPUTDIR"} = $dosBuildPath;
         }
     }
+}
+
+sub setBaseProductDir($)
+{
+    ($baseProductDir) = @_;
 }
 
 sub determineConfiguration
@@ -147,11 +164,16 @@ sub determineConfigurationProductDir
     }
 }
 
+sub setConfigurationProductDir($)
+{
+    ($configurationProductDir) = @_;
+}
+
 sub determineCurrentSVNRevision
 {
     return if defined $currentSVNRevision;
     determineSourceDir();
-    my $svnInfo = `svn info $sourceDir | grep Revision:`;
+    my $svnInfo = `LC_ALL=C svn info $sourceDir | grep Revision:`;
     ($currentSVNRevision) = ($svnInfo =~ m/Revision: (\d+).*/g);
     die "Unable to determine current SVN revision in $sourceDir" unless (defined $currentSVNRevision);
     return $currentSVNRevision;
@@ -258,15 +280,27 @@ sub safariPath
     if (!$safariBundle) {
         determineConfigurationProductDir();
         # Use Safari.app in product directory if present (good for Safari development team).
-        if (-d "$configurationProductDir/Safari.app") {
+        if (isOSX() && -d "$configurationProductDir/Safari.app") {
             $safariBundle = "$configurationProductDir/Safari.app";
+        } elsif (isCygwin() && -x "$configurationProductDir/bin/Safari.exe") {
+            $safariBundle = "$configurationProductDir/bin/Safari.exe";
         } else {
-            # Otherwise use Safari.app in Applications directory.
-            $safariBundle = "/Applications/Safari.app";
+            # Otherwise use the installed Safari
+            if (isOSX()) {
+                $safariBundle = "/Applications/Safari.app";
+            } elsif (isCygwin()) {
+                chomp(my $programFiles = `cygpath -u '$ENV{"PROGRAMFILES"}'`);
+                $safariBundle = "$programFiles/Safari/Safari.exe";
+            }
         }
     }
-    my $safariPath = "$safariBundle/Contents/MacOS/Safari";
-    die "Can't find executable at $safariPath.\n" unless -x $safariPath;
+    my $safariPath;
+    if (isOSX()) {
+        $safariPath = "$safariBundle/Contents/MacOS/Safari";
+    } elsif (isCygwin()) {
+        $safariPath = $safariBundle;
+    }
+    die "Can't find executable at $safariPath.\n" if isOSX() && !-x $safariPath;
     return $safariPath;
 }
 
@@ -274,7 +308,7 @@ sub builtDylibPathForName
 {
     my $framework = shift;
     determineConfigurationProductDir();
-    if (isQt() or isGdk()) {
+    if (isQt() or isGtk()) {
         return "$configurationProductDir/$framework";
     }
     if (isOSX()) {
@@ -294,8 +328,9 @@ sub builtDylibPathForName
 # Check to see that all the frameworks are built.
 sub checkFrameworks
 {
+    return if isCygwin();
     my @frameworks = ("JavaScriptCore", "WebCore");
-    push(@frameworks, "WebKit") if isOSX();
+    push(@frameworks, "WebKit") if isOSX() and not isGtk() and not isQt();
     for my $framework (@frameworks) {
         my $path = builtDylibPathForName($framework);
         die "Can't find built framework at \"$path\".\n" unless -x $path;
@@ -308,12 +343,12 @@ sub hasSVGSupport
 
     my $path = shift;
 
-    if (isQt() and $path =~ /WebCore/) {
-        $path .= "/../lib/libWebKitQt.so";
+    if (isQt()) {
+        return 1;
     }
 
-    if (isGdk() and $path =~ /WebCore/) {
-        $path .= "/../lib/libWebKitGdk.so";
+    if (isGtk() and $path =~ /WebCore/) {
+        $path .= "/../lib/libWebKitGtk.so";
     }
 
     open NM, "-|", "nm", $path or die;
@@ -351,18 +386,43 @@ sub checkWebCoreSVGSupport
 
 sub isQt()
 {
-    return defined($ENV{'QTDIR'})
+    determineIsQt();
+    return $isQt;
 }
 
-sub isGdk()
+sub determineIsQt()
 {
+    return if defined($isQt);
+
+    # Allow override in case QTDIR is not set.
     for my $i (0 .. $#ARGV) {
         my $opt = $ARGV[$i];
-        if ($opt =~ /^--gdk$/i ) {
-            return 1;
+        if ($opt =~ /^--qt/i ) {
+            $isQt = 1;
+            return;
         }
     }
-    return 0;
+    $isQt = defined($ENV{'QTDIR'});
+}
+
+sub isGtk()
+{
+    determineIsGtk();
+    return $isGtk;
+}
+
+sub determineIsGtk()
+{
+    return if defined($isGtk);
+
+    for my $i (0 .. $#ARGV) {
+        my $opt = $ARGV[$i];
+        if ($opt =~ /^--gtk$/i ) {
+            $isGtk = 1;
+            return;
+        }
+    }
+    $isGtk = 0;
 }
 
 sub isCygwin()
@@ -373,6 +433,62 @@ sub isCygwin()
 sub isOSX()
 {
     return ($^O eq "darwin");
+}
+
+sub determineOSXVersion()
+{
+    return if $osXVersion;
+
+    if (!isOSX()) {
+        $osXVersion = -1;
+        return;
+    }
+
+    my $version = `sw_vers -productVersion`;
+    my @splitVersion = split(/\./, $version);
+    @splitVersion >= 2 or die "Invalid version $version";
+    $osXVersion = {
+            "major" => $splitVersion[0],
+            "minor" => $splitVersion[1],
+            "subminor" => (defined($splitVersion[2]) ? $splitVersion[2] : 0),
+    };
+}
+
+sub osXVersion()
+{
+    determineOSXVersion();
+    return $osXVersion;
+}
+
+sub isTiger()
+{
+    return isOSX() && osXVersion()->{"minor"} == 4;
+}
+
+sub isLeopard()
+{
+    return isOSX() && osXVersion()->{"minor"} == 5;
+}
+
+sub launcherPath()
+{
+    my $relativeScriptsPath = File::Spec->catpath("", File::Spec->abs2rel(dirname($0), getcwd()), "");
+    if (isGtk() || isQt()) {
+        return "$relativeScriptsPath/run-launcher";
+    } elsif (isOSX() || isCygwin()) {
+        return "$relativeScriptsPath/run-safari";
+    }
+}
+
+sub launcherName()
+{
+    if (isGtk()) {
+        return "GtkLauncher";
+    } elsif (isQt()) {
+        return "QtLauncher";
+    } elsif (isOSX() || isCygwin()) {
+        return "Safari";
+    }
 }
 
 sub checkRequiredSystemConfig
@@ -393,6 +509,18 @@ sub checkRequiredSystemConfig
             print "most likely fail.  The latest Xcode is available from the web:\n";
             print "http://developer.apple.com/tools/xcode\n";
             print "*************************************************************\n";
+        }
+    } elsif (isGtk() or isQt()) {
+        my @cmds = qw(flex bison gperf);
+        my @missing = ();
+        foreach my $cmd (@cmds) {
+            if (not `$cmd --version`) {
+                push @missing, $cmd;
+            }
+        }
+        if (@missing) {
+            my $list = join ", ", @missing;
+            die "ERROR: $list missing but required to build WebKit.\n";
         }
     }
     # Win32 and other platforms may want to check for minimum config
@@ -429,10 +557,13 @@ sub setupCygwinEnv()
         }
     }
 
+    chomp($ENV{'WEBKITLIBRARIESDIR'} = `cygpath -wa "$sourceDir/WebKitLibraries/win"`) unless $ENV{'WEBKITLIBRARIESDIR'};
+
     $windowsTmpPath = `cygpath -w /tmp`;
     chomp $windowsTmpPath;
     print "Building results into: ", baseProductDir(), "\n";
     print "WEBKITOUTPUTDIR is set to: ", $ENV{"WEBKITOUTPUTDIR"}, "\n";
+    print "WEBKITLIBRARIESDIR is set to: ", $ENV{"WEBKITLIBRARIESDIR"}, "\n";
 }
 
 sub buildVisualStudioProject($)
@@ -440,18 +571,55 @@ sub buildVisualStudioProject($)
     my ($project) = @_;
     setupCygwinEnv();
 
-    chdir "$project.vcproj" or die "Failed to cd into $project.vcproj\n";
     my $config = configuration();
 
-    print "$vcBuildPath $project.sln /build $config";
-    my $result = system $vcBuildPath, "$project.sln", "/build", $config;
-    chdir ".." or die;
+    chomp(my $winProjectPath = `cygpath -w "$project"`);
+
+    print "$vcBuildPath $winProjectPath /build $config";
+    my $result = system $vcBuildPath, $winProjectPath, "/build", $config;
     return $result;
+}
+
+sub qtMakeCommand()
+{
+    chomp(my $mkspec = `qmake -query QMAKE_MKSPECS`);
+    $mkspec .= "/default";
+
+    my $compiler = "";
+    open SPEC, "<$mkspec/qmake.conf" or return "make";
+    while (<SPEC>) {
+        if ($_ =~ /QMAKE_CC\s*=\s*([^\s]+)/) {
+            $compiler = $1;
+        }
+    }
+    close SPEC;
+
+    #print "default spec: " . $mkspec . "\n";
+    #print "compiler found: " . $compiler . "\n";
+
+    if ($compiler eq "cl") {
+        return "nmake";
+    }
+
+    return "make";
 }
 
 sub buildQMakeProject($$)
 {
     my ($project, $colorize) = @_;
+
+    my @buildArgs = ("-r");
+    my $make = qtMakeCommand();
+
+    my $qmakebin = "qmake"; # Allow override of the qmake binary from $PATH
+    for my $i (0 .. $#ARGV) {
+        my $opt = $ARGV[$i];
+        if ($opt =~ /^--qmake=(.*)/i ) {
+            $qmakebin = $1;
+        } elsif ($opt =~ /^--qmakearg=(.*)/i ) {
+            push @buildArgs, $1;
+        }
+    }
 
     if ($project ne "WebKit") {
         die "Qt/Linux builds JavaScriptCore/WebCore/WebKitQt in one shot! Only call it for 'WebKit'.\n";
@@ -460,49 +628,77 @@ sub buildQMakeProject($$)
     my $config = configuration();
     my $prefix = $ENV{"WebKitInstallationPrefix"};
 
-    my @buildArgs = ("-r");
     push @buildArgs, "OUTPUT_DIR=" . baseProductDir() . "/$config";
     push @buildArgs, "CONFIG+=qt-port";
     push @buildArgs, sourceDir() . "/WebKit.pro";
+    if ($config =~ m/debug/i) {
+        push @buildArgs, "CONFIG-=release";
+        push @buildArgs, "CONFIG+=debug";
+    } else {
+        push @buildArgs, "CONFIG+=release";
+        push @buildArgs, "CONFIG-=debug";
+    }
 
-    print "Calling 'qmake @buildArgs' in " . baseProductDir() . "/$config ...\n\n";
+    print "Calling '$qmakebin @buildArgs' in " . baseProductDir() . "/$config ...\n\n";
     print "Installation directory: $prefix\n" if(defined($prefix));
 
-    system "mkdir -p " . baseProductDir() . "/$config";
-    chdir baseProductDir() . "/$config" or die "Failed to cd into " . baseProductDir() . "/$config \n";
+    my $dir = baseProductDir();
+    if (! -d $dir) {
+        mkdir $dir or die "Failed to create product directory " . $dir;
+    }
+    $dir = $dir . "/$config";
+    if (! -d $dir) {
+        mkdir $dir or die "Failed to create build directory " . $dir;
+    }
 
-    my $result = system "qmake", @buildArgs;
+    chdir $dir or die "Failed to cd into " . $dir . "\n";
+
+    my $result = system $qmakebin, @buildArgs;
     if($result ne 0) {
-       die "Failed to setup build environment using qmake!\n";
+       die "Failed to setup build environment using $qmakebin!\n";
     }
 
     my $clean = $ENV{"WEBKIT_FULLBUILD"};
 
     if(defined $clean) {
-      system "make clean";
+      system "$make clean";
     }
 
-    $result = system "make";
+    $result = system "$make";
     chdir ".." or die;
     return $result;
 }
 
-sub buildQMakeGdkProject($$)
+sub buildQMakeGtkProject($$)
 {
     my ($project, $colorize) = @_;
 
     if ($project ne "WebKit") {
-        die "The Gdk portbuilds JavaScriptCore/WebCore/WebKitQt in one shot! Only call it for 'WebKit'.\n";
+        die "The Gtk portbuilds JavaScriptCore/WebCore/WebKitQt in one shot! Only call it for 'WebKit'.\n";
     }
 
     my $config = configuration();
     my $prefix = $ENV{"WebKitInstallationPrefix"};
 
     my @buildArgs = ("-r");
+
+    foreach my $opt (@ARGV) {
+        if ($opt =~ /^--qmakearg=(.*)/i ) {
+            push @buildArgs, $1;
+        }
+    }
+
     push @buildArgs, "OUTPUT_DIR=" . baseProductDir() . "/$config";
     push @buildArgs, "CONFIG-=qt";
-    push @buildArgs, "CONFIG+=gdk-port";
+    push @buildArgs, "CONFIG+=gtk-port";
     push @buildArgs, sourceDir() . "/WebKit.pro";
+    if ($config =~ m/debug/i) {
+        push @buildArgs, "CONFIG-=release";
+        push @buildArgs, "CONFIG+=debug";
+    } else {
+        push @buildArgs, "CONFIG+=release";
+        push @buildArgs, "CONFIG-=debug";
+    }
 
     print "Calling 'qmake @buildArgs' in " . baseProductDir() . "/$config ...\n\n";
     print "Installation directory: $prefix\n" if(defined($prefix));

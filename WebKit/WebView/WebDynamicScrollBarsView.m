@@ -29,6 +29,7 @@
 #import <WebKit/WebDynamicScrollBarsView.h>
 
 #import <WebKit/WebDocument.h>
+#import <WebKitSystemInterface.h>
 
 @implementation WebDynamicScrollBarsView
 
@@ -40,10 +41,13 @@
 - (void)setScrollBarsSuppressed:(BOOL)suppressed repaintOnUnsuppress:(BOOL)repaint
 {
     suppressScrollers = suppressed;
-    if (suppressed || repaint) {
-        [[self verticalScroller] setNeedsDisplay: !suppressed];
-        [[self horizontalScroller] setNeedsDisplay: !suppressed];
+    if (suppressed) {
+        [[self verticalScroller] setNeedsDisplay:NO];
+        [[self horizontalScroller] setNeedsDisplay:NO];
     }
+        
+    if (!suppressed && repaint)
+        [super reflectScrolledClipView:[self contentView]];
 }
 
 - (void)updateScrollers
@@ -68,9 +72,7 @@
         BOOL scrollsVertically;
         BOOL scrollsHorizontally;
 
-        if (!suppressLayout && !suppressScrollers &&
-            (hScroll == WebCoreScrollbarAuto || vScroll == WebCoreScrollbarAuto))
-        {
+        if (!suppressLayout && !suppressScrollers && (hScroll == WebCoreScrollbarAuto || vScroll == WebCoreScrollbarAuto)) {
             // Do a layout if pending, before checking if scrollbars are needed.
             // This fixes 2969367, although may introduce a slowdown in live resize performance.
             NSView *documentView = [self documentView];
@@ -79,10 +81,10 @@
                 [(id <WebDocumentView>)documentView setNeedsLayout: YES];
                 [(id <WebDocumentView>)documentView layout];
             }
-            
+
             NSSize documentSize = [documentView frame].size;
             NSSize frameSize = [self frame].size;
-            
+
             scrollsVertically = (vScroll == WebCoreScrollbarAlwaysOn) ||
                 (vScroll == WebCoreScrollbarAuto && documentSize.height > frameSize.height);
             if (scrollsVertically)
@@ -95,12 +97,11 @@
                     scrollsVertically = (vScroll == WebCoreScrollbarAlwaysOn) ||
                         (vScroll == WebCoreScrollbarAuto && documentSize.height + [NSScroller scrollerWidth] > frameSize.height);
             }
-        }
-        else {
+        } else {
             scrollsHorizontally = (hScroll == WebCoreScrollbarAuto) ? hasHorizontalScroller : (hScroll == WebCoreScrollbarAlwaysOn);
             scrollsVertically = (vScroll == WebCoreScrollbarAuto) ? hasVerticalScroller : (vScroll == WebCoreScrollbarAlwaysOn);
         }
-        
+
         if (hasVerticalScroller != scrollsVertically) {
             [self setHasVerticalScroller:scrollsVertically];
             hasVerticalScroller = scrollsVertically;
@@ -116,7 +117,7 @@
         [[self verticalScroller] setNeedsDisplay: NO];
         [[self horizontalScroller] setNeedsDisplay: NO];
     }
-    
+
     inUpdateScrollers = false;
 }
 
@@ -133,13 +134,10 @@
         if (!inUpdateScrollers && [[NSGraphicsContext currentContext] isDrawingToScreen])
             [self updateScrollers];
     }
-    [super reflectScrolledClipView:clipView];
 
-    // Validate the scrollers if they're being suppressed.
-    if (suppressScrollers) {
-        [[self verticalScroller] setNeedsDisplay: NO];
-        [[self horizontalScroller] setNeedsDisplay: NO];
-    }
+    // Update the scrollers if they're not being suppressed.
+    if (!suppressScrollers)
+        [super reflectScrolledClipView:clipView];
 }
 
 - (void)setAllowsScrolling:(BOOL)flag
@@ -210,21 +208,46 @@
 
 - (void)setHorizontalScrollingMode:(WebCoreScrollbarMode)mode
 {
+    [self setHorizontalScrollingMode:mode andLock:NO];
+}
+
+- (void)setHorizontalScrollingMode:(WebCoreScrollbarMode)mode andLock:(BOOL)lock
+{
     if (mode == hScroll || hScrollModeLocked)
         return;
+
     hScroll = mode;
+
+    if (lock)
+        [self setHorizontalScrollingModeLocked:YES];
+
     [self updateScrollers];
 }
 
 - (void)setVerticalScrollingMode:(WebCoreScrollbarMode)mode
 {
+    [self setVerticalScrollingMode:mode andLock:NO];
+}
+
+- (void)setVerticalScrollingMode:(WebCoreScrollbarMode)mode andLock:(BOOL)lock
+{
     if (mode == vScroll || vScrollModeLocked)
         return;
+
     vScroll = mode;
+
+    if (lock)
+        [self setVerticalScrollingModeLocked:YES];
+
     [self updateScrollers];
 }
 
 - (void)setScrollingMode:(WebCoreScrollbarMode)mode
+{
+    [self setScrollingMode:mode andLock:NO];
+}
+
+- (void)setScrollingMode:(WebCoreScrollbarMode)mode andLock:(BOOL)lock
 {
     if ((mode == vScroll && mode == hScroll) || (vScrollModeLocked && hScrollModeLocked))
         return;
@@ -239,6 +262,9 @@
         hScroll = mode;
         update = YES;
     }
+
+    if (lock)
+        [self setScrollingModesLocked:YES];
 
     if (update)
         [self updateScrollers];
@@ -272,6 +298,26 @@
 - (BOOL)autoforwardsScrollWheelEvents
 {
     return YES;
+}
+
+- (void)scrollWheel:(NSEvent *)event
+{
+    float deltaX;
+    float deltaY;
+    BOOL isContinuous;
+    WKGetWheelEventDeltas(event, &deltaX, &deltaY, &isContinuous);
+
+    if (fabsf(deltaY) > fabsf(deltaX)) {
+        if (![self allowsVerticalScrolling]) {
+            [[self nextResponder] scrollWheel:event];
+            return;
+        }
+    } else if (![self allowsHorizontalScrolling]) {
+        [[self nextResponder] scrollWheel:event];
+        return;
+    }
+
+    [super scrollWheel:event];
 }
 
 @end

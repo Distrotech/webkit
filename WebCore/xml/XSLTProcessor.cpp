@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -42,6 +42,7 @@
 #include "Text.h"
 #include "TextResourceDecoder.h"
 #include "XMLTokenizer.h"
+#include "XSLTExtensions.h"
 #include "loader.h"
 #include "markup.h"
 #include <libxslt/imports.h>
@@ -50,6 +51,21 @@
 #include <wtf/Assertions.h>
 #include <wtf/Platform.h>
 #include <wtf/Vector.h>
+#if PLATFORM(MAC)
+#include "SoftLinking.h"
+#endif
+
+#if PLATFORM(MAC)
+SOFT_LINK_LIBRARY(libxslt);
+SOFT_LINK(libxslt, xsltFreeStylesheet, void, (xsltStylesheetPtr sheet), (sheet))
+SOFT_LINK(libxslt, xsltFreeTransformContext, void, (xsltTransformContextPtr ctxt), (ctxt))
+SOFT_LINK(libxslt, xsltNewTransformContext, xsltTransformContextPtr, (xsltStylesheetPtr style, xmlDocPtr doc), (style, doc))
+SOFT_LINK(libxslt, xsltApplyStylesheetUser, xmlDocPtr, (xsltStylesheetPtr style, xmlDocPtr doc, const char **params, const char *output, FILE * profile, xsltTransformContextPtr userCtxt), (style, doc, params, output, profile, userCtxt))
+SOFT_LINK(libxslt, xsltQuoteUserParams, int, (xsltTransformContextPtr ctxt, const char **params), (ctxt, params))
+SOFT_LINK(libxslt, xsltSetLoaderFunc, void, (xsltDocLoaderFunc f), (f))
+SOFT_LINK(libxslt, xsltSaveResultTo, int, (xmlOutputBufferPtr buf, xmlDocPtr result, xsltStylesheetPtr style), (buf, result, style))
+SOFT_LINK(libxslt, xsltNextImport, xsltStylesheetPtr, (xsltStylesheetPtr style), (style))
+#endif
 
 namespace WebCore {
 
@@ -168,8 +184,8 @@ static const char **xsltParamArrayFromParameterMap(XSLTProcessor::ParameterMap& 
     XSLTProcessor::ParameterMap::iterator end = parameters.end();
     unsigned index = 0;
     for (XSLTProcessor::ParameterMap::iterator it = parameters.begin(); it != end; ++it) {
-        parameterArray[index++] = strdup(it->first.utf8());
-        parameterArray[index++] = strdup(it->second.utf8());
+        parameterArray[index++] = strdup(it->first.utf8().data());
+        parameterArray[index++] = strdup(it->second.utf8().data());
     }
     parameterArray[index] = 0;
 
@@ -226,11 +242,8 @@ RefPtr<Document> XSLTProcessor::createDocumentFromSource(const DeprecatedString&
     
     result->write(documentSource);
     result->finishParsing();
-    if (frame)
-        frame->loader()->checkCompleted();
-    else
-        result->close(); // FIXME: Even viewless docs can load subresources. onload will fire too early.
-                         // This is probably a bug in XMLHttpRequestObjects as well.
+    result->close();
+
     return result;
 }
 
@@ -324,6 +337,7 @@ bool XSLTProcessor::transformToString(Node *sourceNode, DeprecatedString &mimeTy
         sheet->omitXmlDeclaration = true;
 
         xsltTransformContextPtr transformContext = xsltNewTransformContext(sheet, sourceDoc);
+        registerXSLTExtensions(transformContext);
 
         // This is a workaround for a bug in libxslt. 
         // The bug has been fixed in version 1.1.13, so once we ship that this can be removed.

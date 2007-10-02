@@ -24,7 +24,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Alternatively, the contents of this file may be used under the terms
  * of either the Mozilla Public License Version 1.1, found at
@@ -280,7 +280,6 @@ public:
     
     void updateLayerPosition();
     void updateLayerPositions(bool doFullRepaint = false, bool checkForRepaint = true);
-    void checkForRepaintOnResize();
 
     void relativePositionOffset(int& relX, int& relY) { relX += m_relX; relY += m_relY; }
 
@@ -339,6 +338,7 @@ public:
     void updateHoverActiveState(const HitTestRequest&, HitTestResult&);
 
     IntRect repaintRect() const { return m_repaintRect; }
+    void setNeedsFullRepaint(bool f = true) { m_needsFullRepaint = f; }
     
     int staticX() const { return m_staticX; }
     int staticY() const { return m_staticY; }
@@ -447,7 +447,7 @@ protected:
                                  // we ended up painting this layer or any descendants (and therefore need to
                                  // blend).
     bool m_inOverflowRelayout : 1;
-    bool m_repaintOverflowOnResize : 1;
+    bool m_needsFullRepaint : 1;
 
     bool m_overflowStatusDirty : 1;
     bool m_horizontalOverflow : 1;

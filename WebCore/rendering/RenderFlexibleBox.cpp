@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -287,6 +287,15 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
     // Always ensure our overflow width is at least as large as our width.
     if (m_overflowWidth < m_width)
         m_overflowWidth = m_width;
+
+    if (!hasOverflowClip()) {
+        if (ShadowData* boxShadow = style()->boxShadow()) {
+            m_overflowLeft = min(m_overflowLeft, boxShadow->x - boxShadow->blur);
+            m_overflowWidth = max(m_overflowWidth, m_width + boxShadow->x + boxShadow->blur);
+            m_overflowTop = min(m_overflowTop, boxShadow->y - boxShadow->blur);
+            m_overflowHeight = max(m_overflowHeight, m_height + boxShadow->y + boxShadow->blur);
+        }
+    }
 
     view()->popLayoutState();
 
@@ -695,8 +704,10 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
                     child->setChildNeedsLayout(true, false);
                     
                     // Dirty all the positioned objects.
-                    static_cast<RenderBlock*>(child)->markPositionedObjectsForLayout();
-                    static_cast<RenderBlock*>(child)->clearTruncation();
+                    if (child->isRenderBlock()) {
+                        static_cast<RenderBlock*>(child)->markPositionedObjectsForLayout();
+                        static_cast<RenderBlock*>(child)->clearTruncation();
+                    }
                 }
                 child->layoutIfNeeded();
                 if (child->style()->height().isAuto() && child->isBlockFlow())
@@ -706,8 +717,8 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
         }
         
         // Get the # of lines and then alter all block flow children with auto height to use the
-        // specified height.
-        int numVisibleLines = int((maxLineCount+1)*style()->lineClamp()/100.0);
+        // specified height. We always try to leave room for at least one line.
+        int numVisibleLines = max(1, static_cast<int>((maxLineCount + 1) * style()->lineClamp() / 100.0));
         if (numVisibleLines < maxLineCount) {
             for (child = iterator.first(); child; child = iterator.next()) {
                 if (child->isPositioned() || !child->style()->height().isAuto() || !child->isBlockFlow())

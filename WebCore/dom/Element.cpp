@@ -18,14 +18,14 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
 #include "Element.h"
 
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 #include "Document.h"
 #include "Editor.h"
 #include "ExceptionCode.h"
@@ -51,7 +51,11 @@ using namespace XMLNames;
 class ElementRareData {
 public:
     ElementRareData(Element*);
+    void resetComputedStyle(Element*);
+
     IntSize m_minimumSizeForResizing;
+    RenderStyle* m_computedStyle;
+    bool m_needsFocusAppearanceUpdateSoonAfterAttach;
 };
 
 typedef HashMap<const Element*, ElementRareData*> ElementRareDataMap;
@@ -74,13 +78,21 @@ static inline IntSize defaultMinimumSizeForResizing()
 
 inline ElementRareData::ElementRareData(Element* element)
     : m_minimumSizeForResizing(defaultMinimumSizeForResizing())
+    , m_computedStyle(0)
+    , m_needsFocusAppearanceUpdateSoonAfterAttach(false)
 {
+}
+
+void ElementRareData::resetComputedStyle(Element* element)
+{
+    if (!m_computedStyle)
+        return;
+    m_computedStyle->deref(element->document()->renderArena());
+    m_computedStyle = 0;
 }
 
 Element::Element(const QualifiedName& qName, Document *doc)
     : ContainerNode(doc)
-    , m_updateFocusAppearanceTimer(this, &Element::updateFocusAppearanceTimerFired)
-    , m_needsFocusAppearanceUpdate(false)
     , m_tagName(qName)
 {
 }
@@ -153,16 +165,6 @@ void Element::setAttribute(const QualifiedName& name, const String &value)
 {
     ExceptionCode ec = 0;
     setAttribute(name, value.impl(), ec);
-}
-
-void Element::setBooleanAttribute(const QualifiedName& name, bool b)
-{
-    if (b)
-        setAttribute(name, name.localName());
-    else {
-        ExceptionCode ex;
-        removeAttribute(name, ex);
-    }
 }
 
 // Virtual function, defined in base class.
@@ -657,17 +659,22 @@ void Element::removedFromDocument()
 
 void Element::attach()
 {
-#if !defined(SPEED_DEBUG) || SPEED_DEBUG < 1
     createRendererIfNeeded();
-#endif
     ContainerNode::attach();
-    if (needsFocusAppearanceUpdate() && !m_updateFocusAppearanceTimer.isActive() && document()->focusedNode() == this)
-        m_updateFocusAppearanceTimer.startOneShot(0);
+    if (ElementRareData* rd = rareData()) {
+        if (rd->m_needsFocusAppearanceUpdateSoonAfterAttach) {
+            if (isFocusable() && document()->focusedNode() == this)
+                document()->updateFocusAppearanceSoon();
+            rd->m_needsFocusAppearanceUpdateSoonAfterAttach = false;
+        }
+    }
 }
 
 void Element::detach()
 {
-    stopUpdateFocusAppearanceTimer();
+    cancelFocusAppearanceUpdate();
+    if (ElementRareData* rd = rareData())
+        rd->resetComputedStyle(this);
     ContainerNode::detach();
 }
 
@@ -682,6 +689,10 @@ void Element::recalcStyle(StyleChange change)
         hasParentStyle = true;
 #endif
 
+    if ((change > NoChange || changed())) {
+        if (ElementRareData* rd = rareData())
+            rd->resetComputedStyle(this);
+    }
     if (hasParentStyle && (change >= Inherit || changed())) {
         RenderStyle *newStyle = document()->styleSelector()->styleForElement(this);
         StyleChange ch = diff(_style, newStyle);
@@ -976,19 +987,23 @@ CSSStyleDeclaration *Element::style()
 void Element::focus(bool restorePreviousSelection)
 {
     Document* doc = document();
-    doc->updateLayout();
+    if (doc->focusedNode() == this)
+        return;
+
+    doc->updateLayoutIgnorePendingStylesheets();
     
     if (!supportsFocus())
         return;
     
     if (Page* page = doc->page())
-        page->focusController()->setFocusedNode(this);
+        page->focusController()->setFocusedNode(this, doc->frame());
 
     if (!isFocusable()) {
-        setNeedsFocusAppearanceUpdate(true);
+        createRareData()->m_needsFocusAppearanceUpdateSoonAfterAttach = true;
         return;
     }
         
+    cancelFocusAppearanceUpdate();
     updateFocusAppearance(restorePreviousSelection);
 }
 
@@ -1010,39 +1025,27 @@ void Element::updateFocusAppearance(bool restorePreviousSelection)
         renderer()->enclosingLayer()->scrollRectToVisible(getRect());
 }
 
-void Element::updateFocusAppearanceTimerFired(Timer<Element>*)
-{
-    stopUpdateFocusAppearanceTimer();
-    Document* doc = document();
-    doc->updateLayout();
-    if (isFocusable())
-        updateFocusAppearance();
-}
-    
 void Element::blur()
 {
-    stopUpdateFocusAppearanceTimer();
+    cancelFocusAppearanceUpdate();
     Document* doc = document();
-    if (doc->focusedNode() == this)
-        doc->setFocusedNode(0);
-}
-
-void Element::stopUpdateFocusAppearanceTimer()
-{
-    if (m_updateFocusAppearanceTimer.isActive()) {
-        m_updateFocusAppearanceTimer.stop();
-        setNeedsFocusAppearanceUpdate(false);
+    if (doc->focusedNode() == this) {
+        if (doc->frame())
+            doc->frame()->page()->focusController()->setFocusedNode(0, doc->frame());
+        else
+            doc->setFocusedNode(0);
     }
 }
 
 String Element::innerText() const
 {
+    // We need to update layout, since plainText uses line boxes in the render tree.
+    document()->updateLayoutIgnorePendingStylesheets();
+
     if (!renderer())
         return textContent(true);
 
-    // We need to update layout, since plainText uses line boxes in the render tree.
-    document()->updateLayoutIgnorePendingStylesheets();
-    return plainText(rangeOfContents(const_cast<Element *>(this)).get());
+    return plainText(rangeOfContents(const_cast<Element*>(this)).get());
 }
 
 String Element::outerText() const
@@ -1071,6 +1074,30 @@ void Element::setMinimumSizeForResizing(const IntSize& size)
     if (size == defaultMinimumSizeForResizing() && !rareData())
         return;
     createRareData()->m_minimumSizeForResizing = size;
+}
+
+RenderStyle* Element::computedStyle()
+{
+    if (RenderStyle* usedStyle = renderStyle())
+        return usedStyle;
+
+    if (!attached())
+        // FIXME: Try to do better than this. Ensure that styleForElement() works for elements that are not in the
+        // document tree and figure out when to destroy the computed style for such elements.
+        return 0;
+
+    ElementRareData* rd = createRareData();
+    if (!rd->m_computedStyle)
+        rd->m_computedStyle = document()->styleSelector()->styleForElement(this, parent() ? parent()->computedStyle() : 0);
+    return rd->m_computedStyle;
+}
+
+void Element::cancelFocusAppearanceUpdate()
+{
+    if (ElementRareData* rd = rareData())
+        rd->m_needsFocusAppearanceUpdateSoonAfterAttach = false;
+    if (document()->focusedNode() == this)
+        document()->cancelFocusAppearanceUpdate();
 }
 
 }

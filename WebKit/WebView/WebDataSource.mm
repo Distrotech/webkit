@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,41 +51,57 @@
 #import <JavaScriptCore/Assertions.h>
 #import <WebCore/FrameLoader.h>
 #import <WebCore/KURL.h>
-#import <WebCore/MimeTypeRegistry.h>
+#import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/ResourceRequest.h>
 #import <WebCore/SharedBuffer.h>
+#import <WebCore/WebCoreObjCExtras.h>
 #import <WebKit/DOMHTML.h>
 #import <WebKit/DOMPrivate.h>
 #import <WebKitSystemInterface.h>
 
 using namespace WebCore;
 
-@interface WebDataSourcePrivate : NSObject
-{
-    @public
-    
-    WebDocumentLoaderMac *loader;
+@interface WebDataSourcePrivate : NSObject {
+@public
+    WebDocumentLoaderMac* loader;
    
     id <WebDocumentRepresentation> representation;
     
     WebUnarchivingState *unarchivingState;
     BOOL representationFinishedLoading;
 }
-
 @end
 
 @implementation WebDataSourcePrivate 
 
+#ifndef BUILDING_ON_TIGER
++ (void)initialize
+{
+    WebCoreObjCFinalizeOnMainThread(self);
+}
+#endif
+
 - (void)dealloc
 {
     ASSERT(!loader->isLoading());
-
+    loader->detachDataSource();
     loader->deref();
     
     [representation release];
     [unarchivingState release];
 
     [super dealloc];
+}
+
+- (void)finalize
+{
+    ASSERT_MAIN_THREAD();
+
+    ASSERT(!loader->isLoading());
+    loader->detachDataSource();
+    loader->deref();
+
+    [super finalize];
 }
 
 @end
@@ -244,7 +260,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
             DOMDocumentFragment *fragment = [[self _bridge] documentFragmentWithMarkupString:markupString baseURLString:[[mainResource URL] _web_originalDataAsString]];
             [markupString release];
             return fragment;
-        } else if (MimeTypeRegistry::isSupportedImageMIMEType(MIMEType)) {
+        } else if (MIMETypeRegistry::isSupportedImageMIMEType(MIMEType)) {
             return [self _documentFragmentWithImageResource:mainResource];
             
         }
@@ -404,8 +420,12 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (NSMutableURLRequest *)request
 {
-    // FIXME: XXX
-    return (NSMutableURLRequest*)_private->loader->request().nsURLRequest();
+    FrameLoader* frameLoader = _private->loader->frameLoader();
+    if (!frameLoader || !frameLoader->frameHasLoaded())
+        return nil;
+
+    // FIXME: this cast is dubious
+    return (NSMutableURLRequest *)_private->loader->request().nsURLRequest();
 }
 
 - (NSURLResponse *)response

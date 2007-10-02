@@ -14,8 +14,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -39,6 +39,7 @@ namespace WebCore
     class Frame;
     class FrameView;
     class HTMLFrameOwnerElement;
+    class PlatformScrollbar;
 }
 class QWebPage;
 
@@ -71,8 +72,9 @@ public:
     void init(QWebFrame *qframe, WebCore::Page *page,
               QWebFrameData *frameData);
 
-    void _q_adjustScrollbars();
-    void _q_handleKeyEvent(QKeyEvent *ev, bool isKeyUp);
+    QWebFrame *parentFrame();
+    WebCore::PlatformScrollbar *horizontalScrollBar() const;
+    WebCore::PlatformScrollbar *verticalScrollBar() const;
 
     QWebFrame *q;
     WebCore::FrameLoaderClientQt *frameLoaderClient;

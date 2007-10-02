@@ -42,8 +42,9 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-InsertParagraphSeparatorCommand::InsertParagraphSeparatorCommand(Document *document) 
+InsertParagraphSeparatorCommand::InsertParagraphSeparatorCommand(Document *document, bool useDefaultParagraphElement) 
     : CompositeEditCommand(document)
+    , m_useDefaultParagraphElement(useDefaultParagraphElement)
 {
 }
 
@@ -136,7 +137,9 @@ void InsertParagraphSeparatorCommand::doApply()
     if (startBlock == startBlock->rootEditableElement()) {
         blockToInsert = static_pointer_cast<Node>(createDefaultParagraphElement(document()));
         nestNewBlock = true;
-    } else
+    } else if (m_useDefaultParagraphElement)
+        blockToInsert = static_pointer_cast<Node>(createDefaultParagraphElement(document()));
+    else
         blockToInsert = startBlock->cloneNode(false);
     
     //---------------------------------------------------------------------
@@ -165,7 +168,6 @@ void InsertParagraphSeparatorCommand::doApply()
     // Handle case when position is in the first visible position in its block, and
     // similar case where previous position is in another, presumeably nested, block.
     if (isFirstInBlock || !inSameBlock(visiblePos, visiblePos.previous())) {
-        pos = pos.downstream();
         Node *refNode;
         if (isFirstInBlock && !nestNewBlock)
             refNode = startBlock;
@@ -175,6 +177,9 @@ void InsertParagraphSeparatorCommand::doApply()
         } else
             refNode = pos.node();
 
+        // find ending selection position easily before inserting the paragraph
+        pos = pos.downstream();
+        
         insertNodeBefore(blockToInsert.get(), refNode);
         appendBlockPlaceholder(blockToInsert.get());
         setEndingSelection(Selection(Position(blockToInsert.get(), 0), DOWNSTREAM));

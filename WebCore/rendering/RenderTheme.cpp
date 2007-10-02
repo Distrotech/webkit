@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -123,7 +123,10 @@ bool RenderTheme::paint(RenderObject* o, const RenderObject::PaintInfo& paintInf
             return paintSliderTrack(o, paintInfo, r);
         case SliderThumbHorizontalAppearance:
         case SliderThumbVerticalAppearance:
-            return paintSliderThumb(o, paintInfo, r);
+            if (o->parent()->isSlider())
+                return paintSliderThumb(o, paintInfo, r);
+            // We don't support drawing a slider thumb without a parent slider
+            break;
         case MenulistButtonAppearance:
         case TextFieldAppearance:
         case TextAreaAppearance:
@@ -306,8 +309,6 @@ bool RenderTheme::isControlStyled(const RenderStyle* style, const BorderData& bo
         default:
             return false;
     }
-
-    return false;
 }
 
 bool RenderTheme::supportsFocusRing(const RenderStyle* style) const
@@ -395,6 +396,8 @@ void RenderTheme::adjustCheckboxStyle(CSSStyleSelector* selector, RenderStyle* s
     // border - honored by WinIE, but looks terrible (just paints in the control box and turns off the Windows XP theme)
     // for now, we will not honor it.
     style->resetBorder();
+
+    style->setBoxShadow(0);
 }
 
 void RenderTheme::adjustRadioStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
@@ -410,6 +413,8 @@ void RenderTheme::adjustRadioStyle(CSSStyleSelector* selector, RenderStyle* styl
     // border - honored by WinIE, but looks terrible (just paints in the control box and turns off the Windows XP theme)
     // for now, we will not honor it.
     style->resetBorder();
+
+    style->setBoxShadow(0);
 }
 
 void RenderTheme::adjustButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const

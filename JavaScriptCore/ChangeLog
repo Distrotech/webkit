@@ -1,3 +1,5 @@
+=== Merged changes from rebasing branches/feature-branch on to trunk r25817 ===
+
 2007-09-29  Rob Buis  <buis@kde.org>
 
         Reviewed by Adam.
@@ -36,6 +38,2257 @@
         (WTF::FloatHashTraits::emptyValue):
         (WTF::FloatHashTraits::deletedValue):
         (WTF::):
+
+=== End of merged changes from rebasing branches/feature-branch on to trunk r25817 ===
+
+2007-09-29  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark.
+
+        -Fix http://bugs.webkit.org/show_bug.cgi?id=13226.
+        Remove Bakefiles from svn.
+
+        * JavaScriptCoreSources.bkl: Removed.
+        * jscore.bkl: Removed.
+
+2007-09-27  Kevin Decker  <kdecker@apple.com>
+
+        Rubber stamped by John Sullivan.
+
+        <rdar://problem/5493093>
+        
+        * JavaScriptCore.order: Added.
+        * JavaScriptCore.xcodeproj/project.pbxproj: We're changing from using an order file built by
+         another team to using one we actually check into our project repository. Linker settings for
+         Symbol Ordering Flags have been updated accordingly.
+
+2007-09-26  Adam Roben  <aroben@apple.com>
+
+        Make testkjs delay-load WebKit.dll so WebKitInitializer can work its magic
+
+        Rubberstamped by Anders.
+
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj:
+
+2007-09-25  Adam Roben  <aroben@apple.com>
+
+        Make testkjs delay-load its dependencies
+
+        This lets WebKitInitializer re-route the dependencies to be loaded out
+        of the Safari installation directory.
+
+        Rubberstamped by Sam.
+
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj:
+
+2007-09-25  David Kilzer  <ddkilzer@webkit.org>
+
+        Reviewed by Adam.
+
+        - Fix http://bugs.webkit.org/show_bug.cgi?id=14885
+          LGPL'ed files contain incorrect FSF address
+
+        * COPYING.LIB:
+        * bindings/testbindings.cpp:
+        * kjs/AllInOneFile.cpp:
+        * kjs/DateMath.cpp:
+        * kjs/PropertyNameArray.cpp:
+        * kjs/PropertyNameArray.h:
+        * kjs/config.h:
+
+2007-09-25  Sam Weinig  <sam@webkit.org>
+
+        Fix location for build products for Debug_Internal.
+
+        Reviewed by Adam Roben.
+
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj:
+
+2007-09-25  Adam Roben  <aroben@apple.com>
+
+        Make testkjs use WebKitInitializer
+
+        Reviewed by Sam.
+
+        * JavaScriptCore.vcproj/JavaScriptCore.sln: Add WebKitInitializer and
+        make testkjs depend on it.
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj: Link against
+        WebKitInitializer.lib.
+        * kjs/testkjs.cpp:
+        (main): Call initializeWebKit.
+
+2007-09-24  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Sam.
+
+        - Continued to update project files to not use Edit and Continue for Debug Information since it doesn't work and breaks some functionality.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        * JavaScriptCore.vcproj/WTF/WTF.vcproj:
+
+2007-09-21  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Sam.
+
+        - Updated project files to not use Edit and Continue for Debug Information since it doesn't work and breaks some functionality.
+
+        * JavaScriptCore.vcproj/dftables/dftables.vcproj:
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj:
+
+2007-09-20  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber stamped by Adam.
+
+        Renamed files from *Gdk to *Gtk (see #14732) using the
+        work of Juan A. Suarez Romero as a base.
+
+        GDK -> GTK 
+
+        * JavaScriptCore.pri:
+        * kjs/testkjs.pro:
+        * pcre/dftables.pro:
+        * wtf/Platform.h: PLATFORM(GDK) to PLATFORM(GTK)
+
+2007-09-21  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Antti Koivisto.
+
+        http://bugs.webkit.org/show_bug.cgi?id=15250
+        <rdar://problem/5496942> REGRESSION: Reproducible crash in Safari when evaluating script in Drosera console (15250)
+
+        * kjs/function.cpp:
+        (KJS::GlobalFuncImp::callAsFunction): Null-check thisObj before passing it to interpreterForGlobalObject.
+
+2007-09-19  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber stamped by Adam.
+
+        Make the guard/#if use the same name (ENABLE_FTPDIR) as the #define. This follows
+        the ENABLE_ICONDATABASE example from a couple of lines above.
+
+        * wtf/Platform.h:
+
+2007-09-19  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5487107> NULL dereference crash in FastMallocZone::enumerate when running leaks against Safari
+
+        Storing remote pointers to their local equivalents in mapped memory was leading to the local pointer being
+        interpreted as a remote pointer.  This caused a crash when using the result of mapping this invalid remote pointer.
+        The fix is to follow the pattern used elsewhere in FastMallocZone by always doing the mapping after reading and
+        never storing the mapped pointer.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::FastMallocZone::enumerate):
+
+2007-09-15  Darin Adler  <darin@apple.com>
+
+        - fix Mac build
+
+        * JavaScriptCore.exp: Export WTFLogVerbose.
+
+2007-09-14  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Sam.
+
+        - Copy JSRetainPtr to include folder.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+
+2007-09-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Try to fix GDK build.
+
+        * wtf/MathExtras.h:
+        (wtf_random_init):
+
+2007-09-12  Geoff Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Fixed <rdar://problem/5429064> 141885 Safari JavaScript: Math.random() slightly less randomly distributed than on Safari / Mac
+
+        Math.random was skewed slightly upward because it assumed that RAND_MAX was outside the range of
+        values that rand() might return. This problem was particularly pronounced on Windows because
+        the range of values returned by rand() on Windows is 2^16 smaller than the range of values
+        return by rand() on Mac.
+        
+        Fixed by accounting for RAND_MAX return values. Also, switched Windows over to rand_s, which has
+        a range that's equal to rand()'s range on Mac.
+        
+        * kjs/config.h:
+
+        * kjs/math_object.cpp:
+        (MathFuncImp::callAsFunction): Use the new new thing.
+
+        * wtf/MathExtras.h: Platform abstraction for random numbers, to cover over differences on Windows.
+        (wtf_random_init):
+        (wtf_random):
+
+2007-09-13  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Maciej.
+        
+        Small addition to previous path to cover
+        http://bugs.webkit.org/show_bug.cgi?id=11399
+        window.eval runs in the global scope of the calling window
+        
+        Switch variable scope as well.
+
+        * kjs/function.cpp:
+        (KJS::GlobalFuncImp::callAsFunction):
+
+2007-09-12  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Geoff, Maciej.
+        
+        Fix <rdar://problem/5445058>
+        REGRESSION: Unable to upload picture to eBay auction due to domain security check
+        
+        eBay uses window.eval() between windows. In Firefox window.eval() switches execution
+        and security context to the target window, something WebKit did not do. With WebKit
+        security tightening in r24781, this broke picture uploads.
+        
+        Fix by making WebKit switch context in window.eval().
+        
+        * kjs/Context.cpp:
+        (KJS::Context::Context):
+        (KJS::Context::~Context):
+        * kjs/context.h:
+        Save and restore interpreter context independently from calling context.
+        
+        * kjs/function.cpp:
+        (KJS::GlobalFuncImp::callAsFunction):
+        If eval is called for global object different than current one, switch execution context
+        to that object and push it to scope.
+
+2007-09-12  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        <rdar://problem/5478717> JSStringCreateWithCFString leaks when passed a zero length CFStringRef
+
+        * API/JSStringRefCF.cpp:
+        (JSStringCreateWithCFString): Special case the zero length string and remove the
+        UTF16 optimized path since it will always leak due to the fact that we won't be 
+        able to free the backing store that the CFStringRef provides.
+
+2007-09-10  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Darin Adler.
+
+        <rdar://problem/5456224> CrashTracer: [USER] 2 crashes in Toast Titanium at com.apple.CoreServices.CarbonCore: CSMemDisposePtr + 37
+
+        Removed the implementation of these malloc zone functions. We do not have the ability to 
+        check if a pointer is valid or not, so we can't correctly implement them. The system free 
+        does not fail if you pass in a bad pointer.
+
+        * wtf/FastMalloc.cpp:
+        (WTF::FastMallocZone::size):
+        (WTF::FastMallocZone::zoneMalloc):
+        (WTF::FastMallocZone::zoneCalloc):
+        (WTF::FastMallocZone::zoneFree):
+        (WTF::FastMallocZone::zoneRealloc):
+
+2007-09-07  Darin Adler  <darin@apple.com>
+
+        Reviewed by Steve Falkenburg.
+
+        - fix crash seen on Windows release builds
+
+        * wtf/FastMalloc.cpp: Change pthread_getspecific optimization to be done only
+        on the DARWIN platform. Also correct a couple reinterpret_cast that should be
+        static_cast instead.
+
+2007-09-06  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Maciej.
+
+        - Moved JSRetainPtr to the API.
+
+        * API/JSRetainPtr.h: Copied from kjs/JSRetainPtr.h.
+        (JSRetain):
+        (JSRelease):
+        (JSRetainPtr::JSRetainPtr):
+        (JSRetainPtr::~JSRetainPtr):
+        (JSRetainPtr::get):
+        (JSRetainPtr::releaseRef):
+        (JSRetainPtr::operator->):
+        (JSRetainPtr::operator!):
+        (JSRetainPtr::operator UnspecifiedBoolType):
+        (::operator):
+        (::adopt):
+        (::swap):
+        (swap):
+        (operator==):
+        (operator!=):
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/JSRetainPtr.h: Removed.
+
+2007-09-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - Remove single-threaded optimization for FastMalloc. 
+        
+        It does not appear to help anywhere but Mac OS X on PPC, due to
+        pthread_getspecific being slow there. On Intel, removing the
+        optimization results in a ~1.5% PLT speedup, a ~1-5% JS iBench
+        speedup, and a ~1.5% HTML iBench speedup. On PPC this change is a
+        speedup on some benchmarks, a slight hit on others.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/collector.cpp:
+        (KJS::Collector::registerThread):
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_ThreadCache::GetCache):
+        (WTF::TCMalloc_ThreadCache::GetCacheIfPresent):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        (WTF::do_malloc):
+        * wtf/FastMallocInternal.h: Removed.
+
+2007-09-05  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Adam, Sam, Darin.
+
+        - Created a JSRetainPtr specifically for JSStringRefs so they can be automatically refed and derefed.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/JSRetainPtr.h: Copied from wtf/RetainPtr.h.
+        (KJS::JSRetain):
+        (KJS::JSRelease):
+        (KJS::):
+        (KJS::JSRetainPtr::JSRetainPtr):
+        (KJS::JSRetainPtr::~JSRetainPtr):
+        (KJS::JSRetainPtr::get):
+        (KJS::JSRetainPtr::releaseRef):
+        (KJS::JSRetainPtr::operator->):
+        (KJS::JSRetainPtr::operator UnspecifiedBoolType):
+        (KJS::::operator):
+        (KJS::::adopt):
+        (KJS::::swap):
+        (KJS::swap):
+        (KJS::operator==):
+        (KJS::operator!=):
+
+2007-09-05  Mark Rowe  <mrowe@apple.com>
+
+        Unreviewed Qt build fix.
+
+        * wtf/unicode/qt4/UnicodeQt4.h: Fix the constness of the src argument to toUpper to prevent build failures.
+
+2007-09-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Back out accidentally committed change.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/collector.cpp:
+        (KJS::Collector::registerThread):
+        * wtf/FastMalloc.cpp:
+        (WTF::fastMallocSetIsMultiThreaded):
+        (WTF::TCMalloc_ThreadCache::GetCache):
+        (WTF::TCMalloc_ThreadCache::GetCacheIfPresent):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        (WTF::do_malloc):
+        * wtf/FastMallocInternal.h: Added.
+
+2007-09-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - Added Vector::appendRange(), which appends to a vector based on a given start and end iterator
+        - Added keys() and values() functions to HashMap iterators, which give keys-only and values-only iterators
+        
+        Together, these allow easy copying of a set, or the keys or values of a map, into a Vector. Examples:
+        
+        HashMap<int, int> map;
+        HashSet<int> set;
+        Vector<int> vec;
+        // ...
+        vec.appendRange(set.begin(), set.end());
+        vec.appendRange(map.begin().keys(), map.end().keys());
+        vec.appendRange(map.begin().values(), map.end().values());
+
+        This also allows for a slightly nicer syntax when iterating a map. Instead of saying 
+        (*it)->first, you can say *it.values(). Similarly for keys. Example:
+        
+        HashMap<int, int>::const_iterator end = map.end();
+        for (HashMap<int, int>::const_iterator it = map.begin(); it != end; ++it)
+        printf(" [%d => %d]", *it.keys(), *it.values());
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * wtf/HashIterators.h: Added.
+        (WTF::):
+        (WTF::HashTableConstKeysIterator::HashTableConstKeysIterator):
+        (WTF::HashTableConstKeysIterator::get):
+        (WTF::HashTableConstKeysIterator::operator*):
+        (WTF::HashTableConstKeysIterator::operator->):
+        (WTF::HashTableConstKeysIterator::operator++):
+        (WTF::HashTableConstValuesIterator::HashTableConstValuesIterator):
+        (WTF::HashTableConstValuesIterator::get):
+        (WTF::HashTableConstValuesIterator::operator*):
+        (WTF::HashTableConstValuesIterator::operator->):
+        (WTF::HashTableConstValuesIterator::operator++):
+        (WTF::HashTableKeysIterator::HashTableKeysIterator):
+        (WTF::HashTableKeysIterator::get):
+        (WTF::HashTableKeysIterator::operator*):
+        (WTF::HashTableKeysIterator::operator->):
+        (WTF::HashTableKeysIterator::operator++):
+        (WTF::HashTableKeysIterator::operator HashTableConstKeysIterator<HashTableType, KeyType, MappedType>):
+        (WTF::HashTableValuesIterator::HashTableValuesIterator):
+        (WTF::HashTableValuesIterator::get):
+        (WTF::HashTableValuesIterator::operator*):
+        (WTF::HashTableValuesIterator::operator->):
+        (WTF::HashTableValuesIterator::operator++):
+        (WTF::HashTableValuesIterator::operator HashTableConstValuesIterator<HashTableType, KeyType, MappedType>):
+        (WTF::operator==):
+        (WTF::operator!=):
+        * wtf/HashTable.h:
+        * wtf/Vector.h:
+        (WTF::::appendRange):
+
+2007-09-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - Remove single-threaded optimization for FastMalloc. 
+        
+        It does not appear to help anywhere but Mac OS X on PPC, due to
+        pthread_getspecific being slow there. On Intel, removing the
+        optimization results in a 1% PLT speedup, a 2% JS iBench speedup,
+        and no measurable effect on HTML iBench (maybe a slight speedup).
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/collector.cpp:
+        (KJS::Collector::registerThread):
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_ThreadCache::GetCache):
+        (WTF::TCMalloc_ThreadCache::GetCacheIfPresent):
+        (WTF::TCMalloc_ThreadCache::CreateCacheIfNecessary):
+        (WTF::do_malloc):
+        * wtf/FastMallocInternal.h: Removed.
+
+2007-09-03  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        <rdar://problem/5452164> Production build with in symbols directory has no debug info
+
+        Enable debug symbol generation on all build configurations.  Production builds are stripped
+        of symbols by Xcode during deployment post-processing.
+
+        * Configurations/Base.xcconfig:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2007-08-30  Riku Voipio  <riku.voipio@iki.fi>
+
+        Reviewed by Dave Kilzer.
+
+        Better ARM defines.
+
+        * kjs/ustring.h: Update comments to reflect the change and update test
+        to fit changes to Platform.h.
+        * wtf/Platform.h: Forced packing is only needed on oldabi ARM.
+        Set middle-endian floats only for little-endian oldabi ARM.
+        Set big-endian define for big-endian ARM.
+
+2007-08-29  Ryan Leavengood <leavengood@gmail.com>
+
+        Reviewed by Maciej.
+
+        http://bugs.webkit.org/show_bug.cgi?id=15043
+        - posix_memalign takes a void** as its first parameter. My port makes use of this function call.
+
+        * kjs/collector.cpp:
+        (KJS::allocateBlock):
+
+2007-08-26  Darin Adler  <darin@apple.com>
+
+        - quick follow on to that last check-in
+
+        * API/JSCallbackObject.cpp: (KJS::JSCallbackObject::JSCallbackObject):
+        Need to initialize m_class to 0.
+
+2007-08-26  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Darin Adler.
+
+        <rdar://problem/4949002> JSGlobalContextCreate can cause crashes because it passes a NULL JSContextRef to the globalObjectClass's initialize callback
+
+        JSCallbackObject now tracks whether it was constructed with a null ExecState.  This will happen when the object is being used as the global object,
+        as the Interpreter needs to be created after the global object.  In this situation the initialization is deferred until after the Interpreter's
+        ExecState is available to be passed down to the initialize callbacks.
+
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::init): Track whether we successfully initialized.
+        (KJS::JSCallbackObject::initializeIfNeeded): Attempt to initialize with the new ExecState.
+        * API/JSCallbackObject.h:
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreate): Initialize the JSCallbackObject with the Interpreter's ExecState.
+        * API/testapi.c:
+        (testInitializeOfGlobalObjectClassHasNonNullContext):
+        (main): Verify that the context passed to the initialize callback is non-null.
+
+2007-08-26  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Darin Adler.
+
+        <rdar://problem/5438496> JSGlobalContextCreate crashes when passed a custom class
+
+        * API/JSContextRef.cpp:
+        (JSGlobalContextCreate): Specify jsNull() as the prototype and let Interpreter's constructor fix it up to point at builtinObjectPrototype().
+        * API/testapi.c:
+        (main): Use an instance of a custom class as the global object to ensure the code path is exercised in the test.
+
+2007-08-26  Mike Hommey  <glandium@debian.org>
+
+        Reviewed by Mark Rowe and David Kilzer.
+
+        Fix build failure on arm.
+
+        * wtf/Platform.h: Also test if __arm__ is defined.
+
+2007-08-25  Peter Kasting <zerodpx@gmail.org>
+
+        Reviewed by Maciej Stachowiak.
+
+        Part 3 of http://bugs.webkit.org/show_bug.cgi?id=14967
+        Bug 14967: Reduce wtf::Vector::operator[]() overloads
+
+        * wtf/Vector.h:
+        (WTF::Vector::operator[]): Only provide versions of operator[] that takes a size_t argument.
+
+2007-08-25  Peter Kasting <zerodpx@gmail.org>
+
+        Reviewed by Sam Weinig.
+
+        Part 2 of http://bugs.webkit.org/show_bug.cgi?id=14967.
+        Eliminate all remaining implicit conversions of wtf::Vector<T> to T*.  Where code was
+        previously checking that the Vector's data pointer was non-NULL, check !Vector::isEmpty()
+        instead.
+
+        * wtf/Vector.h:
+        (WTF::Vector::data):
+
+2007-08-16  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Geoff and Adam.
+
+        - Changing stack depth to 500 (from 100 on mac and win) to help out some apps specifically gmail.  <rdar://problem/3590522> JavaScript call stack limit of 99 is too small for some applications; needs to be closer to 500 (4045)
+
+        * kjs/object.cpp:
+
+2007-08-15  Peter Kasting  <zerodpx@gmail.org>
+
+        Reviewed by Darin.
+        
+        http://bugs.webkit.org/show_bug.cgi?id=14967 part 1 - Eliminate most implicit
+        conversions of wtf::Vector<T> to T* by explicitly calling .data()
+
+        * API/JSCallbackConstructor.cpp:
+        (KJS::JSCallbackConstructor::construct):
+        * API/JSCallbackFunction.cpp:
+        (KJS::JSCallbackFunction::callAsFunction):
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::construct):
+        (KJS::JSCallbackObject::callAsFunction):
+        * bindings/c/c_instance.cpp:
+        (KJS::Bindings::CInstance::invokeMethod):
+        (KJS::Bindings::CInstance::invokeDefaultMethod):
+        * kjs/number_object.cpp:
+        (integer_part_noexp):
+        (char_sequence):
+        * kjs/ustring.cpp:
+        (KJS::UString::UTF8String):
+
+2007-08-14  Darin Adler  <darin@apple.com>
+
+        Reviewed by Sam.
+
+        - fix <rdar://problem/5410570> Global initializer introduced by use of std::numeric_limits in r24919
+
+        * kjs/ustring.cpp:
+        (KJS::overflowIndicator): Turned into a function.
+        (KJS::maxUChars): Ditto.
+        (KJS::allocChars): Use the functions.
+        (KJS::reallocChars): Ditto.
+        (KJS::UString::expandedSize): Ditto.
+
+2007-08-12  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=14931
+          <rdar://problem/5403816> JavaScript regular expression non-participating capturing parentheses
+          fail in 3 different ways
+
+        Test: fast/js/regexp-non-capturing-groups.html
+
+        * kjs/string_object.cpp:
+        (KJS::replace): Add missing code to handle undefined backreferences; before we'd get the empty string
+        instead of a JavaScript "undefined" value.
+        (KJS::StringProtoFunc::callAsFunction): Implemented backreference support for split.
+        * pcre/pcre_exec.c: (match): Made backreferences to undefined groups match the empty string instead
+        of always failing. Only in JAVASCRIPT mode.
+
+        * tests/mozilla/expected.html: Add a new expected test success, since this fixed one test result.
+
+2007-08-10  Timothy Hatcher  <timothy@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5394449> Stop using some Carbon UI APIs for 64 bit
+
+        Disable the NPAPI for 64-bit on Mac OS X.
+
+        * Configurations/JavaScriptCore.xcconfig: Use the 64-bit export file.
+        * JavaScriptCore.xcodeproj/project.pbxproj: Create a 64-bit export file
+        that filters out the NPN fnctions.
+        * bindings/NP_jsobject.cpp: #ifdef out this for 64-bit on Mac OS X
+        * bindings/NP_jsobject.h: Ditto.
+        * bindings/c/c_class.cpp: Ditto.
+        * bindings/c/c_class.h: Ditto.
+        * bindings/c/c_instance.cpp: Ditto.
+        * bindings/c/c_instance.h: Ditto.
+        * bindings/c/c_runtime.cpp: Ditto.
+        * bindings/c/c_runtime.h: Ditto.
+        * bindings/c/c_utility.cpp: Ditto.
+        * bindings/c/c_utility.h: Ditto.
+        * bindings/npapi.h: Ditto.
+        * bindings/npruntime.cpp: Ditto.
+        * bindings/npruntime.h: Ditto.
+        * bindings/npruntime_impl.h: Ditto.
+        * bindings/npruntime_priv.h: Ditto.
+        * bindings/runtime.cpp:
+        (KJS::Bindings::Instance::createBindingForLanguageInstance):
+         don't creat an NPObject on Mac OS X in 64-bit.
+
+2007-08-09  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Antti.
+
+        <rdar://problem/5400709> Versioning in debug and release builds should include minor and tiny version before +
+
+        * Configurations/Version.xcconfig:
+        * JavaScriptCore.xcodeproj/project.pbxproj: Add a shell script phase to make to dependency between
+        Version.xcconfig and Info.plist explicit to Xcode.
+
+2007-08-08  George Staikos  <staikos@kde.org>
+
+        Make it compile with Qt again.
+
+        * wtf/unicode/qt4/UnicodeQt4.h:
+        (WTF::Unicode::toUpper):
+
+2007-08-07  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Fix for http://bugs.webkit.org/show_bug.cgi?id=14897
+        Decompilation of double negation fails and produces invalid or incorrect code
+
+        Test: fast/js/function-decompilation-operators.html
+
+        * kjs/nodes2string.cpp:
+        (UnaryPlusNode::streamTo): Put space after unary operator.  Matches Firefox.
+        (NegateNode::streamTo): Diito.
+        (MultNode::streamTo): Put spaces around binary operator.  Matches Firefox.
+        (AddNode::streamTo): Ditto.
+
+2007-08-07  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adele.
+
+        - fix <rdar://problem/5383104> REGRESSION: XHR.responseText is null instead of empty string
+          in http/tests/xmlhttprequest/zero-length-response.html
+
+        The new code to handle out of memory conditions was turning a "" into a null string.
+
+        * kjs/ustring.h: Removed UCharReference, which has long been obsolete and unused.
+        Removed copyForWriting, which was only used for the upper/lowercasing code and for
+        UCharReference.
+        * kjs/ustring.cpp:
+        (KJS::allocChars): Removed special case that made this fail (return 0) when passed 0.
+        Instead assert that we're not passed 0. Also added an overflow check for two reasons:
+        1) for sizes that aren't checked this prevents us from allocating a buffer that's too
+        small, and 2) for sizes where we overflowed in the expandedSize function and returned
+        overflowIndicator, it guarantees we fail.
+        (KJS::reallocChars): Ditto.
+        (KJS::UString::expandedSize): Return a large number, overflowIndicator, rather than 0
+        for cases where we overflow.
+        (KJS::UString::spliceSubstringsWithSeparators): Added a special case for empty string so
+        we don't call allocChars with a length of 0.
+        (KJS::UString::operator=): Added special characters for both 0 and empty string so we
+        match the behavior of the constructor. This avoids calling allocChars with a length of 0
+        and making a null string rather than an empty string in that case, and also matches the
+        pattern used in the rest of the functions.
+        (KJS::UString::operator[]): Made the return value const so code that tries to use the
+        operator to modify the string will fail.
+
+        * kjs/string_object.cpp: (KJS::StringProtoFunc::callAsFunction): Rewrote uppercasing and
+        lowercasing functions so they don't need copyForWriting any more -- it wasn't really doing
+        any good for optimization purposes. Instead use a Vector and releaseBuffer.
+
+        * wtf/unicode/icu/UnicodeIcu.h: Eliminate one of the versions of toLower/toUpper -- we now
+        only need the version where both a source and destination buffer is passed in, not the one
+        that works in place.
+        * wtf/unicode/qt4/UnicodeQt4.h: Ditto.
+
+2007-08-06  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Fix for http://bugs.webkit.org/show_bug.cgi?id=14891
+        Decompilation of try block immediately following "else" fails
+
+        Test: fast/js/toString-try-else.html
+
+        * kjs/nodes2string.cpp:
+        (TryNode::streamTo): Add newline before "try".
+
+2007-08-07  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5388774> REGRESSION: Hang occurs after clicking "Attach a file " link in a new .Mac message
+
+        Attempting to acquire the JSLock inside CollectorHeap::forceLock can lead to a deadlock if the thread currently
+        holding the lock is waiting on the thread that is forking.  It is not considered safe to use system frameworks
+        after a fork without first execing[*] so it is not particularly important to ensure that the collector and
+        fastMalloc allocators are unlocked in the child process.  If the child process wishes to use JavaScriptCore it
+        should exec after forking like it would to use any other system framework.
+        [*]: <http://lists.apple.com/archives/Cocoa-dev/2005/Jan/msg00676.html>
+
+        * kjs/CollectorHeapIntrospector.cpp: Remove forceLock and forceUnlock implementations.
+        * kjs/CollectorHeapIntrospector.h: Stub out forceLock and forceUnlock methods.
+        * wtf/FastMalloc.cpp: Ditto.
+
+2007-08-06  Darin Adler  <darin@apple.com>
+
+        Rubber stamped by Geoff.
+
+        * kjs/ustring.h: Added an assertion which would have helped us find the
+        previous bug more easily.
+
+2007-08-06  Darin Adler  <darin@apple.com>
+
+        Reviewed by Anders.
+
+        - fix <rdar://problem/5387589> 9A514: Quartz Composer crash on launch in KJS::jsString
+
+        * API/JSBase.cpp:
+        (JSEvaluateScript): Turn NULL for sourceURL into UString::null(), just as JSObjectMakeFunction already does.
+        (JSCheckScriptSyntax): Ditto.
+
+2007-08-06  Matt Lilek  <pewtermoose@gmail.com>
+
+        Not reviewed, build fix.
+
+        * kjs/string_object.cpp:
+        (KJS::StringProtoFunc::callAsFunction):
+
+2007-08-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fix <rdar://problem/5371862> crash in Dashcode due to Quartz Composer JavaScript garbage collector reentrancy
+
+        * API/JSBase.cpp: (JSGarbageCollect): Don't call collector() if isBusy() returns true.
+
+        * kjs/collector.h: Added isBusy(), removed the unused return value from collect()
+        * kjs/collector.cpp: Added an "operation in progress" flag to the allocator.
+        (KJS::Collector::allocate): Call abort() if an operation is already in progress. Set the new flag instead
+        of using the debug-only GCLock.
+        (KJS::Collector::collect): Ditto.
+        (KJS::Collector::isBusy): Added.
+
+2007-08-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin and Adam.
+        
+        <rdar://problem/5368990> REGRESSION: newsgator.com sign-on 6x slower than Safari 3 beta due to GC changes (14808)
+
+        * kjs/string_object.cpp:
+        (KJS::replace): if the string didn't change (very common in some cases) reuse the original string value.
+        (KJS::StringProtoFunc::callAsFunction): Pass in the StringImp* when replacing, not just the UString.
+        * kjs/string_object.h:
+        (KJS::StringInstance::internalValue): covariant override to return StringImp for convenience
+
+2007-08-04  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        <rdar://problem/5385145> r24843 introduces a crash on calling fork() (14878)
+        http://bugs.webkit.org/show_bug.cgi?id=14878
+
+        Provide no-op functions for all members of the malloc_zone_t and malloc_introspection_t structures that we
+        register to avoid crashes in system code that assumes they will be non-null.
+
+        * kjs/CollectorHeapIntrospector.cpp:
+        (KJS::CollectorHeapIntrospector::CollectorHeapIntrospector):
+        (KJS::CollectorHeapIntrospector::forceLock): Grab the lock.
+        (KJS::CollectorHeapIntrospector::forceUnlock): Release the lock.
+        * kjs/CollectorHeapIntrospector.h:
+        (KJS::CollectorHeapIntrospector::goodSize):
+        (KJS::CollectorHeapIntrospector::check):
+        (KJS::CollectorHeapIntrospector::print):
+        (KJS::CollectorHeapIntrospector::log):
+        (KJS::CollectorHeapIntrospector::statistics):
+        (KJS::CollectorHeapIntrospector::size):
+        (KJS::CollectorHeapIntrospector::zoneMalloc):
+        (KJS::CollectorHeapIntrospector::zoneCalloc):
+        (KJS::CollectorHeapIntrospector::zoneFree):
+        * wtf/FastMalloc.cpp:
+        (WTF::FastMallocZone::goodSize):
+        (WTF::FastMallocZone::check):
+        (WTF::FastMallocZone::print):
+        (WTF::FastMallocZone::log):
+        (WTF::FastMallocZone::forceLock): Grab the TCMalloc locks.
+        (WTF::FastMallocZone::forceUnlock): Release the TCMalloc locks.
+        (WTF::FastMallocZone::FastMallocZone):
+
+2007-08-04  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Anders.
+
+        * pcre/pcre_compile.c: Remove non-ASCII character from a comment.
+
+2007-08-02  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Geoff Garen.
+
+        <rdar://problem/4212199> 'leaks' reports false leaks in WebKit (because the WTF allocator uses mmap?)
+
+        Implement malloc zone introspection routines to allow leaks, heap, and friends to request information
+        about specific memory regions that were allocated by FastMalloc or the JavaScriptCore collector.
+
+        This requires tool-side support before the regions will be displayed.  The addition of that support is
+        tracked by <rdar://problems/5353057&5353060>.
+
+        * JavaScriptCore.exp: Export the two variables that are used by leaks to introspect the allocators.
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/AllInOneFile.cpp:
+        * kjs/CollectorHeapIntrospector.cpp: Added.
+        (KJS::):
+        (KJS::CollectorHeapIntrospector::init): 
+        (KJS::CollectorHeapIntrospector::CollectorHeapIntrospector): Create and register our zone with the system.
+        (KJS::CollectorHeapIntrospector::enumerate): Iterate over the CollectorBlocks that are in use and report them to the caller as being used.
+        * kjs/CollectorHeapIntrospector.h: Added.
+        (KJS::CollectorHeapIntrospector::size): Return zero to indicate the specified pointer does not belong to this zone.
+        * kjs/collector.cpp:
+        (KJS::Collector::registerThread): Register the CollectorHeapIntrospector with the system when the first thread is registered with the collector.
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_PageHeap::GetDescriptorEnsureSafe):
+        (WTF::TCMalloc_ThreadCache_FreeList::enumerateFreeObjects): Enumerate the objects on the free list.
+        (WTF::TCMalloc_ThreadCache::enumerateFreeObjects): Ditto.
+        (WTF::TCMalloc_Central_FreeList::enumerateFreeObjects): Ditto.
+        (WTF::TCMalloc_ThreadCache::InitModule): Register the FastMallocZone with the system when initializing TCMalloc.
+        (WTF::FreeObjectFinder::FreeObjectFinder):
+        (WTF::FreeObjectFinder::visit): Add an object to the free list.
+        (WTF::FreeObjectFinder::isFreeObject):
+        (WTF::FreeObjectFinder::freeObjectCount):
+        (WTF::FreeObjectFinder::findFreeObjects): Find the free objects within a thread cache or free list.
+        (WTF::PageMapFreeObjectFinder::PageMapFreeObjectFinder): Find the free objects within a TC_PageMap.
+        (WTF::PageMapFreeObjectFinder::visit): Called once per allocated span.  Record whether the span or any subobjects are free.
+        (WTF::PageMapMemoryUsageRecorder::PageMapMemoryUsageRecorder):
+        (WTF::PageMapMemoryUsageRecorder::visit): Called once per allocated span.  Report the range of memory as being allocated, and the span or
+        its subobjects as being used if they do not appear on the free list.
+        (WTF::FastMallocZone::enumerate): Map the key remote TCMalloc data structures into our address space.  We then locate all free memory ranges
+        before reporting the other ranges as being in use.
+        (WTF::FastMallocZone::size): Determine whether the given pointer originates from within our allocation zone.  If so,
+        we return its allocation size.
+        (WTF::FastMallocZone::zoneMalloc):
+        (WTF::FastMallocZone::zoneCalloc):
+        (WTF::FastMallocZone::zoneFree):
+        (WTF::FastMallocZone::zoneRealloc):
+        (WTF::):
+        (WTF::FastMallocZone::FastMallocZone): Create and register our zone with the system.
+        (WTF::FastMallocZone::init):
+        * wtf/MallocZoneSupport.h: Added.
+        (WTF::RemoteMemoryReader::RemoteMemoryReader): A helper class to ease the process of mapping memory in a different process into
+        our local address space
+        (WTF::RemoteMemoryReader::operator()):
+        * wtf/TCPageMap.h:
+        (TCMalloc_PageMap2::visit): Walk over the heap and visit each allocated span.
+        (TCMalloc_PageMap3::visit): Ditto.
+
+2007-08-02  Mark Rowe  <mrowe@apple.com>
+
+        Build fix.
+
+        * kjs/ustring.cpp:
+        (KJS::UString::expandedSize):  Use std::numeric_limits<size_t>::max() rather than the non-portable SIZE_T_MAX.
+
+2007-08-02  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Maciej.
+
+        <rdar://problem/5352887> "Out of memory" error during repeated JS string concatenation leaks hundreds of MBs of RAM
+
+        A call to fastRealloc was failing which lead to UString::expandCapacity leaking the buffer it was trying to reallocate.
+        It also resulted in the underlying UString::rep having both a null baseString and buf field, which meant that attempting
+        to access the contents of the string after the failed memory reallocation would crash.
+
+        A third issue is that expandedSize size was calculating the new length in a way that led to an integer overflow occurring.
+        Attempting to allocate a string more than 190,000,000 characters long would fail a the integer overflow would lead to a
+        memory allocation of around 3.6GB being attempted rather than the expected 390MB.  Sizes that would lead to an overflow
+        are now  returned as zero and callers are updated to treat this as though the memory allocation has failed.
+
+        * kjs/array_object.cpp:
+        (ArrayProtoFunc::callAsFunction): Check whether the append failed and raise an "Out of memory" exception if it did.
+        * kjs/ustring.cpp:
+        (KJS::allocChars): Wrapper around fastMalloc that takes a length in characters.  It will return 0 when asked to allocate a zero-length buffer.
+        (KJS::reallocChars): Wrapper around fastRealloc that takes a length in characters.  It will return 0 when asked to allocate a zero-length buffer.
+        (KJS::UString::expandedSize): Split the size calculation in two and guard against overflow during each step.
+        (KJS::UString::expandCapacity): Don't leak r->buf if reallocation fails.  Instead free the memory and use the null representation.
+        (KJS::UString::expandPreCapacity): If fastMalloc fails then use the null representation rather than crashing in memcpy.
+        (KJS::UString::UString): If calls to expandCapacity, expandPreCapacity or fastMalloc fail then use the null representation rather than crashing in memcpy.
+        (KJS::UString::append): Ditto.
+        (KJS::UString::operator=): Ditto.
+        * kjs/ustring.h: Change return type of expandedSize from int to size_t.
+
+2007-08-01  Darin Adler  <darin@apple.com>
+
+        Reviewed by Kevin McCullough.
+
+        - fix <rdar://problem/5375186> pointers to pieces of class definition passed to JSClassCreate should all be const
+
+        * API/JSObjectRef.h: Added const.
+
+        * API/JSClassRef.cpp:
+        (OpaqueJSClass::OpaqueJSClass): Added const.
+        (OpaqueJSClass::create): Added const.
+        * API/JSObjectRef.cpp:
+        (JSClassCreate): Added const.
+
+2007-08-01  Steve Falkenburg  <sfalken@apple.com>
+
+        Build mod: Fix sln to match configs in vcproj.
+        
+        Reviewed by Adam.
+
+        * JavaScriptCore.vcproj/JavaScriptCore.make:
+        * JavaScriptCore.vcproj/JavaScriptCore.sln:
+
+2007-07-30  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars.
+
+        Removed the __BUILDING_QT ifdef in JSStringRef.h and changed UChar for the Qt build to use wchar_t on Windows.
+
+        * API/JSStringRef.h:
+        * wtf/unicode/qt4/UnicodeQt4.h:
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Always define JSChar to be unsigned short for the Qt builds, to ensure compatibility with UChar.
+
+        * API/JSStringRef.h:
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Fix compilation with Qt on Windows with MingW: Implemented currentThreadStackBase() for this platform.
+
+        * kjs/collector.cpp:
+        (KJS::currentThreadStackBase):
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Fix compilation with Qt on Windows with MingW: The MingW headers do not provide a prototype for a reentrant version of localtime. But since we don't use multiple threads for the Qt build we can use the plain localtime() function.
+
+        * kjs/DateMath.cpp:
+        (KJS::getDSTOffsetSimple):
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Use $(MOVE) instead of mv to eliminated the shell dependency and replaced the long shell line to call bison and modify the css grammar file with a few lines of portable perl code.
+
+        * JavaScriptCore.pri:
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Implemented currentTime() in the interpreter by using QDateTime, so that we don't need timeGetTime() on Windows and therefore also don't need to link against Winmm.dll.
+
+        * kjs/interpreter.cpp:
+        (KJS::getCurrentTime):
+        * kjs/testkjs.cpp:
+        (StopWatch::start):
+        (StopWatch::stop):
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Replace the use of snprintf with QByteArray to compile under msvc 2005 express.
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::stringValue):
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Don't use pthread.h unless thread support is enabled.
+
+        * kjs/collector.cpp:
+        (KJS::Collector::registerAsMainThread):
+        (KJS::onMainThread):
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Removed TCSystemMalloc from the Qt build, it's not necessary it seems.
+
+        * JavaScriptCore.pri:
+
+2007-07-27  Simon Hausmann  <hausmann@kde.org>
+
+        Done with and reviewed by Lars and Zack.
+
+        Added os-win32 to the include search path for the Qt windows build in order to provide the fake stdint.h header file.
+
+        * JavaScriptCore.pri:
+
+2007-07-25  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Mark.
+
+        - follow-up to previous change
+        
+        * kjs/ustring.cpp:
+        (KJS::UString::operator=): Make sure to reset the length when
+        replacing the buffer contents for a single-owned string.
+
+2007-07-25  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - JavaScriptCore part of fix for <rdar://problem/5300291> Optimize GC to reclaim big, temporary objects (like XMLHttpRequest.responseXML) quickly
+        
+        Also, as a side effect of optimizations included in this patch:
+        - 7% speedup on JavaScript iBench
+        - 4% speedup on "Celtic Kane" JS benchmark
+        
+        The basic idea is explained in a big comment in collector.cpp. When unusually 
+        large objecs are allocated, we push the next GC closer on the assumption that
+        most objects are short-lived.
+        
+        I also did the following two optimizations in the course of tuning
+        this not to be a performance regression:
+
+        1) Change UString::Rep to hold a self-pointer as the baseString in
+        the unshared case, instead of a null pointer; this removes a
+        number of null checks in hot code because many places already
+        wanted to use the rep itself or the baseString as appropriate.
+        
+        2) Avoid creating duplicate StringImpls when creating a
+        StringInstance (the object wrapper for a JS string) or calling
+        their methods. Since a temporary wrapper object is made every time
+        a string method is called, this resulted in two useless extra
+        StringImpls being allocated for no reason whenever a String method
+        was invoked on a string value. Now we bypass those.
+        
+        * kjs/collector.cpp:
+        (KJS::):
+        (KJS::Collector::recordExtraCost): Basics of the extra cost mechanism.
+        (KJS::Collector::allocate): ditto
+        (KJS::Collector::collect): ditto
+        * kjs/collector.h:
+        (KJS::Collector::reportExtraMemoryCost): ditto
+        * kjs/array_object.cpp:
+        (ArrayInstance::ArrayInstance): record extra cost
+        * kjs/internal.cpp:
+        (KJS::StringImp::toObject): don't create a whole new StringImpl just
+        to be the internal value of a StringInstance! StringImpls are immutable
+        so there's no point tot his.
+        * kjs/internal.h:
+        (KJS::StringImp::StringImp): report extra cost
+        * kjs/string_object.cpp:
+        (KJS::StringInstance::StringInstance): new version that takes a StringImp
+        (KJS::StringProtoFunc::callAsFunction): don't create a whole new StringImpl
+        just to convert self to string! we already have one in the internal value
+        * kjs/string_object.h: report extra cost        
+        * kjs/ustring.cpp: All changes to handle baseString being self instead of null in the 
+        unshared case.
+        (KJS::):
+        (KJS::UString::Rep::create):
+        (KJS::UString::Rep::destroy):
+        (KJS::UString::usedCapacity):
+        (KJS::UString::usedPreCapacity):
+        (KJS::UString::expandCapacity):
+        (KJS::UString::expandPreCapacity):
+        (KJS::UString::UString):
+        (KJS::UString::append):
+        (KJS::UString::operator=):
+        (KJS::UString::copyForWriting):
+        * kjs/ustring.h:
+        (KJS::UString::Rep::baseIsSelf): new method, now that baseString is
+        self instead of null in the unshared case we can't just null check.
+        (KJS::UString::Rep::data): adjusted as mentioned above
+        (KJS::UString::cost): new method to compute the cost for a UString, for
+        use by StringImpl.
+
+        * kjs/value.cpp:
+        (KJS::jsString): style fixups.
+        (KJS::jsOwnedString): new method, use this for strings allocated from UStrings
+        held by the parse tree. Tracking their cost as part of string cost is pointless,
+        because garbage collecting them will not actually free the relevant string buffer.
+        * kjs/value.h: prototyped jsOwnedString.
+        * kjs/nodes.cpp:
+        (StringNode::evaluate): use jsOwnedString as appropriate
+        (RegExpNode::evaluate): ditto
+        (PropertyNameNode::evaluate): ditto
+        (ForInNode::execute): ditto
+        
+        * JavaScriptCore.exp: Exported some new symbols.
+
+2007-07-23  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        <rdar://problem/5121461> REGRESSION: Unable to load JigZone puzzle
+        
+        * bindings/jni/jni_jsobject.cpp:
+        (JavaJSObject::createNative):
+        
+        Call RootObject::gcProtect on the global object, thereby putting it in the
+        "protect count" set which is used for checking if a native handle is valid.
+        
+2007-07-23  Darin Adler  <darin@apple.com>
+
+        * pcre/pcre_compile.c: Roll back a tiny accidental change in the unused !JAVASCRIPT
+        side of an #ifdef. This has no effect when using PCRE in JAVASCRIPT mode as we do,
+        but seems worth rolling back.
+
+2007-07-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fix remaining problems with Window shadowing
+
+        * kjs/nodes.cpp:
+        (VarDeclNode::evaluate): Tweak the special case a little.
+
+2007-07-23  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fix Window shadowing regressions caused by the previous commit.
+
+        * kjs/nodes.cpp:
+        (VarDeclNode::evaluate): Handle the case of global scope specially.
+
+2007-07-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        -fixed <rdar://problem/5353293> REGRESSION (r24287): 1% i-Bench JS slowdown from JavaScript compatibility fix (14719)
+        http://bugs.webkit.org/show_bug.cgi?id=14719
+        
+        My fix for this actually resulted in JS iBench being 1% faster than before the regression
+        and the Celtic Kane benchmark being 5% faster than before the regression.
+        
+        * kjs/nodes.cpp:
+        (VarDeclNode::handleSlowCase): factored out the slow code path to be out of line.
+        (VarDeclNode::evaluate): I did a couple of things:
+        (1) Don't check if the variable is already declared by looking for the property in
+        the variable object, that code path was dead code.
+        (2) Special-case the common case where the top of the scope and the variable object
+        are the same; in that case the variable must always be in the variable object.
+        (3) Don't return a jsString() of the variable name, nothing uses the return value
+        from this node types evaluate method.
+        * kjs/nodes.h:
+
+2007-07-22  Darin Adler  <darin@apple.com>
+
+        Reviewed by Kevin Decker.
+
+        - fix <rdar://problem/5126394> REGRESSION: Crash after clicking back button in test application (13250)
+          http://bugs.webkit.org/show_bug.cgi?id=13250
+
+        * bindings/objc/objc_utility.mm: (KJS::Bindings::convertObjcValueToValue):
+        If the object returns 0 for _imp, convert that to "undefined", since callers
+        can't cope with a JSValue of 0.
+
+2007-07-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Fixed http://bugs.webkit.org/show_bug.cgi?id=10880 | <rdar://problem/5335694>
+        REGRESSION: JavaScript menu doesn't appear on pricepoint.com (14595)
+        
+        Though the ECMA spec says auto-semicolon insertion should not occur
+        without a newline or '}', Firefox treats do-while specially, and the
+        library used by pricepoint.com requires that special treatment.
+        
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/grammar.y:
+
+2007-07-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - fix <rdar://problem/5345440> PCRE computes wrong length for expressions with quantifiers
+          on named recursion or subexpressions
+
+        It's challenging to implement proper preflighting for compiling these advanced features.
+        But we don't want them in the JavaScript engine anyway.
+
+        Turned off the following features of PCRE (some of these are simply parsed and not implemented):
+
+            \C \E \G \L \N \P \Q \U \X \Z
+            \e \l \p \u \z
+            [::] [..] [==]
+            (?#) (?<=) (?<!) (?>)
+            (?C) (?P) (?R)
+            (?0) (and 1-9)
+            (?imsxUX)
+
+        Added the following:
+
+            \u \v
+
+        Because of \v, the js1_2/regexp/special_characters.js test now passes.
+
+        To be conservative, I left some features that JavaScript doesn't want, such as
+        \012 and \x{2013}, in place. We can revisit these later; they're not directly-enough
+        related to avoiding the incorrect preflighting.
+
+        I also didn't try to remove unused opcodes and remove code from the execution engine.
+        That could save code size and speed things up a bit, but it would require more changes.
+
+        * kjs/regexp.h:
+        * kjs/regexp.cpp: (KJS::RegExp::RegExp): Remove the sanitizePattern workaround for
+        lack of \u support, since the PCRE code now has \u support.
+
+        * pcre/pcre-config.h: Set JAVASCRIPT to 1.
+        * pcre/pcre_internal.h: Added ESC_v.
+
+        * pcre/pcre_compile.c: Added a different escape table for when JAVASCRIPT is set that
+        omits all the escapes we don't want interpreted and includes '\v'.
+        (check_escape): Put !JAVASCRIPT around the code for '\l', '\L', '\N', '\u', and '\U',
+        and added code to handle '\u2013' inside JAVASCRIPT.
+        (compile_branch): Put !JAVASCRIPT if around all the code implementing the features we
+        don't want.
+        (pcre_compile2): Ditto.
+
+        * tests/mozilla/expected.html: Updated since js1_2/regexp/special_characters.js now
+        passes.
+
+2007-07-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        - fix <rdar://problem/5345432> PCRE computes length wrong for expressions such as "[**]"
+
+        Test: fast/js/regexp-charclass-crash.html
+
+        * pcre/pcre_compile.c: (pcre_compile2): Fix the preflight code that calls
+        check_posix_syntax to match the actual regular expression compilation code;
+        before it was missing the check of the first character.
+
+2007-07-19  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark.
+
+        Define __BUILDING_GDK when building for Gdk to fix building testkjs on OSX.
+
+        * JavaScriptCore.pri:
+
+2007-07-18  Simon Hausmann  <hausmann@kde.org>
+
+        * Fix the Qt build, call dftables from the right directory.
+
+        Reviewed by Adam Treat.
+
+        * pcre/pcre.pri:
+
+2007-07-18  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Don't call gcc directly when building the dftables tool but use a separate .pro file for the Qt build.
+
+        * pcre/dftables.pro: Added.
+        * pcre/pcre.pri:
+
+2007-07-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Darin, Maciej, and Adam.
+
+        Fixes <http://bugs.webkit.org/show_bug.cgi?id=9697>,
+              the failure of ecma/GlobalObject/15.1.2.2-2.js,
+              the failure of ecma/LexicalConventions/7.7.3-1.js,
+              and most of the failures of tests in ecma/TypeConversion/9.3.1-3.js.
+
+        Bug 9697: parseInt results may be inaccurate for numbers greater than 2^53
+
+        This patch also fixes similar issues in the lexer and UString::toDouble().
+
+        * kjs/function.cpp:
+        (KJS::parseIntOverflow):
+        (KJS::parseInt):
+        * kjs/function.h:
+        * kjs/lexer.cpp:
+        (KJS::Lexer::lex):
+        * kjs/ustring.cpp:
+        (KJS::UString::toDouble):
+        * tests/mozilla/expected.html:
+
+2007-07-16  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver.
+
+        Turn off -Wshorten-64-to-32 warning for 64-bit builds.
+
+        * Configurations/Base.xcconfig:
+
+2007-07-14  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Initial check-in for <rdar://problem/3154486> - Supporting FTP directory listings in the browser
+
+        * wtf/Platform.h: Add ENABLE_FTPDIR feature to handle building on platforms that don't have the
+          proper network-layer support
+
+2007-07-14  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Darin.
+
+        Fixes http://bugs.webkit.org/show_bug.cgi?id=13517,
+              http://bugs.webkit.org/show_bug.cgi?id=14237, and
+              the failure of test js1_5/Scope/regress-185485.js
+
+        Bug 13517: DOM Exception 8 in finance.aol.com sub-page
+        Bug 14237: Javascript "var" statement interprets initialization in the topmost function scope
+
+        * kjs/nodes.cpp:
+        (VarDeclNode::evaluate):
+        * tests/mozilla/expected.html:
+
+2007-07-12  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Mitz.
+
+        http://bugs.webkit.org/show_bug.cgi?id=14596
+        Fix JSC compilation with KJS_VERBOSE.
+
+        * kjs/function.cpp:
+        (KJS::FunctionImp::passInParameters):
+
+2007-07-11  George Staikos  <staikos@kde.org>
+
+        Make it compile.
+
+        * ForwardingHeaders: Added.
+        * ForwardingHeaders/JavaScriptCore: Added.
+        * ForwardingHeaders/JavaScriptCore/APICast.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSBase.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSContextRef.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSLock.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSObjectRef.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSStringRef.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSStringRefCF.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JSValueRef.h: Added.
+        * ForwardingHeaders/JavaScriptCore/JavaScriptCore.h: Added.
+
+2007-07-11  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Darin.
+
+        As of http://bugs.webkit.org/show_bug.cgi?id=14527 move the
+        WebCore/ForwardingHeader/JavaScriptCore to JavaScriptCore
+
+        * ForwardingHeaders: Added.
+        * ForwardingHeaders/JavaScriptCore: Copied from WebCore/ForwardingHeaders/JavaScriptCore.
+
+2007-07-11  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Reviewed by Mark.
+
+        Forwardport the hash table fix from CodeGeneratorJS.pm to create_hash_table.
+        Reran run-jsc-tests, couldn't find any regressions. Suggested by Darin.
+
+        * kjs/create_hash_table:
+
+2007-07-09  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - JavaScriptCore part of fix for: <rdar://problem/5295734> Repro crash closing tab/window @ maps.google.com in WTF::HashSet<KJS::RuntimeObjectImp*, WTF::PtrHash<KJS::RuntimeObjectImp*>, WTF::HashTraits<KJS::RuntimeObjectImp*> >::add + 11
+        
+        * JavaScriptCore.exp: Added needed export.
+
+2007-07-06  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Antti.
+
+        - <rdar://problem/5311093> JavaScriptCore fails to build with strict-aliasing warnings
+        
+        * Configurations/Base.xcconfig: Re-enable -Wstrict-aliasing
+        * bindings/jni/jni_utility.cpp:
+        (KJS::Bindings::getJNIEnv): Type-pun via a union instead of a pointer cast.
+        * wtf/HashMap.h:
+        (WTF::): Instead of doing type-punned assignments via pointer cast, do one of three things:
+        (1) assign directly w/o cast if storage type matches real type; (2) assign using cast
+        via union if type does not need reffing; (3) copy with memcpy and ref/deref manually if type
+        needs reffing. This is ok peref-wise because memcpy of a constant length gets optomized.
+        HashTraits are now expected to make ref()/deref() take the storage type, not the true type.
+        * wtf/HashSet.h:
+        (WTF::): Same basic idea.
+        * wtf/HashTable.h:
+        (WTF::): Added Assigner template for use by HashMap/HashSet. Change RefCounter to call ref()
+        and deref() via storage type, avoiding the need to
+        type-pun.
+        (WTF::RefCounter::ref): ditto
+        (WTF::RefCounter::deref): ditto
+        * wtf/HashTraits.h:
+        (WTF::): Change ref() and deref() for RefPtr HashTraits to take the storage type; cast
+        via union to pointer type.
+        * wtf/FastMalloc.cpp:
+        (WTF::TCMalloc_PageHeap::init): Changed from constructor to init function so this can go in a union.
+        (WTF::): redefine pageheap macro in terms of getPageHeap().
+        (WTF::getPageHeap): new inline function, helper for pageheap macro. This hides the cast in a union.
+        (WTF::TCMalloc_ThreadCache::InitModule): Call init() instead of using placement new to initialize page
+        heap.
+        * wtf/TCPageMap.h:
+        (TCMalloc_PageMap1::init): Changed from constructor to init function.
+        (TCMalloc_PageMap2::init): ditto
+        (TCMalloc_PageMap3::init): ditto
+
+
+2007-07-06  George Staikos  <staikos@kde.org>
+
+        Reviewed by Maciej.
+
+        Switch USE(ICONDATABASE) to ENABLE(ICONDATABASE)
+
+        * wtf/Platform.h:
+
+2007-07-03  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Eleventh round of fixes for implicit 64-32 bit conversion errors.
+        <rdar://problem/5292262>
+
+        - Fixes a real bug where where we were setting long long and unsigned long long
+          values to a long field.
+
+        * bindings/objc/objc_utility.mm:
+        (KJS::Bindings::convertValueToObjcValue):
+
+2007-07-03  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Brady Eidson.
+
+        Tenth round of fixes for implicit 64-32 bit conversion errors.
+        <rdar://problem/5292262>
+
+        - Add explicit casts.
+
+        * kjs/dtoa.cpp:
+        (Bigint::):
+
+2007-07-02  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Kevin McCullough.
+
+        Fourth round of fixes for implicit 64-32 bit conversion errors.
+        <rdar://problem/5292262>
+
+        Add custom piDouble and piFloat constants to use instead of M_PI.
+
+        * kjs/math_object.cpp:
+        (MathObjectImp::getValueProperty):
+        * wtf/MathExtras.h:
+        (wtf_atan2):
+
+2007-06-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Second pass at fixing implicit 64-32 bit conversion errors.
+        <rdar://problem/5292262>
+
+        - Add a toFloat() method to JSValue for float conversion.
+
+        * JavaScriptCore.exp:
+        * kjs/value.cpp:
+        (KJS::JSValue::toFloat):
+        * kjs/value.h:
+
+2007-06-27  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Darin.
+
+        - <rdar://problem/5271937> REGRESSION: Apparent WebKit JavaScript memory smasher when submitting comment to iWeb site (crashes in kjs_pcre_compile2)
+        - Correctly evaluate the return value of _pcre_ucp_findchar.
+
+        * pcre/pcre_compile.c:
+        (compile_branch):
+        * pcre/pcre_exec.c:
+        (match):
+
+2007-06-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        First pass at fixing implicit 64-32 bit conversion errors.
+        <rdar://problem/5292262>
+
+        - Add 'f' suffix where necessary.
+
+        * kjs/testkjs.cpp:
+        (StopWatch::getElapsedMS):
+
+2007-06-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed <rdar://problem/5296627> JSGarbageCollect headerdoc suggests that 
+        using JavaScriptCore requires leaking memory
+
+        * API/JSBase.h: Changed documentation to explain that you can pass NULL
+        to JSGarbageCollect.
+
+2007-06-26  Adam Treat  <adam@staikos.net>
+
+        Reviewed by Adam Roben.
+
+        Make the SQLite icon database optional.
+
+        * wtf/Platform.h:
+
+2007-06-15  George Staikos  <staikos@kde.org>
+
+        More missing files for Qt.
+
+        * JavaScriptCore.pri:
+        * kjs/testkjs.pro:
+
+2007-06-15  George Staikos  <staikos@kde.org>
+
+        Another Qt build fix.
+
+        * JavaScriptCore.pri:
+        * kjs/testkjs.pro:
+
+2007-06-15  George Staikos  <staikos@kde.org>
+
+        Fixing Qt build.
+
+        * JavaScriptCore.pri:
+
+2007-06-20  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Mitz.
+
+        Fix http://bugs.webkit.org/show_bug.cgi?id=14244
+        Bug 14244: Data corruption when using a replace() callback function with data containing "$"
+
+        * kjs/string_object.cpp:
+        (KJS::replace):  When 'replacement' is a function, do not replace $n placeholders in its return value.
+        This matches the behaviour described in ECMA 262 3rd Ed section 15.5.4.1, and as implemented in Firefox.
+
+2007-06-14  Anders Carlsson  <andersca@apple.com>
+
+        Fix Windows build.
+        
+        * bindings/runtime_object.cpp:
+        (RuntimeObjectImp::canPut):
+
+2007-06-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5103077> 
+        Crash at _NPN_ReleaseObject when quitting page at http://eshop.macsales.com/shop/ModBook
+        
+        <rdar://problem/5183692>
+        http://bugs.webkit.org/show_bug.cgi?id=13547
+        REGRESSION: Crash in _NPN_ReleaseObject when closing Safari on nba.com (13547)
+        
+        <rdar://problem/5261499>
+        CrashTracer: [USER] 75 crashes in Safari at com.apple.JavaScriptCore: KJS::Bindings::CInstance::~CInstance + 40
+        
+        Have the root object track all live instances of RuntimeObjectImp. When invalidating 
+        the root object, also invalidate all live runtime objects by zeroing out their instance ivar.
+        This prevents instances from outliving their plug-ins which lead to crashes.
+        
+        * bindings/c/c_utility.cpp:
+        (KJS::Bindings::convertValueToNPVariant):
+        * bindings/jni/jni_jsobject.cpp:
+        (JavaJSObject::convertValueToJObject):
+        * bindings/jni/jni_utility.cpp:
+        (KJS::Bindings::convertValueToJValue):
+        * bindings/objc/objc_runtime.mm:
+        (ObjcFallbackObjectImp::callAsFunction):
+        * bindings/runtime_array.cpp:
+        (RuntimeArray::RuntimeArray):
+        * bindings/runtime_array.h:
+        (KJS::RuntimeArray::getConcreteArray):
+        * bindings/runtime_method.cpp:
+        (RuntimeMethod::callAsFunction):
+        * bindings/runtime_method.h:
+        * bindings/runtime_object.cpp:
+        (RuntimeObjectImp::RuntimeObjectImp):
+        (RuntimeObjectImp::~RuntimeObjectImp):
+        (RuntimeObjectImp::invalidate):
+        (RuntimeObjectImp::fallbackObjectGetter):
+        (RuntimeObjectImp::fieldGetter):
+        (RuntimeObjectImp::methodGetter):
+        (RuntimeObjectImp::getOwnPropertySlot):
+        (RuntimeObjectImp::put):
+        (RuntimeObjectImp::canPut):
+        (RuntimeObjectImp::defaultValue):
+        (RuntimeObjectImp::implementsCall):
+        (RuntimeObjectImp::callAsFunction):
+        (RuntimeObjectImp::getPropertyNames):
+        (RuntimeObjectImp::throwInvalidAccessError):
+        * bindings/runtime_object.h:
+        * bindings/runtime_root.cpp:
+        (KJS::Bindings::RootObject::invalidate):
+        (KJS::Bindings::RootObject::addRuntimeObject):
+        (KJS::Bindings::RootObject::removeRuntimeObject):
+        * bindings/runtime_root.h:
+
+2007-06-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        <rdar://problem/5244948>
+        Safari keeps on complaining about slow script playing NBC TV video (14133)
+
+        http://bugs.webkit.org/show_bug.cgi?id=14133
+        Runaway JavaScript timer fires when spinning around in Google Maps street view
+
+        Make sure to start and stop the timeout checker around calls to JS.
+        
+        * bindings/NP_jsobject.cpp:
+        (_NPN_InvokeDefault):
+        (_NPN_Invoke):
+        (_NPN_Evaluate):
+        * bindings/jni/jni_jsobject.cpp:
+        (JavaJSObject::call):
+        (JavaJSObject::eval):
+
+2007-06-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=14132
+          array sort with > 10000 elements sets elements > 10000 undefined
+
+        Test: fast/js/sort-large-array.html
+
+        * kjs/array_instance.h: Replaced pushUndefinedObjectsToEnd with
+        compactForSorting, and removed ExecState parameters.
+
+        * kjs/array_object.cpp:
+        (ArrayInstance::sort): Changed to call compactForSorting.
+        (ArrayInstance::compactForSorting): Do the get and delete of the
+        properties directly on the property map instead of using public
+        calls from JSObject. The public calls would just read the undefined
+        values from the compacted sort results array!
+
+2007-06-13  George Staikos  <staikos@kde.org>
+
+        Reviewed by Lars.
+
+        Fix Mac OS X build after last checkin.
+
+        * wtf/FastMalloc.h:
+
+2007-06-14  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Maciej.
+
+        Disable FastMalloc for the Qt build and make sure we
+        don't reimplement the global new/delete operators
+        when using the system malloc.
+
+        * wtf/FastMalloc.cpp:
+        * wtf/FastMalloc.h:
+        * wtf/Platform.h:
+
+2007-06-13  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Make sure that bindings instances get correct root objects.
+        
+        * JavaScriptCore.exp:
+        * bindings/NP_jsobject.cpp:
+        (listFromVariantArgs):
+        (_NPN_InvokeDefault):
+        (_NPN_Invoke):
+        (_NPN_SetProperty):
+        * bindings/c/c_instance.cpp:
+        (KJS::Bindings::CInstance::invokeMethod):
+        (KJS::Bindings::CInstance::invokeDefaultMethod):
+        * bindings/c/c_runtime.cpp:
+        (KJS::Bindings::CField::valueFromInstance):
+        * bindings/c/c_utility.cpp:
+        (KJS::Bindings::convertNPVariantToValue):
+        * bindings/c/c_utility.h:
+        * bindings/objc/objc_instance.mm:
+        (ObjcInstance::invokeMethod):
+        (ObjcInstance::invokeDefaultMethod):
+        (ObjcInstance::getValueOfUndefinedField):
+        * bindings/objc/objc_runtime.mm:
+        (ObjcField::valueFromInstance):
+        (ObjcArray::valueAt):
+        * bindings/objc/objc_utility.h:
+        * bindings/objc/objc_utility.mm:
+        (KJS::Bindings::convertObjcValueToValue):
+        * bindings/runtime.h:
+
+2007-06-13  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Lars.
+
+        * kjs/testkjs.pro: WebKitQt is now called QtWebKit.
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Another build fix.
+        
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Move the notion of field type to the JNI runtime since that's the only 
+        one that was actually using it.
+        
+        * bindings/c/c_runtime.h:
+        (KJS::Bindings::CField::CField):
+        * bindings/jni/jni_runtime.h:
+        * bindings/objc/objc_runtime.h:
+        * bindings/objc/objc_runtime.mm:
+        * bindings/qt/qt_runtime.h:
+        * bindings/runtime.h:
+        * bindings/runtime_method.cpp:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Build fix.
+        
+        * bindings/qt/qt_class.cpp:
+        (KJS::Bindings::QtClass::methodsNamed):
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Oliver.
+        
+        Get rid of the MethodList class and use a good ol' Vector instead.
+
+        * bindings/c/c_class.cpp:
+        (KJS::Bindings::CClass::methodsNamed):
+        * bindings/c/c_instance.cpp:
+        (KJS::Bindings::CInstance::invokeMethod):
+        * bindings/jni/jni_class.cpp:
+        (JavaClass::JavaClass):
+        (JavaClass::~JavaClass):
+        * bindings/jni/jni_instance.cpp:
+        (JavaInstance::invokeMethod):
+        * bindings/objc/objc_class.mm:
+        (KJS::Bindings::ObjcClass::methodsNamed):
+        * bindings/objc/objc_instance.mm:
+        (ObjcInstance::invokeMethod):
+        * bindings/objc/objc_runtime.mm:
+        (ObjcFallbackObjectImp::callAsFunction):
+        * bindings/runtime.cpp:
+        * bindings/runtime.h:
+        * bindings/runtime_method.cpp:
+        (RuntimeMethod::lengthGetter):
+        (RuntimeMethod::callAsFunction):
+        * bindings/runtime_object.cpp:
+        (RuntimeObjectImp::getOwnPropertySlot):
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Make RuntimeMethod's method list a pointer so that the object size doesn't
+        grow beyond 32 bytes when we later will replace MethodList with a Vector.
+        
+        * bindings/runtime_method.cpp:
+        (RuntimeMethod::RuntimeMethod):
+        (RuntimeMethod::lengthGetter):
+        (RuntimeMethod::callAsFunction):
+        * bindings/runtime_method.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Get rid of the Parameter class.
+        
+        * bindings/jni/jni_instance.cpp:
+        (JavaInstance::invokeMethod):
+        * bindings/jni/jni_runtime.cpp:
+        (JavaMethod::signature):
+        * bindings/jni/jni_runtime.h:
+        (KJS::Bindings::JavaParameter::JavaParameter):
+        (KJS::Bindings::JavaParameter::~JavaParameter):
+        (KJS::Bindings::JavaParameter::type):
+        (KJS::Bindings::JavaMethod::parameterAt):
+        (KJS::Bindings::JavaMethod::numParameters):
+        * bindings/runtime.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Build fix.
+        
+        * bindings/qt/qt_class.h:
+
+2007-06-12  Mark Rowe  <mrowe@apple.com>
+
+        Build fix.
+
+        * bindings/objc/objc_runtime.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Get rid of Constructor and its only subclass JavaConstructor.
+        
+        * bindings/c/c_class.h:
+        * bindings/jni/jni_class.cpp:
+        (JavaClass::JavaClass):
+        (JavaClass::~JavaClass):
+        * bindings/jni/jni_class.h:
+        * bindings/jni/jni_runtime.cpp:
+        * bindings/jni/jni_runtime.h:
+        * bindings/objc/objc_class.h:
+        * bindings/runtime.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Use RetainPtr throughout the bindings code.
+        
+        * bindings/objc/objc_class.h:
+        * bindings/objc/objc_class.mm:
+        (KJS::Bindings::ObjcClass::ObjcClass):
+        (KJS::Bindings::ObjcClass::methodsNamed):
+        (KJS::Bindings::ObjcClass::fieldNamed):
+        * bindings/objc/objc_instance.h:
+        (KJS::Bindings::ObjcInstance::getObject):
+        * bindings/objc/objc_instance.mm:
+        (ObjcInstance::ObjcInstance):
+        (ObjcInstance::~ObjcInstance):
+        (ObjcInstance::implementsCall):
+        (ObjcInstance::invokeMethod):
+        (ObjcInstance::invokeDefaultMethod):
+        (ObjcInstance::defaultValue):
+        * bindings/objc/objc_runtime.h:
+        (KJS::Bindings::ObjcMethod::setJavaScriptName):
+        (KJS::Bindings::ObjcMethod::javaScriptName):
+        (KJS::Bindings::ObjcArray::getObjcArray):
+        * bindings/objc/objc_runtime.mm:
+        (ObjcField::name):
+        (ObjcArray::ObjcArray):
+        (ObjcArray::setValueAt):
+        (ObjcArray::valueAt):
+        (ObjcArray::getLength):
+        * wtf/RetainPtr.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Maciej.
+
+        Have JSCell inherit from Noncopyable.
+        
+        * bindings/objc/objc_runtime.h:
+        * bindings/runtime_object.h:
+        * kjs/value.h:
+
+2007-06-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin and Maciej.
+
+        More cleanup. Use our Noncopyable WTF class, add a root object member
+        to the Array class.
+        
+        * bindings/c/c_class.h:
+        * bindings/jni/jni_class.h:
+        * bindings/jni/jni_instance.h:
+        * bindings/jni/jni_runtime.cpp:
+        (JavaArray::JavaArray):
+        * bindings/jni/jni_runtime.h:
+        * bindings/objc/objc_class.h:
+        * bindings/objc/objc_runtime.h:
+        * bindings/objc/objc_runtime.mm:
+        (ObjcArray::ObjcArray):
+        * bindings/objc/objc_utility.mm:
+        (KJS::Bindings::convertObjcValueToValue):
+        * bindings/runtime.cpp:
+        (KJS::Bindings::Array::Array):
+        (KJS::Bindings::Array::~Array):
+        * bindings/runtime.h:
+        * bindings/runtime_object.h:
+        * bindings/runtime_root.h:
+
+2007-06-08  Zack Rusin  <zrusin@trolltech.com>
+
+        Fix the Qt build
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::QtInstance):
+        * bindings/qt/qt_instance.h:
+
+2007-06-07  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Geoff.
+
+        Get rid of Instance::setRootObject and pass the root object to the instance constructor instead.
+        
+        * bindings/c/c_instance.cpp:
+        (KJS::Bindings::CInstance::CInstance):
+        * bindings/c/c_instance.h:
+        * bindings/jni/jni_instance.cpp:
+        (JavaInstance::JavaInstance):
+        * bindings/jni/jni_instance.h:
+        * bindings/jni/jni_jsobject.cpp:
+        (JavaJSObject::convertJObjectToValue):
+        * bindings/objc/objc_instance.h:
+        * bindings/objc/objc_instance.mm:
+        (ObjcInstance::ObjcInstance):
+        * bindings/runtime.cpp:
+        (KJS::Bindings::Instance::Instance):
+        (KJS::Bindings::Instance::createBindingForLanguageInstance):
+        * bindings/runtime.h:
+
+2007-06-07  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Don't use a JavaInstance to store the field when all we want to do is to keep the field
+        from being garbage collected. Instead, use a JObjectWrapper.
+        
+        * bindings/jni/jni_instance.h:
+        * bindings/jni/jni_runtime.cpp:
+        (JavaField::JavaField):
+        (JavaField::dispatchValueFromInstance):
+        (JavaField::dispatchSetValueToInstance):
+        * bindings/jni/jni_runtime.h:
+        (KJS::Bindings::JavaField::JavaField):
+        (KJS::Bindings::JavaField::operator=):
+
+2007-05-30  Alp Toker  <alp.toker@collabora.co.uk>
+
+        Reviewed by Brady.
+
+        Enable logging in the Gdk port.
+        http://bugs.webkit.org/show_bug.cgi?id=13936
+
+        * wtf/Assertions.cpp:
+        * wtf/Assertions.h: Add WTFLogVerbose which also logs
+        the file, line number and function.
+
+2007-05-30  Mark Rowe  <mrowe@apple.com>
+
+        Mac build fix.  Update #include.
+
+        * API/JSCallbackFunction.h:
+
+2007-05-30  Luciano Montanaro  <mikelima@cirulla.net>
+
+        Reviewed by Maciej.
+
+        - cross-port Harri Porten's commits 636099 and 636108 from KJS: 
+        "publish a class anyway public already" and "class is being used from
+        outside for quite some time" in preparation for further syncronizations
+
+        * kjs/context.h:
+        * kjs/date_object.cpp:
+        * kjs/date_object.h:
+        * kjs/function.h:
+        (KJS::):
+        (KJS::InternalFunctionImp::classInfo):
+        (KJS::InternalFunctionImp::functionName):
+        * kjs/function_object.h:
+        * kjs/internal.h:
+        * kjs/lookup.h:
+        (KJS::getStaticPropertySlot):
+        (KJS::getStaticFunctionSlot):
+        (KJS::getStaticValueSlot):
+        * kjs/object_object.h:
+
+2007-05-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Cleanup function and fix to match comparison API.
+
+        * kjs/string_object.cpp:
+        (KJS::substituteBackreferences):
+        (KJS::localeCompare):
+
+2007-05-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Slight clarification to an exception message.
+
+        * API/JSCallbackObject.cpp:
+        (KJS::JSCallbackObject::put):
+
+2007-05-27  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * wtf/Platform.h: Move Gdk up to allow building WebKit/Gdk on Darwin
+
+2007-05-27  Darin Adler  <darin@apple.com>
+
+        - fix a couple ifdefs that said WIN instead of WIN_OS
+
+        * kjs/collector.cpp:
+        (KJS::allocateBlock): WIN -> WIN_OS
+        (KJS::freeBlock): Ditto.
+
+2007-05-26  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin.
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13854
+        Port of commit 667785 from kjs
+
+        - special case calling String.localeCompare() with no parameters to return 0.
+
+        * kjs/string_object.cpp:
+        (KJS::StringProtoFunc::callAsFunction):
+
+2007-05-25  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fix for http://bugs.webkit.org/show_bug.cgi?id=13456
+        REGRESSION: setTimeout "arguments" object gets shadowed by a local variable
+
+        - Add a explicit check for arguments. Previously check was done with getDirect,
+        but since the arguments is created on-demand in ActivationImp, it doesn't
+        show up in the test. 'arguments' should always be in the VarDeclNode's
+        evaluation scope.
+
+        * kjs/nodes.cpp:
+        (VarDeclNode::evaluate): Additional check if the var decl identifier is 'arguments'
+
+2007-05-25  George Staikos  <staikos@kde.org>
+
+        Reviewed by Maciej.
+
+        - Use COMPILER(GCC), not PLATFORM(GCC) - as Platform.h defines
+
+        * wtf/FastMalloc.h:
+
+2007-05-25  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - http://bugs.webkit.org/show_bug.cgi?id=13623 (Decompilation of function
+          doesn't compile with "++(x,y)")
+        - Create the error node based on the actual node, not the node inside
+          parenthesis
+        - Fix applies to postfix, prefix and typeof operators
+        - Produces run-time ReferenceError like other non-lvalue assignments etc.
+
+        * kjs/grammar.y: Create {Prefix,Postfix}ErrorNode based on the actual node,
+        not the based on the node returned by "nodeInsideAllParens()". Same for
+        TypeOfValueNode.
+
+2007-05-25  Simon Hausmann  <hausmann@kde.org>
+
+        Reviewed by Zack.
+
+        Fix crash in Qt JavaScript bindings when the arguments used on the Qt side are not
+        registered with QMetaType.
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+        * bindings/qt/qt_runtime.cpp:
+
+2007-05-24  Luciano Montanaro  <mikelima@cirulla.net>
+
+        Reviewed by Darin
+
+        Patch for http://bugs.webkit.org/show_bug.cgi?id=13855
+        Port patch 666176 to JavaScriptCore
+
+        - Renamed JSValue::downcast() to JSValue::asCell() which makes the
+        function meaning cleaner. It's modeled after Harri Porten change in 
+        KDE trunk.
+
+        * kjs/collector.cpp:
+        (KJS::Collector::protect):
+        (KJS::Collector::unprotect):
+        (KJS::Collector::collectOnMainThreadOnly):
+        * kjs/object.h:
+        (KJS::JSValue::isObject):
+        * kjs/string_object.cpp:
+        (KJS::StringProtoFunc::callAsFunction):
+        * kjs/value.h:
+        (KJS::JSValue::asCell):
+        (KJS::JSValue::isNumber):
+        (KJS::JSValue::isString):
+        (KJS::JSValue::isObject):
+        (KJS::JSValue::getNumber):
+        (KJS::JSValue::getString):
+        (KJS::JSValue::getObject):
+        (KJS::JSValue::getUInt32):
+        (KJS::JSValue::mark):
+        (KJS::JSValue::marked):
+        (KJS::JSValue::type):
+        (KJS::JSValue::toPrimitive):
+        (KJS::JSValue::toBoolean):
+        (KJS::JSValue::toNumber):
+        (KJS::JSValue::toString):
+        (KJS::JSValue::toObject):
+
+2007-05-18  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Mark Rowe.
+
+        * kjs/testkjs.pro: Make the Gdk port link to icu
+
+2007-05-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Adele Peterson.
+        
+        It helps if you swap the right variable.
+
+        * wtf/HashSet.h:
+        (WTF::::operator):
+
+2007-05-15  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Extend the QObject JavaScript bindings to work for slots with
+        arguments.
+
+        * bindings/qt/qt_instance.cpp:
+        (KJS::Bindings::QtInstance::invokeMethod):
+
+2007-05-14  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fixes http://bugs.webkit.org/show_bug.cgi?id=13622 (Decompiler
+          omits trailing comma in array literal)
+
+         * kjs/nodes2string.cpp:
+         (ArrayNode::streamTo): print extra ',' in case there was elision
+         commas (check opt member var) and array elements present
+         in the array expression
+
+2007-05-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Added HashMap::swap and HashSet::swap. WebCore now uses HashSet::swap.
+        I figured while I was in the neighborhood I might as well add HashMap::swap,
+        too.
+
+        * wtf/HashMap.h:
+        (WTF::::operator):
+        (WTF::::swap):
+        * wtf/HashSet.h:
+        (WTF::::operator):
+        (WTF::::swap):
+
+2007-05-11  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fix for bug http://bugs.webkit.org/show_bug.cgi?id=13620
+          Bogus decompilation of "for (var j = 1 in [])"
+        - ForInNode toString()'ed to syntax error if there was var decl
+          and initializer
+        - ForNode toStringed()'ed lost 'var ' if it was present
+
+        * kjs/nodes2string.cpp:
+        (VarDeclListNode::streamTo): Print "var " here
+        (VarStatementNode::streamTo): Don't print "var " here
+        (ForNode::streamTo): Remove TODO comment, VarDeclListNode will
+        stream the "var "
+        (ForInNode::streamTo): ForIn initializer is printed by VarDeclNode
+
+2007-05-11  Kimmo Kinnunen  <kimmok@iki.fi>
+
+        Reviewed by Darin.
+
+        - Fixes http://bugs.webkit.org/show_bug.cgi?id=10878
+          (Incorrect decompilation for "4..x")
+        - Group numbers in dotted expressions in toString() output, so we
+          avoid the 4.x constructs  when the original input is 4..x.
+          4..x means the same as 4. .x or (4).x or Number(4).x
+
+        * kjs/nodes2string.cpp:
+        (KJS::SourceStream::):
+        Add boolean flag to indicate that if next item is a number, it should be grouped.
+        Add new formatting enum which turns on the boolean flag.
+        (KJS::SourceStream::SourceStream): Added. Initialize the flag.
+        (SourceStream::operator<<): Added. New overloaded operator with double value as parameter.
+        (NumberNode::streamTo): Use the double operator
+        (ArrayNode::streamTo):
+        (DotAccessorNode::streamTo):
+        (FunctionCallDotNode::streamTo):
+        (FunctionCallParenDotNode::streamTo):
+        (PostfixDotNode::streamTo):
+        (DeleteDotNode::streamTo):
+        (PrefixDotNode::streamTo):
+        (AssignDotNode::streamTo): Use the new formatting enum to turn on the grouping flag.
+
+2007-05-10  Lars Knoll <lars@trolltech.com>
+
+        Reviewed by Zack
+
+        Fix our last three test failures in the JavaScript
+        tests.
+
+        * wtf/unicode/qt4/UnicodeQt4.h:
+        (WTF::Unicode::toLower):
+        (WTF::Unicode::toUpper):
+
+2007-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Darin Adler.
+        
+        Fixed #includes of JSStringRefCF.h and use of CF datatypes. I think I 
+        misunderstood this issue before.
+
+        * API/JavaScriptCore.h: #include JSStringRefCF.h. Platforms that don't
+        want this behavior can just #include individual headers, instead of the
+        umbrella framework header. But we definitely want Mac OS X clients to
+        get the #include of JSStringRefCF.h "for free."
+        * API/minidom.c: Don't #include JSStringRefCF.h. (Don't need to #include
+        JavaScriptCore.h, either.)
+        * API/testapi.c: Don't #include JSStringRefCF.h. Do use CF datatypes
+        regardless of whether __APPLE__ is defined. Platforms that don't support
+        CF just shouldn't compile this file.
+        (main):
 
 2007-05-09  Eric Seidel  <eric@webkit.org>
 

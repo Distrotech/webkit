@@ -4,6 +4,7 @@
  *  Copyright (C) 1999-2002 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
  *  Copyright (C) 2003 Apple Computer, Inc.
+ *  Copyright (C) 2007 Cameron Zwarich (cwzwarich@uwaterloo.ca)
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -25,6 +26,7 @@
 #include "config.h"
 #include "function.h"
 
+#include "dtoa.h"
 #include "internal.h"
 #include "function_object.h"
 #include "lexer.h"
@@ -155,13 +157,13 @@ inline void FunctionImp::passInParameters(ExecState* exec, const List& args)
 #ifdef KJS_VERBOSE
     fprintf(stderr, "---------------------------------------------------\n"
           "processing parameters for %s call\n",
-          name().isEmpty() ? "(internal)" : name().ascii());
+          functionName().isEmpty() ? "(internal)" : functionName().ascii());
 #endif
 
     size_t size = parameters.size();
     for (size_t i = 0; i < size; ++i) {
 #ifdef KJS_VERBOSE
-      fprintf(stderr, "setting parameter %s ", parameters->at(i).name.ascii());
+      fprintf(stderr, "setting parameter %s ", parameters.at(i).name.ascii());
       printInfo(exec, "to", args[i]);
 #endif
       variable->put(exec, parameters[i].name, args[i]);
@@ -669,6 +671,28 @@ static int parseDigit(unsigned short c, int radix)
     return digit;
 }
 
+double parseIntOverflow(const char* s, int length, int radix)
+{
+    double number = 0.0;
+    double radixMultiplier = 1.0;
+
+    for (const char* p = s + length - 1; p >= s; p--) {
+        if (radixMultiplier == Inf) {
+            if (*p != '0') {
+                number = Inf;
+                break;
+            }
+        } else {
+            int digit = parseDigit(*p, radix);
+            number += digit * radixMultiplier;
+        }
+
+        radixMultiplier *= radix;
+    }
+
+    return number;
+}
+
 static double parseInt(const UString& s, int radix)
 {
     int length = s.size();
@@ -701,6 +725,7 @@ static double parseInt(const UString& s, int radix)
     if (radix < 2 || radix > 36)
         return NaN;
 
+    int firstDigitPosition = p;
     bool sawDigit = false;
     double number = 0;
     while (p < length) {
@@ -711,6 +736,13 @@ static double parseInt(const UString& s, int radix)
         number *= radix;
         number += digit;
         ++p;
+    }
+
+    if (number >= mantissaOverflowLowerBound) {
+        if (radix == 10)
+            number = kjs_strtod(s.substr(firstDigitPosition, p - firstDigitPosition).ascii(), 0);
+        else if (radix == 2 || radix == 4 || radix == 8 || radix == 16 || radix == 32)
+            number = parseIntOverflow(s.substr(firstDigitPosition, p - firstDigitPosition).ascii(), p - firstDigitPosition, radix);
     }
 
     if (!sawDigit)
@@ -738,7 +770,7 @@ static double parseFloat(const UString& s)
     return s.toDouble( true /*tolerant*/, false /* NaN for empty string */ );
 }
 
-JSValue* GlobalFuncImp::callAsFunction(ExecState* exec, JSObject* /*thisObj*/, const List& args)
+JSValue* GlobalFuncImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
   JSValue* res = jsUndefined();
 
@@ -785,22 +817,33 @@ JSValue* GlobalFuncImp::callAsFunction(ExecState* exec, JSObject* /*thisObj*/, c
         if (!progNode)
           return throwError(exec, SyntaxError, errMsg, errLine, sid, NULL);
 
+        bool switchGlobal = thisObj && exec->dynamicInterpreter()->isGlobalObject(thisObj) && thisObj != exec->dynamicInterpreter()->globalObject();
+          
         // enter a new execution context
+        Interpreter* interpreter = switchGlobal ? exec->dynamicInterpreter()->interpreterForGlobalObject(thisObj) : exec->dynamicInterpreter();
         JSObject* thisVal = static_cast<JSObject*>(exec->context()->thisValue());
-        Context ctx(exec->dynamicInterpreter()->globalObject(),
-                       exec->dynamicInterpreter(),
+        Context ctx(interpreter->globalObject(),
+                       interpreter,
                        thisVal,
                        progNode.get(),
                        EvalCode,
                        exec->context());
-        ExecState newExec(exec->dynamicInterpreter(), &ctx);
+        ExecState newExec(interpreter, &ctx);
         if (exec->hadException())
             newExec.setException(exec->exception());
         ctx.setExecState(&newExec);
+          
+        if (switchGlobal) {
+            ctx.pushScope(thisObj);
+            ctx.setVariableObject(thisObj);
+        }
         
         // execute the code
         progNode->processVarDecls(&newExec);
         Completion c = progNode->execute(&newExec);
+          
+        if (switchGlobal)
+            ctx.popScope();
 
         // if an exception occured, propogate it back to the previous execution object
         if (newExec.hadException())

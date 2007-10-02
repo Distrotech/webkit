@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifndef __LP64__
 #import <WebKit/WebNetscapePluginStream.h>
 
 #import <Foundation/NSURLConnection.h>
@@ -57,7 +57,14 @@ using namespace WebCore;
 }
 #endif
 
-- initWithRequest:(NSURLRequest *)theRequest
+- (id)initWithFrameLoader:(FrameLoader *)frameLoader
+{
+    _frameLoader = frameLoader;
+    
+    return self;
+}
+
+- (id)initWithRequest:(NSURLRequest *)theRequest
            plugin:(NPP)thePlugin
        notifyData:(void *)theNotifyData 
  sendNotification:(BOOL)flag
@@ -107,22 +114,36 @@ using namespace WebCore;
 - (void)start
 {
     ASSERT(request);
-
+    ASSERT(!_frameLoader);
+    
     _loader->documentLoader()->addPlugInStreamLoader(_loader);
     _loader->load(request);
 }
 
 - (void)cancelLoadWithError:(NSError *)error
 {
+    if (_frameLoader) {
+        ASSERT(!_loader);
+    
+        DocumentLoader* documentLoader = _frameLoader->activeDocumentLoader();
+        ASSERT(documentLoader);
+        
+        if (documentLoader->isLoadingMainResource())
+            documentLoader->cancelMainResourceLoad(error);
+        return;
+    }
+    
     if (!_loader->isDone())
         _loader->cancel(error);
 }
 
 - (void)stop
 {
+    ASSERT(!_frameLoader);
+    
     if (!_loader->isDone())
         [self cancelLoadAndDestroyStreamWithError:_loader->cancelledError()];
 }
 
 @end
-
+#endif

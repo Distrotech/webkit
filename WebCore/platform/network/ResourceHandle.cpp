@@ -35,15 +35,15 @@
 namespace WebCore {
 
 ResourceHandle::ResourceHandle(const ResourceRequest& request, ResourceHandleClient* client, bool defersLoading,
-        bool mightDownloadFromHandle)
-    : d(new ResourceHandleInternal(this, request, client, defersLoading, mightDownloadFromHandle))
+         bool shouldContentSniff, bool mightDownloadFromHandle)
+    : d(new ResourceHandleInternal(this, request, client, defersLoading, shouldContentSniff, mightDownloadFromHandle))
 {
 }
 
 PassRefPtr<ResourceHandle> ResourceHandle::create(const ResourceRequest& request, ResourceHandleClient* client,
-    Frame* frame, bool defersLoading, bool mightDownloadFromHandle)
+    Frame* frame, bool defersLoading, bool shouldContentSniff, bool mightDownloadFromHandle)
 {
-    RefPtr<ResourceHandle> newHandle(new ResourceHandle(request, client, defersLoading, mightDownloadFromHandle));
+    RefPtr<ResourceHandle> newHandle(new ResourceHandle(request, client, defersLoading, shouldContentSniff, mightDownloadFromHandle));
 
     if (!portAllowed(request)) {
         newHandle->scheduleBlockedFailure();
@@ -64,33 +64,19 @@ void ResourceHandle::scheduleBlockedFailure()
 
 void ResourceHandle::fireBlockedFailure(Timer<ResourceHandle>* timer)
 {
-    client()->wasBlocked(this);
+    if (client())
+        client()->wasBlocked(this);
     delete timer;
-}
-
-const HTTPHeaderMap& ResourceHandle::requestHeaders() const
-{
-    return d->m_request.httpHeaderFields();
-}
-
-const KURL& ResourceHandle::url() const
-{
-    return d->m_request.url();
-}
-
-PassRefPtr<FormData> ResourceHandle::postData() const
-{
-    return d->m_request.httpBody();
-}
-
-const String& ResourceHandle::method() const
-{
-    return d->m_request.httpMethod();
 }
 
 ResourceHandleClient* ResourceHandle::client() const
 {
     return d->m_client;
+}
+
+void ResourceHandle::setClient(ResourceHandleClient* client)
+{
+    d->m_client = client;
 }
 
 const ResourceRequest& ResourceHandle::request() const
@@ -181,9 +167,19 @@ bool ResourceHandle::portAllowed(const ResourceRequest& request)
     const unsigned short* const blockedPortListEnd = blockedPortList
         + sizeof(blockedPortList) / sizeof(blockedPortList[0]);
 
+    // If the port is not in the blocked port list, allow it.
+    if (!std::binary_search(blockedPortList, blockedPortListEnd, port))
+        return true;
+
     // Allow ports 21 and 22 for FTP URLs, as Mozilla does.
-    return !std::binary_search(blockedPortList, blockedPortListEnd, port)
-        || ((port == 21 || port == 22) && request.url().url().startsWith("ftp:", false));
+    if ((port == 21 || port == 22) && request.url().url().startsWith("ftp:", false))
+        return true;
+
+    // Allow any port number in a file URL, since the port number is ignored.
+    if (request.url().url().startsWith("file:", false))
+        return true;
+
+    return false;
 }
   
 } // namespace WebCore

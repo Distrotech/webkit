@@ -77,19 +77,9 @@ JavaClass::JavaClass(jobject anInstance)
                 _methods.set(Identifier(aMethod->name()).ustring().rep(), methodList);
             }
         }
-        methodList->addMethod(aMethod);
+        methodList->append(aMethod);
         env->DeleteLocalRef(aJMethod);
-    }
-    
-    // Get the constructors
-    jarray constructors = (jarray)callJNIObjectMethod (aClass, "getConstructors", "()[Ljava/lang/reflect/Constructor;");
-    _numConstructors = env->GetArrayLength(constructors);    
-    _constructors = new JavaConstructor[_numConstructors];
-    for (i = 0; i < _numConstructors; i++) {
-        jobject aConstructor = env->GetObjectArrayElement((jobjectArray)constructors, i);
-        _constructors[i] = JavaConstructor(env, aConstructor);
-        env->DeleteLocalRef(aConstructor);
-    }
+    }    
 }
 
 JavaClass::~JavaClass() {
@@ -103,14 +93,10 @@ JavaClass::~JavaClass() {
     MethodListMap::const_iterator end = _methods.end();
     for (MethodListMap::const_iterator it = _methods.begin(); it != end; ++it) {
         const MethodList* methodList = it->second;
-        int length = methodList->length();
-        for (int i = 0; i < length; i++)
-            delete methodList->methodAt(i);    
+        deleteAllValues(*methodList);
         delete methodList;
     }
     _methods.clear();
-    
-    delete [] _constructors;
 }
 
 MethodList JavaClass::methodsNamed(const Identifier& identifier, Instance*) const

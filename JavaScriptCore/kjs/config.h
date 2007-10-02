@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -44,6 +44,9 @@
 // We want to use std::min and std::max
 #define max max
 #define min min
+
+// We need to define this before the first #include of stdlib.h or it won't contain rand_s.
+#define _CRT_RAND_S
 
 #define HAVE_FLOAT_H 1
 #define HAVE_FUNC__FINITE 1

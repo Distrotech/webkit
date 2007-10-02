@@ -121,7 +121,8 @@ static void setAllDefersLoading(const ResourceLoaderSet& loaders, bool defers)
 }
 
 DocumentLoader::DocumentLoader(const ResourceRequest& req, const SubstituteData& substituteData)
-    : m_frame(0)
+    : m_deferMainResourceDataLoad(true)
+    , m_frame(0)
     , m_originalRequest(req)
     , m_substituteData(substituteData)
     , m_originalRequestCopy(req)
@@ -263,7 +264,10 @@ void DocumentLoader::stopLoading()
         if (loading || (doc && doc->parsing()))
             m_frame->loader()->stopLoading(false);
     }
-    
+
+    // Always cancel multipart loaders
+    cancelAll(m_multipartSubresourceLoaders);
+
     if (!loading)
         return;
     
@@ -666,6 +670,12 @@ bool DocumentLoader::isLoadingPlugIns() const
     return !m_plugInStreamLoaders.isEmpty();
 }
 
+bool DocumentLoader::isLoadingMultipartContent() const
+{
+    ASSERT(m_mainResourceLoader);
+    return m_mainResourceLoader->isLoadingMultipartContent();
+}
+
 bool DocumentLoader::startLoadingMainResource(unsigned long identifier)
 {
     ASSERT(!m_mainResourceLoader);
@@ -690,6 +700,21 @@ bool DocumentLoader::startLoadingMainResource(unsigned long identifier)
 void DocumentLoader::cancelMainResourceLoad(const ResourceError& error)
 {
     m_mainResourceLoader->cancel(error);
+}
+
+void DocumentLoader::subresourceLoaderFinishedLoadingOnePart(ResourceLoader* loader)
+{
+    m_multipartSubresourceLoaders.add(loader);
+    m_subresourceLoaders.remove(loader);
+    updateLoading();
+    if (Frame* frame = m_frame)
+        frame->loader()->checkLoadComplete();    
+}
+
+void DocumentLoader::iconLoadDecisionAvailable()
+{
+    if (m_frame)
+        m_frame->loader()->iconLoadDecisionAvailable();
 }
 
 }

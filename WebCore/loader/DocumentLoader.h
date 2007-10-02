@@ -29,6 +29,7 @@
 #ifndef DocumentLoader_h
 #define DocumentLoader_h
 
+#include "IconDatabase.h"
 #include "NavigationAction.h"
 #include "Shared.h"
 #include "PlatformString.h"
@@ -61,6 +62,8 @@ namespace WebCore {
         virtual ~DocumentLoader();
 
         void setFrame(Frame*);
+        Frame* frame() const { return m_frame; }
+
         virtual void attachToFrame();
         virtual void detachFromFrame();
 
@@ -134,10 +137,13 @@ namespace WebCore {
 
         bool startLoadingMainResource(unsigned long identifier);
         void cancelMainResourceLoad(const ResourceError&);
-
+        
+        void iconLoadDecisionAvailable();
+        
         bool isLoadingMainResource() const;
         bool isLoadingSubresources() const;
         bool isLoadingPlugIns() const;
+        bool isLoadingMultipartContent() const;
 
         void stopLoadingPlugIns();
         void stopLoadingSubresources();
@@ -146,6 +152,12 @@ namespace WebCore {
         void removeSubresourceLoader(ResourceLoader*);
         void addPlugInStreamLoader(ResourceLoader*);
         void removePlugInStreamLoader(ResourceLoader*);
+
+        void subresourceLoaderFinishedLoadingOnePart(ResourceLoader*);
+        
+        bool deferMainResourceDataLoad() const { return m_deferMainResourceDataLoad; }
+    protected:
+        bool m_deferMainResourceDataLoad;
 
     private:
         void setupForReplace();
@@ -159,6 +171,7 @@ namespace WebCore {
 
         RefPtr<MainResourceLoader> m_mainResourceLoader;
         ResourceLoaderSet m_subresourceLoaders;
+        ResourceLoaderSet m_multipartSubresourceLoaders;
         ResourceLoaderSet m_plugInStreamLoaders;
 
         RefPtr<SharedBuffer> m_mainResourceData;

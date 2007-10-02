@@ -14,8 +14,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -25,21 +25,26 @@
 #define QWEBPAGE_H
 
 #include "qwebpagehistory.h"
+#include "qwebsettings.h"
 #include <qwebkitglobal.h>
 
 #include <qwidget.h>
-class QWebFrame;
+class QNetworkProxy;
 class QUndoStack;
 class QUrl;
+class QWebFrame;
+class QWebNetworkRequest;
 
 class QWebPagePrivate;
 class QWebFrameData;
+class QWebNetworkInterface;
 
 namespace WebCore {
     class ChromeClientQt;
     class FrameLoaderClientQt;
     class FrameLoadRequest;
     class EditorClientQt;
+    class ResourceHandle;
 }
 
 class QWEBKIT_EXPORT QWebPage : public QWidget
@@ -48,15 +53,32 @@ class QWEBKIT_EXPORT QWebPage : public QWidget
 
     Q_PROPERTY(bool modified READ isModified)
 public:
+    enum NavigationRequestResponse {
+        AcceptNavigationRequest,
+        IgnoreNavigationRequest
+    };
+
+    enum NavigationType {
+        NavigationTypeLinkClicked,
+        NavigationTypeFormSubmitted,
+        NavigationTypeBackForward,
+        NavigationTypeReload,
+        NavigationTypeFormResubmitted,
+        NavigationTypeOther
+    };
+
     QWebPage(QWidget *parent);
     ~QWebPage();
 
-
     void open(const QUrl &url);
+    void open(const QWebNetworkRequest &request);
 
     QWebFrame *mainFrame() const;
 
     QWebPageHistory history() const;
+
+    void setSettings(const QWebSettings &settings);
+    QWebSettings settings() const;
 
     QSize sizeHint() const;
 
@@ -66,18 +88,24 @@ public:
 
     bool isModified() const;
 
-    virtual void javaScriptConsoleMessage(const QString& message, unsigned int lineNumber, const QString& sourceID);
-
-    virtual void statusTextChanged(const QString& text);
-
-    virtual void runJavaScriptAlert(QWebFrame *frame, const QString& msg);
-
     QUndoStack *undoStack();
     
-    virtual void dragEnterEvent(QDragEnterEvent *);
-    virtual void dragLeaveEvent(QDragLeaveEvent *);
-    virtual void dragMoveEvent(QDragMoveEvent *);
-    virtual void dropEvent(QDropEvent *);
+    void setNetworkInterface(QWebNetworkInterface *interface);
+    QWebNetworkInterface *networkInterface() const;
+
+    QPixmap icon() const;
+
+#ifndef QT_NO_NETWORKPROXY
+    void setNetworkProxy(const QNetworkProxy& proxy);
+    QNetworkProxy networkProxy() const;
+#endif
+
+    bool canCut() const;
+    bool canCopy() const;
+    bool canPaste() const;
+
+    quint64 totalBytes() const;
+    quint64 bytesReceived() const;
 
 public slots:
     /**
@@ -91,6 +119,10 @@ public slots:
 
     virtual void setWindowGeometry(const QRect& geom);
 
+    void cut();
+    void copy();
+    void paste();
+
 signals:
     /**
      * Signal is emitted when load is started on one of the child
@@ -102,7 +134,7 @@ signals:
      * Signal is emitted when the global progress status changes.
      * It accumulates changes from all the child frames.
      */
-    void loadProgressChanged(double progress);
+    void loadProgressChanged(int progress);
     /**
      * Signal is emitted when load has been finished on one of
      * the child frames of the page. The frame on which the
@@ -121,10 +153,57 @@ signals:
      * isn't hovering over any link element.
      */
     void hoveringOverLink(const QString &link, const QString &title);
+    /**
+     * Signal is emitted when the statusbar text is changed by the page.
+     */
+    void statusBarTextChanged(const QString& text);
+    /**
+     * Signal is emitted when an icon ("favicon") is loaded from the site.
+     */
+    void iconLoaded();
+
+    void selectionChanged();
+
+    /**
+      * Signal is emitted when the mainframe()'s initial layout is completed.
+     */
+    void initialLayoutComplete();
+
+    void addToHistory(const QUrl&);
+
+private slots:
+    void onLoadProgressChanged(int);
 
 protected:
     virtual QWebFrame *createFrame(QWebFrame *parentFrame, QWebFrameData *frameData);
     virtual QWebPage *createWindow();
+    virtual QObject *createPlugin(const QString &classid, const QUrl &url, const QStringList &paramNames, const QStringList &paramValues);
+
+    virtual NavigationRequestResponse navigationRequested(QWebFrame *frame, const QWebNetworkRequest &request, NavigationType type);
+    virtual QString chooseFile(QWebFrame *frame, const QString& oldFile);
+    virtual void javaScriptAlert(QWebFrame *frame, const QString& msg);
+    virtual bool javaScriptConfirm(QWebFrame *frame, const QString& msg);
+    virtual bool javaScriptPrompt(QWebFrame *frame, const QString& msg, const QString& defaultValue, QString* result);
+    virtual void javaScriptConsoleMessage(const QString& message, unsigned int lineNumber, const QString& sourceID);
+    virtual QString userAgentStringForUrl(const QUrl& forUrl) const;
+
+    virtual void resizeEvent(QResizeEvent*);
+    virtual void paintEvent(QPaintEvent*);
+    virtual void mouseMoveEvent(QMouseEvent*);
+    virtual void mousePressEvent(QMouseEvent*);
+    virtual void mouseDoubleClickEvent(QMouseEvent*);
+    virtual void mouseReleaseEvent(QMouseEvent*);
+    virtual void wheelEvent(QWheelEvent*);
+    virtual void keyPressEvent(QKeyEvent*);
+    virtual void keyReleaseEvent(QKeyEvent*);
+    virtual void focusInEvent(QFocusEvent*);
+    virtual void focusOutEvent(QFocusEvent*);
+    virtual bool focusNextPrevChild(bool next);
+
+    virtual void dragEnterEvent(QDragEnterEvent *);
+    virtual void dragLeaveEvent(QDragLeaveEvent *);
+    virtual void dragMoveEvent(QDragMoveEvent *);
+    virtual void dropEvent(QDropEvent *);
 
 private:
     friend class QWebFrame;
@@ -132,6 +211,7 @@ private:
     friend class WebCore::ChromeClientQt;
     friend class WebCore::EditorClientQt;
     friend class WebCore::FrameLoaderClientQt;
+    friend class WebCore::ResourceHandle;
     QWebPagePrivate *d;
 };
 

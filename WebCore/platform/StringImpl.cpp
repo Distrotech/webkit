@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -29,6 +29,7 @@
 #include "CString.h"
 #include "CharacterNames.h"
 #include "DeprecatedString.h"
+#include "FloatConversion.h"
 #include "Length.h"
 #include "StringHash.h"
 #include "TextBreakIterator.h"
@@ -353,12 +354,12 @@ Length* StringImpl::toCoordsArray(int& len) const
 
 Length* StringImpl::toLengthArray(int& len) const
 {
-    if (!length()) {
+    DeprecatedString str(reinterpret_cast<const DeprecatedChar*>(m_data), m_length);
+    str = str.simplifyWhiteSpace();
+    if (!str.length()) {
         len = 1;
         return 0;
     }
-    DeprecatedString str(reinterpret_cast<const DeprecatedChar*>(m_data), m_length);
-    str = str.simplifyWhiteSpace();
 
     len = str.contains(',') + 1;
     Length* r = new Length[len];
@@ -627,6 +628,44 @@ int StringImpl::toInt(bool* ok) const
     return DeprecatedConstString(reinterpret_cast<const DeprecatedChar*>(m_data), i).string().toInt(ok);
 }
 
+int64_t StringImpl::toInt64(bool* ok) const
+{
+    unsigned i = 0;
+
+    // Allow leading spaces.
+    for (; i != m_length; ++i)
+        if (!isSpace(m_data[i]))
+            break;
+    
+    // Allow sign.
+    if (i != m_length && (m_data[i] == '+' || m_data[i] == '-'))
+        ++i;
+    
+    // Allow digits.
+    for (; i != m_length; ++i)
+        if (!Unicode::isDigit(m_data[i]))
+            break;
+    
+    return DeprecatedConstString(reinterpret_cast<const DeprecatedChar*>(m_data), i).string().toInt64(ok);
+}
+
+uint64_t StringImpl::toUInt64(bool* ok) const
+{
+    unsigned i = 0;
+
+    // Allow leading spaces.
+    for (; i != m_length; ++i)
+        if (!isSpace(m_data[i]))
+            break;
+
+    // Allow digits.
+    for (; i != m_length; ++i)
+        if (!Unicode::isDigit(m_data[i]))
+            break;
+    
+    return DeprecatedConstString(reinterpret_cast<const DeprecatedChar*>(m_data), i).string().toUInt64(ok);
+}
+
 double StringImpl::toDouble(bool* ok) const
 {
     if (!m_length) {
@@ -636,10 +675,16 @@ double StringImpl::toDouble(bool* ok) const
     }
     char *end;
     CString latin1String = Latin1Encoding().encode(characters(), length());
-    double val = kjs_strtod(latin1String, &end);
+    double val = kjs_strtod(latin1String.data(), &end);
     if (ok)
         *ok = end == 0 || *end == '\0';
     return val;
+}
+
+float StringImpl::toFloat(bool* ok) const
+{
+    // FIXME: this will return ok even when the string does not fit into a float
+    return narrowPrecisionToFloat(toDouble(ok));
 }
 
 static bool equal(const UChar* a, const char* b, int length)
@@ -1172,6 +1217,18 @@ Vector<char> StringImpl::ascii() const
     }
     buffer[i] = '\0';
     return buffer;
+}
+
+WTF::Unicode::Direction StringImpl::defaultWritingDirection() const
+{
+    for (unsigned i = 0; i < m_length; ++i) {
+        WTF::Unicode::Direction charDirection = WTF::Unicode::direction(m_data[i]);
+        if (charDirection == WTF::Unicode::LeftToRight)
+            return WTF::Unicode::LeftToRight;
+        if (charDirection == WTF::Unicode::RightToLeft || charDirection == WTF::Unicode::RightToLeftArabic)
+            return WTF::Unicode::RightToLeft;
+    }
+    return WTF::Unicode::LeftToRight;
 }
 
 StringImpl::StringImpl(const Identifier& str)

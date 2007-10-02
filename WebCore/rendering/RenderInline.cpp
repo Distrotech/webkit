@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -222,6 +222,10 @@ void RenderInline::splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox
 {
     RenderBlock* pre = 0;
     RenderBlock* block = containingBlock();
+    
+    // Delete our line boxes before we do the inline split into continuations.
+    block->deleteLineBoxTree();
+    
     bool madeNewBeforeBlock = false;
     if (block->isAnonymousBlock() && (!block->parent() || !block->parent()->createsAnonymousWrapper())) {
         // We can reuse this block and make it the preBlock of the next continuation.
@@ -241,7 +245,7 @@ void RenderInline::splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox
     block->insertChildNode(newBlockBox, boxFirst);
     block->insertChildNode(post, boxFirst);
     block->setChildrenInline(false);
-
+    
     if (madeNewBeforeBlock) {
         RenderObject* o = boxFirst;
         while (o) {
@@ -278,25 +282,26 @@ void RenderInline::paint(PaintInfo& paintInfo, int tx, int ty)
     paintLines(paintInfo, tx, ty);
 }
 
-void RenderInline::absoluteRects(Vector<IntRect>& rects, int tx, int ty)
+void RenderInline::absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool topLevel)
 {
     for (InlineRunBox* curr = firstLineBox(); curr; curr = curr->nextLineBox())
         rects.append(IntRect(tx + curr->xPos(), ty + curr->yPos(), curr->width(), curr->height()));
 
     for (RenderObject* curr = firstChild(); curr; curr = curr->nextSibling()) {
         if (!curr->isText())
-            curr->absoluteRects(rects, tx + curr->xPos(), ty + curr->yPos());
+            curr->absoluteRects(rects, tx + curr->xPos(), ty + curr->yPos(), false);
     }
 
-    if (continuation())
+    if (continuation() && topLevel)
         continuation()->absoluteRects(rects, 
                                       tx - containingBlock()->xPos() + continuation()->xPos(),
-                                      ty - containingBlock()->yPos() + continuation()->yPos());
+                                      ty - containingBlock()->yPos() + continuation()->yPos(),
+                                      topLevel);
 }
 
 bool RenderInline::requiresLayer()
 {
-    return isRoot() || isRelPositioned() || style()->opacity() < 1.0f;
+    return isRelPositioned() || style()->opacity() < 1.0f;
 }
 
 int RenderInline::width() const
@@ -316,7 +321,11 @@ int RenderInline::width() const
 
 int RenderInline::height() const
 {
-    if (firstLineBox())
+    // See <rdar://problem/5289721>, for an unknown reason the linked list here is sometimes inconsistent, first is non-zero and last is zero.  We have been
+    // unable to reproduce this at all (and consequently unable to figure ot why this is happening).  The assert will hopefully catch the problem in debug
+    // builds and help us someday figure out why.  We also put in a redundant check of lastLineBox() to avoid the crash for now.
+    ASSERT(!firstLineBox() == !lastLineBox());  // Either both are null or both exist.
+    if (firstLineBox() && lastLineBox())
         return lastLineBox()->yPos() + lastLineBox()->height() - firstLineBox()->yPos();
     return 0;
 }

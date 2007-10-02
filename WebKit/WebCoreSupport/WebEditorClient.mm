@@ -197,11 +197,6 @@ int WebEditorClient::spellCheckerDocumentTag()
     return [m_webView spellCheckerDocumentTag];
 }
 
-bool WebEditorClient::selectWordBeforeMenuEvent()
-{
-    return [m_webView _selectWordBeforeMenuEvent];
-}
-
 bool WebEditorClient::isEditable()
 {
     return [m_webView isEditable];
@@ -228,6 +223,12 @@ bool WebEditorClient::shouldApplyStyle(CSSStyleDeclaration* style, Range* range)
 {
     return [[m_webView _editingDelegateForwarder] webView:m_webView
         shouldApplyStyle:kit(style) toElementsInDOMRange:kit(range)];
+}
+
+bool WebEditorClient::shouldMoveRangeAfterDelete(Range* range, Range* rangeToBeReplaced)
+{
+    return [[m_webView _editingDelegateForwarder] webView:m_webView
+        shouldMoveRangeAfterDelete:kit(range) replacingRange:kit(rangeToBeReplaced)];
 }
 
 bool WebEditorClient::shouldBeginEditing(Range* range)
@@ -445,33 +446,27 @@ void WebEditorClient::handleInputMethodKeypress(KeyboardEvent* event)
         event->setDefaultHandled();
 }
 
-void WebEditorClient::markedTextAbandoned(Frame* frame)
-{
-    WebHTMLView *webHTMLView = [[kit(frame) frameView] documentView];
-    [[NSInputManager currentInputManager] markedTextAbandoned:webHTMLView];
-}
-
 #define FormDelegateLog(ctrl)  LOG(FormDelegate, "control=%@", ctrl)
 
 void WebEditorClient::textFieldDidBeginEditing(Element* element)
 {
     DOMHTMLInputElement* inputElement = [DOMHTMLInputElement _wrapHTMLInputElement:(HTMLInputElement*)element];
     FormDelegateLog(inputElement);
-    [[m_webView _formDelegate] textFieldDidBeginEditing:inputElement inFrame:kit(element->document()->frame())];
+    CallFormDelegate(m_webView, @selector(textFieldDidBeginEditing:inFrame:), inputElement, kit(element->document()->frame()));
 }
 
 void WebEditorClient::textFieldDidEndEditing(Element* element)
 {
     DOMHTMLInputElement* inputElement = [DOMHTMLInputElement _wrapHTMLInputElement:(HTMLInputElement*)element];
     FormDelegateLog(inputElement);
-    [[m_webView _formDelegate] textFieldDidEndEditing:inputElement inFrame:kit(element->document()->frame())];
+    CallFormDelegate(m_webView, @selector(textFieldDidEndEditing:inFrame:), inputElement, kit(element->document()->frame()));
 }
     
 void WebEditorClient::textDidChangeInTextField(Element* element)
 {
     DOMHTMLInputElement* inputElement = [DOMHTMLInputElement _wrapHTMLInputElement:(HTMLInputElement*)element];
     FormDelegateLog(inputElement);
-    [[m_webView _formDelegate] textDidChangeInTextField:(DOMHTMLInputElement *)inputElement inFrame:kit(element->document()->frame())];
+    CallFormDelegate(m_webView, @selector(textDidChangeInTextField:inFrame:), inputElement, kit(element->document()->frame()));
 }
 
 static SEL selectorForKeyEvent(KeyboardEvent* event)
@@ -499,32 +494,25 @@ static SEL selectorForKeyEvent(KeyboardEvent* event)
 bool WebEditorClient::doTextFieldCommandFromEvent(Element* element, KeyboardEvent* event)
 {
     DOMHTMLInputElement* inputElement = [DOMHTMLInputElement _wrapHTMLInputElement:(HTMLInputElement*)element];
-
-    bool result = false;
     FormDelegateLog(inputElement);
-
-    SEL selector = selectorForKeyEvent(event);
-    if (selector)
-        result = [[m_webView _formDelegate] textField:inputElement doCommandBySelector:selector inFrame:kit(element->document()->frame())];
-
-    return result;
+    if (SEL commandSelector = selectorForKeyEvent(event))
+        return CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, commandSelector, kit(element->document()->frame()));
+    return NO;
 }
 
 void WebEditorClient::textWillBeDeletedInTextField(Element* element)
 {
     DOMHTMLInputElement* inputElement = [DOMHTMLInputElement _wrapHTMLInputElement:(HTMLInputElement*)element];
-
-    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
     FormDelegateLog(inputElement);
-    [[m_webView _formDelegate] textField:inputElement doCommandBySelector:@selector(deleteBackward:) inFrame:kit(element->document()->frame())];
+    // We're using the deleteBackward selector for all deletion operations since the autofill code treats all deletions the same way.
+    CallFormDelegateReturningBoolean(NO, m_webView, @selector(textField:doCommandBySelector:inFrame:), inputElement, @selector(deleteBackward:), kit(element->document()->frame()));
 }
 
 void WebEditorClient::textDidChangeInTextArea(Element* element)
 {
     DOMHTMLTextAreaElement* textAreaElement = [DOMHTMLTextAreaElement _wrapHTMLTextAreaElement:(HTMLTextAreaElement*)element];
-
     FormDelegateLog(textAreaElement);
-    [[m_webView _formDelegate] textDidChangeInTextArea:textAreaElement inFrame:kit(element->document()->frame())];
+    CallFormDelegate(m_webView, @selector(textDidChangeInTextArea:inFrame:), textAreaElement, kit(element->document()->frame()));
 }
 
 void WebEditorClient::ignoreWordInSpellDocument(const String& text)
@@ -543,8 +531,14 @@ void WebEditorClient::checkSpellingOfString(const UChar* text, int length, int* 
     NSString* textString = [[NSString alloc] initWithCharactersNoCopy:const_cast<UChar*>(text) length:length freeWhenDone:NO];
     NSRange range = [[NSSpellChecker sharedSpellChecker] checkSpellingOfString:textString startingAt:0 language:nil wrap:NO inSpellDocumentWithTag:spellCheckerDocumentTag() wordCount:NULL];
     [textString release];
-    if (misspellingLocation)
-        *misspellingLocation = range.location;
+    if (misspellingLocation) {
+        // WebCore expects -1 to represent "not found"
+        if (range.location == NSNotFound)
+            *misspellingLocation = -1;
+        else
+            *misspellingLocation = range.location;
+    }
+    
     if (misspellingLength)
         *misspellingLength = range.length;
 }
@@ -557,7 +551,8 @@ void WebEditorClient::checkGrammarOfString(const UChar* text, int length, Vector
     NSRange range = [[NSSpellChecker sharedSpellChecker] checkGrammarOfString:textString startingAt:0 language:nil wrap:NO inSpellDocumentWithTag:spellCheckerDocumentTag() details:&grammarDetails];
     [textString release];
     if (badGrammarLocation)
-        *badGrammarLocation = range.location;
+        // WebCore expects -1 to represent "not found"
+        *badGrammarLocation = (range.location == NSNotFound) ? -1 : range.location;
     if (badGrammarLength)
         *badGrammarLength = range.length;
     for (NSDictionary *detail in grammarDetails) {
@@ -624,4 +619,8 @@ void WebEditorClient::getGuessesForWord(const String& word, WTF::Vector<String>&
         while ((string = [enumerator nextObject]) != nil)
             guesses.append(string);
     }
+}
+
+void WebEditorClient::setInputMethodState(bool)
+{
 }

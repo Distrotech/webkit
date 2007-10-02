@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Trolltech ASA
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,9 +30,11 @@
 #import "WebChromeClient.h"
 
 #import "WebDefaultUIDelegate.h"
+#import "WebElementDictionary.h"
 #import "WebFrameInternal.h"
 #import "WebFrameView.h"
 #import "WebHTMLView.h"
+#import "WebHTMLViewPrivate.h"
 #import "WebNSURLRequestExtras.h"
 #import "WebUIDelegate.h"
 #import "WebUIDelegatePrivate.h"
@@ -41,10 +43,11 @@
 #import <WebCore/BlockExceptions.h>
 #import <WebCore/FloatRect.h>
 #import <WebCore/FrameLoadRequest.h>
+#import <WebCore/HitTestResult.h>
 #import <WebCore/IntRect.h>
+#import <WebCore/PlatformScreen.h>
 #import <WebCore/PlatformString.h>
 #import <WebCore/ResourceRequest.h>
-#import <WebCore/Screen.h>
 #import <wtf/PassRefPtr.h>
 
 @interface NSView (AppKitSecretsWebBridgeKnowsAbout)
@@ -116,9 +119,16 @@ void WebChromeClient::takeFocus(FocusDirection direction)
         // view of the last view in its key view loop. This makes m_webView
         // behave as if it had no subviews, which is the behavior we want.
         NSView *lastView = [m_webView _findLastViewInKeyViewLoop];
+        // avoid triggering assertions if the WebView is the only thing in the key loop
+        if ([m_webView _becomingFirstResponderFromOutside] && m_webView == [lastView nextValidKeyView])
+            return;
         [[m_webView window] selectKeyViewFollowingView:lastView];
-    } else
+    } else {
+        // avoid triggering assertions if the WebView is the only thing in the key loop
+        if ([m_webView _becomingFirstResponderFromOutside] && m_webView == [m_webView previousValidKeyView])
+            return;
         [[m_webView window] selectKeyViewPrecedingView:m_webView];
+    }
 }
 
 Page* WebChromeClient::createWindow(Frame*, const FrameLoadRequest& request)
@@ -126,14 +136,7 @@ Page* WebChromeClient::createWindow(Frame*, const FrameLoadRequest& request)
     NSURLRequest *URLRequest = nil;
     if (!request.isEmpty())
         URLRequest = request.resourceRequest().nsURLRequest();
-
-    WebView *newWebView;
-    id delegate = [m_webView UIDelegate];
-    if ([delegate respondsToSelector:@selector(webView:createWebViewWithRequest:)])
-        newWebView = [delegate webView:m_webView createWebViewWithRequest:URLRequest];
-    else
-        newWebView = [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView createWebViewWithRequest:URLRequest];
-
+    WebView *newWebView = CallUIDelegate(m_webView, @selector(webView:createWebViewWithRequest:), URLRequest);
     return core(newWebView);
 }
 
@@ -146,12 +149,9 @@ Page* WebChromeClient::createModalDialog(Frame*, const FrameLoadRequest& request
     WebView *newWebView = nil;
     id delegate = [m_webView UIDelegate];
     if ([delegate respondsToSelector:@selector(webView:createWebViewModalDialogWithRequest:)])
-        newWebView = [delegate webView:m_webView createWebViewModalDialogWithRequest:URLRequest];
+        newWebView = CallUIDelegate(m_webView, @selector(webView:createWebViewModalDialogWithRequest:), URLRequest);
     else if ([delegate respondsToSelector:@selector(webView:createWebViewWithRequest:)])
-        newWebView = [delegate webView:m_webView createWebViewWithRequest:URLRequest];
-    else
-        newWebView = [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView createWebViewWithRequest:URLRequest];
-
+        newWebView = CallUIDelegate(m_webView, @selector(webView:createWebViewWithRequest:), URLRequest);
     return core(newWebView);
 }
 
@@ -167,7 +167,7 @@ bool WebChromeClient::canRunModal()
 
 void WebChromeClient::runModal()
 {
-    [[m_webView UIDelegate] webViewRunModal:m_webView];
+    CallUIDelegate(m_webView, @selector(webViewRunModal:));
 }
 
 void WebChromeClient::setToolbarsVisible(bool b)
@@ -177,10 +177,7 @@ void WebChromeClient::setToolbarsVisible(bool b)
 
 bool WebChromeClient::toolbarsVisible()
 {
-    id delegate = [m_webView UIDelegate];
-    if ([delegate respondsToSelector:@selector(webViewAreToolbarsVisible:)])
-        return [delegate webViewAreToolbarsVisible:m_webView];
-    return [[WebDefaultUIDelegate sharedUIDelegate] webViewAreToolbarsVisible:m_webView];
+    return CallUIDelegateReturningBoolean(NO, m_webView, @selector(webViewAreToolbarsVisible:));
 }
 
 void WebChromeClient::setStatusbarVisible(bool b)
@@ -190,12 +187,8 @@ void WebChromeClient::setStatusbarVisible(bool b)
 
 bool WebChromeClient::statusbarVisible()
 {
-    id delegate = [m_webView UIDelegate];
-    if ([delegate respondsToSelector:@selector(webViewIsStatusBarVisible:)])
-        return [delegate webViewIsStatusBarVisible:m_webView];
-    return [[WebDefaultUIDelegate sharedUIDelegate] webViewIsStatusBarVisible:m_webView];
+    return CallUIDelegateReturningBoolean(NO, m_webView, @selector(webViewIsStatusBarVisible:));
 }
-
 
 void WebChromeClient::setScrollbarsVisible(bool b)
 {
@@ -226,30 +219,28 @@ void WebChromeClient::setResizable(bool b)
 
 void WebChromeClient::addMessageToConsole(const String& message, unsigned int lineNumber, const String& sourceURL)
 {
-    id wd = [m_webView UIDelegate];
-    if ([wd respondsToSelector:@selector(webView:addMessageToConsole:)]) {
-        NSDictionary *dictionary = [NSDictionary dictionaryWithObjectsAndKeys:
-            (NSString *)message, @"message",
-            [NSNumber numberWithInt: lineNumber], @"lineNumber",
-            (NSString *)sourceURL, @"sourceURL",
-            NULL];
-        
-        [wd webView:m_webView addMessageToConsole:dictionary];
-    }    
+    id delegate = [m_webView UIDelegate];
+    SEL selector = @selector(webView:addMessageToConsole:);
+    if (![delegate respondsToSelector:selector])
+        return;
+
+    NSDictionary *dictionary = [[NSDictionary alloc] initWithObjectsAndKeys:
+        (NSString *)message, @"message", [NSNumber numberWithUnsignedInt:lineNumber], @"lineNumber",
+        (NSString *)sourceURL, @"sourceURL", NULL];
+
+    CallUIDelegate(m_webView, selector, dictionary);
+
+    [dictionary release];
 }
 
 bool WebChromeClient::canRunBeforeUnloadConfirmPanel()
 {
-    id wd = [m_webView UIDelegate];
-    return [wd respondsToSelector:@selector(webView:runBeforeUnloadConfirmPanelWithMessage:initiatedByFrame:)];
+    return [[m_webView UIDelegate] respondsToSelector:@selector(webView:runBeforeUnloadConfirmPanelWithMessage:initiatedByFrame:)];
 }
 
 bool WebChromeClient::runBeforeUnloadConfirmPanel(const String& message, Frame* frame)
 {
-    id wd = [m_webView UIDelegate];
-    if ([wd respondsToSelector:@selector(webView:runBeforeUnloadConfirmPanelWithMessage:initiatedByFrame:)])
-        return [wd webView:m_webView runBeforeUnloadConfirmPanelWithMessage:message initiatedByFrame:kit(frame)];
-    return true;
+    return CallUIDelegateReturningBoolean(true, m_webView, @selector(webView:runBeforeUnloadConfirmPanelWithMessage:initiatedByFrame:), message, kit(frame));
 }
 
 void WebChromeClient::closeWindowSoon()
@@ -274,69 +265,68 @@ void WebChromeClient::closeWindowSoon()
 
 void WebChromeClient::runJavaScriptAlert(Frame* frame, const String& message)
 {
-    id wd = [m_webView UIDelegate];
-    // Check whether delegate implements new version, then whether delegate implements old version. If neither,
-    // fall back to shared delegate's implementation of new version.
-    if ([wd respondsToSelector:@selector(webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:)])
-        [wd webView:m_webView runJavaScriptAlertPanelWithMessage:message initiatedByFrame:kit(frame)];
-    else if ([wd respondsToSelector:@selector(webView:runJavaScriptAlertPanelWithMessage:)])
-        [wd webView:m_webView runJavaScriptAlertPanelWithMessage:message];
-    else
-        [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView runJavaScriptAlertPanelWithMessage:message initiatedByFrame:kit(frame)];    
+    id delegate = [m_webView UIDelegate];
+    SEL selector = @selector(webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:);
+    if ([delegate respondsToSelector:selector]) {
+        CallUIDelegate(m_webView, selector, message, kit(frame));
+        return;
+    }
+
+    // Call the old version of the delegate method if it is implemented.
+    selector = @selector(webView:runJavaScriptAlertPanelWithMessage:);
+    if ([delegate respondsToSelector:selector]) {
+        CallUIDelegate(m_webView, selector, message);
+        return;
+    }
 }
 
 bool WebChromeClient::runJavaScriptConfirm(Frame* frame, const String& message)
 {
-    id wd = [m_webView UIDelegate];
-    // Check whether delegate implements new version, then whether delegate implements old version. If neither,
-    // fall back to shared delegate's implementation of new version.
-    if ([wd respondsToSelector:@selector(webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:)])
-        return [wd webView:m_webView runJavaScriptConfirmPanelWithMessage:message initiatedByFrame:kit(frame)];
-    if ([wd respondsToSelector:@selector(webView:runJavaScriptConfirmPanelWithMessage:)])
-        return [wd webView:m_webView runJavaScriptConfirmPanelWithMessage:message];    
-    return [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView runJavaScriptConfirmPanelWithMessage:message initiatedByFrame:kit(frame)];
+    id delegate = [m_webView UIDelegate];
+    SEL selector = @selector(webView:runJavaScriptConfirmPanelWithMessage:initiatedByFrame:);
+    if ([delegate respondsToSelector:selector])
+        return CallUIDelegateReturningBoolean(NO, m_webView, selector, message, kit(frame));
+
+    // Call the old version of the delegate method if it is implemented.
+    selector = @selector(webView:runJavaScriptConfirmPanelWithMessage:);
+    if ([delegate respondsToSelector:selector])
+        return CallUIDelegateReturningBoolean(NO, m_webView, selector, message);
+
+    return NO;
 }
 
 bool WebChromeClient::runJavaScriptPrompt(Frame* frame, const String& prompt, const String& defaultText, String& result)
 {
-    id wd = [m_webView UIDelegate];
-    // Check whether delegate implements new version, then whether delegate implements old version. If neither,
-    // fall back to shared delegate's implementation of new version.
-    if ([wd respondsToSelector:@selector(webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:)])
-        result = [wd webView:m_webView runJavaScriptTextInputPanelWithPrompt:prompt defaultText:defaultText initiatedByFrame:kit(frame)];
-    else if ([wd respondsToSelector:@selector(webView:runJavaScriptTextInputPanelWithPrompt:defaultText:)])
-        result = [wd webView:m_webView runJavaScriptTextInputPanelWithPrompt:prompt defaultText:defaultText];
-    else
-        result = [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView runJavaScriptTextInputPanelWithPrompt:prompt defaultText:defaultText initiatedByFrame:kit(frame)];
-    
+    id delegate = [m_webView UIDelegate];
+    SEL selector = @selector(webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:);
+    if ([delegate respondsToSelector:selector]) {
+        result = (NSString *)CallUIDelegate(m_webView, selector, prompt, defaultText, kit(frame));
+        return !result.isNull();
+    }
+
+    // Call the old version of the delegate method if it is implemented.
+    selector = @selector(webView:runJavaScriptTextInputPanelWithPrompt:defaultText:);
+    if ([delegate respondsToSelector:selector]) {
+        result = (NSString *)CallUIDelegate(m_webView, selector, prompt, defaultText);
+        return !result.isNull();
+    }
+
+    result = [[WebDefaultUIDelegate sharedUIDelegate] webView:m_webView runJavaScriptTextInputPanelWithPrompt:prompt defaultText:defaultText initiatedByFrame:kit(frame)];
     return !result.isNull();
 }
 
 bool WebChromeClient::shouldInterruptJavaScript()
 {
-    BEGIN_BLOCK_OBJC_EXCEPTIONS;
-    id wd = [m_webView UIDelegate];
-    if ([wd respondsToSelector:@selector(webViewShouldInterruptJavaScript:)])
-        return [wd webViewShouldInterruptJavaScript:m_webView];
-    return false;
-    END_BLOCK_OBJC_EXCEPTIONS;
-    
-    return false;
+    return CallUIDelegate(m_webView, @selector(webViewShouldInterruptJavaScript:));
 }
 
 void WebChromeClient::setStatusbarText(const WebCore::String& status)
 {
-    id wd = [m_webView UIDelegate];
-
-    if ([wd respondsToSelector:@selector(webView:setStatusText:)]) {
-        // We want the temporaries allocated here to be released even before returning to the 
-        // event loop; see <http://bugs.webkit.org/show_bug.cgi?id=9880>.
-        NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
-    
-        [wd webView:m_webView setStatusText:status];
-        
-        [localPool drain];
-    }
+    // We want the temporaries allocated here to be released even before returning to the 
+    // event loop; see <http://bugs.webkit.org/show_bug.cgi?id=9880>.
+    NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
+    CallUIDelegate(m_webView, @selector(webView:setStatusText:), (NSString *)status);
+    [localPool drain];
 }
 
 bool WebChromeClient::tabsToLinks() const
@@ -359,4 +349,22 @@ void WebChromeClient::scrollBackingStore(int, int, const IntRect&, const IntRect
 
 void WebChromeClient::updateBackingStore()
 {
+}
+
+void WebChromeClient::mouseDidMoveOverElement(const HitTestResult& result, unsigned modifierFlags)
+{
+    WebElementDictionary *element = [[WebElementDictionary alloc] initWithHitTestResult:result];
+    [m_webView _mouseDidMoveOverElement:element modifierFlags:modifierFlags];
+    [element release];
+}
+
+void WebChromeClient::setToolTip(const String& toolTip)
+{
+    [(WebHTMLView *)[[[m_webView mainFrame] frameView] documentView] _setToolTip:toolTip];
+}
+
+void WebChromeClient::print(Frame* frame)
+{
+    WebFrameView* frameView = [kit(frame) frameView];
+    CallUIDelegate(m_webView, @selector(webView:printFrameView:), frameView);
 }

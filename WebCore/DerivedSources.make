@@ -42,6 +42,7 @@ VPATH = \
 
 ifeq ($(OS),MACOS)
 all : \
+    CharsetData.cpp \
     DOMAbstractView.h \
     DOMAttr.h \
     DOMCDATASection.h \
@@ -106,6 +107,7 @@ all : \
     DOMHTMLLegendElement.h \
     DOMHTMLLinkElement.h \
     DOMHTMLMapElement.h \
+    DOMHTMLMarqueeElement.h \
     DOMHTMLMenuElement.h \
     DOMHTMLMetaElement.h \
     DOMHTMLModElement.h \
@@ -294,15 +296,22 @@ all : \
     CSSGrammar.cpp \
     CSSPropertyNames.h \
     CSSValueKeywords.h \
-    CharsetData.cpp \
     ColorData.c \
     DocTypeStrings.cpp \
     HTMLEntityNames.c \
     JSAttr.h \
+    JSBarInfo.h \
     JSCDATASection.h \
+    JSCSSCharsetRule.h \
+    JSCSSFontFaceRule.h \
+    JSCSSImportRule.h \
+    JSCSSMediaRule.h \
+    JSCSSPageRule.h \
     JSCSSPrimitiveValue.h \
     JSCSSRule.h \
     JSCSSRuleList.h \
+    JSCSSStyleRule.h \
+    JSCSSStyleSheet.h \
     JSCSSValue.h \
     JSCSSValueList.h \
     JSCanvasGradient.h \
@@ -312,20 +321,22 @@ all : \
     JSComment.h \
     JSCounter.h \
     JSCSSStyleDeclaration.h \
+    JSDOMExceptionConstructor.lut.h \
     JSDOMImplementation.h \
     JSDOMParser.h \
+    JSDOMSelection.h \
     JSDOMWindow.h \
     JSDocument.h \
     JSDocumentFragment.h \
     JSDocumentType.h \
     JSElement.h \
-    JSEvent.h \
     JSEntity.h \
     JSEntityReference.h \
+    JSEvent.h \
+    JSEventTargetNode.lut.h \
     JSHTMLAppletElement.h \
     JSHTMLAnchorElement.h \
     JSHTMLAreaElement.h \
-    JSHTMLAudioElement.h \
     JSHTMLBaseElement.h \
     JSHTMLBaseFontElement.h \
     JSHTMLBlockquoteElement.h \
@@ -333,61 +344,73 @@ all : \
     JSHTMLBRElement.h \
     JSHTMLButtonElement.h \
     JSHTMLCanvasElement.h \
+    JSHTMLCollection.h \
+    JSHTMLDListElement.h \
     JSHTMLDirectoryElement.h \
     JSHTMLDivElement.h \
-    JSHTMLDListElement.h \
     JSHTMLDocument.h \
     JSHTMLElement.h \
+    JSHTMLEmbedElement.h \
     JSHTMLFieldSetElement.h \
     JSHTMLFontElement.h \
     JSHTMLFormElement.h \
+    JSHTMLFrameElement.h \
+    JSHTMLFrameSetElement.h \
+    JSHTMLHRElement.h \
     JSHTMLHeadElement.h \
     JSHTMLHeadingElement.h \
-    JSHTMLHRElement.h \
-    JSHTMLImageElement.h \
-    JSHTMLIsIndexElement.h \
     JSHTMLHtmlElement.h \
+    JSHTMLIFrameElement.h \
+    JSHTMLImageElement.h \
     JSHTMLInputElement.h \
     JSHTMLInputElementBaseTable.cpp \
+    JSHTMLIsIndexElement.h \
+    JSHTMLLIElement.h \
     JSHTMLLabelElement.h \
     JSHTMLLegendElement.h \
-    JSHTMLLIElement.h \
     JSHTMLLinkElement.h \
-    JSHTMLMenuElement.h \
-    JSHTMLMediaElement.h \
-    JSHTMLOptionElement.h \
-    JSHTMLOptionsCollection.h \
-    JSHTMLOptGroupElement.h \
-    JSHTMLQuoteElement.h \
     JSHTMLMapElement.h \
+    JSHTMLMarqueeElement.h \
+    JSHTMLMenuElement.h \
     JSHTMLMetaElement.h \
     JSHTMLModElement.h \
     JSHTMLOListElement.h \
+    JSHTMLOptGroupElement.h \
+    JSHTMLObjectElement.h \
+    JSHTMLOptionElement.h \
+    JSHTMLOptionsCollection.h \
     JSHTMLParagraphElement.h \
     JSHTMLParamElement.h \
     JSHTMLPreElement.h \
+    JSHTMLQuoteElement.h \
     JSHTMLScriptElement.h \
     JSHTMLSelectElement.h \
-    JSHTMLSourceElement.h \
     JSHTMLStyleElement.h \
+    JSHTMLTableCaptionElement.h \
+    JSHTMLTableCellElement.h \
+    JSHTMLTableColElement.h \
+    JSHTMLTableElement.h \
+    JSHTMLTableRowElement.h \
+    JSHTMLTableSectionElement.h \
     JSHTMLTextAreaElement.h \
     JSHTMLTitleElement.h \
     JSHTMLUListElement.h \
-    JSHTMLVideoElement.h \
+    JSHistory.h \
     JSKeyboardEvent.h \
-    JSMediaError.h \
+    JSMediaList.h \
     JSMouseEvent.h \
     JSMutationEvent.h \
+    JSNamedNodeMap.h \
     JSNode.h \
     JSNodeFilter.h \
     JSNodeIterator.h \
+    JSNodeList.h \
     JSNotation.h \
     JSOverflowEvent.h \
     JSProcessingInstruction.h \
-    JSProgressEvent.h \
     JSRange.h \
     JSRangeException.h \
-    JSSVGZoomEvent.h \
+    JSRect.h \
     JSSVGAElement.h \
     JSSVGAngle.h \
     JSSVGAnimatedAngle.h \
@@ -512,12 +535,13 @@ all : \
     JSSVGMaskElement.h \
     JSSVGMarkerElement.h \
     JSSVGTransform.h \
+    JSSVGZoomEvent.h \
+    JSScreen.h \
+    JSStyleSheet.h \
     JSText.h \
     JSTextEvent.h \
-    JSTimeRanges.h \
     JSTreeWalker.h \
     JSUIEvent.h \
-    JSVoidCallback.h \
     JSXPathEvaluator.h \
     JSXPathExpression.h \
     JSXPathNSResolver.h \
@@ -534,27 +558,23 @@ all : \
     XMLNames.cpp \
     XPathGrammar.cpp \
     kjs_css.lut.h \
-    kjs_dom.lut.h \
     kjs_events.lut.h \
-    kjs_html.lut.h \
     kjs_navigator.lut.h \
-    kjs_traversal.lut.h \
     kjs_window.lut.h \
     ksvgcssproperties.h \
     ksvgcssvalues.h \
     tokenizer.cpp \
-    WebCore.exp \
 #
 
 # CSS property names and value keywords
 
-CSSPropertyNames.h : css/CSSPropertyNames.in css/makeprop
+CSSPropertyNames.h : css/CSSPropertyNames.in css/makeprop.pl
 	cat $< > CSSPropertyNames.in
-	sh "$(WebCore)/css/makeprop"
+	perl "$(WebCore)/css/makeprop.pl"
 
-CSSValueKeywords.h : css/CSSValueKeywords.in css/makevalues
+CSSValueKeywords.h : css/CSSValueKeywords.in css/makevalues.pl
 	cat $< > CSSValueKeywords.in
-	sh "$(WebCore)/css/makevalues"
+	perl "$(WebCore)/css/makevalues.pl"
 
 # DOCTYPE strings
 
@@ -577,21 +597,29 @@ tokenizer.cpp : css/tokenizer.flex css/maketokenizer
 	flex -t $< | perl $(WebCore)/css/maketokenizer > $@
 
 # CSS grammar
+# NOTE: older versions of bison do not inject an inclusion guard, so we do it
 
 CSSGrammar.cpp : css/CSSGrammar.y
 	bison -d -p cssyy $< -o $@
 	touch CSSGrammar.cpp.h
 	touch CSSGrammar.hpp
-	cat CSSGrammar.cpp.h CSSGrammar.hpp > CSSGrammar.h
+	echo '#ifndef CSSGrammar_h' > CSSGrammar.h
+	echo '#define CSSGrammar_h' >> CSSGrammar.h
+	cat CSSGrammar.cpp.h CSSGrammar.hpp >> CSSGrammar.h
+	echo '#endif' >> CSSGrammar.h
 	rm -f CSSGrammar.cpp.h CSSGrammar.hpp
 
 # XPath grammar
+# NOTE: older versions of bison do not inject an inclusion guard, so we do it
 
 XPathGrammar.cpp : xml/XPathGrammar.y $(PROJECT_FILE)
 	bison -d -p xpathyy $< -o $@
 	touch XPathGrammar.cpp.h
 	touch XPathGrammar.hpp
-	cat XPathGrammar.cpp.h XPathGrammar.hpp > XPathGrammar.h
+	echo '#ifndef XPathGrammar_h' > XPathGrammar.h
+	echo '#define XPathGrammar_h' >> XPathGrammar.h
+	cat XPathGrammar.cpp.h XPathGrammar.hpp >> XPathGrammar.h
+	echo '#endif' >> XPathGrammar.h
 	rm -f XPathGrammar.cpp.h XPathGrammar.hpp
 
 # user agent style sheets
@@ -602,8 +630,8 @@ UserAgentStyleSheets.h : css/make-css-file-arrays.pl $(USER_AGENT_STYLE_SHEETS)
 
 # character set name table
 
-CharsetData.cpp : platform/make-charset-table.pl platform/character-sets.txt $(ENCODINGS_FILE)
-	perl $^ $(ENCODINGS_PREFIX) > $@
+CharsetData.cpp : platform/mac/make-charset-table.pl platform/mac/character-sets.txt platform/mac/mac-encodings.txt
+	perl $^ kTextEncoding > $@
 
 # lookup tables for old-style JavaScript bindings
 
@@ -653,12 +681,6 @@ ksvgcssvalues.h : ksvg2/scripts/cssmakevalues css/CSSValueKeywords.in ksvg2/css/
 	perl -ne 'print lc' $(WebCore)/ksvg2/css/CSSValueKeywords.in > ksvgcssvalues.in
 	$(WebCore)/ksvg2/scripts/cssmakevalues -n SVG -f ksvgcssvalues.in
 
-
-# Add SVG Symbols to the WebCore exported symbols file
-
-WebCore.exp : WebCore.base.exp WebCore.SVG.exp
-	cat $(WebCore)/WebCore.base.exp $(WebCore)/WebCore.SVG.exp > WebCore.exp
-
 else
 
 SVGElementFactory.cpp :
@@ -676,9 +698,6 @@ ksvgcssproperties.h :
 ksvgcssvalues.h :
 	echo > ksvgcssvalues.h
 
-WebCore.exp : WebCore.base.exp
-	cp $(WebCore)/WebCore.base.exp WebCore.exp
-
 endif
 
 # new-style Objective-C bindings
@@ -692,7 +711,7 @@ OBJC_BINDINGS_SCRIPTS = \
 #
 
 DOM%.h : %.idl $(OBJC_BINDINGS_SCRIPTS) bindings/objc/PublicDOMInterfaces.h
-	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_OBJECTIVE_C" --generator ObjC --include dom --include html --include css --include page --include xml --include /ksvg2/svg --include /ksvg2/events --outputdir . $<
+	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_OBJECTIVE_C" --generator ObjC --include dom --include html --include css --include page --include xml --include ksvg2/svg --include ksvg2/events --outputdir . $<
 
 # new-style JavaScript bindings
 
@@ -705,4 +724,4 @@ JS_BINDINGS_SCRIPTS = \
 #
 
 JS%.h : %.idl $(JS_BINDINGS_SCRIPTS)
-	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_JAVASCRIPT" --generator JS --include dom --include html --include css --include page --include xml --include ksvg2/svg --include /ksvg2/events --outputdir . $<
+	perl -I $(WebCore)/bindings/scripts $(WebCore)/bindings/scripts/generate-bindings.pl --defines "$(FEATURE_DEFINES) LANGUAGE_JAVASCRIPT" --generator JS --include dom --include html --include css --include page --include xml --include ksvg2/svg --include ksvg2/events --outputdir . $<

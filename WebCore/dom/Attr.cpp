@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 #include "config.h"
 #include "Attr.h"
@@ -109,12 +109,6 @@ void Attr::setValue( const String& v, ExceptionCode& ec)
     // NO_MODIFICATION_ALLOWED_ERR: Raised when the node is readonly
     if (isReadOnlyNode()) {
         ec = NO_MODIFICATION_ALLOWED_ERR;
-        return;
-    }
-
-    // ### what to do on 0 ?
-    if (v.isNull()) {
-        ec = DOMSTRING_SIZE_ERR;
         return;
     }
 

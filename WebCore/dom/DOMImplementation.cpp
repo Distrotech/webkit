@@ -19,8 +19,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -30,14 +30,19 @@
 #include "DocumentType.h"
 #include "Element.h"
 #include "ExceptionCode.h"
+#include "Frame.h"
+#include "FTPDirectoryDocument.h"
 #include "HTMLDocument.h"
+#include "HTMLNames.h"
 #include "HTMLViewSourceDocument.h"
 #include "Image.h"
 #include "ImageDocument.h"
 #include "MediaList.h"
+#include "Page.h"
 #include "PluginDocument.h"
 #include "PlugInInfoStore.h"
 #include "RegularExpression.h"
+#include "Settings.h"
 #include "TextDocument.h"
 #include "XMLNames.h"
 
@@ -271,7 +276,10 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& namespaceUR
         doc = new SVGDocument(this, 0);
     else
 #endif
-        doc = new Document(this, 0);
+        if (namespaceURI == HTMLNames::xhtmlNamespaceURI)
+            doc = new Document(this, 0, true);
+        else
+            doc = new Document(this, 0);
 
     // now get the interesting parts of the doctype
     if (doctype) {
@@ -343,14 +351,22 @@ PassRefPtr<HTMLDocument> DOMImplementation::createHTMLDocument(const String& tit
 
 PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame* frame, bool inViewSourceMode)
 {
-    if (inViewSourceMode)
-        return new HTMLViewSourceDocument(this, frame);
+    if (inViewSourceMode) {
+        if (type == "text/html" || type == "application/xhtml+xml" || type == "image/svg+xml" || isTextMIMEType(type) || isXMLMIMEType(type))
+            return new HTMLViewSourceDocument(this, frame, type);
+    }
 
     // Plugins cannot take HTML and XHTML from us, and we don't even need to initialize the plugin database for those.
     if (type == "text/html")
         return new HTMLDocument(this, frame);
     if (type == "application/xhtml+xml")
-        return new Document(this, frame);
+        return new Document(this, frame, true);
+        
+#if ENABLE(FTPDIR)
+    // Plugins cannot take FTP from us either
+    if (type == "application/x-ftp-directory")
+        return new FTPDirectoryDocument(this, frame);
+#endif
 
     // PDF is one image type for which a plugin can override built-in support.
     // We do not want QuickTime to take over all image types, obviously.
@@ -358,19 +374,23 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& type, Frame
         return new PluginDocument(this, frame);
     if (Image::supportsType(type))
         return new ImageDocument(this, frame);
-
-    // Everything else can be overridden by plugins. In particular, Adobe SVG Viewer should be used for SVG, if installed.
-    if (PlugInInfoStore::supportsMIMEType(type))
+    // Everything else except text/plain can be overridden by plugins. In particular, Adobe SVG Viewer should be used for SVG, if installed.
+    // Disallowing plug-ins to use text/plain prevents plug-ins from hijacking a fundamental type that the browser is expected to handle,
+    // and also serves as an optimization to prevent loading the plug-in database in the common case.
+    if (type != "text/plain" && PlugInInfoStore::supportsMIMEType(type)) 
         return new PluginDocument(this, frame);
+    if (isTextMIMEType(type))
+        return new TextDocument(this, frame);
 
 #if ENABLE(SVG)
-    if (type == "image/svg+xml")
-        return new SVGDocument(this, frame);
+    if (type == "image/svg+xml") {
+        Settings* settings = frame ? frame->settings() : 0;
+        if (!settings || !settings->usesDashboardBackwardCompatibilityMode())
+            return new SVGDocument(this, frame);
+    }
 #endif
     if (isXMLMIMEType(type))
         return new Document(this, frame);
-    if (isTextMIMEType(type))
-        return new TextDocument(this, frame);
 
     return new HTMLDocument(this, frame);
 }

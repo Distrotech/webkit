@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -24,12 +24,13 @@
 #include "InlineTextBox.h"
 
 #include "Document.h"
+#include "Editor.h"
 #include "Frame.h"
 #include "GraphicsContext.h"
 #include "HitTestResult.h"
-#include "Range.h"
 #include "RenderArena.h"
 #include "RenderBlock.h"
+#include "Text.h"
 #include "TextStyle.h"
 #include "break_lines.h"
 #include <wtf/AlwaysInline.h>
@@ -37,37 +38,6 @@
 using namespace std;
 
 namespace WebCore {
-
-#ifndef NDEBUG
-static bool inInlineTextBoxDetach;
-#endif
-
-void InlineTextBox::destroy(RenderArena* renderArena)
-{
-#ifndef NDEBUG
-    inInlineTextBoxDetach = true;
-#endif
-    delete this;
-#ifndef NDEBUG
-    inInlineTextBoxDetach = false;
-#endif
-    
-    // Recover the size left there for us by operator delete and free the memory.
-    renderArena->free(*(size_t *)this, this);
-}
-
-void* InlineTextBox::operator new(size_t sz, RenderArena* renderArena) throw()
-{
-    return renderArena->allocate(sz);
-}
-
-void InlineTextBox::operator delete(void* ptr, size_t sz)
-{
-    ASSERT(inInlineTextBoxDetach);
-    
-    // Stash size where destroy can find it.
-    *static_cast<size_t*>(ptr) = sz;
-}
 
 int InlineTextBox::selectionTop()
 {
@@ -282,11 +252,9 @@ void InlineTextBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
         // When only painting the selection, don't bother to paint if there is none.
         return;
 
-    // Determine whether or not we have marked text.
-    Range* markedTextRange = object()->document()->frame()->markedTextRange();
-    int exception = 0;
-    bool haveMarkedText = markedTextRange && markedTextRange->startContainer(exception) == object()->node();
-    bool markedTextUsesUnderlines = object()->document()->frame()->markedTextUsesUnderlines();
+    // Determine whether or not we have composition underlines to draw.
+    bool containsComposition = object()->document()->frame()->editor()->compositionNode() == object()->node();
+    bool useCustomUnderlines = containsComposition && object()->document()->frame()->editor()->compositionUsesCustomUnderlines();
 
     // Set our font.
     RenderStyle* styleToUse = object()->style(m_firstLine);
@@ -295,8 +263,8 @@ void InlineTextBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
     if (*font != paintInfo.context->font())
         paintInfo.context->setFont(*font);
 
-    // 1. Paint backgrounds behind text if needed.  Examples of such backgrounds include selection
-    // and marked text.
+    // 1. Paint backgrounds behind text if needed. Examples of such backgrounds include selection
+    // and composition underlines.
     if (paintInfo.phase != PaintPhaseSelection && !isPrinting) {
 #if PLATFORM(MAC)
         // Custom highlighters go behind everything else.
@@ -304,12 +272,14 @@ void InlineTextBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
             paintCustomHighlight(tx, ty, styleToUse->highlight());
 #endif
 
-        if (haveMarkedText  && !markedTextUsesUnderlines)
-            paintMarkedTextBackground(paintInfo.context, tx, ty, styleToUse, font, markedTextRange->startOffset(exception), markedTextRange->endOffset(exception));
+        if (containsComposition && !useCustomUnderlines)
+            paintCompositionBackground(paintInfo.context, tx, ty, styleToUse, font,
+                object()->document()->frame()->editor()->compositionStart(),
+                object()->document()->frame()->editor()->compositionEnd());
 
         paintDocumentMarkers(paintInfo.context, tx, ty, styleToUse, font, true);
 
-        if (haveSelection && !markedTextUsesUnderlines)
+        if (haveSelection && !useCustomUnderlines)
             paintSelection(paintInfo.context, tx, ty, styleToUse, font);
     }
 
@@ -317,20 +287,13 @@ void InlineTextBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
     if (m_len <= 0)
         return;
 
-    const Vector<MarkedTextUnderline>* underlines = 0;
-    size_t numUnderlines = 0;
-    if (haveMarkedText && markedTextUsesUnderlines) {
-        underlines = &object()->document()->frame()->markedTextUnderlines();
-        numUnderlines = underlines->size();
-    }
-
     Color textFillColor;
     Color textStrokeColor;
     float textStrokeWidth = styleToUse->textStrokeWidth();
 
-    if (paintInfo.forceWhiteText) {
-        textFillColor = Color::white;
-        textStrokeColor = Color::white;
+    if (paintInfo.forceBlackText) {
+        textFillColor = Color::black;
+        textStrokeColor = Color::black;
     } else {
         textFillColor = styleToUse->textFillColor();
         if (!textFillColor.isValid())
@@ -463,24 +426,29 @@ void InlineTextBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
     if (paintInfo.phase != PaintPhaseSelection) {
         paintDocumentMarkers(paintInfo.context, tx, ty, styleToUse, font, false);
 
-        for (size_t index = 0; index < numUnderlines; ++index) {
-            const MarkedTextUnderline& underline = (*underlines)[index];
+        if (useCustomUnderlines) {
+            const Vector<CompositionUnderline>& underlines = object()->document()->frame()->editor()->customCompositionUnderlines();
+            size_t numUnderlines = underlines.size();
 
-            if (underline.endOffset <= start())
-                // underline is completely before this run.  This might be an underline that sits
-                // before the first run we draw, or underlines that were within runs we skipped 
-                // due to truncation.
-                continue;
-            
-            if (underline.startOffset <= end()) {
-                // underline intersects this run.  Paint it.
-                paintMarkedTextUnderline(paintInfo.context, tx, ty, underline);
-                if (underline.endOffset > end() + 1)
-                    // underline also runs into the next run. Bail now, no more marker advancement.
+            for (size_t index = 0; index < numUnderlines; ++index) {
+                const CompositionUnderline& underline = underlines[index];
+
+                if (underline.endOffset <= start())
+                    // underline is completely before this run.  This might be an underline that sits
+                    // before the first run we draw, or underlines that were within runs we skipped 
+                    // due to truncation.
+                    continue;
+                
+                if (underline.startOffset <= end()) {
+                    // underline intersects this run.  Paint it.
+                    paintCompositionUnderline(paintInfo.context, tx, ty, underline);
+                    if (underline.endOffset > end() + 1)
+                        // underline also runs into the next run. Bail now, no more marker advancement.
+                        break;
+                } else
+                    // underline is completely after this run, bail.  A later run will paint it.
                     break;
-            } else
-                // underline is completely after this run, bail.  A later run will paint it.
-                break;
+            }
         }
     }
 
@@ -538,7 +506,7 @@ void InlineTextBox::paintSelection(GraphicsContext* p, int tx, int ty, RenderSty
     p->restore();
 }
 
-void InlineTextBox::paintMarkedTextBackground(GraphicsContext* p, int tx, int ty, RenderStyle* style, const Font* f, int startPos, int endPos)
+void InlineTextBox::paintCompositionBackground(GraphicsContext* p, int tx, int ty, RenderStyle* style, const Font* f, int startPos, int endPos)
 {
     int offset = m_start;
     int sPos = max(startPos - offset, 0);
@@ -607,12 +575,16 @@ void InlineTextBox::paintDecoration(GraphicsContext* context, int tx, int ty, in
 
 void InlineTextBox::paintSpellingOrGrammarMarker(GraphicsContext* pt, int tx, int ty, DocumentMarker marker, RenderStyle* style, const Font* f, bool grammar)
 {
-    tx += m_x;
-    ty += m_y;
-    
+    // Never print spelling/grammar markers (5327887)
+    if (textObject()->document()->printing())
+        return;
+
     if (m_truncation == cFullTruncation)
         return;
-    
+
+    tx += m_x;
+    ty += m_y;
+        
     int start = 0;                  // start of line to draw, relative to tx
     int width = m_width;            // how much line to draw
     bool useWholeWidth = true;
@@ -690,7 +662,7 @@ void InlineTextBox::paintTextMatchMarker(GraphicsContext* pt, int tx, int ty, Do
         pt->save();
         updateGraphicsContext(pt, yellow, yellow, 0);  // Don't draw text at all!
         pt->clip(IntRect(tx + m_x, ty + y, m_width, h));
-        pt->drawHighlightForText(run, startPoint, h, renderStyle, yellow);
+        pt->drawHighlightForText(run, startPoint, h, renderStyle, yellow, sPos, ePos);
         pt->restore();
     }
 }
@@ -753,7 +725,7 @@ void InlineTextBox::paintDocumentMarkers(GraphicsContext* pt, int tx, int ty, Re
 }
 
 
-void InlineTextBox::paintMarkedTextUnderline(GraphicsContext* ctx, int tx, int ty, const MarkedTextUnderline& underline)
+void InlineTextBox::paintCompositionUnderline(GraphicsContext* ctx, int tx, int ty, const CompositionUnderline& underline)
 {
     tx += m_x;
     ty += m_y;
@@ -783,10 +755,11 @@ void InlineTextBox::paintMarkedTextUnderline(GraphicsContext* ctx, int tx, int t
         width = static_cast<RenderText*>(m_object)->width(paintStart, paintEnd - paintStart, textPos() + start, m_firstLine);
     }
 
-    // Thick marked text underlines are 2px thick as long as there is room for 1px space under the baseline.
-    // All other marked text underlines are 1px thick, and if there's not enough space they will touch or overlap characters.
+    // Thick marked text underlines are 2px thick as long as there is room for the 2px line under the baseline.
+    // All other marked text underlines are 1px thick.
+    // If there's not enough space the underline will touch or overlap characters.
     int lineThickness = 1;
-    if (underline.thick && m_height - m_baseline > 2)
+    if (underline.thick && m_height - m_baseline >= 2)
         lineThickness = 2;
 
     ctx->setStrokeColor(underline.color);

@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -31,7 +31,7 @@
 #if ENABLE(SVG)
 #include "SVGUseElement.h"
 
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 #include "CString.h"
 #include "Document.h"
 #include "Event.h"
@@ -47,7 +47,6 @@
 #include "SVGSymbolElement.h"
 #include "XLinkNames.h"
 #include "XMLSerializer.h"
-
 #include <wtf/OwnPtr.h>
 
 namespace WebCore {
@@ -315,6 +314,7 @@ void SVGUseElement::buildPendingResource()
     // This also handles the special cases: <use> on <symbol>, <use> on <svg>.
     buildShadowTree(target, m_targetElementInstance.get());
 
+#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
     // Expand all <use> elements in the shadow tree.
     // Expand means: replace the actual <use> element by what it references.
     expandUseElementsInShadowTree(m_shadowTreeRootElement.get());
@@ -322,6 +322,8 @@ void SVGUseElement::buildPendingResource()
     // Expand all <symbol> elements in the shadow tree.
     // Expand means: replace the actual <symbol> element by the <svg> element.
     expandSymbolElementsInShadowTree(m_shadowTreeRootElement.get());
+
+#endif
 
     // Now that the shadow tree is completly expanded, we can associate
     // shadow tree elements <-> instances in the instance tree.
@@ -508,6 +510,7 @@ void SVGUseElement::buildShadowTree(SVGElement* target, SVGElementInstance* targ
         alterShadowTreeForSVGTag(newChildPtr);
 }
 
+#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
 void SVGUseElement::expandUseElementsInShadowTree(Node* element)
 {
     // Why expand the <use> elements in the shadow tree here, and not just
@@ -647,6 +650,8 @@ void SVGUseElement::expandSymbolElementsInShadowTree(Node* element)
         expandSymbolElementsInShadowTree(child.get());
 }
 
+#endif
+    
 void SVGUseElement::attachShadowTree()
 {
     if (!m_shadowTreeRootElement || m_shadowTreeRootElement->attached() || !document()->shouldCreateRenderers() || !attached() || !renderer())
@@ -686,8 +691,12 @@ void SVGUseElement::associateInstancesWithShadowTreeElements(Node* target, SVGEl
     SVGElement* originalElement = targetInstance->correspondingElement();
 
     if (originalElement->hasTagName(SVGNames::useTag)) {
+#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
         // <use> gets replaced by <g>
         ASSERT(target->nodeName() == SVGNames::gTag);
+#else 
+        ASSERT(target->nodeName() == SVGNames::gTag || target->nodeName() == SVGNames::useTag);
+#endif
     } else if (originalElement->hasTagName(SVGNames::symbolTag)) {
         // <symbol> gets replaced by <svg>
         ASSERT(target->nodeName() == SVGNames::svgTag);

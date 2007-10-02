@@ -28,26 +28,49 @@
 #include "ImageBuffer.h"
 
 #include "GraphicsContext.h"
-
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED %s %s:%d\n", __PRETTY_FUNCTION__, __FILE__, __LINE__); } while(0)
+#include <cairo.h>
+#include "NotImplemented.h"
 
 using namespace std;
 
 namespace WebCore {
 
-auto_ptr<ImageBuffer> ImageBuffer::create(const IntSize& size, bool grayScale)
+auto_ptr<ImageBuffer> ImageBuffer::create(const IntSize& size, bool)
 {
-    return auto_ptr<ImageBuffer>();
+    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                                          size.width(), size.height());
+    if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS)
+        return auto_ptr<ImageBuffer>();
+
+    return auto_ptr<ImageBuffer>(new ImageBuffer(surface));
 }
 
+ImageBuffer::ImageBuffer(_cairo_surface* surface)
+    : m_surface(surface)
+{
+    cairo_t* cr = cairo_create(m_surface);
+    m_context.set(new GraphicsContext(cr));
+
+    /*
+     * The context is now owned by the GraphicsContext
+     */
+    cairo_destroy(cr);
+}
 
 ImageBuffer::~ImageBuffer()
 {
+    cairo_surface_destroy(m_surface);
 }
 
 GraphicsContext* ImageBuffer::context() const
 {
-    return 0;
+    return m_context.get();
 }
+
+cairo_surface_t* ImageBuffer::surface() const
+{
+    return m_surface;
+}
+
 
 }

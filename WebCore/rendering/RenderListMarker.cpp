@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -220,18 +220,18 @@ static String toGeorgian(int number)
     int length = 0;
 
     if (number > 9999)
-        letters[length++] = 0x10EF;
+        letters[length++] = 0x10F5;
 
     if (int thousands = (number / 1000) % 10) {
         static const UChar georgianThousands[9] = {
-            0x10E8, 0x10E9, 0x10EA, 0x10EB, 0x10EC, 0x10ED, 0x10EE, 0x10F4, 0x10F5
+            0x10E9, 0x10EA, 0x10EB, 0x10EC, 0x10ED, 0x10EE, 0x10F4, 0x10EF, 0x10F0
         };
         letters[length++] = georgianThousands[thousands - 1];
     }
 
     if (int hundreds = (number / 100) % 10) {
         static const UChar georgianHundreds[9] = {
-            0x10E0, 0x10E1, 0x10E2, 0x10E3, 0x10F3, 0x10E4, 0x10E5, 0x10E6, 0x10E7
+            0x10E0, 0x10E1, 0x10E2, 0x10F3, 0x10E4, 0x10E5, 0x10E6, 0x10E7, 0x10E8
         };
         letters[length++] = georgianHundreds[hundreds - 1];
     }
@@ -545,8 +545,6 @@ void RenderListMarker::paint(PaintInfo& paintInfo, int tx, int ty)
             paintCustomHighlight(tx, ty, style()->highlight(), true);
 #endif
         context->drawImage(m_image->image(), marker.location());
-        if (!context->paintingDisabled())
-            m_image->liveResourceAccessed();
         if (selectionState() != SelectionNone)
             context->fillRect(selectionRect(), selectionBackgroundColor());
         return;
@@ -878,21 +876,25 @@ void RenderListMarker::setSelectionState(SelectionState state)
     containingBlock()->setSelectionState(state);
 }
 
-IntRect RenderListMarker::selectionRect()
+IntRect RenderListMarker::selectionRect(bool clipToVisibleContent)
 {
     ASSERT(!needsLayout());
 
     if (selectionState() == SelectionNone || !inlineBoxWrapper())
         return IntRect();
 
-    int absx, absy;
-    RenderBlock* cb = containingBlock();
-    cb->absolutePosition(absx, absy);
-    if (cb->hasOverflowClip())
-        cb->layer()->subtractScrollOffset(absx, absy);
-
     RootInlineBox* root = inlineBoxWrapper()->root();
-    return IntRect(absx + xPos(), absy + root->selectionTop(), width(), root->selectionHeight());
+    IntRect rect(0, root->selectionTop() - yPos(), width(), root->selectionHeight());
+            
+    if (clipToVisibleContent)
+        computeAbsoluteRepaintRect(rect);
+    else {
+        int absx, absy;
+        absolutePosition(absx, absy);
+        rect.move(absx, absy);
+    }
+    
+    return rect;
 }
 
 } // namespace WebCore

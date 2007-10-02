@@ -40,6 +40,7 @@
 #include "HTMLNames.h"
 #include "IndentOutdentCommand.h"
 #include "InsertListCommand.h"
+#include "Page.h"
 #include "ReplaceSelectionCommand.h"
 #include "SelectionController.h"
 #include "Settings.h"
@@ -125,7 +126,8 @@ bool JSEditor::queryCommandState(const String& command)
 
 bool JSEditor::queryCommandSupported(const String& command)
 {
-    if ((!m_document->frame() || !m_document->frame()->settings()->isDOMPasteAllowed()) && command.lower() == "paste")
+    Settings* settings = m_document->settings();
+    if ((!settings || !settings->isDOMPasteAllowed()) && command.lower() == "paste")
         return false;
     return commandImp(command) != 0;
 }
@@ -292,7 +294,7 @@ bool execInsertHorizontalRule(Frame* frame, bool userInterface, const String& va
         return false;
     
     applyCommand(new ReplaceSelectionCommand(frame->document(), fragment.release(),
-        false, false, false, true, EditActionUnspecified));
+        false, false, false, true, false, EditActionUnspecified));
     return true;
 }
 
@@ -409,7 +411,8 @@ bool execPasteAndMatchStyle(Frame* frame, bool, const String&)
 
 bool execPrint(Frame* frame, bool, const String&)
 {
-    frame->print();
+    if (Page* page = frame->page())
+        page->chrome()->print(frame);
     return true;
 }
 
@@ -519,7 +522,8 @@ bool enabledCopy(Frame* frame)
 
 bool enabledPaste(Frame* frame)
 {
-    return frame->settings()->isDOMPasteAllowed() && frame->editor()->canPaste();
+    Settings* settings = frame ? frame->settings() : 0;
+    return settings && settings->isDOMPasteAllowed() && frame->editor()->canPaste();
 }
 
 bool enabledAnyRangeSelection(Frame* frame)

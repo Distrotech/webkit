@@ -60,7 +60,7 @@ namespace WebCore {
     signals:
         void sigCallPolicyFunction(int);
         void loadStarted(QWebFrame *frame);
-        void loadProgressChanged(double d);
+        void loadProgressChanged(int d);
         void loadFinished(QWebFrame *frame);
         void titleChanged(const QString& title);
 
@@ -86,15 +86,6 @@ namespace WebCore {
         virtual void makeRepresentation(DocumentLoader*);
         virtual void forceLayout();
         virtual void forceLayoutForNonHTML();
-
-        virtual void updateHistoryForCommit();
-
-        virtual void updateHistoryForBackForwardNavigation();
-        virtual void updateHistoryForReload();
-        virtual void updateHistoryForStandardLoad();
-        virtual void updateHistoryForInternalLoad();
-
-        virtual void updateHistoryAfterClientRedirect();
 
         virtual void setCopiesOnScroll();
 
@@ -183,7 +174,7 @@ namespace WebCore {
         virtual WebCore::ResourceError fileDoesNotExistError(const WebCore::ResourceResponse&);
         virtual bool shouldFallBack(const WebCore::ResourceError&);
         virtual WTF::PassRefPtr<WebCore::DocumentLoader> createDocumentLoader(const WebCore::ResourceRequest&, const WebCore::SubstituteData&);
-        virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
+        virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
 
         virtual void assignIdentifierToInitialRequest(unsigned long identifier, WebCore::DocumentLoader*, const WebCore::ResourceRequest&);
         
@@ -213,7 +204,7 @@ namespace WebCore {
 
         virtual Frame* createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
                                    const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight) ;
-        virtual Widget* createPlugin(Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool);
+        virtual Widget* createPlugin(const IntSize&, Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool);
         virtual void redirectDataToPlugin(Widget* pluginWidget);
         virtual Widget* createJavaAppletWidget(const IntSize&, Element*, const KURL& baseURL, const Vector<String>& paramNames, const Vector<String>& paramValues);
 
@@ -221,6 +212,11 @@ namespace WebCore {
         virtual String overrideMediaType() const;
         
         virtual void windowObjectCleared() const;
+        virtual void didPerformFirstNavigation() const;
+        
+        virtual void registerForIconNotification(bool);
+
+        QString chooseFile(const QString& oldFile);
 
     private:
         Frame *m_frame;

@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -42,7 +42,6 @@
 #include "Page.h"
 #include "PlatformMouseEvent.h"
 #include "PlatformWheelEvent.h"
-#include "ProgressEvent.h"
 #include "RegisteredEventListener.h"
 #include "TextEvent.h"
 #include "UIEvent.h"
@@ -402,6 +401,9 @@ void EventTargetNode::dispatchSimulatedMouseEvent(const AtomicString& eventType,
     PassRefPtr<Event> underlyingEvent)
 {
     ASSERT(!eventDispatchForbidden());
+    
+    if (m_dispatchingSimulatedEvent)
+        return;
 
     bool ctrlKey = false;
     bool altKey = false;
@@ -413,15 +415,22 @@ void EventTargetNode::dispatchSimulatedMouseEvent(const AtomicString& eventType,
         shiftKey = keyStateEvent->shiftKey();
         metaKey = keyStateEvent->metaKey();
     }
+    
+    m_dispatchingSimulatedEvent = true;
 
     // Like Gecko, we just pass 0 for everything when we make a fake mouse event.
     // Internet Explorer instead gives the current mouse position and state.
     dispatchMouseEvent(eventType, 0, 0, 0, 0, 0, 0,
         ctrlKey, altKey, shiftKey, metaKey, true, 0, underlyingEvent);
+    
+    m_dispatchingSimulatedEvent = false;
 }
 
 void EventTargetNode::dispatchSimulatedClick(PassRefPtr<Event> event, bool sendMouseEvents, bool showPressedLook)
 {
+    if (m_dispatchingSimulatedEvent)
+        return;
+    
     // send mousedown and mouseup before the click, if requested
     if (sendMouseEvents)
         dispatchSimulatedMouseEvent(mousedownEvent, event.get());
@@ -530,13 +539,6 @@ bool EventTargetNode::dispatchHTMLEvent(const AtomicString &eventType, bool canB
     ASSERT(!eventDispatchForbidden());
     ExceptionCode ec = 0;
     return dispatchEvent(new Event(eventType, canBubbleArg, cancelableArg), ec, true);
-}
-
-bool EventTargetNode::dispatchProgressEvent(const AtomicString &eventType, bool lengthComputableArg, unsigned loadedArg, unsigned totalArg)
-{
-    ASSERT(!eventDispatchForbidden());
-    ExceptionCode ec = 0;
-    return dispatchEvent(new ProgressEvent(eventType, lengthComputableArg, loadedArg, totalArg), ec, true);
 }
 
 void EventTargetNode::removeHTMLEventListener(const AtomicString &eventType)

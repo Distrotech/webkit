@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
@@ -25,6 +25,8 @@
 #include "Document.h"
 #include "Frame.h"
 #include "FrameLoader.h"
+#include "GCController.h"
+#include "JSDocument.h"
 #include "JSDOMWindow.h"
 #include "Page.h"
 #include "kjs_events.h"
@@ -49,14 +51,16 @@ KJSProxy::~KJSProxy()
     // Check for <rdar://problem/4876466>. In theory, no JS should be executing
     // in our interpreter. 
     ASSERT(!m_script || !m_script->context());
-    m_script = 0;
     
-    // It's likely that destroying the interpreter has created a lot of garbage.
-    JSLock lock;
-    Collector::collect();
+    if (m_script) {
+        m_script = 0;
+    
+        // It's likely that destroying the interpreter has created a lot of garbage.
+        gcController().garbageCollectSoon();
+    }
 }
 
-JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& str, Node* n) 
+JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& str) 
 {
     // evaluate code. Returns the JS return value or 0
     // if there was none, an error occured or the type couldn't be converted.
@@ -72,7 +76,11 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
 
     JSLock lock;
 
-    JSValue* thisNode = n ? Window::retrieve(m_frame) : toJS(m_script->globalExec(), n);
+    // Evaluating the JavaScript could cause the frame to be deallocated
+    // so we start the keep alive timer here.
+    m_frame->keepAlive();
+    
+    JSValue* thisNode = Window::retrieve(m_frame);
   
     m_script->startTimeoutCheck();
     Completion comp = m_script->evaluate(filename, baseLine, reinterpret_cast<const KJS::UChar*>(str.characters()), str.length(), thisNode);
@@ -86,7 +94,7 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
         int lineNumber = comp.value()->toObject(m_script->globalExec())->get(m_script->globalExec(), "line")->toInt32(m_script->globalExec());
         UString sourceURL = comp.value()->toObject(m_script->globalExec())->get(m_script->globalExec(), "sourceURL")->toString(m_script->globalExec());
         if (Page* page = m_frame->page())
-            page->chrome()->addMessageToConsole(errorMessage, lineNumber, sourceURL);
+            page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, errorMessage, lineNumber, sourceURL);
     }
 
     return 0;
@@ -154,6 +162,17 @@ void KJSProxy::initScriptIfNeeded()
     // If we find "Mozilla" but not "(compatible, ...)" we are a real Netscape
     if (userAgent.find("Mozilla") >= 0 && userAgent.find("compatible") == -1)
       m_script->setCompatMode(Interpreter::NetscapeCompat);
+
+  m_frame->loader()->dispatchWindowObjectAvailable();
+}
+    
+void KJSProxy::updateDocumentWrapper() 
+{
+    if (!m_script || !m_frame->document())
+        return;
+    JSLock lock;
+    // this will update 'document' property to point to the current document
+    toJS(m_script->globalExec(), m_frame->document());
 }
 
 }

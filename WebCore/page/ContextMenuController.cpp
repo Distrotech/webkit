@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,6 +42,7 @@
 #include "FrameLoadRequest.h"
 #include "HitTestRequest.h"
 #include "HitTestResult.h"
+#include "InspectorController.h"
 #include "KURL.h"
 #include "MouseEvent.h"
 #include "Node.h"
@@ -51,6 +52,8 @@
 #include "ReplaceSelectionCommand.h"
 #include "ResourceRequest.h"
 #include "SelectionController.h"
+#include "Settings.h"
+#include "TextIterator.h"
 #include "markup.h"
 
 namespace WebCore {
@@ -62,6 +65,8 @@ ContextMenuController::ContextMenuController(Page* page, ContextMenuClient* clie
     , m_client(client)
     , m_contextMenu(0)
 {
+    ASSERT_ARG(page, page);
+    ASSERT_ARG(client, client);
 }
 
 ContextMenuController::~ContextMenuController()
@@ -91,17 +96,21 @@ void ContextMenuController::handleContextMenuEvent(Event* event)
 
     m_contextMenu.set(new ContextMenu(result));
     m_contextMenu->populate();
+    if (m_page->inspectorController()->enabled())
+        m_contextMenu->addInspectElementItem();
+
     PlatformMenuDescription customMenu = m_client->getCustomMenuFromDefaultItems(m_contextMenu.get());
     m_contextMenu->setPlatformDescription(customMenu);
+
     event->setDefaultHandled();
 }
 
 static void openNewWindow(const KURL& urlToLoad, Frame* frame)
 {
-    Page* newPage = frame->page()->chrome()->createWindow(frame,
-        FrameLoadRequest(ResourceRequest(urlToLoad, frame->loader()->outgoingReferrer())));
-    if (newPage)
-        newPage->chrome()->show();
+    if (Page* oldPage = frame->page())
+        if (Page* newPage = oldPage->chrome()->createWindow(frame,
+                FrameLoadRequest(ResourceRequest(urlToLoad, frame->loader()->outgoingReferrer()))))
+            newPage->chrome()->show();
 }
 
 void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
@@ -117,7 +126,6 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
     Frame* frame = result.innerNonSharedNode()->document()->frame();
     if (!frame)
         return;
-    ASSERT(m_page == frame->page());
     
     switch (item->action()) {
         case ContextMenuItemTagOpenLinkInNewWindow: 
@@ -195,14 +203,13 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             // FIXME: Some day we may be able to do this from within WebCore.
             m_client->lookUpInDictionary(frame);
             break;
-        case ContextMenuItemTagOpenLink: {
+        case ContextMenuItemTagOpenLink:
             if (Frame* targetFrame = result.targetFrame())
                 targetFrame->loader()->load(FrameLoadRequest(ResourceRequest(result.absoluteLinkURL(), 
-                    frame->loader()->outgoingReferrer())), true, 0, 0, HashMap<String, String>());
+                    frame->loader()->outgoingReferrer())), false, true, 0, 0, HashMap<String, String>());
             else
                 openNewWindow(result.absoluteLinkURL(), frame);
             break;
-        }
         case ContextMenuItemTagBold:
             frame->editor()->execCommand("ToggleBold");
             break;
@@ -224,7 +231,7 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
                 selectedRange = document->createRange();
                 selectedRange->selectNode(document->documentElement(), ec);
             }
-            m_client->speak(selectedRange->toString(true, ec));
+            m_client->speak(plainText(selectedRange.get()));
             break;
         }
         case ContextMenuItemTagStopSpeaking:
@@ -269,10 +276,13 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             frame->editor()->showColorPanel();
             break;
 #endif
+        case ContextMenuItemTagInspectElement:
+            if (Page* page = frame->page())
+                page->inspectorController()->inspect(result.innerNonSharedNode());
+            break;
         default:
             break;
     }
 }
 
 } // namespace WebCore
-

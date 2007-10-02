@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -36,9 +36,10 @@ const unsigned short cFullTruncation = USHRT_MAX - 1;
 
 class String;
 class StringImpl;
-class MarkedTextUnderline;
 class HitTestResult;
 class Position;
+
+struct CompositionUnderline;
 
 // Helper functions shared by InlineTextBox / SVGRootInlineBox
 void updateGraphicsContext(GraphicsContext* context, const Color& fillColor, const Color& strokeColor, float strokeThickness);
@@ -66,8 +67,6 @@ public:
 
     void offsetRun(int d) { m_start += d; }
 
-    void destroy(RenderArena*);
-
     virtual int selectionTop();
     virtual int selectionHeight();
 
@@ -91,18 +90,6 @@ public:
 
     virtual bool isLineBreak() const;
 
-    // Overloaded new operator.  Derived classes must override operator new
-    // in order to allocate out of the RenderArena.
-    void* operator new(size_t, RenderArena*) throw();
-
-    // Overridden to prevent the normal delete from being called.
-    void operator delete(void*, size_t);
-
-private:
-    // The normal operator new is disallowed.
-    void* operator new(size_t) throw();
-
-public:
     void setSpaceAdd(int add) { m_width -= m_toAdd; m_toAdd = add; m_width += m_toAdd; }
     int spaceAdd() { return m_toAdd; }
 
@@ -112,11 +99,11 @@ public:
 
     void paintDecoration(GraphicsContext*, int tx, int ty, int decoration);
     void paintSelection(GraphicsContext*, int tx, int ty, RenderStyle*, const Font*);
-    void paintMarkedTextBackground(GraphicsContext*, int tx, int ty, RenderStyle*, const Font*, int startPos, int endPos);
+    void paintCompositionBackground(GraphicsContext*, int tx, int ty, RenderStyle*, const Font*, int startPos, int endPos);
     void paintDocumentMarkers(GraphicsContext*, int tx, int ty, RenderStyle*, const Font*, bool background);
     void paintSpellingOrGrammarMarker(GraphicsContext*, int tx, int ty, DocumentMarker, RenderStyle*, const Font*, bool grammar);
     void paintTextMatchMarker(GraphicsContext*, int tx, int ty, DocumentMarker, RenderStyle*, const Font*);
-    void paintMarkedTextUnderline(GraphicsContext*, int tx, int ty, const MarkedTextUnderline&);
+    void paintCompositionUnderline(GraphicsContext*, int tx, int ty, const CompositionUnderline&);
 #if PLATFORM(MAC)
     void paintCustomHighlight(int tx, int ty, const AtomicString& type);
 #endif

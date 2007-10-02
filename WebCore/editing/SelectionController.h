@@ -87,8 +87,8 @@ public:
     IntRect caretRect() const;
     void setNeedsLayout(bool flag = true);
 
-    void clearModifyBias() { m_modifyBiasSet = false; }
-    void setModifyBias(EAlteration, EDirection);
+    void setLastChangeWasHorizontalExtension(bool b) { m_lastChangeWasHorizontalExtension = b; }
+    void willBeModified(EAlteration, EDirection);
     
     bool isNone() const { return m_sel.isNone(); }
     bool isCaret() const { return m_sel.isCaret(); }
@@ -104,13 +104,14 @@ public:
     void nodeWillBeRemoved(Node*);
 
     // Safari Selection Object API
-    Node* baseNode() const { return m_sel.base().node(); }
-    Node* extentNode() const { return m_sel.extent().node(); }
-    int baseOffset() const { return m_sel.base().offset(); }
-    int extentOffset() const { return m_sel.extent().offset(); }
+    // These methods return the valid equivalents of internal editing positions.
+    Node* baseNode() const;
+    Node* extentNode() const;
+    int baseOffset() const;
+    int extentOffset() const;
     String type() const;
-    void setBaseAndExtent(Node* baseNode, int baseOffset, Node* extentNode, int extentOffset);
-    void setPosition(Node*, int offset);
+    void setBaseAndExtent(Node* baseNode, int baseOffset, Node* extentNode, int extentOffset, ExceptionCode&);
+    void setPosition(Node*, int offset, ExceptionCode&);
     bool modify(const String& alterString, const String& directionString, const String& granularityString, bool userTriggered = false);
     
     // Mozilla Selection Object API
@@ -118,17 +119,18 @@ public:
     // but reflect the direction in which the selection was made by the user.  That does
     // not mean that they are base/extent, since the base/extent don't reflect
     // expansion.
-    Node* anchorNode() const { return m_sel.isBaseFirst() ? m_sel.start().node() : m_sel.end().node(); }
-    int anchorOffset() const { return m_sel.isBaseFirst() ? m_sel.start().offset() : m_sel.end().offset(); }
-    Node* focusNode() const { return m_sel.isBaseFirst() ? m_sel.end().node() : m_sel.start().node(); }
-    int focusOffset() const { return m_sel.isBaseFirst() ? m_sel.end().offset() : m_sel.start().offset(); }
+    // These methods return the valid equivalents of internal editing positions.
+    Node* anchorNode() const;
+    int anchorOffset() const;
+    Node* focusNode() const;
+    int focusOffset() const;
     bool isCollapsed() const { return !isRange(); }
     String toString() const;
-    void collapse(Node*, int offset);
+    void collapse(Node*, int offset, ExceptionCode&);
     void collapseToEnd();
     void collapseToStart();
-    void extend(Node*, int offset);
-    PassRefPtr<Range> getRangeAt(int index) const;
+    void extend(Node*, int offset, ExceptionCode&);
+    PassRefPtr<Range> getRangeAt(int index, ExceptionCode&) const;
     int rangeCount() const { return !isNone() ? 1 : 0; }
     void removeAllRanges();
     void addRange(const Range*);
@@ -184,8 +186,7 @@ private:
     IntPoint m_caretPositionOnLayout;
     
     bool m_needsLayout : 1;       // true if the caret and expectedVisible rectangles need to be calculated
-    bool m_modifyBiasSet : 1;     // true if the selection has been horizontally 
-                                  // modified with EAlteration::EXTEND
+    bool m_lastChangeWasHorizontalExtension : 1;
     Frame* m_frame;
     bool m_isDragCaretController;
 

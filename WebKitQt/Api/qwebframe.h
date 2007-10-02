@@ -14,8 +14,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 
     This class provides all functionality needed for loading images, style sheets and html
     pages from the web. It has a memory cache for these objects.
@@ -24,19 +24,26 @@
 #ifndef QWEBFRAME_H
 #define QWEBFRAME_H
 
-#include <qabstractscrollarea.h>
+#include <qobject.h>
 
 #include <qwebkitglobal.h>
+
+class QRect;
+class QPoint;
+class QPainter;
+class QMouseEvent;
+class QWheelEvent;
 
 class QWebFramePrivate;
 class QWebPage;
 
 namespace WebCore {
+    class WidgetPrivate;
     class FrameLoaderClientQt;
 }
 class QWebFrameData;
 
-class QWEBKIT_EXPORT QWebFrame : public QAbstractScrollArea
+class QWEBKIT_EXPORT QWebFrame : public QObject
 {
     Q_OBJECT
 protected:
@@ -56,29 +63,41 @@ public:
 
     QList<QWebFrame*> childFrames() const;
 
+    Qt::ScrollBarPolicy verticalScrollBarPolicy() const;
+    void setVerticalScrollBarPolicy(Qt::ScrollBarPolicy);
+    Qt::ScrollBarPolicy horizontalScrollBarPolicy() const;
+    void setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy);
+
+    void render(QPainter *painter, const QRect &source);
+    void layout();
+
+    QPoint pos() const;
+    QRect geometry() const;
+
+public Q_SLOTS:
+    QString evaluateJavaScript(const QString& scriptSource);
+
 signals:
     void cleared();
     void loadDone(bool ok);
+    void provisionalLoad();
     void titleChanged(const QString &title);
     void hoveringOverLink(const QString &link, const QString &title);
 
 protected:
-    virtual void resizeEvent(QResizeEvent *);
-    virtual void paintEvent(QPaintEvent*);
+    //for dumprendertree
     virtual void mouseMoveEvent(QMouseEvent*);
     virtual void mousePressEvent(QMouseEvent*);
+    virtual void mouseDoubleClickEvent(QMouseEvent*);
     virtual void mouseReleaseEvent(QMouseEvent*);
     virtual void wheelEvent(QWheelEvent*);
-    virtual void keyPressEvent(QKeyEvent*);
-    virtual void keyReleaseEvent(QKeyEvent*);
-    virtual void scrollContentsBy(int dx, int dy);
-    
+
 private:
     friend class QWebPage;
+    friend class QWebPagePrivate;
+    friend class WebCore::WidgetPrivate;
     friend class WebCore::FrameLoaderClientQt;
     QWebFramePrivate *d;
 };
-
-
 
 #endif

@@ -92,7 +92,7 @@
     NSValue *rangeAsValue;
     while ((rangeAsValue = [rangeEnumerator nextObject]) != nil) {
         NSRange range = [rangeAsValue rangeValue];
-        WebNSUInteger rectCount;
+        NSUInteger rectCount;
         NSRectArray rectArray = [[self layoutManager] rectArrayForCharacterRange:range 
                                                     withinSelectedCharacterRange:range 
                                                                  inTextContainer:[self textContainer] 
@@ -112,6 +112,13 @@
     return result;
 }
 
+- (NSImage *)selectionImageForcingBlackText:(BOOL)forceBlackText
+{
+    // This is here to complete the <WebDocumentSelection> protocol, but it was introduced after this
+    // class was deprecated so there's no implementation.
+    return nil;
+}
+
 - (NSImage *)selectionImageForcingWhiteText:(BOOL)forceWhiteText
 {
     // This is here to complete the <WebDocumentSelection> protocol, but it was introduced after this
@@ -124,6 +131,13 @@
     // This is here to complete the <WebDocumentSelection> protocol, but it was introduced after this
     // class was deprecated so there's no implementation.
     return NSZeroRect;
+}
+
+- (NSArray *)selectionTextRects
+{
+    // This is here to complete the <WebDocumentSelection> protocol, but it was introduced after this
+    // class was deprecated so there's no implementation.
+    return nil;
 }
 
 - (NSView *)selectionView

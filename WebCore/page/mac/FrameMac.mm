@@ -31,10 +31,12 @@
 #import "AXObjectCache.h"
 #import "BeforeUnloadEvent.h"
 #import "BlockExceptions.h"
-#import "Chrome.h"
+#import "CSSHelper.h"
 #import "Cache.h"
+#import "Chrome.h"
 #import "ClipboardEvent.h"
 #import "ClipboardMac.h"
+#import "ColorMac.h"
 #import "Cursor.h"
 #import "DOMInternal.h"
 #import "DocumentLoader.h"
@@ -84,7 +86,6 @@
 #import "WebCoreViewFactory.h"
 #import "WebDashboardRegion.h"
 #import "WebScriptObjectPrivate.h"
-#import "csshelper.h"
 #import "kjs_proxy.h"
 #import "kjs_window.h"
 #import "visible_units.h"
@@ -369,10 +370,11 @@ NSImage* Frame::imageFromRect(NSRect rect) const
     return nil;
 }
 
-NSImage* Frame::selectionImage(bool forceWhiteText) const
+NSImage* Frame::selectionImage(bool forceBlackText) const
 {
-    d->m_paintRestriction = forceWhiteText ? PaintRestrictionSelectionOnlyWhiteText : PaintRestrictionSelectionOnly;
-    NSImage* result = imageFromRect(visibleSelectionRect());
+    d->m_paintRestriction = forceBlackText ? PaintRestrictionSelectionOnlyBlackText : PaintRestrictionSelectionOnly;
+    d->m_doc->updateLayout();
+    NSImage* result = imageFromRect(selectionRect());
     d->m_paintRestriction = PaintRestrictionNone;
     return result;
 }
@@ -490,11 +492,6 @@ NSWritingDirection Frame::baseWritingDirectionForSelectionStart() const
     return result;
 }
 
-void Frame::print()
-{
-    [d->m_bridge print];
-}
-
 void Frame::issuePasteCommand()
 {
     [d->m_bridge issuePasteCommand];
@@ -527,63 +524,6 @@ void Frame::setUseSecureKeyboardEntry(bool enable)
         TSMRemoveDocumentProperty(TSMGetActiveDocument(), kTSMDocumentEnabledInputSourcesPropertyTag);
 #endif
     }
-}
-
-static void convertAttributesToUnderlines(Vector<MarkedTextUnderline>& result, const Range* markedTextRange, NSArray* attributes, NSArray* ranges)
-{
-    int exception = 0;
-    int baseOffset = markedTextRange->startOffset(exception);
-
-    unsigned length = [attributes count];
-    ASSERT([ranges count] == length);
-
-    for (unsigned i = 0; i < length; i++) {
-        NSNumber* style = [[attributes objectAtIndex:i] objectForKey:NSUnderlineStyleAttributeName];
-        if (!style)
-            continue;
-        NSRange range = [[ranges objectAtIndex:i] rangeValue];
-        NSColor* color = [[attributes objectAtIndex:i] objectForKey:NSUnderlineColorAttributeName];
-        Color qColor = Color::black;
-        if (color) {
-            NSColor* deviceColor = [color colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-            qColor = Color(makeRGBA((int)(255 * [deviceColor redComponent]),
-                                    (int)(255 * [deviceColor blueComponent]),
-                                    (int)(255 * [deviceColor greenComponent]),
-                                    (int)(255 * [deviceColor alphaComponent])));
-        }
-
-        result.append(MarkedTextUnderline(range.location + baseOffset, 
-                                          range.location + baseOffset + range.length, 
-                                          qColor,
-                                          [style intValue] > 1));
-    }
-}
-
-void Frame::setMarkedTextRange(const Range* range, NSArray* attributes, NSArray* ranges)
-{
-    int exception = 0;
-
-    ASSERT(!range || range->startContainer(exception) == range->endContainer(exception));
-    ASSERT(!range || range->collapsed(exception) || range->startContainer(exception)->isTextNode());
-
-    d->m_markedTextUnderlines.clear();
-    if (attributes == nil)
-        d->m_markedTextUsesUnderlines = false;
-    else {
-        d->m_markedTextUsesUnderlines = true;
-        convertAttributesToUnderlines(d->m_markedTextUnderlines, range, attributes, ranges);
-    }
-
-    if (d->m_markedTextRange.get() && document() && d->m_markedTextRange->startContainer(exception)->renderer())
-        d->m_markedTextRange->startContainer(exception)->renderer()->repaint();
-
-    if (range && range->collapsed(exception))
-        d->m_markedTextRange = 0;
-    else
-        d->m_markedTextRange = const_cast<Range*>(range);
-
-    if (d->m_markedTextRange.get() && document() && d->m_markedTextRange->startContainer(exception)->renderer())
-        d->m_markedTextRange->startContainer(exception)->renderer()->repaint();
 }
 
 NSMutableDictionary* Frame::dashboardRegionsDictionary()
@@ -635,11 +575,6 @@ void Frame::willPopupMenu(NSMenu * menu)
     [d->m_bridge willPopupMenu:menu];
 }
 
-bool Frame::isCharacterSmartReplaceExempt(UChar c, bool isPreviousChar)
-{
-    return [d->m_bridge isCharacterSmartReplaceExempt:c isPreviousCharacter:isPreviousChar];
-}
-
 void Frame::setNeedsReapplyStyles()
 {
     [d->m_bridge setNeedsReapplyStyles];
@@ -679,6 +614,7 @@ KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(WebCore::Widget* w
             return Instance::createBindingForLanguageInstance(Instance::ObjectiveCLanguage, objectForWebScript, rootObject.release());
         return 0;
     } else if ([aView respondsToSelector:@selector(createPluginScriptableObject)]) {
+#if USE(NPOBJECT)
         NPObject* npObject = [aView createPluginScriptableObject];
         if (npObject) {
             Instance* instance = Instance::createBindingForLanguageInstance(Instance::CLanguage, npObject, rootObject.release());
@@ -687,6 +623,7 @@ KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(WebCore::Widget* w
             _NPN_ReleaseObject(npObject);
             return instance;
         }
+#endif
         return 0;
     }
 
@@ -710,23 +647,26 @@ KJS::Bindings::Instance* Frame::createScriptInstanceForWidget(WebCore::Widget* w
 
 WebScriptObject* Frame::windowScriptObject()
 {
-    if (!d->m_settings->isJavaScriptEnabled())
+    Settings* settings = this->settings();
+    if (!settings || !settings->isJavaScriptEnabled())
         return 0;
 
     if (!d->m_windowScriptObject) {
         KJS::JSLock lock;
         KJS::JSObject* win = KJS::Window::retrieveWindow(this);
         KJS::Bindings::RootObject *root = bindingRootObject();
-        d->m_windowScriptObject = HardRetain([WebScriptObject scriptObjectForJSObject:toRef(win) originRootObject:0 rootObject:root]);
+        d->m_windowScriptObject = [WebScriptObject scriptObjectForJSObject:toRef(win) originRootObject:root rootObject:root];
     }
 
-    return d->m_windowScriptObject;
+    return d->m_windowScriptObject.get();
 }
 
-void Frame::cleanupPlatformScriptObjects()
+void Frame::clearPlatformScriptObjects()
 {
-    HardRelease(d->m_windowScriptObject);
-    d->m_windowScriptObject = 0;
+    if (d->m_windowScriptObject) {
+        KJS::Bindings::RootObject* root = bindingRootObject();
+        [d->m_windowScriptObject.get() _setOriginRootObject:root andRootObject:root];
+    }
 }
 
 } // namespace WebCore

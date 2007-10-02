@@ -43,7 +43,8 @@
 using namespace KJS::Bindings;
 using namespace KJS;
 
-JavaInstance::JavaInstance (jobject instance) 
+JavaInstance::JavaInstance (jobject instance, PassRefPtr<RootObject> rootObject)
+    : Instance(rootObject)
 {
     _instance = new JObjectWrapper (instance);
     _class = 0;
@@ -103,17 +104,16 @@ JSValue *JavaInstance::invokeMethod (ExecState *exec, const MethodList &methodLi
     jvalue *jArgs;
     JSValue *resultValue;
     Method *method = 0;
-    unsigned int numMethods = methodList.length();
+    size_t numMethods = methodList.size();
     
     // Try to find a good match for the overloaded method.  The 
     // fundamental problem is that JavaScript doesn have the
     // notion of method overloading and Java does.  We could 
     // get a bit more sophisticated and attempt to does some
     // type checking as we as checking the number of parameters.
-    unsigned int methodIndex;
     Method *aMethod;
-    for (methodIndex = 0; methodIndex < numMethods; methodIndex++) {
-        aMethod = methodList.methodAt (methodIndex);
+    for (size_t methodIndex = 0; methodIndex < numMethods; methodIndex++) {
+        aMethod = methodList[methodIndex];
         if (aMethod->numParameters() == count) {
             method = aMethod;
             break;
@@ -134,7 +134,7 @@ JSValue *JavaInstance::invokeMethod (ExecState *exec, const MethodList &methodLi
         jArgs = 0;
         
     for (i = 0; i < count; i++) {
-        JavaParameter *aParameter = static_cast<JavaParameter *>(jMethod->parameterAt(i));
+        JavaParameter* aParameter = jMethod->parameterAt(i);
         jArgs[i] = convertValueToJValue (exec, args.at(i), aParameter->getJNIType(), aParameter->type());
         JS_LOG("arg[%d] = %s\n", i, args.at(i)->toString(exec).ascii());
     }

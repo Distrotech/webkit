@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -33,6 +33,9 @@ class StringImpl;
 class RenderText : public RenderObject {
 public:
     RenderText(Node*, PassRefPtr<StringImpl>);
+#ifndef NDEBUG
+    virtual ~RenderText();
+#endif
 
     virtual const char* renderName() const { return "RenderText"; }
 
@@ -59,8 +62,8 @@ public:
 
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int, int, int, int, HitTestAction) { ASSERT_NOT_REACHED(); return false; }
 
-    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty);
-    virtual void addLineBoxRects(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX);
+    virtual void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
+    virtual void addLineBoxRects(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false);
 
     virtual VisiblePosition positionForCoordinates(int x, int y);
 
@@ -100,7 +103,7 @@ public:
     virtual bool canBeSelectionLeaf() const { return true; }
     virtual SelectionState selectionState() const { return static_cast<SelectionState>(m_selectionState); }
     virtual void setSelectionState(SelectionState s);
-    virtual IntRect selectionRect();
+    virtual IntRect selectionRect(bool clipToVisibleContent = true);
     virtual IntRect caretRect(int offset, EAffinity, int* extraWidthToEndOfLine = 0);
 
     virtual int marginLeft() const { return style()->marginLeft().calcMinValue(0); }
@@ -126,9 +129,12 @@ public:
 
     int allowTabs() const { return !style()->collapseWhiteSpace(); }
 
+    void checkConsistency() const;
+
 protected:
-    void setTextInternal(PassRefPtr<StringImpl>);
+    virtual void setTextInternal(PassRefPtr<StringImpl>);
     virtual void calcPrefWidths(int leadWidth);
+    virtual UChar previousCharacter();
 
 private:
     // Make length() private so that callers that have a RenderText*
@@ -164,6 +170,12 @@ private:
     bool m_containsReversedText : 1;
     bool m_isAllASCII : 1;
 };
+
+#ifdef NDEBUG
+inline void RenderText::checkConsistency() const
+{
+}
+#endif
 
 } // namespace WebCore
 

@@ -3,7 +3,7 @@
 # Copyright (C) 2006 Anders Carlsson <andersca@mac.com> 
 # Copyright (C) 2006, 2007 Samuel Weinig <sam@webkit.org>
 # Copyright (C) 2006 Alexey Proskuryakov <ap@webkit.org>
-# Copyright (C) 2006, 2007 Apple Inc.
+# Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
@@ -17,8 +17,8 @@
 # 
 # You should have received a copy of the GNU Library General Public License
 # aint with this library; see the file COPYING.LIB.  If not, write to
-# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
+# the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
 #
 
 package CodeGeneratorObjC;
@@ -332,7 +332,6 @@ sub GetImplClassName
     my $name = $codeGenerator->StripModule(shift);
 
     return "DOMImplementationFront" if $name eq "DOMImplementation";
-    return "RectImpl" if $name eq "Rect";
     return "DOMWindow" if $name eq "AbstractView";
     return $name;
 }
@@ -548,12 +547,6 @@ sub AddIncludesForType
         return;
     }
 
-    if ($type eq "Rect") {
-        $implIncludes{"RectImpl.h"} = 1;
-        $implIncludes{"DOM$type.h"} = 1;
-        return;
-    }
-
     if ($type eq "RGBColor") {
         $implIncludes{"Color.h"} = 1;
         $implIncludes{"DOM$type.h"} = 1;
@@ -711,9 +704,6 @@ sub GenerateHeader
     my @headerAttributes = ();
     my @privateHeaderAttributes = ();
 
-    my @headerAttributesOldStyle = ();
-    my @privateHeaderAttributesOldStyle = ();
-
     # - Add attribute getters/setters.
     if ($numAttributes > 0) {
         # Add ivars, if any, first
@@ -773,12 +763,6 @@ sub GenerateHeader
                 $property .= "\n";
                 push(@headerAttributes, $property) if $public;
                 push(@privateHeaderAttributes, $property) unless $public;
-
-                my $oldStyleProperty = "\@property" . ($attributeIsReadonly ? "(readonly)" : "");
-                $oldStyleProperty .= " " . $attributeType . ($attributeType =~ /\*$/ ? "" : " ") . $attributeName . ";\n";
-
-                push(@headerAttributesOldStyle, $oldStyleProperty) if $public;
-                push(@privateHeaderAttributesOldStyle, $oldStyleProperty) unless $public;
             } else {
                 # - GETTER
                 my $getter = "- (" . $attributeType . ")" . $attributeName . ";\n";
@@ -794,11 +778,7 @@ sub GenerateHeader
             }
         }
 
-        push(@headerContent, "#ifdef OBJC_NEW_PROPERTIES\n") if $buildingForLeopardOrLater;
         push(@headerContent, @headerAttributes) if @headerAttributes > 0;
-        push(@headerContent, "#else\n") if $buildingForLeopardOrLater;
-        push(@headerContent, @headerAttributesOldStyle) if @headerAttributesOldStyle > 0 and $buildingForLeopardOrLater;
-        push(@headerContent, "#endif\n") if $buildingForLeopardOrLater;
     }
 
     my @headerFunctions = ();
@@ -914,11 +894,7 @@ sub GenerateHeader
 
         @privateHeaderContent = ();
         push(@privateHeaderContent, "\@interface $className (" . $className . "Private)\n");
-        push(@privateHeaderContent, "#ifdef OBJC_NEW_PROPERTIES\n") if $buildingForLeopardOrLater;
         push(@privateHeaderContent, @privateHeaderAttributes) if @privateHeaderAttributes > 0;
-        push(@privateHeaderContent, "#else\n") if $buildingForLeopardOrLater;
-        push(@privateHeaderContent, @privateHeaderAttributesOldStyle) if @privateHeaderAttributesOldStyle > 0 and $buildingForLeopardOrLater;
-        push(@privateHeaderContent, "#endif\n") if $buildingForLeopardOrLater;
         push(@privateHeaderContent, "\n") if $buildingForLeopardOrLater and @privateHeaderAttributes > 0 and @privateHeaderFunctions > 0;
         push(@privateHeaderContent, @privateHeaderFunctions) if @privateHeaderFunctions > 0;
         push(@privateHeaderContent, "\@end\n");

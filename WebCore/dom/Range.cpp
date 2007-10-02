@@ -1,11 +1,9 @@
 /**
- * This file is part of the DOM implementation for KDE.
- *
  * (C) 1999 Lars Knoll (knoll@kde.org)
  * (C) 2000 Gunnstein Lye (gunnstein@netcom.no)
  * (C) 2000 Frederik Holljen (frederik.holljen@hig.no)
  * (C) 2001 Peter Kelly (pmk@post.com)
- * Copyright (C) 2004 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -41,6 +39,7 @@
 
 namespace WebCore {
 
+using namespace std;
 using namespace HTMLNames;
 
 #ifndef NDEBUG
@@ -951,6 +950,11 @@ void Range::insertNode(PassRefPtr<Node> newNode, ExceptionCode& ec)
         return;
     }
 
+    if (!newNode) {
+        ec = NOT_FOUND_ERR;
+        return;
+    }
+
     // NO_MODIFICATION_ALLOWED_ERR: Raised if an ancestor container of either boundary-point of
     // the Range is read-only.
     if (containedByReadOnly()) {
@@ -1031,31 +1035,25 @@ void Range::insertNode(PassRefPtr<Node> newNode, ExceptionCode& ec)
 
 String Range::toString(ExceptionCode& ec) const
 {
-    return toString(false, ec);
-}
-
-String Range::toString(bool convertBRsToNewlines, ExceptionCode& ec) const
-{
     if (m_detached) {
         ec = INVALID_STATE_ERR;
         return String();
     }
 
-    String text = "";
-    Node *pastEnd = pastEndNode();
-    for (Node *n = startNode(); n != pastEnd; n = n->traverseNextNode()) {
+    Vector<UChar> result;
+
+    Node* pastEnd = pastEndNode();
+    for (Node* n = startNode(); n != pastEnd; n = n->traverseNextNode()) {
         if (n->nodeType() == Node::TEXT_NODE || n->nodeType() == Node::CDATA_SECTION_NODE) {
-            String str = static_cast<Text *>(n)->data().copy();
-            if (n == m_endContainer)
-                str.truncate(m_endOffset);
-            if (n == m_startContainer)
-                str.remove(0, m_startOffset);
-            text += str;
+            String data = static_cast<CharacterData*>(n)->data();
+            unsigned length = data.length();
+            unsigned start = (n == m_startContainer) ? min(m_startOffset, length) : 0;
+            unsigned end = (n == m_endContainer) ? min(max(start, m_endOffset), length) : length;
+            result.append(data.characters() + start, end - start);
         }
-        if (n->hasTagName(brTag) && convertBRsToNewlines)
-            text += "\n";
     }
-    return text;
+
+    return String::adopt(result);
 }
 
 String Range::toHTML() const
@@ -1530,7 +1528,7 @@ Position Range::editingStartPosition() const
 
 Node *Range::pastEndNode() const
 {
-    if (!m_endContainer)
+    if (!m_startContainer || !m_endContainer)
         return 0;
     if (m_endContainer->offsetInCharacters())
         return m_endContainer->traverseNextSibling();
@@ -1551,7 +1549,7 @@ IntRect Range::boundingBox()
     return result;
 }
 
-void Range::addLineBoxRects(Vector<IntRect>& rects)
+void Range::addLineBoxRects(Vector<IntRect>& rects, bool useSelectionHeight)
 {
     if (!m_startContainer || !m_endContainer)
         return;
@@ -1567,7 +1565,7 @@ void Range::addLineBoxRects(Vector<IntRect>& rects)
         if (!r->firstChild()) {
             int startOffset = r == start ? m_startOffset : 0;
             int endOffset = r == end ? m_endOffset : UINT_MAX;
-            r->addLineBoxRects(rects, startOffset, endOffset);
+            r->addLineBoxRects(rects, startOffset, endOffset, useSelectionHeight);
         }
     }
 }

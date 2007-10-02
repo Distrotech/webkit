@@ -59,6 +59,7 @@
 #import "WebScriptDebugDelegatePrivate.h"
 #import "WebViewInternal.h"
 #import <WebCore/Chrome.h>
+#import <WebCore/ColorMac.h>
 #import <WebCore/Document.h>
 #import <WebCore/Event.h>
 #import <WebCore/FrameLoader.h>
@@ -137,8 +138,6 @@ NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
     [webFrameView release];
     
     [scriptDebugger release];
-    
-    [inspectors release];
 
     [super dealloc];
 }
@@ -258,8 +257,7 @@ Page* core(WebView *webView)
 
 WebView *kit(Page* page)
 {
-    WebChromeClient* chromeClient = static_cast<WebChromeClient*>(page->chrome()->client());
-    return chromeClient->webView();
+    return page ? static_cast<WebChromeClient*>(page->chrome()->client())->webView() : nil;
 }
 
 WebView *getWebView(WebFrame *webFrame)
@@ -292,7 +290,7 @@ WebView *getWebView(WebFrame *webFrame)
     ASSERT(childFrame);
     HistoryItem* parentItem = core(self)->loader()->currentHistoryItem();
     FrameLoadType loadType = [self _frameLoader]->loadType();
-    FrameLoadType childLoadType = FrameLoadTypeInternal;
+    FrameLoadType childLoadType = FrameLoadTypeRedirectWithLockedHistory;
 
     // If we're moving in the backforward list, we might want to replace the content
     // of this child frame with whatever was there at that point.
@@ -320,12 +318,12 @@ WebView *getWebView(WebFrame *webFrame)
         }
     }
 
-    WebArchive *archive = [[self dataSource] _popSubframeArchiveWithName:[childFrame name]];
+    WebArchive *archive = [[self _dataSource] _popSubframeArchiveWithName:[childFrame name]];
     if (archive)
         [childFrame loadArchive:archive];
     else
-        [childFrame _frameLoader]->load(URL, referrer, childLoadType,
-            String(), nil, 0, HashMap<String, String>());
+        [childFrame _frameLoader]->load([URL absoluteURL], referrer, childLoadType,
+                                        String(), 0, 0);
 }
 
 
@@ -346,8 +344,8 @@ WebView *getWebView(WebFrame *webFrame)
 - (void)_addChild:(WebFrame *)child
 {
     core(self)->tree()->appendChild(adoptRef(core(child)));
-    if ([child dataSource])
-        [[child dataSource] _documentLoader]->setOverrideEncoding([[self dataSource] _documentLoader]->overrideEncoding());  
+    if ([child _dataSource])
+        [[child _dataSource] _documentLoader]->setOverrideEncoding([[self _dataSource] _documentLoader]->overrideEncoding());  
 }
 
 - (int)_numPendingOrLoadingRequests:(BOOL)recurse
@@ -367,7 +365,7 @@ WebView *getWebView(WebFrame *webFrame)
 
 - (void)_attachScriptDebugger
 {
-    if (!_private->scriptDebugger)
+    if (!_private->scriptDebugger && core(self)->scriptProxy()->haveInterpreter())
         _private->scriptDebugger = [[WebScriptDebugger alloc] initWithWebFrame:self];
 }
 
@@ -539,20 +537,6 @@ WebView *getWebView(WebFrame *webFrame)
    return coreFrame == coreFrame->page()->mainFrame() ;
 }
 
-- (void)_addInspector:(WebInspector *)inspector
-{
-    if (!_private->inspectors)
-        _private->inspectors = [[NSMutableSet alloc] init];
-    ASSERT(![_private->inspectors containsObject:inspector]);
-    [_private->inspectors addObject:inspector];
-}
-
-- (void)_removeInspector:(WebInspector *)inspector
-{
-    ASSERT([_private->inspectors containsObject:inspector]);
-    [_private->inspectors removeObject:inspector];
-}
-
 - (FrameLoader*)_frameLoader
 {
     Frame* frame = core(self);
@@ -572,6 +556,16 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 - (void)_addDocumentLoader:(DocumentLoader*)loader toUnarchiveState:(WebArchive *)archive
 {
     [dataSource(loader) _addToUnarchiveState:archive];
+}
+
+- (WebDataSource *)_dataSource
+{
+    FrameLoader* frameLoader = [self _frameLoader];
+
+    if (!frameLoader)
+        return nil;
+
+    return dataSource(frameLoader->documentLoader());
 }
 
 @end
@@ -622,6 +616,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     return (WebFrameLoadType)[self _frameLoader]->loadType();
 }
 
+#ifndef __LP64__
 - (void)_recursive_resumeNullEventsForAllNetscapePlugins
 {
     Frame* coreFrame = core(self);
@@ -631,7 +626,9 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
             [(WebHTMLView *)documentView _resumeNullEventsForAllNetscapePlugins];
     }
 }
+#endif
 
+#ifndef __LP64__
 - (void)_recursive_pauseNullEventsForAllNetscapePlugins
 {
     Frame* coreFrame = core(self);
@@ -641,6 +638,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
             [(WebHTMLView *)documentView _pauseNullEventsForAllNetscapePlugins];
     }
 }
+#endif
 
 - (NSRange)_selectedNSRange
 {
@@ -656,26 +654,6 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 {
     Document* document = core(self)->document();
     return document && document->isImageDocument();
-}
-
-@end
-
-@implementation WebFrame (WebPendingPublic)
-
-- (WebScriptObject *)windowObject
-{
-    Frame* coreFrame = core(self);
-    if (!coreFrame)
-        return 0;
-    return coreFrame->windowScriptObject();
-}
-
-- (JSGlobalContextRef)globalContext
-{
-    Frame* coreFrame = core(self);
-    if (!coreFrame)
-        return 0;
-    return reinterpret_cast<JSGlobalContextRef>(coreFrame->scriptProxy()->interpreter()->globalExec());
 }
 
 @end
@@ -735,7 +713,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     // FIXME: <rdar://problem/5145841> When loading a custom view/representation 
     // into a web frame, the old document can still be around. This makes sure that
     // we'll return nil in those cases.
-    if (![[self dataSource] _isDocumentHTML]) 
+    if (![[self _dataSource] _isDocumentHTML]) 
         return nil; 
 
     Document* document = coreFrame->document();
@@ -765,8 +743,11 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 
 - (WebDataSource *)dataSource
 {
-    FrameLoader* frameLoader = [self _frameLoader];
-    return frameLoader ? dataSource(frameLoader->documentLoader()) : nil;
+    FrameLoader* loader = [self _frameLoader];
+    if (!loader || !loader->frameHasLoaded())
+        return nil;
+
+    return [self _dataSource];
 }
 
 - (void)loadRequest:(NSURLRequest *)request
@@ -792,12 +773,12 @@ static NSURL *createUniqueWebDataURL()
         responseURL = createUniqueWebDataURL();
     }
     
-    ResourceRequest request(URL);
+    ResourceRequest request([URL absoluteURL]);
 
     // hack because Mail checks for this property to detect data / archive loads
     [NSURLProtocol setProperty:@"" forKey:@"WebDataRequest" inRequest:(NSMutableURLRequest *)request.nsURLRequest()];
 
-    SubstituteData substituteData(WebCore::SharedBuffer::wrapNSData(data), MIMEType, encodingName, unreachableURL, responseURL);
+    SubstituteData substituteData(WebCore::SharedBuffer::wrapNSData(data), MIMEType, encodingName, [unreachableURL absoluteURL], responseURL);
 
     [self _frameLoader]->load(request, substituteData);
 }
@@ -847,7 +828,7 @@ static NSURL *createUniqueWebDataURL()
 - (void)stopLoading
 {
     if (FrameLoader* frameLoader = [self _frameLoader])
-        frameLoader->stopAllLoaders();
+        frameLoader->stopForUserCancel();
 }
 
 - (void)reload
@@ -880,6 +861,22 @@ static NSURL *createUniqueWebDataURL()
     for (Frame* child = coreFrame->tree()->firstChild(); child; child = child->tree()->nextSibling())
         [children addObject:kit(child)];
     return children;
+}
+
+- (WebScriptObject *)windowObject
+{
+    Frame* coreFrame = core(self);
+    if (!coreFrame)
+        return 0;
+    return coreFrame->windowScriptObject();
+}
+
+- (JSGlobalContextRef)globalContext
+{
+    Frame* coreFrame = core(self);
+    if (!coreFrame)
+        return 0;
+    return reinterpret_cast<JSGlobalContextRef>(coreFrame->scriptProxy()->interpreter()->globalExec());
 }
 
 @end

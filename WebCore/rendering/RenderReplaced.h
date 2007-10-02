@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -30,6 +30,7 @@ class RenderReplaced : public RenderBox {
 public:
     RenderReplaced(Node*);
     RenderReplaced(Node*, const IntSize& intrinsicSize);
+    virtual ~RenderReplaced();
 
     virtual const char* renderName() const { return "RenderReplaced"; }
 
@@ -42,6 +43,12 @@ public:
 
     virtual IntSize intrinsicSize() const;
 
+    virtual int overflowHeight(bool includeInterior = true) const;
+    virtual int overflowWidth(bool includeInterior = true) const;
+    virtual int overflowLeft(bool includeInterior = true) const;
+    virtual int overflowTop(bool includeInterior = true) const;
+    virtual IntRect overflowRect(bool includeInterior = true) const;
+
     virtual int caretMinOffset() const;
     virtual int caretMaxOffset() const;
     virtual unsigned caretMaxRenderedOffset() const;
@@ -50,7 +57,7 @@ public:
     virtual bool canBeSelectionLeaf() const { return true; }
     virtual SelectionState selectionState() const { return static_cast<SelectionState>(m_selectionState); }
     virtual void setSelectionState(SelectionState);
-    virtual IntRect selectionRect();
+    virtual IntRect selectionRect(bool clipToVisibleContent = true);
 
     bool isSelected() const;
 
@@ -58,11 +65,13 @@ protected:
     void setIntrinsicSize(const IntSize&);
 
     bool shouldPaint(PaintInfo&, int& tx, int& ty);
+    void adjustOverflowForBoxShadow();
 
 private:
     IntSize m_intrinsicSize;
     
     unsigned m_selectionState : 3; // SelectionState
+    bool m_hasOverflow : 1;
 };
 
 }

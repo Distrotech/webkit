@@ -29,6 +29,7 @@
 #import <WebKit/WebHTMLView.h>
 
 @class DOMDocumentFragment;
+@class DOMElement;
 @class DOMNode;
 @class DOMRange;
 @class WebArchive;
@@ -36,7 +37,7 @@
 @class WebView;
 @class WebFrame;
 @class WebPluginController;
- 
+
 @protocol WebHTMLHighlighter
 - (NSRect)highlightRectForLine:(NSRect)lineRect representedNode:(DOMNode *)node;
 - (void)paintHighlightForBox:(NSRect)boxRect onLine:(NSRect)lineRect behindText:(BOOL)text entireLine:(BOOL)line representedNode:(DOMNode *)node;
@@ -74,7 +75,6 @@
 
 - (NSImage *)_dragImageForLinkElement:(NSDictionary *)element;
 - (NSImage *)_dragImageForURL:(NSString*)linkURL withLabel:(NSString*)label;
-- (BOOL)_startDraggingImage:(NSImage *)dragImage at:(NSPoint)dragLoc operation:(NSDragOperation)op event:(NSEvent *)event sourceIsDHTML:(BOOL)flag DHTMLWroteData:(BOOL)dhtmlWroteData;
 - (void)_handleAutoscrollForMouseDragged:(NSEvent *)event;
 - (WebPluginController *)_pluginController;
 
@@ -95,6 +95,8 @@
 - (BOOL)_transparentBackground;
 - (void)_setTransparentBackground:(BOOL)f;
 
+- (void)_setToolTip:(NSString *)string;
+
 // SPI's for Mail.
 - (NSImage *)_selectionDraggingImage;
 - (NSRect)_selectionDraggingRect;
@@ -113,14 +115,9 @@
 // SPI for DumpRenderTree
 - (void)_updateActiveState;
 
-// Support for displaying multiple text matches.
-// These methods might end up moving into a protocol, so different document types can specify
-// whether or not they implement the protocol.
-// These methods are still in flux; don't rely on them yet.
-- (unsigned)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag limit:(unsigned)limit;
-- (void)unmarkAllTextMatches;
-- (void)setMarkedTextMatchesAreHighlighted:(BOOL)newValue;
-- (BOOL)markedTextMatchesAreHighlighted;
-- (NSArray *)rectsForTextMatches;
+// SPI for printing (should be converted to API someday). When the WebHTMLView isn't being printed
+// directly, this method must be called before paginating, or the computed height might be incorrect.
+// Typically this would be called from inside an override of -[NSView knowsPageRange:].
+- (void)_layoutForPrinting;
 
 @end

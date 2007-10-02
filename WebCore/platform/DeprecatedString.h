@@ -32,9 +32,9 @@
 
 #include <ctype.h>
 
-/* On ARM some versions of GCC don't pack structures by default so sizeof(DeprecatedChar)
+/* On some ARM platforms GCC won't pack structures by default so sizeof(DeprecatedChar)
    will end up being != 2 which causes crashes since the code depends on that. */
-#if COMPILER(GCC) && PLATFORM(ARM)
+#if COMPILER(GCC) && PLATFORM(FORCE_PACK)
 #define PACK_STRUCT __attribute__((packed))
 #else
 #define PACK_STRUCT
@@ -210,7 +210,7 @@ struct DeprecatedStringData
     void initialize(const char *u, unsigned l);
 
     // Move from destination to source.
-    DeprecatedStringData(DeprecatedStringData &);
+    static DeprecatedStringData* createAndAdopt(DeprecatedStringData &);
 
     ~DeprecatedStringData();
 
@@ -249,6 +249,8 @@ struct DeprecatedStringData
     char _internalBuffer[WEBCORE_DS_INTERNAL_BUFFER_SIZE]; // Pad out to a (((size + 1) & ~15) + 14) size
     
 private:
+    void adopt(DeprecatedStringData&);
+
     DeprecatedStringData(const DeprecatedStringData &);
     DeprecatedStringData &operator=(const DeprecatedStringData &);
 };
@@ -347,8 +349,12 @@ public:
     short toShort(bool *ok = 0, int base = 10) const;
     unsigned short toUShort(bool *ok = 0, int base = 10) const;
     int toInt(bool *ok = 0, int base = 10) const;
+    int64_t toInt64(bool *ok = 0, int base = 10) const;
     unsigned toUInt(bool *ok = 0, int base = 10) const;
+    uint64_t toUInt64(bool *ok = 0, int base = 10) const;
+
     double toDouble(bool *ok = 0) const;
+    float toFloat(bool* ok = 0) const;
 
     static DeprecatedString number(int);
     static DeprecatedString number(unsigned);
@@ -461,6 +467,7 @@ private:
 
     friend bool operator==(const DeprecatedString &, const DeprecatedString &);
     friend bool operator==(const DeprecatedString &, const char *);
+    friend bool equalIgnoringCase(const DeprecatedString&, const DeprecatedString&);
 
     friend class DeprecatedConstString;
     friend class QGDict;
@@ -474,6 +481,10 @@ DeprecatedString operator+(const DeprecatedString &, char);
 DeprecatedString operator+(const char *, const DeprecatedString &);
 DeprecatedString operator+(DeprecatedChar, const DeprecatedString &);
 DeprecatedString operator+(char, const DeprecatedString &);
+
+bool equalIgnoringCase(const DeprecatedString&, const DeprecatedString&);
+inline bool equalIgnoringCase(const DeprecatedString& a, const char* b) { return equalIgnoringCase(a, DeprecatedString(b)); }
+inline bool equalIgnoringCase(const char* a, const DeprecatedString& b) { return equalIgnoringCase(DeprecatedString(a), b); }
 
 inline char *DeprecatedStringData::ascii()
 {

@@ -20,8 +20,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 #include "config.h"
 #include "HTMLTableSectionElement.h"
@@ -32,6 +32,7 @@
 #include "HTMLTableRowElement.h"
 #include "HTMLTableElement.h"
 #include "NodeList.h"
+#include "Text.h"
 
 namespace WebCore {
 
@@ -44,6 +45,8 @@ HTMLTableSectionElement::HTMLTableSectionElement(const QualifiedName& tagName, D
 
 bool HTMLTableSectionElement::checkDTD(const Node* newChild)
 {
+    if (newChild->isTextNode())
+        return static_cast<const Text*>(newChild)->containsOnlyWhitespace();
     return newChild->hasTagName(trTag) || newChild->hasTagName(formTag) ||
            newChild->hasTagName(scriptTag);
 }
@@ -77,7 +80,7 @@ CSSMutableStyleDeclaration* HTMLTableSectionElement::additionalAttributeStyleDec
 PassRefPtr<HTMLElement> HTMLTableSectionElement::insertRow(int index, ExceptionCode& ec)
 {
     RefPtr<HTMLTableRowElement> r;
-    RefPtr<NodeList> children = childNodes();
+    RefPtr<HTMLCollection> children = rows();
     int numRows = children ? (int)children->length() : 0;
     if (index < -1 || index > numRows)
         ec = INDEX_SIZE_ERR; // per the DOM
@@ -99,7 +102,7 @@ PassRefPtr<HTMLElement> HTMLTableSectionElement::insertRow(int index, ExceptionC
 
 void HTMLTableSectionElement::deleteRow( int index, ExceptionCode& ec)
 {
-    RefPtr<NodeList> children = childNodes();
+    RefPtr<HTMLCollection> children = rows();
     int numRows = children ? (int)children->length() : 0;
     if (index == -1)
         index = numRows - 1;

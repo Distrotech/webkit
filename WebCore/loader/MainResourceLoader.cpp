@@ -42,7 +42,7 @@
 namespace WebCore {
 
 MainResourceLoader::MainResourceLoader(Frame* frame)
-    : ResourceLoader(frame)
+    : ResourceLoader(frame, true, true)
     , m_dataLoadTimer(this, &MainResourceLoader::handleDataLoadNow)
     , m_loadingMultipartContent(false)
     , m_waitingForContentPolicy(false)
@@ -62,16 +62,20 @@ void MainResourceLoader::receivedError(const ResourceError& error)
 {
     // Calling receivedMainResourceError will likely result in the last reference to this object to go away.
     RefPtr<MainResourceLoader> protect(this);
-
-    frameLoader()->receivedMainResourceError(error, true);
+    RefPtr<Frame> protectFrame(m_frame);
 
     if (!cancelled()) {
         ASSERT(!reachedTerminalState());
         frameLoader()->didFailToLoad(this, error);
-
-        releaseResources();
     }
     
+    if (frameLoader())
+        frameLoader()->receivedMainResourceError(error, true);
+
+    if (!cancelled()) {
+        releaseResources();
+    }
+
     ASSERT(reachedTerminalState());
 }
 
@@ -194,7 +198,7 @@ void MainResourceLoader::continueAfterContentPolicy(PolicyAction contentPolicy, 
     }
 
     case PolicyDownload:
-        frameLoader()->client()->download(m_handle.get(), request(), r);
+        frameLoader()->client()->download(m_handle.get(), request(), m_handle.get()->request(), r);
         receivedError(interruptionForPolicyChangeError());
         return;
 
@@ -245,7 +249,7 @@ void MainResourceLoader::continueAfterContentPolicy(PolicyAction policy)
 {
     ASSERT(m_waitingForContentPolicy);
     m_waitingForContentPolicy = false;
-    if (!frameLoader()->isStopping())
+    if (frameLoader() && !frameLoader()->isStopping())
         continueAfterContentPolicy(policy, m_response);
     deref(); // balances ref in didReceiveResponse
 }
@@ -335,7 +339,11 @@ void MainResourceLoader::handleDataLoadNow(Timer<MainResourceLoader>*)
 void MainResourceLoader::handleDataLoadSoon(ResourceRequest& r)
 {
     m_initialRequest = r;
-    m_dataLoadTimer.startOneShot(0);
+    
+    if (m_documentLoader->deferMainResourceDataLoad())
+        m_dataLoadTimer.startOneShot(0);
+    else
+        handleDataLoadNow(0);
 }
 
 bool MainResourceLoader::loadNow(ResourceRequest& r)
@@ -361,12 +369,12 @@ bool MainResourceLoader::loadNow(ResourceRequest& r)
     if (shouldLoadEmptyBeforeRedirect && !shouldLoadEmpty && defersLoading())
         return true;
 
-    if (m_substituteData.isValid())
+    if (m_substituteData.isValid()) 
         handleDataLoadSoon(r);
     else if (shouldLoadEmpty || frameLoader()->representationExistsForURLScheme(url.protocol()))
         handleEmptyLoad(url, !shouldLoadEmpty);
     else
-        m_handle = ResourceHandle::create(r, this, m_frame.get(), false, true);
+        m_handle = ResourceHandle::create(r, this, m_frame.get(), false, true, true);
 
     return false;
 }
@@ -408,8 +416,9 @@ void MainResourceLoader::setDefersLoading(bool defers)
         if (m_initialRequest.isNull())
             return;
         
-        if (m_substituteData.isValid())
-            m_dataLoadTimer.startOneShot(0);
+        if (m_substituteData.isValid() &&
+            m_documentLoader->deferMainResourceDataLoad())
+                m_dataLoadTimer.startOneShot(0);
         else {
             ResourceRequest r(m_initialRequest);
             m_initialRequest = ResourceRequest();

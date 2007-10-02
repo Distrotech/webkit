@@ -13,8 +13,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -159,6 +159,9 @@ RenderStyle* RenderFileUploadControl::createButtonStyle(RenderStyle* parentStyle
 
 void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
 {
+    if (style()->visibility() != VISIBLE)
+        return;
+    
     // Push a clip.
     if (paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseChildBlockBackgrounds) {
         IntRect clipRect(tx + borderLeft(), ty + borderTop(),
@@ -173,17 +176,7 @@ void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
         const String& displayedFilename = m_fileChooser->basenameForWidth(style()->font(), maxFilenameWidth());        
         unsigned length = displayedFilename.length();
         const UChar* string = displayedFilename.characters();
-        TextStyle textStyle(0, 0, 0, false, true);
-        RenderBlock::CharacterBuffer characterBuffer;
-
-        if (style()->direction() == RTL && style()->unicodeBidi() == Override)
-            textStyle.setRTL(true);
-        else if ((style()->direction() == RTL || style()->unicodeBidi() != Override) && !style()->visuallyOrdered()) {
-            // If necessary, reorder characters by running the string through the bidi algorithm
-            characterBuffer.append(string, length);
-            RenderBlock::bidiReorderCharacters(document(), style(), characterBuffer);
-            string = characterBuffer.data();
-        }
+        TextStyle textStyle(0, 0, 0, style()->direction() == RTL, style()->unicodeBidi() == Override);
         TextRun textRun(string, length);
         
         // Determine where the filename should be placed
@@ -205,7 +198,7 @@ void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
         paintInfo.context->setFillColor(style()->color());
         
         // Draw the filename
-        paintInfo.context->drawText(textRun, IntPoint(textX, textY), textStyle);
+        paintInfo.context->drawBidiText(textRun, IntPoint(textX, textY), textStyle);
         
         if (m_fileChooser->icon()) {
             // Determine where the icon should be placed
@@ -264,6 +257,11 @@ void RenderFileUploadControl::calcPrefWidths()
     m_maxPrefWidth += toAdd;
 
     setPrefWidthsDirty(false);
+}
+
+void RenderFileUploadControl::receiveDroppedFile(const String& filename)
+{
+    m_fileChooser->chooseFile(filename);
 }
 
 HTMLFileUploadInnerButtonElement::HTMLFileUploadInnerButtonElement(Document* doc, Node* shadowParent)

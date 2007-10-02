@@ -30,12 +30,11 @@
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "markup.h"
+#include "NotImplemented.h"
 
 #include <QList>
 #include <QMimeData>
 #include <QUrl>
-
-#define notImplemented() qDebug("FIXME: UNIMPLEMENTED: %s:%d (%s)", __FILE__, __LINE__, __FUNCTION__)
 
 namespace WebCore {
 
@@ -48,6 +47,16 @@ bool DragData::containsColor() const
 {
     notImplemented();
     return false;
+}
+
+bool DragData::containsFiles() const
+{
+    notImplemented();
+    return false;
+}
+
+void DragData::asFilenames(Vector<String>& result) const
+{
 }
 
 bool DragData::containsPlainText() const

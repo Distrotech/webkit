@@ -71,14 +71,38 @@ static BOOL isPreVersion3Client(void)
     return preVersion3Client;
 }
 
-static void fixMenusToSendToOldClients(NSMutableArray *defaultMenuItems)
+static BOOL isPreInspectElementTagClient(void)
 {
+    static BOOL preInspectElementTagClient = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_INSPECT_ELEMENT_MENU_TAG);
+    return preInspectElementTagClient;
+}
+
+static NSMutableArray *fixMenusToSendToOldClients(NSMutableArray *defaultMenuItems)
+{
+    NSMutableArray *savedItems = nil;
+
+    unsigned defaultItemsCount = [defaultMenuItems count];
+
+    if (isPreInspectElementTagClient() && defaultItemsCount >= 2) {
+        NSMenuItem *secondToLastItem = [defaultMenuItems objectAtIndex:defaultItemsCount - 2];
+        NSMenuItem *lastItem = [defaultMenuItems objectAtIndex:defaultItemsCount - 1];
+
+        if ([secondToLastItem isSeparatorItem] && [lastItem tag] == WebMenuItemTagInspectElement) {
+            savedItems = [NSMutableArray arrayWithCapacity:2];
+            [savedItems addObject:secondToLastItem];
+            [savedItems addObject:lastItem];
+
+            [defaultMenuItems removeObject:secondToLastItem];
+            [defaultMenuItems removeObject:lastItem];
+            defaultItemsCount -= 2;
+        }
+    }
+
     BOOL preVersion3Client = isPreVersion3Client();
     if (!preVersion3Client)
-        return;
+        return savedItems;
         
     BOOL isMail = isAppleMail();
-    unsigned defaultItemsCount = [defaultMenuItems count];
     for (unsigned i = 0; i < defaultItemsCount; ++i) {
         NSMenuItem *item = [defaultMenuItems objectAtIndex:i];
         int tag = [item tag];
@@ -123,10 +147,15 @@ static void fixMenusToSendToOldClients(NSMutableArray *defaultMenuItems)
         if (oldStyleTag != tag)
             [item setTag:oldStyleTag];
     }
+
+    return savedItems;
 }
 
-static void fixMenusReceivedFromOldClients(NSMutableArray *newMenuItems)
+static void fixMenusReceivedFromOldClients(NSMutableArray *newMenuItems, NSMutableArray *savedItems)
 {   
+    if (savedItems)
+        [newMenuItems addObjectsFromArray:savedItems];
+
     BOOL preVersion3Client = isPreVersion3Client();
     if (!preVersion3Client)
         return;
@@ -220,7 +249,8 @@ static void fixMenusReceivedFromOldClients(NSMutableArray *newMenuItems)
 NSMutableArray* WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu* defaultMenu)
 {
     id delegate = [m_webView UIDelegate];
-    if (![delegate respondsToSelector:@selector(webView:contextMenuItemsForElement:defaultMenuItems:)])
+    SEL selector = @selector(webView:contextMenuItemsForElement:defaultMenuItems:);
+    if (![delegate respondsToSelector:selector])
         return defaultMenu->platformDescription();
 
     NSDictionary *element = [[[WebElementDictionary alloc] initWithHitTestResult:defaultMenu->hitTestResult()] autorelease];
@@ -235,24 +265,31 @@ NSMutableArray* WebContextMenuClient::getCustomMenuFromDefaultItems(ContextMenu*
     }
 
     NSMutableArray *defaultMenuItems = defaultMenu->platformDescription();
-    
+
     unsigned defaultItemsCount = [defaultMenuItems count];
     for (unsigned i = 0; i < defaultItemsCount; ++i)
         [[defaultMenuItems objectAtIndex:i] setRepresentedObject:element];
-            
-    fixMenusToSendToOldClients(defaultMenuItems);
-    NSMutableArray *newMenuItems = [[[delegate webView:m_webView contextMenuItemsForElement:element defaultMenuItems:defaultMenuItems] mutableCopy] autorelease];
-    fixMenusReceivedFromOldClients(newMenuItems);
-    return newMenuItems;
+
+    NSMutableArray *savedItems = [fixMenusToSendToOldClients(defaultMenuItems) retain];
+    NSArray *delegateSuppliedItems = CallUIDelegate(m_webView, selector, element, defaultMenuItems);
+    NSMutableArray *newMenuItems = [delegateSuppliedItems mutableCopy];
+    fixMenusReceivedFromOldClients(newMenuItems, savedItems);
+    [savedItems release];
+    return [newMenuItems autorelease];
 }
 
 void WebContextMenuClient::contextMenuItemSelected(ContextMenuItem* item, const ContextMenu* parentMenu)
 {
     id delegate = [m_webView UIDelegate];
-    if ([delegate respondsToSelector:@selector(webView:contextMenuItemSelected:forElement:)]) {
+    SEL selector = @selector(webView:contextMenuItemSelected:forElement:);
+    if ([delegate respondsToSelector:selector]) {
         NSDictionary *element = [[WebElementDictionary alloc] initWithHitTestResult:parentMenu->hitTestResult()];
-        [delegate webView:m_webView contextMenuItemSelected:item->releasePlatformDescription() forElement:element];
+        NSMenuItem *platformItem = item->releasePlatformDescription();
+
+        CallUIDelegate(m_webView, selector, platformItem, element);
+
         [element release];
+        [platformItem release];
     }
 }
 

@@ -1,3 +1,0 @@
-EVENT(begin) TEST(relativeURL(video.currentSrc) == 'content/test.mp4') FAIL
-END OF TEST
-

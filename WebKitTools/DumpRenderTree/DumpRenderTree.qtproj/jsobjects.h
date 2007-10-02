@@ -30,6 +30,9 @@
 
 #include <qobject.h>
 #include <qdebug.h>
+#include <qpoint.h>
+
+class QWebFrame;
 
 class LayoutTestController : public QObject
 {
@@ -37,8 +40,11 @@ class LayoutTestController : public QObject
 public:
     LayoutTestController();
 
-    bool shouldDumpAsText() const { return textDump; }
-    bool shouldWaitUntilDone() const { return waitForDone; }
+    bool isLoading() const { return m_isLoading; }
+    void setLoading(bool loading) { m_isLoading = loading; }
+
+    bool shouldDumpAsText() const { return m_textDump; }
+    bool shouldWaitUntilDone() const { return m_waitForDone; }
 
     void reset();
 
@@ -47,17 +53,46 @@ protected:
 
 signals:
     void done();
-    
+
 public slots:
-    void dumpAsText() { textDump = true; }
+    void maybeDump(bool ok);
+    void dumpAsText() { m_textDump = true; }
     void waitUntilDone();
     void notifyDone();
     void dumpEditingCallbacks();
+    void queueReload();
+    void provisionalLoad();
 
 private:
-    bool textDump;
-    bool waitForDone;
-    int timeoutTimer;
+    bool m_isLoading;
+    bool m_textDump;
+    bool m_waitForDone;
+    int m_timeoutTimer;
+    QWebFrame *m_topLoadingFrame;
 };
+
+class QWebPage;
+class QWebFrame;
+
+class EventSender : public QObject
+{
+    Q_OBJECT
+public:
+    EventSender(QWebPage *parent);
+
+public slots:
+    void mouseDown();
+    void mouseUp();
+    void mouseMoveTo(int x, int y);
+    void leapForward(int ms);
+    void keyDown(const QString &string, const QStringList &modifiers);
+
+private:
+    QPoint m_mousePos;
+    QWebPage *m_page;
+    int m_timeLeap;
+    QWebFrame *frameUnderMouse() const;
+};
+
 
 #endif

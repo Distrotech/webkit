@@ -32,6 +32,7 @@
 #import <wtf/HashMap.h>
 #import <wtf/RetainPtr.h>
 
+@class WebDownload;
 @class WebFrame;
 @class WebFramePolicyListener;
 @class WebHistoryItem;
@@ -65,6 +66,7 @@ private:
 
     virtual void makeDocumentView();
     virtual void makeRepresentation(WebCore::DocumentLoader*);
+    virtual bool hasHTMLView() const;
     virtual void setDocumentViewFromCachedPage(WebCore::CachedPage*);
     virtual void forceLayout();
     virtual void forceLayoutForNonHTML();
@@ -75,9 +77,7 @@ private:
     virtual void detachedFromParent3();
     virtual void detachedFromParent4();
 
-    virtual void loadedFromCachedPage();
-
-    virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
+    virtual void download(WebCore::ResourceHandle*, const WebCore::ResourceRequest&, const WebCore::ResourceRequest&, const WebCore::ResourceResponse&);
 
     virtual void assignIdentifierToInitialRequest(unsigned long identifier, WebCore::DocumentLoader*, const WebCore::ResourceRequest&);
 
@@ -184,7 +184,7 @@ private:
 
     virtual WebCore::Frame* createFrame(const WebCore::KURL& url, const WebCore::String& name, WebCore::HTMLFrameOwnerElement*,
                                         const WebCore::String& referrer, bool allowsScrolling, int marginWidth, int marginHeight);
-    virtual WebCore::Widget* createPlugin(WebCore::Element*, const WebCore::KURL&, const Vector<WebCore::String>&,
+    virtual WebCore::Widget* createPlugin(const WebCore::IntSize&, WebCore::Element*, const WebCore::KURL&, const Vector<WebCore::String>&,
                                           const Vector<WebCore::String>&, const WebCore::String&, bool);
     virtual void redirectDataToPlugin(WebCore::Widget* pluginWidget);
     
@@ -195,11 +195,16 @@ private:
     virtual WebCore::String overrideMediaType() const;
     
     virtual void windowObjectCleared() const;
+    virtual void didPerformFirstNavigation() const;
+
+    virtual void registerForIconNotification(bool listen);
 
     void deliverArchivedResourcesAfterDelay() const;
     bool canUseArchivedResource(NSURLRequest *) const;
     bool canUseArchivedResource(NSURLResponse *) const;
     void deliverArchivedResources(WebCore::Timer<WebFrameLoaderClient>*);
+
+    void setOriginalURLForDownload(WebDownload *, const WebCore::ResourceRequest&) const;
 
     RetainPtr<WebFramePolicyListener> setUpPolicyListener(WebCore::FramePolicyFunction);
 

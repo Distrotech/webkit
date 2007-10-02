@@ -26,6 +26,8 @@
 #ifndef BINDINGS_C_INSTANCE_H_
 #define BINDINGS_C_INSTANCE_H_
 
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "runtime.h"
 #include <wtf/Noncopyable.h>
 
@@ -39,7 +41,7 @@ class CClass;
 
 class CInstance : public Instance {
 public:
-    CInstance (NPObject*);
+    CInstance (NPObject*, PassRefPtr<RootObject>);
     ~CInstance ();
     
     virtual Class *getClass() const;
@@ -71,4 +73,5 @@ private:
 
 } // namespace KJS
 
+#endif
 #endif

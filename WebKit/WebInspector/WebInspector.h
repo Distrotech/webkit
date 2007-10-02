@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2007 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,27 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <AppKit/NSWindowController.h>
+#import <Foundation/Foundation.h>
 
 @class WebFrame;
-@class WebInspectorPrivate;
-@class DOMNode;
+@class WebView;
 
-@interface WebInspector : NSWindowController
+@interface WebInspector : NSObject
 {
-@private
-    WebInspectorPrivate *_private;
+    WebView *_webView;
 }
 + (WebInspector *)sharedWebInspector;
-
-- (id)initWithWebFrame:(WebFrame *)webFrame;
-
-- (void)setWebFrame:(WebFrame *)webFrame;
-- (WebFrame *)webFrame;
-
-- (void)setRootDOMNode:(DOMNode *)node;
-- (DOMNode *)rootDOMNode;
-
-- (void)setFocusedDOMNode:(DOMNode *)node;
-- (DOMNode *)focusedDOMNode;
++ (WebInspector *)webInspector;
+- (void)setWebFrame:(WebFrame*)frame;
+- (void)showWindow:(id)sender;
 @end

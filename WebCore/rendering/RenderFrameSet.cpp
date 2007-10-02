@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -193,7 +193,7 @@ void RenderFrameSet::layOutAxis(GridAxis& axis, const Length* grid, int availabl
 {
     availableLen = max(availableLen, 0);
 
-    int* gridLayout = axis.m_sizes;
+    int* gridLayout = axis.m_sizes.data();
 
     if (!grid) {
         gridLayout[0] = availableLen;
@@ -367,7 +367,7 @@ void RenderFrameSet::layOutAxis(GridAxis& axis, const Length* grid, int availabl
 
     // now we have the final layout, distribute the delta over it
     bool worked = true;
-    int* gridDelta = axis.m_deltas;
+    int* gridDelta = axis.m_deltas.data();
     for (int i = 0; i < gridLen; ++i) {
         if (gridLayout[i] && gridLayout[i] + gridDelta[i] <= 0)
             worked = false;
@@ -454,6 +454,11 @@ void RenderFrameSet::layout()
 {
     ASSERT(needsLayout());
 
+    bool doFullRepaint = selfNeedsLayout() && checkForRepaintDuringLayout();
+    IntRect oldBounds;
+    if (doFullRepaint)
+        oldBounds = absoluteClippedOverflowRect();
+
     if (!parent()->isFrameSet()) {
         FrameView* v = view()->frameView();
         m_width = v->visibleWidth();
@@ -477,6 +482,13 @@ void RenderFrameSet::layout()
     RenderContainer::layout();
 
     computeEdgeInfo();
+
+    if (doFullRepaint) {
+        view()->repaintViewRectangle(oldBounds);
+        IntRect newBounds = absoluteClippedOverflowRect();
+        if (newBounds != oldBounds)
+            view()->repaintViewRectangle(newBounds);
+    }
 
     setNeedsLayout(false);
 }
@@ -651,6 +663,11 @@ int RenderFrameSet::hitTestSplit(const GridAxis& axis, int position) const
         splitPosition += borderThickness + axis.m_sizes[i];
     }
     return noSplit;
+}
+
+bool RenderFrameSet::isChildAllowed(RenderObject* child, RenderStyle* style) const
+{
+    return child->isFrame() || child->isFrameSet();
 }
 
 #ifndef NDEBUG

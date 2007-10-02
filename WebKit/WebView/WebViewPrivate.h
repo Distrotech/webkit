@@ -31,8 +31,10 @@
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
 #define WebNSInteger int
+#define WebNSUInteger unsigned int
 #else
 #define WebNSInteger NSInteger
+#define WebNSUInteger NSUInteger
 #endif
 
 @class NSError;
@@ -40,41 +42,6 @@
 @class WebPreferences;
 
 @protocol WebFormDelegate;
-
-typedef void (*WebDidCancelAuthenticationChallengeFunc)(id, SEL, WebView *, id, NSURLAuthenticationChallenge *, WebDataSource *);
-typedef void (*WebDidReceiveAuthenticationChallengeFunc)(id, SEL, WebView *, id, NSURLAuthenticationChallenge *, WebDataSource *);
-typedef id (*WebIdentifierForRequestFunc)(id, SEL, WebView *, NSURLRequest *, WebDataSource *);
-typedef NSURLRequest *(*WebWillSendRequestFunc)(id, SEL, WebView *, id, NSURLRequest *, NSURLResponse *, WebDataSource *);
-typedef void (*WebDidReceiveResponseFunc)(id, SEL, WebView *, id, NSURLResponse *, WebDataSource *);
-typedef void (*WebDidReceiveContentLengthFunc)(id, SEL, WebView *, id, WebNSInteger, WebDataSource *);
-typedef void (*WebDidFinishLoadingFromDataSourceFunc)(id, SEL, WebView *, id, WebDataSource *);
-typedef void (*WebDidFailLoadingWithErrorFromDataSourceFunc)(id, SEL, WebView *, id, NSError *, WebDataSource *);
-typedef void (*WebDidLoadResourceFromMemoryCacheFunc)(id, SEL, WebView *, NSURLRequest *, NSURLResponse *, WebNSInteger, WebDataSource *);
-typedef NSCachedURLResponse *(*WebWillCacheResponseFunc)(id, SEL, WebView *, id, NSCachedURLResponse *, WebDataSource *);
-
-typedef struct _WebResourceDelegateImplementationCache {
-    uint delegateImplementsDidCancelAuthenticationChallenge:1;
-    uint delegateImplementsDidReceiveAuthenticationChallenge:1;
-    uint delegateImplementsDidReceiveResponse:1;
-    uint delegateImplementsDidReceiveContentLength:1;
-    uint delegateImplementsDidFinishLoadingFromDataSource:1;
-    uint delegateImplementsDidFailLoadingWithErrorFromDataSource:1;
-    uint delegateImplementsWillSendRequest:1;
-    uint delegateImplementsIdentifierForRequest:1;
-    uint delegateImplementsDidLoadResourceFromMemoryCache:1;
-    uint delegateImplementsWillCacheResponse:1;
-
-    WebDidCancelAuthenticationChallengeFunc didCancelAuthenticationChallengeFunc;
-    WebDidReceiveAuthenticationChallengeFunc didReceiveAuthenticationChallengeFunc;
-    WebIdentifierForRequestFunc identifierForRequestFunc;
-    WebWillSendRequestFunc willSendRequestFunc;
-    WebDidReceiveResponseFunc didReceiveResponseFunc;
-    WebDidReceiveContentLengthFunc didReceiveContentLengthFunc;
-    WebDidFinishLoadingFromDataSourceFunc didFinishLoadingFromDataSourceFunc;
-    WebDidFailLoadingWithErrorFromDataSourceFunc didFailLoadingWithErrorFromDataSourceFunc;
-    WebDidLoadResourceFromMemoryCacheFunc didLoadResourceFromMemoryCacheFunc;
-    WebWillCacheResponseFunc willCacheResponseFunc;
-} WebResourceDelegateImplementationCache;
 
 extern NSString *_WebCanGoBackKey;
 extern NSString *_WebCanGoForwardKey;
@@ -169,7 +136,8 @@ typedef enum {
 // These methods might end up moving into a protocol, so different document types can specify
 // whether or not they implement the protocol. For now we'll just deal with HTML.
 // These methods are still in flux; don't rely on them yet.
-- (unsigned)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(unsigned)limit;
+- (BOOL)canMarkAllTextMatches;
+- (WebNSUInteger)markAllMatchesForText:(NSString *)string caseSensitive:(BOOL)caseFlag highlight:(BOOL)highlight limit:(WebNSUInteger)limit;
 - (void)unmarkAllTextMatches;
 - (NSArray *)rectsForTextMatches;
 
@@ -230,6 +198,7 @@ Could be worth adding to the API.
 - (void)_setFormDelegate:(id<WebFormDelegate>)delegate;
 - (id<WebFormDelegate>)_formDelegate;
 
+- (BOOL)_isClosed;
 - (void)_close;
 
 /*!
@@ -273,6 +242,14 @@ Could be worth adding to the API.
 
 + (void)_setShouldUseFontSmoothing:(BOOL)f;
 + (BOOL)_shouldUseFontSmoothing;
+
+- (void)_setCatchesDelegateExceptions:(BOOL)f;
+- (BOOL)_catchesDelegateExceptions;
+
+// These two methods are useful for a test harness that needs a consistent appearance for the focus rings
+// regardless of OS X version.
++ (void)_setUsesTestModeFocusRingColor:(BOOL)f;
++ (BOOL)_usesTestModeFocusRingColor;
 
 + (NSString *)_minimumRequiredSafariBuildNumber;
 
@@ -342,6 +319,19 @@ Could be worth adding to the API.
 - (BOOL)defersCallbacks; // called by QuickTime plug-in
 - (void)setDefersCallbacks:(BOOL)defer; // called by QuickTime plug-in
 
+- (BOOL)usesPageCache;
+- (void)setUsesPageCache:(BOOL)usesPageCache;
+
+// <rdar://problem/5217124> Clients other than dashboard, don't use this.
+// Do not remove until Dashboard has moved off it
+- (void)handleAuthenticationForResource:(id)identifier challenge:(NSURLAuthenticationChallenge *)challenge fromDataSource:(WebDataSource *)dataSource;
+
+- (void)_clearUndoRedoOperations;
+
+/* Used to do fast (lower quality) scaling of images so that window resize can be quick. */
+- (BOOL)_inFastImageScalingMode;
+- (void)_setUseFastImageScalingMode:(BOOL)flag;
+
 @end
 
 @interface WebView (WebViewPrintingPrivate)
@@ -380,19 +370,7 @@ Could be worth adding to the API.
 
 @interface WebView (WebViewEditingInMail)
 - (void)_insertNewlineInQuotedContent;
-- (BOOL)_selectWordBeforeMenuEvent;
-- (void)_setSelectWordBeforeMenuEvent:(BOOL)flag;
 - (void)_replaceSelectionWithNode:(DOMNode *)node matchStyle:(BOOL)matchStyle;
-@end
-
-@interface _WebSafeForwarder : NSObject
-{
-    id target; // Non-retained. Don't retain delegates.
-    id defaultTarget;
-    Class templateClass;
-}
-- (id)initWithTarget:(id)t defaultTarget:(id)dt templateClass:(Class)aClass;
-+ (id)safeForwarderWithTarget:(id)t defaultTarget:(id)dt templateClass:(Class)aClass;
 @end
 
 @interface NSObject (WebFrameLoadDelegatePrivate)
@@ -400,31 +378,18 @@ Could be worth adding to the API.
 
 // didFinishDocumentLoadForFrame is sent when the document has finished loading, though not necessarily all
 // of its subresources.
+// FIXME 5259339: Currently this callback is not sent for (some?) pages loaded entirely from the cache.
 - (void)webView:(WebView *)sender didFinishDocumentLoadForFrame:(WebFrame *)frame;
 
 // Addresses 4192534.  SPI for now.
 - (void)webView:(WebView *)sender didHandleOnloadEventsForFrame:(WebFrame *)frame;
 
-/*!
-    @method webView:didClearWindowObject:forFrame:
-    @abstract Notifies the delegate that the JavaScript window object in a frame has 
-    been cleared in preparation for a new load. This is the preferred place to set custom 
-    properties on the window object using the WebScriptObject and JavaScriptCore APIs.
-    @param webView The webView sending the message.
-    @param windowObject The WebScriptObject representing the frame's JavaScript window object.
-    @param frame The WebFrame to which windowObject belongs.
-    @discussion If a delegate implements both webView:didClearWindowObject:forFrame:
-    and webView:windowScriptObjectAvailable:, only webView:didClearWindowObject:forFrame: 
-    will be invoked. This enables a delegate to implement both methods for backwards 
-    compatibility with older versions of WebKit.
-*/
-- (void)webView:(WebView *)webView didClearWindowObject:(WebScriptObject *)windowObject forFrame:(WebFrame *)frame;
-
 @end
 
 @interface NSObject (WebResourceLoadDelegatePrivate)
 // Addresses <rdar://problem/5008925> - SPI for now
-- (NSCachedURLResponse *)webView:(WebView *)sender resource:(id)identifier willCacheResponse:(NSCachedURLResponse *)respose fromDataSource:(WebDataSource *)dataSource;
+- (NSCachedURLResponse *)webView:(WebView *)sender resource:(id)identifier willCacheResponse:(NSCachedURLResponse *)response fromDataSource:(WebDataSource *)dataSource;
 @end
 
 #undef WebNSInteger
+#undef WebNSUInteger

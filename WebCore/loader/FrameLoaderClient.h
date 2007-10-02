@@ -58,12 +58,13 @@ namespace WebCore {
     class ResourceError;
     class ResourceHandle;
     class ResourceLoader;
-    class ResourceRequest;
     class ResourceResponse;
     class SharedBuffer;
     class SubstituteData;
     class String;
     class Widget;
+
+    struct ResourceRequest;
 
     typedef void (FrameLoader::*FramePolicyFunction)(PolicyAction);
 
@@ -74,6 +75,8 @@ namespace WebCore {
         
         virtual bool hasWebView() const = 0; // mainly for assertions
         virtual bool hasFrameView() const = 0; // ditto
+
+        virtual bool hasHTMLView() const { return true; }
 
         virtual bool privateBrowsingEnabled() const = 0;
 
@@ -88,8 +91,6 @@ namespace WebCore {
         virtual void detachedFromParent2() = 0;
         virtual void detachedFromParent3() = 0;
         virtual void detachedFromParent4() = 0;
-
-        virtual void loadedFromCachedPage() = 0;
 
         virtual void assignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader*, const ResourceRequest&) = 0;
 
@@ -193,11 +194,11 @@ namespace WebCore {
         
         virtual void saveDocumentViewToCachedPage(CachedPage*) = 0;
         virtual bool canCachePage() const = 0;
-        virtual void download(ResourceHandle*, const ResourceRequest&, const ResourceResponse&) = 0;
+        virtual void download(ResourceHandle*, const ResourceRequest&, const ResourceRequest&, const ResourceResponse&) = 0;
 
         virtual Frame* createFrame(const KURL& url, const String& name, HTMLFrameOwnerElement* ownerElement,
                                    const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight) = 0;
-        virtual Widget* createPlugin(Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool loadManually) = 0;
+        virtual Widget* createPlugin(const IntSize&, Element*, const KURL&, const Vector<String>&, const Vector<String>&, const String&, bool loadManually) = 0;
         virtual void redirectDataToPlugin(Widget* pluginWidget) = 0;
         
         virtual Widget* createJavaAppletWidget(const IntSize&, Element*, const KURL& baseURL, const Vector<String>& paramNames, const Vector<String>& paramValues) = 0;
@@ -206,6 +207,9 @@ namespace WebCore {
         virtual String overrideMediaType() const = 0;
 
         virtual void windowObjectCleared() const = 0;
+        virtual void didPerformFirstNavigation() const = 0; // "Navigation" here means a transition from one page to another that ends up in the back/forward list.
+        
+        virtual void registerForIconNotification(bool listen = true) = 0;
         
 #if PLATFORM(MAC)
         virtual NSCachedURLResponse* willCacheResponse(DocumentLoader*, unsigned long identifier, NSCachedURLResponse*) const = 0;

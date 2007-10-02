@@ -33,8 +33,9 @@
 #import "WebFrame.h"
 #import "WebFrameBridge.h"
 #import "WebFrameInternal.h"
-#import <WebCore/csshelper.h>
 #import <WebCore/BlockExceptions.h>
+#import <WebCore/ColorMac.h>
+#import <WebCore/CSSHelper.h>
 #import <WebCore/Document.h>
 #import <WebCore/Element.h>
 #import <WebCore/FontData.h>
@@ -94,7 +95,7 @@ static NSFileWrapper *fileWrapperForElement(Element* e)
     const AtomicString& attr = e->getAttribute(srcAttr);
     if (!attr.isEmpty()) {
         NSURL *URL = KURL(e->document()->completeURL(attr.deprecatedString())).getNSURL();
-        wrapper = [[kit(e->document()->frame()) dataSource] _fileWrapperForURL:URL];
+        wrapper = [[kit(e->document()->frame()) _dataSource] _fileWrapperForURL:URL];
     }
     if (!wrapper) {
         RenderImage* renderer = static_cast<RenderImage*>(e->renderer());

@@ -25,7 +25,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifndef __LP64__
 #import <AppKit/AppKit.h>
 
 #import <WebKit/WebBaseNetscapePluginView.h>
@@ -33,7 +33,13 @@
 @class WebFrame;
 @class WebNetscapePluginStream;
 
+// Because the Adobe 7.x Acrobat plug-in has a hard coded check for a view named 
+// "WebNetscapePluginDocumentView", this class must retain the old name in order 
+// for the plug-in to function correctly. (rdar://problem/4699455)
+#define WebNetscapePluginEmbeddedView WebNetscapePluginDocumentView
+
 @interface WebNetscapePluginEmbeddedView : WebBaseNetscapePluginView 
 {
 }
 @end
+#endif

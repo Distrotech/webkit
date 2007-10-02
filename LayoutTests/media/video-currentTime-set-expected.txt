@@ -1,5 +1,0 @@
-EVENT(load)
-EVENT(play)
-EVENT(ended)
-END OF TEST
-

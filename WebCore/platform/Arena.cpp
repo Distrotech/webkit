@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Alternatively, the contents of this file may be used under the terms
  * of either the Mozilla Public License Version 1.1, found at
@@ -84,7 +84,7 @@ static int freelist_count = 0;
       if ((j_) >> 1)                  \
       (_log2) += 1;
 
-int CeilingLog2(unsigned int i) {
+static int CeilingLog2(unsigned int i) {
     int log2;
     CEILING_LOG2(log2,i);
     return log2;
@@ -281,17 +281,6 @@ void FreeArenaPool(ArenaPool *pool)
 void FinishArenaPool(ArenaPool *pool)
 {
     FreeArenaList(pool, &pool->first, true);
-}
-
-void ArenaFinish(void)
-{
-    Arena *a, *next;
-
-    for (a = arena_freelist; a; a = next) {
-        next = a->next;
-        fastFree(a); a = 0;
-    }
-    arena_freelist = NULL;
 }
 
 }

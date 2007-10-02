@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -28,7 +28,6 @@
 #include "ContainerNode.h"
 #include "QualifiedName.h"
 #include "ScrollTypes.h"
-#include "Timer.h"
 
 namespace WebCore {
 
@@ -124,7 +123,6 @@ public:
 
     // convenience methods which ignore exceptions
     void setAttribute(const QualifiedName&, const String& value);
-    void setBooleanAttribute(const QualifiedName& name, bool);
 
     virtual NamedAttrMap* attributes() const;
     NamedAttrMap* attributes(bool readonly) const;
@@ -143,6 +141,8 @@ public:
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
     virtual void recalcStyle(StyleChange = NoChange);
 
+    virtual RenderStyle* computedStyle();
+
     virtual bool childTypeAllowed(NodeType);
 
     virtual Attribute* createAttribute(const QualifiedName& name, StringImpl* value);
@@ -158,10 +158,8 @@ public:
     virtual String target() const { return String(); }
         
     virtual void focus(bool restorePreviousSelection = true);
-    virtual void updateFocusAppearance(bool restorePreviousSelection = false);
+    virtual void updateFocusAppearance(bool restorePreviousSelection);
     void blur();
-    bool needsFocusAppearanceUpdate() const { return m_needsFocusAppearanceUpdate; }
-    void setNeedsFocusAppearanceUpdate(bool b) { m_needsFocusAppearanceUpdate = b; }
 
 #ifndef NDEBUG
     virtual void dump(TextStream* , DeprecatedString ind = "") const;
@@ -183,6 +181,10 @@ public:
     IntSize minimumSizeForResizing() const;
     void setMinimumSizeForResizing(const IntSize&);
 
+    // The following method is called when a Document is restored from the page cache
+    // and the element has registered itself with the Document via registerForDidRestorePageCallback()
+    virtual void didRestoreFromCache() { }
+    
 private:
     ElementRareData* rareData();
     const ElementRareData* rareData() const;
@@ -192,10 +194,8 @@ private:
 
     virtual void updateStyleAttributeIfNeeded() const {}
     
-    void updateFocusAppearanceTimerFired(Timer<Element>*);
-    void stopUpdateFocusAppearanceTimer();
-    Timer<Element> m_updateFocusAppearanceTimer;
-    bool m_needsFocusAppearanceUpdate;
+    void updateFocusAppearanceSoonAfterAttach();
+    void cancelFocusAppearanceUpdate();
 
 protected:
     mutable RefPtr<NamedAttrMap> namedAttrMap;

@@ -30,11 +30,12 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include "CgSupport.h"
 
+#include "FloatConversion.h"
 #include "GraphicsContext.h"
 #include "RenderStyle.h"
 #include "SVGPaintServer.h"
-#include <wtf/Assertions.h>
 #include "SVGRenderStyle.h"
+#include <wtf/Assertions.h>
 
 namespace WebCore {
 
@@ -63,7 +64,7 @@ void applyStrokeStyleToContext(CGContextRef context, RenderStyle* style, const R
     const DashArray& dashes = dashArrayFromRenderingStyle(style);
     double dashOffset = SVGRenderStyle::cssPrimitiveToLength(object, style->svgStyle()->strokeDashOffset(), 0.0);
 
-    CGContextSetLineDash(context, dashOffset, dashes.data(), dashes.size());
+    CGContextSetLineDash(context, narrowPrecisionToCGFloat(dashOffset), dashes.data(), dashes.size());
 }
 
 CGContextRef scratchContext()

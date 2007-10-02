@@ -15,15 +15,15 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
 */
 
 #include "config.h"
 #include "HitTestResult.h"
 
-#include "csshelper.h"
+#include "CSSHelper.h"
 #include "Document.h"
 #include "Frame.h"
 #include "FrameTree.h"
@@ -34,8 +34,8 @@
 #include "HTMLNames.h"
 #include "KURL.h"
 #include "PlatformScrollBar.h"
-#include "RenderObject.h"
 #include "RenderImage.h"
+#include "RenderObject.h"
 #include "SelectionController.h"
 
 #if ENABLE(SVG)
@@ -74,6 +74,18 @@ HitTestResult& HitTestResult::operator=(const HitTestResult& other)
     m_innerURLElement = other.URLElement();
     m_scrollbar = other.scrollbar();
     return *this;
+}
+
+void HitTestResult::setToNonShadowAncestor()
+{
+    Node* node = innerNode();
+    if (node)
+        node = node->shadowAncestorNode();
+    setInnerNode(node);
+    node = innerNonSharedNode();
+    if (node)
+        node = node->shadowAncestorNode();
+    setInnerNonSharedNode(node);
 }
 
 void HitTestResult::setInnerNode(Node* n)

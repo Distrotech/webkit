@@ -26,7 +26,7 @@
 #import "config.h"
 #import "PlatformMouseEvent.h"
 
-#import "Screen.h"
+#import "PlatformScreen.h"
 
 namespace WebCore {
 
@@ -169,6 +169,7 @@ PlatformMouseEvent::PlatformMouseEvent(NSEvent* event)
     , m_altKey([event modifierFlags] & NSAlternateKeyMask)
     , m_metaKey([event modifierFlags] & NSCommandKeyMask)
     , m_timestamp([event timestamp])
+    , m_modifierFlags([event modifierFlags])
     , m_eventNumber([event eventNumber])
 {
 }

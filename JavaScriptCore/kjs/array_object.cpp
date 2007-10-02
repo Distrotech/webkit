@@ -2,7 +2,7 @@
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2003 Apple Computer, Inc.
+ *  Copyright (C) 2003, 2007 Apple Inc. All rights reserved.
  *  Copyright (C) 2003 Peter Kelly (pmk@post.com)
  *  Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
@@ -77,6 +77,7 @@ ArrayInstance::ArrayInstance(JSObject *proto, unsigned initialLength)
   , storageLength(initialLength < sparseArrayCutoff ? initialLength : 0)
   , storage(allocateStorage(storageLength))
 {
+  Collector::reportExtraMemoryCost(storageLength * sizeof(JSValue*));
 }
 
 ArrayInstance::ArrayInstance(JSObject *proto, const List &list)
@@ -90,6 +91,8 @@ ArrayInstance::ArrayInstance(JSObject *proto, const List &list)
   for (unsigned i = 0; i < l; ++i) {
     storage[i] = it++;
   }
+  // When the array is created non-empty its cells are filled so it's really no worse than
+  // a property map. Therefore don't report extra memory cost.
 }
 
 ArrayInstance::~ArrayInstance()
@@ -330,7 +333,7 @@ static int compareByStringForQSort(const void *a, const void *b)
 
 void ArrayInstance::sort(ExecState* exec)
 {
-    size_t lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
+    size_t lengthNotIncludingUndefined = compactForSorting();
       
     ExecState* oldExec = execForCompareByStringForQSort;
     execForCompareByStringForQSort = exec;
@@ -397,7 +400,7 @@ static int compareWithCompareFunctionForQSort(const void *a, const void *b)
 
 void ArrayInstance::sort(ExecState* exec, JSObject* compareFunction)
 {
-    size_t lengthNotIncludingUndefined = pushUndefinedObjectsToEnd(exec);
+    size_t lengthNotIncludingUndefined = compactForSorting();
 
     CompareWithCompareFunctionArguments* oldArgs = compareWithCompareFunctionArguments;
     CompareWithCompareFunctionArguments args(exec, compareFunction);
@@ -422,7 +425,7 @@ void ArrayInstance::sort(ExecState* exec, JSObject* compareFunction)
     compareWithCompareFunctionArguments = oldArgs;
 }
 
-unsigned ArrayInstance::pushUndefinedObjectsToEnd(ExecState *exec)
+unsigned ArrayInstance::compactForSorting()
 {
     JSValue *undefined = jsUndefined();
 
@@ -447,8 +450,8 @@ unsigned ArrayInstance::pushUndefinedObjectsToEnd(ExecState *exec)
     PropertyNameArrayIterator end = sparseProperties.end();
     for (PropertyNameArrayIterator it = sparseProperties.begin(); it != end; ++it) {
         Identifier name = *it;
-        storage[o] = get(exec, name);
-        JSObject::deleteProperty(exec, name);
+        storage[o] = getDirect(name);
+        _prop.remove(name);
         o++;
     }
     
@@ -543,6 +546,11 @@ JSValue* ArrayProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, cons
     for (unsigned int k = 0; k < length; k++) {
         if (k >= 1)
             str += separator;
+        if (str.isNull()) {
+            JSObject *error = Error::create(exec, GeneralError, "Out of memory");
+            exec->setException(error);
+            break;
+        }
 
         JSValue* element = thisObj->get(exec, k);
         if (element->isUndefinedOrNull())
@@ -561,6 +569,11 @@ JSValue* ArrayProtoFunc::callAsFunction(ExecState* exec, JSObject* thisObj, cons
 
         if (id == ToString || id == Join || fallback)
             str += element->toString(exec);
+
+        if (str.isNull()) {
+            JSObject *error = Error::create(exec, GeneralError, "Out of memory");
+            exec->setException(error);
+        }
 
         if (exec->hadException())
             break;

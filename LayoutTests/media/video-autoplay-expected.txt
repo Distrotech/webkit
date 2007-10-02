@@ -1,5 +1,0 @@
-TEST(video.autoplay) OK
-TEST(video.getAttribute('autoplay') != null) OK
-EVENT(play) TEST(!video.paused) OK
-END OF TEST
-

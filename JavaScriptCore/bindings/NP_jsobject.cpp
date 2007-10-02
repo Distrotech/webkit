@@ -24,6 +24,9 @@
  */
 
 #include "config.h"
+
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "NP_jsobject.h"
 
 #include "c_utility.h"
@@ -36,11 +39,11 @@
 using namespace KJS;
 using namespace KJS::Bindings;
 
-static List listFromVariantArgs(ExecState* exec, const NPVariant* args, unsigned argCount)
+static List listFromVariantArgs(ExecState* exec, const NPVariant* args, unsigned argCount, RootObject* rootObject)
 {
     List aList; 
     for (unsigned i = 0; i < argCount; i++)
-        aList.append(convertNPVariantToValue(exec, &args[i]));    
+        aList.append(convertNPVariantToValue(exec, &args[i], rootObject));
     return aList;
 }
 
@@ -123,9 +126,11 @@ bool _NPN_InvokeDefault(NPP, NPObject* o, const NPVariant* args, uint32_t argCou
         if (!funcImp->implementsCall())
             return false;
         
-        List argList = listFromVariantArgs(exec, args, argCount);
+        List argList = listFromVariantArgs(exec, args, argCount, rootObject);
+        rootObject->interpreter()->startTimeoutCheck();
         JSValue *resultV = funcImp->call (exec, funcImp, argList);
-        
+        rootObject->interpreter()->stopTimeoutCheck();
+
         // Convert and return the result of the function call.
         convertValueToNPVariant(exec, resultV, result);
         return true;        
@@ -176,8 +181,10 @@ bool _NPN_Invoke(NPP npp, NPObject* o, NPIdentifier methodName, const NPVariant*
         // Call the function object.
         JSObject *funcImp = static_cast<JSObject*>(func);
         JSObject *thisObj = const_cast<JSObject*>(obj->imp);
-        List argList = listFromVariantArgs(exec, args, argCount);
+        List argList = listFromVariantArgs(exec, args, argCount, rootObject);
+        rootObject->interpreter()->startTimeoutCheck();
         JSValue *resultV = funcImp->call (exec, thisObj, argList);
+        rootObject->interpreter()->stopTimeoutCheck();
 
         // Convert and return the result of the function call.
         convertValueToNPVariant(exec, resultV, result);
@@ -209,7 +216,9 @@ bool _NPN_Evaluate(NPP, NPObject* o, NPString* s, NPVariant* variant)
         NPUTF16* scriptString;
         unsigned int UTF16Length;
         convertNPStringToUTF16(s, &scriptString, &UTF16Length); // requires free() of returned memory
+        rootObject->interpreter()->startTimeoutCheck();
         Completion completion = rootObject->interpreter()->evaluate(UString(), 0, UString((const UChar*)scriptString,UTF16Length));
+        rootObject->interpreter()->stopTimeoutCheck();
         ComplType type = completion.complType();
         
         JSValue* result;
@@ -289,9 +298,9 @@ bool _NPN_SetProperty(NPP, NPObject* o, NPIdentifier propertyName, const NPVaria
         JSLock lock;
         PrivateIdentifier* i = (PrivateIdentifier*)propertyName;
         if (i->isString)
-            obj->imp->put(exec, identifierFromNPIdentifier(i->value.string), convertNPVariantToValue(exec, variant));
+            obj->imp->put(exec, identifierFromNPIdentifier(i->value.string), convertNPVariantToValue(exec, variant, rootObject));
         else
-            obj->imp->put(exec, i->value.number, convertNPVariantToValue(exec, variant));
+            obj->imp->put(exec, i->value.number, convertNPVariantToValue(exec, variant, rootObject));
         return true;
     }
 
@@ -433,3 +442,5 @@ bool _NPN_Enumerate(NPP, NPObject *o, NPIdentifier **identifier, uint32_t *count
     
     return false;
 }
+
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +32,8 @@
 #include "CSSRule.h"
 #include "CSSRuleList.h"
 #include "CSSStyleRule.h"
+#include "CSSStyleSelector.h"
 #include "CSSValueKeywords.h"
-#include "cssstyleselector.h"
 #include "Comment.h"
 #include "DeleteButtonController.h"
 #include "DeprecatedStringList.h"
@@ -51,9 +51,9 @@
 #include "QualifiedName.h"
 #include "Range.h"
 #include "Selection.h"
+#include "TextIterator.h"
 #include "htmlediting.h"
 #include "visible_units.h"
-#include "TextIterator.h"
 
 using namespace std;
 
@@ -63,13 +63,36 @@ using namespace HTMLNames;
 
 static inline bool shouldSelfClose(const Node *node);
 
-static DeprecatedString escapeTextForMarkup(const DeprecatedString &in, bool isAttributeValue)
+class AttributeChange {
+public:
+    AttributeChange()
+        : m_name(nullAtom, nullAtom, nullAtom)
+    {
+    }
+
+    AttributeChange(PassRefPtr<Element> element, const QualifiedName& name, const String& value)
+        : m_element(element), m_name(name), m_value(value)
+    {
+    }
+
+    void apply()
+    {
+        m_element->setAttribute(m_name, m_value);
+    }
+
+private:
+    RefPtr<Element> m_element;
+    QualifiedName m_name;
+    String m_value;
+};
+
+static DeprecatedString escapeTextForMarkup(const String& in, bool isAttributeValue)
 {
     DeprecatedString s = "";
 
     unsigned len = in.length();
     for (unsigned i = 0; i < len; ++i) {
-        switch (in[i].unicode()) {
+        switch (in[i]) {
             case '&':
                 s += "&amp;";
                 break;
@@ -86,11 +109,33 @@ static DeprecatedString escapeTextForMarkup(const DeprecatedString &in, bool isA
                 }
                 // fall through
             default:
-                s += in[i];
+                s += DeprecatedChar(in[i]);
         }
     }
 
     return s;
+}
+    
+static String urlAttributeToQuotedString(String urlString)
+{
+    UChar quoteChar = '"';
+    if (urlString.stripWhiteSpace().startsWith("javascript:", false)) {
+        // minimal escaping for javascript urls
+        if (urlString.contains('"')) {
+            if (urlString.contains('\''))
+                urlString.replace('"', "&quot;");
+            else
+                quoteChar = '\'';
+        }
+    } else
+        // FIXME this does not fully match other browsers. Firefox escapes spaces and other special characters.
+        urlString = escapeTextForMarkup(urlString.deprecatedString(), true);
+
+    String res;
+    res.append(quoteChar);
+    res.append(urlString);
+    res.append(quoteChar);
+    return res;
 }
 
 static String stringValueForRange(const Node *node, const Range *range)
@@ -106,10 +151,10 @@ static String stringValueForRange(const Node *node, const Range *range)
     return str;
 }
 
-static DeprecatedString renderedText(const Node *node, const Range *range)
+static String renderedText(const Node* node, const Range* range)
 {
     if (!node->isTextNode())
-        return DeprecatedString();
+        return String();
 
     ExceptionCode ec;
     const Text* textNode = static_cast<const Text*>(node);
@@ -192,7 +237,7 @@ static String addNamespace(const AtomicString& prefix, const AtomicString& ns, H
     AtomicStringImpl* foundNS = namespaces.get(pre);
     if (foundNS != ns.impl()) {
         namespaces.set(pre, ns.impl());
-        return " xmlns" + (!prefix.isEmpty() ? ":" + prefix : "") + "=\"" + escapeTextForMarkup(ns.deprecatedString(), true) + "\"";
+        return " xmlns" + (!prefix.isEmpty() ? ":" + prefix : "") + "=\"" + escapeTextForMarkup(ns, true) + "\"";
     }
     
     return "";
@@ -212,7 +257,7 @@ static DeprecatedString startMarkup(const Node *node, const Range *range, EAnnot
                     return stringValueForRange(node, range).deprecatedString();
             }
             bool useRenderedText = annotate && !enclosingNodeWithTag(const_cast<Node*>(node), selectTag);
-            DeprecatedString markup = useRenderedText ? escapeTextForMarkup(renderedText(node, range), false) : escapeTextForMarkup(stringValueForRange(node, range).deprecatedString(), false);
+            DeprecatedString markup = escapeTextForMarkup(useRenderedText ? renderedText(node, range) : stringValueForRange(node, range), false);
             return annotate ? convertHTMLTextToInterchangeFormat(markup, static_cast<const Text*>(node)) : markup;
         }
         case Node::COMMENT_NODE:
@@ -245,14 +290,14 @@ static DeprecatedString startMarkup(const Node *node, const Range *range, EAnnot
                 // We'll handle the style attribute separately, below.
                 if (attr->name() == styleAttr && el->isHTMLElement() && (annotate || convertBlocksToInlines))
                     continue;
-                String value = attr->value();
-                // FIXME: Handle case where value has illegal characters in it, like "
                 if (documentIsHTML)
                     markup += " " + attr->name().localName().deprecatedString();
                 else
                     markup += " " + attr->name().toString().deprecatedString();
-                markup += "=\"" + escapeTextForMarkup(value.deprecatedString(), true) + "\"";
-
+                if (el->isURLAttribute(attr))
+                    markup += "=" + urlAttributeToQuotedString(attr->value()).deprecatedString();
+                else
+                    markup += "=\"" + escapeTextForMarkup(attr->value(), true) + "\"";
                 if (!documentIsHTML && namespaces && shouldAddNamespaceAttr(attr, *namespaces))
                     markup += addNamespace(attr->prefix(), attr->namespaceURI(), *namespaces).deprecatedString();
             }
@@ -267,7 +312,7 @@ static DeprecatedString startMarkup(const Node *node, const Range *range, EAnnot
                 if (convertBlocksToInlines)
                     style->setProperty(CSS_PROP_DISPLAY, CSS_VAL_INLINE, true);
                 if (style->length() > 0)
-                    markup += " " +  styleAttr.localName().deprecatedString() + "=\"" + style->cssText().deprecatedString() + "\"";
+                    markup += " style=\"" + escapeTextForMarkup(style->cssText(), true) + "\"";
             }
             
             if (shouldSelfClose(el)) {
@@ -347,27 +392,40 @@ static DeprecatedString markup(Node* startNode, bool onlyIncludeChildren, Vector
     return me;
 }
 
-static void completeURLs(Node *node, const DeprecatedString &baseURL)
+static void completeURLs(Node* node, const String& baseURL)
 {
-    Node *end = node->traverseNextSibling();
-    for (Node *n = node; n != end; n = n->traverseNextNode()) {
+    Vector<AttributeChange> changes;
+
+    KURL baseURLAsKURL(baseURL.deprecatedString());
+
+    Node* end = node->traverseNextSibling();
+    for (Node* n = node; n != end; n = n->traverseNextNode()) {
         if (n->isElementNode()) {
-            Element *e = static_cast<Element*>(n);
-            NamedAttrMap *attrs = e->attributes();
+            Element* e = static_cast<Element*>(n);
+            NamedAttrMap* attrs = e->attributes();
             unsigned length = attrs->length();
             for (unsigned i = 0; i < length; i++) {
-                Attribute *attr = attrs->attributeItem(i);
-                if (e->isURLAttribute(attr))
-                    e->setAttribute(attr->name(), KURL(baseURL, attr->value().deprecatedString()).url());
+                Attribute* attr = attrs->attributeItem(i);
+                if (e->isURLAttribute(attr)) {
+                    String completedURL = KURL(baseURLAsKURL, attr->value().deprecatedString()).url();
+                    changes.append(AttributeChange(e, attr->name(), completedURL));
+                }
             }
         }
     }
+
+    size_t numChanges = changes.size();
+    for (size_t i = 0; i < numChanges; ++i)
+        changes[i].apply();
 }
 
 static bool needInterchangeNewlineAfter(const VisiblePosition& v)
 {
     VisiblePosition next = v.next();
-    return isEndOfParagraph(v) && isStartOfParagraph(next) && !next.deepEquivalent().upstream().node()->hasTagName(brTag);
+    Node* upstreamNode = next.deepEquivalent().upstream().node();
+    Node* downstreamNode = v.deepEquivalent().downstream().node();
+    // Add an interchange newline if a paragraph break is selected and a br won't already be added to the markup to represent it.
+    return isEndOfParagraph(v) && isStartOfParagraph(next) && !(upstreamNode->hasTagName(brTag) && upstreamNode == downstreamNode);
 }
 
 static PassRefPtr<CSSMutableStyleDeclaration> styleFromMatchedRulesAndInlineDecl(Node* node)
@@ -394,7 +452,7 @@ static bool propertyMissingOrEqualToNone(CSSMutableStyleDeclaration* style, int 
     return static_cast<CSSPrimitiveValue*>(value.get())->getIdent() == CSS_VAL_NONE;
 }
 
-bool elementHasTextDecorationProperty(Node* node)
+static bool elementHasTextDecorationProperty(Node* node)
 {
     RefPtr<CSSMutableStyleDeclaration> style = styleFromMatchedRulesAndInlineDecl(node);
     if (!style)
@@ -404,36 +462,49 @@ bool elementHasTextDecorationProperty(Node* node)
 
 // FIXME: Shouldn't we omit style info when annotate == DoNotAnnotateForInterchange? 
 // FIXME: At least, annotation and style info should probably not be included in range.markupString()
-DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotateForInterchange annotate, bool convertBlocksToInlines)
+DeprecatedString createMarkup(const Range* range, Vector<Node*>* nodes, EAnnotateForInterchange annotate, bool convertBlocksToInlines)
 {
-    if (!range || range->isDetached())
-        return DeprecatedString();
-
     static const DeprecatedString interchangeNewlineString = DeprecatedString("<br class=\"") + AppleInterchangeNewline + "\">";
 
-    ExceptionCode ec = 0;
-    if (range->collapsed(ec))
+    if (!range || range->isDetached())
         return "";
-    ASSERT(ec == 0);
-    Node *commonAncestor = range->commonAncestorContainer(ec);
-    ASSERT(ec == 0);
 
-    Document *doc = commonAncestor->document();
-    // disable the delete button so it's elements are not serialized into the markup
-    doc->frame()->editor()->deleteButtonController()->disable();
-    doc->updateLayoutIgnorePendingStylesheets();
+    Document* document = range->ownerDocument();
+    if (!document)
+        return "";
+
+    // Disable the delete button so it's elements are not serialized into the markup,
+    // but make sure neither endpoint is inside the delete user interface.
+    Frame* frame = document->frame();
+    DeleteButtonController* deleteButton = frame ? frame->editor()->deleteButtonController() : 0;
+    RefPtr<Range> updatedRange = avoidIntersectionWithNode(range, deleteButton ? deleteButton->containerElement() : 0);
+    if (deleteButton)
+        deleteButton->disable();
+
+    ExceptionCode ec = 0;
+    bool collapsed = updatedRange->collapsed(ec);
+    ASSERT(ec == 0);
+    if (collapsed)
+        return "";
+    Node* commonAncestor = updatedRange->commonAncestorContainer(ec);
+    ASSERT(ec == 0);
+    if (!commonAncestor)
+        return "";
+
+    document->updateLayoutIgnorePendingStylesheets();
 
     DeprecatedStringList markups;
-    Node *pastEnd = range->pastEndNode();
-    Node *lastClosed = 0;
+    Node* pastEnd = updatedRange->pastEndNode();
+    Node* lastClosed = 0;
     Vector<Node*> ancestorsToClose;
     
-    Node* startNode = range->startNode();
-    VisiblePosition visibleStart(range->startPosition(), VP_DEFAULT_AFFINITY);
-    VisiblePosition visibleEnd(range->endPosition(), VP_DEFAULT_AFFINITY);
+    Node* startNode = updatedRange->startNode();
+    VisiblePosition visibleStart(updatedRange->startPosition(), VP_DEFAULT_AFFINITY);
+    VisiblePosition visibleEnd(updatedRange->endPosition(), VP_DEFAULT_AFFINITY);
     if (annotate && needInterchangeNewlineAfter(visibleStart)) {
         if (visibleStart == visibleEnd.previous()) {
-            doc->frame()->editor()->deleteButtonController()->enable();
+            if (deleteButton)
+                deleteButton->enable();
             return interchangeNewlineString;
         }
 
@@ -441,8 +512,8 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
         startNode = visibleStart.next().deepEquivalent().node();
     }
 
-    Node *next;
-    for (Node *n = startNode; n != pastEnd; n = next) {
+    Node* next;
+    for (Node* n = startNode; n != pastEnd; n = next) {
         next = n->traverseNextNode();
         bool skipDescendants = false;
         bool addMarkupForNode = true;
@@ -462,7 +533,7 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
         
         // Add the node to the markup.
         if (addMarkupForNode) {
-            markups.append(startMarkup(n, range, annotate));
+            markups.append(startMarkup(n, updatedRange.get(), annotate));
             if (nodes)
                 nodes->append(n);
         }
@@ -499,7 +570,7 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
                             continue;
                         // or b) ancestors that we never encountered during a pre-order traversal starting at startNode:
                         ASSERT(startNode->isDescendantOf(parent));
-                        markups.prepend(startMarkup(parent, range, annotate));
+                        markups.prepend(startMarkup(parent, updatedRange.get(), annotate));
                         markups.append(endMarkup(parent));
                         if (nodes)
                             nodes->append(parent);
@@ -514,10 +585,10 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
     
     // Include ancestors that aren't completely inside the range but are required to retain 
     // the structure and appearance of the copied markup.
-    Node *specialCommonAncestor = 0;
-    Node *commonAncestorBlock = commonAncestor ? enclosingBlock(commonAncestor) : 0;
+    Node* specialCommonAncestor = 0;
+    Node* commonAncestorBlock = commonAncestor ? enclosingBlock(commonAncestor) : 0;
     if (annotate && commonAncestorBlock) {
-        if (commonAncestorBlock->hasTagName(tbodyTag)) {
+        if (commonAncestorBlock->hasTagName(tbodyTag) || commonAncestorBlock->hasTagName(trTag)) {
             Node* table = commonAncestorBlock->parentNode();
             while (table && !table->hasTagName(tableTag))
                 table = table->parentNode();
@@ -546,7 +617,7 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
     // FIXME: Only include markup for a fully selected root (and ancestors of lastClosed up to that root) if
     // there are styles/attributes on those nodes that need to be included to preserve the appearance of the copied markup.
     // FIXME: Do this for all fully selected blocks, not just the body.
-    Node* fullySelectedRoot = body && *Selection::selectionFromContentsOfNode(body).toRange() == *range ? body : 0;
+    Node* fullySelectedRoot = body && *Selection::selectionFromContentsOfNode(body).toRange() == *updatedRange ? body : 0;
     if (annotate && fullySelectedRoot)
         specialCommonAncestor = fullySelectedRoot;
         
@@ -562,11 +633,11 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
                     style->setProperty(CSS_PROP_BACKGROUND_IMAGE, "url('" + static_cast<Element*>(fullySelectedRoot)->getAttribute(backgroundAttr) + "')");
                 
                 if (style->length()) {
-                    markups.prepend("<div style='" + style->cssText().deprecatedString() + "'>");
+                    markups.prepend("<div style=\"" + escapeTextForMarkup(style->cssText(), true) + "\">");
                     markups.append("</div>");
                 }
             } else {
-                markups.prepend(startMarkup(ancestor, range, annotate, convertBlocksToInlines));
+                markups.prepend(startMarkup(ancestor, updatedRange.get(), annotate, convertBlocksToInlines));
                 markups.append(endMarkup(ancestor));
             }
             if (nodes)
@@ -583,19 +654,26 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
     Node* parentOfLastClosed = lastClosed ? lastClosed->parentNode() : 0;
     if (parentOfLastClosed && parentOfLastClosed->renderer()) {
         RefPtr<CSSMutableStyleDeclaration> style = computedStyle(parentOfLastClosed)->copyInheritableProperties();
+
         // Styles that Mail blockquotes contribute should only be placed on the Mail blockquote, to help
         // us differentiate those styles from ones that the user has applied.  This helps us
         // get the color of content pasted into blockquotes right.
         removeEnclosingMailBlockquoteStyle(style.get(), parentOfLastClosed);
         
+        // Since we are converting blocks to inlines, remove any inherited block properties that are in the style.
+        // This cuts out meaningless properties and prevents properties from magically affecting blocks later
+        // if the style is cloned for a new block element during a future editing operation.
+        if (convertBlocksToInlines)
+            style->removeBlockProperties();
+
         if (style->length() > 0) {
-            // FIXME: Handle case where style->cssText() has illegal characters in it, like "
-            DeprecatedString openTag = DeprecatedString("<span class=\"") + AppleStyleSpanClass + "\" style=\"" + style->cssText().deprecatedString() + "\">";
+            DeprecatedString openTag = DeprecatedString("<span class=\"") + AppleStyleSpanClass + "\" style=\"" + escapeTextForMarkup(style->cssText(), true) + "\">";
             markups.prepend(openTag);
             markups.append("</span>");
         }
     }
 
+    // FIXME: The interchange newline should be placed in the block that it's in, not after all of the content, unconditionally.
     if (annotate && needInterchangeNewlineAfter(visibleEnd.previous()))
         markups.append(interchangeNewlineString);
 
@@ -606,13 +684,15 @@ DeprecatedString createMarkup(const Range *range, Vector<Node*>* nodes, EAnnotat
     if (lastClosed && annotate && selectedOneOrMoreParagraphs) {
         for (Node *ancestor = lastClosed->parentNode(); ancestor; ancestor = ancestor->parentNode()) {
             if (isMailBlockquote(ancestor)) {
-                markups.prepend(startMarkup(ancestor, range, annotate));
+                markups.prepend(startMarkup(ancestor, updatedRange.get(), annotate));
                 markups.append(endMarkup(ancestor));
             }
         }
     }
 
-    doc->frame()->editor()->deleteButtonController()->enable();
+    if (deleteButton)
+        deleteButton->enable();
+
     return markups.join("");
 }
 
@@ -625,7 +705,7 @@ PassRefPtr<DocumentFragment> createFragmentFromMarkup(Document* document, const 
     RefPtr<DocumentFragment> fragment = element->createContextualFragment(markup);
 
     if (fragment && !baseURL.isEmpty() && baseURL != document->baseURL())
-        completeURLs(fragment.get(), baseURL.deprecatedString());
+        completeURLs(fragment.get(), baseURL);
 
     return fragment.release();
 }
@@ -634,13 +714,27 @@ DeprecatedString createMarkup(const Node* node, EChildrenOnly includeChildren,
     Vector<Node*>* nodes, EAnnotateForInterchange annotate)
 {
     ASSERT(annotate == DoNotAnnotateForInterchange); // annotation not yet implemented for this code path
+
+    if (!node)
+        return "";
+
+    Document* document = node->document();
+    Frame* frame = document->frame();
+    DeleteButtonController* deleteButton = frame ? frame->editor()->deleteButtonController() : 0;
+
     // disable the delete button so it's elements are not serialized into the markup
-    if (node->document()->frame())
-        node->document()->frame()->editor()->deleteButtonController()->disable();
-    node->document()->updateLayoutIgnorePendingStylesheets();
+    if (deleteButton) {
+        if (node->isDescendantOf(deleteButton->containerElement()))
+            return "";
+        deleteButton->disable();
+    }
+
+    document->updateLayoutIgnorePendingStylesheets();
     DeprecatedString result(markup(const_cast<Node*>(node), includeChildren, nodes));
-    if (node->document()->frame())
-        node->document()->frame()->editor()->deleteButtonController()->enable();
+
+    if (deleteButton)
+        deleteButton->enable();
+
     return result;
 }
 

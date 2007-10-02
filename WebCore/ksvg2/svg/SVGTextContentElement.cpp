@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -59,12 +59,12 @@ long SVGTextContentElement::getNumberOfChars() const
 
 float SVGTextContentElement::getComputedTextLength() const
 {
-    return 0.;
+    return 0.0f;
 }
 
 float SVGTextContentElement::getSubStringLength(unsigned long charnum, unsigned long nchars, ExceptionCode&) const
 {
-    return 0.;
+    return 0.0f;
 }
 
 FloatPoint SVGTextContentElement::getStartPositionOfChar(unsigned long charnum, ExceptionCode&) const
@@ -84,7 +84,7 @@ FloatRect SVGTextContentElement::getExtentOfChar(unsigned long charnum, Exceptio
 
 float SVGTextContentElement::getRotationOfChar(unsigned long charnum, ExceptionCode&) const
 {
-    return 0.;
+    return 0.0f;
 }
 
 long SVGTextContentElement::getCharNumAtPosition(const FloatPoint& point) const

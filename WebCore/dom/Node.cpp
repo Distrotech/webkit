@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -153,6 +153,7 @@ Node::Node(Document *doc)
       m_hovered(false),
       m_inActiveChain(false),
       m_inDetach(false),
+      m_dispatchingSimulatedEvent(false),
       m_inSubtreeMark(false)
 {
 #ifndef NDEBUG
@@ -168,11 +169,15 @@ void Node::setDocument(Document* doc)
     if (inDocument() || m_document == doc)
         return;
 
+    willMoveToNewOwnerDocument();
+
     {
         KJS::JSLock lock;
         KJS::ScriptInterpreter::updateDOMNodeDocument(this, m_document.get(), doc);
-    }
+    }    
     m_document = doc;
+
+    didMoveToNewOwnerDocument();
 }
 
 Node::~Node()
@@ -377,6 +382,11 @@ bool Node::isContentRichlyEditable() const
     return parent() && parent()->isContentRichlyEditable();
 }
 
+bool Node::shouldUseInputMethod() const
+{
+    return isContentEditable();
+}
+
 IntRect Node::getRect() const
 {
     int _x, _y;
@@ -429,13 +439,17 @@ void Node::registerNodeList(NodeList* list)
 {
     if (!m_nodeLists)
         m_nodeLists = new NodeListsNodeData;
+    else if (m_nodeLists->m_registeredLists.isEmpty()) 
+        m_nodeLists->m_childNodeListCaches.reset();
+
     m_nodeLists->m_registeredLists.add(list);
+    m_document->addNodeList();
 }
 
 void Node::unregisterNodeList(NodeList* list)
 {
-    if (!m_nodeLists)
-        return;
+    ASSERT(m_nodeLists);
+    m_document->removeNodeList();
     m_nodeLists->m_registeredLists.remove(list);
 }
 
@@ -1005,13 +1019,15 @@ void Node::createRendererIfNeeded()
         ) {
         RenderStyle* style = styleForRenderer(parentRenderer);
         if (rendererIsNeeded(style)) {
-            RenderObject* r = createRenderer(document()->renderArena(), style);
-            if (r && parentRenderer->isChildAllowed(r, style)) {
-                setRenderer(r);
-                renderer()->setStyle(style);
-                parentRenderer->addChild(renderer(), nextRenderer());
-            } else 
-                r->destroy();
+            if (RenderObject* r = createRenderer(document()->renderArena(), style)) {
+                if (!parentRenderer->isChildAllowed(r, style))
+                    r->destroy();
+                else {
+                    setRenderer(r);
+                    renderer()->setStyle(style);
+                    parentRenderer->addChild(renderer(), nextRenderer());
+                }
+            }
         }
         style->deref(document()->renderArena());
     }
@@ -1046,6 +1062,11 @@ void Node::setRenderStyle(RenderStyle* s)
         m_renderer->setStyle(s); 
 }
 
+RenderStyle* Node::computedStyle()
+{
+    return parent() ? parent()->computedStyle() : 0;
+}
+
 int Node::maxOffset() const
 {
     return 1;
@@ -1076,6 +1097,13 @@ int Node::previousOffset (int current) const
 int Node::nextOffset (int current) const
 {
     return renderer() ? renderer()->nextOffset(current) : current + 1;
+}
+
+bool Node::canStartSelection() const
+{
+    if (isContentEditable())
+        return true;
+    return parent() ? parent()->canStartSelection() : true;
 }
 
 Node* Node::shadowAncestorNode()

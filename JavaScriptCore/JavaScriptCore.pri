@@ -6,6 +6,9 @@ INCLUDEPATH += $$PWD $$PWD/kjs $$PWD/bindings $$PWD/bindings/c $$PWD/wtf
 DEFINES -= KJS_IDENTIFIER_HIDE_GLOBALS 
 qt-port:INCLUDEPATH += $$PWD/bindings/qt
 qt-port:DEFINES += BUILDING_QT__
+gtk-port:DEFINES += BUILDING_GTK__
+
+win32-msvc*: INCLUDEPATH += $$PWD/os-win32
 
 include(pcre/pcre.pri)
 
@@ -23,8 +26,9 @@ KEYWORDLUT_FILES += \
 KJSBISON += \
     kjs/grammar.y
 
+gtk-port: SOURCES += wtf/TCSystemAlloc.cpp
+
 SOURCES += \
-    wtf/TCSystemAlloc.cpp \
     wtf/Assertions.cpp \
     wtf/HashTable.cpp \
     wtf/FastMalloc.cpp \
@@ -39,6 +43,15 @@ SOURCES += \
     bindings/c/c_instance.cpp \
     bindings/c/c_runtime.cpp \
     bindings/c/c_utility.cpp \
+    API/JSBase.cpp \
+    API/JSCallbackConstructor.cpp \
+    API/JSCallbackFunction.cpp \
+    API/JSCallbackObject.cpp \
+    API/JSClassRef.cpp \
+    API/JSContextRef.cpp \
+    API/JSObjectRef.cpp \
+    API/JSStringRef.cpp \
+    API/JSValueRef.cpp \
     kjs/DateMath.cpp \
     kjs/JSWrapperObject.cpp \
     kjs/PropertyNameArray.cpp \
@@ -104,7 +117,7 @@ QMAKE_EXTRA_COMPILERS += keywordlut
 
 # GENERATOR 2: bison grammar
 kjsbison.output = tmp/${QMAKE_FILE_BASE}.cpp
-kjsbison.commands = bison -d -p kjsyy ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.tab.c && mv ${QMAKE_FILE_BASE}.tab.c ${QMAKE_FILE_OUT} && mv ${QMAKE_FILE_BASE}.tab.h tmp/${QMAKE_FILE_BASE}.h
+kjsbison.commands = bison -d -p kjsyy ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.tab.c && $(MOVE) ${QMAKE_FILE_BASE}.tab.c ${QMAKE_FILE_OUT} && $(MOVE) ${QMAKE_FILE_BASE}.tab.h tmp/${QMAKE_FILE_BASE}.h
 kjsbison.depend = ${QMAKE_FILE_NAME}
 kjsbison.input = KJSBISON
 kjsbison.variable_out = GENERATED_SOURCES

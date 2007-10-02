@@ -42,6 +42,7 @@
 #import "WebKeyGenerator.h"
 #import "WebKitErrorsPrivate.h"
 #import "WebKitStatisticsPrivate.h"
+#import "WebKitVersionChecks.h"
 #import "WebNSDictionaryExtras.h"
 #import "WebNSObjectExtras.h"
 #import "WebNSPasteboardExtras.h"
@@ -57,14 +58,23 @@
 #import <JavaScriptCore/Assertions.h>
 #import <WebCore/DragController.h>
 #import <WebCore/Frame.h>
+#import <WebCore/FrameView.h>
 #import <WebCore/HistoryItem.h>
 #import <WebCore/Page.h>
+#import <WebCore/ThreadCheck.h>
 #import <WebCore/WebCoreFrameView.h>
 #import <WebCore/WebCoreView.h>
 #import <WebKitSystemInterface.h>
 
+using namespace WebCore;
+
+@interface NSWindow (WindowPrivate)
+- (BOOL)_needsToResetDragMargins;
+- (void)_setNeedsToResetDragMargins:(BOOL)s;
+@end
+
 @interface NSClipView (AppKitSecretsIKnow)
-- (BOOL)_scrollTo:(const NSPoint *)newOrigin; // need the boolean result from this method
+- (BOOL)_scrollTo:(const NSPoint *)newOrigin animate:(BOOL)animate; // need the boolean result from this method
 @end
 
 enum {
@@ -76,8 +86,7 @@ enum {
 - (WebCoreFrameBridge *) webCoreBridge;
 @end
 
-@interface WebFrameViewPrivate : NSObject
-{
+@interface WebFrameViewPrivate : NSObject {
 @public
     WebFrame *webFrame;
     WebDynamicScrollBarsView *frameScrollView;
@@ -154,23 +163,34 @@ enum {
 
 - (void)_setDocumentView:(NSView <WebDocumentView> *)view
 {
-    WebDynamicScrollBarsView *sv = (WebDynamicScrollBarsView *)[self _scrollView];
+    WebDynamicScrollBarsView *sv = [self _scrollView];
     core([self _webView])->dragController()->setDidInitiateDrag(false);
     
     [sv setSuppressLayout:YES];
     
-    // Always start out with arrow.  New docView can then change as needed, but doesn't have to
-    // clean up after the previous docView.  Also TextView will set cursor when added to view
-    // tree, so must do this before setDocumentView:.
-    [sv setDocumentCursor:[NSCursor arrowCursor]];
+    // If the old view is the first responder, transfer first responder status to the new view as 
+    // a convenience and so that we don't leave the window pointing to a view that's no longer in it.
+    NSWindow *window = [sv window];
+    NSResponder *firstResponder = [window firstResponder];
+    bool makeNewViewFirstResponder = [firstResponder isKindOfClass:[NSView class]] && [(NSView *)firstResponder isDescendantOf:[sv documentView]];
 
+    // Suppress the resetting of drag margins since we know we can't affect them.
+    BOOL resetDragMargins = [window _needsToResetDragMargins];
+    [window _setNeedsToResetDragMargins:NO];
     [sv setDocumentView:view];
+    [window _setNeedsToResetDragMargins:resetDragMargins];
+
+    if (makeNewViewFirstResponder)
+        [window makeFirstResponder:view];
     [sv setSuppressLayout:NO];
 }
 
 -(NSView <WebDocumentView> *)_makeDocumentViewForDataSource:(WebDataSource *)dataSource
-{    
-    Class viewClass = [[self class] _viewClassForMIMEType:[[dataSource response] MIMEType]];
+{
+    NSString* MIMEType = [[dataSource response] MIMEType];
+    if (!MIMEType)
+        MIMEType = @"text/html";
+    Class viewClass = [[self class] _viewClassForMIMEType:MIMEType];
     NSView <WebDocumentView> *documentView;
     if (viewClass) {
         // If the dataSource's representation has already been created, and it is also the
@@ -202,7 +222,7 @@ enum {
     _private->webFrame = webFrame;    
 }
 
-- (NSScrollView *)_scrollView
+- (WebDynamicScrollBarsView *)_scrollView
 {
     // this can be called by [super dealloc] when cleaning up the keyview loop,
     // after _private has been nilled out.
@@ -295,6 +315,9 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
         // default.
         if (![defaults boolForKey:WebKitEnableDeferredUpdatesPreferenceKey])
             WKDisableCGDeferredUpdates();
+
+        if (!WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_MAIN_THREAD_EXCEPTIONS))
+            setDefaultThreadViolationBehavior(LogOnFirstThreadViolation);
     }
     
     _private = [[WebFrameViewPrivate alloc] init];
@@ -342,12 +365,18 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
 
 - (void)setAllowsScrolling:(BOOL)flag
 {
-    [(WebDynamicScrollBarsView *)[self _scrollView] setAllowsScrolling:flag];
+    WebDynamicScrollBarsView *scrollView = [self _scrollView];
+    [scrollView setAllowsScrolling:flag];
+    WebCore::Frame *frame = core([self webFrame]);
+    if (WebCore::FrameView *view = frame? frame->view() : 0) {
+        view->setHScrollbarMode((WebCore::ScrollbarMode)[scrollView horizontalScrollingMode]);
+        view->setVScrollbarMode((WebCore::ScrollbarMode)[scrollView verticalScrollingMode]);
+    }
 }
 
 - (BOOL)allowsScrolling
 {
-    return [(WebDynamicScrollBarsView *)[self _scrollView] allowsScrolling];
+    return [[self _scrollView] allowsScrolling];
 }
 
 - (NSView <WebDocumentView> *)documentView
@@ -495,14 +524,14 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
     // did any scrolling or not with the public API.
     NSPoint point = [[self _contentView] bounds].origin;
     point.y += delta;
-    return [[self _contentView] _scrollTo:&point];
+    return [[self _contentView] _scrollTo:&point animate:YES];
 }
 
 - (BOOL)_scrollHorizontallyBy:(float)delta
 {
     NSPoint point = [[self _contentView] bounds].origin;
     point.x += delta;
-    return [[self _contentView] _scrollTo:&point];
+    return [[self _contentView] _scrollTo:&point animate:YES];
 }
 
 - (float)_horizontalKeyboardScrollDistance
@@ -608,7 +637,7 @@ static inline void addTypesFromClass(NSMutableDictionary *allTypes, Class objCCl
     NSString *characters = [event characters];
     int index, count;
     BOOL callSuper = YES;
-    BOOL maintainsBackForwardList = core([self webFrame])->page()->backForwardList() ? YES : NO;
+    BOOL maintainsBackForwardList = core([self webFrame])->page()->backForwardList()->enabled() ? YES : NO;
     
     count = [characters length];
     for (index = 0; index < count; ++index) {

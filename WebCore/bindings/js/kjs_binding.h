@@ -17,12 +17,13 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef kjs_binding_h
 #define kjs_binding_h
 
+#include <kjs/function.h>
 #include <kjs/lookup.h>
 #include <wtf/Noncopyable.h>
 
@@ -31,11 +32,13 @@
 #endif
 
 namespace WebCore {
+    class AtomicString;
     class Document;
     class Event;
     class Frame;
     class Node;
     class String;
+    class JSNode;
 
     typedef int ExceptionCode;
 
@@ -60,11 +63,7 @@ namespace KJS {
 #ifndef NDEBUG
         virtual ~DOMObject();
 #endif
-    public:
-        virtual UString toString(ExecState*) const;
     };
-
-    class DOMNode;
 
     /**
      * We inherit from Interpreter, to save a pointer to the HTML part
@@ -79,8 +78,8 @@ namespace KJS {
         static void putDOMObject(void* objectHandle, DOMObject*);
         static void forgetDOMObject(void* objectHandle);
 
-        static DOMNode *getDOMNodeForDocument(WebCore::Document*, WebCore::Node*);
-        static void putDOMNodeForDocument(WebCore::Document*, WebCore::Node*, DOMNode *nodeWrapper);
+        static WebCore::JSNode* getDOMNodeForDocument(WebCore::Document*, WebCore::Node*);
+        static void putDOMNodeForDocument(WebCore::Document*, WebCore::Node*, WebCore::JSNode* nodeWrapper);
         static void forgetDOMNodeForDocument(WebCore::Document*, WebCore::Node*);
         static void forgetAllDOMNodesForDocument(WebCore::Document*);
         static void updateDOMNodeDocument(WebCore::Node*, WebCore::Document* oldDoc, WebCore::Document* newDoc);
@@ -168,11 +167,16 @@ namespace KJS {
     JSValue* jsStringOrNull(const WebCore::String&); // null if the string is null
     JSValue* jsStringOrUndefined(const WebCore::String&); // undefined if the string is null
     JSValue* jsStringOrFalse(const WebCore::String&); // boolean false if the string is null
+
+    // see JavaScriptCore for explanation should be used for UString that is already owned
+    // by another object, so that collecting the JSString wrapper is unlikely to save memory.
+    JSValue* jsOwnedStringOrNull(const KJS::UString&); 
+
     WebCore::String valueToStringWithNullCheck(ExecState*, JSValue*); // null String if the value is null
     WebCore::String valueToStringWithUndefinedOrNullCheck(ExecState*, JSValue*); // null String if the value is null or undefined
 
     template <typename T> inline JSValue* toJS(ExecState* exec, PassRefPtr<T> ptr) { return toJS(exec, ptr.get()); }
-  
+
 } // namespace
 
 #endif

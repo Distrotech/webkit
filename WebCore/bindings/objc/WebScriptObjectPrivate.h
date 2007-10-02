@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2004 Apple Computer, Inc. All rights reserved.    
+    Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.    
 */
 #ifndef _WEB_SCRIPT_OBJECT_PRIVATE_H_
 #define _WEB_SCRIPT_OBJECT_PRIVATE_H_
@@ -24,6 +24,7 @@ namespace WebCore {
 - (id)_init;
 - (id)_initWithJSObject:(KJS::JSObject*)imp originRootObject:(PassRefPtr<KJS::Bindings::RootObject>)originRootObject rootObject:(PassRefPtr<KJS::Bindings::RootObject>)rootObject;
 - (void)_setImp:(KJS::JSObject*)imp originRootObject:(PassRefPtr<KJS::Bindings::RootObject>)originRootObject rootObject:(PassRefPtr<KJS::Bindings::RootObject>)rootObject;
+- (void)_setOriginRootObject:(PassRefPtr<KJS::Bindings::RootObject>)originRootObject andRootObject:(PassRefPtr<KJS::Bindings::RootObject>)rootObject;
 - (void)_initializeScriptDOMNodeImp;
 - (KJS::JSObject *)_imp;
 - (BOOL)_hasImp;

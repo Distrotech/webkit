@@ -21,8 +21,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #ifndef FramePrivate_h
@@ -63,6 +63,8 @@ namespace WebCore {
 
     class UserStyleSheetLoader;
 
+    typedef HashMap<void*, RefPtr<KJS::Bindings::RootObject> > RootObjectMap;
+    
     class FramePrivate {
     public:
         FramePrivate(Page*, Frame* parent, Frame* thisFrame, HTMLFrameOwnerElement*, FrameLoaderClient*);
@@ -77,8 +79,6 @@ namespace WebCore {
         RefPtr<Document> m_doc;
 
         KJSProxy* m_jscript;
-
-        Settings* m_settings;
 
         String m_kjsStatusBarText;
         String m_kjsDefaultStatusBarText;
@@ -97,7 +97,7 @@ namespace WebCore {
         bool m_caretVisible : 1;
         bool m_caretPaint : 1;
         bool m_isActive : 1;
-        bool m_useSecureKeyboardEntryWhenActive : 1;
+        bool m_isPainting : 1;
 
         RefPtr<CSSMutableStyleDeclaration> m_typingStyle;
 
@@ -110,8 +110,6 @@ namespace WebCore {
         RefPtr<Node> m_elementToDraw;
         PaintRestriction m_paintRestriction;
         
-        bool m_markedTextUsesUnderlines;
-        Vector<MarkedTextUnderline> m_markedTextUnderlines;
         bool m_highlightTextMatches;
         bool m_windowHasFocus;
         
@@ -121,14 +119,12 @@ namespace WebCore {
 
         bool m_prohibitsScrolling;
 
-        RefPtr<Range> m_markedTextRange;
-
         // The root object used for objects bound outside the context of a plugin.
         RefPtr<KJS::Bindings::RootObject> m_bindingRootObject; 
-        Vector<RefPtr<KJS::Bindings::RootObject> > m_rootObjects;
+        RootObjectMap m_rootObjects;
         NPObject* m_windowScriptNPObject;
 #if PLATFORM(MAC)
-        WebScriptObject* m_windowScriptObject;
+        RetainPtr<WebScriptObject> m_windowScriptObject;
         WebCoreFrameBridge* m_bridge;
 #endif
     };

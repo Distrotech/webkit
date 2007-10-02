@@ -41,7 +41,7 @@ my $nightlyLauncherStagingPath = productDir() . "/WebKit.app";
 my $droseraStagingPath = productDir() . "/DroseraLauncher.app";
 my $nightlyLauncherDiskImagePath;
 
-my $nightlyRemoteHost = 'webkit-nightlies@nightly.webkit.org';
+my $nightlyRemoteHost = 'webkit-nightlies@live.nightly.webkit.org';
 my $nightlyRemotePath = "/home/webkit-nightlies";
 my $nightlyRemoteLatestPath = "$nightlyRemotePath/update-latest.sh";
 
@@ -107,7 +107,7 @@ GetOptions('upload-to-host=s' => \$uploadTo,
            'tag=s' => \$buildTag);
 
 if ($buildTag ne 'mac') {
-    $buildTag = 'mac-' . $buildTag;
+    $buildTag = "mac-" . $buildTag;
 }
 
 chdirWebKit();

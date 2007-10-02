@@ -19,8 +19,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -34,6 +34,7 @@
 #include "Length.h"
 #include "MouseEvent.h"
 #include "RenderFrameSet.h"
+#include "Text.h"
 
 namespace WebCore {
 
@@ -67,6 +68,8 @@ bool HTMLFrameSetElement::checkDTD(const Node* newChild)
 {
     // FIXME: Old code had adjacent double returns and seemed to want to do something with NOFRAMES (but didn't).
     // What is the correct behavior?
+    if (newChild->isTextNode())
+        return static_cast<const Text*>(newChild)->containsOnlyWhitespace();
     return newChild->hasTagName(framesetTag) || newChild->hasTagName(frameTag);
 }
 

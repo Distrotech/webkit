@@ -58,7 +58,7 @@ bool initFontData(FontData* fontData)
     if (ATSUCreateStyle(&fontStyle) != noErr)
         return false;
     
-    ATSUFontID fontId = wkGetNSFontATSUFontId(fontData->m_font.font);
+    ATSUFontID fontId = wkGetNSFontATSUFontId(fontData->m_font.font());
     if (!fontId) {
         ATSUDisposeStyle(fontStyle);
         return false;
@@ -87,7 +87,7 @@ static NSString *webFallbackFontFamily(void)
 {
     static RetainPtr<NSString> webFallbackFontFamily = nil;
     if (!webFallbackFontFamily)
-        webFallbackFontFamily = [[NSFont systemFontOfSize:16.0] familyName];
+        webFallbackFontFamily = [[NSFont systemFontOfSize:16.0f] familyName];
     return webFallbackFontFamily.get();
 }
 
@@ -111,7 +111,7 @@ void FontData::platformInit()
         // It overrides the normal "Times" family font.
         // It also appears to have a corrupt regular variant.
         NSString *fallbackFontFamily;
-        if ([[m_font.font familyName] isEqual:@"Times"])
+        if ([[m_font.font() familyName] isEqual:@"Times"])
             fallbackFontFamily = @"Times New Roman";
         else
             fallbackFontFamily = webFallbackFontFamily();
@@ -119,11 +119,11 @@ void FontData::platformInit()
         // Try setting up the alternate font.
         // This is a last ditch effort to use a substitute font when something has gone wrong.
 #if !ERROR_DISABLED
-        NSFont *initialFont = m_font.font;
+        RetainPtr<NSFont> initialFont = m_font.font();
 #endif
-        m_font.font = [[NSFontManager sharedFontManager] convertFont:m_font.font toFamily:fallbackFontFamily];
+        m_font.setFont([[NSFontManager sharedFontManager] convertFont:m_font.font() toFamily:fallbackFontFamily]);
 #if !ERROR_DISABLED
-        NSString *filePath = wkPathFromFont(initialFont);
+        NSString *filePath = wkPathFromFont(initialFont.get());
         if (!filePath)
             filePath = @"not known";
 #endif
@@ -131,37 +131,37 @@ void FontData::platformInit()
             if ([fallbackFontFamily isEqual:@"Times New Roman"]) {
                 // OK, couldn't setup Times New Roman as an alternate to Times, fallback
                 // on the system font.  If this fails we have no alternative left.
-                m_font.font = [[NSFontManager sharedFontManager] convertFont:m_font.font toFamily:webFallbackFontFamily()];
+                m_font.setFont([[NSFontManager sharedFontManager] convertFont:m_font.font() toFamily:webFallbackFontFamily()]);
                 if (!initFontData(this)) {
                     // We tried, Times, Times New Roman, and the system font. No joy. We have to give up.
-                    LOG_ERROR("unable to initialize with font %@ at %@", initialFont, filePath);
+                    LOG_ERROR("unable to initialize with font %@ at %@", initialFont.get(), filePath);
                     failedSetup = true;
                 }
             } else {
                 // We tried the requested font and the system font. No joy. We have to give up.
-                LOG_ERROR("unable to initialize with font %@ at %@", initialFont, filePath);
+                LOG_ERROR("unable to initialize with font %@ at %@", initialFont.get(), filePath);
                 failedSetup = true;
             }
         }
 
         // Report the problem.
         LOG_ERROR("Corrupt font detected, using %@ in place of %@ located at \"%@\".",
-            [m_font.font familyName], [initialFont familyName], filePath);
+            [m_font.font() familyName], [initialFont.get() familyName], filePath);
     }
 
     // If all else fails, try to set up using the system font.
     // This is probably because Times and Times New Roman are both unavailable.
     if (failedSetup) {
-        m_font.font = [NSFont systemFontOfSize:[m_font.font pointSize]];
-        LOG_ERROR("failed to set up font, using system font %s", m_font.font);
+        m_font.setFont([NSFont systemFontOfSize:[m_font.font() pointSize]]);
+        LOG_ERROR("failed to set up font, using system font %s", m_font.font());
         initFontData(this);
     }
     
     int iAscent;
     int iDescent;
     int iLineGap;
-    wkGetFontMetrics(m_font.font, &iAscent, &iDescent, &iLineGap, &m_unitsPerEm); 
-    float pointSize = [m_font.font pointSize];
+    wkGetFontMetrics(wkGetCGFontFromNSFont(m_font.font()), &iAscent, &iDescent, &iLineGap, &m_unitsPerEm); 
+    float pointSize = [m_font.font() pointSize];
     float fAscent = scaleEmToUnits(iAscent, m_unitsPerEm) * pointSize;
     float fDescent = -scaleEmToUnits(iDescent, m_unitsPerEm) * pointSize;
     float fLineGap = scaleEmToUnits(iLineGap, m_unitsPerEm) * pointSize;
@@ -171,7 +171,7 @@ void FontData::platformInit()
     // web standard. The AppKit adjustment of 20% is too big and is
     // incorrectly added to line spacing, so we use a 15% adjustment instead
     // and add it to the ascent.
-    NSString *familyName = [m_font.font familyName];
+    NSString *familyName = [m_font.font() familyName];
     if ([familyName isEqualToString:@"Times"] || [familyName isEqualToString:@"Helvetica"] || [familyName isEqualToString:@"Courier"])
         fAscent += floorf(((fAscent + fDescent) * 0.15f) + 0.5f);
 
@@ -180,20 +180,26 @@ void FontData::platformInit()
     m_lineGap = lroundf(fLineGap);
     m_lineSpacing = m_ascent + m_descent + m_lineGap;
     
+    // Hack Hiragino line metrics to allow room for marked text underlines.
+    // <rdar://problem/5386183>
+    if (m_descent < 3 && m_lineGap >= 3 && [familyName hasPrefix:@"Hiragino"]) {
+        m_lineGap -= 3 - m_descent;
+        m_descent = 3;
+    }
+    
     // Measure the actual character "x", because AppKit synthesizes X height rather than getting it from the font.
     // Unfortunately, NSFont will round this for us so we don't quite get the right value.
-    NSGlyph xGlyph = GlyphPageTreeNode::getRootChild(this, 0)->page()->glyphDataForCharacter('x').glyph;
+    GlyphPage* glyphPageZero = GlyphPageTreeNode::getRootChild(this, 0)->page();
+    NSGlyph xGlyph = glyphPageZero ? glyphPageZero->glyphDataForCharacter('x').glyph : 0;
     if (xGlyph) {
-        NSRect xBox = [m_font.font boundingRectForGlyph:xGlyph];
+        NSRect xBox = [m_font.font() boundingRectForGlyph:xGlyph];
         // Use the maximum of either width or height because "x" is nearly square
         // and web pages that foolishly use this metric for width will be laid out
         // poorly if we return an accurate height. Classic case is Times 13 point,
         // which has an "x" that is 7x6 pixels.
         m_xHeight = MAX(NSMaxX(xBox), NSMaxY(xBox));
     } else
-        m_xHeight = [m_font.font xHeight];
-
-    [m_font.font retain];
+        m_xHeight = [m_font.font() xHeight];
 }
 
 void FontData::platformDestroy()
@@ -203,31 +209,29 @@ void FontData::platformDestroy()
 
     if (m_ATSUStyleInitialized)
         ATSUDisposeStyle(m_ATSUStyle);
-        
-    [m_font.font release];
 }
 
 FontData* FontData::smallCapsFontData(const FontDescription& fontDescription) const
 {
     if (!m_smallCapsFontData) {
         NS_DURING
-            float size = [m_font.font pointSize] * smallCapsFontSizeMultiplier;
-            FontPlatformData smallCapsFont([[NSFontManager sharedFontManager] convertFont:m_font.font toSize:size]);
+            float size = [m_font.font() pointSize] * smallCapsFontSizeMultiplier;
+            FontPlatformData smallCapsFont([[NSFontManager sharedFontManager] convertFont:m_font.font() toSize:size]);
             
             // AppKit resets the type information (screen/printer) when you convert a font to a different size.
             // We have to fix up the font that we're handed back.
-            smallCapsFont.font = fontDescription.usePrinterFont() ? [smallCapsFont.font printerFont] : [smallCapsFont.font screenFont];
+            smallCapsFont.setFont(fontDescription.usePrinterFont() ? [smallCapsFont.font() printerFont] : [smallCapsFont.font() screenFont]);
 
-            if (smallCapsFont.font) {
+            if (smallCapsFont.font()) {
                 NSFontManager *fontManager = [NSFontManager sharedFontManager];
-                NSFontTraitMask fontTraits = [fontManager traitsOfFont:m_font.font];
+                NSFontTraitMask fontTraits = [fontManager traitsOfFont:m_font.font()];
 
                 if (m_font.syntheticBold)
                     fontTraits |= NSBoldFontMask;
                 if (m_font.syntheticOblique)
                     fontTraits |= NSItalicFontMask;
 
-                NSFontTraitMask smallCapsFontTraits = [fontManager traitsOfFont:smallCapsFont.font];
+                NSFontTraitMask smallCapsFontTraits = [fontManager traitsOfFont:smallCapsFont.font()];
                 smallCapsFont.syntheticBold = (fontTraits & NSBoldFontMask) && !(smallCapsFontTraits & NSBoldFontMask);
                 smallCapsFont.syntheticOblique = (fontTraits & NSItalicFontMask) && !(smallCapsFontTraits & NSItalicFontMask);
 
@@ -243,7 +247,7 @@ FontData* FontData::smallCapsFontData(const FontDescription& fontDescription) co
 bool FontData::containsCharacters(const UChar* characters, int length) const
 {
     NSString *string = [[NSString alloc] initWithCharactersNoCopy:(UniChar*)characters length:length freeWhenDone:NO];
-    NSCharacterSet *set = [[m_font.font coveredCharacterSet] invertedSet];
+    NSCharacterSet *set = [[m_font.font() coveredCharacterSet] invertedSet];
     bool result = set && [string rangeOfCharacterFromSet:set].location == NSNotFound;
     [string release];
     return result;
@@ -251,28 +255,33 @@ bool FontData::containsCharacters(const UChar* characters, int length) const
 
 void FontData::determinePitch()
 {
-    NSFont* f = m_font.font;
+    NSFont* f = m_font.font();
     // Special case Osaka-Mono.
     // According to <rdar://problem/3999467>, we should treat Osaka-Mono as fixed pitch.
     // Note that the AppKit does not report Osaka-Mono as fixed pitch.
 
     // Special case MS-PGothic.
-    // According to <rdar://problem/4032938, we should not treat MS-PGothic as fixed pitch.
+    // According to <rdar://problem/4032938>, we should not treat MS-PGothic as fixed pitch.
     // Note that AppKit does report MS-PGothic as fixed pitch.
 
+    // Special case MonotypeCorsiva
+    // According to <rdar://problem/5454704>, we should not treat MonotypeCorsiva as fixed pitch.
+    // Note that AppKit does report MonotypeCorsiva as fixed pitch.
+
     NSString *name = [f fontName];
-    m_treatAsFixedPitch = ([f isFixedPitch] || [f _isFakeFixedPitch] || 
-           [name caseInsensitiveCompare:@"Osaka-Mono"] == NSOrderedSame) && 
-          ![name caseInsensitiveCompare:@"MS-PGothic"] == NSOrderedSame;
+    m_treatAsFixedPitch = ([f isFixedPitch] || [f _isFakeFixedPitch] ||
+           [name caseInsensitiveCompare:@"Osaka-Mono"] == NSOrderedSame) &&
+           [name caseInsensitiveCompare:@"MS-PGothic"] != NSOrderedSame &&
+           [name caseInsensitiveCompare:@"MonotypeCorsiva"] != NSOrderedSame;
 }
 
 float FontData::platformWidthForGlyph(Glyph glyph) const
 {
-    NSFont *font = m_font.font;
+    NSFont *font = m_font.font();
     float pointSize = [font pointSize];
     CGAffineTransform m = CGAffineTransformMakeScale(pointSize, pointSize);
     CGSize advance;
-    if (!wkGetGlyphTransformedAdvances(font, &m, &glyph, &advance)) {
+    if (!wkGetGlyphTransformedAdvances(wkGetCGFontFromNSFont(font), font, &m, &glyph, &advance)) {
         LOG_ERROR("Unable to cache glyph widths for %@ %f", [font displayName], pointSize);
         advance.width = 0;
     }
@@ -285,9 +294,9 @@ void FontData::checkShapesArabic() const
 
     m_checkedShapesArabic = true;
     
-    ATSUFontID fontID = wkGetNSFontATSUFontId(m_font.font);
+    ATSUFontID fontID = wkGetNSFontATSUFontId(m_font.font());
     if (!fontID) {
-        LOG_ERROR("unable to get ATSUFontID for %@", m_font.font);
+        LOG_ERROR("unable to get ATSUFontID for %@", m_font.font());
         return;
     }
 

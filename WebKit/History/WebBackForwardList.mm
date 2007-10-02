@@ -29,23 +29,25 @@
 #import "WebBackForwardList.h"
 #import "WebBackForwardListInternal.h"
 
+#import "WebFrameInternal.h"
 #import "WebHistoryItemInternal.h"
 #import "WebHistoryItemPrivate.h"
 #import "WebKitLogging.h"
-#import "WebKitSystemBits.h"
 #import "WebNSObjectExtras.h"
 #import "WebPreferencesPrivate.h"
 #import "WebTypesInternal.h"
+#import "WebViewPrivate.h"
 #import <JavaScriptCore/Assertions.h>
 #import <WebCore/BackForwardList.h>
 #import <WebCore/HistoryItem.h>
+#import <WebCore/Page.h>
+#import <WebCore/PageCache.h>
+#import <WebCore/Settings.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <wtf/RetainPtr.h>
 
-using WebCore::BackForwardList;
-using WebCore::HistoryItem;
-using WebCore::HistoryItemVector;
+using namespace WebCore;
 
 static HashMap<BackForwardList*, WebBackForwardList*>& backForwardLists()
 {
@@ -74,24 +76,6 @@ WebBackForwardList *kit(BackForwardList* backForwardList)
     return [[[WebBackForwardList alloc] initWithBackForwardList:backForwardList] autorelease];
 }
 
-+ (void)setDefaultPageCacheSizeIfNecessary
-{
-    static bool initialized = false;
-    if (initialized)
-        return;
-
-    vm_size_t memSize = WebSystemMainMemory();
-    unsigned s = [[WebPreferences standardPreferences] _pageCacheSize];
-    if (memSize >= 1024 * 1024 * 1024)
-        BackForwardList::setDefaultPageCacheSize(s);
-    else if (memSize >= 512 * 1024 * 1024)
-        BackForwardList::setDefaultPageCacheSize(s - 1);
-    else 
-        BackForwardList::setDefaultPageCacheSize(s - 2);
-        
-    initialized = true;
-}
-
 - (id)initWithBackForwardList:(PassRefPtr<BackForwardList>)backForwardList
 {   
     WebCoreThreadViolationCheck();
@@ -117,7 +101,8 @@ WebBackForwardList *kit(BackForwardList* backForwardList)
 
 - (id)init
 {
-    return [self initWithBackForwardList:new BackForwardList];
+    RefPtr<BackForwardList> coreList(new BackForwardList(0));
+    return [self initWithBackForwardList:coreList.release()];
 }
 
 - (void)dealloc
@@ -267,14 +252,14 @@ static NSArray* vectorToNSArray(HistoryItemVector& list)
     return result;
 }
 
-- (void)setPageCacheSize:(unsigned)size
+- (void)setPageCacheSize:(NSUInteger)size
 {
-    core(self)->setPageCacheSize(size);
+    [kit(core(self)->page()) setUsesPageCache:size != 0];
 }
 
-- (unsigned)pageCacheSize
+- (NSUInteger)pageCacheSize
 {
-    return core(self)->pageCacheSize();
+    return [kit(core(self)->page()) usesPageCache] ? pageCache()->capacity() : 0;
 }
 
 - (int)backListCount

@@ -102,6 +102,12 @@ namespace WebCore {
         virtual void scrollBackingStore(int, int, const IntRect&, const IntRect&);
         virtual void updateBackingStore();
 
+        virtual void mouseDidMoveOverElement(const HitTestResult&, unsigned modifierFlags);
+
+        virtual void setToolTip(const String&);
+
+        virtual void print(Frame*);
+
         QWebPage* m_webPage;
     };
 }

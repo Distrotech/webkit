@@ -45,6 +45,11 @@ typedef QPainter PlatformGraphicsContext;
 typedef void PlatformGraphicsContext;
 #endif
 
+#if PLATFORM(GTK)
+typedef struct _GdkDrawable GdkDrawable;
+typedef struct _GdkEventExpose GdkEventExpose;
+#endif
+
 #if PLATFORM(WIN)
 typedef struct HDC__* HDC;
 #endif
@@ -116,16 +121,23 @@ namespace WebCore {
         void strokeRect(const FloatRect&, float lineWidth);
 
         void drawImage(Image*, const IntPoint&, CompositeOperator = CompositeSourceOver);
-        void drawImage(Image*, const IntRect&, CompositeOperator = CompositeSourceOver);
+        void drawImage(Image*, const IntRect&, CompositeOperator = CompositeSourceOver, bool useLowQualityScale = false);
         void drawImage(Image*, const IntPoint& destPoint, const IntRect& srcRect, CompositeOperator = CompositeSourceOver);
-        void drawImage(Image*, const IntRect& destRect, const IntRect& srcRect, CompositeOperator = CompositeSourceOver);
+        void drawImage(Image*, const IntRect& destRect, const IntRect& srcRect, CompositeOperator = CompositeSourceOver, bool useLowQualityScale = false);
         void drawImage(Image*, const FloatRect& destRect, const FloatRect& srcRect = FloatRect(0, 0, -1, -1),
-                       CompositeOperator = CompositeSourceOver);
+                       CompositeOperator = CompositeSourceOver, bool useLowQualityScale = false);
         void drawTiledImage(Image*, const IntRect& destRect, const IntPoint& srcPoint, const IntSize& tileSize,
                        CompositeOperator = CompositeSourceOver);
         void drawTiledImage(Image*, const IntRect& destRect, const IntRect& srcRect, 
                             Image::TileRule hRule = Image::StretchTile, Image::TileRule vRule = Image::StretchTile,
                             CompositeOperator = CompositeSourceOver);
+#if PLATFORM(CG)
+        void setUseLowQualityImageInterpolation(bool = true);
+        bool useLowQualityImageInterpolation() const;
+#else
+        void setUseLowQualityImageInterpolation(bool = true) {}
+        bool useLowQualityImageInterpolation() const { return false; }
+#endif
 
         void clip(const IntRect&);
         void addRoundedRectClip(const IntRect&, const IntSize& topLeft, const IntSize& topRight, const IntSize& bottomLeft, const IntSize& bottomRight);
@@ -143,6 +155,7 @@ namespace WebCore {
 
         void drawText(const TextRun&, const IntPoint&, int from = 0, int to = -1);
         void drawText(const TextRun&, const IntPoint&, const TextStyle&, int from = 0, int to = -1);
+        void drawBidiText(const TextRun&, const IntPoint&, const TextStyle&);
         void drawHighlightForText(const TextRun&, const IntPoint&, int h, const TextStyle&, const Color& backgroundColor, int from = 0, int to = -1);
 
         FloatRect roundToDevicePixels(const FloatRect&);
@@ -177,9 +190,10 @@ namespace WebCore {
         void setCompositeOperation(CompositeOperator);
 
         void beginPath();
-        void addPath(const Path& path);
+        void addPath(const Path&);
 
         void clip(const Path&);
+        void clipOut(const Path&);
 
         void scale(const FloatSize&);
         void rotate(float angleInRadians);
@@ -199,6 +213,13 @@ namespace WebCore {
 #if PLATFORM(QT)
         void setFillRule(WindRule);
         PlatformPath* currentPath();
+#endif
+
+#if PLATFORM(GTK)
+        void setGdkExposeEvent(GdkEventExpose*);
+        GdkDrawable* gdkDrawable() const;
+        GdkEventExpose* gdkExposeEvent() const;
+        IntPoint translatePoint(const IntPoint&) const;
 #endif
 
     private:

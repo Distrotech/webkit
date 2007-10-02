@@ -30,6 +30,8 @@
 #if PLATFORM(CG)
 
 #include "GraphicsContext.h"
+#include "ImageObserver.h"
+#include <wtf/MathExtras.h>
 
 using namespace std;
 
@@ -131,7 +133,7 @@ void PDFDocumentImage::setCurrentPage(int page)
         m_cropBox = m_mediaBox;
 
     // get page rotation angle
-    m_rotation = CGPDFPageGetRotationAngle(cgPage) * M_PI / 180.0; // to radians
+    m_rotation = CGPDFPageGetRotationAngle(cgPage) * piFloat / 180.0f; // to radians
 }
 
 int PDFDocumentImage::pageCount() const
@@ -166,8 +168,11 @@ void PDFDocumentImage::draw(GraphicsContext* context, const FloatRect& dstRect, 
     // Media box may have non-zero origin which we ignore. Pass 1 for the page number.
     CGContextDrawPDFDocument(context->platformContext(), FloatRect(FloatPoint(), m_mediaBox.size()),
         m_document, m_currentPage + 1);
-
+    
     context->restore();
+
+    if (imageObserver())
+        imageObserver()->didDraw(this);
 }
 
 }

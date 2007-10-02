@@ -32,9 +32,11 @@
 
 @class WebTextCompleteController;
 @class DOMDocumentFragment;
+@class DOMElement;
 
 namespace WebCore {
     class KeyboardEvent;
+    class CachedImage;
 }
 
 struct WebHTMLViewInterpretKeyEventsParameters;
@@ -45,9 +47,9 @@ struct WebHTMLViewInterpretKeyEventsParameters;
     BOOL closed;
     BOOL needsLayout;
     BOOL needsToApplyStyles;
-    BOOL showsURLsInToolTips;
     BOOL ignoringMouseDraggedEvents;
     BOOL printing;
+    BOOL avoidingPrintOrphan;
     
     id savedSubviews;
     BOOL subviewsSetAside;
@@ -85,10 +87,21 @@ struct WebHTMLViewInterpretKeyEventsParameters;
     BOOL transparentBackground;
 
     WebHTMLViewInterpretKeyEventsParameters *interpretKeyEventsParameters;
-
+    BOOL receivedNOOP;
+    
     NSTextView *firstResponderTextViewAtMouseDownTime;
     
     WebDataSource *dataSource;
+    WebCore::CachedImage *promisedDragTIFFDataSource;
+    
+    CFRunLoopTimerRef updateActiveStateTimer;
+    CFRunLoopTimerRef updateMouseoverTimer;
+
+    SEL selectorForDoCommandBySelector;
+
+#ifndef NDEBUG
+    BOOL enumeratingSubviews;
+#endif
 }
 - (void)clear;
 @end
@@ -98,8 +111,10 @@ struct WebHTMLViewInterpretKeyEventsParameters;
 - (void)_updateFontPanel;
 - (BOOL)_canSmartCopyOrDelete;
 - (BOOL)_textViewWasFirstResponderAtMouseDownTime:(NSTextView *)textView;
+#ifndef __LP64__
 - (void)_pauseNullEventsForAllNetscapePlugins;
 - (void)_resumeNullEventsForAllNetscapePlugins;
+#endif
 - (void)_willMakeFirstResponderForNodeFocus;
 - (id<WebHTMLHighlighter>)_highlighterForType:(NSString*)type;
 - (WebFrame *)_frame;
@@ -118,5 +133,7 @@ struct WebHTMLViewInterpretKeyEventsParameters;
 - (void)setGrammarCheckingEnabled:(BOOL)flag;
 - (void)toggleGrammarChecking:(id)sender;
 #endif
+- (WebCore::CachedImage*)promisedDragTIFFDataSource;
+- (void)setPromisedDragTIFFDataSource:(WebCore::CachedImage*)source;
+- (void)_web_layoutIfNeededRecursive;
 @end
-

@@ -15,8 +15,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -33,12 +33,22 @@
 #include "XMLTokenizer.h"
 #include <libxml/uri.h>
 #include <libxslt/xsltutils.h>
+#if PLATFORM(MAC)
+#include "SoftLinking.h"
+#endif
+
+#if PLATFORM(MAC)
+SOFT_LINK_LIBRARY(libxslt)
+SOFT_LINK(libxslt, xsltIsBlank, int, (xmlChar *str), (str))
+SOFT_LINK(libxslt, xsltGetNsProp, xmlChar *, (xmlNodePtr node, const xmlChar *name, const xmlChar *nameSpace), (node, name, nameSpace))
+SOFT_LINK(libxslt, xsltParseStylesheetDoc, xsltStylesheetPtr, (xmlDocPtr doc), (doc))
+SOFT_LINK(libxslt, xsltLoadStylesheetPI, xsltStylesheetPtr, (xmlDocPtr doc), (doc))
+#endif
 
 namespace WebCore {
 
 #define IS_BLANK_NODE(n)                                                \
     (((n)->type == XML_TEXT_NODE) && (xsltIsBlank((n)->content)))
-
     
 XSLStyleSheet::XSLStyleSheet(XSLImportRule* parentRule, const String& href)
     : StyleSheet(parentRule, href)
@@ -232,7 +242,7 @@ xmlDocPtr XSLStyleSheet::locateStylesheetSubResource(xmlDocPtr parentDoc, const 
                 // with the URI argument.
                 CString importHref = import->href().utf8();
                 xmlChar* base = xmlNodeGetBase(parentDoc, (xmlNodePtr)parentDoc);
-                xmlChar* childURI = xmlBuildURI((const xmlChar*)(const char*)importHref, base);
+                xmlChar* childURI = xmlBuildURI((const xmlChar*)importHref.data(), base);
                 bool equalURIs = xmlStrEqual(uri, childURI);
                 xmlFree(base);
                 xmlFree(childURI);

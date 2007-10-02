@@ -3,6 +3,7 @@
  *  Copyright (C) 1999-2002 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
  *  Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ *  Copyright (C) 2007 Cameron Zwarich (cwzwarich@uwaterloo.ca)
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -355,7 +356,7 @@ JSValue *NumberNode::evaluate(ExecState *)
 
 JSValue *StringNode::evaluate(ExecState *)
 {
-  return jsString(value);
+  return jsOwnedString(value);
 }
 
 // ------------------------------ RegExpNode -----------------------------------
@@ -363,8 +364,8 @@ JSValue *StringNode::evaluate(ExecState *)
 JSValue *RegExpNode::evaluate(ExecState *exec)
 {
   List list;
-  list.append(jsString(pattern));
-  list.append(jsString(flags));
+  list.append(jsOwnedString(pattern));
+  list.append(jsOwnedString(flags));
 
   JSObject *reg = exec->lexicalInterpreter()->builtinRegExp();
   return reg->construct(exec,list);
@@ -531,7 +532,7 @@ JSValue *PropertyNameNode::evaluate(ExecState*)
   if (str.isNull()) {
     s = jsString(UString::from(numeric));
   } else {
-    s = jsString(str.ustring());
+    s = jsOwnedString(str.ustring());
   }
 
   return s;
@@ -1586,36 +1587,76 @@ VarDeclNode::VarDeclNode(const Identifier &id, AssignExprNode *in, Type t)
 {
 }
 
-// ECMA 12.2
-JSValue *VarDeclNode::evaluate(ExecState *exec)
+JSValue* VarDeclNode::handleSlowCase(ExecState* exec, const ScopeChain& chain, JSValue* val)
 {
-  JSObject* variable = exec->context()->variableObject();
+    ScopeChainIterator iter = chain.begin();
+    ScopeChainIterator end = chain.end();        
+    
+    // we must always have something in the scope chain
+    ASSERT(iter != end);
+    
+    PropertySlot slot;
+    JSObject* base;
+    
+    do {
+        base = *iter;
+        if (base->getPropertySlot(exec, ident, slot))
+            break;
+        
+        ++iter;
+    } while (iter != end);
+    
+    unsigned flags = 0;
+    base->getPropertyAttributes(ident, flags);
+    if (varType == VarDeclNode::Constant)
+        flags |= ReadOnly;
+    
+    base->put(exec, ident, val, flags);
+    return 0;
+}
 
-  JSValue* val;
-  if (init) {
-      val = init->evaluate(exec);
-      KJS_CHECKEXCEPTIONVALUE
-  } else {
-      // already declared? - check with getDirect so you can override
-      // built-in properties of the global object with var declarations.
-      if (variable->getDirect(ident)) 
-          return 0;
-      val = jsUndefined();
-  }
+// ECMA 12.2
+JSValue* VarDeclNode::evaluate(ExecState* exec)
+{
+    const ScopeChain& chain = exec->context()->scopeChain();
+    JSObject* variableObject = exec->context()->variableObject();
 
-#ifdef KJS_VERBOSE
-  printInfo(exec,(UString("new variable ")+ident.ustring()).cstring().c_str(),val);
-#endif
-  // We use Internal to bypass all checks in derived objects, e.g. so that
-  // "var location" creates a dynamic property instead of activating window.location.
-  int flags = Internal;
-  if (exec->context()->codeType() != EvalCode)
-    flags |= DontDelete;
-  if (varType == VarDeclNode::Constant)
-    flags |= ReadOnly;
-  variable->put(exec, ident, val, flags);
+    ASSERT(!chain.isEmpty());
 
-  return jsString(ident.ustring());
+    bool inGlobalScope = ++chain.begin() == chain.end();
+
+    if (inGlobalScope && (init || !variableObject->getDirect(ident))) {
+        JSValue* val = init ? init->evaluate(exec) : jsUndefined();
+        int flags = Internal;
+        if (exec->context()->codeType() != EvalCode)
+            flags |= DontDelete;
+        if (varType == VarDeclNode::Constant)
+            flags |= ReadOnly;
+        variableObject->putDirect(ident, val, flags);
+    } else if (init) {
+        JSValue* val = init->evaluate(exec);
+        KJS_CHECKEXCEPTIONVALUE
+            
+        // if the variable object is the top of the scope chain, then that must
+        // be where this variable is declared, processVarDecls would have put 
+        // it there. Don't search the scope chain, to optimize this very common case.
+        if (chain.top() != variableObject)
+            return handleSlowCase(exec, chain, val);
+
+        unsigned flags = 0;
+        variableObject->getPropertyAttributes(ident, flags);
+        if (varType == VarDeclNode::Constant)
+            flags |= ReadOnly;
+        
+        ASSERT(variableObject->getDirect(ident) || ident == exec->propertyNames().arguments);
+        variableObject->put(exec, ident, val, flags);
+    }
+
+    // no caller of this function actually uses the return value. 
+    // FIXME: It would be better to change the inheritence hierarchy so this
+    // node doesn't even have an evaluate method, but instead a differently named
+    // one with a void return.
+    return 0;
 }
 
 void VarDeclNode::processVarDecls(ExecState *exec)
@@ -1947,7 +1988,7 @@ Completion ForInNode::execute(ExecState *exec)
       if (!v->hasProperty(exec, name))
           continue;
 
-      JSValue *str = jsString(name.ustring());
+      JSValue *str = jsOwnedString(name.ustring());
 
       if (lexpr->isResolveNode()) {
         const Identifier &ident = static_cast<ResolveNode *>(lexpr.get())->identifier();

@@ -1,9 +1,7 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,18 +15,21 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
+
 #include "config.h"
 #include "HTMLImageLoader.h"
 
-#include "csshelper.h"
+#include "CSSHelper.h"
 #include "CachedImage.h"
 #include "DocLoader.h"
 #include "Document.h"
 #include "Element.h"
 #include "EventNames.h"
+#include "kjs_binding.h"
+#include "JSNode.h"
 #include "HTMLNames.h"
 #include "RenderImage.h"
 
@@ -45,11 +46,13 @@ HTMLImageLoader::HTMLImageLoader(Element* elt)
     , m_firedLoad(true)
     , m_imageComplete(true)
     , m_loadManually(false)
+    , m_elementIsProtected(false)
 {
 }
 
 HTMLImageLoader::~HTMLImageLoader()
 {
+    ASSERT(!m_elementIsProtected);
     if (m_image)
         m_image->deref(this);
     m_element->document()->removeImage(this);
@@ -68,12 +71,18 @@ void HTMLImageLoader::setImage(CachedImage *newImage)
             oldImage->deref(this);
     }
 
-    if (RenderImage* renderer = static_cast<RenderImage*>(element()->renderer()))
-        renderer->resetAnimation();
+    if (RenderObject* renderer = element()->renderer())
+        if (renderer->isImage())
+            static_cast<RenderImage*>(renderer)->resetAnimation();
 }
 
 void HTMLImageLoader::setLoadingImage(CachedImage *loadingImage)
 {
+    if (loadingImage)
+        protectElement();
+    else
+        unprotectElement();
+    
     m_firedLoad = false;
     m_imageComplete = false;
     m_image = loadingImage;
@@ -95,8 +104,9 @@ void HTMLImageLoader::updateFromElement()
     if (!attr.isEmpty()) {
         if (m_loadManually) {
             doc->docLoader()->setAutoLoadImages(false);
-            newImage = new CachedImage(doc->docLoader(), parseURL(attr));
+            newImage = new CachedImage(doc->docLoader(), parseURL(attr), false /* not for cache */);
             newImage->setLoading(true);
+            newImage->setDocLoader(doc->docLoader());
             doc->docLoader()->m_docResources.set(newImage->url(), newImage);
         } else
             newImage = doc->docLoader()->requestImage(parseURL(attr));
@@ -115,8 +125,9 @@ void HTMLImageLoader::updateFromElement()
             oldImage->deref(this);
     }
 
-    if (RenderImage* renderer = static_cast<RenderImage*>(elem->renderer()))
-        renderer->resetAnimation();
+    if (RenderObject* renderer = elem->renderer())
+        if (renderer->isImage())
+            static_cast<RenderImage*>(renderer)->resetAnimation();
 }
 
 void HTMLImageLoader::dispatchLoadEvent()
@@ -125,6 +136,8 @@ void HTMLImageLoader::dispatchLoadEvent()
         setHaveFiredLoadEvent(true);
         element()->dispatchHTMLEvent(image()->errorOccurred() ? errorEvent : loadEvent, false, false);
     }
+
+    unprotectElement();
 }
 
 void HTMLImageLoader::notifyFinished(CachedResource *image)
@@ -137,8 +150,34 @@ void HTMLImageLoader::notifyFinished(CachedResource *image)
         if (!doc->ownerElement())
             printf("Image loaded at %d\n", doc->elapsedTime());
 #endif
-    if (RenderImage* renderer = static_cast<RenderImage*>(elem->renderer()))
-        renderer->setCachedImage(m_image);
+    if (RenderObject* renderer = elem->renderer())
+        if (renderer->isImage())
+            static_cast<RenderImage*>(renderer)->setCachedImage(m_image);
 }
+
+void HTMLImageLoader::protectElement()
+{
+    if (m_elementIsProtected)
+        return;
+    
+    KJS::JSLock lock;
+    if (JSNode* node = KJS::ScriptInterpreter::getDOMNodeForDocument(m_element->document(), m_element)) {
+        KJS::gcProtect(node);
+        m_elementIsProtected = true;
+    }    
+}
+    
+void HTMLImageLoader::unprotectElement()
+{
+    if (!m_elementIsProtected)
+        return;
+    
+    KJS::JSLock lock;
+    JSNode* node = KJS::ScriptInterpreter::getDOMNodeForDocument(m_element->document(), m_element);
+    ASSERT(node);
+    KJS::gcUnprotect(node);
+    m_elementIsProtected = false;
+}
+    
 
 }

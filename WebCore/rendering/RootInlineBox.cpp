@@ -15,13 +15,14 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
 #include "RootInlineBox.h"
 
+#include "BidiResolver.h"
 #include "Document.h"
 #include "EllipsisBox.h"
 #include "Frame.h"
@@ -67,6 +68,7 @@ void RootInlineBox::detachEllipsisBox(RenderArena* arena)
 {
     if (m_hasEllipsisBox) {
         EllipsisBoxMap::iterator it = gEllipsisBoxMap->find(this);
+        it->second->setParent(0);
         it->second->destroy(arena);
         gEllipsisBoxMap->remove(it);
         m_hasEllipsisBox = false;
@@ -194,10 +196,10 @@ void RootInlineBox::adjustPosition(int dx, int dy)
 void RootInlineBox::childRemoved(InlineBox* box)
 {
     if (box->object() == m_lineBreakObj)
-        setLineBreakInfo(0, 0, 0, 0);
+        setLineBreakInfo(0, 0, BidiStatus());
 
     for (RootInlineBox* prev = prevRootBox(); prev && prev->lineBreakObj() == box->object(); prev = prev->prevRootBox()) {
-        prev->setLineBreakInfo(0, 0, 0, 0);
+        prev->setLineBreakInfo(0, 0, BidiStatus());
         prev->markDirty();
     }
 }
@@ -315,47 +317,56 @@ RenderBlock* RootInlineBox::block() const
     return static_cast<RenderBlock*>(m_object);
 }
 
-InlineBox* RootInlineBox::closestLeafChildForXPos(int x)
+bool isEditableLeaf(InlineBox* leaf)
+{
+    return leaf && leaf->object() && leaf->object()->element() && leaf->object()->element()->isContentEditable();
+}
+
+InlineBox* RootInlineBox::closestLeafChildForXPos(int x, bool onlyEditableLeaves)
 {
     InlineBox* firstLeaf = firstLeafChildAfterBox();
     InlineBox* lastLeaf = lastLeafChildBeforeBox();
-    if (firstLeaf == lastLeaf)
+    if (firstLeaf == lastLeaf && (!onlyEditableLeaves || isEditableLeaf(firstLeaf)))
         return firstLeaf;
 
     // Avoid returning a list marker when possible.
-    if (x <= firstLeaf->m_x && !firstLeaf->object()->isListMarker())
+    if (x <= firstLeaf->m_x && !firstLeaf->object()->isListMarker() && (!onlyEditableLeaves || isEditableLeaf(firstLeaf)))
         // The x coordinate is less or equal to left edge of the firstLeaf.
         // Return it.
         return firstLeaf;
 
-    if (x >= lastLeaf->m_x + lastLeaf->m_width && !lastLeaf->object()->isListMarker())
+    if (x >= lastLeaf->m_x + lastLeaf->m_width && !lastLeaf->object()->isListMarker() && (!onlyEditableLeaves || isEditableLeaf(lastLeaf)))
         // The x coordinate is greater or equal to right edge of the lastLeaf.
         // Return it.
         return lastLeaf;
 
-    for (InlineBox* leaf = firstLeaf; leaf && leaf != lastLeaf; leaf = leaf->nextLeafChild()) {
-        if (!leaf->object()->isListMarker()) {
-            int leafX = leaf->m_x;
-            if (x < leafX + leaf->m_width)
+    InlineBox* closestLeaf = 0;
+    for (InlineBox* leaf = firstLeaf; leaf; leaf = leaf->nextLeafChild()) {
+        if (!leaf->object()->isListMarker() && (!onlyEditableLeaves || isEditableLeaf(leaf))) {
+            closestLeaf = leaf;
+            if (x < leaf->m_x + leaf->m_width)
                 // The x coordinate is less than the right edge of the box.
                 // Return it.
                 return leaf;
         }
     }
 
-    return lastLeaf;
+    return closestLeaf ? closestLeaf : lastLeaf;
 }
 
-void RootInlineBox::setLineBreakInfo(RenderObject* obj, unsigned breakPos, BidiStatus* status, BidiContext* context)
+BidiStatus RootInlineBox::lineBreakBidiStatus() const
+{ 
+    return BidiStatus(m_lineBreakBidiStatusEor, m_lineBreakBidiStatusLastStrong, m_lineBreakBidiStatusLast, m_lineBreakContext);
+}
+
+void RootInlineBox::setLineBreakInfo(RenderObject* obj, unsigned breakPos, const BidiStatus& status)
 {
     m_lineBreakObj = obj;
     m_lineBreakPos = breakPos;
-    m_lineBreakContext = context;
-    if (status) {
-        m_lineBreakBidiStatusEor = status->eor;
-        m_lineBreakBidiStatusLastStrong = status->lastStrong;
-        m_lineBreakBidiStatusLast = status->last;
-    }
+    m_lineBreakBidiStatusEor = status.eor;
+    m_lineBreakBidiStatusLastStrong = status.lastStrong;
+    m_lineBreakBidiStatusLast = status.last;
+    m_lineBreakContext = status.context;
 }
 
 EllipsisBox* RootInlineBox::ellipsisBox() const

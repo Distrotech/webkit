@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2007 Trolltech ASA
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +28,7 @@
 #include "CanvasRenderingContext2D.h"
 
 #include "AffineTransform.h"
+#include "CSSParser.h"
 #include "CachedImage.h"
 #include "CanvasGradient.h"
 #include "CanvasPattern.h"
@@ -38,10 +40,16 @@
 #include "HTMLCanvasElement.h"
 #include "HTMLImageElement.h"
 #include "HTMLNames.h"
+#include "NotImplemented.h"
 #include "RenderHTMLCanvas.h"
 #include "Settings.h"
-#include "cssparser.h"
 #include <wtf/MathExtras.h>
+
+#if PLATFORM(QT)
+#include <QPainter>
+#include <QPixmap>
+#include <QPainterPath>
+#endif
 
 namespace WebCore {
 
@@ -290,7 +298,7 @@ void CanvasRenderingContext2D::rotate(float angleInRadians)
     if (!c)
         return;
     c->rotate(angleInRadians);
-    state().m_path.transform(AffineTransform().rotate(-angleInRadians/M_PI*180));
+    state().m_path.transform(AffineTransform().rotate(-angleInRadians / piDouble * 180.0));
 }
 
 void CanvasRenderingContext2D::translate(float tx, float ty)
@@ -422,6 +430,14 @@ void CanvasRenderingContext2D::rect(float x, float y, float width, float height,
     state().m_path.addRect(FloatRect(x, y, width, height));
 }
 
+void CanvasRenderingContext2D::clearPathForDashboardBackwardCompatibilityMode()
+{
+    if (m_canvas)
+        if (Settings* settings = m_canvas->document()->settings())
+            if (settings->usesDashboardBackwardCompatibilityMode())
+                state().m_path.clear();
+}
+
 void CanvasRenderingContext2D::fill()
 {
     GraphicsContext* c = drawingContext();
@@ -432,7 +448,8 @@ void CanvasRenderingContext2D::fill()
     CGContextBeginPath(c->platformContext());
     CGContextAddPath(c->platformContext(), state().m_path.platformPath());
 
-    willDraw(CGContextGetPathBoundingBox(c->platformContext()));
+    if (!state().m_path.isEmpty())
+        willDraw(CGContextGetPathBoundingBox(c->platformContext()));
 
     if (state().m_fillStyle->gradient()) {
         // Shading works on the entire clip region, so convert the current path to a clip.
@@ -445,7 +462,20 @@ void CanvasRenderingContext2D::fill()
             applyFillPattern();
         CGContextFillPath(c->platformContext());
     }
+#elif PLATFORM(QT)
+    QPainterPath* path = state().m_path.platformPath();
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    willDraw(path->controlPointRect());
+    if (state().m_fillStyle->gradient()) {
+        p->fillPath(*path, QBrush(*(state().m_fillStyle->gradient()->platformShading())));
+    } else {
+        if (state().m_fillStyle->pattern())
+            applyFillPattern();
+        p->fillPath(*path, p->brush());
+    }
 #endif
+
+    clearPathForDashboardBackwardCompatibilityMode();
 }
 
 void CanvasRenderingContext2D::stroke()
@@ -458,11 +488,12 @@ void CanvasRenderingContext2D::stroke()
     CGContextBeginPath(c->platformContext());
     CGContextAddPath(c->platformContext(), state().m_path.platformPath());
 
-    float lineWidth = state().m_lineWidth;
-    float inset = -lineWidth / 2;
-    CGRect boundingRect = CGRectInset(CGContextGetPathBoundingBox(c->platformContext()), inset, inset);
-
-    willDraw(boundingRect);
+    if (!state().m_path.isEmpty()) {
+        float lineWidth = state().m_lineWidth;
+        float inset = -lineWidth / 2;
+        CGRect boundingRect = CGRectInset(CGContextGetPathBoundingBox(c->platformContext()), inset, inset);
+        willDraw(boundingRect);
+    }
 
     if (state().m_strokeStyle->gradient()) {
         // Shading works on the entire clip region, so convert the current path to a clip.
@@ -476,10 +507,23 @@ void CanvasRenderingContext2D::stroke()
             applyStrokePattern();
         CGContextStrokePath(c->platformContext());
     }
+#elif PLATFORM(QT)
+    QPainterPath* path = state().m_path.platformPath();
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    willDraw(path->controlPointRect());
+    if (state().m_strokeStyle->gradient()) {
+        p->save();
+        p->setBrush(*(state().m_strokeStyle->gradient()->platformShading()));
+        p->strokePath(*path, p->pen());
+        p->restore();
+    } else {
+        if (state().m_strokeStyle->pattern())
+            applyStrokePattern();
+        p->strokePath(*path, p->pen());
+    }
 #endif
 
-    if (m_canvas && m_canvas->document()->frame() && m_canvas->document()->frame()->settings()->usesDashboardBackwardCompatibilityMode())
-        state().m_path.clear();
+    clearPathForDashboardBackwardCompatibilityMode();
 }
 
 void CanvasRenderingContext2D::clip()
@@ -488,6 +532,7 @@ void CanvasRenderingContext2D::clip()
     if (!c)
         return;
     c->clip(state().m_path);
+    clearPathForDashboardBackwardCompatibilityMode();
 }
 
 void CanvasRenderingContext2D::clearRect(float x, float y, float width, float height, ExceptionCode& ec)
@@ -533,6 +578,17 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
         if (state().m_fillStyle->pattern())
             applyFillPattern();
         CGContextFillRect(c->platformContext(), rect);
+    }
+#elif PLATFORM(QT)
+    QRectF rect(x, y, width, height);
+    willDraw(rect);
+    QPainter* p = static_cast<QPainter*>(c->platformContext());
+    if (state().m_fillStyle->gradient()) {
+        p->fillRect(rect, QBrush(*(state().m_fillStyle->gradient()->platformShading())));
+    } else {
+        if (state().m_fillStyle->pattern())
+            applyFillPattern();
+        p->fillRect(rect, p->brush());
     }
 #endif
 }
@@ -618,9 +674,9 @@ void CanvasRenderingContext2D::setShadow(float width, float height, float blur, 
     RGBA32 rgba = 0; // default is transparant black
     CSSParser::parseColor(rgba, color);
     const CGFloat components[4] = {
-        ((rgba >> 16) & 0xFF) / 255.0,
-        ((rgba >> 8) & 0xFF) / 255.0,
-        (rgba & 0xFF) / 255.0,
+        ((rgba >> 16) & 0xFF) / 255.0f,
+        ((rgba >> 8) & 0xFF) / 255.0f,
+        (rgba & 0xFF) / 255.0f,
         alpha
     };
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -710,10 +766,10 @@ void CanvasRenderingContext2D::applyShadow()
     if (!state().m_shadowColor.isEmpty())
         CSSParser::parseColor(rgba, state().m_shadowColor);
     const CGFloat components[4] = {
-        ((rgba >> 16) & 0xFF) / 255.0,
-        ((rgba >> 8) & 0xFF) / 255.0,
-        (rgba & 0xFF) / 255.0,
-        ((rgba >> 24) & 0xFF) / 255.0
+        ((rgba >> 16) & 0xFF) / 255.0f,
+        ((rgba >> 8) & 0xFF) / 255.0f,
+        (rgba & 0xFF) / 255.0f,
+        ((rgba >> 24) & 0xFF) / 255.0f
     };
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGColorRef color = CGColorCreate(colorSpace, components);
@@ -855,6 +911,13 @@ void CanvasRenderingContext2D::drawImage(HTMLCanvasElement* canvas, const FloatR
     }
 
     CGImageRelease(platformImage);
+#elif PLATFORM(QT)
+    QImage px = canvas->createPlatformImage();
+    if (px.isNull())
+        return;
+    willDraw(dstRect);
+    QPainter* painter = static_cast<QPainter*>(c->platformContext());
+    painter->drawImage(dstRect, px, srcRect);
 #endif
 }
 
@@ -930,6 +993,7 @@ PassRefPtr<CanvasPattern> CanvasRenderingContext2D::createPattern(HTMLCanvasElem
     CGImageRelease(image);
     return pattern;
 #else
+    notImplemented();
     return 0;
 #endif
 }
@@ -978,6 +1042,8 @@ void CanvasRenderingContext2D::applyStrokePattern()
     CGPatternRelease(platformPattern);
 
     state().m_strokeStylePatternTransform = m;
+#elif PLATFORM(QT)
+    fprintf(stderr, "FIXME: CanvasRenderingContext2D::applyStrokePattern\n");
 #endif
     state().m_appliedStrokePattern = true;
 }
@@ -1012,6 +1078,8 @@ void CanvasRenderingContext2D::applyFillPattern()
     CGPatternRelease(platformPattern);
 
     state().m_fillStylePatternTransform = m;
+#elif PLATFORM(QT)
+    fprintf(stderr, "FIXME: CanvasRenderingContext2D::applyFillPattern\n");
 #endif
     state().m_appliedFillPattern = true;
 }

@@ -1466,7 +1466,6 @@ for (;;)
 
     case OP_REF:
       {
-      int tmplen;
       offset = GET2(ecode, 1) << 1;               /* Doubled ref number */
       ecode += 3;                                 /* Advance past item */
 
@@ -1475,9 +1474,12 @@ for (;;)
       can't just fail here, because of the possibility of quantifiers with zero
       minima. */
 
-      tmplen = INT_CAST(md->end_subject - eptr + 1);
       length = (offset >= offset_top || md->offset_vector[offset] < 0)?
-        tmplen :
+#if JAVASCRIPT
+        0 : /* in JavaScript these match the empty string */
+#else
+        INT_CAST(md->end_subject - eptr + 1) :
+#endif
         md->offset_vector[offset+1] - md->offset_vector[offset];
 
       /* Set up for repetition, or handle the non-repeated case */
@@ -1946,7 +1948,7 @@ for (;;)
 #ifdef SUPPORT_UCP
           int chartype;
           int othercase;
-          if (_pcre_ucp_findchar(fc, &chartype, &othercase) < 0 || dc != othercase)
+          if (_pcre_ucp_findchar(fc, &chartype, &othercase) != ucp_L || dc != othercase)
 #endif
             RRETURN(MATCH_NOMATCH);
           }
@@ -2008,7 +2010,7 @@ for (;;)
         {
         int othercase;
         int chartype;
-        if ((ims & PCRE_CASELESS) == 0 || _pcre_ucp_findchar(fc, &chartype, &othercase) < 0)
+        if ((ims & PCRE_CASELESS) == 0 || _pcre_ucp_findchar(fc, &chartype, &othercase) != ucp_L)
           othercase = -1; /* Guaranteed to not match any character */
 
         for (i = 1; i <= min; i++)
@@ -2123,7 +2125,7 @@ for (;;)
         int othercase;
         int chartype;
         if ((ims & PCRE_CASELESS) != 0 &&
-             _pcre_ucp_findchar(fc, &chartype, &othercase) >= 0 &&
+             _pcre_ucp_findchar(fc, &chartype, &othercase) == ucp_L &&
              othercase > 0)
           oclength = _pcre_ord2utf8(othercase, occhars);
 #endif  /* SUPPORT_UCP */

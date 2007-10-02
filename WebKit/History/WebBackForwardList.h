@@ -28,6 +28,12 @@
 
 #import <Foundation/Foundation.h>
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+#define WebNSUInteger unsigned int
+#else
+#define WebNSUInteger NSUInteger
+#endif
+
 @class WebHistoryItem;
 @class WebBackForwardListPrivate;
 
@@ -155,18 +161,30 @@
 */
 - (WebHistoryItem *)itemAtIndex:(int)index;
 
+@end
+
+@interface WebBackForwardList(WebBackForwardListDeprecated)
+
+// The following methods are deprecated, and exist for backward compatibility only.
+// Use -[WebPreferences setUsesPageCache] and -[WebPreferences usesPageCache]
+// instead.
+
 /*!
     @method setPageCacheSize:
-    @abstract Sets the size of the page cache.
-    @param size The number of pages to allow in the page cache.
+    @abstract The size passed to this method determines whether the WebView 
+    associated with this WebBackForwardList will use the shared page cache.
+    @param size If size is 0, the WebView associated with this WebBackForwardList
+    will not use the shared page cache. Otherwise, it will.
 */
-- (void)setPageCacheSize:(unsigned)size;
+- (void)setPageCacheSize:(WebNSUInteger)size;
 
 /*!
     @method pageCacheSize
-    @abstract Returns the number of pages that may be cached.
-    @result The number of pages that may be cached.
+    @abstract Returns the size of the shared page cache, or 0.
+    @result The size of the shared page cache (in pages), or 0 if the WebView 
+    associated with this WebBackForwardList will not use the shared page cache.
 */
-- (unsigned)pageCacheSize;
-
+- (WebNSUInteger)pageCacheSize;
 @end
+
+#undef WebNSUInteger

@@ -14,15 +14,15 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
 #include "config.h"
 #include "RenderStyle.h"
 
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 #include "RenderArena.h"
 
 namespace WebCore {
@@ -107,6 +107,8 @@ StyleVisualData::StyleVisualData(const StyleVisualData& o)
 
 BackgroundLayer::BackgroundLayer()
     : m_image(RenderStyle::initialBackgroundImage())
+    , m_xPosition(RenderStyle::initialBackgroundXPosition())
+    , m_yPosition(RenderStyle::initialBackgroundYPosition())
     , m_bgAttachment(RenderStyle::initialBackgroundAttachment())
     , m_bgClip(RenderStyle::initialBackgroundClip())
     , m_bgOrigin(RenderStyle::initialBackgroundOrigin())
@@ -186,13 +188,12 @@ BackgroundLayer& BackgroundLayer::operator=(const BackgroundLayer& o)
 
 bool BackgroundLayer::operator==(const BackgroundLayer& o) const
 {
+    // We do not check the "isSet" booleans for each property, since those are only used during initial construction
+    // to propagate patterns into layers.  All layer comparisons happen after values have all been filled in anyway.
     return m_image == o.m_image && m_xPosition == o.m_xPosition && m_yPosition == o.m_yPosition &&
            m_bgAttachment == o.m_bgAttachment && m_bgClip == o.m_bgClip && 
            m_bgComposite == o.m_bgComposite && m_bgOrigin == o.m_bgOrigin && m_bgRepeat == o.m_bgRepeat &&
            m_backgroundSize.width == o.m_backgroundSize.width && m_backgroundSize.height == o.m_backgroundSize.height && 
-           m_imageSet == o.m_imageSet && m_attachmentSet == o.m_attachmentSet && m_compositeSet == o.m_compositeSet && 
-           m_repeatSet == o.m_repeatSet && m_xPosSet == o.m_xPosSet && m_yPosSet == o.m_yPosSet && 
-           m_backgroundSizeSet == o.m_backgroundSizeSet && 
            ((m_next && o.m_next) ? *m_next == *o.m_next : m_next == o.m_next);
 }
 
@@ -425,7 +426,6 @@ StyleRareNonInheritedData::StyleRareNonInheritedData()
     , m_content(0)
     , m_counterDirectives(0)
     , userDrag(RenderStyle::initialUserDrag())
-    , userSelect(RenderStyle::initialUserSelect())
     , textOverflow(RenderStyle::initialTextOverflow())
     , marginTopCollapse(MCOLLAPSE)
     , marginBottomCollapse(MCOLLAPSE)
@@ -449,7 +449,6 @@ StyleRareNonInheritedData::StyleRareNonInheritedData(const StyleRareNonInherited
     , m_content(0)
     , m_counterDirectives(0)
     , userDrag(o.userDrag)
-    , userSelect(o.userSelect)
     , textOverflow(o.textOverflow)
     , marginTopCollapse(o.marginTopCollapse)
     , marginBottomCollapse(o.marginBottomCollapse)
@@ -496,7 +495,6 @@ bool StyleRareNonInheritedData::operator==(const StyleRareNonInheritedData& o) c
         && m_content == o.m_content
         && m_counterDirectives == o.m_counterDirectives
         && userDrag == o.userDrag
-        && userSelect == o.userSelect
         && textOverflow == o.textOverflow
         && marginTopCollapse == o.marginTopCollapse
         && marginBottomCollapse == o.marginBottomCollapse
@@ -530,6 +528,7 @@ StyleRareInheritedData::StyleRareInheritedData()
     , khtmlLineBreak(LBNORMAL)
     , textSizeAdjust(RenderStyle::initialTextSizeAdjust())
     , resize(RenderStyle::initialResize())
+    , userSelect(RenderStyle::initialUserSelect())
 {
 }
 
@@ -548,6 +547,7 @@ StyleRareInheritedData::StyleRareInheritedData(const StyleRareInheritedData& o)
     , khtmlLineBreak(o.khtmlLineBreak)
     , textSizeAdjust(o.textSizeAdjust)
     , resize(o.resize)
+    , userSelect(o.userSelect)
 {
 }
 
@@ -569,7 +569,8 @@ bool StyleRareInheritedData::operator==(const StyleRareInheritedData& o) const
         && wordWrap == o.wordWrap
         && nbspMode == o.nbspMode
         && khtmlLineBreak == o.khtmlLineBreak
-        && textSizeAdjust == o.textSizeAdjust;
+        && textSizeAdjust == o.textSizeAdjust
+        && userSelect == o.userSelect;
 }
 
 bool StyleRareInheritedData::shadowDataEquivalent(const StyleRareInheritedData& o) const
@@ -1059,7 +1060,7 @@ RenderStyle::Diff RenderStyle::diff(const RenderStyle* other) const
         *background.get() != *other->background.get() ||
         visual->textDecoration != other->visual->textDecoration ||
         rareInheritedData->userModify != other->rareInheritedData->userModify ||
-        rareNonInheritedData->userSelect != other->rareNonInheritedData->userSelect ||
+        rareInheritedData->userSelect != other->rareInheritedData->userSelect ||
         rareNonInheritedData->userDrag != other->rareNonInheritedData->userDrag ||
         rareNonInheritedData->m_borderFit != other->rareNonInheritedData->m_borderFit ||
         rareInheritedData->textFillColor != other->rareInheritedData->textFillColor ||

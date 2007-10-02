@@ -32,6 +32,7 @@
 #import "Font.h"
 #import "Frame.h"
 #import "GraphicsContext.h"
+#import "Page.h"
 #import "PlatformMouseEvent.h"
 #import "WebCoreFrameBridge.h"
 #import "WebCoreFrameView.h"
@@ -39,6 +40,11 @@
 #import "WidgetClient.h"
 
 #import <wtf/RetainPtr.h>
+
+@interface NSWindow (WindowPrivate)
+- (BOOL) _needsToResetDragMargins;
+- (void) _setNeedsToResetDragMargins:(BOOL)s;
+@end
 
 namespace WebCore {
 
@@ -50,6 +56,22 @@ public:
     bool mustStayInWindow;
     bool removeFromSuperviewSoon;
 };
+
+static void safeRemoveFromSuperview(NSView *view)
+{
+    // If the the view is the first responder, then set the window's first responder to nil so
+    // we don't leave the window pointing to a view that's no longer in it.
+    NSWindow *window = [view window];
+    NSResponder *firstResponder = [window firstResponder];
+    if ([firstResponder isKindOfClass:[NSView class]] && [(NSView *)firstResponder isDescendantOf:view])
+        [window makeFirstResponder:nil];
+
+    // Suppress the resetting of drag margins since we know we can't affect them.
+    BOOL resetDragMargins = [window _needsToResetDragMargins];
+    [window _setNeedsToResetDragMargins:NO];
+    [view removeFromSuperview];
+    [window _setNeedsToResetDragMargins:resetDragMargins];
+}
 
 Widget::Widget() : data(new WidgetPrivate)
 {
@@ -105,12 +127,6 @@ IntRect Widget::frameGeometry() const
     return IntRect();
 }
 
-bool Widget::hasFocus() const
-{
-    ASSERT_NOT_REACHED();
-    return false;
-}
-
 // FIXME: Should move this to Chrome; bad layering that this knows about Frame.
 void Widget::setFocus()
 {
@@ -121,62 +137,17 @@ void Widget::setFocus()
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
  
     NSView *view = [getView() _webcore_effectiveFirstResponder];
-    WebCoreFrameBridge *bridge = frame->bridge();
-    id firstResponder = [bridge firstResponder];
-    if (firstResponder && firstResponder == view)
-        return;
-
-    if (![view superview] || ![view acceptsFirstResponder])
-        return;
-
-    NSResponder *oldFirstResponder = [bridge firstResponder];
-
-    [bridge makeFirstResponder:view];
-
-    // Setting focus can actually cause a style change which might
-    // remove the view from its superview while it's being made
-    // first responder. This confuses AppKit so we must restore
-    // the old first responder.
-    if (![view superview])
-        [bridge makeFirstResponder:oldFirstResponder];
-
+    if (Page* page = frame->page())
+        page->chrome()->focusNSView(view);
+    
     END_BLOCK_OBJC_EXCEPTIONS;
 }
 
-void Widget::clearFocus()
-{
-    ASSERT_NOT_REACHED();
-}
-
-Widget::FocusPolicy Widget::focusPolicy() const
-{
-    ASSERT_NOT_REACHED();
-    return NoFocus;
-}
-
-const Font& Widget::font() const
-{
-    ASSERT_NOT_REACHED();
-    return *static_cast<Font*>(0);
-}
-
-void Widget::setFont(const Font& font)
-{
-    ASSERT_NOT_REACHED();
-}
-
-void Widget::setCursor(const Cursor& cursor)
-{
-    BEGIN_BLOCK_OBJC_EXCEPTIONS;
-    for (id view = data->view.get(); view; view = [view superview]) {
-        if ([view respondsToSelector:@selector(setDocumentCursor:)]) {
-            if ([view respondsToSelector:@selector(documentCursor)] && cursor.impl() == [view documentCursor])
-                break;
-            [view setDocumentCursor:cursor.impl()];
-            break;
-        }
-    }
-    END_BLOCK_OBJC_EXCEPTIONS;
+ void Widget::setCursor(const Cursor& cursor)
+ {
+    if ([NSCursor currentCursor] == cursor.impl())
+        return;
+    [cursor.impl() set];
 }
 
 void Widget::show()
@@ -240,27 +211,6 @@ NSView* Widget::getOuterView() const
     return view;
 }
 
-GraphicsContext* Widget::lockDrawingFocus()
-{
-    ASSERT_NOT_REACHED();
-    return 0;
-}
-
-void Widget::unlockDrawingFocus(GraphicsContext*)
-{
-    ASSERT_NOT_REACHED();
-}
-
-void Widget::disableFlushDrawing()
-{
-    ASSERT_NOT_REACHED();
-}
-
-void Widget::enableFlushDrawing()
-{
-    ASSERT_NOT_REACHED();
-}
-
 void Widget::paint(GraphicsContext* p, const IntRect& r)
 {
     if (p->paintingDisabled())
@@ -285,11 +235,6 @@ void Widget::invalidateRect(const IntRect& r)
     END_BLOCK_OBJC_EXCEPTIONS;
 }
 
-void Widget::sendConsumedMouseUp()
-{
-    ASSERT_NOT_REACHED();
-}
-
 // FIXME: Should move this to Chrome; bad layering that this knows about Frame.
 void Widget::setIsSelected(bool isSelected)
 {
@@ -297,16 +242,22 @@ void Widget::setIsSelected(bool isSelected)
         [frame->bridge() setIsSelected:isSelected forView:getView()];
 }
 
-void Widget::addToSuperview(NSView *superview)
+void Widget::addToSuperview(NSView *view)
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
-    ASSERT(superview);
+    ASSERT(view);
     NSView *subview = getOuterView();
-    ASSERT(![superview isDescendantOf:subview]);
-    if ([subview superview] != superview)
-        [superview addSubview:subview];
+    ASSERT(![view isDescendantOf:subview]);
+    
+    // Suppress the resetting of drag margins since we know we can't affect them.
+    NSWindow* window = [view window];
+    BOOL resetDragMargins = [window _needsToResetDragMargins];
+    [window _setNeedsToResetDragMargins:NO];
+    if ([subview superview] != view)
+        [view addSubview:subview];
     data->removeFromSuperviewSoon = false;
+    [window _setNeedsToResetDragMargins:resetDragMargins];
 
     END_BLOCK_OBJC_EXCEPTIONS;
 }
@@ -318,7 +269,7 @@ void Widget::removeFromSuperview()
     else {
         data->removeFromSuperviewSoon = false;
         BEGIN_BLOCK_OBJC_EXCEPTIONS;
-        [getOuterView() removeFromSuperview];
+        safeRemoveFromSuperview(getOuterView());
         END_BLOCK_OBJC_EXCEPTIONS;
     }
 }
@@ -336,7 +287,7 @@ void Widget::afterMouseDown(NSView *view, Widget* widget)
 {
     if (!widget) {
         BEGIN_BLOCK_OBJC_EXCEPTIONS;
-        [view removeFromSuperview];
+        safeRemoveFromSuperview(view);
         END_BLOCK_OBJC_EXCEPTIONS;
     } else {
         ASSERT(widget->data->mustStayInWindow);

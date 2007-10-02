@@ -46,6 +46,7 @@ typedef WebCore::Page WebCorePage;
 #endif
 
 @class WebBasePluginPackage;
+@class WebDownload;
 
 @interface WebView (WebViewEditingExtras)
 - (BOOL)_interceptEditingKeyEvent:(WebCoreKeyboardEvent *)event shouldSaveCommand:(BOOL)shouldSave;
@@ -64,14 +65,12 @@ typedef WebCore::Page WebCorePage;
 #endif
 @end
 
-id WebViewGetResourceLoadDelegate(WebView *webView);
-WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementations(WebView *webView);
-
 @interface WebView (WebViewMiscInternal)
+
++ (void)_setCacheModelIfNecessary;
 - (WebCorePage*)page;
 - (NSMenu *)_menuForElement:(NSDictionary *)element defaultItems:(NSArray *)items;
 - (id)_UIDelegateForwarder;
-- (id)_frameLoadDelegateForwarder;
 - (id)_editingDelegateForwarder;
 - (id)_policyDelegateForwarder;
 - (id)_scriptDebugDelegateForwarder;
@@ -85,14 +84,15 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 + (BOOL)_viewClass:(Class *)vClass andRepresentationClass:(Class *)rClass forMIMEType:(NSString *)MIMEType;
 - (BOOL)_viewClass:(Class *)vClass andRepresentationClass:(Class *)rClass forMIMEType:(NSString *)MIMEType;
 + (NSString *)_MIMETypeForFile:(NSString *)path;
-- (void)_downloadURL:(NSURL *)URL;
+- (WebDownload *)_downloadURL:(NSURL *)URL;
 + (NSString *)_generatedMIMETypeForURLScheme:(NSString *)URLScheme;
 + (BOOL)_representationExistsForURLScheme:(NSString *)URLScheme;
 - (BOOL)_isPerformingProgrammaticFocus;
-- (void)_mouseDidMoveOverElement:(NSDictionary *)dictionary modifierFlags:(WebNSUInteger)modifierFlags;
+- (void)_mouseDidMoveOverElement:(NSDictionary *)dictionary modifierFlags:(NSUInteger)modifierFlags;
 - (WebView *)_openNewWindowWithRequest:(NSURLRequest *)request;
 - (void)_writeImageForElement:(NSDictionary *)element withPasteboardTypes:(NSArray *)types toPasteboard:(NSPasteboard *)pasteboard;
 - (void)_writeLinkElement:(NSDictionary *)element withPasteboardTypes:(NSArray *)types toPasteboard:(NSPasteboard *)pasteboard;
+- (void)_openFrameInNewWindowFromMenu:(NSMenuItem *)sender;
 - (void)_searchWithGoogleFromMenu:(id)sender;
 - (void)_searchWithSpotlightFromMenu:(id)sender;
 - (void)_progressCompleted:(WebFrame *)frame;
@@ -109,4 +109,80 @@ WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementat
 - (void)_addObject:(id)object forIdentifier:(unsigned long)identifier;
 - (id)_objectForIdentifier:(unsigned long)identifier;
 - (void)_removeObjectForIdentifier:(unsigned long)identifier;
+- (BOOL)_becomingFirstResponderFromOutside;
+
+- (void)_registerForIconNotification:(BOOL)listen;
+- (void)_dispatchDidReceiveIconFromWebFrame:(WebFrame *)webFrame;
+
 @end
+
+typedef struct _WebResourceDelegateImplementationCache {
+    IMP didCancelAuthenticationChallengeFunc;
+    IMP didReceiveAuthenticationChallengeFunc;
+    IMP identifierForRequestFunc;
+    IMP willSendRequestFunc;
+    IMP didReceiveResponseFunc;
+    IMP didReceiveContentLengthFunc;
+    IMP didFinishLoadingFromDataSourceFunc;
+    IMP didFailLoadingWithErrorFromDataSourceFunc;
+    IMP didLoadResourceFromMemoryCacheFunc;
+    IMP willCacheResponseFunc;
+    IMP plugInFailedWithErrorFunc;
+} WebResourceDelegateImplementationCache;
+
+typedef struct _WebFrameLoadDelegateImplementationCache {
+    IMP didClearWindowObjectForFrameFunc;
+    IMP windowScriptObjectAvailableFunc;
+    IMP didHandleOnloadEventsForFrameFunc;
+    IMP didReceiveServerRedirectForProvisionalLoadForFrameFunc;
+    IMP didCancelClientRedirectForFrameFunc;
+    IMP willPerformClientRedirectToURLDelayFireDateForFrameFunc;
+    IMP didChangeLocationWithinPageForFrameFunc;
+    IMP willCloseFrameFunc;
+    IMP didStartProvisionalLoadForFrameFunc;
+    IMP didReceiveTitleForFrameFunc;
+    IMP didCommitLoadForFrameFunc;
+    IMP didFailProvisionalLoadWithErrorForFrameFunc;
+    IMP didFailLoadWithErrorForFrameFunc;
+    IMP didFinishLoadForFrameFunc;
+    IMP didFirstLayoutInFrameFunc;
+    IMP didReceiveIconForFrameFunc;
+    IMP didFinishDocumentLoadForFrameFunc;
+} WebFrameLoadDelegateImplementationCache;
+
+WebResourceDelegateImplementationCache WebViewGetResourceLoadDelegateImplementations(WebView *webView);
+WebFrameLoadDelegateImplementationCache WebViewGetFrameLoadDelegateImplementations(WebView *webView);
+
+#ifdef __cplusplus
+
+id CallFormDelegate(WebView *, SEL, id, id);
+id CallFormDelegate(WebView *self, SEL selector, id object1, id object2, id object3, id object4, id object5);
+BOOL CallFormDelegateReturningBoolean(BOOL, WebView *, SEL, id, SEL, id);
+
+id CallUIDelegate(WebView *, SEL);
+id CallUIDelegate(WebView *, SEL, id);
+id CallUIDelegate(WebView *, SEL, NSRect);
+id CallUIDelegate(WebView *, SEL, id, id);
+id CallUIDelegate(WebView *, SEL, id, BOOL);
+id CallUIDelegate(WebView *, SEL, id, id, id);
+id CallUIDelegate(WebView *, SEL, id, NSUInteger);
+float CallUIDelegateReturningFloat(WebView *, SEL);
+BOOL CallUIDelegateReturningBoolean(BOOL, WebView *, SEL);
+BOOL CallUIDelegateReturningBoolean(BOOL, WebView *, SEL, id);
+BOOL CallUIDelegateReturningBoolean(BOOL, WebView *, SEL, id, id);
+BOOL CallUIDelegateReturningBoolean(BOOL, WebView *, SEL, id, BOOL);
+
+id CallFrameLoadDelegate(IMP, WebView *, SEL);
+id CallFrameLoadDelegate(IMP, WebView *, SEL, id);
+id CallFrameLoadDelegate(IMP, WebView *, SEL, id, id);
+id CallFrameLoadDelegate(IMP, WebView *, SEL, id, id, id);
+id CallFrameLoadDelegate(IMP, WebView *, SEL, id, id, id, id);
+id CallFrameLoadDelegate(IMP, WebView *, SEL, id, NSTimeInterval, id, id);
+
+id CallResourceLoadDelegate(IMP, WebView *, SEL, id, id);
+id CallResourceLoadDelegate(IMP, WebView *, SEL, id, id, id);
+id CallResourceLoadDelegate(IMP, WebView *, SEL, id, id, id, id);
+id CallResourceLoadDelegate(IMP, WebView *, SEL, id, NSInteger, id);
+id CallResourceLoadDelegate(IMP, WebView *, SEL, id, id, NSInteger, id);
+
+#endif

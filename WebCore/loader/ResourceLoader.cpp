@@ -52,10 +52,13 @@ PassRefPtr<SharedBuffer> ResourceLoader::resourceData()
     return 0;
 }
 
-ResourceLoader::ResourceLoader(Frame* frame)
+ResourceLoader::ResourceLoader(Frame* frame, bool sendResourceLoadCallbacks, bool shouldContentSniff)
     : m_reachedTerminalState(false)
     , m_cancelled(false)
     , m_calledDidFinishLoad(false)
+    , m_sendResourceLoadCallbacks(sendResourceLoadCallbacks)
+    , m_shouldContentSniff(shouldContentSniff)
+    , m_shouldBufferData(true)
     , m_frame(frame)
     , m_documentLoader(frame->loader()->activeDocumentLoader())
     , m_identifier(0)
@@ -87,7 +90,13 @@ void ResourceLoader::releaseResources()
 
     m_identifier = 0;
 
-    m_handle = 0;
+    if (m_handle) {
+        // Clear out the ResourceHandle's client so that it doesn't try to call
+        // us back after we release it.
+        m_handle->setClient(0);
+        m_handle = 0;
+    }
+
     m_resourceData = 0;
     m_deferredRequest = ResourceRequest();
 }
@@ -115,7 +124,7 @@ bool ResourceLoader::load(const ResourceRequest& r)
         return true;
     }
     
-    m_handle = ResourceHandle::create(clientRequest, this, m_frame.get(), m_defersLoading);
+    m_handle = ResourceHandle::create(clientRequest, this, m_frame.get(), m_defersLoading, m_shouldContentSniff, true);
 
     return true;
 }
@@ -141,6 +150,9 @@ FrameLoader* ResourceLoader::frameLoader() const
 
 void ResourceLoader::addData(const char* data, int length, bool allAtOnce)
 {
+    if (!m_shouldBufferData)
+        return;
+
     if (allAtOnce) {
         m_resourceData = new SharedBuffer(data, length);
         return;
@@ -160,7 +172,8 @@ void ResourceLoader::addData(const char* data, int length, bool allAtOnce)
 
 void ResourceLoader::clearResourceData()
 {
-    m_resourceData->clear();
+    if (m_resourceData)
+        m_resourceData->clear();
 }
 
 void ResourceLoader::willSendRequest(ResourceRequest& request, const ResourceResponse& redirectResponse)
@@ -171,12 +184,15 @@ void ResourceLoader::willSendRequest(ResourceRequest& request, const ResourceRes
         
     ASSERT(!m_reachedTerminalState);
 
-    if (!m_identifier) {
-        m_identifier = m_frame->page()->progress()->createUniqueIdentifier();
-        frameLoader()->assignIdentifierToInitialRequest(m_identifier, request);
-    }
+    if (m_sendResourceLoadCallbacks) {
+        if (!m_identifier) {
+            m_identifier = m_frame->page()->progress()->createUniqueIdentifier();
+            frameLoader()->assignIdentifierToInitialRequest(m_identifier, request);
+        }
 
-    frameLoader()->willSendRequest(this, request, redirectResponse);
+        frameLoader()->willSendRequest(this, request, redirectResponse);
+    }
+    
     m_request = request;
 }
 
@@ -190,7 +206,8 @@ void ResourceLoader::didReceiveResponse(const ResourceResponse& r)
 
     m_response = r;
 
-    frameLoader()->didReceiveResponse(this, m_response);
+    if (m_sendResourceLoadCallbacks)
+        frameLoader()->didReceiveResponse(this, m_response);
 }
 
 void ResourceLoader::didReceiveData(const char* data, int length, long long lengthReceived, bool allAtOnce)
@@ -206,12 +223,18 @@ void ResourceLoader::didReceiveData(const char* data, int length, long long leng
     RefPtr<ResourceLoader> protector(this);
 
     addData(data, length, allAtOnce);
-    if (m_frame)
-        frameLoader()->didReceiveData(this, data, length, lengthReceived);
+    // FIXME: If we get a resource with more than 2B bytes, this code won't do the right thing.
+    // However, with today's computers and networking speeds, this won't happen in practice.
+    // Could be an issue with a giant local file.
+    if (m_sendResourceLoadCallbacks && m_frame)
+        frameLoader()->didReceiveData(this, data, length, static_cast<int>(lengthReceived));
 }
 
 void ResourceLoader::willStopBufferingData(const char* data, int length)
 {
+    if (!m_shouldBufferData)
+        return;
+
     ASSERT(!m_resourceData);
     m_resourceData = new SharedBuffer(data, length);
 }
@@ -237,7 +260,8 @@ void ResourceLoader::didFinishLoadingOnePart()
     if (m_calledDidFinishLoad)
         return;
     m_calledDidFinishLoad = true;
-    frameLoader()->didFinishLoad(this);
+    if (m_sendResourceLoadCallbacks)
+        frameLoader()->didFinishLoad(this);
 }
 
 void ResourceLoader::didFail(const ResourceError& error)
@@ -250,7 +274,8 @@ void ResourceLoader::didFail(const ResourceError& error)
     // anything including possibly derefing this; one example of this is Radar 3266216.
     RefPtr<ResourceLoader> protector(this);
 
-    frameLoader()->didFailToLoad(this, error);
+    if (m_sendResourceLoadCallbacks && !m_calledDidFinishLoad)
+        frameLoader()->didFailToLoad(this, error);
 
     releaseResources();
 }
@@ -280,7 +305,8 @@ void ResourceLoader::didCancel(const ResourceError& error)
         m_handle->cancel();
         m_handle = 0;
     }
-    frameLoader()->didFailToLoad(this, error);
+    if (m_sendResourceLoadCallbacks && !m_calledDidFinishLoad)
+        frameLoader()->didFailToLoad(this, error);
 
     releaseResources();
 }

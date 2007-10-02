@@ -29,6 +29,7 @@
 #if ENABLE(XPATH)
 
 #include "CString.h"
+#include "DOMWindow.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "Frame.h"
@@ -53,7 +54,7 @@ PassRefPtr<JSCustomXPathNSResolver> JSCustomXPathNSResolver::create(KJS::ExecSta
         return 0;
     }
     
-    return new JSCustomXPathNSResolver(resolverObject, KJS::Window::retrieveActive(exec)->frame());
+    return new JSCustomXPathNSResolver(resolverObject, KJS::Window::retrieveActive(exec)->impl()->frame());
 }
 
 JSCustomXPathNSResolver::JSCustomXPathNSResolver(JSObject* customResolver, Frame* frame)
@@ -92,7 +93,7 @@ String JSCustomXPathNSResolver::lookupNamespaceURI(const String& prefix)
     if (!lookupNamespaceURIFunc && !m_customResolver->implementsCall()) {
         // FIXME: pass actual line number and source URL.
         if (Page* page = m_frame->page())
-            page->chrome()->addMessageToConsole("XPathNSResolver does not have a lookupNamespaceURI method.", 0, String());
+            page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, "XPathNSResolver does not have a lookupNamespaceURI method.", 0, String());
         return String();
     }
 
@@ -118,7 +119,7 @@ String JSCustomXPathNSResolver::lookupNamespaceURI(const String& prefix)
         if (Interpreter::shouldPrintExceptions())
             printf("XPathNSResolver: %s\n", message.utf8().data());
         if (Page* page = m_frame->page())
-            page->chrome()->addMessageToConsole(message, lineNumber, sourceURL);
+            page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, message, lineNumber, sourceURL);
         exec->clearException();
     } else {
         if (!retval->isUndefinedOrNull())

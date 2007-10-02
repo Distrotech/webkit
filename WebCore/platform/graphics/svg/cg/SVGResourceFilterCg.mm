@@ -48,6 +48,9 @@
 
 #include <QuartzCore/CoreImage.h>
 
+// Setting to a value > 0 allows to dump the output image as JPEG.
+#define DEBUG_OUTPUT_IMAGE 0
+
 namespace WebCore {
 
 static const char* const SVGPreviousFilterOutputName = "__previousOutput__";
@@ -166,6 +169,10 @@ void SVGResourceFilter::applyFilter(GraphicsContext*& context, const FloatRect& 
         CIImage* outputImage = [[filterStack lastObject] valueForKey:@"outputImage"];
 
         if (outputImage) {
+#if DEBUG_OUTPUT_IMAGE > 0
+            dumpOutputImage(outputImage);
+#endif
+
             FloatRect filterRect = filterBBoxForItemBBox(bbox);
             FloatPoint destOrigin = filterRect.location();
             filterRect.setLocation(FloatPoint(0.0, 0.0));

@@ -37,7 +37,7 @@ class ObjcClass;
 
 class ObjcInstance : public Instance {
 public:
-    ObjcInstance(ObjectStructPtr instance);
+    ObjcInstance(ObjectStructPtr instance, PassRefPtr<RootObject>);
         
     ~ObjcInstance();
     
@@ -59,14 +59,14 @@ public:
     
     virtual JSValue *getValueOfUndefinedField(ExecState *exec, const Identifier &property, JSType hint) const;
 
-    ObjectStructPtr getObject() const { return _instance; }
+    ObjectStructPtr getObject() const { return _instance.get(); }
     
     JSValue *stringValue() const;
     JSValue *numberValue() const;
     JSValue *booleanValue() const;
     
 private:
-    ObjectStructPtr _instance;
+    RetainPtr<ObjectStructPtr> _instance;
     mutable ObjcClass *_class;
     ObjectStructPtr _pool;
     int _beginCount;

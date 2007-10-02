@@ -39,7 +39,7 @@
 #include "PlatformMouseEvent.h"
 #include "CookieJar.h"
 #include "Screen.h"
-#include "History.h"
+#include "GlobalHistory.h"
 #include "Language.h"
 #include "LocalizedStrings.h"
 #include "PlugInInfoStore.h"
@@ -80,11 +80,9 @@
 #include "PageCache.h"
 #include "BitmapImage.h"
 #include "DragController.h"
+#include "NotImplemented.h"
 
 using namespace WebCore;
-
-//static void notImplemented() { puts("Not yet implemented"); }
-#define notImplemented() do { fprintf(stderr, "FIXME: UNIMPLEMENTED: %s:%d (%s)\n", __FILE__, __LINE__, __FUNCTION__); } while(0)
 
 Vector<char> loadResourceIntoArray(const char* resourceName)
 {
@@ -109,7 +107,7 @@ void WebCore::findSentenceBoundary(UChar const*,int,int,int*,int*) { notImplemen
 int WebCore::findNextWordFromIndex(UChar const*,int,int,bool) { notImplemented(); return 0; }
 
 void Frame::print() { notImplemented(); }
-void Frame::cleanupPlatformScriptObjects() { notImplemented(); }
+void Frame::clearPlatformScriptObjects() { notImplemented(); }
 bool Frame::isCharacterSmartReplaceExempt(UChar, bool) { notImplemented(); return true; }
 //void Frame::respondToChangedSelection(WebCore::Selection const&,bool) { }
 void Frame::issueTransposeCommand() { notImplemented(); }
@@ -192,6 +190,7 @@ PopupMenu::~PopupMenu() { notImplemented(); }
 void PopupMenu::show(const IntRect&, FrameView*, int index) { notImplemented(); }
 void PopupMenu::hide() { notImplemented(); }
 void PopupMenu::updateFromElement() { notImplemented(); }
+bool PopupMenu::itemWritingDirectionIsNatural() { notImplemented(); return false; }
 
 Icon::Icon() { notImplemented(); }
 Icon::~Icon() { notImplemented(); }
@@ -298,11 +297,6 @@ void SearchPopupMenu::saveRecentSearches(const AtomicString& name, const Vector<
 void SearchPopupMenu::loadRecentSearches(const AtomicString& name, Vector<String>& searchItems) { notImplemented(); }
 SearchPopupMenu::SearchPopupMenu(PopupMenuClient* client) : PopupMenu(client) { notImplemented(); }
 bool SearchPopupMenu::enabled() { return true; }
-
-bool ResourceHandle::willLoadFromCache(ResourceRequest&) { notImplemented(); return false; }
-bool ResourceHandle::loadsBlocked() { notImplemented(); return false; }
-void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& e, ResourceResponse& r, Vector<char>& data) { notImplemented(); }
-
 
 // bool SharedBuffer::hasPlatformData() const { notImplemented(); return false; }
 // const char* SharedBuffer::platformData() const { notImplemented(); return NULL; }

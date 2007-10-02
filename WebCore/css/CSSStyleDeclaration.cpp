@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -29,6 +29,7 @@
 #include "CSSRule.h"
 #include "DeprecatedValueList.h"
 #include "ksvgcssproperties.h"
+#include <ctype.h>
 
 namespace WebCore {
 
@@ -47,7 +48,7 @@ static int propertyID(const String& s)
         UChar c = s[i];
         if (c == 0 || c >= 0x7F)
             return 0; // illegal character
-        buffer[i] = c;
+        buffer[i] = tolower(c);
     }
 
     int propID = getPropertyID(buffer, len);

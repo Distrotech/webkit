@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 #include "config.h"
 #include "HTMLScriptElement.h"
@@ -92,13 +92,13 @@ void HTMLScriptElement::parseMappedAttribute(MappedAttribute *attr)
         HTMLElement::parseMappedAttribute(attr);
 }
 
-void HTMLScriptElement::closeRenderer()
+void HTMLScriptElement::finishedParsing()
 {
     // The parser just reached </script>. If we have no src and no text,
     // allow dynamic loading later.
     if (getAttribute(srcAttr).isEmpty() && text().isEmpty())
         setCreatedByParser(false);
-    HTMLElement::closeRenderer();
+    HTMLElement::finishedParsing();
 }
 
 void HTMLScriptElement::insertedIntoDocument()
@@ -252,7 +252,7 @@ void HTMLScriptElement::evaluateScript(const String& URL, const String& script)
         KJSProxy* proxy = frame->scriptProxy();
         if (proxy) {
             m_evaluated = true;
-            proxy->evaluate(URL, 0, script, 0);
+            proxy->evaluate(URL, 0, script);
             Document::updateDocumentsRendering();
         }
     }

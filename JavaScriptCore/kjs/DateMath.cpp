@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Alternatively, the contents of this file may be used under the terms
  * of either the Mozilla Public License Version 1.1, found at
@@ -420,7 +420,14 @@ static double getDSTOffsetSimple(double localTimeSeconds)
     time_t localTime = static_cast<time_t>(localTimeSeconds);
 
     tm localTM;
-#if PLATFORM(WIN_OS)
+#if PLATFORM(QT)
+    // ### this is not threadsafe but we don't use multiple threads anyway
+    // in the Qt build
+#if USE(MULTIPLE_THREADS)
+#error Mulitple threads are currently not supported in the Qt/mingw build
+#endif
+    localTM = *localtime(&localTime);
+#elif PLATFORM(WIN_OS)
     localtime_s(&localTM, &localTime);
 #else
     localtime_r(&localTime, &localTM);

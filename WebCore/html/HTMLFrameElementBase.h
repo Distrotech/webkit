@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -36,10 +36,12 @@ public:
     virtual void parseMappedAttribute(MappedAttribute*);
 
     virtual void insertedIntoDocument();
+    virtual void removedFromDocument();
     virtual void willRemove();
 
     virtual void attach();
 
+    String location() const;
     void setLocation(const String&);
 
     virtual bool isFocusable() const;
@@ -85,9 +87,10 @@ protected:
     HTMLFrameElementBase(const QualifiedName&, Document*);
 
     bool isURLAllowed(const AtomicString&) const;
+    void setNameAndOpenURL();
     void openURL();
 
-    static void openURLCallback(Node*);
+    static void setNameAndOpenURLCallback(Node*);
 
     AtomicString m_URL;
     AtomicString m_name;
@@ -99,6 +102,8 @@ protected:
 
     bool m_noResize;
     bool m_viewSource;
+
+    bool m_shouldOpenURLAfterAttach;
 };
 
 } // namespace WebCore

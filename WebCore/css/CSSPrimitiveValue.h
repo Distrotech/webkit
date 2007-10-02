@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #ifndef CSSPrimitiveValue_h
@@ -31,7 +31,7 @@ namespace WebCore {
 class Counter;
 class DashboardRegion;
 class Pair;
-class RectImpl;
+class Rect;
 class RenderStyle;
 class StringImpl;
 
@@ -76,7 +76,7 @@ public:
     CSSPrimitiveValue(double, UnitTypes);
     CSSPrimitiveValue(const String&, UnitTypes);
     CSSPrimitiveValue(PassRefPtr<Counter>);
-    CSSPrimitiveValue(PassRefPtr<RectImpl>);
+    CSSPrimitiveValue(PassRefPtr<Rect>);
     CSSPrimitiveValue(unsigned color); // RGB value
     CSSPrimitiveValue(PassRefPtr<Pair>);
     CSSPrimitiveValue(PassRefPtr<DashboardRegion>); // FIXME: Why is dashboard region a primitive value? This makes no sense.
@@ -103,19 +103,26 @@ public:
     int computeLengthIntForLength(RenderStyle*, double multiplier);
     short computeLengthShort(RenderStyle*);
     short computeLengthShort(RenderStyle*, double multiplier);
-    double computeLengthFloat(RenderStyle*, bool applyZoomFactor = true);
+    float computeLengthFloat(RenderStyle*, bool applyZoomFactor = true);
+    double computeLengthDouble(RenderStyle*, bool applyZoomFactor = true);
 
     // use with care!!!
     void setPrimitiveType(unsigned short type) { m_type = type; }
+
+    double getDoubleValue(unsigned short unitType);
+    double getDoubleValue() const { return m_value.num; }
+
     void setFloatValue(unsigned short unitType, double floatValue, ExceptionCode&);
-    double getFloatValue(unsigned short unitType);
-    double getFloatValue() { return m_value.num; }
+    float getFloatValue(unsigned short unitType) { return static_cast<float>(getDoubleValue(unitType)); }
+    float getFloatValue() const { return static_cast<float>(m_value.num); }
+    int getIntValue(unsigned short unitType) { return static_cast<int>(getDoubleValue(unitType)); }
+    int getIntValue() const { return static_cast<int>(m_value.num); }
 
     void setStringValue(unsigned short stringType, const String& stringValue, ExceptionCode&);
     String getStringValue() const;
 
     Counter* getCounterValue () const { return m_type != CSS_COUNTER ? 0 : m_value.counter; }
-    RectImpl* getRectValue () const { return m_type != CSS_RECT ? 0 : m_value.rect; }
+    Rect* getRectValue () const { return m_type != CSS_RECT ? 0 : m_value.rect; }
     unsigned getRGBColorValue() const { return m_type != CSS_RGBCOLOR ? 0 : m_value.rgbcolor; }
     Pair* getPairValue() const { return m_type != CSS_PAIR ? 0 : m_value.pair; }
 
@@ -139,7 +146,7 @@ protected:
         double num;
         StringImpl* string;
         Counter* counter;
-        RectImpl* rect;
+        Rect* rect;
         unsigned rgbcolor;
         Pair* pair;
         DashboardRegion* region;

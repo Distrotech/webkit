@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -138,7 +138,10 @@ public:
     Vector<String> split(UChar separator, bool allowEmptyEntries = false) const;
 
     int toInt(bool* ok = 0) const;
+    int64_t toInt64(bool* ok = 0) const;
+    uint64_t toUInt64(bool* ok = 0) const;
     double toDouble(bool* ok = 0) const;
+    float toFloat(bool* ok = 0) const;
     Length* toLengthArray(int& len) const;
     Length* toCoordsArray(int& len) const;
     bool percentage(int &_percentage) const;
@@ -165,6 +168,7 @@ public:
 
 #if PLATFORM(QT)
     String(const QString&);
+    String(const QStringRef&);
     operator QString() const;
 #endif
 
@@ -181,6 +185,12 @@ public:
 
     CString latin1() const;
     CString utf8() const;
+
+    static String fromUTF8(const char*, size_t);
+    static String fromUTF8(const char*);
+
+    // Determines the writing direction using the Unicode Bidi Algorithm rules P2 and P3.
+    WTF::Unicode::Direction defaultWritingDirection() const { return m_impl ? m_impl->defaultWritingDirection() : WTF::Unicode::LeftToRight; }
     
     String(const DeprecatedString&);
     DeprecatedString deprecatedString() const;

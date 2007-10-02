@@ -26,15 +26,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "HIWebView.h"
+#ifndef __LP64__
 
-#include "CarbonWindowAdapter.h"
+#import "HIWebView.h"
 
-#include <WebKit/WebKit.h>
-#include "HIViewAdapter.h"
-#include <WebKitSystemInterface.h>
+#import "CarbonWindowAdapter.h"
+#import "HIViewAdapter.h"
+#import "WebHTMLViewInternal.h"
+#import "WebKit.h"
 
 #import <objc/objc-runtime.h>
+#import <WebKitSystemInterface.h>
 
 @interface NSWindow (AppKitSecretsHIWebViewKnows)
 - (void)_removeWindowRef;
@@ -43,6 +45,8 @@
 @interface NSView (AppKitSecretsHIWebViewKnows)
 - (void)_clearDirtyRectsForTree;
 @end
+
+extern "C" void HIWebViewRegisterClass();
 
 @interface MenuItemProxy : NSObject <NSValidatedUserInterfaceItem>
 {
@@ -141,7 +145,6 @@ static const EventTypeSpec kEvents[] = {
 
 static HIWebView*		HIWebViewConstructor( HIViewRef inView );
 static void				HIWebViewDestructor( HIWebView* view );
-void                    HIWebViewRegisterClass( void );
 
 static OSStatus			HIWebViewEventHandler(
 								EventHandlerCallRef	inCallRef,
@@ -193,10 +196,10 @@ static void				StopUpdateObserver( HIWebView* view );
 
 static inline void HIRectToQDRect( const HIRect* inRect, Rect* outRect )
 {
-    outRect->top = CGRectGetMinY( *inRect );
-    outRect->left = CGRectGetMinX( *inRect );
-    outRect->bottom = CGRectGetMaxY( *inRect );
-    outRect->right = CGRectGetMaxX( *inRect );
+    outRect->top = (SInt16)CGRectGetMinY( *inRect );
+    outRect->left = (SInt16)CGRectGetMinX( *inRect );
+    outRect->bottom = (SInt16)CGRectGetMaxY( *inRect );
+    outRect->right = (SInt16)CGRectGetMaxX( *inRect );
 }
 
 static Class webViewClass;
@@ -333,7 +336,6 @@ Draw( HIWebView* inView, RgnHandle limitRgn, CGContextRef inContext )
 	HIRect				hiRect;
 	bool				createdContext = false;
 
-#ifndef __LP64__
     if (!inView->fIsComposited)
     {
         GrafPtr port;
@@ -347,7 +349,6 @@ Draw( HIWebView* inView, RgnHandle limitRgn, CGContextRef inContext )
         CGContextScaleCTM( inContext, 1, -1 );
         createdContext = true;
     }
-#endif
 
 	HIViewGetBounds( inView->fViewRef, &bounds );
 
@@ -357,7 +358,7 @@ Draw( HIWebView* inView, RgnHandle limitRgn, CGContextRef inContext )
 	GetRegionBounds( limitRgn, &drawRect );
 
     if ( !inView->fIsComposited )
-        OffsetRect( &drawRect, -bounds.origin.x, -bounds.origin.y );
+        OffsetRect( &drawRect, (SInt16)-bounds.origin.x, (SInt16)-bounds.origin.y );
     
 	hiRect.origin.x = drawRect.left;
 	hiRect.origin.y = bounds.size.height - drawRect.bottom; // flip y
@@ -366,6 +367,15 @@ Draw( HIWebView* inView, RgnHandle limitRgn, CGContextRef inContext )
 
 //    printf( "Drawing: drawRect is (%g %g) (%g %g)\n", hiRect.origin.x, hiRect.origin.y,
 //            hiRect.size.width, hiRect.size.height );
+
+    // FIXME: We need to do layout before Carbon has decided what region needs drawn.
+    // In Cocoa we make sure to do layout and invalidate any new regions before draw, so everything
+    // can be drawn in one pass. Doing a layout here will cause new regions to be invalidated, but they
+    // will not all be drawn in this pass since we already have a fixed rect we are going to display.
+
+    NSView <WebDocumentView> *documentView = [[[inView->fWebView mainFrame] frameView] documentView];
+    if ([documentView isKindOfClass:[WebHTMLView class]])
+        [(WebHTMLView *)documentView _web_layoutIfNeededRecursive];
 
     if ( inView->fIsComposited )
         [inView->fWebView displayIfNeededInRect: *(NSRect*)&hiRect];
@@ -444,8 +454,8 @@ GetRegion(
 
 			temp.top = (SInt16)bounds.origin.y;
 			temp.left = (SInt16)bounds.origin.x;
-			temp.bottom = CGRectGetMaxY( bounds );
-			temp.right = CGRectGetMaxX( bounds );
+			temp.bottom = (SInt16)CGRectGetMaxY( bounds );
+			temp.right = (SInt16)CGRectGetMaxX( bounds );
 
 			RectRgn( outRgn, &temp );
 			err = noErr;
@@ -755,9 +765,11 @@ WindowHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData
                             SetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef, sizeof(WindowRef), &window);
                             SetEventParameter(inEvent, kEventParamWindowMouseLocation, typeQDPoint, sizeof(Point), &where);
 
-                            HIViewRef view;
-                            HIViewGetViewForMouseEvent(HIViewGetRoot(window), inEvent, &view);
-                            if (HIObjectIsOfClass((HIObjectRef)view, kHIWebViewClassID))
+                            OSStatus err = noErr;
+                            HIViewRef view = NULL;
+
+                            err = HIViewGetViewForMouseEvent(HIViewGetRoot(window), inEvent, &view);
+                            if (err == noErr && view && HIObjectIsOfClass((HIObjectRef)view, kHIWebViewClassID))
                                 result = SendEventToEventTargetWithOptions(inEvent, HIObjectGetEventTarget((HIObjectRef)view), kEventTargetDontPropagate);
                         }
                     }
@@ -767,9 +779,11 @@ WindowHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData
                 case kEventMouseDragged:
                 case kEventMouseWheelMoved:
                     {
-                        HIViewRef view;
-                        HIViewGetViewForMouseEvent(HIViewGetRoot(window), inEvent, &view);
-                        if (HIObjectIsOfClass((HIObjectRef)view, kHIWebViewClassID))
+                        OSStatus err = noErr;
+                        HIViewRef view = NULL;
+
+                        err = HIViewGetViewForMouseEvent(HIViewGetRoot(window), inEvent, &view);
+                        if (err == noErr && view && HIObjectIsOfClass((HIObjectRef)view, kHIWebViewClassID))
                             result = SendEventToEventTargetWithOptions(inEvent, HIObjectGetEventTarget((HIObjectRef)view), kEventTargetDontPropagate);
                     }
                     break;
@@ -808,7 +822,6 @@ SyncFrame( HIWebView* inView )
             [inView->fWebView setFrameOrigin: origin];
             [inView->fWebView setFrameSize: *(NSSize*)&frame.size];
         }
-#ifndef __LP64__
         else
         {
             GrafPtr			port = GetWindowPort( GetControlOwner( inView->fViewRef ) );
@@ -841,7 +854,6 @@ SyncFrame( HIWebView* inView )
             [inView->fWebView setFrameOrigin: *(NSPoint*)&frame.origin];
             [inView->fWebView setFrameSize: *(NSSize*)&frame.size];
         }
-#endif
     }
 }
 
@@ -875,7 +887,10 @@ SetFocusPart(
 
         // Advance the keyboard focus, maybe right off of this view.  Maybe a subview of this one already has the keyboard focus, maybe not.
         freshlyMadeFirstResponderView = AdvanceFocus( view, goForward );
-        partCodeToReturn = freshlyMadeFirstResponderView ? desiredFocus : kControlFocusNoPart;
+        if (freshlyMadeFirstResponderView)
+            partCodeToReturn = desiredFocus;
+        else
+            partCodeToReturn = kControlFocusNoPart;
         //NSLog(freshlyMadeFirstResponderView ? @"Advanced the key focus." : @"Relinquished the key focus.");
     }
 	else
@@ -1495,10 +1510,6 @@ MissingParameter:
 }
 
 
-#ifdef __LP64__
-static void StartUpdateObserver(HIWebView* view) {};
-static void StopUpdateObserver(HIWebView* view) {};
-#else
 static void UpdateObserver(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info);
 
 static void
@@ -1624,4 +1635,5 @@ UpdateObserver( CFRunLoopObserverRef observer, CFRunLoopActivity activity, void 
         DisposeRgn( region );
     }
 }
+
 #endif

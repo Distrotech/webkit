@@ -1,6 +1,6 @@
 /*      
     WebKitSystemInterface.h
-    Copyright (C) 2005, 2006 Apple Computer, Inc. All rights reserved.    
+    Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.    
 
     Public header file.
 */
@@ -19,9 +19,6 @@ typedef enum {
     WKCertificateParseResultFailed     = 1,
     WKCertificateParseResultPKCS7      = 2,
 } WKCertificateParseResult;
-
-NSString *WKCreateURLPasteboardFlavorTypeName(void);
-NSString *WKCreateURLNPasteboardFlavorTypeName(void);
 
 CFStringRef WKCopyCFLocalizationPreferredName(CFStringRef localization);
 CFStringRef WKSignedPublicKeyAndChallengeString(unsigned keySize, CFStringRef challenge, CFStringRef keyDescription);
@@ -45,11 +42,13 @@ void WKSetNSURLConnectionDefersCallbacks(NSURLConnection *connection, BOOL defer
 float WKSecondsSinceLastInputEvent(void);
 
 void WKShowKeyAndMain(void);
+#ifndef __LP64__
 OSStatus WKSyncWindowWithCGAfterMove(WindowRef);
 unsigned WKCarbonWindowMask(void);
 void *WKGetNativeWindowFromWindowRef(WindowRef);
 OSType WKCarbonWindowPropertyCreator(void);
 OSType WKCarbonWindowPropertyTag(void);
+#endif
 
 typedef id WKNSURLConnectionDelegateProxyPtr;
 
@@ -58,6 +57,7 @@ WKNSURLConnectionDelegateProxyPtr WKCreateNSURLConnectionDelegateProxy(void);
 void WKDisableCGDeferredUpdates(void);
 
 Class WKNSURLProtocolClassForReqest(NSURLRequest *request);
+void WKSetNSURLRequestShouldContentSniff(NSMutableURLRequest *request, BOOL shouldContentSniff);
 
 unsigned WKGetNSAutoreleasePoolCount(void);
 
@@ -106,13 +106,15 @@ void WKDrawBezeledTextArea(NSRect, BOOL enabled);
 void WKPopupMenu(NSMenu*, NSPoint location, float width, NSView*, int selectedItem, NSFont*);
 
 void WKSendUserChangeNotifications(void);
+#ifndef __LP64__    
 BOOL WKConvertNSEventToCarbonEvent(EventRecord *carbonEvent, NSEvent *cocoaEvent);
 void WKSendKeyEventToTSM(NSEvent *theEvent);
 void WKCallDrawingNotification(CGrafPtr port, Rect *bounds);
+#endif
 
-BOOL WKGetGlyphTransformedAdvances(NSFont *font, CGAffineTransform *m, ATSGlyphRef *glyph, CGSize *advance);
+BOOL WKGetGlyphTransformedAdvances(CGFontRef, NSFont*, CGAffineTransform *m, ATSGlyphRef *glyph, CGSize *advance);
 CGFontRef WKGetCGFontFromNSFont(NSFont *font);
-void WKGetFontMetrics(NSFont *font, int *ascent, int *descent, int *lineGap, unsigned *unitsPerEm);
+void WKGetFontMetrics(CGFontRef font, int *ascent, int *descent, int *lineGap, unsigned *unitsPerEm);
 NSFont *WKGetFontInLanguageForRange(NSFont *font, NSString *string, NSRange range);
 NSFont *WKGetFontInLanguageForCharacter(NSFont *font, UniChar ch);
 void WKSetCGFontRenderingMode(CGContextRef cgContext, NSFont *font);
@@ -121,8 +123,6 @@ void WKReleaseStyleGroup(void *group);
 BOOL WKCGContextGetShouldSmoothFonts(CGContextRef cgContext);
 
 void WKSetPatternPhaseInUserSpace(CGContextRef, CGPoint);
-
-#define WKGlyphVectorSize (50 * 32)
 
 typedef void *WKGlyphVectorRef;
 OSStatus WKConvertCharToGlyphs(void *styleGroup, const UniChar *characters, unsigned numCharacters, WKGlyphVectorRef glyphs);
@@ -135,9 +135,11 @@ ATSLayoutRecord *WKGetGlyphVectorFirstRecord(WKGlyphVectorRef glyphVector);
 size_t WKGetGlyphVectorRecordSize(WKGlyphVectorRef glyphVector);
 ATSGlyphRef WKGetDefaultGlyphForChar(NSFont *font, UniChar c);
 
+#ifndef __LP64__
 NSEvent *WKCreateNSEventWithCarbonEvent(EventRef eventRef);
 NSEvent *WKCreateNSEventWithCarbonMouseMoveEvent(EventRef inEvent, NSWindow *window);
 NSEvent *WKCreateNSEventWithCarbonClickEvent(EventRef inEvent, WindowRef windowRef);
+#endif
 
 CGContextRef WKNSWindowOverrideCGContext(NSWindow *, CGContextRef);
 void WKNSWindowRestoreCGContext(NSWindow *, CGContextRef);
@@ -153,6 +155,8 @@ BOOL WKAppVersionCheckLessThan(NSString *, int, double);
 
 int WKQTMovieDataRate(QTMovie* movie);
 float WKQTMovieMaxTimeLoaded(QTMovie* movie);
+
+CFStringRef WKCopyFoundationCacheDirectory(void);
 
 #ifdef __cplusplus
 }

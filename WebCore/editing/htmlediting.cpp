@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,6 +36,7 @@
 #include "RenderObject.h"
 #include "RegularExpression.h"
 #include "Range.h"
+#include "Selection.h"
 #include "Text.h"
 #include "VisiblePosition.h"
 #include "visible_units.h"
@@ -242,7 +243,7 @@ Position previousVisuallyDistinctCandidate(const Position& position)
 
 VisiblePosition firstEditablePositionAfterPositionInRoot(const Position& position, Node* highestRoot)
 {
-    if (comparePositions(position, Position(highestRoot, 0)) == -1)
+    if (comparePositions(position, Position(highestRoot, 0)) == -1 && highestRoot->isContentEditable())
         return VisiblePosition(Position(highestRoot, 0));
     
     Position p = nextVisuallyDistinctCandidate(position);
@@ -351,6 +352,9 @@ Position rangeCompliantEquivalent(const VisiblePosition& vpos)
 // on a Position before using it to create a DOM Range, or an exception will be thrown.
 int maxDeepOffset(const Node *node)
 {
+    ASSERT(node);
+    if (!node)
+        return 0;
     if (node->offsetInCharacters())
         return node->maxOffset();
         
@@ -409,9 +413,6 @@ bool isSpecialElement(const Node *n)
         return false;
 
     if (n->isLink())
-        return true;
-
-    if (n->hasTagName(ulTag) || n->hasTagName(olTag) || n->hasTagName(dlTag))
         return true;
 
     RenderObject *renderer = n->renderer();
@@ -489,7 +490,6 @@ bool isFirstVisiblePositionInSpecialElement(const Position& pos)
 Position positionBeforeContainingSpecialElement(const Position& pos, Node** containingSpecialElement)
 {
     Node* n = firstInSpecialElement(pos);
-    ASSERT(n);
     if (!n)
         return pos;
     Position result = positionBeforeNode(n);
@@ -508,7 +508,6 @@ bool isLastVisiblePositionInSpecialElement(const Position& pos)
 Position positionAfterContainingSpecialElement(const Position& pos, Node **containingSpecialElement)
 {
     Node* n = lastInSpecialElement(pos);
-    ASSERT(n);
     if (!n)
         return pos;
     Position result = positionAfterNode(n);
@@ -584,6 +583,8 @@ Node* enclosingNodeOfType(Node* node, bool (*nodeIsOfType)(Node*))
         return 0;
         
     Node* root = highestEditableRoot(Position(node, 0));
+    if (root == node)
+        return 0;
     
     for (Node* n = node->parentNode(); n; n = n->parentNode()) {
         if ((*nodeIsOfType)(n))
@@ -869,6 +870,64 @@ bool lineBreakExistsAtPosition(const VisiblePosition& visiblePosition)
     Position downstream(visiblePosition.deepEquivalent().downstream());
     return downstream.node()->hasTagName(brTag) ||
            downstream.node()->isTextNode() && downstream.node()->renderer()->style()->preserveNewline() && visiblePosition.characterAfter() == '\n';
+}
+
+PassRefPtr<Range> avoidIntersectionWithNode(const Range* range, Node* node)
+{
+    if (!range || range->isDetached())
+        return 0;
+
+    Document* document = range->ownerDocument();
+
+    ExceptionCode ec = 0;
+    Node* startContainer = range->startContainer(ec);
+    ASSERT(ec == 0);
+    int startOffset = range->startOffset(ec);
+    ASSERT(ec == 0);
+    Node* endContainer = range->endContainer(ec);
+    ASSERT(ec == 0);
+    int endOffset = range->endOffset(ec);
+    ASSERT(ec == 0);
+
+    ASSERT(startContainer);
+    ASSERT(endContainer);
+
+    if (startContainer == node || startContainer->isDescendantOf(node)) {
+        ASSERT(node->parentNode());
+        startContainer = node->parentNode();
+        startOffset = node->nodeIndex();
+    }
+    if (endContainer == node || endContainer->isDescendantOf(node)) {
+        ASSERT(node->parentNode());
+        endContainer = node->parentNode();
+        endOffset = node->nodeIndex();
+    }
+
+    return new Range(document, startContainer, startOffset, endContainer, endOffset);
+}
+
+Selection avoidIntersectionWithNode(const Selection& selection, Node* node)
+{
+    if (selection.isNone())
+        return Selection(selection);
+        
+    Selection updatedSelection(selection);
+    Node* base = selection.base().node();
+    Node* extent = selection.extent().node();
+    ASSERT(base);
+    ASSERT(extent);
+    
+    if (base == node || base->isDescendantOf(node)) {
+        ASSERT(node->parentNode());
+        updatedSelection.setBase(Position(node->parentNode(), node->nodeIndex()));
+    }
+    
+    if (extent == node || extent->isDescendantOf(node)) {
+        ASSERT(node->parentNode());
+        updatedSelection.setExtent(Position(node->parentNode(), node->nodeIndex()));
+    }
+        
+    return updatedSelection;
 }
 
 } // namespace WebCore

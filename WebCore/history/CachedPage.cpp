@@ -33,6 +33,8 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameView.h"
+#include "GCController.h"
+#include "Logging.h"
 #include "Page.h"
 #include "SystemTime.h"
 #if ENABLE(SVG)
@@ -50,6 +52,21 @@ using namespace KJS;
 
 namespace WebCore {
 
+#ifndef NDEBUG
+WTFLogChannel LogWebCoreCachedPageLeaks =  { 0x00000000, "", WTFLogChannelOn };
+
+struct CachedPageCounter { 
+    static int count; 
+    ~CachedPageCounter() 
+    { 
+        if (count)
+            LOG(WebCoreCachedPageLeaks, "LEAK: %d CachedPage\n", count);
+    }
+};
+int CachedPageCounter::count = 0;
+static CachedPageCounter cachedPageCounter;
+#endif
+
 PassRefPtr<CachedPage> CachedPage::create(Page* page)
 {
     return new CachedPage(page);
@@ -65,8 +82,10 @@ CachedPage::CachedPage(Page* page)
     , m_locationProperties(new SavedProperties)
     , m_interpreterBuiltins(new SavedBuiltins)
 {
-    m_document->willMoveInToPageCache(); 
-        
+#ifndef NDEBUG
+    ++CachedPageCounter::count;
+#endif
+    
     Frame* mainFrame = page->mainFrame();
     KJSProxy* proxy = mainFrame->scriptProxy();
     Window* window = Window::retrieveWindow(mainFrame);
@@ -92,6 +111,10 @@ CachedPage::CachedPage(Page* page)
 
 CachedPage::~CachedPage()
 {
+#ifndef NDEBUG
+    --CachedPageCounter::count;
+#endif
+
     close();
 }
 
@@ -139,14 +162,12 @@ void CachedPage::clear()
     if (m_document->inPageCache()) {
         Frame::clearTimers(m_view.get());
 
-        bool detached = !m_document->renderer();
         m_document->setInPageCache(false);
-        if (detached) {
-            m_document->detach();
-            m_document->removeAllEventListenersFromAllNodes();
-        }
+        // FIXME: We don't call willRemove here. Why is that OK?
+        m_document->detach();
+        m_document->removeAllEventListenersFromAllNodes();
 
-        m_view->clearPart();
+        m_view->clearFrame();
     }
 
     ASSERT(!m_document->inPageCache());
@@ -163,7 +184,7 @@ void CachedPage::clear()
     m_interpreterBuiltins.clear();
     m_pausedTimeouts.clear();
 
-    Collector::collect();
+    gcController().garbageCollectSoon();
 }
 
 void CachedPage::setDocumentLoader(PassRefPtr<DocumentLoader> loader)

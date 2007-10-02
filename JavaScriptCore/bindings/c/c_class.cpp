@@ -24,6 +24,9 @@
  */
 
 #include "config.h"
+
+#if !PLATFORM(DARWIN) || !defined(__LP64__)
+
 #include "c_class.h"
 
 #include "c_instance.h"
@@ -77,7 +80,7 @@ MethodList CClass::methodsNamed(const Identifier& identifier, Instance* instance
 
     Method* method = _methods.get(identifier.ustring().rep());
     if (method) {
-        methodList.addMethod(method);
+        methodList.append(method);
         return methodList;
     }
 
@@ -90,7 +93,7 @@ MethodList CClass::methodsNamed(const Identifier& identifier, Instance* instance
             JSLock lock;
             _methods.set(identifier.ustring().rep(), aMethod);
         }
-        methodList.addMethod(aMethod);
+        methodList.append(aMethod);
     }
     
     return methodList;
@@ -116,3 +119,5 @@ Field* CClass::fieldNamed(const Identifier& identifier, Instance* instance) cons
 }
 
 } } // namespace KJS::Bindings
+
+#endif

@@ -3,6 +3,7 @@
  *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
+ *           (C) 2007 David Smith (catfish.man@gmail.com)
  * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #ifndef RenderBlock_h
@@ -28,18 +29,22 @@
 #include "GapRects.h"
 #include "RenderFlow.h"
 #include "RootInlineBox.h"
+#include <wtf/ListHashSet.h>
 
 namespace WebCore {
 
+class BidiIterator;
+class BidiRun;
 class Position;
+class RootInlineBox;
+
+template <class Iterator, class Run> class BidiResolver;
+typedef BidiResolver<BidiIterator, BidiRun> BidiState;
 
 enum CaretType { CursorCaret, DragCaret };
 
 class RenderBlock : public RenderFlow {
 public:
-    typedef Vector<UChar, 1024> CharacterBuffer;
-    static void bidiReorderCharacters(Document*, RenderStyle*, CharacterBuffer&);
-
     RenderBlock(Node*);
     virtual ~RenderBlock();
 
@@ -121,19 +126,20 @@ public:
     virtual RenderObject* layoutLegend(bool relayoutChildren) { return 0; };
 
     // the implementation of the following functions is in bidi.cpp
-    void bidiReorderLine(const BidiIterator& start, const BidiIterator& end, BidiState& bidi);
-    RootInlineBox* determineStartPosition(bool fullLayout, BidiIterator& start, BidiState& bidi);
+    void bidiReorderLine(const BidiIterator& start, const BidiIterator& end, BidiState&);
+    RootInlineBox* determineStartPosition(bool fullLayout, BidiIterator& start, BidiState&);
     RootInlineBox* determineEndPosition(RootInlineBox* startBox, BidiIterator& cleanLineStart,
-                                        BidiStatus& cleanLineBidiStatus, BidiContext*& cleanLineBidiContext,
+                                        BidiStatus& cleanLineBidiStatus,
                                         int& yPos);
-    bool matchedEndLine(const BidiIterator& start, const BidiStatus& status, BidiContext* context,
-                        const BidiIterator& endLineStart, const BidiStatus& endLineStatus, BidiContext* endLineContext,
+    bool matchedEndLine(const BidiIterator& start, const BidiStatus& status,
+                        const BidiIterator& endLineStart, const BidiStatus& endLineStatus,
                         RootInlineBox*& endLine, int& endYPos, int& repaintBottom, int& repaintTop);
+    bool generatesLineBoxesForInlineChild(RenderObject*);
     int skipWhitespace(BidiIterator&, BidiState&);
     BidiIterator findNextLineBreak(BidiIterator& start, BidiState& info);
     RootInlineBox* constructLine(const BidiIterator& start, const BidiIterator& end);
     InlineFlowBox* createLineBoxes(RenderObject*);
-    void computeHorizontalPositionsForLine(RootInlineBox*, BidiState&);
+    void computeHorizontalPositionsForLine(RootInlineBox*, bool reachedEnd);
     void computeVerticalPositionsForLine(RootInlineBox*);
     void checkLinesForOverflow();
     void deleteEllipsisLineBoxes();
@@ -249,7 +255,7 @@ public:
         SelectionState state() const { return m_state; }
     };
 
-    virtual IntRect selectionRect() { return selectionGapRects(); }
+    virtual IntRect selectionRect(bool) { return selectionGapRects(); }
     GapRects selectionGapRects();
     virtual bool shouldPaintSelectionGaps() const;
     bool isSelectionRoot() const;
@@ -287,6 +293,10 @@ public:
     void setDesiredColumnCountAndWidth(int count, int width);
     
     void adjustRectForColumns(IntRect&) const;
+
+    void addContinuationWithOutline(RenderFlow*);
+    void paintContinuationOutlines(PaintInfo&, int tx, int ty);
+
 private:
     void adjustPointToColumnContents(IntPoint&) const;
     void adjustForBorderFit(int x, int& left, int& right) const; // Helper function for borderFitAdjust
@@ -435,8 +445,9 @@ protected:
     // End helper functions and structs used by layoutBlockChildren.
 
 private:
+    typedef ListHashSet<RenderObject*>::const_iterator Iterator;
     DeprecatedPtrList<FloatingObject>* m_floatingObjects;
-    DeprecatedPtrList<RenderObject>* m_positionedObjects;
+    ListHashSet<RenderObject*>* m_positionedObjects;
          
      // Allocated only when some of these fields have non-default values
      struct MaxMargin {

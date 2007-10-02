@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -27,6 +27,8 @@
 #if ENABLE(SVG)
 #include "SVGRootInlineBox.h"
 
+#include "Editor.h"
+#include "Frame.h"
 #include "GraphicsContext.h"
 #include "RenderSVGRoot.h"
 #include "SVGInlineFlowBox.h"
@@ -35,6 +37,8 @@
 #include "SVGRenderSupport.h"
 #include "SVGResourceFilter.h"
 #include "SVGTextPositioningElement.h"
+#include "SVGURIReference.h"
+#include "Text.h"
 #include "TextStyle.h"
 
 // Text chunk creation is complex and the whole process
@@ -403,7 +407,7 @@ TextStyle svgTextStyleForInlineTextBox(RenderStyle* style, const InlineTextBox* 
     ASSERT(textBox);
     ASSERT(style);
 
-    return TextStyle(false, xPos, textBox->m_toAdd, textBox->m_reversed, textBox->m_dirOverride || style->visuallyOrdered());
+    return TextStyle(false, xPos, textBox->toAdd(), textBox->m_reversed, textBox->m_dirOverride || style->visuallyOrdered());
 }
 
 static float cummulatedWidthOfTextChunk(SVGTextChunk& chunk)

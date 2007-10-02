@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -55,11 +55,6 @@ SVGSVGElement* SVGDocument::rootElement() const
     return 0;
 }
 
-PassRefPtr<Element> SVGDocument::createElement(const String& tagName, ExceptionCode& ec)
-{
-    return createElementNS(SVGNames::svgNamespaceURI, tagName, ec);
-}
-
 void SVGDocument::dispatchZoomEvent(float prevScale, float newScale)
 {
     ExceptionCode ec = 0;
@@ -94,13 +89,16 @@ bool SVGDocument::zoomAndPanEnabled() const
 void SVGDocument::startPan(const FloatPoint& start)
 {
     if (rootElement())
-        m_translation = FloatPoint(start.x() - rootElement()->currentTranslate().x(), rootElement()->currentTranslate().y() + start.y());
+        m_translate = FloatPoint(start.x() - rootElement()->currentTranslate().x(), rootElement()->currentTranslate().y() + start.y());
 }
 
 void SVGDocument::updatePan(const FloatPoint& pos) const
 {
-    if (rootElement())
-        rootElement()->setCurrentTranslate(FloatPoint(pos.x() - m_translation.x(), m_translation.y() - pos.y()));
+    if (rootElement()) {
+        rootElement()->setCurrentTranslate(FloatPoint(pos.x() - m_translate.x(), m_translate.y() - pos.y()));
+        if (renderer())
+            renderer()->repaint();
+    }
 }
 
 }

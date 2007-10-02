@@ -15,8 +15,8 @@
 
     You should have received a copy of the GNU Library General Public License
     aint with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -25,6 +25,7 @@
 #include "SVGPaintServerGradient.h"
 
 #include "CgSupport.h"
+#include "FloatConversion.h"
 #include "GraphicsContext.h"
 #include "ImageBuffer.h"
 #include "RenderObject.h"
@@ -69,10 +70,10 @@ static void cgGradientCallback(void* info, const CGFloat* inValues, CGFloat* out
         CGFloat diffFromPrevious = inValue - stops[nextStopIndex - 1].offset;
         CGFloat percent = diffFromPrevious * stops[nextStopIndex].previousDeltaInverse;
 
-        outColor[0] = ((1.0 - percent) * previousColorArray[0] + percent * nextColorArray[0]);
-        outColor[1] = ((1.0 - percent) * previousColorArray[1] + percent * nextColorArray[1]);
-        outColor[2] = ((1.0 - percent) * previousColorArray[2] + percent * nextColorArray[2]);
-        outColor[3] = ((1.0 - percent) * previousColorArray[3] + percent * nextColorArray[3]);
+        outColor[0] = ((1.0f - percent) * previousColorArray[0] + percent * nextColorArray[0]);
+        outColor[1] = ((1.0f - percent) * previousColorArray[1] + percent * nextColorArray[1]);
+        outColor[2] = ((1.0f - percent) * previousColorArray[2] + percent * nextColorArray[2]);
+        outColor[3] = ((1.0f - percent) * previousColorArray[3] + percent * nextColorArray[3]);
     }
     // FIXME: have to handle the spreadMethod()s here SPREADMETHOD_REPEAT, etc.
 }
@@ -105,10 +106,10 @@ static CGShadingRef CGShadingRefForRadialGradient(const SVGPaintServerRadialGrad
 
     // Spec: If (fx, fy) lies outside the circle defined by (cx, cy) and r, set (fx, fy)
     // to the point of intersection of the line through (fx, fy) and the circle.
-    if (sqrtf(fdx * fdx + fdy * fdy) > radius) { 
+    if (sqrt(fdx * fdx + fdy * fdy) > radius) { 
         double angle = atan2(focus.y * 100.0, focus.x * 100.0);
-        focus.x = cos(angle) * radius;
-        focus.y = sin(angle) * radius;
+        focus.x = narrowPrecisionToCGFloat(cos(angle) * radius);
+        focus.y = narrowPrecisionToCGFloat(sin(angle) * radius);
     }
 
     CGFunctionCallbacks callbacks = {0, cgGradientCallback, NULL};
@@ -117,7 +118,7 @@ static CGShadingRef CGShadingRefForRadialGradient(const SVGPaintServerRadialGrad
     CGFunctionRef shadingFunction = CGFunctionCreate((void *)server, 1, domainLimits, 4, rangeLimits, &callbacks);
 
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGShadingRef shading = CGShadingCreateRadial(colorSpace, focus, 0, center, radius, shadingFunction, true, true);
+    CGShadingRef shading = CGShadingCreateRadial(colorSpace, focus, 0, center, narrowPrecisionToCGFloat(radius), shadingFunction, true, true);
     CGColorSpaceRelease(colorSpace);
     CGFunctionRelease(shadingFunction);
     return shading;
@@ -130,11 +131,11 @@ void SVGPaintServerGradient::updateQuartzGradientStopsCache(const Vector<SVGGrad
     m_stopsCount = stops.size();
     m_stopsCache = new SVGPaintServerGradient::QuartzGradientStop[m_stopsCount];
 
-    CGFloat previousOffset = 0.0;
+    CGFloat previousOffset = 0.0f;
     for (unsigned i = 0; i < stops.size(); ++i) {
         CGFloat currOffset = min(max(stops[i].first, previousOffset), static_cast<CGFloat>(1.0));
         m_stopsCache[i].offset = currOffset;
-        m_stopsCache[i].previousDeltaInverse = 1.0 / (currOffset - previousOffset);
+        m_stopsCache[i].previousDeltaInverse = 1.0f / (currOffset - previousOffset);
         previousOffset = currOffset;
         CGFloat* ca = m_stopsCache[i].colorArray;
         stops[i].second.getRGBA(ca[0], ca[1], ca[2], ca[3]);
@@ -213,7 +214,7 @@ void SVGPaintServerGradient::renderPath(GraphicsContext*& context, const RenderO
     RenderStyle* style = path->style();
     CGContextRef contextRef = context->platformContext();
     ASSERT(contextRef);
-
+    
     bool isFilled = (type & ApplyToFillTargetType) && style->svgStyle()->hasFill();
 
     // Compute destination object bounding box
@@ -238,7 +239,7 @@ void SVGPaintServerGradient::handleBoundingBoxModeAndGradientTransformation(Grap
 
     if (boundingBoxMode()) {
         // Choose default gradient bounding box
-        CGRect gradientBBox = CGRectMake(0.0, 0.0, 1.0, 1.0);
+        CGRect gradientBBox = CGRectMake(0.0f, 0.0f, 1.0f, 1.0f);
 
         // Generate a transform to map between both bounding boxes
         CGAffineTransform gradientIntoObjectBBox = CGAffineTransformMakeMapBetweenRects(gradientBBox, CGRect(targetRect));

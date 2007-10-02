@@ -2,11 +2,13 @@
     <ul id="navlist">
         <li><a href="/">Home</a></li>
         <li><a href="/blog/">Surfin&#8217; Safari Blog</a></li>
+        <li><a href="/projects/goals.html">Project Goals</a></li>
         <li><a href="/contact.html">Keeping in Touch</a></li>
         <li><a href="http://trac.webkit.org/projects/webkit">Trac</a></li>
 
         <li class="subtitle">Working with the Code</li>
 
+        <li><a href="/building/tools.html">Installing Developer Tools</a></li>
         <li><a href="/building/checkout.html">Getting the Code</a></li>
         <li><a href="/building/build.html">Building WebKit</a></li>
         <li><a href="/building/run.html">Running WebKit</a></li>
@@ -27,6 +29,7 @@
         <li><a href="/quality/testing.html">Regression Testing</a></li>
         <li><a href="/quality/leakhunting.html">Leak Hunting</a></li>
         <li><a href="/quality/testwriting.html">Writing New Tests</a></li>
+        <li><a href="/quality/crashlogs.html">Getting a Crash Log</a></li>
 
         <li class="subtitle">Bugs</li>
 

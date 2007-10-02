@@ -26,12 +26,13 @@
 #ifndef ScrollView_h
 #define ScrollView_h
 
+#include "IntRect.h"
 #include "ScrollTypes.h"
 #include "Widget.h"
 #include <wtf/HashSet.h>
 
-#if PLATFORM(QT)
-class QAbstractScrollArea;
+#if PLATFORM(GTK)
+typedef struct _GtkAdjustment GtkAdjustment;
 #endif
 
 #if PLATFORM(WIN)
@@ -86,7 +87,17 @@ namespace WebCore {
         // of containing window is.  (For example on Mac it is the containing NSWindow.)
         IntPoint windowToContents(const IntPoint&) const;
         IntPoint contentsToWindow(const IntPoint&) const;
- 
+        
+#if PLATFORM(MAC)
+        // On Mac only because of flipped NSWindow y-coordinates, we have to have a special implementation.
+        IntRect windowToContents(const IntRect&) const;
+        IntRect contentsToWindow(const IntRect&) const;
+#else
+        // Other platforms can just implement these helper methods using the corresponding point conversion methods.
+        IntRect contentsToWindow(const IntRect& rect) const { return IntRect(contentsToWindow(rect.location()), rect.size()); }
+        IntRect windowToContents(const IntRect& rect) const { return IntRect(windowToContents(rect.location()), rect.size()); }
+#endif
+
         void setStaticBackground(bool);
 
         bool inWindow() const;
@@ -128,6 +139,9 @@ namespace WebCore {
         void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
         void updateBackingStore();
 
+        void setAllowsScrolling(bool);
+        bool allowsScrolling() const;
+
         HashSet<Widget*>* children();
 
     private:
@@ -137,18 +151,29 @@ namespace WebCore {
         ScrollViewPrivate* m_data;
 #endif
 
-#if PLATFORM(GDK)
+#if PLATFORM(GTK)
         ScrollView();
         ~ScrollView();
 
-        void updateView(const IntRect&, bool now = false);
-        virtual void setDrawable(GdkDrawable* drawable);
+        virtual void setGtkAdjustments(GtkAdjustment* hadj, GtkAdjustment* vadj);
+        virtual IntPoint convertChildToSelf(const Widget*, const IntPoint&) const;
+        virtual IntPoint convertSelfToChild(const Widget*, const IntPoint&) const;
+        virtual void geometryChanged() const;
+
+        virtual void paint(GraphicsContext*, const IntRect&);
         virtual void setFrameGeometry(const IntRect&);
-        void updateGeometry();
+
+        void addToDirtyRegion(const IntRect&);
+        void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
+        void updateBackingStore();
+
+    protected:
+        HashSet<Widget*>* children() const;
+
     private:
-        void updateScrollbars();
         IntSize maximumScroll() const;
-        int updateScrollInfo(short type, int current, int max, int pageSize);
+        void updateScrollbars(const IntSize& desiredOffset);
+
         class ScrollViewPrivate;
         ScrollViewPrivate* m_data;
 #endif
@@ -157,14 +182,32 @@ namespace WebCore {
         ScrollView();
         ~ScrollView();
 
-        void setScrollArea(QAbstractScrollArea*);
-        void setAllowsScrolling(bool);
+        virtual void paint(GraphicsContext*, const IntRect&);
+
+        virtual IntPoint convertChildToSelf(const Widget*, const IntPoint&) const;
+        virtual IntPoint convertSelfToChild(const Widget*, const IntPoint&) const;
+
+        virtual void geometryChanged() const;
+        virtual void setFrameGeometry(const IntRect&);
+
+        IntRect windowResizerRect();
+        bool resizerOverlapsContent() const;
+        void adjustOverlappingScrollbarCount(int overlapDelta);
+
+        virtual void setParent(ScrollView*);
+
+        void addToDirtyRegion(const IntRect&);
+        void scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect);
+        void updateBackingStore();
+
+        PlatformScrollbar *horizontalScrollBar() const;
+        PlatformScrollbar *verticalScrollBar() const;
 
     private:
-        QAbstractScrollArea* m_area;
-        bool m_allowsScrolling;
-        int  m_width;
-        int  m_height;
+        void updateScrollbars(const IntSize& desiredOffset);
+        IntSize maximumScroll() const;
+        class ScrollViewPrivate;
+        ScrollViewPrivate* m_data;
 #endif
     };
 

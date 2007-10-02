@@ -18,7 +18,7 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
@@ -30,6 +30,7 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "Language.h"
+#include "Page.h"
 #include "PlugInInfoStore.h"
 #include "Settings.h"
 
@@ -70,7 +71,7 @@ namespace KJS {
         PluginBase(ExecState *exec);
         virtual ~PluginBase();
         
-        void refresh(bool reload);
+        static void refresh(bool reload);
 
     protected:
         static void cachePluginDataIfNecessary();
@@ -235,7 +236,7 @@ void PluginBase::cachePluginDataIfNecessary()
                 continue;
             
             plugins->append(plugin);
-            if (!plugin->mimes)
+            if (plugin->mimes.isEmpty())
                 continue;
             
             Vector<MimeClassInfo*>::iterator end = plugin->mimes.end();
@@ -514,7 +515,9 @@ JSValue *MimeType::getValueProperty(ExecState *exec, int token) const
     case EnabledPlugin: {
         ScriptInterpreter *interpreter = static_cast<ScriptInterpreter *>(exec->dynamicInterpreter());
         Frame *frame = interpreter->frame();
-        if (frame && frame->settings()->arePluginsEnabled())
+        ASSERT(frame);
+        Settings* settings = frame->settings();
+        if (settings && settings->arePluginsEnabled())
             return new Plugin(exec, m_info->plugin);
         else
             return jsUndefined();
@@ -531,7 +534,7 @@ bool MimeType::getOwnPropertySlot(ExecState *exec, const Identifier& propertyNam
 
 JSValue *PluginsFunc::callAsFunction(ExecState *exec, JSObject *, const List &args)
 {
-    PluginBase(exec).refresh(args[0]->toBoolean(exec));
+    PluginBase::refresh(args[0]->toBoolean(exec));
     return jsUndefined();
 }
 
@@ -541,7 +544,8 @@ JSValue *NavigatorFunc::callAsFunction(ExecState *exec, JSObject *thisObj, const
     return throwError(exec, TypeError);
   Navigator *nav = static_cast<Navigator *>(thisObj);
   // javaEnabled()
-  return jsBoolean(nav->frame()->settings()->isJavaEnabled());
+  Settings* settings = nav->frame() ? nav->frame()->settings() : 0;
+  return jsBoolean(settings && settings->isJavaEnabled());
 }
 
 } // namespace

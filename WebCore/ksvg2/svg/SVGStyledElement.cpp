@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2006, 2007 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005 Rob Buis <buis@kde.org>
+                  2004, 2005, 2007 Rob Buis <buis@kde.org>
 
     This file is part of the KDE project
 
@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -26,19 +26,17 @@
 #include "SVGStyledElement.h"
 
 #include "Attr.h"
-#include "cssstyleselector.h"
+#include "CSSStyleSelector.h"
 #include "Document.h"
 #include "HTMLNames.h"
-#include "ksvgcssproperties.h"
 #include "PlatformString.h"
-#include "RenderView.h"
 #include "RenderPath.h"
 #include "SVGElement.h"
 #include "SVGElementInstance.h"
 #include "SVGNames.h"
 #include "SVGRenderStyle.h"
 #include "SVGSVGElement.h"
-
+#include "ksvgcssproperties.h"
 #include <wtf/Assertions.h>
 
 namespace WebCore {
@@ -274,11 +272,6 @@ PassRefPtr<CSSValue> SVGStyledElement::getPresentationAttribute(const String& na
     if (!cssSVGAttr || !cssSVGAttr->style())
         return 0;
     return cssSVGAttr->style()->getPropertyCSSValue(name);
-}
-
-RenderView* SVGStyledElement::view() const
-{
-    return static_cast<RenderView*>(document()->renderer());
 }
 
 void SVGStyledElement::rebuildRenderer() const

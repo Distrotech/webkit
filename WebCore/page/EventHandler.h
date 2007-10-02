@@ -48,6 +48,7 @@ namespace WebCore {
 
 class AtomicString;
 class Clipboard;
+class Cursor;
 class EventTargetNode;
 class Event;
 class FloatPoint;
@@ -84,7 +85,7 @@ public:
 
     void clear();
 
-    void updateSelectionForMouseDragOverPosition(const VisiblePosition&);
+    void updateSelectionForMouseDrag();
 
     Node* mousePressNode() const;
     void setMousePressNode(PassRefPtr<Node>);
@@ -120,8 +121,10 @@ public:
 
     bool mouseDownMayStartSelect() const { return m_mouseDownMayStartSelect; }
 
+    bool mouseMoved(const PlatformMouseEvent&);
+
     bool handleMousePressEvent(const PlatformMouseEvent&);
-    bool handleMouseMoveEvent(const PlatformMouseEvent&);
+    bool handleMouseMoveEvent(const PlatformMouseEvent&, HitTestResult* hoveredNode = 0);
     bool handleMouseReleaseEvent(const PlatformMouseEvent&);
     bool handleWheelEvent(PlatformWheelEvent&);
 
@@ -187,9 +190,12 @@ private:
     bool handleMouseDraggedEvent(const MouseEventWithHitTestResults&);
     bool handleMouseReleaseEvent(const MouseEventWithHitTestResults&);
 
+    Cursor selectCursor(const MouseEventWithHitTestResults&, PlatformScrollbar*);
+
     void hoverTimerFired(Timer<EventHandler>*);
 
     static bool canMouseDownStartSelect(Node*);
+    static bool canMouseDragExtendSelect(Node*);
 
     void handleAutoscroll(RenderObject*);
     void startAutoscrollTimer();
@@ -220,10 +226,10 @@ private:
     bool dragHysteresisExceeded(const IntPoint&) const;
 
     bool passMousePressEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe);
-    bool passMouseMoveEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe);
+    bool passMouseMoveEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe, HitTestResult* hoveredNode = 0);
     bool passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe);
 
-    bool passSubframeEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe);
+    bool passSubframeEventToSubframe(MouseEventWithHitTestResults&, Frame* subframe, HitTestResult* hoveredNode = 0);
 
     bool passMousePressEventToScrollbar(MouseEventWithHitTestResults&, PlatformScrollbar*);
 
@@ -249,6 +255,8 @@ private:
 #endif
 
     bool invertSenseOfTabsToLinks(KeyboardEvent*) const;
+
+    void updateSelectionForMouseDrag(Node* targetNode, const IntPoint& localPoint);
 
     Frame* m_frame;
 

@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -33,6 +33,8 @@
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "HistoryItem.h"
+#include "InspectorController.h"
+#include "Logging.h"
 #include "ProgressTracker.h"
 #include "RenderWidget.h"
 #include "SelectionController.h"
@@ -50,19 +52,37 @@ namespace WebCore {
 static HashSet<Page*>* allPages;
 static HashMap<String, HashSet<Page*>*>* frameNamespaces;
 
-Page::Page(ChromeClient* chromeClient, ContextMenuClient* contextMenuClient, EditorClient* editorClient, DragClient* dragClient)
+#ifndef NDEBUG
+WTFLogChannel LogWebCorePageLeaks =  { 0x00000000, "", WTFLogChannelOn };
+
+struct PageCounter { 
+    static int count; 
+    ~PageCounter() 
+    { 
+        if (count)
+            LOG(WebCorePageLeaks, "LEAK: %d Page\n", count);
+    }
+};
+int PageCounter::count = 0;
+static PageCounter pageCounter;
+#endif
+
+Page::Page(ChromeClient* chromeClient, ContextMenuClient* contextMenuClient, EditorClient* editorClient, DragClient* dragClient, InspectorClient* inspectorClient)
     : m_chrome(new Chrome(this, chromeClient))
     , m_dragCaretController(new SelectionController(0, true))
     , m_dragController(new DragController(this, dragClient))
     , m_focusController(new FocusController(this))
     , m_contextMenuController(new ContextMenuController(this, contextMenuClient))
-    , m_backForwardList(new BackForwardList)
-    , m_settings(new Settings)
+    , m_inspectorController(new InspectorController(this, inspectorClient))
+    , m_settings(new Settings(this))
     , m_progress(new ProgressTracker)
+    , m_backForwardList(new BackForwardList(this))
     , m_editorClient(editorClient)
     , m_frameCount(0)
     , m_tabKeyCyclesThroughElements(true)
     , m_defersLoading(false)
+    , m_inLowQualityInterpolationMode(false)
+    , m_parentInspectorController(0)
 {
     if (!allPages) {
         allPages = new HashSet<Page*>;
@@ -71,6 +91,10 @@ Page::Page(ChromeClient* chromeClient, ContextMenuClient* contextMenuClient, Edi
 
     ASSERT(!allPages->contains(this));
     allPages->add(this);
+
+#ifndef NDEBUG
+    ++PageCounter::count;
+#endif
 }
 
 Page::~Page()
@@ -82,10 +106,13 @@ Page::~Page()
     for (Frame* frame = mainFrame(); frame; frame = frame->tree()->traverseNext())
         frame->pageDestroyed();
     m_editorClient->pageDestroyed();
+    m_inspectorController->pageDestroyed();
 
     m_backForwardList->close();
 
 #ifndef NDEBUG
+    --PageCounter::count;
+
     // Cancel keepAlive timers, to ensure we release all Frames before exiting.
     // It's safe to do this because we prohibit closing a Page while JavaScript
     // is executing.
@@ -128,9 +155,6 @@ bool Page::goForward()
 
 void Page::goToItem(HistoryItem* item, FrameLoadType type)
 {
-    // We never go back/forward on a per-frame basis, so the target must be the main frame
-    ASSERT(item->target().isEmpty() || m_mainFrame->tree()->find(item->target()) == m_mainFrame);
-
     // Abort any current load if we're going to a history item
     m_mainFrame->loader()->stopAllLoaders();
     m_mainFrame->loader()->goToItem(item, type);
@@ -181,17 +205,6 @@ void Page::setNeedsReapplyStyles()
             frame->setNeedsReapplyStyles();
 }
 
-void Page::setNeedsReapplyStylesForSettingsChange(Settings* settings)
-{
-    if (!allPages)
-        return;
-    HashSet<Page*>::iterator end = allPages->end();
-    for (HashSet<Page*>::iterator it = allPages->begin(); it != end; ++it)
-        for (Frame* frame = (*it)->mainFrame(); frame; frame = frame->tree()->traverseNext())
-            if (frame->settings() == settings)
-                frame->setNeedsReapplyStyles();
-}
-
 const Selection& Page::selection() const
 {
     return focusController()->focusedOrMainFrame()->selectionController()->selection();
@@ -205,6 +218,21 @@ void Page::setDefersLoading(bool defers)
     m_defersLoading = defers;
     for (Frame* frame = mainFrame(); frame; frame = frame->tree()->traverseNext())
         frame->loader()->setDefersLoading(defers);
+}
+
+void Page::clearUndoRedoOperations()
+{
+    m_editorClient->clearUndoRedoOperations();
+}
+
+bool Page::inLowQualityImageInterpolationMode() const
+{
+    return m_inLowQualityInterpolationMode;
+}
+
+void Page::setInLowQualityImageInterpolationMode(bool mode)
+{
+    m_inLowQualityInterpolationMode = mode;
 }
 
 } // namespace WebCore

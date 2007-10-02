@@ -3,7 +3,7 @@
 /*
  *  This file is part of the KDE libraries
  *  Copyright (C) 2002-2003 Lars Knoll (knoll@kde.org)
- *  Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2004, 2005, 2006, 2007 Apple Inc.
  *  Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  *  This library is free software; you can redistribute it and/or
@@ -18,13 +18,14 @@
  *
  *  You should have received a copy of the GNU Lesser General Public
  *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
 #include "config.h"
 
 #include "CSSMediaRule.h"
+#include "CSSParser.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSRule.h"
 #include "CSSRuleList.h"
@@ -36,7 +37,6 @@
 #include "MediaQuery.h"
 #include "MediaQueryExp.h"
 #include "PlatformString.h"
-#include "cssparser.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -172,7 +172,8 @@ static int cssyylex(YYSTYPE* yylval) { return CSSParser::current()->lex(yylval);
 
 %right <string> IDENT
 
-%nonassoc <string> HASH
+%nonassoc <string> HEX
+%nonassoc <string> IDSEL
 %nonassoc ':'
 %nonassoc '.'
 %nonassoc '['
@@ -740,7 +741,7 @@ specifier_list:
 ;
 
 specifier:
-    HASH {
+    IDSEL {
         CSSParser* p = static_cast<CSSParser*>(parser);
         $$ = p->createFloatingSelector();
         $$->m_match = CSSSelector::Id;
@@ -748,6 +749,19 @@ specifier:
             $1.lower();
         $$->m_attr = idAttr;
         $$->m_value = atomicString($1);
+    }
+  | HEX {
+        if ($1.characters[0] >= '0' && $1.characters[0] <= '9') {
+            $$ = 0;
+        } else {
+            CSSParser* p = static_cast<CSSParser*>(parser);
+            $$ = p->createFloatingSelector();
+            $$->m_match = CSSSelector::Id;
+            if (!p->strict)
+                $1.lower();
+            $$->m_attr = idAttr;
+            $$->m_value = atomicString($1);
+        }
     }
   | class
   | attrib
@@ -1114,7 +1128,8 @@ function:
  * after the "#"; e.g., "#000" is OK, but "#abcd" is not.
  */
 hexcolor:
-  HASH maybe_space { $$ = $1; }
+  HEX maybe_space { $$ = $1; }
+  | IDSEL maybe_space { $$ = $1; }
   ;
 
 

@@ -1,5 +1,0 @@
-TEST(!video.muted) OK
-TEST(video.muted) OK
-TEST(!video.muted) OK
-END OF TEST
-

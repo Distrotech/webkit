@@ -41,11 +41,14 @@ JSGlobalContextRef JSGlobalContextCreate(JSClassRef globalObjectClass)
 
     JSObject* globalObject;
     if (globalObjectClass)
-        globalObject = new JSCallbackObject(0, globalObjectClass, 0, 0); // FIXME: <rdar://problem/4949002>
+        // Specify jsNull() as the prototype.  Interpreter will fix it up to point at builtinObjectPrototype() in its constructor
+        globalObject = new JSCallbackObject(0, globalObjectClass, jsNull(), 0);
     else
         globalObject = new JSObject();
 
     Interpreter* interpreter = new Interpreter(globalObject); // adds the built-in object prototype to the global object
+    if (globalObjectClass)
+        static_cast<JSCallbackObject*>(globalObject)->initializeIfNeeded(interpreter->globalExec());
     JSGlobalContextRef ctx = reinterpret_cast<JSGlobalContextRef>(interpreter->globalExec());
     return JSGlobalContextRetain(ctx);
 }

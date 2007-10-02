@@ -3,7 +3,7 @@
 <title>Test XmlHttpRequest response encoding handling</title>
 <meta http-equiv="content-type" content="text/html;charset=koi8-r">
 <body>
-<p>Test for <a href="http://bugzilla.opendarwin.org/show_bug.cgi?id=5744">bug 5744</a>
+<p>Test for <a href="http://bugs.webkit.org/show_bug.cgi?id=5744">bug 5744</a>
 - correctly determine the encoding of XMLHttpRequest responses.</p>
 <script>
 
@@ -104,10 +104,15 @@
              getWithOverride('resources/reply3.xml', 'text/xml; charset=windows-1251', true);
            } else if (asyncStep == 8) {
              asyncStep = 9;
-             log("Async: XML, koi8-r specified in XML declaration, but overridden by windows-1251 in overrideMimeType: " + req.responseXML.getElementsByTagName('node')[0].childNodes[0].nodeValue + ". responseText: " + req.responseText);
+             log("Async: XML, koi8-r specified in XML declaration, but overridden by windows-1251 in overrideMimeType: " + 
+                 (req.responseXML ? req.responseXML.getElementsByTagName('node')[0].childNodes[0].nodeValue  : "<No responseXML>") + ". responseText: " + req.responseText);
              get('resources/reply5.txt', true);
            } else if (asyncStep == 9) {
+             asyncStep = 10;
              log("Async: XML transferred as text/plain, UTF-8 as default (ignore XML text declaration): " + req.responseText);
+             get('resources/1251.html', true);
+           } else if (asyncStep == 10) {
+             log("Async: HTML, charset determined by a META: " + req.responseText.replace(/\s/g, "").replace(/.*<body>(.*)<\/body>.*/, "$1"));
            }
         } else {
            log("Error loading URL: status " + req.status);
@@ -189,6 +194,14 @@
         log("Exception: " + ex.description);
     }
     
+    // 10
+    try {
+        req =  get('resources/1251.html', false);
+        log("HTML, charset determined by a META: " + req.responseText.replace(/\s/g, "").replace(/.*<body>(.*)<\/body>.*/, "$1"));
+    } catch (ex) {
+        log("Exception: " + ex.description);
+    }
+
     // start async steps
     get('resources/reply.txt', true);
     

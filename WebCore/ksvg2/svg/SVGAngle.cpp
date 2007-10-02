@@ -16,8 +16,8 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 #include "config.h"
@@ -29,8 +29,8 @@
 
 namespace WebCore {
 
-const double deg2rad = 0.017453292519943295769; // pi/180
-const double deg2grad = 400.0 / 360.0;
+const float deg2rad = 0.017453292519943295769f; // pi/180
+const float deg2grad = 400.0f / 360.0f;
 
 #define rad2grad deg2grad / deg2rad
 
@@ -88,7 +88,7 @@ void SVGAngle::setValueAsString(const String& s)
     m_valueAsString = s;
 
     bool bOK;
-    m_valueInSpecifiedUnits = m_valueAsString.toDouble(&bOK);
+    m_valueInSpecifiedUnits = m_valueAsString.toFloat(&bOK);
     m_unitType = SVG_ANGLETYPE_UNSPECIFIED;
 
     if (!bOK) {

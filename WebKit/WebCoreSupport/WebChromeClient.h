@@ -95,6 +95,11 @@ public:
     
     virtual void setStatusbarText(const WebCore::String&);
 
+    virtual void mouseDidMoveOverElement(const WebCore::HitTestResult&, unsigned modifierFlags);
+
+    virtual void setToolTip(const WebCore::String&);
+
+    virtual void print(WebCore::Frame*);
 private:
     WebView *m_webView;
 };

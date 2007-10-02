@@ -48,6 +48,7 @@ inline bool isCollapsibleWhitespace(UChar c)
 }
 
 DeprecatedString plainText(const Range*);
+UChar* plainTextToMallocAllocatedBuffer(const Range*, unsigned& bufferLength);
 PassRefPtr<Range> findPlainText(const Range*, const String&, bool forward, bool caseSensitive);
 
 // Iterates through the DOM range, returning all the text, and 0-length boundaries
@@ -75,6 +76,7 @@ public:
 private:
     void exitNode();
     bool shouldRepresentNodeOffsetZero();
+    bool shouldEmitSpaceBeforeAndAfterNode(Node*);
     void representNodeOffsetZero();
     bool handleTextNode();
     bool handleReplacedElement();
@@ -125,8 +127,9 @@ private:
     // Used when deciding whether to emit a "positioning" (e.g. newline) before any other content
     bool m_haveEmitted;
     
-    // Used by selection preservation code.
-    bool m_emitForReplacedElements;
+    // Used by selection preservation code.  There should be one character emitted between every VisiblePosition
+    // in the Range used to create the TextIterator.
+    bool m_emitForSelectionPreservation;
 };
 
 // Iterates through the DOM range, returning all the text, and 0-length boundaries
@@ -163,6 +166,9 @@ private:
     // End of the range.
     Node* m_startNode;
     int m_startOffset;
+    // Start of the range.
+    Node* m_endNode;
+    int m_endOffset;
     
     // The current text and its position, in the form to be returned from the iterator.
     Node* m_positionNode;

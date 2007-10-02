@@ -29,6 +29,7 @@
  */
 #include <qwebpage.h>
 #include <qwebframe.h>
+#include <qwebsettings.h>
 
 #include <QtGui>
 #include <QDebug>
@@ -52,13 +53,13 @@ public:
 public slots:
     void startLoad()
     {
-        setValue(int(m_progress*100));
+        setValue(m_progress);
         show();
     }
-    void changeLoad(double change)
+    void changeLoad(int change)
     {
         m_progress = change;
-        setValue(int(change*100));
+        setValue(change);
     }
     void endLoad()
     {
@@ -67,7 +68,7 @@ public slots:
     }
 
 protected:
-    qreal m_progress;
+    int m_progress;
 };
 
 class HoverLabel : public QWidget {
@@ -237,9 +238,13 @@ public:
                                        geometry().top() - 2,
                                        geometry().right(), geometry().bottom()));
         clearButton->setVisible(true);
+#ifndef QT_NO_CURSOR
         clearButton->setCursor(Qt::ArrowCursor);
-        connect(clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+#endif
+#ifndef QT_NO_TOOLTIP
         clearButton->setToolTip("Clear");
+#endif
+        connect(clearButton, SIGNAL(clicked()), this, SLOT(clear()));
     }
     ~SearchEdit() { }
 protected:
@@ -277,8 +282,8 @@ public:
                           info->sizeHint().height());
         connect(page, SIGNAL(loadStarted(QWebFrame*)),
                 info, SLOT(startLoad()));
-        connect(page, SIGNAL(loadProgressChanged(double)),
-                info, SLOT(changeLoad(double)));
+        connect(page, SIGNAL(loadProgressChanged(int)),
+                info, SLOT(changeLoad(int)));
         connect(page, SIGNAL(loadFinished(QWebFrame*)),
                 info, SLOT(endLoad()));
         connect(page, SIGNAL(loadFinished(QWebFrame*)),
@@ -321,8 +326,10 @@ protected slots:
     {
         //statusBar()->showMessage(link);
         hoverLabel->setHoverLink(link);
+#ifndef QT_NO_TOOLTIP
         if (!toolTip.isEmpty())
             QToolTip::showText(QCursor::pos(), toolTip);
+#endif
     }
 protected:
     void resizeEvent(QResizeEvent *) {
@@ -342,6 +349,10 @@ int main(int argc, char **argv)
 {
     QString url = QString("%1/%2").arg(QDir::homePath()).arg(QLatin1String("index.html"));
     QApplication app(argc, argv);
+
+    QWebSettings settings = QWebSettings::global();
+    settings.setAttribute(QWebSettings::PluginsEnabled);
+    QWebSettings::setGlobal(settings);
 
     const QStringList args = app.arguments();
     if (args.count() > 1)

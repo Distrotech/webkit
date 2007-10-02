@@ -1,10 +1,8 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2000 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +16,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -37,12 +35,10 @@ class HTMLOptionElement;
 class HTMLOptionsCollection;
 class KeyboardEvent;
 
-class HTMLSelectElement : public HTMLGenericFormElement {
-
+class HTMLSelectElement : public HTMLFormControlElementWithState {
 public:
     HTMLSelectElement(Document*, HTMLFormElement* = 0);
     HTMLSelectElement(const QualifiedName& tagName, Document*, HTMLFormElement* = 0);
-    ~HTMLSelectElement();
 
     virtual int tagPriority() const { return 6; }
     virtual bool checkDTD(const Node* newChild);
@@ -58,6 +54,8 @@ public:
 
     virtual void dispatchFocusEvent();
     virtual void dispatchBlurEvent();
+    
+    virtual bool canStartSelection() const { return false; }
 
     int selectedIndex() const;
     void setSelectedIndex(int index, bool deselect = true, bool fireOnChange = false);
@@ -81,7 +79,7 @@ public:
     
     PassRefPtr<HTMLOptionsCollection> options();
 
-    virtual String stateValue() const;
+    virtual bool saveState(String& value) const;
     virtual void restoreState(const String&);
 
     virtual bool insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode&);

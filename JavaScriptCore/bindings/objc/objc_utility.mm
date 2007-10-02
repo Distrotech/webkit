@@ -172,7 +172,7 @@ ObjcValue convertValueToObjcValue(ExecState *exec, JSValue *value, ObjcValueType
             break;
         case ObjcLongLongType:
         case ObjcUnsignedLongLongType:
-            result.longValue = (long long)d;
+            result.longLongValue = (long long)d;
             break;
         case ObjcFloatType:
             result.floatValue = (float)d;
@@ -225,7 +225,7 @@ JSValue *convertNSStringToString(NSString *nsstring)
     id              object wrapper
     other           should not happen
 */
-JSValue* convertObjcValueToValue(ExecState* exec, void* buffer, ObjcValueType type)
+JSValue* convertObjcValueToValue(ExecState* exec, void* buffer, ObjcValueType type, RootObject* rootObject)
 {
     JSLock lock;
     
@@ -243,14 +243,16 @@ JSValue* convertObjcValueToValue(ExecState* exec, void* buffer, ObjcValueType ty
             if ([obj isKindOfClass:[NSNumber class]])
                 return jsNumber([obj doubleValue]);
             if ([obj isKindOfClass:[NSArray class]])
-                return new RuntimeArray(exec, new ObjcArray(obj));
-            if ([obj isKindOfClass:webScriptObjectClass()])
-                return [obj _imp];
+                return new RuntimeArray(exec, new ObjcArray(obj, rootObject));
+            if ([obj isKindOfClass:webScriptObjectClass()]) {
+                JSObject* imp = [obj _imp];
+                return imp ? imp : jsUndefined();
+            }
             if ([obj isKindOfClass:[NSNull class]])
                 return jsNull();
             if (obj == 0)
                 return jsUndefined();
-            return Instance::createRuntimeObject(Instance::ObjectiveCLanguage, obj);
+            return Instance::createRuntimeObject(Instance::ObjectiveCLanguage, obj, rootObject);
         }
         case ObjcCharType:
             return jsNumber(*(char *)buffer);

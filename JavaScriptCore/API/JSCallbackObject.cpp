@@ -42,6 +42,8 @@ const ClassInfo JSCallbackObject::info = { "CallbackObject", 0, 0, 0 };
 
 JSCallbackObject::JSCallbackObject(ExecState* exec, JSClassRef jsClass, JSValue* prototype, void* data)
     : JSObject(prototype)
+    , m_class(0)
+    , m_isInitialized(false)
 {
     init(exec, jsClass, data);
 }
@@ -49,7 +51,13 @@ JSCallbackObject::JSCallbackObject(ExecState* exec, JSClassRef jsClass, JSValue*
 void JSCallbackObject::init(ExecState* exec, JSClassRef jsClass, void* data)
 {
     m_privateData = data;
+    JSClassRef oldClass = m_class;
     m_class = JSClassRetain(jsClass);
+    if (oldClass)
+        JSClassRelease(oldClass);
+
+    if (!exec)
+        return;
 
     Vector<JSObjectInitializeCallback, 16> initRoutines;
     do {
@@ -63,6 +71,7 @@ void JSCallbackObject::init(ExecState* exec, JSClassRef jsClass, void* data)
         JSObjectInitializeCallback initialize = initRoutines[i];
         initialize(toRef(exec), toRef(this));
     }
+    m_isInitialized = true;
 }
 
 JSCallbackObject::~JSCallbackObject()
@@ -75,6 +84,13 @@ JSCallbackObject::~JSCallbackObject()
         }
     
     JSClassRelease(m_class);
+}
+
+void JSCallbackObject::initializeIfNeeded(ExecState* exec)
+{
+    if (m_isInitialized)
+        return;
+    init(exec, m_class, m_privateData);
 }
 
 UString JSCallbackObject::className() const
@@ -156,7 +172,7 @@ void JSCallbackObject::put(ExecState* exec, const Identifier& propertyName, JSVa
                     if (setProperty(ctx, thisRef, propertyNameRef, valueRef, toRef(exec->exceptionSlot())))
                         return;
                 } else
-                    throwError(exec, ReferenceError, "Writable static value property defined with NULL setProperty callback.");
+                    throwError(exec, ReferenceError, "Attempt to set a property that is not settable.");
             }
         }
         
@@ -237,7 +253,7 @@ JSObject* JSCallbackObject::construct(ExecState* exec, const List& args)
             for (int i = 0; i < argumentCount; i++)
                 arguments[i] = toRef(args[i]);
             JSLock::DropAllLocks dropAllLocks;
-            return toJS(callAsConstructor(execRef, thisRef, argumentCount, arguments, toRef(exec->exceptionSlot())));
+            return toJS(callAsConstructor(execRef, thisRef, argumentCount, arguments.data(), toRef(exec->exceptionSlot())));
         }
     }
     
@@ -292,7 +308,7 @@ JSValue* JSCallbackObject::callAsFunction(ExecState* exec, JSObject* thisObj, co
             for (int i = 0; i < argumentCount; i++)
                 arguments[i] = toRef(args[i]);
             JSLock::DropAllLocks dropAllLocks;
-            return toJS(callAsFunction(execRef, thisRef, thisObjRef, argumentCount, arguments, toRef(exec->exceptionSlot())));
+            return toJS(callAsFunction(execRef, thisRef, thisObjRef, argumentCount, arguments.data(), toRef(exec->exceptionSlot())));
         }
     }
 

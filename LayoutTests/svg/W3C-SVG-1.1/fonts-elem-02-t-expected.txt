@@ -26,7 +26,7 @@ layer at (0,0) size 480x360
         RenderSVGInlineText {#text} at (0,-17) size 130x22
           chunk 1 text run 1 at (7.00,210.00) startOffset 0 endOffset 15 width 130.00: "Glyphs over SVG"
       RenderSVGContainer {g} at (165,156) size 198x69 [transform={m=((1.00,0.00)(0.00,1.00)) t=(165.00,210.00)}]
-        RenderSVGText {text} at (0,0) size 198x69 contains 1 chunk(s)
+        RenderSVGText {text} at (0,0) size 198x69 contains 1 chunk(s) [color=#FFFFFF]
           RenderSVGInlineText {#text} at (0,-54) size 198x69
             chunk 1 text run 1 at (0.00,0.00) startOffset 0 endOffset 5 width 198.00: "Ay\x{D6}@\x{E7}"
       RenderSVGContainer {g} at (168.84,155.62) size 203.44x71.34 [transform={m=((1.00,0.00)(-0.00,-1.00)) t=(165.00,210.00)}]

@@ -131,6 +131,8 @@ namespace WebCore {
         FrameLoader(Frame*, FrameLoaderClient*);
         ~FrameLoader();
 
+        void init();
+
         Frame* frame() const { return m_frame; }
 
         // FIXME: This is not cool, people.
@@ -139,10 +141,10 @@ namespace WebCore {
         void setupForReplaceByMIMEType(const String& newMIMEType);
         void finalSetupForReplace(DocumentLoader*);
         void load(const KURL&, Event*);
-        void load(const FrameLoadRequest&, bool userGesture,
+        void load(const FrameLoadRequest&, bool lockHistory, bool userGesture,
             Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
         void load(const KURL&, const String& referrer, FrameLoadType, const String& target,
-            Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
+            Event*, PassRefPtr<FormState>);
         void post(const KURL&, const String& referrer, const String& target,
             PassRefPtr<FormData>, const String& contentType,
             Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
@@ -155,14 +157,14 @@ namespace WebCore {
         void load(DocumentLoader*);
         void load(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>);
 
-        static bool canLoad(const KURL&, const String& referrer, bool& hideReferrer);
+        static bool canLoad(const KURL&, const String& referrer);
         static bool canLoad(const KURL&, const Document*);
         static bool canLoad(const CachedResource&, const Document*);
         static void reportLocalLoadFailed(const Page*, const String& url);
 
         static bool shouldHideReferrer(const KURL& url, const String& referrer);
 
-        Frame* createWindow(const FrameLoadRequest&, const WindowFeatures&);
+        Frame* createWindow(const FrameLoadRequest&, const WindowFeatures&, bool& created);
 
         void loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
 
@@ -170,10 +172,13 @@ namespace WebCore {
 
         // Also not cool.
         void stopAllLoaders();
+        void stopForUserCancel(bool deferCheckLoadComplete = false);
         void cancelPendingArchiveLoad(ResourceLoader*);
 
-        bool isLoadingMainResource() const;
+        bool isLoadingMainResource() const { return m_isLoadingMainResource; }
         bool isLoading() const;
+        bool frameHasLoaded() const;
+        bool committedFirstRealDocumentLoad() const { return m_committedFirstRealDocumentLoad; }
 
         int numPendingOrLoadingRequests(bool recurse) const;
         bool isReloading() const;
@@ -206,7 +211,6 @@ namespace WebCore {
         bool isStopping() const;
 
         void finishedLoading();
-        KURL URL() const;
 
         ResourceError cancelledError(const ResourceRequest&) const;
         ResourceError fileDoesNotExistError(const ResourceResponse&) const;
@@ -254,7 +258,7 @@ namespace WebCore {
 
         bool isQuickRedirectComing() const;
 
-        void sendRemainingDelegateMessages(unsigned long identifier, const ResourceResponse&, unsigned length, const ResourceError&);
+        void sendRemainingDelegateMessages(unsigned long identifier, const ResourceResponse&, int length, const ResourceError&);
         void requestFromDelegate(ResourceRequest&, unsigned long& identifier, ResourceError&);
         void loadedResourceFromMemoryCache(const ResourceRequest&, const ResourceResponse&, int length);
 
@@ -270,8 +274,9 @@ namespace WebCore {
         void setDefersLoading(bool);
 
         void changeLocation(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
+        void changeLocation(const KURL& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
         void urlSelected(const ResourceRequest&, const String& target, Event*, bool lockHistory, bool userGesture);
-        void urlSelected(const FrameLoadRequest&, Event*, bool userGesture);
+        void urlSelected(const FrameLoadRequest&, Event*, bool lockHistory, bool userGesture);
       
         bool requestFrame(HTMLFrameOwnerElement*, const String& URL, const AtomicString& frameName);
         Frame* loadSubframe(HTMLFrameOwnerElement*, const KURL& URL, const String& name, const String& referrer);
@@ -293,12 +298,10 @@ namespace WebCore {
         String baseTarget() const;
         KURL dataURLBaseFromRequest(const ResourceRequest& request) const;
 
-        void scheduleRedirection(double delay, const String& URL);
-
+        bool isScheduledLocationChangePending() const;
+        void scheduleHTTPRedirection(double delay, const String& URL);
         void scheduleLocationChange(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
         void scheduleRefresh(bool userGesture = false);
-        bool isScheduledLocationChangePending() const;
-
         void scheduleHistoryNavigation(int steps);
 
         bool canGoBackOrForward(int distance) const;
@@ -307,19 +310,20 @@ namespace WebCore {
         KURL historyURL(int distance);
 
         void begin();
-        void begin(const KURL&);
+        void begin(const KURL&, bool dispatchWindowObjectAvailable = true);
+
         void write(const char* str, int len = -1, bool flush = false);
         void write(const String&);
         void end();
-
-        void endIfNotLoading();
+        void endIfNotLoadingMainResource();
 
         void setEncoding(const String& encoding, bool userChosen);
         String encoding() const;
 
-        KJS::JSValue* executeScript(const String& URL, int baseLine, Node*, const String& script);
-        KJS::JSValue* executeScript(Node*, const String& script, bool forceUserGesture = false);
+        KJS::JSValue* executeScript(const String& URL, int baseLine, const String& script);
+        KJS::JSValue* executeScript(const String& script, bool forceUserGesture = false);
 
+        void gotoAnchor();
         bool gotoAnchor(const String& name); // returns true if the anchor was found
         void scrollToAnchor(const KURL&);
 
@@ -330,17 +334,15 @@ namespace WebCore {
 
         Widget* createJavaAppletWidget(const IntSize&, Element*, const HashMap<String, String>& args);
 
-        void createEmptyDocument();
-
-        void partClearedInBegin(); 
+        void dispatchWindowObjectAvailable();
         void restoreDocumentState();
 
         String overrideMediaType() const;
 
         Frame* opener();
         void setOpener(Frame*);
-        bool openedByJavaScript();
-        void setOpenedByJavaScript();
+        bool openedByDOM() const;
+        void setOpenedByDOM();
 
         void provisionalLoadStarted();
 
@@ -353,12 +355,14 @@ namespace WebCore {
 
         bool canCachePage();
 
-        void checkEmitLoadEvent();
+        void checkCallImplicitClose();
         bool didOpenURL(const KURL&);
 
         void frameDetached();
 
+        // FIXME: Which one of these URL methods is right?
         KURL url() const;
+        KURL URL() const;
 
         void updateBaseURLForEmptyDocument();
 
@@ -371,6 +375,7 @@ namespace WebCore {
         void finishedParsing();
         void checkCompleted();
         void scheduleCheckCompleted();
+        void scheduleCheckLoadComplete();
 
         void clearRecordedFormValues();
         void recordFormValue(const String& name, const String& value, PassRefPtr<HTMLFormElement>);
@@ -430,7 +435,10 @@ namespace WebCore {
         bool useLowBandwidthDisplay() const { return m_useLowBandwidthDisplay; }
 #endif
 
-    private:        
+        bool committingFirstRealLoad() const { return !m_creatingInitialEmptyDocument && !m_committedFirstRealDocumentLoad; }
+
+        void iconLoadDecisionAvailable();
+    private:
         PassRefPtr<HistoryItem> createHistoryItem(bool useOriginal);
         PassRefPtr<HistoryItem> createHistoryItemTree(Frame* targetFrame, bool clipAtTarget);
 
@@ -439,7 +447,6 @@ namespace WebCore {
         void saveDocumentState();
         void loadItem(HistoryItem*, FrameLoadType);
         bool urlsMatchItem(HistoryItem*) const;
-        void purgePageCache();
         void invalidateCurrentItemCachedPage();
         void recursiveGoToItem(HistoryItem*, HistoryItem*, FrameLoadType);
         bool childFramesMatchItem(HistoryItem*) const;
@@ -448,12 +455,13 @@ namespace WebCore {
         void updateHistoryForBackForwardNavigation();
         void updateHistoryForReload();
         void updateHistoryForStandardLoad();
-        void updateHistoryForInternalLoad();
+        void updateHistoryForRedirectWithLockedHistory();
         void updateHistoryForClientRedirect();
         void updateHistoryForCommit();
     
         void redirectionTimerFired(Timer<FrameLoader>*);
         void checkCompletedTimerFired(Timer<FrameLoader>*);
+        void checkLoadCompleteTimerFired(Timer<FrameLoader>*);
 
         void cancelRedirection(bool newLoadInProgress = false);
 
@@ -467,13 +475,9 @@ namespace WebCore {
         const Vector<String>& paramNames, const Vector<String>& paramValues, bool useFallback);
         
         bool loadProvisionalItemFromCachedPage();
-        void cachePageToHistoryItem(HistoryItem*);
-
-        void emitLoadEvent();
+        void cachePageForHistoryItem(HistoryItem*);
 
         void receivedFirstData();
-
-        void gotoAnchor();
 
         void updatePolicyBaseURL();
         void setPolicyBaseURL(const String&);
@@ -527,7 +531,7 @@ namespace WebCore {
         void opened();
         void updateHistoryAfterClientRedirect();
 
-        void clear(bool clearWindowProperties = true);
+        void clear(bool clearWindowProperties = true, bool clearScriptObjects = true);
 
         bool shouldReloadToHandleUnreachableURL(DocumentLoader*);
         void handleUnimplementablePolicy(const ResourceError&);
@@ -541,6 +545,8 @@ namespace WebCore {
         void stopRedirectionTimer();
 
         void startIconLoader();
+        
+        bool isSecureTransition(const KURL& fromURL, const KURL& toURL);
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
         // implementation of CachedResourceClient        
@@ -549,6 +555,14 @@ namespace WebCore {
         void removeAllLowBandwidthDisplayRequests();    
         void switchOutLowBandwidthDisplayIfReady();        
 #endif
+
+        void dispatchDidCommitLoad();
+        void dispatchAssignIdentifierToInitialRequest(unsigned long identifier, DocumentLoader*, const ResourceRequest&);
+        void dispatchWillSendRequest(DocumentLoader*, unsigned long identifier, ResourceRequest&, const ResourceResponse& redirectResponse);
+        void dispatchDidReceiveResponse(DocumentLoader*, unsigned long identifier, const ResourceResponse&);
+        void dispatchDidReceiveContentLength(DocumentLoader*, unsigned long identifier, int length);
+        void dispatchDidFinishLoading(DocumentLoader*, unsigned long identifier);
+        bool dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int length);
 
         Frame* m_frame;
         FrameLoaderClient* m_client;
@@ -571,6 +585,7 @@ namespace WebCore {
         bool m_quickRedirectComing;
         bool m_sentRedirectNotification;
         bool m_inStopAllLoaders;
+        bool m_navigationDuringLoad;
 
         String m_outgoingReferrer;
 
@@ -585,7 +600,7 @@ namespace WebCore {
 
         String m_responseMIMEType;
 
-        bool m_wasLoadEventEmitted;
+        bool m_didCallImplicitClose;
         bool m_wasUnloadEventEmitted;
         bool m_isComplete;
         bool m_isLoadingMainResource;
@@ -594,6 +609,7 @@ namespace WebCore {
         KURL m_workingURL;
 
         OwnPtr<IconLoader> m_iconLoader;
+        bool m_mayLoadIconLater;
 
         bool m_cancellingWithLoadInProgress;
 
@@ -614,15 +630,22 @@ namespace WebCore {
     
         Timer<FrameLoader> m_redirectionTimer;
         Timer<FrameLoader> m_checkCompletedTimer;
+        Timer<FrameLoader> m_checkLoadCompleteTimer;
 
         Frame* m_opener;
         HashSet<Frame*> m_openedFrames;
 
-        bool m_openedByJavaScript;
+        bool m_openedByDOM;
+
+        bool m_creatingInitialEmptyDocument;
+        bool m_isDisplayingInitialEmptyDocument;
+        bool m_committedFirstRealDocumentLoad;
 
         RefPtr<HistoryItem> m_currentHistoryItem;
         RefPtr<HistoryItem> m_previousHistoryItem;
         RefPtr<HistoryItem> m_provisionalHistoryItem;
+        
+        bool m_didPerformFirstNavigation;
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
         // whether to use low bandwidth dislay, set by client

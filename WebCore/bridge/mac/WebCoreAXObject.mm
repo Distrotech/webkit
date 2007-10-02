@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004, 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,20 +23,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#import "config.h"
 #import "WebCoreAXObject.h"
 
 #import "DOMInternal.h"
+#import "ColorMac.h"
 #import "Document.h"
 #import "EventNames.h"
 #import "FocusController.h"
 #import "FontData.h"
-#import "FrameLoader.h"
 #import "Frame.h"
+#import "FrameLoader.h"
 #import "FrameView.h"
 #import "HTMLAreaElement.h"
 #import "HTMLCollection.h"
 #import "HTMLFrameElementBase.h"
+#import "HTMLImageElement.h"
 #import "HTMLInputElement.h"
 #import "HTMLLabelElement.h"
 #import "HTMLMapElement.h"
@@ -46,6 +48,7 @@
 #import "HitTestRequest.h"
 #import "HitTestResult.h"
 #import "LocalizedStrings.h"
+#import "NodeList.h"
 #import "Page.h"
 #import "RenderImage.h"
 #import "RenderListMarker.h"
@@ -58,6 +61,7 @@
 #import "TextIterator.h"
 #import "WebCoreFrameBridge.h"
 #import "WebCoreFrameView.h"
+#import "WebCoreObjCExtras.h"
 #import "WebCoreViewFactory.h"
 #import "htmlediting.h"
 #import "kjs_html.h"
@@ -75,6 +79,13 @@ using namespace HTMLNames;
 @end
 
 @implementation WebCoreAXObject
+
+#ifndef BUILDING_ON_TIGER
++ (void)initialize
+{
+    WebCoreObjCFinalizeOnMainThread(self);
+}
+#endif
 
 -(id)initWithRenderer:(RenderObject*)renderer
 {
@@ -106,6 +117,12 @@ using namespace HTMLNames;
 {
     [self detach];
     [super dealloc];
+}
+
+- (void)finalize
+{
+    [self detach];
+    [super finalize];
 }
 
 -(id)data
@@ -314,7 +331,7 @@ static bool isPasswordFieldElement(Node* node)
 -(BOOL)isAttachment
 {
     // widgets are the replaced elements that we represent to AX as attachments
-    BOOL result = m_renderer->isWidget();
+    BOOL result = m_renderer && m_renderer->isWidget();
     
     // assert that a widget is a replaced element that is not an image
     ASSERT(!result || (m_renderer->isReplaced() && !m_renderer->isImage()));
@@ -625,7 +642,7 @@ static HTMLLabelElement* labelForElement(Element* element)
     unsigned len = list->length();
     for (unsigned i = 0; i < len; i++) {
         HTMLLabelElement* label = static_cast<HTMLLabelElement*>(list->item(i));
-        if (label->formElement() == element)
+        if (label->correspondingControl() == element)
             return label;
     }
     
@@ -650,7 +667,7 @@ static HTMLLabelElement* labelForElement(Element* element)
             return label->innerText();
     }
     
-    if (m_renderer->element()->isLink())
+    if (m_renderer->element()->isLink() || [self isHeading])
         return [self textUnderElement];
         
     if ([self isAttachment]) {
@@ -674,8 +691,11 @@ static HTMLLabelElement* labelForElement(Element* element)
                 return nil;
             return alt;
         }
-    } else if ([self isAttachment])
-        return [[self attachmentView] accessibilityAttributeValue:NSAccessibilityDescriptionAttribute];
+    } else if ([self isAttachment]) {
+        NSView* attachmentView = [self attachmentView];
+        if ([[attachmentView accessibilityAttributeNames] containsObject:NSAccessibilityDescriptionAttribute])
+            return [attachmentView accessibilityAttributeValue:NSAccessibilityDescriptionAttribute];
+    }
 
     if ([self isWebArea]) {
         Document *document = m_renderer->document();
@@ -884,7 +904,7 @@ static IntRect boundingBoxRect(RenderObject* obj)
     if ([self isTextControl])
         return textAttrs;
 
-    if ([self isAnchor])
+    if ([self isAnchor] || m_renderer->isImage())
         return anchorAttrs;
 
     return attributes;
@@ -1077,15 +1097,23 @@ static IntRect boundingBoxRect(RenderObject* obj)
         }
     }
     
-    if ([self isAnchor] && [attributeName isEqualToString: NSAccessibilityURLAttribute]) {
-        HTMLAnchorElement* anchor = [self anchorElement];
-        if (anchor) {
-            DeprecatedString s = anchor->getAttribute(hrefAttr).deprecatedString();
-            if (!s.isNull()) {
-                s = anchor->document()->completeURL(s);
-                return s.getNSString();
+    if ([attributeName isEqualToString: NSAccessibilityURLAttribute]) {
+        if ([self isAnchor]) {
+            HTMLAnchorElement* anchor = [self anchorElement];
+            if (anchor) {
+                DeprecatedString s = anchor->getAttribute(hrefAttr).deprecatedString();
+                if (!s.isNull()) {
+                    s = anchor->document()->completeURL(s);
+                    return KURL(s).getNSURL();
+                }
             }
         }
+        else if (m_renderer->isImage() && m_renderer->element() && m_renderer->element()->hasTagName(imgTag)) {
+            DeprecatedString src = static_cast<HTMLImageElement*>(m_renderer->element())->src().deprecatedString();
+            if (!src.isNull()) 
+                return KURL(src).getNSURL();
+        }
+        return nil;
     }
 
     if ([attributeName isEqualToString: @"AXVisited"])
@@ -1392,6 +1420,20 @@ static NSString *nsStringForReplacedNode(Node* replacedNode)
 
     IntRect rect1 = startVisiblePosition.caretRect();
     IntRect rect2 = endVisiblePosition.caretRect();
+
+    // readjust for position at the edge of a line.  This is to exclude line rect that doesn't need to be accounted in the range bounds 
+    if (rect2.y() != rect1.y()) {
+        VisiblePosition endOfFirstLine = endOfLine(startVisiblePosition);
+        if (startVisiblePosition == endOfFirstLine) {
+            startVisiblePosition.setAffinity(DOWNSTREAM);
+            rect1 = startVisiblePosition.caretRect();
+        }
+        if (endVisiblePosition == endOfFirstLine) {
+            endVisiblePosition.setAffinity(UPSTREAM);
+            rect2 = endVisiblePosition.caretRect();
+        }
+    }
+
     IntRect ourrect = rect1;
     ourrect.unite(rect2);
 
@@ -1401,12 +1443,15 @@ static NSString *nsStringForReplacedNode(Node* replacedNode)
     FrameView* frameView = renderer ? renderer->document()->view() : 0;
     if (!frameView)
         frameView = [self frameView];
-    NSView* view = frameView->getView();
+    NSView *view = frameView->getView();
 
-    // if the rectangle spans lines, it is to extend across the width of the view
+    // if the rectangle spans lines and contains multiple text chars, use the range's bounding box intead
     if (rect1.bottom() != rect2.bottom()) {
-        ourrect.setX(static_cast<int>([view frame].origin.x));
-        ourrect.setWidth(static_cast<int>([view frame].size.width));
+        RefPtr<Range> dataRange = makeRange(startVisiblePosition, endVisiblePosition);
+        IntRect boundingBox = dataRange->boundingBox();
+        DeprecatedString rangeString = plainText(dataRange.get());
+        if (rangeString.length() > 1 && !boundingBox.isEmpty()) 
+            ourrect = boundingBox;
     }
  
     // convert our rectangle to screen coordinates
@@ -1706,12 +1751,19 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
     if (visiblePos1.isNull() || visiblePos2.isNull())
         return nil;
     
-    // use the SelectionController class to do the ordering
-    // NOTE: Perhaps we could add a SelectionController method to indicate direction, based on m_baseIsStart
     WebCoreTextMarker* startTextMarker;
     WebCoreTextMarker* endTextMarker;
-    Selection selection(visiblePos1, visiblePos2);
-    if (selection.base() == selection.start()) {
+    bool alreadyInOrder;
+    
+    // upstream is ordered before downstream for the same position
+    if (visiblePos1 == visiblePos2 && visiblePos2.affinity() == UPSTREAM) 
+        alreadyInOrder = false;
+    
+    // use selection order to see if the positions are in order
+    else 
+        alreadyInOrder = Selection(visiblePos1, visiblePos2).isBaseFirst();
+    
+    if (alreadyInOrder) {
         startTextMarker = textMarker1;
         endTextMarker = textMarker2;
     } else {
@@ -1719,7 +1771,6 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         endTextMarker = textMarker1;
     }
     
-    // return a range based on the SelectionController verdict
     return (id) [self textMarkerRangeFromMarkers: startTextMarker andEndMarker:endTextMarker];
 }
 
@@ -1761,6 +1812,31 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
     return (id) [self textMarkerRangeFromVisiblePositions:startPosition andEndPos:endPosition];
 }
 
+
+static VisiblePosition updateAXLineStartForVisiblePosition(const VisiblePosition& visiblePosition)
+{
+    // A line in the accessibility sense should include floating objects, such as aligned image, as part of a line.
+    // So let's update the position to include that.
+    VisiblePosition tempPosition;
+    VisiblePosition startPosition = visiblePosition;
+    Position p;
+    RenderObject* renderer;
+    while (true) {
+        tempPosition = startPosition.previous();
+        if (tempPosition.isNull())
+            break;
+        p = tempPosition.deepEquivalent();
+        if (!p.node())
+            break;
+        renderer = p.node()->renderer();
+        if (!renderer || renderer->inlineBox(p.offset(), tempPosition.affinity()) || (renderer->isRenderBlock() && p.offset() == 0))
+            break;
+        startPosition = tempPosition;
+    }
+    
+    return startPosition;
+}
+
 - (id)doAXLeftLineTextMarkerRangeForTextMarker: (WebCoreTextMarker*) textMarker
 {
     VisiblePosition visiblePos = [self visiblePositionForTextMarker:textMarker];
@@ -1774,6 +1850,19 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
     
     VisiblePosition startPosition = startOfLine(prevVisiblePos);
+
+    // keep searching for a valid line start position.  Unless the textmarker is at the very beginning, there should
+    // always be a valid line range.  However, startOfLine will return null for position next to a floating object, 
+    // since floating object doesn't really belong to any line.  
+    // This check will reposition the marker before the floating object, to ensure we get a line start.
+    if (startPosition.isNull()) {
+        while (startPosition.isNull() && prevVisiblePos.isNotNull()) {
+            prevVisiblePos = prevVisiblePos.previous();
+            startPosition = startOfLine(prevVisiblePos);
+        }
+    } else 
+        startPosition = updateAXLineStartForVisiblePosition(startPosition);
+    
     VisiblePosition endPosition = endOfLine(prevVisiblePos);
     return (id) [self textMarkerRangeFromVisiblePositions:startPosition andEndPos:endPosition];
 }
@@ -1790,7 +1879,25 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
         
     VisiblePosition startPosition = startOfLine(nextVisiblePos);
+    
+    // fetch for a valid line start position
+    if (startPosition.isNull() ) {
+        startPosition = visiblePos;
+        nextVisiblePos = nextVisiblePos.next();
+    } else 
+        startPosition = updateAXLineStartForVisiblePosition(startPosition);
+    
     VisiblePosition endPosition = endOfLine(nextVisiblePos);
+
+    // as long as the position hasn't reached the end of the doc,  keep searching for a valid line end position
+    // Unless the textmarker is at the very end, there should always be a valid line range.  However, endOfLine will 
+    // return null for position by a floating object, since floating object doesn't really belong to any line.  
+    // This check will reposition the marker after the floating object, to ensure we get a line end.
+    while (endPosition.isNull() && nextVisiblePos.isNotNull()) {
+        nextVisiblePos = nextVisiblePos.next();
+        endPosition = endOfLine(nextVisiblePos);
+    }
+    
     return (id) [self textMarkerRangeFromVisiblePositions:startPosition andEndPos:endPosition];
 }
 
@@ -1854,6 +1961,14 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
         
     VisiblePosition endPosition = endOfLine(nextVisiblePos);
+
+    // as long as the position hasn't reached the end of the doc,  keep searching for a valid line end position
+    // There are cases like when the position is next to a floating object that'll return null for end of line. This code will avoid returning null.
+    while (endPosition.isNull() && nextVisiblePos.isNotNull()) {
+        nextVisiblePos = nextVisiblePos.next();
+        endPosition = endOfLine(nextVisiblePos);
+    }
+    
     return (id) [self textMarkerForVisiblePosition: endPosition];
 }
 
@@ -1869,6 +1984,17 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
         
     VisiblePosition startPosition = startOfLine(prevVisiblePos);
+
+    // as long as the position hasn't reached the beginning of the doc,  keep searching for a valid line start position
+    // There are cases like when the position is next to a floating object that'll return null for start of line. This code will avoid returning null.
+    if (startPosition.isNull()) {
+        while (startPosition.isNull() && prevVisiblePos.isNotNull()) {
+            prevVisiblePos = prevVisiblePos.previous();
+            startPosition = startOfLine(prevVisiblePos);
+        }
+    } else 
+        startPosition = updateAXLineStartForVisiblePosition(startPosition);
+    
     return (id) [self textMarkerForVisiblePosition: startPosition];
 }
 
@@ -1881,11 +2007,19 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
     
     // make sure we move off of a sentence end
-    visiblePos = visiblePos.next();
-    if (visiblePos.isNull())
+    VisiblePosition nextVisiblePos = visiblePos.next();
+    if (nextVisiblePos.isNull())
         return nil;
 
-    VisiblePosition endPosition = endOfSentence(visiblePos);
+    // an empty line is considered a sentence. If it's skipped, then the sentence parser will not
+    // see this empty line.  Instead, return the end position of the empty line. 
+    VisiblePosition endPosition;
+    DeprecatedString lineString = plainText(makeRange(startOfLine(visiblePos), endOfLine(visiblePos)).get());
+    if (lineString.isEmpty())
+        endPosition = nextVisiblePos;
+    else
+        endPosition = endOfSentence(nextVisiblePos);
+    
     return (id) [self textMarkerForVisiblePosition: endPosition];
 }
 
@@ -1898,11 +2032,18 @@ static void AXAttributedStringAppendText(NSMutableAttributedString* attrString, 
         return nil;
 
     // make sure we move off of a sentence start
-    visiblePos = visiblePos.previous();
-    if (visiblePos.isNull())
+    VisiblePosition previousVisiblePos = visiblePos.previous();
+    if (previousVisiblePos.isNull())
         return nil;
-
-    VisiblePosition startPosition = startOfSentence(visiblePos);
+    
+    // treat empty line as a separate sentence.  
+    VisiblePosition startPosition;
+    DeprecatedString lineString = plainText(makeRange(startOfLine(previousVisiblePos), endOfLine(previousVisiblePos)).get());
+    if (lineString.isEmpty())
+        startPosition = previousVisiblePos;
+    else
+        startPosition = startOfSentence(previousVisiblePos);
+        
     return (id) [self textMarkerForVisiblePosition: startPosition];
 }
 
@@ -2202,7 +2343,7 @@ static VisiblePosition endOfStyleRange (const VisiblePosition visiblePos)
     NSNumber*               number = nil;
     NSArray*                array = nil;
     WebCoreAXObject*        uiElement = nil;
-    NSPoint                 point = {0.0, 0.0};
+    NSPoint                 point = NSZeroPoint;
     bool                    pointSet = false;
     NSRange                 range = {0, 0};
     bool                    rangeSet = false;
@@ -2482,7 +2623,7 @@ static VisiblePosition endOfStyleRange (const VisiblePosition visiblePos)
 
 - (BOOL)accessibilityIsAttributeSettable:(NSString*)attributeName
 {
-    if ([attributeName isEqualToString: @"AXSelectedTextMarkerRangeAttribute"])
+    if ([attributeName isEqualToString: @"AXSelectedTextMarkerRange"])
         return YES;
         
     if ([attributeName isEqualToString: NSAccessibilityFocusedAttribute])

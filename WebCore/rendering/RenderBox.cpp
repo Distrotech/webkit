@@ -19,8 +19,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -468,7 +468,7 @@ void RenderBox::imageChanged(CachedImage* image)
     IntRect absoluteRect;
     RenderBox* backgroundRenderer;
 
-    if (isBody() || isRoot()) {
+    if (isRoot() || (isBody() && document()->isHTMLDocument() && !document()->documentElement()->renderer()->style()->hasBackground())) {
         // Our background propagates to the root.
         backgroundRenderer = view();
 
@@ -684,11 +684,8 @@ void RenderBox::paintBackgroundExtended(GraphicsContext* context, const Color& c
         IntSize tileSize;
 
         calculateBackgroundImageGeometry(bgLayer, tx, ty, w, h, destRect, phase, tileSize);
-        if (!destRect.isEmpty()) {
+        if (!destRect.isEmpty())
             context->drawTiledImage(bg->image(), destRect, phase, tileSize, bgLayer->backgroundComposite());
-            if (!context->paintingDisabled())
-                bg->liveResourceAccessed();
-        }
     }
 
     if (bgLayer->backgroundClip() != BGBORDER)
@@ -930,7 +927,10 @@ IntRect RenderBox::absoluteClippedOverflowRect()
             theme()->adjustRepaintRect(this, r);
 
         // FIXME: Technically the outline inflation could fit within the theme inflation.
-        r.inflate(style()->outlineSize());
+        if (!isInline() && continuation())
+            r.inflate(continuation()->style()->outlineSize());
+        else
+            r.inflate(style()->outlineSize());
     }
     computeAbsoluteRepaintRect(r);
     return r;
@@ -1328,10 +1328,13 @@ int RenderBox::calcPercentageHeight(const Length& height)
         // block that may have a specified height and then use it.  In strict mode, this violates the
         // specification, which states that percentage heights just revert to auto if the containing
         // block has an auto height.
-        while (!cb->isRenderView() && !cb->isBody() && !cb->isTableCell()
-                    && !cb->isPositioned() && cb->style()->height().isAuto())
-                cb = cb->containingBlock();
+        while (!cb->isRenderView() && !cb->isBody() && !cb->isTableCell() && !cb->isPositioned() && cb->style()->height().isAuto())
+            cb = cb->containingBlock();
     }
+
+    // A positioned element that specified both top/bottom or that specifies height should be treated as though it has a height
+    // explicitly specified that can be used for any percentage computations.
+    bool isPositionedWithSpecifiedHeight = cb->isPositioned() && (!cb->style()->height().isAuto() || (!cb->style()->top().isAuto() && !cb->style()->bottom().isAuto()));
 
     // Table cells violate what the CSS spec says to do with heights.  Basically we
     // don't care if the cell specified a height or not.  We just always make ourselves
@@ -1353,18 +1356,16 @@ int RenderBox::calcPercentageHeight(const Length& height)
         }
         includeBorderPadding = true;
     }
-
     // Otherwise we only use our percentage height if our containing block had a specified
     // height.
     else if (cb->style()->height().isFixed())
         result = cb->calcContentBoxHeight(cb->style()->height().value());
-    else if (cb->style()->height().isPercent()) {
+    else if (cb->style()->height().isPercent() && !isPositionedWithSpecifiedHeight) {
         // We need to recur and compute the percentage height for our containing block.
         result = cb->calcPercentageHeight(cb->style()->height());
         if (result != -1)
             result = cb->calcContentBoxHeight(result);
-    } else if (cb->isRenderView() || (cb->isBody() && style()->htmlHacks())
-                || (cb->isPositioned() && !(cb->style()->top().isAuto() || cb->style()->bottom().isAuto()))) {
+    } else if (cb->isRenderView() || (cb->isBody() && style()->htmlHacks()) || isPositionedWithSpecifiedHeight) {
         // Don't allow this to affect the block' m_height member variable, since this
         // can get called while the block is still laying out its kids.
         int oldHeight = cb->height();
@@ -1430,23 +1431,27 @@ int RenderBox::calcReplacedHeightUsing(Length height) const
             return calcContentBoxHeight(height.value());
         case Percent:
         {
-            RenderBlock* cb = containingBlock();
+            RenderObject* cb = isPositioned() ? container() : containingBlock();
             if (cb->isPositioned() && cb->style()->height().isAuto() && !(cb->style()->top().isAuto() || cb->style()->bottom().isAuto())) {
-                int oldHeight = cb->height();
-                cb->calcHeight();
-                int newHeight = cb->calcContentBoxHeight(cb->contentHeight());
-                cb->setHeight(oldHeight);
+                ASSERT(cb->isRenderBlock());
+                RenderBlock* block = static_cast<RenderBlock*>(cb);
+                int oldHeight = block->height();
+                block->calcHeight();
+                int newHeight = block->calcContentBoxHeight(block->contentHeight());
+                block->setHeight(oldHeight);
                 return calcContentBoxHeight(height.calcValue(newHeight));
             }
             
+            int availableHeight = isPositioned() ? containingBlockHeightForPositioned(cb) : cb->availableHeight();
+
             // It is necessary to use the border-box to match WinIE's broken
             // box model.  This is essential for sizing inside
             // table cells using percentage heights.
             if (cb->isTableCell() && (cb->style()->height().isAuto() || cb->style()->height().isPercent()))
-                return height.calcValue(cb->availableHeight() - (borderTop() + borderBottom()
+                return height.calcValue(availableHeight - (borderTop() + borderBottom()
                     + paddingTop() + paddingBottom()));
 
-            return calcContentBoxHeight(height.calcValue(cb->availableHeight()));
+            return calcContentBoxHeight(height.calcValue(availableHeight));
         }
         default:
             return intrinsicSize().height();

@@ -51,9 +51,9 @@ using WTF::fastMallocForbid;
 using WTF::fastMallocAllow;
 #endif
 
-#if PLATFORM(GCC) && PLATFORM(DARWIN)
+#if COMPILER(GCC) && PLATFORM(DARWIN)
 #define WTF_PRIVATE_INLINE __private_extern__ inline __attribute__((always_inline))
-#elif PLATFORM(GCC)
+#elif COMPILER(GCC)
 #define WTF_PRIVATE_INLINE inline __attribute__((always_inline))
 #else
 #define WTF_PRIVATE_INLINE inline
@@ -61,10 +61,12 @@ using WTF::fastMallocAllow;
 
 #ifndef _CRTDBG_MAP_ALLOC
 
+#if !defined(USE_SYSTEM_MALLOC) || !(USE_SYSTEM_MALLOC)
 WTF_PRIVATE_INLINE void* operator new(size_t s) { return fastMalloc(s); }
 WTF_PRIVATE_INLINE void operator delete(void* p) { fastFree(p); }
 WTF_PRIVATE_INLINE void* operator new[](size_t s) { return fastMalloc(s); }
 WTF_PRIVATE_INLINE void operator delete[](void* p) { fastFree(p); }
+#endif
 
 #endif // _CRTDBG_MAP_ALLOC
 

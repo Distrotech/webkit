@@ -40,23 +40,21 @@
 using namespace KJS::Bindings;
 using namespace KJS;
 
-ObjcInstance::ObjcInstance(ObjectStructPtr instance) 
+ObjcInstance::ObjcInstance(ObjectStructPtr instance, PassRefPtr<RootObject> rootObject) 
+    : Instance(rootObject)
+    , _instance(instance)
+    , _class(0)
+    , _pool(0)
+    , _beginCount(0)
 {
-    _instance = instance;
-    if (_instance)
-        CFRetain(_instance);
-    _class = 0;
-    _pool = 0;
-    _beginCount = 0;
 }
 
 ObjcInstance::~ObjcInstance() 
 {
     begin(); // -finalizeForWebScript and -dealloc/-finalize may require autorelease pools.
-    if ([_instance respondsToSelector:@selector(finalizeForWebScript)])
-        [_instance performSelector:@selector(finalizeForWebScript)];
-    if (_instance)
-        CFRelease(_instance);
+    if ([_instance.get() respondsToSelector:@selector(finalizeForWebScript)])
+        [_instance.get() performSelector:@selector(finalizeForWebScript)];
+    _instance = 0;
     end();
 }
 
@@ -88,7 +86,7 @@ Bindings::Class* ObjcInstance::getClass() const
 
 bool ObjcInstance::implementsCall() const
 {
-    return [_instance respondsToSelector:@selector(invokeDefaultMethodWithArguments:)];
+    return [_instance.get() respondsToSelector:@selector(invokeDefaultMethodWithArguments:)];
 }
 
 JSValue* ObjcInstance::invokeMethod(ExecState* exec, const MethodList &methodList, const List &args)
@@ -99,11 +97,11 @@ JSValue* ObjcInstance::invokeMethod(ExecState* exec, const MethodList &methodLis
 
     // Overloading methods is not allowed in ObjectiveC.  Should only be one
     // name match for a particular method.
-    assert(methodList.length() == 1);
+    assert(methodList.size() == 1);
 
 @try {
     ObjcMethod* method = 0;
-    method = static_cast<ObjcMethod*>(methodList.methodAt(0));
+    method = static_cast<ObjcMethod*>(methodList[0]);
     NSMethodSignature* signature = method->getMethodSignature();
     NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:signature];
 #if defined(OBJC_API_VERSION) && OBJC_API_VERSION >= 2
@@ -111,7 +109,7 @@ JSValue* ObjcInstance::invokeMethod(ExecState* exec, const MethodList &methodLis
 #else
     [invocation setSelector:(SEL)method->name()];
 #endif
-    [invocation setTarget:_instance];
+    [invocation setTarget:_instance.get()];
 
     if (method->isFallbackMethod()) {
         if (objcValueTypeForType([signature methodReturnType]) != ObjcObjectType) {
@@ -203,27 +201,27 @@ JSValue* ObjcInstance::invokeMethod(ExecState* exec, const MethodList &methodLis
 
     if (*type != 'v') {
         [invocation getReturnValue:buffer];
-        result = convertObjcValueToValue(exec, buffer, objcValueType);
+        result = convertObjcValueToValue(exec, buffer, objcValueType, _rootObject.get());
     }
 } @catch(NSException* localException) {
 }
     return result;
 }
 
-JSValue* ObjcInstance::invokeDefaultMethod (ExecState* exec, const List &args)
+JSValue* ObjcInstance::invokeDefaultMethod(ExecState* exec, const List &args)
 {
     JSValue* result = jsUndefined();
 
    JSLock::DropAllLocks dropAllLocks; // Can't put this inside the @try scope because it unwinds incorrectly.
 
 @try {
-    if (![_instance respondsToSelector:@selector(invokeDefaultMethodWithArguments:)])
+    if (![_instance.get() respondsToSelector:@selector(invokeDefaultMethodWithArguments:)])
         return result;
 
-    NSMethodSignature* signature = [_instance methodSignatureForSelector:@selector(invokeDefaultMethodWithArguments:)];
+    NSMethodSignature* signature = [_instance.get() methodSignatureForSelector:@selector(invokeDefaultMethodWithArguments:)];
     NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:signature];
     [invocation setSelector:@selector(invokeDefaultMethodWithArguments:)];
-    [invocation setTarget:_instance];
+    [invocation setTarget:_instance.get()];
 
     if (objcValueTypeForType([signature methodReturnType]) != ObjcObjectType) {
         NSLog(@"Incorrect signature for invokeDefaultMethodWithArguments: -- return type must be object.");
@@ -250,7 +248,7 @@ JSValue* ObjcInstance::invokeDefaultMethod (ExecState* exec, const List &args)
     // OK with 32 here.
     char buffer[32];
     [invocation getReturnValue:buffer];
-    result = convertObjcValueToValue(exec, buffer, objcValueType);
+    result = convertObjcValueToValue(exec, buffer, objcValueType, _rootObject.get());
 } @catch(NSException* localException) {
 }
 
@@ -299,7 +297,7 @@ JSValue* ObjcInstance::getValueOfUndefinedField(ExecState* exec, const Identifie
     if ([targetObject respondsToSelector:@selector(valueForUndefinedKey:)]){
         @try {
             id objcValue = [targetObject valueForUndefinedKey:[NSString stringWithCString:property.ascii() encoding:NSASCIIStringEncoding]];
-            result = convertObjcValueToValue(exec, &objcValue, ObjcObjectType);
+            result = convertObjcValueToValue(exec, &objcValue, ObjcObjectType, _rootObject.get());
         } @catch(NSException* localException) {
             // Do nothing.  Class did not override valueForUndefinedKey:.
         }
@@ -318,9 +316,9 @@ JSValue* ObjcInstance::defaultValue(JSType hint) const
     case BooleanType:
         return booleanValue();
     case UnspecifiedType:
-        if ([_instance isKindOfClass:[NSString class]])
+        if ([_instance.get() isKindOfClass:[NSString class]])
             return stringValue();
-        if ([_instance isKindOfClass:[NSNumber class]])
+        if ([_instance.get() isKindOfClass:[NSNumber class]])
             return numberValue();
     default:
         return valueOf();

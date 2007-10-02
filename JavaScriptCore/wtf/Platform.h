@@ -66,6 +66,7 @@
 /* Operating environments */
 
 /* PLATFORM(QT) */
+/* PLATFORM(GTK) */
 /* PLATFORM(MAC) */
 /* PLATFORM(WIN) */
 #if defined(BUILDING_QT__)
@@ -76,13 +77,12 @@
 #define WTF_PLATFORM_KDE 1
 #endif
 
+#elif defined(BUILDING_GTK__)
+#define WTF_PLATFORM_GTK 1
 #elif PLATFORM(DARWIN)
 #define WTF_PLATFORM_MAC 1
 #elif PLATFORM(WIN_OS)
 #define WTF_PLATFORM_WIN 1
-#endif
-#if defined(BUILDING_GDK__)
-#define WTF_PLATFORM_GDK 1
 #endif
 
 /* Graphics engines */
@@ -127,9 +127,17 @@
 #define WTF_PLATFORM_BIG_ENDIAN 1
 #endif
 
-#if defined(arm)
+#if   defined(arm) \
+   || defined(__arm__)
 #define WTF_PLATFORM_ARM 1
+#if defined(__ARMEB__)
+#define WTF_PLATFORM_BIG_ENDIAN 1
+#elif !defined(__ARM_EABI__) && !defined(__ARMEB__)
 #define WTF_PLATFORM_MIDDLE_ENDIAN 1
+#endif
+#if !defined(__ARM_EABI__)
+#define WTF_PLATFORM_FORCE_PACK 1
+#endif
 #endif
 
 /* PLATFORM(X86) */
@@ -193,8 +201,20 @@
 #define WTF_USE_WININET 1
 #endif
 
-#if PLATFORM(GDK)
+#if PLATFORM(GTK)
 #define WTF_USE_CURL 1
+#endif
+
+#if PLATFORM(QT)
+#define USE_SYSTEM_MALLOC 1
+#endif
+
+#if !defined(ENABLE_ICONDATABASE)
+#define ENABLE_ICONDATABASE 1
+#endif
+
+#if !defined(ENABLE_FTPDIR)
+#define ENABLE_FTPDIR 1
 #endif
 
 #endif /* WTF_Platform_h */

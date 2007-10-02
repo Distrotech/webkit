@@ -181,7 +181,7 @@ bool Path::isEmpty() const
     return CGPathIsEmpty(m_path);
  }
 
-void CGPathToCFStringApplierFunction(void* info, const CGPathElement *element)
+static void CGPathToCFStringApplierFunction(void* info, const CGPathElement *element)
 {
     CFMutableStringRef string = (CFMutableStringRef)info;
     CFStringRef typeString = CFSTR("");
@@ -207,7 +207,7 @@ void CGPathToCFStringApplierFunction(void* info, const CGPathElement *element)
     }
 }
 
-CFStringRef CFStringFromCGPath(CGPathRef path)
+static CFStringRef CFStringFromCGPath(CGPathRef path)
 {
     if (!path)
         return 0;

@@ -32,12 +32,8 @@
 _HIWebViewCreate
 _HIWebViewGetWebView
 _WebActionButtonKey
-_WebActionButtonKey
-_WebActionElementKey
 _WebActionElementKey
 _WebActionModifierFlagsKey
-_WebActionModifierFlagsKey
-_WebActionNavigationTypeKey
 _WebActionNavigationTypeKey
 _WebActionOriginalURLKey
 _WebArchivePboardType
@@ -76,7 +72,6 @@ _WebKitErrorMIMETypeKey
 _WebKitErrorPlugInNameKey
 _WebKitErrorPlugInPageURLStringKey
 _WebLocalizedString
-_WebMainResourceKey
 _WebPlugInAttributesKey
 _WebPlugInBaseURLKey
 _WebPlugInContainerKey

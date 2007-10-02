@@ -40,24 +40,32 @@
 #include "Settings.h"
 #include <math.h>
 
+#if PLATFORM(QT)
+#include <QPainter>
+#include <QPixmap>
+#endif
+
 namespace WebCore {
 
 using namespace HTMLNames;
 
 // These values come from the WhatWG spec.
-const int defaultWidth = 300;
-const int defaultHeight = 150;
+static const int defaultWidth = 300;
+static const int defaultHeight = 150;
 
 // Firefox limits width/height to 32767 pixels, but slows down dramatically before it 
-// reaches that limit we limit by area instead, giving us larger max dimensions, in exchange 
-// for reduce maximum canvas size.
-const float maxCanvasArea = 32768 * 8192; // Maximum canvas area in CSS pixels
+// reaches that limit. We limit by area instead, giving us larger maximum dimensions,
+// in exchange for a smaller maximum canvas size.
+static const float maxCanvasArea = 32768 * 8192; // Maximum canvas area in CSS pixels
 
 HTMLCanvasElement::HTMLCanvasElement(Document* doc)
     : HTMLElement(canvasTag, doc)
     , m_size(defaultWidth, defaultHeight)
     , m_createdDrawingContext(false)
     , m_data(0)
+#if PLATFORM(QT)
+    , m_painter(0)
+#endif
     , m_drawingContext(0)
 {
 }
@@ -66,13 +74,19 @@ HTMLCanvasElement::~HTMLCanvasElement()
 {
     if (m_2DContext)
         m_2DContext->detachCanvas();
+#if PLATFORM(CG)
     fastFree(m_data);
+#elif PLATFORM(QT)
+    delete m_painter;
+    delete m_data;
+#endif
     delete m_drawingContext;
 }
 
 HTMLTagStatus HTMLCanvasElement::endTagRequirement() const 
-{ 
-    if (document()->frame() && document()->frame()->settings()->usesDashboardBackwardCompatibilityMode())
+{
+    Settings* settings = document()->settings();
+    if (settings && settings->usesDashboardBackwardCompatibilityMode())
         return TagStatusForbidden; 
 
     return HTMLElement::endTagRequirement();
@@ -80,7 +94,8 @@ HTMLTagStatus HTMLCanvasElement::endTagRequirement() const
 
 int HTMLCanvasElement::tagPriority() const 
 { 
-    if (document()->frame() && document()->frame()->settings()->usesDashboardBackwardCompatibilityMode())
+    Settings* settings = document()->settings();
+    if (settings && settings->usesDashboardBackwardCompatibilityMode())
         return 0; 
 
     return HTMLElement::tagPriority();
@@ -96,7 +111,8 @@ void HTMLCanvasElement::parseMappedAttribute(MappedAttribute* attr)
 
 RenderObject* HTMLCanvasElement::createRenderer(RenderArena* arena, RenderStyle* style)
 {
-    if (document()->frame() && document()->frame()->settings()->isJavaScriptEnabled()) {
+    Settings* settings = document()->settings();
+    if (settings && settings->isJavaScriptEnabled()) {
         m_rendererIsCanvas = true;
         return new (arena) RenderHTMLCanvas(this);
     }
@@ -150,10 +166,18 @@ void HTMLCanvasElement::reset()
 
     bool hadDrawingContext = m_createdDrawingContext;
     m_createdDrawingContext = false;
+#if PLATFORM(CG)
     fastFree(m_data);
+#elif PLATFORM(QT)
+    delete m_painter;
+    m_painter = 0;
+    delete m_data;
+#endif
     m_data = 0;
     delete m_drawingContext;
     m_drawingContext = 0;
+    if (m_2DContext)
+        m_2DContext->reset();
 
     if (RenderObject* ro = renderer())
         if (m_rendererIsCanvas) {
@@ -173,6 +197,21 @@ void HTMLCanvasElement::paint(GraphicsContext* p, const IntRect& r)
         CGContextDrawImage(p->platformContext(), p->roundToDevicePixels(r), image);
         CGImageRelease(image);
     }
+#elif PLATFORM(QT)
+    if (m_data) {
+        QPen currentPen = m_painter->pen();
+        qreal currentOpacity = m_painter->opacity();
+        QBrush currentBrush = m_painter->brush();
+        QBrush currentBackground = m_painter->background();
+        if (m_painter->isActive())
+            m_painter->end();
+        static_cast<QPainter*>(p->platformContext())->drawImage(r, *m_data);
+        m_painter->begin(m_data);
+        m_painter->setPen(currentPen);
+        m_painter->setBrush(currentBrush);
+        m_painter->setOpacity(currentOpacity);
+        m_painter->setBackground(currentBackground);
+    }
 #endif
 }
 
@@ -188,26 +227,34 @@ void HTMLCanvasElement::createDrawingContext() const
     float pageScaleFactor = document()->frame() ? document()->frame()->page()->chrome()->scaleFactor() : 1.0f;
     float wf = ceilf(unscaledWidth * pageScaleFactor);
     float hf = ceilf(unscaledHeight * pageScaleFactor);
-    
+
     if (!(wf >= 1 && hf >= 1 && wf * hf <= maxCanvasArea))
         return;
-        
+
     unsigned w = static_cast<unsigned>(wf);
     unsigned h = static_cast<unsigned>(hf);
-    
+
+#if PLATFORM(CG)
     size_t bytesPerRow = w * 4;
     if (bytesPerRow / 4 != w) // check for overflow
         return;
     m_data = fastCalloc(h, bytesPerRow);
     if (!m_data)
         return;
-#if PLATFORM(CG)
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef bitmapContext = CGBitmapContextCreate(m_data, w, h, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
     CGContextScaleCTM(bitmapContext, w / unscaledWidth, h / unscaledHeight);
     CGColorSpaceRelease(colorSpace);
     m_drawingContext = new GraphicsContext(bitmapContext);
     CGContextRelease(bitmapContext);
+#elif PLATFORM(QT)
+    m_data = new QImage(w, h, QImage::Format_ARGB32_Premultiplied);
+    if (!m_data)
+        return;
+    m_painter = new QPainter(m_data);
+    m_painter->setBackground(QBrush(Qt::transparent));
+    m_painter->fillRect(0, 0, w, h, QColor(Qt::transparent));
+    m_drawingContext = new GraphicsContext(m_painter);
 #endif
 }
 
@@ -225,14 +272,23 @@ CGImageRef HTMLCanvasElement::createPlatformImage() const
     GraphicsContext* context = drawingContext();
     if (!context)
         return 0;
-    
+
     CGContextRef contextRef = context->platformContext();
     if (!contextRef)
         return 0;
-    
+
     CGContextFlush(contextRef);
-    
+
     return CGBitmapContextCreateImage(contextRef);
+}
+
+#elif PLATFORM(QT)
+
+QImage HTMLCanvasElement::createPlatformImage() const
+{
+    if (m_data)
+        return *m_data;
+    return QImage();
 }
 
 #endif

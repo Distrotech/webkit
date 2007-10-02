@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.
  *           (C) 2006 Graham Dennis (graham.dennis@gmail.com)
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,20 +27,112 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <WebKit/WebPreferencesPrivate.h>
-#import <WebKit/WebPreferenceKeysPrivate.h>
+#import "WebPreferencesPrivate.h"
+#import "WebPreferenceKeysPrivate.h"
 
-#import <WebKit/WebKitLogging.h>
-#import <WebKit/WebKitNSStringExtras.h>
-#import <WebKit/WebNSDictionaryExtras.h>
-#import <WebKit/WebNSURLExtras.h>
-#import <WebKitSystemInterface.h>
+#import "WebKitLogging.h"
+#import "WebKitNSStringExtras.h"
+#import "WebKitSystemBits.h"
+#import "WebKitSystemInterface.h"
+#import "WebKitVersionChecks.h"
+#import "WebNSDictionaryExtras.h"
+#import "WebNSURLExtras.h"
 
 NSString *WebPreferencesChangedNotification = @"WebPreferencesChangedNotification";
+NSString *WebPreferencesRemovedNotification = @"WebPreferencesRemovedNotification";
 
 #define KEY(x) (_private->identifier ? [_private->identifier stringByAppendingString:(x)] : (x))
 
 enum { WebPreferencesVersion = 1 };
+
+static WebPreferences *_standardPreferences;
+static NSMutableDictionary *webPreferencesInstances;
+
+static bool contains(const char* const array[], int count, const char* item)
+{
+    if (!item)
+        return false;
+
+    for (int i = 0; i < count; i++)
+        if (!strcasecmp(array[i], item))
+            return true;
+    return false;
+}
+
+static WebCacheModel cacheModelForMainBundle(void)
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+    // Apps that probably need the small setting
+    static const char* const documentViewerIDs[] = {
+        "Microsoft/com.microsoft.Messenger",
+        "com.adiumX.adiumX", 
+        "com.alientechnology.Proteus",
+        "com.apple.Dashcode",
+        "com.apple.iChat", 
+        "com.barebones.bbedit", 
+        "com.barebones.textwrangler",
+        "com.barebones.yojimbo",
+        "com.equinux.iSale4",
+        "com.growl.growlframework",
+        "com.intrarts.PandoraMan",
+        "com.karelia.Sandvox",
+        "com.macromates.textmate",
+        "com.realmacsoftware.rapidweaverpro",
+        "com.red-sweater.marsedit",
+        "com.yahoo.messenger3",
+        "de.codingmonkeys.SubEthaEdit",
+        "fi.karppinen.Pyro",
+        "info.colloquy", 
+        "kungfoo.tv.ecto",
+    };
+
+    // Apps that probably need the medium setting
+    static const char* const documentBrowserIDs[] = {
+        "com.apple.Dictionary",
+        "com.apple.Xcode",
+        "com.apple.dashboard.client", 
+        "com.apple.helpviewer",
+        "com.culturedcode.xyle",
+        "com.macrabbit.CSSEdit",
+        "com.panic.Coda",
+        "com.ranchero.NetNewsWire",
+        "com.thinkmac.NewsLife",
+        "org.xlife.NewsFire",
+        "uk.co.opencommunity.vienna2",
+    };
+
+    // Apps that probably need the large setting
+    static const char* const primaryWebBrowserIDs[] = {
+        "com.app4mac.KidsBrowser"
+        "com.app4mac.wKiosk",
+        "com.freeverse.bumpercar",
+        "com.omnigroup.OmniWeb5",
+        "com.sunrisebrowser.Sunrise",
+        "net.hmdt-web.Shiira",
+    };
+
+    WebCacheModel cacheModel;
+
+    const char* bundleID = [[[NSBundle mainBundle] bundleIdentifier] UTF8String];
+    if (contains(documentViewerIDs, sizeof(documentViewerIDs) / sizeof(documentViewerIDs[0]), bundleID))
+        cacheModel = WebCacheModelDocumentViewer;
+    else if (contains(documentBrowserIDs, sizeof(documentBrowserIDs) / sizeof(documentBrowserIDs[0]), bundleID))
+        cacheModel = WebCacheModelDocumentBrowser;
+    else if (contains(primaryWebBrowserIDs, sizeof(primaryWebBrowserIDs) / sizeof(primaryWebBrowserIDs[0]), bundleID))
+        cacheModel = WebCacheModelPrimaryWebBrowser;
+    else {
+        bool isLegacyApp = !WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_CACHE_MODEL_API);
+        if (isLegacyApp)
+            cacheModel = WebCacheModelDocumentBrowser; // To avoid regressions in apps that depended on old WebKit's large cache.
+        else
+            cacheModel = WebCacheModelDocumentViewer; // To save memory.
+    }
+
+    [pool drain];
+
+    return cacheModel;
+}
 
 @interface WebPreferencesPrivate : NSObject
 {
@@ -49,6 +141,8 @@ enum { WebPreferencesVersion = 1 };
     NSString *identifier;
     NSString *IBCreatorID;
     BOOL autosaves;
+    BOOL automaticallyDetectsCacheModel;
+    unsigned numWebViews;
 }
 @end
 
@@ -95,8 +189,6 @@ enum { WebPreferencesVersion = 1 };
     return [self initWithIdentifier:fakeIdentifier];
 }
 
-static WebPreferences *_standardPreferences = nil;
-
 - (id)initWithIdentifier:(NSString *)anIdentifier
 {
     self = [super init];
@@ -114,59 +206,62 @@ static WebPreferences *_standardPreferences = nil;
 
     _private->values = [[NSMutableDictionary alloc] init];
     _private->identifier = [anIdentifier copy];
-    
+    _private->automaticallyDetectsCacheModel = YES;
+
     [[self class] _setInstance:self forIdentifier:_private->identifier];
 
-    [[NSNotificationCenter defaultCenter]
-       postNotificationName:WebPreferencesChangedNotification object:self userInfo:nil];
+    [self _postPreferencesChangesNotification];
 
     return self;
 }
 
 - (id)initWithCoder:(NSCoder *)decoder
 {
-    volatile id result = nil;
-
-NS_DURING
-
-    int version;
+    self = [super init];
+    if (!self)
+        return nil;
 
     _private = [[WebPreferencesPrivate alloc] init];
     _private->IBCreatorID = [[WebPreferences _IBCreatorID] retain];
-    
-    if ([decoder allowsKeyedCoding]){
-        _private->identifier = [[decoder decodeObjectForKey:@"Identifier"] retain];
-        _private->values = [[decoder decodeObjectForKey:@"Values"] retain];
-        LOG (Encoding, "Identifier = %@, Values = %@\n", _private->identifier, _private->values);
-    }
-    else {
-        [decoder decodeValueOfObjCType:@encode(int) at:&version];
-        if (version == 1){
-            _private->identifier = [[decoder decodeObject] retain];
-            _private->values = [[decoder decodeObject] retain];
+    _private->automaticallyDetectsCacheModel = YES;
+
+    @try {
+        id identifier = nil;
+        id values = nil;
+        if ([decoder allowsKeyedCoding]) {
+            identifier = [decoder decodeObjectForKey:@"Identifier"];
+            values = [decoder decodeObjectForKey:@"Values"];
+        } else {
+            int version;
+            [decoder decodeValueOfObjCType:@encode(int) at:&version];
+            if (version == 1) {
+                identifier = [decoder decodeObject];
+                values = [decoder decodeObject];
+            }
         }
+
+        if ([identifier isKindOfClass:[NSString class]])
+            _private->identifier = [identifier copy];
+        if ([values isKindOfClass:[NSDictionary class]])
+            _private->values = [values mutableCopy]; // ensure dictionary is mutable
+
+        LOG(Encoding, "Identifier = %@, Values = %@\n", _private->identifier, _private->values);
+    } @catch(id) {
+        [self release];
+        return nil;
     }
-    
+
     // If we load a nib multiple times, or have instances in multiple
     // nibs with the same name, the first guy up wins.
     WebPreferences *instance = [[self class] _getInstanceForIdentifier:_private->identifier];
-    if (instance){
+    if (instance) {
         [self release];
-        result = [instance retain];
-    }
-    else {
+        self = [instance retain];
+    } else {
         [[self class] _setInstance:self forIdentifier:_private->identifier];
-        result = self;
     }
-    
-NS_HANDLER
 
-    result = nil;
-    [self release];
-    
-NS_ENDHANDLER
-
-    return result;
+    return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)encoder
@@ -189,7 +284,6 @@ NS_ENDHANDLER
     if (_standardPreferences == nil) {
         _standardPreferences = [[WebPreferences alloc] initWithIdentifier:nil];
         [_standardPreferences setAutosaves:YES];
-        [_standardPreferences _postPreferencesChangesNotification];
     }
 
     return _standardPreferences;
@@ -210,12 +304,11 @@ NS_ENDHANDLER
         @"16",                          WebKitDefaultFontSizePreferenceKey,
         @"13",                          WebKitDefaultFixedFontSizePreferenceKey,
         @"ISO-8859-1",                  WebKitDefaultTextEncodingNamePreferenceKey,
-        @"3",                           WebKitPageCacheSizePreferenceKey,
-        @"33554432",                    WebKitObjectCacheSizePreferenceKey,
         [NSNumber numberWithBool:NO],   WebKitUserStyleSheetEnabledPreferenceKey,
         @"",                            WebKitUserStyleSheetLocationPreferenceKey,
         [NSNumber numberWithBool:NO],   WebKitShouldPrintBackgroundsPreferenceKey,
         [NSNumber numberWithBool:NO],   WebKitTextAreasAreResizablePreferenceKey,
+        [NSNumber numberWithBool:NO],   WebKitShrinksStandaloneImagesToFit,
         [NSNumber numberWithBool:YES],  WebKitJavaEnabledPreferenceKey,
         [NSNumber numberWithBool:YES],  WebKitJavaScriptEnabledPreferenceKey,
         [NSNumber numberWithBool:YES],  WebKitJavaScriptCanOpenWindowsAutomaticallyPreferenceKey,
@@ -234,6 +327,8 @@ NS_ENDHANDLER
         @"0",                           WebKitUseSiteSpecificSpoofingPreferenceKey,
         [NSNumber numberWithInt:WebKitEditableLinkDefaultBehavior], WebKitEditableLinkBehaviorPreferenceKey,
         [NSNumber numberWithBool:NO],   WebKitDOMPasteAllowedPreferenceKey,
+        [NSNumber numberWithBool:YES],  WebKitUsesPageCachePreferenceKey,
+        [NSNumber numberWithInt:cacheModelForMainBundle()], WebKitCacheModelPreferenceKey,
         nil];
 
     // This value shouldn't ever change, which is assumed in the initialization of WebKitPDFDisplayModePreferenceKey above
@@ -586,6 +681,27 @@ NS_ENDHANDLER
     return [self _boolValueForKey:WebKitPrivateBrowsingEnabledPreferenceKey];
 }
 
+- (void)setUsesPageCache:(BOOL)usesPageCache
+{
+    [self _setBoolValue:usesPageCache forKey:WebKitUsesPageCachePreferenceKey];
+}
+
+- (BOOL)usesPageCache
+{
+    return [self _boolValueForKey:WebKitUsesPageCachePreferenceKey];
+}
+
+- (void)setCacheModel:(WebCacheModel)cacheModel
+{
+    [self _setIntegerValue:cacheModel forKey:WebKitCacheModelPreferenceKey];
+    [self setAutomaticallyDetectsCacheModel:NO];
+}
+
+- (WebCacheModel)cacheModel
+{
+    return [self _integerValueForKey:WebKitCacheModelPreferenceKey];
+}
+
 @end
 
 @implementation WebPreferences (WebPrivate)
@@ -620,18 +736,29 @@ NS_ENDHANDLER
     [self _setBoolValue: flag forKey: WebKitTextAreasAreResizablePreferenceKey];
 }
 
-- (size_t)_pageCacheSize
+- (BOOL)shrinksStandaloneImagesToFit
 {
-    return [[NSUserDefaults standardUserDefaults] integerForKey:WebKitPageCacheSizePreferenceKey];
+    return [self _boolValueForKey:WebKitShrinksStandaloneImagesToFit];
 }
 
-- (size_t)_objectCacheSize
+- (void)setShrinksStandaloneImagesToFit:(BOOL)flag
 {
-    return [[NSUserDefaults standardUserDefaults] integerForKey:WebKitObjectCacheSizePreferenceKey];
+    [self _setBoolValue:flag forKey:WebKitShrinksStandaloneImagesToFit];
+}
+
+- (BOOL)automaticallyDetectsCacheModel
+{
+    return _private->automaticallyDetectsCacheModel;
+}
+
+- (void)setAutomaticallyDetectsCacheModel:(BOOL)automaticallyDetectsCacheModel
+{
+    _private->automaticallyDetectsCacheModel = automaticallyDetectsCacheModel;
 }
 
 - (NSTimeInterval)_backForwardCacheExpirationInterval
 {
+    // FIXME: There's probably no good reason to read from the standard user defaults instead of self.
     return (NSTimeInterval)[[NSUserDefaults standardUserDefaults] floatForKey:WebKitBackForwardCacheExpirationIntervalKey];
 }
 
@@ -700,17 +827,12 @@ NS_ENDHANDLER
     [self _setBoolValue:newValue forKey:WebKitUseSiteSpecificSpoofingPreferenceKey];
 }
 
-static NSMutableDictionary *webPreferencesInstances = nil;
-
 + (WebPreferences *)_getInstanceForIdentifier:(NSString *)ident
 {
-        LOG (Encoding, "requesting for %@\n", ident);
+    LOG(Encoding, "requesting for %@\n", ident);
 
-    if (!ident){
-        if(_standardPreferences)
-            return _standardPreferences;
-        return nil;
-    }    
+    if (!ident)
+        return _standardPreferences;
     
     WebPreferences *instance = [webPreferencesInstances objectForKey:[self _concatenateKeyWithIBCreatorID:ident]];
 
@@ -723,15 +845,23 @@ static NSMutableDictionary *webPreferencesInstances = nil;
         webPreferencesInstances = [[NSMutableDictionary alloc] init];
     if (ident) {
         [webPreferencesInstances setObject:instance forKey:[self _concatenateKeyWithIBCreatorID:ident]];
-        LOG (Encoding, "recording %p for %@\n", instance, [self _concatenateKeyWithIBCreatorID:ident]);
+        LOG(Encoding, "recording %p for %@\n", instance, [self _concatenateKeyWithIBCreatorID:ident]);
     }
+}
+
++ (void)_checkLastReferenceForIdentifier:(id)identifier
+{
+    // FIXME: This won't work at all under garbage collection because retainCount returns a constant.
+    // We may need to change WebPreferences API so there's an explicit way to end the lifetime of one.
+    WebPreferences *instance = [webPreferencesInstances objectForKey:identifier];
+    if ([instance retainCount] == 1)
+        [webPreferencesInstances removeObjectForKey:identifier];
 }
 
 + (void)_removeReferenceForIdentifier:(NSString *)ident
 {
-    if (ident != nil) {
-        [webPreferencesInstances performSelector:@selector(_web_checkLastReferenceForIdentifier:) withObject: [self _concatenateKeyWithIBCreatorID:ident] afterDelay:.1];
-    }
+    if (ident)
+        [self performSelector:@selector(_checkLastReferenceForIdentifier:) withObject:[self _concatenateKeyWithIBCreatorID:ident] afterDelay:0.1];
 }
 
 - (void)_postPreferencesChangesNotification
@@ -772,6 +902,41 @@ static NSString *classIBCreatorID = nil;
     [self _setBoolValue:DOMPasteAllowed forKey:WebKitDOMPasteAllowedPreferenceKey];
 }
 
+- (void)_setFTPDirectoryTemplatePath:(NSString *)path
+{
+    [self _setStringValue:path forKey:WebKitFTPDirectoryTemplatePath];
+}
+
+- (NSString *)_ftpDirectoryTemplatePath
+{
+    return [self _stringValueForKey:WebKitFTPDirectoryTemplatePath];
+}
+
+- (void)_setForceFTPDirectoryListings:(BOOL)force
+{
+    [self _setBoolValue:force forKey:WebKitForceFTPDirectoryListings];
+}
+
+- (BOOL)_forceFTPDirectoryListings
+{
+    return [self _boolValueForKey:WebKitForceFTPDirectoryListings];
+}
+
+- (void)didRemoveFromWebView
+{
+    ASSERT(_private->numWebViews);
+    if (--_private->numWebViews == 0)
+        [[NSNotificationCenter defaultCenter]
+            postNotificationName:WebPreferencesRemovedNotification
+                          object:self
+                        userInfo:nil];
+}
+
+- (void)willAddToWebView
+{
+    ++_private->numWebViews;
+}
+
 @end
 
 @implementation WebPreferences (WebInternal)
@@ -787,17 +952,6 @@ static NSString *classIBCreatorID = nil;
     if (!IBCreatorID)
         return key;
     return [IBCreatorID stringByAppendingString:key];
-}
-
-@end
-
-@implementation NSMutableDictionary (WebInternal)
-
-- (void)_web_checkLastReferenceForIdentifier:(NSString *)identifier
-{
-    WebPreferences *instance = [webPreferencesInstances objectForKey:identifier];
-    if ([instance retainCount] == 1)
-        [webPreferencesInstances removeObjectForKey:identifier];
 }
 
 @end

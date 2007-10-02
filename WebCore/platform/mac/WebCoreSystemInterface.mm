@@ -41,8 +41,8 @@ CGFontRef (*wkGetCGFontFromNSFont)(NSFont*);
 ATSGlyphRef (*wkGetDefaultGlyphForChar)(NSFont*, UniChar);
 NSFont* (*wkGetFontInLanguageForRange)(NSFont*, NSString*, NSRange);
 NSFont* (*wkGetFontInLanguageForCharacter)(NSFont*, UniChar);
-void (*wkGetFontMetrics)(NSFont*, int* ascent, int* descent, int* lineGap, unsigned* unitsPerEm);
-BOOL (*wkGetGlyphTransformedAdvances)(NSFont*, CGAffineTransform*, ATSGlyphRef*, CGSize* advance);
+void (*wkGetFontMetrics)(CGFontRef, int* ascent, int* descent, int* lineGap, unsigned* unitsPerEm);
+BOOL (*wkGetGlyphTransformedAdvances)(CGFontRef, NSFont*, CGAffineTransform*, ATSGlyphRef*, CGSize* advance);
 ATSLayoutRecord* (*wkGetGlyphVectorFirstRecord)(void* glyphVector);
 int (*wkGetGlyphVectorNumGlyphs)(void* glyphVector);
 size_t (*wkGetGlyphVectorRecordSize)(void* glyphVector);
@@ -57,8 +57,6 @@ void (*wkGetWheelEventDeltas)(NSEvent*, float* deltaX, float* deltaY, BOOL* cont
 OSStatus (*wkInitializeGlyphVector)(int count, void* glyphs);
 NSString* (*wkPathFromFont)(NSFont*);
 void (*wkPopupMenu)(NSMenu*, NSPoint location, float width, NSView*, int selectedItem, NSFont*);
-int (*wkQTMovieDataRate)(QTMovie*);
-float (*wkQTMovieMaxTimeLoaded)(QTMovie*);
 void (*wkReleaseStyleGroup)(void* group);
 void (*wkSetCGFontRenderingMode)(CGContextRef, NSFont*);
 void (*wkSetDragImage)(NSImage*, NSPoint offset);
@@ -77,6 +75,7 @@ CFReadStreamRef (*wkCreateCustomCFReadStream)(void *(*formCreate)(CFReadStreamRe
     void (*formUnschedule)(CFReadStreamRef, CFRunLoopRef, CFStringRef, void *),
     void *context);
 void (*wkSetNSURLConnectionDefersCallbacks)(NSURLConnection *, BOOL);
+void (*wkSetNSURLRequestShouldContentSniff)(NSMutableURLRequest *, BOOL);
 id (*wkCreateNSURLConnectionDelegateProxy)(void);
 BOOL (*wkSupportsMultipartXMixedReplace)(NSMutableURLRequest *);
 Class (*wkNSURLProtocolClassForReqest)(NSURLRequest *);

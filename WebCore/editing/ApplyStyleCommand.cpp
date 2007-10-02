@@ -27,11 +27,10 @@
 #include "ApplyStyleCommand.h"
 
 #include "CSSComputedStyleDeclaration.h"
-#include "cssparser.h"
+#include "CSSParser.h"
 #include "CSSProperty.h"
 #include "CSSPropertyNames.h"
 #include "Document.h"
-#include "htmlediting.h"
 #include "HTMLElement.h"
 #include "HTMLInterchange.h"
 #include "HTMLNames.h"
@@ -40,6 +39,7 @@
 #include "RenderObject.h"
 #include "Text.h"
 #include "TextIterator.h"
+#include "htmlediting.h"
 #include "visible_units.h"
 
 namespace WebCore {
@@ -413,8 +413,10 @@ void ApplyStyleCommand::applyBlockStyle(CSSMutableStyleDeclaration *style)
         nextParagraphStart = endOfParagraph(paragraphStart).next();
     }
     
-    updateStartEnd(TextIterator::rangeFromLocationAndLength(static_cast<Element*>(scope), startIndex, 0, true)->startPosition(),
-                   TextIterator::rangeFromLocationAndLength(static_cast<Element*>(scope), endIndex, 0, true)->startPosition());
+    startRange = TextIterator::rangeFromLocationAndLength(static_cast<Element*>(scope), startIndex, 0, true);
+    endRange = TextIterator::rangeFromLocationAndLength(static_cast<Element*>(scope), endIndex, 0, true);
+    if (startRange && endRange)
+        updateStartEnd(startRange->startPosition(), endRange->startPosition());
 }
 
 #define NoFontDelta (0.0f)
@@ -509,7 +511,7 @@ void ApplyStyleCommand::applyRelativeFontStyleChange(CSSMutableStyleDeclaration 
             if (!nodeFullySelected(node, start, end))
                 continue;
             elem = static_cast<HTMLElement *>(node);
-        } else if (node->isTextNode() && node->parentNode() != lastStyledNode) {
+        } else if (node->isTextNode() && node->renderer() && node->parentNode() != lastStyledNode) {
             // Last styled node was not parent node of this text node, but we wish to style this
             // text node. To make this possible, add a style span to surround this text node.
             RefPtr<HTMLElement> span = createStyleSpanElement(document());
@@ -649,8 +651,12 @@ void ApplyStyleCommand::applyInlineStyle(CSSMutableStyleDeclaration *style)
     }
     
     if (!rangeIsEmpty) {
+        // FIXME: Callers should perform this operation on a Range that includes the br
+        // if they want style applied to the empty line.
+        if (start == end && start.node()->hasTagName(brTag))
+            end = positionAfterNode(start.node());
         // Add the style to selected inline runs.
-        Node* pastEnd = Range(document(), start, end).pastEndNode();
+        Node* pastEnd = Range(document(), rangeCompliantEquivalent(start), rangeCompliantEquivalent(end)).pastEndNode();
         for (Node* next; node && node != pastEnd; node = next) {
             
             next = node->traverseNextNode();
@@ -685,7 +691,7 @@ void ApplyStyleCommand::applyInlineStyle(CSSMutableStyleDeclaration *style)
             Node* runStart = node;
             // Find the end of the run.
             Node* sibling = node->nextSibling();
-            while (node != end.node() && sibling && (!sibling->isElementNode() || sibling->hasTagName(brTag)) && !isBlock(sibling)) {
+            while (sibling && sibling != pastEnd && (!sibling->isElementNode() || sibling->hasTagName(brTag)) && !isBlock(sibling)) {
                 node = sibling;
                 sibling = node->nextSibling();
             }

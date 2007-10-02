@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  */
 
 #include "config.h"
@@ -62,22 +62,26 @@ void ContainerNode::removeAllChildren()
     bool topLevel = !alreadyInsideDestructor;
     if (topLevel)
         alreadyInsideDestructor = true;
-    
-    // List of nodes to be deleted.
-    static Node *head;
-    static Node *tail;
-    
-    // We have to tell all children that their parent has died.
-    Node *n;
-    Node *next;
 
-    for (n = m_firstChild; n != 0; n = next ) {
+    // List of nodes to be deleted.
+    static Node* head;
+    static Node* tail;
+
+    // We have to tell all children that their parent has died.
+    Node* n;
+    Node* next;
+    for (n = m_firstChild; n != 0; n = next) {
+        ASSERT(!n->m_deletionHasBegun);
+
         next = n->nextSibling();
         n->setPreviousSibling(0);
         n->setNextSibling(0);
         n->setParent(0);
         
-        if ( !n->refCount() ) {
+        if (!n->refCount()) {
+#ifndef NDEBUG
+            n->m_deletionHasBegun = true;
+#endif
             // Add the node to the list of nodes to be deleted.
             // Reuse the nextSibling pointer for this purpose.
             if (tail)
@@ -88,20 +92,22 @@ void ContainerNode::removeAllChildren()
         } else if (n->inDocument())
             n->removedFromDocument();
     }
-    
+
     // Only for the top level call, do the actual deleting.
     if (topLevel) {
         while ((n = head) != 0) {
+            ASSERT(n->m_deletionHasBegun);
+
             next = n->nextSibling();
             n->setNextSibling(0);
 
             head = next;
             if (next == 0)
                 tail = 0;
-            
+
             delete n;
         }
-        
+
         alreadyInsideDestructor = false;
         m_firstChild = 0;
         m_lastChild = 0;
@@ -570,6 +576,8 @@ ContainerNode* ContainerNode::addChild(PassRefPtr<Node> newChild)
 
     if (inDocument())
         newChild->insertedIntoDocument();
+    if (document()->hasNodeLists())
+        notifyNodeListsChildrenChanged();
     childrenChanged();
     
     if (newChild->isElementNode())
@@ -826,8 +834,11 @@ void ContainerNode::setActive(bool down, bool pause)
             double startTime = currentTime();
 #endif
 
+            // Ensure there are no pending changes
+            Document::updateDocumentsRendering();
             // Do an immediate repaint.
-            renderer()->repaint(true);
+            if (renderer())
+                renderer()->repaint(true);
             
             // FIXME: Find a substitute for usleep for Win32.
             // Better yet, come up with a way of doing this that doesn't use this sort of thing at all.            
@@ -880,7 +891,7 @@ static void dispatchChildInsertionEvents(Node* child, ExceptionCode& ec)
     ASSERT(!eventDispatchForbidden());
 
     RefPtr<Node> c = child;
-    RefPtr<Document> doc = child->document();
+    DocPtr<Document> doc = child->document();
 
     if (c->parentNode() && c->parentNode()->inDocument())
         c->insertedIntoDocument();
@@ -914,7 +925,7 @@ static void dispatchChildInsertionEvents(Node* child, ExceptionCode& ec)
 static void dispatchChildRemovalEvents(Node* child, ExceptionCode& ec)
 {
     RefPtr<Node> c = child;
-    RefPtr<Document> doc = child->document();
+    DocPtr<Document> doc = child->document();
 
     // update auxiliary doc info (e.g. iterators) to note that node is being removed
     doc->notifyBeforeNodeRemoval(child); // ### use events instead

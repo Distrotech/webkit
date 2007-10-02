@@ -18,19 +18,21 @@
 
     You should have received a copy of the GNU Library General Public License
     along with this library; see the file COPYING.LIB.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
+    the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+    Boston, MA 02110-1301, USA.
 */
 
 module svg {
 
-    interface [Conditional=SVG, PODType=AffineTransform] SVGMatrix { 
-        attribute float a;
-        attribute float b;
-        attribute float c;
-        attribute float d;
-        attribute float e;
-        attribute float f;
+    interface [Conditional=SVG, PODType=AffineTransform] SVGMatrix {
+        // FIXME: these attributes should all be floats but since we implement
+        // AffineTransform with doubles setting these as doubles makes more sense.
+        attribute double a;
+        attribute double b;
+        attribute double c;
+        attribute double d;
+        attribute double e;
+        attribute double f;
 
         [Custom] SVGMatrix multiply(in SVGMatrix secondMatrix);
         [Custom] SVGMatrix inverse()

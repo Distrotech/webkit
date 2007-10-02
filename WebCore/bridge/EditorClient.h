@@ -75,7 +75,6 @@ public:
     virtual void toggleGrammarChecking() = 0;
     virtual int spellCheckerDocumentTag() = 0;
     
-    virtual bool selectWordBeforeMenuEvent() = 0;
     virtual bool isEditable() = 0;
 
     virtual bool shouldBeginEditing(Range*) = 0;
@@ -87,6 +86,7 @@ public:
     virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*) = 0;
 //  virtual bool shouldChangeTypingStyle(CSSStyleDeclaration* fromStyle, CSSStyleDeclaration* toStyle) = 0;
 //  virtual bool doCommandBySelector(SEL selector) = 0;
+    virtual bool shouldMoveRangeAfterDelete(Range*, Range*) = 0;
 
     virtual void didBeginEditing() = 0;
     virtual void respondToChangedContents() = 0;
@@ -119,8 +119,6 @@ public:
     virtual void textDidChangeInTextArea(Element*) = 0;
 
 #if PLATFORM(MAC)
-    virtual void markedTextAbandoned(Frame*) = 0;
-
     // FIXME: This should become SelectionController::toWebArchive()
     virtual NSData* dataForArchivedSelection(Frame*) = 0; 
 
@@ -139,6 +137,7 @@ public:
     virtual void showSpellingUI(bool show) = 0;
     virtual bool spellingUIIsShowing() = 0;
     virtual void getGuessesForWord(const String&, Vector<String>& guesses) = 0;
+    virtual void setInputMethodState(bool enabled) = 0;
 };
 
 }

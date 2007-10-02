@@ -18,8 +18,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -34,12 +34,10 @@
 #import "GraphicsContext.h"
 #import "IntRect.h"
 #import "Logging.h"
-#import "Settings.h"
 #import "TextStyle.h"
 #import "WebCoreSystemInterface.h"
 #import "WebCoreTextRenderer.h"
-
-#import <unicode/ushape.h>
+#import "ShapeArabic.h"
 
 #define SYNTHETIC_OBLIQUE_ANGLE 14
 
@@ -109,17 +107,17 @@ static void initializeATSUStyle(const FontData* fontData)
         if (status != noErr)
             LOG_ERROR("ATSUCreateStyle failed (%d)", status);
     
-        ATSUFontID fontID = wkGetNSFontATSUFontId(fontData->m_font.font);
+        ATSUFontID fontID = wkGetNSFontATSUFontId(fontData->m_font.font());
         if (fontID == 0) {
             ATSUDisposeStyle(fontData->m_ATSUStyle);
-            LOG_ERROR("unable to get ATSUFontID for %@", fontData->m_font.font);
+            LOG_ERROR("unable to get ATSUFontID for %@", fontData->m_font.font());
             return;
         }
         
         CGAffineTransform transform = CGAffineTransformMakeScale(1, -1);
         if (fontData->m_font.syntheticOblique)
             transform = CGAffineTransformConcat(transform, CGAffineTransformMake(1, 0, -tanf(SYNTHETIC_OBLIQUE_ANGLE * acosf(0) / 90), 1, 0, 0)); 
-        Fixed fontSize = FloatToFixed([fontData->m_font.font pointSize]);
+        Fixed fontSize = FloatToFixed([fontData->m_font.font() pointSize]);
         // Turn off automatic kerning until it is supported in the CG code path (6136 in bugzilla)
         Fract kerningInhibitFactor = FloatToFract(1.0);
         ATSUAttributeTag styleTags[4] = { kATSUSizeTag, kATSUFontTag, kATSUFontMatrixTag, kATSUKerningInhibitFactorTag };
@@ -140,7 +138,7 @@ static void initializeATSUStyle(const FontData* fontData)
         // Don't be too aggressive: if the font doesn't contain 'a', then assume that any ligatures it contains are
         // in characters that always go through ATSUI, and therefore allow them. Geeza Pro is an example.
         // See bugzilla 5166.
-        if ([[fontData->m_font.font coveredCharacterSet] characterIsMember:'a']) {
+        if ([[fontData->m_font.font() coveredCharacterSet] characterIsMember:'a']) {
             ATSUFontFeatureType featureTypes[] = { kLigaturesType };
             ATSUFontFeatureSelector featureSelectors[] = { kCommonLigaturesOffSelector };
             status = ATSUSetFontFeatures(fontData->m_ATSUStyle, 1, featureTypes, featureSelectors);
@@ -193,7 +191,7 @@ static OSStatus overrideLayoutOperation(ATSULayoutOperationSelector iCurrentOper
                 // The CoreGraphics interpretation of NSFontAntialiasedIntegerAdvancementsRenderingMode seems
                 // to be "round each glyph's width to the nearest integer". This is not the same as ATSUI
                 // does in any of its device-metrics modes.
-                shouldRound = [renderer->m_font.font renderingMode] == NSFontAntialiasedIntegerAdvancementsRenderingMode;
+                shouldRound = [renderer->m_font.font() renderingMode] == NSFontAntialiasedIntegerAdvancementsRenderingMode;
                 if (syntheticBoldPass)
                     syntheticBoldOffset = FloatToFixed(renderer->m_syntheticBoldOffset);
             }
@@ -284,7 +282,7 @@ static void shapeArabic(const UChar* source, UChar* dest, unsigned totalLength, 
         shapingEnd++;
 
         UErrorCode shapingError = U_ZERO_ERROR;
-        unsigned charsWritten = u_shapeArabic(source + shapingStart, shapingEnd - shapingStart, dest + shapingStart, shapingEnd - shapingStart, U_SHAPE_LETTERS_SHAPE | U_SHAPE_LENGTH_FIXED_SPACES_NEAR, &shapingError);
+        unsigned charsWritten = shapeArabic(source + shapingStart, shapingEnd - shapingStart, dest + shapingStart, shapingEnd - shapingStart, U_SHAPE_LETTERS_SHAPE | U_SHAPE_LENGTH_FIXED_SPACES_NEAR, &shapingError);
 
         if (U_SUCCESS(shapingError) && charsWritten == shapingEnd - shapingStart) {
             for (unsigned j = shapingStart; j < shapingEnd - 1; ++j) {
@@ -606,21 +604,24 @@ void Font::drawGlyphs(GraphicsContext* context, const FontData* font, const Glyp
     CGContextRef cgContext = context->platformContext();
 
     bool originalShouldUseFontSmoothing = wkCGContextGetShouldSmoothFonts(cgContext);
-    CGContextSetShouldSmoothFonts(cgContext, WebCoreShouldUseFontSmoothing());
+    bool newShouldUseFontSmoothing = WebCoreShouldUseFontSmoothing();
+    
+    if (originalShouldUseFontSmoothing != newShouldUseFontSmoothing)
+        CGContextSetShouldSmoothFonts(cgContext, newShouldUseFontSmoothing);
     
     const FontPlatformData& platformData = font->platformData();
     NSFont* drawFont;
     if (!isPrinterFont()) {
-        drawFont = [platformData.font screenFont];
-        if (drawFont != platformData.font)
+        drawFont = [platformData.font() screenFont];
+        if (drawFont != platformData.font())
             // We are getting this in too many places (3406411); use ERROR so it only prints on debug versions for now. (We should debug this also, eventually).
             LOG_ERROR("Attempting to set non-screen font (%@) when drawing to screen.  Using screen font anyway, may result in incorrect metrics.",
-                [[[platformData.font fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
+                [[[platformData.font() fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
     } else {
-        drawFont = [platformData.font printerFont];
-        if (drawFont != platformData.font)
+        drawFont = [platformData.font() printerFont];
+        if (drawFont != platformData.font())
             NSLog(@"Attempting to set non-printer font (%@) when printing.  Using printer font anyway, may result in incorrect metrics.",
-                [[[platformData.font fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
+                [[[platformData.font() fontDescriptor] fontAttributes] objectForKey:NSFontNameAttribute]);
     }
     
     CGContextSetFont(cgContext, wkGetCGFontFromNSFont(drawFont));
@@ -643,7 +644,8 @@ void Font::drawGlyphs(GraphicsContext* context, const FontData* font, const Glyp
         CGContextShowGlyphsWithAdvances(cgContext, glyphBuffer.glyphs(from), glyphBuffer.advances(from), numGlyphs);
     }
 
-    CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
+    if (originalShouldUseFontSmoothing != newShouldUseFontSmoothing)
+        CGContextSetShouldSmoothFonts(cgContext, originalShouldUseFontSmoothing);
 }
 
 }

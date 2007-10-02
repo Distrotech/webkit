@@ -24,7 +24,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Alternatively, the contents of this file may be used under the terms
  * of either the Mozilla Public License Version 1.1, found at
@@ -141,7 +141,7 @@ RenderLayer::RenderLayer(RenderObject* object)
     , m_isOverflowOnly(shouldBeOverflowOnly())
     , m_usedTransparency(false)
     , m_inOverflowRelayout(false)
-    , m_repaintOverflowOnResize(false)
+    , m_needsFullRepaint(false)
     , m_overflowStatusDirty(true)
     , m_visibleContentStatusDirty(true)
     , m_hasVisibleContent(false)
@@ -174,15 +174,6 @@ RenderLayer::~RenderLayer()
     ASSERT(!m_clipRects);
 }
 
-void RenderLayer::checkForRepaintOnResize()
-{
-    // FIXME: The second part of the condition is probably no longer needed. The first part can be
-    // done when the object is marked for layout instead of walking the tree here.
-    m_repaintOverflowOnResize = m_object->selfNeedsLayout() || m_object->hasOverflowClip() && m_object->normalChildNeedsLayout();
-    for (RenderLayer* child = firstChild(); child; child = child->nextSibling())
-        child->checkForRepaintOnResize();
-}
-
 void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
 {
     if (doFullRepaint) {
@@ -209,13 +200,12 @@ void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
         IntRect newOutlineBox = m_object->absoluteOutlineBox();
         if (checkForRepaint) {
             if (view && !view->printing()) {
-                bool didMove = newOutlineBox.location() != m_outlineBox.location();
-                if (!didMove && !m_repaintOverflowOnResize)
-                    m_object->repaintAfterLayoutIfNeeded(m_repaintRect, m_outlineBox);
-                else if (didMove || newRect != m_repaintRect) {
+                if (m_needsFullRepaint) {
                     view->repaintViewRectangle(m_repaintRect);
-                    view->repaintViewRectangle(newRect);
-                }
+                    if (newRect != m_repaintRect)
+                        view->repaintViewRectangle(newRect);
+                } else
+                    m_object->repaintAfterLayoutIfNeeded(m_repaintRect, m_outlineBox);
             }
         }
         m_repaintRect = newRect;
@@ -224,6 +214,8 @@ void RenderLayer::updateLayerPositions(bool doFullRepaint, bool checkForRepaint)
         m_repaintRect = IntRect();
         m_outlineBox = IntRect();
     }
+
+    m_needsFullRepaint = false;
     
     for (RenderLayer* child = firstChild(); child; child = child->nextSibling())
         child->updateLayerPositions(doFullRepaint, checkForRepaint);
@@ -239,6 +231,10 @@ void RenderLayer::setHasVisibleContent(bool b)
         return;
     m_visibleContentStatusDirty = false; 
     m_hasVisibleContent = b;
+    if (m_hasVisibleContent) {
+        m_repaintRect = renderer()->absoluteClippedOverflowRect();
+        m_outlineBox = renderer()->absoluteOutlineBox();
+    }
     if (parent())
         parent()->childVisibilityChanged(m_hasVisibleContent);
 }
@@ -707,20 +703,30 @@ void RenderLayer::scrollRectToVisible(const IntRect &rect, const ScrollAlignment
     FrameView* frameView = m_object->document()->view();
     if (frameView)
         frameView->pauseScheduledEvents();
-    
-    if (m_object->hasOverflowClip()) {
+
+    bool restrictedByLineClamp = false;
+    if (m_object->parent()) {
+        parentLayer = m_object->parent()->enclosingLayer();
+        restrictedByLineClamp = m_object->parent()->style()->lineClamp() >= 0;
+    }
+
+    if (m_object->hasOverflowClip() && !restrictedByLineClamp) {
+        // Don't scroll to reveal an overflow layer that is restricted by the -webkit-line-clamp property.
+        // This will prevent us from revealing text hidden by the slider in Safari RSS.
         int x, y;
         m_object->absolutePosition(x, y);
-        IntRect layerBounds = IntRect(x + scrollXOffset(), y + scrollYOffset(), 
-                                      width() - verticalScrollbarWidth(), height() - horizontalScrollbarHeight());
+        x += m_object->borderLeft();
+        y += m_object->borderTop();
+
+        IntRect layerBounds = IntRect(x + scrollXOffset(), y + scrollYOffset(), m_object->clientWidth(), m_object->clientHeight());
         IntRect exposeRect = IntRect(rect.x() + scrollXOffset(), rect.y() + scrollYOffset(), rect.width(), rect.height());
         IntRect r = getRectToExpose(layerBounds, exposeRect, alignX, alignY);
         
         xOffset = r.x() - x;
         yOffset = r.y() - y;
         // Adjust offsets if they're outside of the allowable range.
-        xOffset = max(0, min(scrollWidth() - width(), xOffset));
-        yOffset = max(0, min(scrollHeight() - height(), yOffset));
+        xOffset = max(0, min(scrollWidth() - layerBounds.width(), xOffset));
+        yOffset = max(0, min(scrollHeight() - layerBounds.height(), yOffset));
         
         if (xOffset != scrollXOffset() || yOffset != scrollYOffset()) {
             int diffX = scrollXOffset();
@@ -731,10 +737,7 @@ void RenderLayer::scrollRectToVisible(const IntRect &rect, const ScrollAlignment
             newRect.setX(rect.x() - diffX);
             newRect.setY(rect.y() - diffY);
         }
-    
-        if (m_object->parent())
-            parentLayer = m_object->parent()->enclosingLayer();
-    } else {
+    } else if (!parentLayer) {
         if (frameView) {
             if (m_object->document() && m_object->document()->ownerElement() && m_object->document()->ownerElement()->renderer()) {
                 IntRect viewRect = enclosingIntRect(frameView->visibleContentRect());
@@ -843,25 +846,18 @@ IntRect RenderLayer::getRectToExpose(const IntRect &visibleRect, const IntRect &
 
 void RenderLayer::autoscroll()
 {
-    if (!renderer() || !renderer()->document() || !renderer()->document()->frame() || !renderer()->document()->frame()->view())
+    Frame* frame = renderer()->document()->frame();
+    if (!frame)
         return;
-        
-    Frame* currentFrame = renderer()->document()->frame();
-    IntPoint currentPos = currentFrame->view()->windowToContents(currentFrame->eventHandler()->currentMousePosition());
-    
-    if (currentFrame->eventHandler()->mouseDownMayStartSelect()) {
-        // Convert the mouse position to local layer space.
-        int objectX, objectY;
-        renderer()->absolutePosition(objectX, objectY);
-        HitTestRequest request(true, false, true);
-        HitTestResult result(currentPos - IntSize(objectX, objectY));
-        if (hitTest(request, result) && result.innerNode()->renderer() && result.innerNode()->renderer()->shouldSelect()) {
-            VisiblePosition pos(result.innerNode()->renderer()->positionForPoint(result.localPoint()));
-            currentFrame->eventHandler()->updateSelectionForMouseDragOverPosition(pos);
-        }
-    }
 
-    scrollRectToVisible(IntRect(currentPos, IntSize(1, 1)), gAlignToEdgeIfNeeded, gAlignToEdgeIfNeeded);    
+    FrameView* frameView = frame->view();
+    if (!frameView)
+        return;
+
+    frame->eventHandler()->updateSelectionForMouseDrag();
+
+    IntPoint currentDocumentPosition = frameView->windowToContents(frame->eventHandler()->currentMousePosition());
+    scrollRectToVisible(IntRect(currentDocumentPosition, IntSize(1, 1)), gAlignToEdgeIfNeeded, gAlignToEdgeIfNeeded);    
 }
 
 void RenderLayer::resize(const PlatformMouseEvent& evt, const IntSize& oldOffset)
@@ -1442,8 +1438,8 @@ RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext* p,
     if (!m_object->opacity())
         return;
         
-    bool selectionOnly = paintRestriction == PaintRestrictionSelectionOnly || paintRestriction == PaintRestrictionSelectionOnlyWhiteText;
-    bool forceWhiteText = paintRestriction == PaintRestrictionSelectionOnlyWhiteText;
+    bool selectionOnly = paintRestriction == PaintRestrictionSelectionOnly || paintRestriction == PaintRestrictionSelectionOnlyBlackText;
+    bool forceBlackText = paintRestriction == PaintRestrictionSelectionOnlyBlackText;
 
     if (isTransparent())
         haveTransparency = true;
@@ -1457,7 +1453,7 @@ RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext* p,
         paintingRootForRenderer = paintingRoot;
     
     // We want to paint our layer, but only if we intersect the damage rect.
-    bool shouldPaint = intersectsDamageRect(layerBounds, damageRect);
+    bool shouldPaint = intersectsDamageRect(layerBounds, damageRect) && m_hasVisibleContent;
     if (shouldPaint && !selectionOnly && !damageRect.isEmpty()) {
         // Begin transparency layers lazily now that we know we have to paint something.
         if (haveTransparency)
@@ -1495,7 +1491,7 @@ RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext* p,
         setClip(p, paintDirtyRect, clipRectToApply);
         RenderObject::PaintInfo paintInfo(p, clipRectToApply, 
                                           selectionOnly ? PaintPhaseSelection : PaintPhaseChildBlockBackgrounds,
-                                          forceWhiteText, paintingRootForRenderer, 0);
+                                          forceBlackText, paintingRootForRenderer, 0);
         renderer()->paint(paintInfo, tx, ty);
         if (!selectionOnly) {
             paintInfo.phase = PaintPhaseFloat;
@@ -1789,7 +1785,14 @@ void RenderLayer::calculateRects(const RenderLayer* rootLayer, const IntRect& pa
 
         // If we establish a clip at all, then go ahead and make sure our background
         // rect is intersected with our layer's bounds.
-        backgroundRect.intersect(layerBounds);
+        if (ShadowData* boxShadow = renderer()->style()->boxShadow()) {
+            IntRect shadowRect = layerBounds;
+            shadowRect.move(boxShadow->x, boxShadow->y);
+            shadowRect.inflate(boxShadow->blur);
+            shadowRect.unite(layerBounds);
+            backgroundRect.intersect(shadowRect);
+        } else
+            backgroundRect.intersect(layerBounds);
     }
 }
 

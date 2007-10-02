@@ -64,9 +64,19 @@ static WebPluginDatabase *sharedDatabase = nil;
     return sharedDatabase;
 }
 
++ (void)closeSharedDatabase 
+{
+    [sharedDatabase close];
+}
+
 - (WebBasePluginPackage *)pluginForKey:(NSString *)key withEnumeratorSelector:(SEL)enumeratorSelector
 {
-    WebBasePluginPackage *plugin, *CFMPlugin=nil, *machoPlugin=nil, *webPlugin=nil;
+    WebBasePluginPackage *plugin = nil;
+    WebBasePluginPackage *webPlugin = nil;
+#ifndef __LP64__
+    WebBasePluginPackage *CFMPlugin = nil;
+    WebBasePluginPackage *machoPlugin = nil;
+#endif
     NSEnumerator *pluginEnumerator = [plugins objectEnumerator];
     key = [key lowercaseString];
 
@@ -75,7 +85,9 @@ static WebPluginDatabase *sharedDatabase = nil;
             if ([plugin isKindOfClass:[WebPluginPackage class]]) {
                 if (!webPlugin)
                     webPlugin = plugin;
-            } else if([plugin isKindOfClass:[WebNetscapePluginPackage class]]) {
+            } 
+#ifndef __LP64__
+            else if([plugin isKindOfClass:[WebNetscapePluginPackage class]]) {
                 WebExecutableType executableType = [(WebNetscapePluginPackage *)plugin executableType];
                 if (executableType == WebCFMExecutableType) {
                     if (!CFMPlugin)
@@ -89,6 +101,7 @@ static WebPluginDatabase *sharedDatabase = nil;
             } else {
                 ASSERT_NOT_REACHED();
             }
+#endif
         }
     }
 
@@ -96,16 +109,21 @@ static WebPluginDatabase *sharedDatabase = nil;
     // that the QT plug-in can handle, they probably intended to override QT.
     if (webPlugin && ![webPlugin isQuickTimePlugIn])
         return webPlugin;
+    
+#ifndef __LP64__
     else if (machoPlugin && ![machoPlugin isQuickTimePlugIn])
         return machoPlugin;
     else if (CFMPlugin && ![CFMPlugin isQuickTimePlugIn])
         return CFMPlugin;
+#endif
     else if (webPlugin)
         return webPlugin;
+#ifndef __LP64__
     else if (machoPlugin)
         return machoPlugin;
     else if (CFMPlugin)
         return CFMPlugin;
+#endif
     return nil;
 }
 

@@ -17,8 +17,8 @@
  *
  * You should have received a copy of the GNU Library General Public License
  * along with this library; see the file COPYING.LIB.  If not, write to
- * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
  *
  */
 
@@ -69,7 +69,7 @@ public:
     virtual int offsetLeft() const;
     virtual int offsetTop() const;
 
-    void absoluteRects(Vector<IntRect>&, int tx, int ty);
+    void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
 
     virtual VisiblePosition positionForCoordinates(int x, int y);
 

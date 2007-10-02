@@ -61,14 +61,14 @@ using namespace WebCore;
 
 + (WebArchive *)archiveFrame:(WebFrame *)frame;
 {
-    return [[[WebArchive alloc] initWithMainResource:[[frame dataSource] mainResource]
-                                        subresources:[[frame dataSource] subresources]
+    return [[[WebArchive alloc] initWithMainResource:[[frame _dataSource] mainResource]
+                                        subresources:[[frame _dataSource] subresources]
                                     subframeArchives:[self _subframeArchivesForFrame:frame]] autorelease];
 }
 
 + (WebArchive *)archiveMainResourceForFrame:(WebFrame *)frame;
 {
-    return [[[WebArchive alloc] initWithMainResource:[[frame dataSource] mainResource]
+    return [[[WebArchive alloc] initWithMainResource:[[frame _dataSource] mainResource]
                                         subresources:nil
                                     subframeArchives:nil] autorelease];
 }
@@ -83,9 +83,16 @@ using namespace WebCore;
 
 + (WebArchive *)_archiveWithMarkupString:(NSString *)markupString fromFrame:(WebFrame *)frame nodes:(NSArray *)nodes
 { 
-    NSURLResponse *response = [[frame dataSource] response];
+    NSURLResponse *response = [[frame _dataSource] response];
+    NSURL *responseURL = [response URL];
+    
+    // it's possible to have a response without a URL here
+    // <rdar://problem/5454935>
+    if (!responseURL)
+        responseURL = [NSURL URLWithString:@""];
+    
     WebResource *mainResource = [[WebResource alloc] initWithData:[markupString dataUsingEncoding:NSUTF8StringEncoding]
-                                                              URL:[response URL] 
+                                                              URL:responseURL
                                                          MIMEType:[response MIMEType]
                                                  textEncodingName:@"UTF-8"
                                                         frameName:[frame name]];
@@ -109,7 +116,7 @@ using namespace WebCore;
                 if ([uniqueSubresources containsObject:URL])
                     continue;
                 [uniqueSubresources addObject:URL];
-                WebResource *subresource = [[frame dataSource] subresourceForURL:URL];
+                WebResource *subresource = [[frame _dataSource] subresourceForURL:URL];
                 if (subresource)
                     [subresources addObject:subresource];
                 else
@@ -161,7 +168,7 @@ using namespace WebCore;
         // Wrap the frameset document in an iframe so it can be pasted into
         // another document (which will have a body or frameset of its own). 
 
-        NSString *iframeMarkup = [[NSString alloc] initWithFormat:@"<iframe frameborder=\"no\" marginwidth=\"0\" marginheight=\"0\" width=\"98%%\" height=\"98%%\" src=\"%@\"></iframe>", [[[frame dataSource] response] URL]];
+        NSString *iframeMarkup = [[NSString alloc] initWithFormat:@"<iframe frameborder=\"no\" marginwidth=\"0\" marginheight=\"0\" width=\"98%%\" height=\"98%%\" src=\"%@\"></iframe>", [[[frame _dataSource] response] URL]];
         WebResource *iframeResource = [[WebResource alloc] initWithData:[iframeMarkup dataUsingEncoding:NSUTF8StringEncoding]
                                                                   URL:[NSURL URLWithString:@"about:blank"]
                                                              MIMEType:@"text/html"

@@ -53,65 +53,74 @@ void FrameData::clear()
 
 // Drawing Routines
 
-void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst, const FloatRect& src, CompositeOperator op)
+void BitmapImage::draw(GraphicsContext* context, const FloatRect& dst, const FloatRect& src, CompositeOperator op)
 {
-    cairo_t* context = ctxt->platformContext();
+    cairo_t* cr = context->platformContext();
 
     if (!m_source.initialized())
         return;
-    
+
     cairo_surface_t* image = frameAtIndex(m_currentFrame);
     if (!image) // If it's too early we won't have an image yet.
         return;
 
-    IntSize selfSize = size();                       
+    IntSize selfSize = size();
     FloatRect srcRect(src);
     FloatRect dstRect(dst);
 
-    cairo_save(context);
+    cairo_save(cr);
 
     // Set the compositing operation.
     if (op == CompositeSourceOver && !frameHasAlphaAtIndex(m_currentFrame))
-        ctxt->setCompositeOperation(CompositeCopy);
+        context->setCompositeOperation(CompositeCopy);
     else
-        ctxt->setCompositeOperation(op);
+        context->setCompositeOperation(op);
 
     // If we're drawing a sub portion of the image or scaling then create
     // a pattern transformation on the image and draw the transformed pattern.
     // Test using example site at http://www.meyerweb.com/eric/css/edge/complexspiral/demo.html
     cairo_pattern_t* pattern = cairo_pattern_create_for_surface(image);
+
+    // To avoid the unwanted gradient effect (#14017) we use
+    // CAIRO_FILTER_NEAREST now, but the real fix will be to have
+    // CAIRO_EXTEND_PAD implemented for surfaces in Cairo allowing us to still
+    // use bilinear filtering
+    cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
+
     float scaleX = srcRect.width() / dstRect.width();
     float scaleY = srcRect.height() / dstRect.height();
-    cairo_matrix_t mat = { scaleX,  0, 0 , scaleY, srcRect.x(), srcRect.y() };
-    cairo_pattern_set_matrix(pattern, &mat);
+    cairo_matrix_t matrix = { scaleX,  0, 0 , scaleY, srcRect.x(), srcRect.y() };
+    cairo_pattern_set_matrix(pattern, &matrix);
 
     // Draw the image.
-    cairo_translate(context, dstRect.x(), dstRect.y());
-    cairo_set_source(context, pattern);
-    cairo_rectangle(context, 0, 0, dstRect.width(), dstRect.height());
-    cairo_fill(context);
+    cairo_translate(cr, dstRect.x(), dstRect.y());
+    cairo_set_source(cr, pattern);
+    cairo_rectangle(cr, 0, 0, dstRect.width(), dstRect.height());
+    cairo_fill(cr);
 
     cairo_pattern_destroy(pattern);
-    cairo_restore(context);
+    cairo_restore(cr);
 
     startAnimation();
-
 }
 
-void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const AffineTransform& patternTransform,
+void Image::drawPattern(GraphicsContext* context, const FloatRect& tileRect, const AffineTransform& patternTransform,
                         const FloatPoint& phase, CompositeOperator op, const FloatRect& destRect)
 {
     cairo_surface_t* image = nativeImageForCurrentFrame();
     if (!image) // If it's too early we won't have an image yet.
         return;
 
-    cairo_t* context = ctxt->platformContext();
-    ctxt->save();
+    cairo_t* cr = context->platformContext();
+    context->save();
 
     // TODO: Make use of tileRect.
 
     cairo_pattern_t* pattern = cairo_pattern_create_for_surface(image);
     cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+
+    // Workaround to avoid the unwanted gradient effect (#14017)
+    cairo_pattern_set_filter(pattern, CAIRO_FILTER_NEAREST);
 
     cairo_matrix_t pattern_matrix = cairo_matrix_t(patternTransform);
     cairo_matrix_t phase_matrix = {1, 0, 0, 1, phase.x(), phase.y()};
@@ -120,13 +129,13 @@ void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const 
     cairo_matrix_invert(&combined);
     cairo_pattern_set_matrix(pattern, &combined);
 
-    ctxt->setCompositeOperation(op);
-    cairo_set_source(context, pattern);
-    cairo_rectangle(context, destRect.x(), destRect.y(), destRect.width(), destRect.height());
-    cairo_fill(context);
+    context->setCompositeOperation(op);
+    cairo_set_source(cr, pattern);
+    cairo_rectangle(cr, destRect.x(), destRect.y(), destRect.width(), destRect.height());
+    cairo_fill(cr);
 
     cairo_pattern_destroy(pattern);
-    ctxt->restore();
+    context->restore();
 }
 
 void BitmapImage::checkForSolidColor()

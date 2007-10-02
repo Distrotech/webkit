@@ -65,6 +65,8 @@ public:
 
     virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*);
 
+    virtual bool shouldMoveRangeAfterDelete(Range*, Range*);
+
     virtual void didBeginEditing();
     virtual void respondToChangedContents();
     virtual void respondToChangedSelection();
@@ -101,6 +103,7 @@ public:
     virtual void showSpellingUI(bool show);
     virtual bool spellingUIIsShowing();
     virtual void getGuessesForWord(const String&, Vector<String>& guesses);
+    virtual void setInputMethodState(bool enabled);
 
     bool isEditing() const;
 

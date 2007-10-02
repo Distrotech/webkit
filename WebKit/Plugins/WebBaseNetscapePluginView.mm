@@ -26,6 +26,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __LP64__
+
 #import "WebBaseNetscapePluginView.h"
 
 #import "WebDataSourceInternal.h"
@@ -58,6 +60,7 @@
 #import <WebCore/FrameLoader.h> 
 #import <WebCore/FrameTree.h> 
 #import <WebCore/Page.h> 
+#import <WebCore/SoftLinking.h> 
 #import <WebCore/WebCoreObjCExtras.h>
 #import <WebKit/DOMPrivate.h>
 #import <WebKit/WebUIDelegate.h>
@@ -71,6 +74,29 @@ using namespace WebCore;
 
 #define LoginWindowDidSwitchFromUserNotification    @"WebLoginWindowDidSwitchFromUserNotification"
 #define LoginWindowDidSwitchToUserNotification      @"WebLoginWindowDidSwitchToUserNotification"
+
+SOFT_LINK_FRAMEWORK(OpenGL)
+SOFT_LINK_FRAMEWORK(AGL)
+
+SOFT_LINK(OpenGL, CGLGetOffScreen, CGLError, (CGLContextObj ctx, GLsizei *width, GLsizei *height, GLint *rowbytes, void **baseaddr), (ctx, width, height, rowbytes, baseaddr))
+SOFT_LINK(OpenGL, CGLSetOffScreen, CGLError, (CGLContextObj ctx, GLsizei width, GLsizei height, GLint rowbytes, void *baseaddr), (ctx, width, height, rowbytes, baseaddr))
+SOFT_LINK(OpenGL, glViewport, void, (GLint x, GLint y, GLsizei width, GLsizei height), (x, y, width, height))
+SOFT_LINK(AGL, aglCreateContext, AGLContext, (AGLPixelFormat pix, AGLContext share), (pix, share))
+SOFT_LINK(AGL, aglSetWindowRef, GLboolean, (AGLContext ctx, WindowRef window), (ctx, window))
+SOFT_LINK(AGL, aglSetDrawable, GLboolean, (AGLContext ctx, AGLDrawable draw), (ctx, draw))
+#ifndef BUILDING_ON_TIGER
+SOFT_LINK(AGL, aglChoosePixelFormat, AGLPixelFormat, (const void *gdevs, GLint ndev, const GLint *attribs), (gdevs, ndev, attribs))
+#else
+SOFT_LINK(AGL, aglChoosePixelFormat, AGLPixelFormat, (const AGLDevice *gdevs, GLint ndev, const GLint *attribs), (gdevs, ndev, attribs))
+#endif
+SOFT_LINK(AGL, aglDestroyPixelFormat, void, (AGLPixelFormat pix), (pix))
+SOFT_LINK(AGL, aglDestroyContext, GLboolean, (AGLContext ctx), (ctx))
+SOFT_LINK(AGL, aglGetCGLContext, GLboolean, (AGLContext ctx, void **cgl_ctx), (ctx, cgl_ctx))
+SOFT_LINK(AGL, aglGetCurrentContext, AGLContext, (void), ())
+SOFT_LINK(AGL, aglSetCurrentContext, GLboolean, (AGLContext ctx), (ctx))
+SOFT_LINK(AGL, aglGetError, GLenum, (void), ())
+SOFT_LINK(AGL, aglUpdateContext, GLboolean, (AGLContext ctx), (ctx))
+SOFT_LINK(AGL, aglErrorString, const GLubyte *, (GLenum code), (code))
 
 @interface WebBaseNetscapePluginView (Internal)
 - (void)_viewHasMoved;
@@ -138,7 +164,7 @@ typedef struct {
 
 @interface NSData (WebPluginDataExtras)
 - (BOOL)_web_startsWithBlankLine;
-- (WebNSInteger)_web_locationAfterFirstBlankLine;
+- (NSInteger)_web_locationAfterFirstBlankLine;
 @end
 
 static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEvent, void *pluginView);
@@ -165,6 +191,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     carbonEvent->what = nullEvent;
     carbonEvent->message = 0;
     carbonEvent->when = TickCount();
+    
     GetGlobalMouse(&carbonEvent->where);
     carbonEvent->where.h = static_cast<short>(carbonEvent->where.h * HIGetScaleFactor());
     carbonEvent->where.v = static_cast<short>(carbonEvent->where.v * HIGetScaleFactor());
@@ -308,6 +335,13 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     npr.right = static_cast<uint16>(NSMaxX(nr));
 }
 
+- (NSRect)visibleRect
+{
+    // WebCore may impose an additional clip (via CSS overflow or clip properties).  Fetch
+    // that clip now.    
+    return NSIntersectionRect([self convertRect:[element _windowClipRect] fromView:nil], [super visibleRect]);
+}
+
 - (PortState)saveAndSetNewPortStateForUpdate:(BOOL)forUpdate
 {
     ASSERT([self currentWindow] != nil);
@@ -334,7 +368,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 #ifndef NP_NO_QUICKDRAW
     // Look at the Carbon port to convert top-left-based window coordinates into top-left-based content coordinates.
     if (drawingModel == NPDrawingModelQuickDraw) {
-        Rect portBounds;
+        ::Rect portBounds;
         CGrafPtr port = GetWindowPort(windowRef);
         GetPortBounds(port, &portBounds);
 
@@ -389,7 +423,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 #ifndef NP_NO_QUICKDRAW
         case NPDrawingModelQuickDraw: {
             // Set up NS_Port.
-            Rect portBounds;
+            ::Rect portBounds;
             CGrafPtr port = GetWindowPort(windowRef);
             GetPortBounds(port, &portBounds);
             nPort.qdPort.port = port;
@@ -423,7 +457,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
                 void* offscreenData = CGBitmapContextGetData(currentContext);
                 if (offscreenData) {
                     // If the current context is an offscreen bitmap, then create a GWorld for it.
-                    Rect offscreenBounds;
+                    ::Rect offscreenBounds;
                     offscreenBounds.top = 0;
                     offscreenBounds.left = 0;
                     offscreenBounds.right = CGBitmapContextGetWidth(currentContext);
@@ -457,7 +491,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
                         origin.y = offscreenBounds.bottom + origin.y * (axisFlip.y - origin.y);
                         
                         nPort.qdPort.portx = static_cast<int32>(-boundsInWindow.origin.x + origin.x);
-                        nPort.qdPort.porty = static_cast<int32>(-boundsInWindow.origin.y + origin.y);
+                        nPort.qdPort.porty = static_cast<int32>(-boundsInWindow.origin.y - origin.y);
                         window.x = 0;
                         window.y = 0;
                         window.window = &nPort;
@@ -483,7 +517,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
                 // knows about the true set of dirty rects.
                 NSView *opaqueAncestor = [self opaqueAncestor];
                 const NSRect *dirtyRects;
-                WebNSInteger dirtyRectCount, dirtyRectIndex;
+                NSInteger dirtyRectCount, dirtyRectIndex;
                 [opaqueAncestor getRectsBeingDrawn:&dirtyRects count:&dirtyRectCount];
 
                 for (dirtyRectIndex = 0; dirtyRectIndex < dirtyRectCount; dirtyRectIndex++) {
@@ -548,7 +582,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
             // knows about the true set of dirty rects.
             NSView *opaqueAncestor = [self opaqueAncestor];
             const NSRect *dirtyRects;
-            WebNSInteger count;
+            NSInteger count;
             [opaqueAncestor getRectsBeingDrawn:&dirtyRects count:&count];
             Vector<CGRect, 16> convertedDirtyRects;
             convertedDirtyRects.resize(count);
@@ -726,7 +760,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     // Note that PaintRect() only works for QuickDraw plugins; otherwise the current QD port is undefined.
     if (drawingModel == NPDrawingModelQuickDraw && !isTransparent && event->what == updateEvt) {
         ForeColor(greenColor);
-        const Rect bigRect = { -10000, -10000, 10000, 10000 };
+        const ::Rect bigRect = { -10000, -10000, 10000, 10000 };
         PaintRect(&bigRect);
         ForeColor(blackColor);
     }
@@ -807,7 +841,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
         event.where.v = -1;
         event.where.h = -1;
     }
-
+    
     [self sendEvent:&event];
 }
 
@@ -950,24 +984,25 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
     BOOL acceptedEvent;
     acceptedEvent = [self sendEvent:&event]; 
-    
+
     LOG(PluginEvents, "NPP_HandleEvent(mouseEntered): %d", acceptedEvent);
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
     EventRecord event;
-        
+    
     [self getCarbonEvent:&event withEvent:theEvent];
     event.what = adjustCursorEvent;
 
     BOOL acceptedEvent;
     acceptedEvent = [self sendEvent:&event]; 
-    
-    LOG(PluginEvents, "NPP_HandleEvent(mouseExited): %d", acceptedEvent);
-    
-    // Set cursor back to arrow cursor.
+
+    // Set cursor back to arrow cursor.  Because NSCursor doesn't know about changes that the plugin made, we could get confused about what we think the
+    // current cursor is otherwise.  Therefore we have no choice but to unconditionally reset the cursor when the mouse exits the plugin.
     [[NSCursor arrowCursor] set];
+
+    LOG(PluginEvents, "NPP_HandleEvent(mouseExited): %d", acceptedEvent);
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent
@@ -1064,6 +1099,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     ReleaseEvent(cloneEvent);
     
     free(buffer);
+
     return noErr;
 }
 
@@ -1416,9 +1452,6 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
    
     // Stop the null events
     [self stopNullEvents];
-
-    // Set cursor back to arrow cursor
-    [[NSCursor arrowCursor] set];
     
     // Stop notifications and callbacks.
     [self removeWindowObservers];
@@ -1447,7 +1480,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 - (WebDataSource *)dataSource
 {
     WebFrame *webFrame = kit(core(element)->document()->frame());
-    return [webFrame dataSource];
+    return [webFrame _dataSource];
 }
 
 - (WebFrame *)webFrame
@@ -1729,7 +1762,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         return;
     }
     CGrafPtr port = GetWindowPort(windowRef);
-    Rect bounds;
+    ::Rect bounds;
     GetPortBounds(port, &bounds);
     WKCallDrawingNotification(port, &bounds);
 }
@@ -1930,7 +1963,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     ASSERT(_loadManually);
     ASSERT(!_manualStream);
     
-    _manualStream = [[WebNetscapePluginStream alloc] init];
+    _manualStream = [[WebNetscapePluginStream alloc] initWithFrameLoader:core([self webFrame])->loader()];
 }
 
 - (void)pluginView:(NSView *)pluginView receivedData:(NSData *)data
@@ -2097,15 +2130,9 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         frame = [[self webFrame] findFrameNamed:frameName];
     
         if (frame == nil) {
-            WebView *newWebView = nil;
             WebView *currentWebView = [self webView];
-            id wd = [currentWebView UIDelegate];
-            if ([wd respondsToSelector:@selector(webView:createWebViewWithRequest:)]) {
-                newWebView = [wd webView:currentWebView createWebViewWithRequest:nil];
-            } else {
-                newWebView = [[WebDefaultUIDelegate sharedUIDelegate] webView:currentWebView createWebViewWithRequest:nil];
-            }
-            
+            WebView *newWebView = CallUIDelegate(currentWebView, @selector(webView:createWebViewWithRequest:), nil);
+
             if (!newWebView) {
                 if ([pluginRequest sendNotification]) {
                     [self willCallPlugInFunction];
@@ -2273,7 +2300,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         if ([postData _web_startsWithBlankLine]) {
             postData = [postData subdataWithRange:NSMakeRange(1, [postData length] - 1)];
         } else {
-            WebNSInteger location = [postData _web_locationAfterFirstBlankLine];
+            NSInteger location = [postData _web_locationAfterFirstBlankLine];
             if (location != NSNotFound) {
                 // If the blank line is somewhere in the middle of postData, everything before is the header.
                 NSData *headerData = [postData subdataWithRange:NSMakeRange(0, location)];
@@ -2391,6 +2418,11 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         (float)invalidRect->right - invalidRect->left, (float)invalidRect->bottom - invalidRect->top)];
 }
 
+-(bool)isOpaque
+{
+    return YES;
+}
+
 - (void)invalidateRegion:(NPRegion)invalidRegion
 {
     LOG(Plugins, "NPN_InvalidateRegion");
@@ -2399,7 +2431,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 #ifndef NP_NO_QUICKDRAW
         case NPDrawingModelQuickDraw:
         {
-            Rect qdRect;
+            ::Rect qdRect;
             GetRegionBounds((NPQDRegion)invalidRegion, &qdRect);
             invalidRect = NSMakeRect(qdRect.left, qdRect.top, qdRect.right - qdRect.left, qdRect.bottom - qdRect.top);
         }
@@ -2628,6 +2660,10 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     NPError npErr;
     npErr = NPP_Destroy(plugin, NULL);
     LOG(Plugins, "NPP_Destroy: %d", npErr);
+    
+    if (Frame* frame = core([self webFrame]))
+        frame->cleanupScriptObjectsForPlugin(self);
+        
     free(plugin);
     plugin = NULL;
 }
@@ -2682,7 +2718,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     ASSERT(bitmap);
     
     // Create a GWorld with the same underlying buffer into which the plugin can draw
-    Rect printGWorldBounds;
+    ::Rect printGWorldBounds;
     SetRect(&printGWorldBounds, 0, 0, window.width, window.height);
     GWorldPtr printGWorld;
     if (NewGWorldFromPtr(&printGWorld,
@@ -3133,7 +3169,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 }
 
 
-- (WebNSInteger)_web_locationAfterFirstBlankLine
+- (NSInteger)_web_locationAfterFirstBlankLine
 {
     const char *bytes = (const char *)[self bytes];
     unsigned length = [self length];
@@ -3164,3 +3200,4 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 }
 
 @end
+#endif

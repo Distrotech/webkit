@@ -8,7 +8,6 @@ alink
 alt
 archive
 autocomplete
-autoplay
 autosave
 axis
 background
@@ -39,7 +38,6 @@ compact
 composite
 content
 contenteditable
-controls
 coords
 data
 datetime
@@ -49,7 +47,6 @@ dir
 direction
 disabled
 enctype
-end
 face
 for
 frame
@@ -73,9 +70,6 @@ leftmargin
 link
 longdesc
 loop
-loopcount
-loopend
-loopstart
 lowsrc
 marginheight
 marginwidth
