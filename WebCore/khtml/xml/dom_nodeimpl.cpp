@@ -1216,8 +1216,15 @@ void NodeImpl::insertedIntoDocument()
 
 void NodeImpl::removedFromDocument()
 {
-    if (m_regdListeners && !m_regdListeners->isEmpty() && getDocument())
-        getDocument()->registerDisconnectedNodeWithEventListeners(this);
+    DocumentImpl *doc = getDocument();
+    
+    if (doc) {
+        if (doc->getCSSTarget() == this)
+            doc->setCSSTarget(0);
+        
+        if (m_regdListeners && !m_regdListeners->isEmpty())
+            doc->registerDisconnectedNodeWithEventListeners(this);
+    }
 
     setInDocument(false);
 }

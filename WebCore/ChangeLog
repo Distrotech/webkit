@@ -1,3 +1,14 @@
+2007-10-01  Tristan O'Tierney  <tristan@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        <rdar://problem/4643028> (WebKitForDashboard) JavaScript to cause Safari crash in DOM::NodeImpl::setChanged (Safari 2 fix; already fixed in Safari 3)
+
+        * khtml/xml/dom_nodeimpl.cpp:
+        (NodeImpl::removedFromDocument):
+        Checked to see if the node being removed is currently set as the Document's cssTarget
+        If it is, I clear the cssTarget to prevent an extra incorrect reference to it.
+
 2007-09-26  Tristan O'Tierney   <tristan@apple.com>
 
         Merge r25249 and r25284 from ToT to Safari-2.0-dashboard.
