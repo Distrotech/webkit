@@ -14,13 +14,15 @@ layer at (0,0) size 800x600
           chunk 1 text run 1 at (10.00,60.00) startOffset 0 endOffset 18 width 129.00: "Tabs become spaces"
       RenderSVGText {text} at (10,80) size 109x18 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-14) size 109x18
-          chunk 1 text run 1 at (10.00,80.00) startOffset 0 endOffset 16 width 96.00: "    No leading s"
+          chunk 1 text run 1 at (10.00,80.00) startOffset 0 endOffset 16 width 109.00: "No leading space"
       RenderSVGText {text} at (10,100) size 107x18 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-14) size 107x18
           chunk 1 text run 1 at (10.00,100.00) startOffset 0 endOffset 17 width 107.00: "No trailing space"
       RenderSVGText {text} at (10,120) size 153x18 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-14) size 153x18
           chunk 1 text run 1 at (10.00,120.00) startOffset 0 endOffset 11 width 77.00: "Whitespace "
+          chunk 1 text run 2 at (87.00,120.00) startOffset 0 endOffset 3 width 14.00: "is "
+          chunk 1 text run 3 at (101.00,120.00) startOffset 0 endOffset 10 width 62.00: "simplified"
       RenderSVGText {text} at (10,160) size 245x18 contains 1 chunk(s)
         RenderSVGInlineText {#text} at (0,-14) size 245x18
           chunk 1 text run 1 at (10.00,160.00) startOffset 0 endOffset 37 width 245.00: "Testing xml:space=\"preserve\" support:"
