@@ -1,3 +1,21 @@
+2007-06-25  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Maciej.
+        
+        Use intHash to hash floats and doubles too.
+
+        * ChangeLog:
+        * wtf/HashFunctions.h:
+        (WTF::FloatHash::hash):
+        (WTF::FloatHash::equal):
+        (WTF::):
+        * wtf/HashTraits.h:
+        (WTF::FloatHashTraits::emptyValue):
+        (WTF::FloatHashTraits::deletedValue):
+        (WTF::):
+
+=== Merged the following changes from branches/feature-branch ===
+
 2007-09-29  Holger Hans Peter Freyther  <zecke@selfish.org>
 
         Reviewed by Mark.
