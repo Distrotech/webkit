@@ -1,3 +1,5 @@
+=== start merge of trunk 03-10-2007 ===
+
 2007-10-02  Darin Adler  <darin@apple.com>
 
         Reviewed by Adam.
@@ -21,6 +23,8 @@
         don't have to include <windows.h> in OwnPtr.h.
 
         * JavaScriptCore.vcproj/WTF/WTF.vcproj: Added OwnPtrWin.cpp.
+
+=== end merge of trunk 03-10-2007 ===
 
 2007-10-02  Alexey Proskuryakov  <ap@webkit.org>
 

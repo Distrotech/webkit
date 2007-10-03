@@ -1,3 +1,5 @@
+=== start merge of trunk 03-10-2007 ===
+
 2007-10-03  Lars Knoll <lars@trolltech.com>
 
         Remove pixel test results for text only tests
@@ -54,6 +56,8 @@
         * editing/pasteboard/nested-blocks-with-text-field-expected.txt:
         * editing/pasteboard/paste-RTFD-expected.txt:
         
+=== end merge of trunk 03-10-2007 ===
+
 2007-10-02  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Maciej.

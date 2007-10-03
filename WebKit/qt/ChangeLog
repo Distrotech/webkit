@@ -1,3 +1,5 @@
+=== start merge of trunk 03-10-2007 ===
+
 2007-10-03  Lars Knoll  <lars@trolltech.com>
 
         Signed off by Olliej.
@@ -675,6 +677,8 @@
         (WebCore::FrameLoaderClientQt::dispatchDidFailLoad):
         (WebCore::FrameLoaderClientQt::objectContentType):
         (WebCore::FrameLoaderClientQt::createPlugin):
+
+=== end merge of trunk 03-10-2007 ===
 
 2007-09-30  George Staikos  <staikos@kde.org>
 

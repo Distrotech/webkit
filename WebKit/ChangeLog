@@ -1,3 +1,5 @@
+=== start merge of trunk 03-10-2007 ===
+
 2007-10-02  Kevin Decker  <kdecker@apple.com>
 
         Reviewed by Mark Rowe.
@@ -21,6 +23,8 @@
          they always use a respondsToSelector check before calling this.
          
         * WebView/WebViewPrivate.h: Ditto. 
+
+=== end merge of trunk 03-10-2007 ===
 
 2007-10-01  Eric Seidel  <eric@webkit.org>
 
