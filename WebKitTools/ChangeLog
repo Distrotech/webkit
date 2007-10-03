@@ -1,3 +1,11 @@
+2007-10-03  Rob Buis  <buis@kde.org>
+
+        Reviewed by Olliej.
+
+        Adapt to changed location of Ahem font.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
 === start merge of trunk 03-10-2007 ===
 
 2007-10-03  Lars Knoll  <lars@trolltech.com>
