@@ -3012,7 +3012,7 @@ int CSSParser::lex(void* yylvalWithoutType)
     case SECS:
     case PERCENTAGE:
         length--;
-    case FLOAT:
+    case FLOATTOKEN:
     case INTEGER:
         yylval->val = DeprecatedString((DeprecatedChar*)t, length).toFloat();
         break;
