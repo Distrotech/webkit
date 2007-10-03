@@ -1,0 +1,13 @@
+This tests that preventing the default behavior for a keydown event will not prevent the keypress event from firing, but will prevent text from being inserted.
+This matches IE7 and Firefox.
+ 
+key down
+key press
+key down
+key press
+key down
+key press
+key down
+key press
+
+
