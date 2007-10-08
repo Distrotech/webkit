@@ -1,3 +1,5 @@
+=== start merge of trunk/25970-26102 08-10-2007 ===
+
 2007-10-08  Adam Roben  <aroben@apple.com>
 
         Fix Bug 15305: Crash when dragging an image when "load images automatically" preference is off
