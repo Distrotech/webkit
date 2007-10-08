@@ -1,3 +1,8 @@
+2007-10-04  Darin Adler  <darin@apple.com>
+
+        * WebView/WebHTMLView.mm: (-[WebHTMLView _updateActiveState]):
+        Removed a bogus comment.
+
 === end merge of trunk/25970-26102 08-10-2007 ===
 
 2007-10-03  Andrew Wellington  <proton@wiretapped.net>
