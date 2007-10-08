@@ -1,3 +1,14 @@
+2007-10-03  Ada Chan  <adachan@apple.com>
+
+        <rdar://problem/5521230> Implement IWebIconDatabase::iconURLForURL in WebKit for windows
+
+        Reviewed by Steve and Brady.
+
+        * Interfaces/IWebIconDatabase.idl:
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconURLForURL):
+        * WebIconDatabase.h:
+
 === end merge of trunk/25970-26102 08-10-2007 ===
 
 === start merge of trunk 03-10-2007 ===
