@@ -2125,7 +2125,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
   case Window::AddEventListener: {
         if (!window->isSafeScript(exec))
             return Undefined();
-        JSEventListener *listener = window->getJSEventListener(args[1]);
+        JSEventListener *listener = Window::retrieveActive(exec)->getJSEventListener(args[1]);
         if (listener) {
             DOM::DocumentImpl* docimpl = static_cast<DOM::DocumentImpl *>(part->document().handle());
             if (docimpl)
@@ -2136,7 +2136,7 @@ Value WindowFunc::tryCall(ExecState *exec, Object &thisObj, const List &args)
   case Window::RemoveEventListener: {
         if (!window->isSafeScript(exec))
             return Undefined();
-        JSEventListener *listener = window->getJSEventListener(args[1]);
+        JSEventListener *listener = Window::retrieveActive(exec)->getJSEventListener(args[1]);
         if (listener) {
             DOM::DocumentImpl* docimpl = static_cast<DOM::DocumentImpl *>(part->document().handle());
             if (docimpl)

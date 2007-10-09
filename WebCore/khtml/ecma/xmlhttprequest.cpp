@@ -230,24 +230,12 @@ void XMLHttpRequest::tryPut(ExecState *exec, const Identifier &propertyName, con
 void XMLHttpRequest::putValue(ExecState *exec, int token, const Value& value, int /*attr*/)
 {
   switch(token) {
-  case Onreadystatechange: {
-      if (!doc)
-          return;
-      KHTMLPart *part = doc->part();
-      if (!part)
-          return;
-      onReadyStateChangeListener.reset(Window::retrieveWindow(part)->getJSUnprotectedEventListener(value, true));
-      break;
-  }
-  case Onload: {
-      if (!doc)
-          return;
-      KHTMLPart *part = doc->part();
-      if (!part)
-          return;
-      onLoadListener.reset(Window::retrieveWindow(part)->getJSUnprotectedEventListener(value, true));
-      break;
-  }
+  case Onreadystatechange:
+    onReadyStateChangeListener.reset(Window::retrieveActive(exec)->getJSUnprotectedEventListener(value, true));
+    break;
+  case Onload:
+    onLoadListener.reset(Window::retrieveActive(exec)->getJSUnprotectedEventListener(value, true));
+    break;
   default:
     kdWarning() << "HTMLDocument::putValue unhandled token " << token << endl;
   }
