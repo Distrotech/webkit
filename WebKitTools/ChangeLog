@@ -1,3 +1,9 @@
+2007-10-08  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        * Scripts/build-webkit: add --help, remove unused --color
+
 === start merge of trunk/25970-26102 08-10-2007 ===
 
 2007-10-07  Holger Hans Peter Freyther  <zecke@selfish.org>
