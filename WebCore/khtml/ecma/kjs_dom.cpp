@@ -608,8 +608,10 @@ UString DOMNode::toString(ExecState *) const
 }
 
 void DOMNode::setListener(ExecState *exec, int eventId, Value func) const
-{
-  node.handle()->setHTMLEventListener(eventId,Window::retrieveActive(exec)->getJSEventListener(func,true));
+{    
+    KHTMLPart *part = node.handle()->getDocument()->part();
+    if (part)
+        node.handle()->setHTMLEventListener(eventId,Window::retrieveWindow(part)->getJSEventListener(func,true));
 }
 
 Value DOMNode::getListener(int eventId) const
@@ -648,13 +650,19 @@ Value DOMNodeProtoFunc::tryCall(ExecState *exec, Object &thisObj, const List &ar
         return Boolean(node.isSupported(args[0].toString(exec).string(),
             (args[1].type() != UndefinedType && args[1].type() != NullType) ? args[1].toString(exec).string() : DOMString()));
     case DOMNode::AddEventListener: {
-        JSEventListener *listener = Window::retrieveActive(exec)->getJSEventListener(args[1]);
+        KHTMLPart *part = node.handle()->getDocument()->part();
+        if (!part)
+            return Undefined();
+        JSEventListener *listener = Window::retrieveWindow(part)->getJSEventListener(args[1]);
         if (listener)
             node.addEventListener(args[0].toString(exec).string(),listener,args[2].toBoolean(exec));
         return Undefined();
     }
     case DOMNode::RemoveEventListener: {
-        JSEventListener *listener = Window::retrieveActive(exec)->getJSEventListener(args[1]);
+        KHTMLPart *part = node.handle()->getDocument()->part();
+        if (!part)
+            return Undefined();
+        JSEventListener *listener = Window::retrieveWindow(part)->getJSEventListener(args[1]);
         if (listener)
             node.removeEventListener(args[0].toString(exec).string(),listener,args[2].toBoolean(exec));
         return Undefined();
