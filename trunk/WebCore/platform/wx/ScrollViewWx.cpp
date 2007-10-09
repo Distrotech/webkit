@@ -152,7 +152,7 @@ int ScrollView::contentsY() const
     {
         int sUnitY = 1;
         win->GetViewStart(NULL, &y);
-        win->GetScrollPixelsPerUnit(&sUnitY, NULL);
+        win->GetScrollPixelsPerUnit(NULL, &sUnitY);
         y *= sUnitY;
     }
     return y;
