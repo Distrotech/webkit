@@ -1,0 +1,3103 @@
+2002-03-20  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kdelibs/khtml/rendering/render_applet.cpp:
+	(RenderApplet::RenderApplet): Handle Java parameters properly,
+	with Chris's assistance.
+
+2002-03-20  Maciej Stachowiak  <mjs@apple.com>
+
+	Merged accumlated changes from HEAD, up to
+	MERGED_TO_KDE_3_MERGE_BRANCH tag.
+
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	Fixed two more crashers. Tree now looks pretty stable.
+
+	* src/kdelibs/khtml/html/html_objectimpl.cpp:
+	(HTMLObjectElementImpl::detach): Don't send an unload event, that
+	needs the view to be a live, which it won't be when the DOM is
+	being destroyed.
+
+	* src/kwq/KWQListImpl.mm: (KWQListImpl::getFirst): Return
+	d->head->data, not d->head. Whoops!
+
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	Fixed two crashers:
+
+	* src/kdelibs/khtml/rendering/render_object.h: Don't attempt to
+	schedule a relayout ever. We control layout timing. This was
+	resulting in calls on destroyed/trashed objects before.
+
+	* src/kdelibs/khtml/xml/dom_nodeimpl.cpp:
+	(NodeImpl::dispatchEvent): Check if view()->part() is NULL (looks
+	like a bug in the KDE code that this wasn't checked).
+
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	Changes needed to get WebCore to link: implement all the missing functions.
+	
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::end):
+	* src/kdelibs/khtml/xml/xml_tokenizer.cpp: (XMLTokenizer::end):
+	* src/kdelibs/khtml/xml/xml_tokenizer.h:
+	* src/kwq/KWQApplication.mm: (QApplication::_initialize),
+	(QApplication::focusWidget):
+	* src/kwq/KWQColorGroup.mm: (QColorGroup::operator==):
+	* src/kwq/KWQComboBox.mm: (QComboBox::currentItem):
+	* src/kwq/KWQCursor.mm: (QCursor::operator=), (QCursor::handle):
+	* src/kwq/KWQEvent.mm: (QMouseEvent::QMouseEvent), (QKeyEvent::isAutoRepeat),
+	(QKeyEvent::text), (QKeyEvent::ascii), (QKeyEvent::count),
+	(QKeyEvent::isAccepted), (QCustomEvent::QCustomEvent),
+	(QContextMenuEvent::QContextMenuEvent), (QContextMenuEvent::globalPos),
+	(QContextMenuEvent::reason), (QContextMenuEvent::state), (QContextMenuEvent::x),
+	(QContextMenuEvent::y):
+	* src/kwq/KWQFontMetrics.mm: (QFontMetrics::boundingRect):
+	* src/kwq/KWQKCursor.mm: (KCursor::whatsThisCursor):
+	* src/kwq/KWQKDebug.mm: (kdBacktrace):
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::metaRefreshEnabled),
+	(KHTMLPart::executeScript), (KHTMLPart::requestObject),
+	(KHTMLPart::setJSDefaultStatusBarText), (KHTMLPart::referrer),
+	(KHTMLPart::lastModified):
+	* src/kwq/KWQKMimeType.mm: (KMimeType::comment), (KMimeType::mimeType),
+	(KMimeType::defaultMimeType):
+	* src/kwq/KWQKPrinter.mm: (KPrinter::KPrinter):
+	* src/kwq/KWQKProtocolManager.mm: (KProtocolManager::proxyFor):
+	* src/kwq/KWQKstddirs.mm: (KStandardDirs::saveLocation):
+	* src/kwq/KWQLineEdit.mm: (QLineEdit::edited), (QLineEdit::setEdited):
+	* src/kwq/KWQListImpl.h:
+	* src/kwq/KWQListImpl.mm: (KWQListImpl::getFirst), (KWQListImpl::take):
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapImpl::removeEqualInternal):
+	* src/kwq/KWQNSTextField.h:
+	* src/kwq/KWQNSTextField.mm: (-[KWQNSTextField edited]), (-[KWQNSTextField
+	setEdited:]), (-[KWQNSTextField textDidChange:]):
+	* src/kwq/KWQObject.mm: (QObject::eventFilter):
+	* src/kwq/KWQPainter.mm: (QPainter::drawConvexPolygon), (QPainter::drawText):
+	* src/kwq/KWQPalette.mm: (QPalette::operator==):
+	* src/kwq/KWQRadioButton.mm: (QRadioButton::isChecked):
+	* src/kwq/KWQRect.mm: (QRect::isEmpty), (QRect::intersect), (QRect::unite):
+	* src/kwq/KWQRegion.mm: (QRegion::translate), (QRegion::boundingRect):
+	* src/kwq/KWQScrollView.mm: (QScrollView::updateContents):
+	* src/kwq/KWQString.mm: (QString::endsWith):
+	* src/kwq/KWQStyle.h:
+	* src/kwq/KWQTextArea.h:
+	* src/kwq/KWQTextArea.mm: (-[KWQTextArea paragraphs]), (RangeOfParagraph),
+	(-[KWQTextArea paragraphLength:]), (-[KWQTextArea textForParagraph:]),
+	(-[KWQTextArea lineOfCharAtIndex:inParagraph:]), (-[KWQTextArea
+	getCursorPositionAsIndex:inParagraph:]), (-[KWQTextArea
+	setCursorPositionToIndex:inParagraph:]):
+	* src/kwq/KWQTextEdit.mm: (QMultiLineEdit::QMultiLineEdit), (KEdit::KEdit),
+	(KEdit::~KEdit), (QTextEdit::QTextEdit), (QTextEdit::setText), (QTextEdit::text),
+	(QTextEdit::paragraphs), (QTextEdit::paragraphLength), (QTextEdit::lineOfChar),
+	(QTextEdit::getCursorPosition), (QTextEdit::setCursorPosition),
+	(QTextEdit::wordWrap), (QTextEdit::setWordWrap), (QTextEdit::setTextFormat),
+	(QTextEdit::isReadOnly), (QTextEdit::setReadOnly), (QTextEdit::selectAll):
+	* src/kwq/KWQVectorImpl.mm: (KWQVectorImpl::at), (KWQVectorImpl::data):
+	* src/kwq/KWQWidget.mm: (QWidget::frameGeometry), (QWidget::cursor),
+	(QWidget::unsetCursor):
+	* src/kwq/KWQbrowserextension.mm:
+	* src/kwq/KWQtextstream.mm: (QTextStream::QTextStream),
+	(QTextStream::operator<<), (endl):
+	* src/kwq/KWQxml.mm: (QXmlAttributes::uri), (QXmlParseException::lineNumber):
+	* src/kwq/Makefile.am:
+	* src/kwq/kdecore/kstandarddirs.h:
+	* src/kwq/kdecore/kstaticdeleter.h:
+	* src/kwq/kdeui/keditcl.h:
+	* src/kwq/kio/kmimetype.h:
+	* src/kwq/qt/qarray.h:
+	* src/kwq/qt/qevent.h:
+	* src/kwq/qt/qlist.h:
+	* src/kwq/qt/qmap.h:
+	* src/kwq/qt/qpalette.h:
+	* src/kwq/qt/qptrqueue.h:
+	* src/kwq/qt/qscrollview.h:
+	* src/kwq/qt/qstring.h:
+	* src/kwq/qt/qtextedit.h:
+
+2002-03-18  Maciej Stachowiak  <mjs@apple.com>
+
+	Changes needed to get kwq compiling (doesn't link yet, though).
+
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/xml/dom_elementimpl.h:
+	* src/kwq/KWQCollection.mm: (QPtrCollection::QPtrCollection),
+	(QPtrCollection::operator=), (QPtrCollection::~QPtrCollection),
+	(QPtrCollection::autoDelete), (QPtrCollection::setAutoDelete):
+	* src/kwq/KWQEvent.mm: (QKeyEvent::QKeyEvent):
+	* src/kwq/KWQIcon.h:
+	* src/kwq/KWQKHTMLFactory.mm:
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::KHTMLPart), (KHTMLPart::slotData),
+	(KHTMLPart::begin), (KHTMLPart::write), (KHTMLPart::checkCompleted),
+	(KHTMLPart::settings), (KHTMLPart::completeURL), (KHTMLPart::encoding),
+	(KHTMLPart::overURL), (KHTMLPart::urlSelected), (KHTMLPart::requestObject),
+	(KHTMLPart::frames), (KHTMLPart::event):
+	* src/kwq/KWQKHTMLSettings.mm: (KHTMLSettings::KHTMLSettings),
+	(KHTMLSettings::availableFamilies):
+	* src/kwq/KWQKProcess.mm: (KProcess::args):
+	* src/kwq/KWQKloader.mm: (CachedImage::CachedImage), (CachedImage::movieStatus),
+	(DocLoader::DocLoader), (Loader::load), (Loader::servePendingRequests),
+	(Loader::slotFinished), (Cache::requestScript):
+	* src/kwq/KWQPainter.mm: (QPainter::save):
+	* src/kwq/KWQPointArray.mm: (QPointArray::setPoint):
+	* src/kwq/KWQValueListImpl.mm: (KWQValueListImpl::removeEqualNodes),
+	(KWQValueListImpl::containsEqualNodes):
+	* src/kwq/KWQView.mm: (-[KWQHTMLView layout]):
+	* src/kwq/KWQsignals.mm: (khtml::Loader::requestDone),
+	(khtml::Loader::requestFailed):
+	* src/kwq/kdecore/kiconloader.h:
+	* src/kwq/kparts/browserextension.h:
+	* src/kwq/qt/qmovie.h:
+
+2002-03-16  Maciej Stachowiak  <mjs@apple.com>
+
+	Updated to get khtml to compile. Changes included updating our
+	headers for new classes, new methods, header name changes, etc, as
+	well as occasionally commenting out or replacing portions of the
+	khtml code with #if APPLE_CHANGES, and adding new files from the
+	kde3 sources when appropriate. Also commit some kjs files that I
+	forgot to cvs add before.
+
+	* src/kdelibs/khtml/css/css_valueimpl.cpp:
+	(CSSStyleDeclarationImpl::getPropertyCSSValue):
+	* src/kdelibs/khtml/css/cssparser.cpp: (StyleBaseImpl::parseContent):
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::CSSStyleSelector), (khtml::applyRule):
+	* src/kdelibs/khtml/ecma/.cvsignore:
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/ecma/kjs_debugwin.h:
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMNode::toString):
+	* src/kdelibs/khtml/ecma/kjs_dom.h:
+	* src/kdelibs/khtml/ecma/kjs_window.cpp:
+	* src/kdelibs/khtml/html/html_documentimpl.cpp: (HTMLDocumentImpl::cookie),
+	(HTMLDocumentImpl::setCookie):
+	* src/kdelibs/khtml/html/html_formimpl.cpp:
+	(HTMLKeygenElementImpl::HTMLKeygenElementImpl),
+	(HTMLKeygenElementImpl::encoding):
+	* src/kdelibs/khtml/java/kjavaprocess.cpp: (KJavaProcess::invokeJVM):
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::contentsContextMenuEvent):
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/rendering/render_box.cpp: (RenderBox::calcReplacedWidth):
+	* src/kdelibs/khtml/rendering/render_form.cpp: (RenderTextArea::calcMinMaxWidth):
+	* src/kdelibs/khtml/rendering/render_image.cpp: (RenderImage::printObject):
+	* src/kdelibs/khtml/rendering/render_text.cpp: (RenderText::nodeAtPoint):
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DocumentImpl::close):
+	* src/kdelibs/khtml/xml/dom_elementimpl.cpp:
+	(ElementImpl::dispatchAttrRemovalEvent),
+	(ElementImpl::dispatchAttrAdditionEvent):
+	* src/kdelibs/kjs/interpreter.cpp: (Context::Context), (Context::operator=),
+	(Context::~Context), (Context::isNull), (Context::imp), (Context::scopeChain),
+	(Context::variableObject), (Context::thisValue), (Context::callingContext),
+	(Interpreter::Interpreter), (Interpreter::~Interpreter),
+	(Interpreter::globalObject), (Interpreter::globalExec),
+	(Interpreter::checkSyntax), (Interpreter::evaluate), (Interpreter::imp),
+	(Interpreter::builtinObject), (Interpreter::builtinFunction),
+	(Interpreter::builtinArray), (Interpreter::builtinBoolean),
+	(Interpreter::builtinString), (Interpreter::builtinNumber),
+	(Interpreter::builtinDate), (Interpreter::builtinRegExp),
+	(Interpreter::builtinError), (Interpreter::builtinObjectPrototype),
+	(Interpreter::builtinFunctionPrototype), (Interpreter::builtinArrayPrototype),
+	(Interpreter::builtinBooleanPrototype), (Interpreter::builtinStringPrototype),
+	(Interpreter::builtinNumberPrototype), (Interpreter::builtinDatePrototype),
+	(Interpreter::builtinRegExpPrototype), (Interpreter::builtinErrorPrototype),
+	(Interpreter::builtinEvalError), (Interpreter::builtinRangeError),
+	(Interpreter::builtinReferenceError), (Interpreter::builtinSyntaxError),
+	(Interpreter::builtinTypeError), (Interpreter::builtinURIError),
+	(Interpreter::builtinEvalErrorPrototype),
+	(Interpreter::builtinRangeErrorPrototype),
+	(Interpreter::builtinReferenceErrorPrototype),
+	(Interpreter::builtinSyntaxErrorPrototype),
+	(Interpreter::builtinTypeErrorPrototype),
+	(Interpreter::builtinURIErrorPrototype), (Interpreter::setCompatMode),
+	(Interpreter::compatMode), (Interpreter::finalCheck), (ExecState::~ExecState),
+	(ExecState::interpreter), (ExecState::context), (ExecState::setException),
+	(ExecState::clearException), (ExecState::exception), (ExecState::hadException),
+	(ExecState::ExecState):
+	* src/kdelibs/kjs/property_map.cpp: (PropertyMapNode::setLeft),
+	(PropertyMapNode::setRight), (PropertyMapNode::setParent),
+	(PropertyMapNode::findMax), (PropertyMapNode::findMin), (PropertyMapNode::next),
+	(KJS::uscompare), (PropertyMap::PropertyMap), (PropertyMap::~PropertyMap),
+	(PropertyMap::put), (PropertyMap::remove), (PropertyMap::get),
+	(PropertyMap::clear), (PropertyMap::dump), (PropertyMap::checkTree),
+	(PropertyMap::getNode), (PropertyMap::first), (PropertyMap::balance),
+	(PropertyMap::updateHeight), (PropertyMap::rotateRR), (PropertyMap::rotateLL),
+	(PropertyMap::rotateRL), (PropertyMap::rotateLR):
+	* src/kdelibs/kjs/property_map.h:
+	* src/kdelibs/kjs/value.cpp: (ValueImp::ValueImp), (ValueImp::~ValueImp),
+	(ValueImp::mark), (ValueImp::marked), (ValueImp::setGcAllowed),
+	(ValueImp::operator new), (ValueImp::operator delete), (ValueImp::toInteger),
+	(ValueImp::toInt32), (ValueImp::toUInt32), (ValueImp::toUInt16),
+	(ValueImp::getBase), (ValueImp::getPropertyName), (ValueImp::getValue),
+	(ValueImp::putValue), (KJS::operator==), (KJS::operator!=), (Value::Value),
+	(Value::~Value), (Value::operator=), (Value::isNull), (Value::imp),
+	(Value::type), (Value::isA), (Value::toPrimitive), (Value::toBoolean),
+	(Value::toNumber), (Value::toInteger), (Value::toInt32), (Value::toUInt32),
+	(Value::toUInt16), (Value::toString), (Value::toObject), (Value::getBase),
+	(Value::getPropertyName), (Value::getValue), (Value::putValue),
+	(Undefined::Undefined), (Undefined::~Undefined), (Undefined::operator=),
+	(Undefined::dynamicCast), (Null::Null), (Null::~Null), (Null::operator=),
+	(Null::dynamicCast), (Boolean::Boolean), (Boolean::~Boolean),
+	(Boolean::operator=), (Boolean::value), (Boolean::dynamicCast), (String::String),
+	(String::~String), (String::operator=), (String::value), (String::dynamicCast),
+	(Number::Number), (Number::~Number), (Number::operator=), (Number::dynamicCast),
+	(Number::value), (Number::intValue), (Number::isNaN), (Number::isInf):
+	* src/kwq/KWQDef.h:
+	* src/kwq/KWQInputDialog.mm: (QInputDialog::getText):
+	* src/kwq/KWQKConfigBase.mm: (KConfig::KConfig):
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQListImpl.h:
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapImpl::removeEqualInternal):
+	* src/kwq/KWQStrList.h:
+	* src/kwq/KWQStyle.h:
+	* src/kwq/KWQValueListImpl.h:
+	* src/kwq/KWQVectorImpl.h:
+	* src/kwq/kdecore/kapplication.h:
+	* src/kwq/kdecore/kconfig.h:
+	* src/kwq/kdecore/kdebug.h:
+	* src/kwq/kdecore/kprocess.h:
+	* src/kwq/kdecore/kstandarddirs.h:
+	* src/kwq/kdecore/kstaticdeleter.h:
+	* src/kwq/kdeui/kaction.h:
+	* src/kwq/kdeui/kcursor.h:
+	* src/kwq/khtml/khtml_factory.h:
+	* src/kwq/khtml/khtml_settings.h:
+	* src/kwq/kio/global.h:
+	* src/kwq/kio/kmimetype.h:
+	* src/kwq/kio/kprinter.h:
+	* src/kwq/kio/kprotocolmanager.h:
+	* src/kwq/kparts/browserextension.h:
+	* src/kwq/qt/qapplication.h:
+	* src/kwq/qt/qarray.h:
+	* src/kwq/qt/qcollection.h:
+	* src/kwq/qt/qcombobox.h:
+	* src/kwq/qt/qcstring.h:
+	* src/kwq/qt/qcursor.h:
+	* src/kwq/qt/qdict.h:
+	* src/kwq/qt/qevent.h:
+	* src/kwq/qt/qfontmetrics.h:
+	* src/kwq/qt/qinputdialog.h:
+	* src/kwq/qt/qlineedit.h:
+	* src/kwq/qt/qlist.h:
+	* src/kwq/qt/qmap.h:
+	* src/kwq/qt/qmemarray.h:
+	* src/kwq/qt/qnamespace.h:
+	* src/kwq/qt/qobject.h:
+	* src/kwq/qt/qpainter.h:
+	* src/kwq/qt/qpalette.h:
+	* src/kwq/qt/qpoint.h:
+	* src/kwq/qt/qpointarray.h:
+	* src/kwq/qt/qprinter.h:
+	* src/kwq/qt/qptrdict.h:
+	* src/kwq/qt/qptrlist.h:
+	* src/kwq/qt/qptrqueue.h:
+	* src/kwq/qt/qptrstack.h:
+	* src/kwq/qt/qptrvector.h:
+	* src/kwq/qt/qradiobutton.h:
+	* src/kwq/qt/qrect.h:
+	* src/kwq/qt/qregion.h:
+	* src/kwq/qt/qscrollview.h:
+	* src/kwq/qt/qsortedlist.h:
+	* src/kwq/qt/qstack.h:
+	* src/kwq/qt/qstring.h:
+	* src/kwq/qt/qstylesheet.h:
+	* src/kwq/qt/qtextedit.h:
+	* src/kwq/qt/qtextstream.h:
+	* src/kwq/qt/qvaluelist.h:
+	* src/kwq/qt/qvector.h:
+	* src/kwq/qt/qwidget.h:
+	* src/kwq/qt/qxml.h:
+
+2002-03-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Get kjs to compile and link by adding mssing files, setting up
+	autogenerated files to autogenerate, and making a handful of minor
+	tweaks. The test program passes. Yay!
+
+	* src/kdelibs/kjs/Makefile.am:
+	* src/kdelibs/kjs/create_hash_table:
+	* src/kdelibs/kjs/global_object.cpp:
+	* src/kdelibs/kjs/grammar.y:
+	* src/kdelibs/kjs/interpreter.h:
+	* src/kdelibs/kjs/keywords.table:
+	* src/kdelibs/kjs/kjs.cpp:
+	* src/kdelibs/kjs/kjs.h:
+	* src/kdelibs/kjs/lexer.lut.h:
+	* src/kdelibs/kjs/math_object.lut.h:
+	* src/kdelibs/kjs/ustring.h:
+	* src/kdelibs/kjs/value.h:
+	* src/kdelibs/kjs/.cvsignore:
+
+2002-03-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Hand-merge KDE3 beta 2 changes into this frankenstein file.
+
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient setDataSource:]),
+	(WCSetIFWebDataSourceMakeFunc), (WCSetIFErrorMakeFunc), (recursive),
+	(encodingFromContentType), (splitUrlTarget), (KHTMLPart::KHTMLPart),
+	(KHTMLPart::init), (KHTMLPart::~KHTMLPart), (KHTMLPart::browserExtension),
+	(KHTMLPart::view), (KHTMLPart::setMetaRefreshEnabled), (KHTMLPart::jScript),
+	(KHTMLPart::executeScript), (KHTMLPart::executeScheduledScript),
+	(KHTMLPart::docImpl), (KHTMLPart::xmlDocImpl), (KHTMLPart::slotData),
+	(KHTMLPart::begin), (KHTMLPart::write), (KHTMLPart::end),
+	(KHTMLPart::checkCompleted), (KHTMLPart::settings), (KHTMLPart::completeURL),
+	(KHTMLPart::scheduleRedirection), (KHTMLPart::setEncoding),
+	(KHTMLPart::encoding), (KHTMLPart::gotoAnchor), (KHTMLPart::setFontSizes),
+	(KHTMLPart::fontSizes), (KHTMLPart::onlyLocalReferences),
+	(KHTMLPart::setOnlyLocalReferences), (KHTMLPart::findTextBegin),
+	(KHTMLPart::findTextNext), (KHTMLPart::selectedText), (KHTMLPart::hasSelection),
+	(KHTMLPart::selection), (KHTMLPart::setSelection), (KHTMLPart::overURL),
+	(KHTMLPart::urlSelected), (KHTMLPart::requestFrame),
+	(KHTMLPart::requestFrameName), (KHTMLPart::requestObject),
+	(KHTMLPart::submitForm), (KHTMLPart::findFrame), (KHTMLPart::frameExists),
+	(KHTMLPart::parentPart), (KHTMLPart::setJSStatusBarText),
+	(KHTMLPart::setJSDefaultStatusBarText), (KHTMLPart::jsStatusBarText),
+	(KHTMLPart::jsDefaultStatusBarText), (KHTMLPart::frames),
+	(KHTMLPart::customEvent), (KHTMLPart::khtmlMousePressEvent):
+
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Merge KDE3 beta 2 changes into this frankenstein file.
+
+	* src/kwq/KWQKloader.mm: (CachedCSSStyleSheet::CachedCSSStyleSheet),
+	(CachedCSSStyleSheet::ref), (CachedCSSStyleSheet::data),
+	(CachedCSSStyleSheet::checkNotify), (CachedCSSStyleSheet::error),
+	(CachedScript::CachedScript), (CachedScript::ref), (CachedScript::data),
+	(CachedScript::checkNotify), (CachedScript::error), (CachedImage::CachedImage),
+	(CachedImage::ref), (CachedImage::tiled_pixmap), (CachedImage::pixmap_size),
+	(CachedImage::do_notify), (CachedImage::movieStatus), (CachedImage::movieResize),
+	(CachedImage::setShowAnimations), (CachedImage::deleteMovie),
+	(CachedImage::data), (Request::Request), (DocLoader::DocLoader),
+	(DocLoader::requestImage), (DocLoader::requestStyleSheet),
+	(DocLoader::requestScript), (DocLoader::setAutoloadImages),
+	(DocLoader::setShowAnimations), (Loader::Loader), (Loader::~Loader),
+	(Loader::load), (Loader::servePendingRequests), (Loader::slotFinished),
+	(Loader::slotData), (Loader::numRequests), (Loader::cancelRequests),
+	(Cache::init), (Cache::requestImage), (Cache::requestStyleSheet),
+	(Cache::preloadStyleSheet), (Cache::requestScript), (Cache::preloadScript),
+	(Cache::flush):
+
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Clean up this frankenstein file in preparation for merging KDE
+	beta 2 changes.
+
+	* src/kwq/KWQKloader.mm: (CachedCSSStyleSheet::CachedCSSStyleSheet),
+	(CachedScript::CachedScript), (CachedImage::CachedImage),
+	(CachedImage::pixmap_size), (CachedImage::movieResize), (CachedImage::data),
+	(DocLoader::DocLoader), (Loader::Loader), (Loader::~Loader), (Loader::load),
+	(Loader::servePendingRequests), (Loader::slotFinished), (Loader::slotData),
+	(Loader::numRequests), (Loader::cancelRequests), (Cache::requestImage),
+	(Cache::requestStyleSheet), (Cache::requestScript), (Cache::flush):
+
+2002-03-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Remove files from build that are no longer in KDE 3 beta 2:
+
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/ecma/kjs_text.cpp:
+	* src/kdelibs/khtml/ecma/kjs_text.h:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/khtml/misc/font.cpp:
+	* src/kdelibs/khtml/misc/font.h:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/rendering/render_hr.cpp:
+	* src/kdelibs/khtml/rendering/render_hr.h:
+
+2002-03-08  Don Melton  <gramps@apple.com>
+
+	Merged kdelibs from KDE 3 beta 2 into our 2.2.1-based sources.
+
+	* src/kdelibs/kdecore/kentities.gperf:
+	* src/kdelibs/khtml/css/css_ruleimpl.cpp: (CSSRuleImpl::CSSRuleImpl),
+	(CSSRuleImpl::cssText), (CSSCharsetRuleImpl::CSSCharsetRuleImpl),
+	(CSSImportRuleImpl::CSSImportRuleImpl), (CSSImportRuleImpl::~CSSImportRuleImpl),
+	(CSSImportRuleImpl::setStyleSheet), (CSSImportRuleImpl::init),
+	(CSSMediaRuleImpl::CSSMediaRuleImpl), (CSSMediaRuleImpl::~CSSMediaRuleImpl),
+	(CSSMediaRuleImpl::cssRules), (CSSMediaRuleImpl::appendRule),
+	(CSSMediaRuleImpl::insertRule), (CSSMediaRuleImpl::deleteRule),
+	(CSSRuleListImpl::~CSSRuleListImpl), (CSSPageRuleImpl::selectorText),
+	(CSSStyleRuleImpl::selectorText), (CSSStyleRuleImpl::setSelector),
+	(CSSUnknownRuleImpl::~CSSUnknownRuleImpl), (CSSRuleListImpl::CSSRuleListImpl),
+	(CSSRuleListImpl::length), (CSSRuleListImpl::item),
+	(CSSRuleListImpl::deleteRule), (CSSRuleListImpl::insertRule):
+	* src/kdelibs/khtml/css/css_ruleimpl.h:
+	* src/kdelibs/khtml/css/css_stylesheetimpl.cpp: (StyleSheetImpl::setMedia),
+	(CSSStyleSheetImpl::CSSStyleSheetImpl), (CSSStyleSheetImpl::parseString),
+	(StyleSheetListImpl::~StyleSheetListImpl), (StyleSheetListImpl::length),
+	(StyleSheetListImpl::item), (MediaListImpl::MediaListImpl),
+	(MediaListImpl::contains), (MediaListImpl::item), (MediaListImpl::deleteMedium),
+	(MediaListImpl::appendMedium), (MediaListImpl::setMediaText):
+	* src/kdelibs/khtml/css/css_stylesheetimpl.h:
+	* src/kdelibs/khtml/css/css_valueimpl.cpp:
+	(CSSStyleDeclarationImpl::CSSStyleDeclarationImpl),
+	(CSSStyleDeclarationImpl::getPropertyCSSValue),
+	(CSSStyleDeclarationImpl::removeProperty),
+	(CSSStyleDeclarationImpl::setProperty),
+	(CSSStyleDeclarationImpl::setLengthProperty), (CSSStyleDeclarationImpl::item),
+	(CSSValueListImpl::cssValueType), (CSSPrimitiveValueImpl::cssValueType),
+	(CSSImageValueImpl::CSSImageValueImpl),
+	(FontFamilyValueImpl::FontFamilyValueImpl):
+	* src/kdelibs/khtml/css/css_valueimpl.h:
+	* src/kdelibs/khtml/css/csshelper.cpp: (khtml::computeLengthFloat),
+	(khtml::setFontSize):
+	* src/kdelibs/khtml/css/csshelper.h:
+	* src/kdelibs/khtml/css/cssparser.cpp: (StyleBaseImpl::baseURL),
+	(StyleBaseImpl::parseAtRule), (StyleBaseImpl::parseSelector2),
+	(StyleBaseImpl::parseSelector), (StyleBaseImpl::parseProperty),
+	(StyleBaseImpl::parseProperties), (StyleBaseImpl::parseFont),
+	(StyleBaseImpl::parseValue), (StyleBaseImpl::setParsedValue),
+	(StyleBaseImpl::parseShortHand), (StyleBaseImpl::parseBackgroundPosition),
+	(StyleBaseImpl::parseContent), (StyleBaseImpl::splitContent),
+	(StyleBaseImpl::splitShorthandProperties), (StyleBaseImpl::parse2Values),
+	(StyleBaseImpl::parse4Values), (StyleBaseImpl::parseUnit),
+	(StyleBaseImpl::parseStyleRule), (StyleBaseImpl::preprocess),
+	(CSSSelector::specificity):
+	* src/kdelibs/khtml/css/cssparser.h:
+	* src/kdelibs/khtml/css/cssproperties.in:
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::CSSStyleSelector), (CSSStyleSelector::addSheet),
+	(CSSStyleSelector::loadDefaultStyle), (CSSStyleSelector::clear),
+	(CSSStyleSelector::styleForElement), (CSSStyleSelector::addInlineDeclarations),
+	(CSSStyleSelector::checkSelector), (CSSStyleSelector::checkOneSelector),
+	(CSSStyleSelector::buildLists), (CSSStyleSelectorList::CSSStyleSelectorList),
+	(CSSStyleSelectorList::append), (CSSStyleSelectorList::collect),
+	(CSSOrderedPropertyList::compareItems), (CSSOrderedPropertyList::append),
+	(convertToLength), (khtml::applyRule):
+	* src/kdelibs/khtml/css/cssstyleselector.h:
+	* src/kdelibs/khtml/css/cssvalues.in:
+	* src/kdelibs/khtml/css/html4.css:
+	* src/kdelibs/khtml/css/makeprop:
+	* src/kdelibs/khtml/css/makevalues:
+	* src/kdelibs/khtml/dom/css_rule.cpp: (CSSRuleList::CSSRuleList):
+	* src/kdelibs/khtml/dom/css_rule.h:
+	* src/kdelibs/khtml/dom/css_stylesheet.cpp: (MediaList::length),
+	(MediaList::item), (MediaList::deleteMedium), (MediaList::appendMedium):
+	* src/kdelibs/khtml/dom/css_stylesheet.h:
+	* src/kdelibs/khtml/dom/css_value.cpp: (CSSStyleDeclaration::getPropertyValue),
+	(CSSStyleDeclaration::getPropertyCSSValue),
+	(CSSStyleDeclaration::removeProperty),
+	(CSSStyleDeclaration::getPropertyPriority), (CSSStyleDeclaration::setProperty),
+	(CSSPrimitiveValue::setFloatValue):
+	* src/kdelibs/khtml/dom/css_value.h:
+	* src/kdelibs/khtml/dom/dom2_events.cpp: (Event::type), (Event::eventModuleName):
+	* src/kdelibs/khtml/dom/dom2_events.h:
+	* src/kdelibs/khtml/dom/dom2_range.cpp:
+	* src/kdelibs/khtml/dom/dom2_range.h:
+	* src/kdelibs/khtml/dom/dom2_traversal.cpp:
+	* src/kdelibs/khtml/dom/dom2_traversal.h:
+	* src/kdelibs/khtml/dom/dom2_views.cpp: (AbstractView::document),
+	(AbstractView::getComputedStyle):
+	* src/kdelibs/khtml/dom/dom2_views.h:
+	* src/kdelibs/khtml/dom/dom_core.h:
+	* src/kdelibs/khtml/dom/dom_doc.cpp: (DOMImplementation::hasFeature),
+	(DOMImplementation::createDocumentType), (DOMImplementation::createDocument),
+	(DOMImplementation::createHTMLDocument), (DOMImplementation::getInterface),
+	(DOMImplementation::createCSSStyleSheet), (Document::Document),
+	(Document::operator = ), (Document::createAttribute),
+	(Document::createAttributeNS), (Document::getElementById),
+	(Document::getElementsByTagName), (Document::getElementsByTagNameNS),
+	(Document::importNode), (Document::isHTMLDocument), (Document::createRange),
+	(Document::completeURL), (DocumentFragment::operator = ),
+	(DocumentType::DocumentType), (DocumentType::operator = ), (DocumentType::name),
+	(DocumentType::entities), (DocumentType::notations), (DocumentType::publicId),
+	(DocumentType::systemId), (DocumentType::internalSubset):
+	* src/kdelibs/khtml/dom/dom_doc.h:
+	* src/kdelibs/khtml/dom/dom_element.cpp: (Attr::operator = ), (Attr::name),
+	(Attr::ownerElement), (Attr::value), (Attr::setValue), (Element::operator = ),
+	(Element::tagName), (Element::getAttribute), (Element::setAttribute),
+	(Element::removeAttribute), (Element::getAttributeNode),
+	(Element::setAttributeNode), (Element::removeAttributeNode),
+	(Element::getElementsByTagName), (Element::getElementsByTagNameNS),
+	(Element::getAttributeNS), (Element::setAttributeNS),
+	(Element::removeAttributeNS), (Element::getAttributeNodeNS),
+	(Element::setAttributeNodeNS), (Element::hasAttribute),
+	(Element::hasAttributeNS), (Element::khtmlValidAttrName),
+	(Element::khtmlValidPrefix), (Element::khtmlValidQualifiedName),
+	(Element::khtmlMalformedQualifiedName), (Element::khtmlMalformedPrefix):
+	* src/kdelibs/khtml/dom/dom_element.h:
+	* src/kdelibs/khtml/dom/dom_exception.h:
+	* src/kdelibs/khtml/dom/dom_html.h:
+	* src/kdelibs/khtml/dom/dom_misc.cpp: (DomShared::deleteMe):
+	* src/kdelibs/khtml/dom/dom_misc.h:
+	* src/kdelibs/khtml/dom/dom_node.cpp: (NamedNodeMap::getNamedItem),
+	(NamedNodeMap::setNamedItem), (NamedNodeMap::removeNamedItem),
+	(NamedNodeMap::item), (NamedNodeMap::getNamedItemNS),
+	(NamedNodeMap::setNamedItemNS), (NamedNodeMap::removeNamedItemNS),
+	(NamedNodeMap::length), (throw), (Node::operator == ), (Node::operator != ),
+	(Node::nodeValue), (Node::setNodeValue), (Node::nodeType), (Node::parentNode),
+	(Node::childNodes), (Node::firstChild), (Node::lastChild),
+	(Node::previousSibling), (Node::nextSibling), (Node::attributes),
+	(Node::ownerDocument), (Node::insertBefore), (Node::replaceChild),
+	(Node::removeChild), (Node::appendChild), (Node::hasAttributes),
+	(Node::hasChildNodes), (Node::cloneNode), (Node::normalize), (Node::isSupported),
+	(Node::namespaceURI), (Node::prefix), (Node::setPrefix), (Node::localName),
+	(Node::addEventListener), (Node::removeEventListener), (Node::elementId),
+	(Node::index), (Node::toHTML), (Node::applyChanges), (Node::getCursor),
+	(Node::getRect), (NodeList::item), (NodeList::length):
+	* src/kdelibs/khtml/dom/dom_node.h:
+	* src/kdelibs/khtml/dom/dom_string.cpp: (DOMString::lower), (DOMString::upper),
+	(DOM::operator==):
+	* src/kdelibs/khtml/dom/dom_string.h:
+	* src/kdelibs/khtml/dom/dom_text.cpp: (CharacterData::operator = ),
+	(CharacterData::setData), (CharacterData::substringData),
+	(CharacterData::appendData), (CharacterData::insertData),
+	(CharacterData::deleteData), (CharacterData::replaceData), (Comment::operator =
+	), (Text::operator = ), (Text::splitText):
+	* src/kdelibs/khtml/dom/dom_text.h:
+	* src/kdelibs/khtml/dom/dom_xml.cpp: (CDATASection::operator = ),
+	(Entity::operator = ), (Entity::publicId), (Entity::systemId),
+	(Entity::notationName), (EntityReference::operator = ), (Notation::operator = ),
+	(Notation::publicId), (Notation::systemId), (ProcessingInstruction::operator = ),
+	(ProcessingInstruction::target), (ProcessingInstruction::data),
+	(ProcessingInstruction::setData):
+	* src/kdelibs/khtml/dom/dom_xml.h:
+	* src/kdelibs/khtml/dom/html_base.cpp: (HTMLFrameElement::setSrc),
+	(HTMLFrameElement::contentDocument):
+	* src/kdelibs/khtml/dom/html_base.h:
+	* src/kdelibs/khtml/dom/html_block.cpp:
+	* src/kdelibs/khtml/dom/html_block.h:
+	* src/kdelibs/khtml/dom/html_document.cpp: (HTMLDocument::HTMLDocument),
+	(HTMLDocument::operator = ), (HTMLDocument::title), (HTMLDocument::completeURL),
+	(HTMLDocument::lastModified), (HTMLDocument::cookie), (HTMLDocument::setCookie),
+	(HTMLDocument::getElementsByName):
+	* src/kdelibs/khtml/dom/html_document.h:
+	* src/kdelibs/khtml/dom/html_element.cpp: (HTMLElement::operator = ),
+	(HTMLElement::removeCSSProperty), (HTMLElement::addCSSProperty),
+	(HTMLElement::setInnerText), (HTMLElement::children):
+	* src/kdelibs/khtml/dom/html_element.h:
+	* src/kdelibs/khtml/dom/html_form.cpp: (HTMLInputElement::setDefaultChecked),
+	(HTMLInputElement::name), (HTMLInputElement::setName), (HTMLInputElement::src),
+	(HTMLInputElement::setType), (HTMLInputElement::blur), (HTMLInputElement::focus),
+	(HTMLInputElement::select), (HTMLInputElement::click), (HTMLSelectElement::name),
+	(HTMLSelectElement::setName), (HTMLSelectElement::blur),
+	(HTMLSelectElement::focus), (HTMLTextAreaElement::name),
+	(HTMLTextAreaElement::setName), (HTMLTextAreaElement::blur),
+	(HTMLTextAreaElement::focus), (HTMLTextAreaElement::select),
+	(HTMLOptionElement::value), (HTMLOptionElement::setValue):
+	* src/kdelibs/khtml/dom/html_form.h:
+	* src/kdelibs/khtml/dom/html_head.cpp:
+	* src/kdelibs/khtml/dom/html_head.h:
+	* src/kdelibs/khtml/dom/html_image.cpp: (HTMLImageElement::border),
+	(HTMLImageElement::setBorder), (HTMLImageElement::height),
+	(HTMLImageElement::setHeight), (HTMLImageElement::hspace),
+	(HTMLImageElement::setHspace), (HTMLImageElement::src),
+	(HTMLImageElement::vspace), (HTMLImageElement::setVspace),
+	(HTMLImageElement::width), (HTMLImageElement::setWidth):
+	* src/kdelibs/khtml/dom/html_image.h:
+	* src/kdelibs/khtml/dom/html_inline.cpp: (HTMLAnchorElement::blur),
+	(HTMLAnchorElement::focus), (HTMLIFrameElement::contentDocument),
+	(HTMLModElement::HTMLModElement), (HTMLQuoteElement::HTMLQuoteElement):
+	* src/kdelibs/khtml/dom/html_inline.h:
+	* src/kdelibs/khtml/dom/html_list.cpp:
+	* src/kdelibs/khtml/dom/html_list.h:
+	* src/kdelibs/khtml/dom/html_misc.cpp: (HTMLCollection::base),
+	(HTMLCollection::firstItem), (HTMLCollection::nextItem),
+	(HTMLCollection::nextNamedItem):
+	* src/kdelibs/khtml/dom/html_misc.h:
+	* src/kdelibs/khtml/dom/html_object.cpp: (HTMLObjectElement::setWidth),
+	(HTMLObjectElement::contentDocument):
+	* src/kdelibs/khtml/dom/html_object.h:
+	* src/kdelibs/khtml/dom/html_table.cpp:
+	* src/kdelibs/khtml/dom/html_table.h:
+	* src/kdelibs/khtml/ecma/kjs_binding.cpp: (DOMObject::get), (DOMObject::put),
+	(DOMObject::toString), (DOMFunction::get), (DOMFunction::call),
+	(ScriptInterpreter::~ScriptInterpreter), (ScriptInterpreter::forgetDOMObject),
+	(ScriptInterpreter::mark), (ScriptInterpreter::isWindowOpenAllowed),
+	(KJS::toNode), (KJS::getString), (KJS::ValueToVariant):
+	* src/kdelibs/khtml/ecma/kjs_binding.h:
+	* src/kdelibs/khtml/ecma/kjs_css.cpp:
+	(DOMCSSStyleDeclaration::DOMCSSStyleDeclaration),
+	(DOMCSSStyleDeclaration::~DOMCSSStyleDeclaration),
+	(DOMCSSStyleDeclaration::hasProperty), (DOMCSSStyleDeclaration::tryGet),
+	(DOMCSSStyleDeclaration::tryPut), (DOMCSSStyleDeclarationProtoFunc::tryCall),
+	(KJS::getDOMCSSStyleDeclaration), (DOMStyleSheet::~DOMStyleSheet),
+	(DOMStyleSheet::tryGet), (DOMStyleSheet::getValueProperty),
+	(DOMStyleSheet::tryPut), (KJS::getDOMStyleSheet),
+	(DOMStyleSheetList::~DOMStyleSheetList), (DOMStyleSheetList::tryGet),
+	(KJS::getDOMStyleSheetList), (DOMStyleSheetListFunc::tryCall),
+	(DOMMediaList::DOMMediaList), (DOMMediaList::~DOMMediaList),
+	(DOMMediaList::tryGet), (DOMMediaList::tryPut), (KJS::getDOMMediaList),
+	(KJS::DOMMediaListProtoFunc::tryCall), (DOMCSSStyleSheet::DOMCSSStyleSheet),
+	(DOMCSSStyleSheet::tryGet), (DOMCSSStyleSheetProtoFunc::tryCall),
+	(DOMCSSRuleList::~DOMCSSRuleList), (DOMCSSRuleList::tryGet),
+	(DOMCSSRuleListFunc::tryCall), (KJS::getDOMCSSRuleList),
+	(DOMCSSRule::~DOMCSSRule), (DOMCSSRule::classInfo), (DOMCSSRule::tryGet),
+	(DOMCSSRule::getValueProperty), (DOMCSSRule::tryPut), (DOMCSSRule::putValue),
+	(DOMCSSRuleFunc::tryCall), (KJS::getDOMCSSRule), (KJS::toCSSRule),
+	(CSSRuleConstructor::tryGet), (CSSRuleConstructor::getValueProperty),
+	(KJS::getCSSRuleConstructor), (DOMCSSValue::~DOMCSSValue), (DOMCSSValue::tryGet),
+	(DOMCSSValue::tryPut), (KJS::getDOMCSSValue), (CSSValueConstructor::tryGet),
+	(CSSValueConstructor::getValueProperty), (KJS::getCSSValueConstructor),
+	(DOMCSSPrimitiveValue::DOMCSSPrimitiveValue), (DOMCSSPrimitiveValue::tryGet),
+	(DOMCSSPrimitiveValueProtoFunc::tryCall), (CSSPrimitiveValueConstructor::tryGet),
+	(CSSPrimitiveValueConstructor::getValueProperty),
+	(KJS::getCSSPrimitiveValueConstructor), (DOMCSSValueList::DOMCSSValueList),
+	(DOMCSSValueList::tryGet), (DOMCSSValueListFunc::tryCall), (DOMRGBColor::tryGet),
+	(KJS::getDOMRGBColor), (DOMRect::~DOMRect), (DOMRect::tryGet), (KJS::getDOMRect),
+	(DOMCounter::~DOMCounter), (DOMCounter::tryGet), (KJS::getDOMCounter):
+	* src/kdelibs/khtml/ecma/kjs_css.h:
+	* src/kdelibs/khtml/ecma/kjs_debugwin.cpp: (FakeModal::eventFilter),
+	(FakeModal::enable), (FakeModal::disable), (StackFrame::toString),
+	(SourceFragment::SourceFragment), (SourceFragment::~SourceFragment),
+	(KJSDebugWin::KJSDebugWin), (KJSDebugWin::~KJSDebugWin),
+	(KJSDebugWin::createInstance), (KJSDebugWin::destroyInstance),
+	(KJSDebugWin::instance), (KJSDebugWin::next), (KJSDebugWin::step),
+	(KJSDebugWin::cont), (KJSDebugWin::stop), (KJSDebugWin::showFrame),
+	(KJSDebugWin::sourceSelected), (KJSDebugWin::eval), (KJSDebugWin::closeEvent),
+	(KJSDebugWin::sourceParsed), (KJSDebugWin::sourceUnused), (KJSDebugWin::error),
+	(KJSDebugWin::atLine), (KJSDebugWin::callEvent), (KJSDebugWin::returnEvent),
+	(KJSDebugWin::setCode), (KJSDebugWin::highLight),
+	(KJSDebugWin::setNextSourceInfo), (KJSDebugWin::setSourceFile),
+	(KJSDebugWin::appendSourceFile), (KJSDebugWin::enterSession),
+	(KJSDebugWin::leaveSession), (KJSDebugWin::updateFrameList),
+	(KJSDebugWin::setBreakpoint), (KJSDebugWin::deleteBreakpoint),
+	(KJSDebugWin::clearAllBreakpoints), (KJSDebugWin::breakpointLine),
+	(KJSDebugWin::haveBreakpoint):
+	* src/kdelibs/khtml/ecma/kjs_debugwin.h:
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMNode::DOMNode), (DOMNode::~DOMNode),
+	(DOMNode::toBoolean), (DOMNode::tryGet), (DOMNode::getValueProperty),
+	(DOMNode::tryPut), (DOMNode::putValue), (DOMNode::toPrimitive),
+	(DOMNode::toString), (DOMNode::setListener), (DOMNode::getListener),
+	(DOMNode::eventHandlerScope), (DOMNodeProtoFunc::tryCall),
+	(DOMNodeList::~DOMNodeList), (DOMNodeList::hasProperty), (DOMNodeList::tryGet),
+	(DOMNodeList::call), (DOMNodeList::tryCall), (DOMNodeListFunc::DOMNodeListFunc),
+	(DOMNodeListFunc::tryCall), (DOMAttr::tryGet), (DOMAttr::getValueProperty),
+	(DOMAttr::tryPut), (DOMAttr::putValue), (DOMDocument::DOMDocument),
+	(DOMDocument::tryGet), (DOMDocument::getValueProperty),
+	(DOMDocumentProtoFunc::tryCall), (DOMElement::DOMElement), (DOMElement::tryGet),
+	(DOMElementProtoFunc::tryCall), (DOMDOMImplementation::DOMDOMImplementation),
+	(DOMDOMImplementation::~DOMDOMImplementation),
+	(DOMDOMImplementationProtoFunc::tryCall), (DOMDocumentType::DOMDocumentType),
+	(DOMDocumentType::tryGet), (DOMDocumentType::getValueProperty),
+	(DOMNamedNodeMap::DOMNamedNodeMap), (DOMNamedNodeMap::~DOMNamedNodeMap),
+	(DOMNamedNodeMap::hasProperty), (DOMNamedNodeMap::tryGet),
+	(DOMNamedNodeMapProtoFunc::tryCall), (DOMProcessingInstruction::tryGet),
+	(DOMProcessingInstruction::getValueProperty), (DOMProcessingInstruction::tryPut),
+	(DOMNotation::tryGet), (DOMNotation::getValueProperty), (DOMEntity::tryGet),
+	(DOMEntity::getValueProperty), (KJS::getDOMNode), (KJS::getDOMNamedNodeMap),
+	(KJS::getDOMNodeList), (KJS::getDOMDOMImplementation), (NodeConstructor::tryGet),
+	(NodeConstructor::getValueProperty), (KJS::getNodeConstructor),
+	(DOMExceptionConstructor::tryGet), (DOMExceptionConstructor::getValueProperty),
+	(KJS::getDOMExceptionConstructor),
+	(DOMNamedNodesCollection::DOMNamedNodesCollection),
+	(DOMNamedNodesCollection::tryGet), (DOMCharacterData::DOMCharacterData),
+	(DOMCharacterData::tryGet), (DOMCharacterData::getValueProperty),
+	(DOMCharacterData::tryPut), (DOMCharacterDataProtoFunc::tryCall),
+	(DOMText::DOMText), (DOMText::tryGet), (DOMTextProtoFunc::tryCall):
+	* src/kdelibs/khtml/ecma/kjs_dom.h:
+	* src/kdelibs/khtml/ecma/kjs_events.cpp: (JSEventListener::JSEventListener),
+	(JSEventListener::~JSEventListener), (JSEventListener::handleEvent),
+	(KJS::getNodeEventListener), (EventConstructor::tryGet),
+	(EventConstructor::getValueProperty), (KJS::getEventConstructor),
+	(DOMEvent::DOMEvent), (DOMEvent::~DOMEvent), (DOMEvent::tryGet),
+	(DOMEvent::getValueProperty), (DOMEventProtoFunc::tryCall), (KJS::getDOMEvent),
+	(KJS::toEvent), (EventExceptionConstructor::tryGet),
+	(EventExceptionConstructor::getValueProperty),
+	(KJS::getEventExceptionConstructor), (DOMUIEvent::tryGet),
+	(DOMUIEvent::getValueProperty), (DOMUIEventProtoFunc::tryCall),
+	(DOMMouseEvent::tryGet), (DOMMouseEvent::getValueProperty),
+	(DOMMouseEventProtoFunc::tryCall), (MutationEventConstructor::tryGet),
+	(MutationEventConstructor::getValueProperty), (KJS::getMutationEventConstructor),
+	(DOMMutationEvent::tryGet), (DOMMutationEvent::getValueProperty),
+	(DOMMutationEventProtoFunc::tryCall):
+	* src/kdelibs/khtml/ecma/kjs_events.h:
+	* src/kdelibs/khtml/ecma/kjs_html.cpp: (KJS::HTMLDocFunction::tryCall),
+	(KJS::HTMLDocument::hasProperty), (KJS::HTMLDocument::tryGet),
+	(KJS::HTMLDocument::tryPut), (KJS::HTMLDocument::putValue),
+	(KJS::HTMLElement::classInfo), (KJS::HTMLElement::tryGet),
+	(KJS::HTMLElement::getValueProperty), (KJS::HTMLElement::hasProperty),
+	(KJS::HTMLElement::toString), (KJS::HTMLElement::eventHandlerScope),
+	(HTMLElementFunction::HTMLElementFunction), (KJS::HTMLElementFunction::tryCall),
+	(KJS::HTMLElement::tryPut), (KJS::HTMLElement::putValue),
+	(HTMLCollection::HTMLCollection), (HTMLCollection::~HTMLCollection),
+	(KJS::HTMLCollection::hasProperty), (KJS::HTMLCollection::tryGet),
+	(KJS::HTMLCollection::call), (KJS::HTMLCollection::tryCall),
+	(KJS::HTMLCollection::getNamedItems), (KJS::HTMLCollectionProtoFunc::tryCall),
+	(KJS::HTMLSelectCollection::tryGet), (KJS::HTMLSelectCollection::tryPut),
+	(OptionConstructorImp::OptionConstructorImp),
+	(OptionConstructorImp::implementsConstruct), (OptionConstructorImp::construct),
+	(ImageConstructorImp::ImageConstructorImp),
+	(ImageConstructorImp::implementsConstruct), (ImageConstructorImp::construct),
+	(Image::tryGet), (Image::getValueProperty), (Image::tryPut),
+	(KJS::getHTMLCollection), (KJS::getSelectHTMLCollection):
+	* src/kdelibs/khtml/ecma/kjs_html.h:
+	* src/kdelibs/khtml/ecma/kjs_navigator.cpp: (Navigator::Navigator),
+	(Navigator::get), (Navigator::getValueProperty), (PluginBase::PluginBase),
+	(Plugins::get), (MimeTypes::get), (Plugin::get), (MimeType::get),
+	(PluginsFunc::tryCall), (NavigatorFunc::tryCall):
+	* src/kdelibs/khtml/ecma/kjs_navigator.h:
+	* src/kdelibs/khtml/ecma/kjs_proxy.cpp: (KJSProxyImpl::KJSProxyImpl),
+	(KJSProxyImpl::~KJSProxyImpl), (KJSProxyImpl::evaluate), (KJSProxyImpl::clear),
+	(KJSProxyImpl::createHTMLEventHandler), (KJSProxyImpl::finishedWithEvent),
+	(KJSProxyImpl::interpreter), (KJSProxyImpl::setDebugEnabled),
+	(KJSProxyImpl::paused), (KJSProxyImpl::setSourceFile),
+	(KJSProxyImpl::appendSourceFile), (TestFunctionImp::call),
+	(KJSProxyImpl::initScript), (KJSProxy::proxy), (kjs_html_init):
+	* src/kdelibs/khtml/ecma/kjs_proxy.h:
+	* src/kdelibs/khtml/ecma/kjs_range.cpp: (DOMRange::DOMRange),
+	(DOMRange::~DOMRange), (DOMRange::tryGet), (DOMRange::getValueProperty),
+	(DOMRangeProtoFunc::tryCall), (KJS::getDOMRange), (RangeConstructor::tryGet),
+	(RangeConstructor::getValueProperty), (KJS::getRangeConstructor), (KJS::toRange):
+	* src/kdelibs/khtml/ecma/kjs_range.h:
+	* src/kdelibs/khtml/ecma/kjs_traversal.cpp: (DOMNodeIterator::DOMNodeIterator),
+	(DOMNodeIterator::~DOMNodeIterator), (DOMNodeIterator::tryGet),
+	(DOMNodeIterator::getValueProperty), (DOMNodeIteratorProtoFunc::tryCall),
+	(KJS::getDOMNodeIterator), (NodeFilterConstructor::tryGet),
+	(NodeFilterConstructor::getValueProperty), (KJS::getNodeFilterConstructor),
+	(DOMNodeFilter::DOMNodeFilter), (DOMNodeFilter::~DOMNodeFilter),
+	(DOMNodeFilterProtoFunc::tryCall), (KJS::getDOMNodeFilter),
+	(DOMTreeWalker::DOMTreeWalker), (DOMTreeWalker::~DOMTreeWalker),
+	(DOMTreeWalker::tryGet), (DOMTreeWalker::getValueProperty),
+	(DOMTreeWalker::tryPut), (DOMTreeWalkerProtoFunc::tryCall),
+	(KJS::getDOMTreeWalker), (KJS::toNodeFilter), (JSNodeFilter::JSNodeFilter),
+	(JSNodeFilter::acceptNode):
+	* src/kdelibs/khtml/ecma/kjs_traversal.h:
+	* src/kdelibs/khtml/ecma/kjs_views.cpp: (DOMAbstractView::~DOMAbstractView),
+	(DOMAbstractView::tryGet), (DOMAbstractViewFunc::tryCall),
+	(KJS::getDOMAbstractView), (KJS::toAbstractView):
+	* src/kdelibs/khtml/ecma/kjs_views.h:
+	* src/kdelibs/khtml/ecma/kjs_window.cpp: (Screen::Screen), (Screen::get),
+	(Screen::getValueProperty), (Window::Window), (Window::retrieveWindow),
+	(Window::retrieveActive), (Window::retrieve), (Window::mark),
+	(Window::hasProperty), (Window::toString), (Window::get), (Window::put),
+	(Window::toBoolean), (Window::scheduleClose), (Window::isSafeScript),
+	(Window::setListener), (Window::getListener), (Window::getJSEventListener),
+	(Window::clear), (Window::setCurrentEvent), (WindowFunc::tryCall),
+	(ScheduledAction::ScheduledAction), (ScheduledAction::execute),
+	(ScheduledAction::~ScheduledAction), (WindowQObject::WindowQObject),
+	(WindowQObject::~WindowQObject), (WindowQObject::parentDestroyed),
+	(WindowQObject::installTimeout), (WindowQObject::clearTimeout),
+	(WindowQObject::timerEvent), (WindowQObject::timeoutClose), (FrameArray::get),
+	(Location::Location), (Location::~Location), (Location::get), (Location::put),
+	(Location::toPrimitive), (Location::toString), (LocationFunc::tryCall),
+	(History::get), (History::getValueProperty), (HistoryFunc::tryCall),
+	(Konqueror::hasProperty), (Konqueror::get), (KonquerorFunc::tryCall),
+	(Konqueror::toString):
+	* src/kdelibs/khtml/ecma/kjs_window.h:
+	* src/kdelibs/khtml/html/dtd.cpp: (DOM::checkChild), (DOM::addForbidden),
+	(DOM::removeForbidden):
+	* src/kdelibs/khtml/html/dtd.h:
+	* src/kdelibs/khtml/html/html_baseimpl.cpp:
+	(HTMLBodyElementImpl::HTMLBodyElementImpl), (HTMLBodyElementImpl::id),
+	(HTMLBodyElementImpl::parseAttribute), (HTMLBodyElementImpl::init),
+	(HTMLBodyElementImpl::attach), (HTMLFrameElementImpl::HTMLFrameElementImpl),
+	(HTMLFrameElementImpl::id), (HTMLFrameElementImpl::parseAttribute),
+	(HTMLFrameElementImpl::init), (HTMLFrameElementImpl::attach),
+	(HTMLFrameElementImpl::detach), (HTMLFrameElementImpl::setLocation),
+	(HTMLFrameElementImpl::setFocus), (HTMLFrameElementImpl::contentDocument),
+	(HTMLFrameSetElementImpl::HTMLFrameSetElementImpl),
+	(HTMLFrameSetElementImpl::~HTMLFrameSetElementImpl),
+	(HTMLFrameSetElementImpl::id), (HTMLFrameSetElementImpl::parseAttribute),
+	(HTMLFrameSetElementImpl::init), (HTMLFrameSetElementImpl::attach),
+	(HTMLFrameSetElementImpl::defaultEventHandler),
+	(HTMLFrameSetElementImpl::detach), (HTMLFrameSetElementImpl::recalcStyle),
+	(HTMLHeadElementImpl::id), (HTMLHtmlElementImpl::attach),
+	(HTMLHtmlElementImpl::id), (HTMLIFrameElementImpl::id),
+	(HTMLIFrameElementImpl::parseAttribute), (HTMLIFrameElementImpl::attach),
+	(HTMLIFrameElementImpl::recalcStyle):
+	* src/kdelibs/khtml/html/html_baseimpl.h:
+	* src/kdelibs/khtml/html/html_blockimpl.cpp: (HTMLBlockquoteElementImpl::id),
+	(HTMLDivElementImpl::id), (HTMLDivElementImpl::parseAttribute),
+	(HTMLHRElementImpl::id), (HTMLHRElementImpl::parseAttribute),
+	(HTMLHRElementImpl::attach), (HTMLHeadingElementImpl::HTMLHeadingElementImpl),
+	(HTMLParagraphElementImpl::id), (HTMLPreElementImpl::HTMLPreElementImpl),
+	(HTMLLayerElementImpl::id), (HTMLLayerElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_blockimpl.h:
+	* src/kdelibs/khtml/html/html_documentimpl.cpp:
+	(HTMLDocumentImpl::HTMLDocumentImpl), (HTMLDocumentImpl::~HTMLDocumentImpl),
+	(HTMLDocumentImpl::referrer), (HTMLDocumentImpl::domain),
+	(HTMLDocumentImpl::setDomain), (HTMLDocumentImpl::lastModified),
+	(HTMLDocumentImpl::cookie), (HTMLDocumentImpl::setCookie),
+	(HTMLDocumentImpl::setBody), (HTMLDocumentImpl::slotHistoryChanged),
+	(isTransitional), (HTMLDocumentImpl::close),
+	(HTMLDocumentImpl::determineParseMode):
+	* src/kdelibs/khtml/html/html_documentimpl.h:
+	* src/kdelibs/khtml/html/html_elementimpl.cpp:
+	(HTMLElementImpl::HTMLElementImpl), (HTMLElementImpl::parseAttribute),
+	(HTMLElementImpl::addCSSProperty), (HTMLElementImpl::addCSSLength),
+	(HTMLElementImpl::removeCSSProperty), (HTMLElementImpl::innerText),
+	(HTMLElementImpl::setInnerHTML), (HTMLElementImpl::namespaceURI):
+	* src/kdelibs/khtml/html/html_elementimpl.h:
+	* src/kdelibs/khtml/html/html_formimpl.cpp:
+	(HTMLFormElementImpl::~HTMLFormElementImpl), (HTMLFormElementImpl::id),
+	(HTMLFormElementImpl::length), (HTMLFormElementImpl::i18nData),
+	(HTMLFormElementImpl::formData), (HTMLFormElementImpl::prepareSubmit),
+	(HTMLFormElementImpl::submit), (HTMLFormElementImpl::reset),
+	(HTMLFormElementImpl::parseAttribute), (HTMLFormElementImpl::radioClicked),
+	(HTMLGenericFormElementImpl::HTMLGenericFormElementImpl),
+	(HTMLGenericFormElementImpl::parseAttribute),
+	(HTMLGenericFormElementImpl::attach), (HTMLGenericFormElementImpl::name),
+	(HTMLGenericFormElementImpl::setName), (HTMLGenericFormElementImpl::onSelect),
+	(HTMLGenericFormElementImpl::onChange),
+	(HTMLGenericFormElementImpl::setDisabled),
+	(HTMLGenericFormElementImpl::setParent),
+	(HTMLGenericFormElementImpl::recalcStyle),
+	(HTMLGenericFormElementImpl::isSelectable),
+	(HTMLGenericFormElementImpl::defaultEventHandler),
+	(HTMLGenericFormElementImpl::isEditable), (HTMLButtonElementImpl::id),
+	(HTMLButtonElementImpl::parseAttribute), (HTMLButtonElementImpl::attach),
+	(HTMLButtonElementImpl::defaultEventHandler), (HTMLButtonElementImpl::encoding),
+	(HTMLFieldSetElementImpl::id), (HTMLInputElementImpl::HTMLInputElementImpl),
+	(HTMLInputElementImpl::~HTMLInputElementImpl), (HTMLInputElementImpl::id),
+	(HTMLInputElementImpl::setType), (HTMLInputElementImpl::state),
+	(HTMLInputElementImpl::restoreState), (HTMLInputElementImpl::parseAttribute),
+	(HTMLInputElementImpl::init), (HTMLInputElementImpl::attach),
+	(HTMLInputElementImpl::altText), (HTMLInputElementImpl::encoding),
+	(HTMLInputElementImpl::reset), (HTMLInputElementImpl::setChecked),
+	(HTMLInputElementImpl::value), (HTMLInputElementImpl::setValue),
+	(HTMLInputElementImpl::blur), (HTMLInputElementImpl::focus),
+	(HTMLInputElementImpl::defaultEventHandler), (HTMLInputElementImpl::isEditable),
+	(HTMLLabelElementImpl::id), (HTMLLabelElementImpl::parseAttribute),
+	(HTMLLabelElementImpl::formElement), (HTMLLegendElementImpl::id),
+	(HTMLSelectElementImpl::HTMLSelectElementImpl), (HTMLSelectElementImpl::id),
+	(HTMLSelectElementImpl::add), (HTMLSelectElementImpl::blur),
+	(HTMLSelectElementImpl::focus), (HTMLSelectElementImpl::value),
+	(HTMLSelectElementImpl::setValue), (HTMLSelectElementImpl::state),
+	(HTMLSelectElementImpl::restoreState), (HTMLSelectElementImpl::parseAttribute),
+	(HTMLSelectElementImpl::init), (HTMLSelectElementImpl::attach),
+	(HTMLSelectElementImpl::encoding), (HTMLSelectElementImpl::reset),
+	(HTMLSelectElementImpl::notifyOptionSelected),
+	(HTMLKeygenElementImpl::HTMLKeygenElementImpl), (HTMLKeygenElementImpl::id),
+	(HTMLKeygenElementImpl::parseAttribute), (HTMLKeygenElementImpl::encoding),
+	(HTMLOptGroupElementImpl::HTMLOptGroupElementImpl),
+	(HTMLOptGroupElementImpl::id), (HTMLOptGroupElementImpl::parseAttribute),
+	(HTMLOptionElementImpl::id), (HTMLOptionElementImpl::text),
+	(HTMLOptionElementImpl::index), (HTMLOptionElementImpl::setIndex),
+	(HTMLOptionElementImpl::parseAttribute), (HTMLOptionElementImpl::value),
+	(HTMLOptionElementImpl::setValue), (HTMLOptionElementImpl::getSelect),
+	(HTMLTextAreaElementImpl::HTMLTextAreaElementImpl),
+	(HTMLTextAreaElementImpl::id), (HTMLTextAreaElementImpl::parseAttribute),
+	(HTMLTextAreaElementImpl::init), (HTMLTextAreaElementImpl::attach),
+	(HTMLTextAreaElementImpl::encoding), (HTMLTextAreaElementImpl::setDefaultValue),
+	(HTMLTextAreaElementImpl::blur), (HTMLTextAreaElementImpl::focus),
+	(HTMLTextAreaElementImpl::isEditable),
+	(HTMLIsIndexElementImpl::HTMLIsIndexElementImpl), (HTMLIsIndexElementImpl::id),
+	(HTMLIsIndexElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_formimpl.h:
+	* src/kdelibs/khtml/html/html_headimpl.cpp: (HTMLBaseElementImpl::id),
+	(HTMLBaseElementImpl::parseAttribute),
+	(HTMLBaseElementImpl::insertedIntoDocument),
+	(HTMLBaseElementImpl::removedFromDocument), (HTMLBaseElementImpl::process),
+	(HTMLLinkElementImpl::HTMLLinkElementImpl), (HTMLLinkElementImpl::id),
+	(HTMLLinkElementImpl::parseAttribute), (HTMLLinkElementImpl::process),
+	(HTMLLinkElementImpl::insertedIntoDocument),
+	(HTMLLinkElementImpl::removedFromDocument), (HTMLLinkElementImpl::setStyleSheet),
+	(HTMLLinkElementImpl::sheetLoaded), (HTMLMetaElementImpl::id),
+	(HTMLMetaElementImpl::parseAttribute),
+	(HTMLMetaElementImpl::insertedIntoDocument), (HTMLMetaElementImpl::process),
+	(HTMLScriptElementImpl::id), (HTMLStyleElementImpl::id),
+	(HTMLStyleElementImpl::parseAttribute),
+	(HTMLStyleElementImpl::insertedIntoDocument),
+	(HTMLStyleElementImpl::removedFromDocument),
+	(HTMLStyleElementImpl::childrenChanged), (HTMLStyleElementImpl::isLoading),
+	(HTMLStyleElementImpl::sheetLoaded), (HTMLTitleElementImpl::id),
+	(HTMLTitleElementImpl::insertedIntoDocument),
+	(HTMLTitleElementImpl::removedFromDocument),
+	(HTMLTitleElementImpl::childrenChanged):
+	* src/kdelibs/khtml/html/html_headimpl.h:
+	* src/kdelibs/khtml/html/html_imageimpl.cpp: (HTMLImageElementImpl::id),
+	(HTMLImageElementImpl::parseAttribute), (HTMLImageElementImpl::altText),
+	(HTMLImageElementImpl::attach), (HTMLMapElementImpl::~HTMLMapElementImpl),
+	(HTMLMapElementImpl::id), (HTMLMapElementImpl::mapMouseEvent),
+	(HTMLMapElementImpl::parseAttribute), (HTMLAreaElementImpl::HTMLAreaElementImpl),
+	(HTMLAreaElementImpl::~HTMLAreaElementImpl), (HTMLAreaElementImpl::id),
+	(HTMLAreaElementImpl::parseAttribute), (HTMLAreaElementImpl::mapMouseEvent),
+	(HTMLAreaElementImpl::getRect), (HTMLAreaElementImpl::getRegion):
+	* src/kdelibs/khtml/html/html_imageimpl.h:
+	* src/kdelibs/khtml/html/html_inlineimpl.cpp:
+	(HTMLAnchorElementImpl::HTMLAnchorElementImpl),
+	(HTMLAnchorElementImpl::~HTMLAnchorElementImpl), (HTMLAnchorElementImpl::id),
+	(HTMLAnchorElementImpl::defaultEventHandler),
+	(HTMLAnchorElementImpl::parseAttribute), (HTMLBRElementImpl::id),
+	(HTMLBRElementImpl::parseAttribute), (HTMLBRElementImpl::attach),
+	(HTMLFontElementImpl::id), (HTMLFontElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_inlineimpl.h:
+	* src/kdelibs/khtml/html/html_listimpl.cpp: (HTMLUListElementImpl::id),
+	(HTMLUListElementImpl::parseAttribute), (HTMLDirectoryElementImpl::id),
+	(HTMLMenuElementImpl::id), (HTMLOListElementImpl::id),
+	(HTMLOListElementImpl::parseAttribute), (HTMLLIElementImpl::id),
+	(HTMLLIElementImpl::parseAttribute), (HTMLLIElementImpl::attach),
+	(HTMLDListElementImpl::id):
+	* src/kdelibs/khtml/html/html_listimpl.h:
+	* src/kdelibs/khtml/html/html_miscimpl.cpp:
+	(HTMLBaseFontElementImpl::HTMLBaseFontElementImpl),
+	(HTMLBaseFontElementImpl::id), (HTMLCollectionImpl::HTMLCollectionImpl),
+	(HTMLCollectionImpl::calcLength), (HTMLCollectionImpl::getItem),
+	(HTMLCollectionImpl::firstItem), (HTMLCollectionImpl::nextItem),
+	(HTMLCollectionImpl::getNamedItem), (HTMLCollectionImpl::namedItem),
+	(HTMLCollectionImpl::nextNamedItem), (HTMLCollectionImpl::nextNamedItemInternal),
+	(HTMLFormCollectionImpl::calcLength), (HTMLFormCollectionImpl::getItem),
+	(HTMLFormCollectionImpl::getNamedItem),
+	(HTMLFormCollectionImpl::getNamedFormItem),
+	(HTMLFormCollectionImpl::getNamedImgItem), (HTMLFormCollectionImpl::firstItem),
+	(HTMLFormCollectionImpl::nextItem),
+	(HTMLFormCollectionImpl::nextNamedItemInternal):
+	* src/kdelibs/khtml/html/html_miscimpl.h:
+	* src/kdelibs/khtml/html/html_objectimpl.cpp:
+	(HTMLAppletElementImpl::HTMLAppletElementImpl),
+	(HTMLAppletElementImpl::~HTMLAppletElementImpl), (HTMLAppletElementImpl::id),
+	(HTMLAppletElementImpl::parseAttribute), (HTMLAppletElementImpl::attach),
+	(HTMLEmbedElementImpl::id), (HTMLEmbedElementImpl::parseAttribute),
+	(HTMLEmbedElementImpl::attach), (HTMLObjectElementImpl::id),
+	(HTMLObjectElementImpl::parseAttribute),
+	(HTMLObjectElementImpl::contentDocument), (HTMLObjectElementImpl::attach),
+	(HTMLObjectElementImpl::detach), (HTMLObjectElementImpl::recalcStyle),
+	(HTMLParamElementImpl::id), (HTMLParamElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_objectimpl.h:
+	* src/kdelibs/khtml/html/html_tableimpl.cpp:
+	(HTMLTableElementImpl::HTMLTableElementImpl), (HTMLTableElementImpl::id),
+	(HTMLTableElementImpl::setCaption), (HTMLTableElementImpl::setTHead),
+	(HTMLTableElementImpl::setTFoot), (HTMLTableElementImpl::setTBody),
+	(HTMLTableElementImpl::createTHead), (HTMLTableElementImpl::deleteTHead),
+	(HTMLTableElementImpl::createTFoot), (HTMLTableElementImpl::deleteTFoot),
+	(HTMLTableElementImpl::createCaption), (HTMLTableElementImpl::deleteCaption),
+	(HTMLTableElementImpl::insertRow), (HTMLTableElementImpl::deleteRow),
+	(HTMLTableElementImpl::addChild), (HTMLTableElementImpl::parseAttribute),
+	(HTMLTableElementImpl::init), (HTMLTablePartElementImpl::parseAttribute),
+	(HTMLTableSectionElementImpl::id), (HTMLTableSectionElementImpl::insertRow),
+	(HTMLTableSectionElementImpl::deleteRow), (HTMLTableRowElementImpl::id),
+	(HTMLTableRowElementImpl::insertCell), (HTMLTableRowElementImpl::deleteCell),
+	(HTMLTableCellElementImpl::HTMLTableCellElementImpl),
+	(HTMLTableCellElementImpl::parseAttribute), (HTMLTableCellElementImpl::init),
+	(HTMLTableColElementImpl::HTMLTableColElementImpl),
+	(HTMLTableColElementImpl::id), (HTMLTableColElementImpl::parseAttribute),
+	(HTMLTableCaptionElementImpl::id), (HTMLTableCaptionElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_tableimpl.h:
+	* src/kdelibs/khtml/html/htmlparser.cpp: (KHTMLParser::parseToken),
+	(KHTMLParser::insertNode), (KHTMLParser::getElement),
+	(KHTMLParser::processCloseTag), (KHTMLParser::popOneBlock),
+	(KHTMLParser::handleIsindex):
+	* src/kdelibs/khtml/html/htmlparser.h:
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::HTMLTokenizer),
+	(HTMLTokenizer::reset), (HTMLTokenizer::begin), (HTMLTokenizer::processListing),
+	(HTMLTokenizer::parseSpecial), (HTMLTokenizer::scriptHandler),
+	(HTMLTokenizer::scriptExecution), (HTMLTokenizer::parseComment),
+	(HTMLTokenizer::parseServer), (HTMLTokenizer::parseTag), (HTMLTokenizer::write),
+	(HTMLTokenizer::finish), (HTMLTokenizer::processToken),
+	(HTMLTokenizer::notifyFinished), (HTMLTokenizer::addPendingSource),
+	(HTMLTokenizer::setSrc):
+	* src/kdelibs/khtml/html/htmltokenizer.h:
+	* src/kdelibs/khtml/java/javaembed.h:
+	* src/kdelibs/khtml/java/kjavaapplet.h:
+	* src/kdelibs/khtml/java/kjavaappletcontext.cpp:
+	* src/kdelibs/khtml/java/kjavaappletcontext.h:
+	* src/kdelibs/khtml/java/kjavaappletserver.cpp: (KJavaAppletServer::setupJava):
+	* src/kdelibs/khtml/java/kjavaappletserver.h:
+	* src/kdelibs/khtml/java/kjavaappletwidget.h:
+	* src/kdelibs/khtml/java/kjavaprocess.cpp: (KJavaProcess::invokeJVM):
+	* src/kdelibs/khtml/khtml_events.cpp: (khtml::MouseEvent::MouseEvent),
+	(khtml::MouseEvent::offset):
+	* src/kdelibs/khtml/khtml_events.h:
+	* src/kdelibs/khtml/khtml_ext.h:
+	* src/kdelibs/khtml/khtml_factory.h:
+	* src/kdelibs/khtml/khtml_part.h:
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::KHTMLView),
+	(KHTMLView::~KHTMLView), (KHTMLView::init), (KHTMLView::clear),
+	(KHTMLView::resizeEvent), (KHTMLView::drawContents), (KHTMLView::setMarginWidth),
+	(KHTMLView::setMarginHeight), (KHTMLView::layout),
+	(KHTMLView::viewportMousePressEvent), (KHTMLView::viewportMouseDoubleClickEvent),
+	(KHTMLView::viewportMouseMoveEvent), (KHTMLView::resetCursor),
+	(KHTMLView::viewportMouseReleaseEvent), (KHTMLView::keyPressEvent),
+	(KHTMLView::keyReleaseEvent), (KHTMLView::contentsContextMenuEvent),
+	(KHTMLView::focusNextPrevChild), (KHTMLView::scrollTo),
+	(KHTMLView::focusNextPrevNode), (KHTMLView::setMediaType),
+	(KHTMLView::mediaType), (KHTMLView::print), (KHTMLView::slotPaletteChanged),
+	(KHTMLView::restoreScrollBar), (KHTMLView::addFormCompletionItem),
+	(KHTMLView::dispatchMouseEvent), (KHTMLView::setIgnoreEvents),
+	(KHTMLView::ignoreEvents), (KHTMLView::setIgnoreWheelEvents),
+	(KHTMLView::viewportWheelEvent), (KHTMLView::slotScrollBarMoved),
+	(KHTMLView::timerEvent), (KHTMLView::scheduleRelayout),
+	(KHTMLView::scheduleRepaint), (KHTMLView::complete):
+	* src/kdelibs/khtml/khtmlview.h:
+	* src/kdelibs/khtml/misc/decoder.cpp:
+	* src/kdelibs/khtml/misc/decoder.h:
+	* src/kdelibs/khtml/misc/helper.cpp: (khtml::setNamedColor),
+	(khtml::setPrintPainter):
+	* src/kdelibs/khtml/misc/helper.h:
+	* src/kdelibs/khtml/misc/htmlattrs.in:
+	* src/kdelibs/khtml/misc/htmltags.in:
+	* src/kdelibs/khtml/misc/khtmllayout.h:
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/misc/loader_client.h:
+	* src/kdelibs/khtml/misc/makeattrs:
+	* src/kdelibs/khtml/misc/maketags:
+	* src/kdelibs/khtml/misc/stringit.h:
+	* src/kdelibs/khtml/rendering/bidi.cpp: (Bidinext), (first),
+	(BidiIterator::BidiIterator), (BidiIterator::operator ++ ),
+	(BidiIterator::atEnd), (BidiIterator::current), (BidiIterator::direction),
+	(appendRun), (embed), (RenderFlow::bidiReorderLine),
+	(RenderFlow::layoutInlineChildren):
+	* src/kdelibs/khtml/rendering/bidi.h:
+	* src/kdelibs/khtml/rendering/break_lines.cpp:
+	* src/kdelibs/khtml/rendering/render_applet.cpp: (RenderApplet::RenderApplet),
+	(RenderApplet::intrinsicWidth), (RenderApplet::intrinsicHeight),
+	(RenderApplet::layout), (RenderEmptyApplet::RenderEmptyApplet),
+	(RenderEmptyApplet::layout):
+	* src/kdelibs/khtml/rendering/render_applet.h:
+	* src/kdelibs/khtml/rendering/render_body.cpp: (RenderBody::RenderBody),
+	(RenderBody::setStyle):
+	* src/kdelibs/khtml/rendering/render_body.h:
+	* src/kdelibs/khtml/rendering/render_box.cpp: (RenderBox::RenderBox),
+	(RenderBox::setPos), (RenderBox::setPixmap), (RenderBox::printBackground),
+	(RenderBox::calcClip), (RenderBox::close), (RenderBox::repaintRectangle),
+	(RenderBox::calcWidth), (RenderBox::calcHorizontalMargins),
+	(RenderBox::calcHeight), (RenderBox::calcReplacedWidth),
+	(RenderBox::calcReplacedHeight), (RenderBox::calcVerticalMargins):
+	* src/kdelibs/khtml/rendering/render_box.h:
+	* src/kdelibs/khtml/rendering/render_br.cpp: (RenderBR::RenderBR):
+	* src/kdelibs/khtml/rendering/render_br.h:
+	* src/kdelibs/khtml/rendering/render_container.cpp:
+	(RenderContainer::RenderContainer), (RenderContainer::addChild),
+	(RenderContainer::removeChildNode), (RenderContainer::removeChild),
+	(RenderContainer::insertPseudoChild), (RenderContainer::appendChildNode),
+	(RenderContainer::insertChildNode), (RenderContainer::layout):
+	* src/kdelibs/khtml/rendering/render_container.h:
+	* src/kdelibs/khtml/rendering/render_flow.cpp: (RenderFlow::RenderFlow),
+	(RenderFlow::setStyle), (RenderFlow::print), (RenderFlow::printObject),
+	(RenderFlow::printSpecialObjects), (RenderFlow::layout),
+	(RenderFlow::layoutSpecialObjects), (RenderFlow::layoutBlockChildren),
+	(RenderFlow::insertSpecialObject), (RenderFlow::removeSpecialObject),
+	(RenderFlow::positionNewFloats), (RenderFlow::leftOffset),
+	(RenderFlow::leftRelOffset), (RenderFlow::rightOffset),
+	(RenderFlow::rightRelOffset), (RenderFlow::lineWidth), (RenderFlow::floatBottom),
+	(RenderFlow::lowestPosition), (RenderFlow::rightmostPosition),
+	(RenderFlow::leftBottom), (RenderFlow::rightBottom), (RenderFlow::clearFloats),
+	(RenderFlow::addOverHangingFloats), (next), (RenderFlow::calcMinMaxWidth),
+	(RenderFlow::close), (RenderFlow::addChild), (RenderFlow::makeChildrenNonInline),
+	(RenderFlow::nodeAtPoint), (RenderFlow::printTree), (RenderFlow::dump):
+	* src/kdelibs/khtml/rendering/render_flow.h:
+	* src/kdelibs/khtml/rendering/render_form.cpp:
+	(RenderFormElement::RenderFormElement), (RenderFormElement::updateFromElement),
+	(RenderFormElement::layout), (RenderFormElement::slotClicked),
+	(RenderButton::RenderButton), (RenderCheckBox::RenderCheckBox),
+	(RenderCheckBox::calcMinMaxWidth), (RenderCheckBox::updateFromElement),
+	(RenderCheckBox::slotStateChanged), (RenderRadioButton::RenderRadioButton),
+	(RenderRadioButton::updateFromElement), (RenderRadioButton::slotClicked),
+	(RenderRadioButton::calcMinMaxWidth), (RenderSubmitButton::RenderSubmitButton),
+	(RenderSubmitButton::calcMinMaxWidth), (RenderImageButton::RenderImageButton),
+	(RenderResetButton::RenderResetButton), (RenderPushButton::RenderPushButton),
+	(RenderLineEdit::RenderLineEdit), (RenderLineEdit::slotReturnPressed),
+	(RenderLineEdit::handleFocusOut), (RenderLineEdit::calcMinMaxWidth),
+	(RenderLineEdit::updateFromElement), (RenderLineEdit::slotTextChanged),
+	(RenderFieldset::RenderFieldset), (RenderFileButton::RenderFileButton),
+	(RenderFileButton::calcMinMaxWidth), (RenderFileButton::handleFocusOut),
+	(RenderFileButton::slotClicked), (RenderFileButton::updateFromElement),
+	(RenderFileButton::slotReturnPressed), (RenderFileButton::slotTextChanged),
+	(RenderLabel::RenderLabel), (RenderLegend::RenderLegend),
+	(RenderSelect::RenderSelect), (RenderSelect::updateFromElement),
+	(RenderSelect::calcMinMaxWidth), (RenderSelect::layout), (RenderSelect::close),
+	(RenderSelect::slotSelected), (RenderSelect::slotSelectionChanged),
+	(RenderSelect::createListBox), (RenderSelect::createComboBox),
+	(RenderSelect::updateSelection), (TextAreaWidget::TextAreaWidget),
+	(TextAreaWidget::event), (RenderTextArea::RenderTextArea),
+	(RenderTextArea::~RenderTextArea), (RenderTextArea::handleFocusOut),
+	(RenderTextArea::calcMinMaxWidth), (RenderTextArea::updateFromElement),
+	(RenderTextArea::close), (RenderTextArea::text),
+	(RenderTextArea::slotTextChanged):
+	* src/kdelibs/khtml/rendering/render_form.h:
+	* src/kdelibs/khtml/rendering/render_frames.cpp:
+	(RenderFrameSet::RenderFrameSet), (RenderFrameSet::~RenderFrameSet),
+	(RenderFrameSet::nodeAtPoint), (RenderFrameSet::layout),
+	(RenderFrameSet::positionFrames), (RenderFrameSet::userResize),
+	(RenderFrameSet::setResizing), (RenderFrameSet::canResize),
+	(RenderFrameSet::dump), (RenderPart::RenderPart), (RenderPart::setWidget),
+	(RenderPart::partLoadingErrorNotify), (RenderFrame::RenderFrame),
+	(RenderFrame::slotViewCleared), (RenderPartObject::RenderPartObject),
+	(RenderPartObject::updateWidget), (RenderPartObject::close),
+	(RenderPartObject::partLoadingErrorNotify),
+	(RenderPartObject::slotPartLoadingErrorNotify),
+	(RenderPartObject::calcReplacedWidth), (RenderPartObject::calcReplacedHeight),
+	(RenderPartObject::layout), (RenderPartObject::slotViewCleared):
+	* src/kdelibs/khtml/rendering/render_frames.h:
+	* src/kdelibs/khtml/rendering/render_html.cpp: (RenderHtml::RenderHtml),
+	(RenderHtml::printBoxDecorations):
+	* src/kdelibs/khtml/rendering/render_html.h:
+	* src/kdelibs/khtml/rendering/render_image.cpp: (RenderImage::RenderImage),
+	(RenderImage::setStyle), (RenderImage::setPixmap), (RenderImage::printObject),
+	(RenderImage::layout), (RenderImage::notifyFinished), (RenderImage::nodeAtPoint),
+	(RenderImage::updateFromElement):
+	* src/kdelibs/khtml/rendering/render_image.h:
+	* src/kdelibs/khtml/rendering/render_list.cpp: (toLetter), (toHebrew),
+	(RenderListItem::RenderListItem), (RenderListItem::setStyle),
+	(RenderListItem::calcListValue), (RenderListItem::layout),
+	(RenderListMarker::RenderListMarker), (RenderListMarker::~RenderListMarker),
+	(RenderListMarker::setStyle), (RenderListMarker::printObject),
+	(RenderListMarker::layout), (RenderListMarker::setPixmap),
+	(RenderListMarker::calcMinMaxWidth):
+	* src/kdelibs/khtml/rendering/render_list.h:
+	* src/kdelibs/khtml/rendering/render_object.cpp: (RenderObject::createObject),
+	(RenderObject::RenderObject), (RenderObject::~RenderObject),
+	(RenderObject::addChild), (RenderObject::removeChildNode),
+	(RenderObject::removeChild), (RenderObject::appendChildNode),
+	(RenderObject::insertChildNode), (RenderObject::containingBlock),
+	(RenderObject::drawBorder), (RenderObject::printBorder),
+	(RenderObject::printOutline), (RenderObject::information),
+	(RenderObject::printTree), (RenderObject::dump),
+	(RenderObject::selectionStartEnd), (RenderObject::setStyle),
+	(RenderObject::setOverhangingContents), (RenderObject::root),
+	(RenderObject::invalidateLayout), (RenderObject::checkSelectionPoint),
+	(RenderObject::nodeAtPoint), (RenderObject::getVerticalPosition),
+	(RenderObject::lineHeight), (RenderObject::baselinePosition),
+	(RenderObject::recalcMinMaxWidths), (RenderObject::scheduleRelayout):
+	* src/kdelibs/khtml/rendering/render_object.h:
+	* src/kdelibs/khtml/rendering/render_replaced.cpp:
+	(RenderReplaced::RenderReplaced), (RenderReplaced::print),
+	(RenderReplaced::calcMinMaxWidth), (RenderReplaced::lineHeight),
+	(RenderWidget::RenderWidget), (RenderWidget::detach),
+	(RenderWidget::~RenderWidget), (RenderWidget::setQWidget),
+	(RenderWidget::layout), (RenderWidget::setStyle), (RenderWidget::printObject),
+	(RenderWidget::eventFilter), (RenderWidget::handleDOMEvent),
+	(RenderWidget::sendWidgetEvent):
+	* src/kdelibs/khtml/rendering/render_replaced.h:
+	* src/kdelibs/khtml/rendering/render_root.cpp: (RenderRoot::RenderRoot),
+	(RenderRoot::calcMinMaxWidth), (RenderRoot::layout), (RenderRoot::printObject),
+	(RenderRoot::repaintRectangle), (RenderRoot::repaint), (RenderRoot::close),
+	(RenderRoot::setSelection), (RenderRoot::clearSelection),
+	(RenderRoot::selectionStartEnd), (RenderRoot::docWidth):
+	* src/kdelibs/khtml/rendering/render_root.h:
+	* src/kdelibs/khtml/rendering/render_style.cpp: (RenderStyle::setBitDefaults),
+	(RenderStyle::RenderStyle), (RenderStyle::inheritFrom),
+	(RenderStyle::~RenderStyle), (RenderStyle::operator==),
+	(RenderStyle::getPseudoStyle), (RenderStyle::addPseudoStyle),
+	(RenderStyle::removePseudoStyle), (RenderStyle::inheritedNotEqual),
+	(RenderStyle::diff), (RenderStyle::cleanup),
+	(RenderPseudoElementStyle::RenderPseudoElementStyle),
+	(RenderPseudoElementStyle::~RenderPseudoElementStyle),
+	(RenderPseudoElementStyle::setContent), (RenderPseudoElementStyle::contentText),
+	(RenderPseudoElementStyle::contentObject),
+	(RenderPseudoElementStyle::clearContent):
+	* src/kdelibs/khtml/rendering/render_style.h:
+	* src/kdelibs/khtml/rendering/render_table.cpp: (RenderTable::RenderTable),
+	(RenderTable::setStyle), (RenderTable::addChild), (RenderTable::addCell),
+	(RenderTable::setCells), (RenderTable::recalcColInfo), (RenderTable::addColInfo),
+	(RenderTable::calcSingleColMinMax), (RenderTable::calcFinalColMax),
+	(RenderTable::calcColMinMax), (RenderTable::calcWidth),
+	(RenderTable::calcColWidth), (RenderTable::distributeRest),
+	(RenderTable::layout), (RenderTable::layoutRows), (RenderTable::setCellWidths),
+	(RenderTable::print), (RenderTable::calcMinMaxWidth), (RenderTable::close),
+	(RenderTable::recalcCells), (RenderTable::dump),
+	(RenderTableSection::RenderTableSection),
+	(RenderTableSection::~RenderTableSection), (RenderTableSection::addChild),
+	(RenderTableSection::dump), (RenderTableRow::RenderTableRow),
+	(RenderTableRow::addChild), (RenderTableRow::dump), (RenderTableRow::layout),
+	(RenderTableCell::RenderTableCell), (RenderTableCell::updateFromElement),
+	(RenderTableCell::calcMinMaxWidth), (RenderTableCell::setWidth),
+	(RenderTableCell::close), (RenderTableCell::print),
+	(RenderTableCell::printBoxDecorations), (RenderTableCell::dump),
+	(RenderTableCol::RenderTableCol), (RenderTableCol::updateFromElement),
+	(RenderTableCol::dump), (RenderTableCaption::RenderTableCaption):
+	* src/kdelibs/khtml/rendering/render_table.h:
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::~TextSlave),
+	(TextSlave::print), (TextSlave::printSelection), (TextSlave::printDecoration),
+	(TextSlave::printBoxDecorations), (TextSlave::checkSelectionPoint),
+	(TextSlaveArray::compareItems), (RenderText::RenderText), (RenderText::setStyle),
+	(RenderText::~RenderText), (RenderText::deleteSlaves), (RenderText::nodeAtPoint),
+	(RenderText::checkSelectionPoint), (RenderText::cursorPos),
+	(RenderText::absolutePosition), (RenderText::rightmostPosition),
+	(RenderText::printObject), (RenderText::print), (RenderText::calcMinMaxWidth),
+	(RenderText::font), (RenderText::setText), (RenderText::height),
+	(RenderText::lineHeight), (RenderText::baselinePosition), (RenderText::position),
+	(RenderText::width), (RenderText::metrics), (RenderText::printTextOutline):
+	* src/kdelibs/khtml/rendering/render_text.h:
+	* src/kdelibs/khtml/xml/dom2_eventsimpl.cpp: (EventImpl::~EventImpl),
+	(EventImpl::setTarget), (EventImpl::initEvent), (EventImpl::idToType),
+	(UIEventImpl::UIEventImpl), (UIEventImpl::~UIEventImpl),
+	(KeyEventImpl::KeyEventImpl), (KeyEventImpl::~KeyEventImpl),
+	(KeyEventImpl::checkModifier), (KeyEventImpl::initKeyEvent),
+	(KeyEventImpl::initModifier), (KeyEventImpl::inputGenerated),
+	(KeyEventImpl::keyVal), (KeyEventImpl::numPad), (KeyEventImpl::outputString),
+	(KeyEventImpl::virtKeyVal), (RegisteredEventListener::operator==):
+	* src/kdelibs/khtml/xml/dom2_eventsimpl.h:
+	* src/kdelibs/khtml/xml/dom2_rangeimpl.cpp: (RangeImpl::~RangeImpl),
+	(RangeImpl::compareBoundaryPoints), (RangeImpl::processContents):
+	* src/kdelibs/khtml/xml/dom2_rangeimpl.h:
+	* src/kdelibs/khtml/xml/dom2_traversalimpl.cpp:
+	(NodeIteratorImpl::NodeIteratorImpl), (TreeWalkerImpl::TreeWalkerImpl),
+	(TreeWalkerImpl::operator = ), (TreeWalkerImpl::~TreeWalkerImpl),
+	(TreeWalkerImpl::getCurrentNode), (TreeWalkerImpl::setWhatToShow),
+	(TreeWalkerImpl::setFilter), (TreeWalkerImpl::setExpandEntityReferences),
+	(TreeWalkerImpl::setCurrentNode), (TreeWalkerImpl::parentNode),
+	(TreeWalkerImpl::firstChild), (TreeWalkerImpl::lastChild),
+	(TreeWalkerImpl::previousSibling), (TreeWalkerImpl::nextSibling),
+	(TreeWalkerImpl::previousNode), (TreeWalkerImpl::nextNode),
+	(TreeWalkerImpl::isAccepted), (TreeWalkerImpl::getParentNode),
+	(TreeWalkerImpl::getPreviousSibling), (TreeWalkerImpl::getNextSibling):
+	* src/kdelibs/khtml/xml/dom2_traversalimpl.h:
+	* src/kdelibs/khtml/xml/dom2_viewsimpl.cpp:
+	* src/kdelibs/khtml/xml/dom2_viewsimpl.h:
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DOMImplementationImpl::hasFeature),
+	(DOMImplementationImpl::createDocumentType),
+	(DOMImplementationImpl::getInterface), (DOMImplementationImpl::createDocument),
+	(DOMImplementationImpl::createCSSStyleSheet),
+	(DOMImplementationImpl::createHTMLDocument), (DOMImplementationImpl::instance),
+	(DocumentImpl::DocumentImpl), (DocumentImpl::~DocumentImpl),
+	(DocumentImpl::doctype), (DocumentImpl::implementation),
+	(DocumentImpl::createDocumentFragment), (DocumentImpl::createTextNode),
+	(DocumentImpl::createComment), (DocumentImpl::createCDATASection),
+	(DocumentImpl::createProcessingInstruction), (DocumentImpl::createAttribute),
+	(DocumentImpl::createEntityReference), (DocumentImpl::importNode),
+	(DocumentImpl::createElementNS), (DocumentImpl::getElementById),
+	(DocumentImpl::setTitle), (DocumentImpl::nodeName), (DocumentImpl::nodeType),
+	(DocumentImpl::createHTMLElement), (DocumentImpl::nextState),
+	(DocumentImpl::docState), (DocumentImpl::createNodeIterator),
+	(DocumentImpl::createTreeWalker), (DocumentImpl::setDocumentChanged),
+	(DocumentImpl::recalcStyle), (DocumentImpl::updateRendering),
+	(DocumentImpl::updateDocumentsRendering), (DocumentImpl::attach),
+	(DocumentImpl::detach), (DocumentImpl::setVisuallyOrdered), (DocumentImpl::open),
+	(DocumentImpl::close), (DocumentImpl::write), (DocumentImpl::setStyleSheet),
+	(DocumentImpl::setUserStyleSheet), (DocumentImpl::elementSheet),
+	(DocumentImpl::determineParseMode), (DocumentImpl::findElement),
+	(DocumentImpl::nextFocusNode), (DocumentImpl::previousFocusNode),
+	(DocumentImpl::nodeAbsIndex), (DocumentImpl::nodeWithAbsIndex),
+	(DocumentImpl::processHttpEquiv), (DocumentImpl::prepareMouseEvent),
+	(DocumentImpl::childAllowed), (DocumentImpl::cloneNode), (DocumentImpl::attrId),
+	(DocumentImpl::attrName), (DocumentImpl::tagId), (DocumentImpl::tagName),
+	(DocumentImpl::namespaceURI), (DocumentImpl::updateStyleSelector),
+	(DocumentImpl::recalcStyleSelector), (DocumentImpl::setFocusNode),
+	(DocumentImpl::notifyBeforeNodeRemoval), (DocumentImpl::defaultEventHandler),
+	(DocumentImpl::setWindowEventListener), (DocumentImpl::getWindowEventListener),
+	(DocumentImpl::removeWindowEventListener), (DocumentFragmentImpl::nodeName),
+	(DocumentFragmentImpl::cloneNode), (DocumentTypeImpl::DocumentTypeImpl),
+	(DocumentTypeImpl::~DocumentTypeImpl), (DocumentTypeImpl::copyFrom),
+	(DocumentTypeImpl::nodeName), (DocumentTypeImpl::cloneNode):
+	* src/kdelibs/khtml/xml/dom_docimpl.h:
+	* src/kdelibs/khtml/xml/dom_elementimpl.cpp: (AttributeImpl::allocateImpl),
+	(AttrImpl::AttrImpl), (AttrImpl::~AttrImpl), (AttrImpl::nodeName),
+	(AttrImpl::prefix), (AttrImpl::setPrefix), (AttrImpl::nodeValue),
+	(AttrImpl::setValue), (AttrImpl::setNodeValue), (AttrImpl::cloneNode),
+	(ElementImpl::ElementImpl), (ElementImpl::~ElementImpl),
+	(ElementImpl::removeAttribute), (ElementImpl::setAttribute),
+	(ElementImpl::nodeType), (ElementImpl::getAttribute),
+	(ElementImpl::setAttributeMap), (ElementImpl::cloneNode),
+	(ElementImpl::nodeName), (ElementImpl::tagName), (ElementImpl::setPrefix),
+	(ElementImpl::createAttributeMap), (ElementImpl::attach),
+	(ElementImpl::recalcStyle), (ElementImpl::childAllowed),
+	(ElementImpl::createDecl), (ElementImpl::dispatchAttrRemovalEvent),
+	(ElementImpl::dispatchAttrAdditionEvent), (ElementImpl::dump),
+	(XMLElementImpl::XMLElementImpl), (XMLElementImpl::~XMLElementImpl),
+	(XMLElementImpl::localName), (XMLElementImpl::cloneNode),
+	(NamedAttrMapImpl::NamedAttrMapImpl), (NamedAttrMapImpl::~NamedAttrMapImpl),
+	(NamedAttrMapImpl::getNamedItem), (NamedAttrMapImpl::setNamedItem),
+	(NamedAttrMapImpl::removeNamedItem), (NamedAttrMapImpl::item),
+	(NamedAttrMapImpl::length), (NamedAttrMapImpl::getAttributeItem),
+	(NamedAttrMapImpl::mapId), (NamedAttrMapImpl::clearAttributes),
+	(NamedAttrMapImpl::detachFromElement), (NamedAttrMapImpl::operator=),
+	(NamedAttrMapImpl::addAttribute), (NamedAttrMapImpl::removeAttribute):
+	* src/kdelibs/khtml/xml/dom_elementimpl.h:
+	* src/kdelibs/khtml/xml/dom_nodeimpl.cpp: (NodeImpl::NodeImpl),
+	(NodeImpl::~NodeImpl), (NodeImpl::setNodeValue), (NodeImpl::nodeName),
+	(NodeImpl::normalize), (NodeImpl::prefix), (NodeImpl::setPrefix),
+	(NodeImpl::localName), (escapeHTML), (NodeImpl::recursive_toHTML),
+	(NodeImpl::getRect), (NodeImpl::setChanged), (NodeImpl::isInline),
+	(NodeImpl::nodeIndex), (NodeImpl::addEventListener),
+	(NodeImpl::removeEventListener), (NodeImpl::removeHTMLEventListener),
+	(NodeImpl::setHTMLEventListener), (NodeImpl::getHTMLEventListener),
+	(NodeImpl::dispatchEvent), (NodeImpl::dispatchGenericEvent),
+	(NodeImpl::dispatchHTMLEvent), (NodeImpl::dispatchWindowEvent),
+	(NodeImpl::dispatchMouseEvent), (NodeImpl::dispatchUIEvent),
+	(NodeImpl::dispatchSubtreeModifiedEvent), (NodeImpl::dispatchKeyEvent),
+	(NodeImpl::handleLocalEvents), (NodeImpl::defaultEventHandler),
+	(NodeImpl::traverseNextNode), (NodeImpl::traversePreviousNode),
+	(NodeImpl::checkSetPrefix), (NodeImpl::checkAddChild), (NodeImpl::isAncestor),
+	(NodeImpl::childAllowed), (NodeImpl::diff), (NodeImpl::dump),
+	(NodeImpl::deleteMe), (NodeImpl::init), (NodeImpl::attach), (NodeImpl::detach),
+	(NodeImpl::maintainsState), (NodeImpl::state), (NodeImpl::restoreState),
+	(NodeImpl::insertedIntoDocument), (NodeImpl::removedFromDocument),
+	(NodeImpl::childrenChanged), (NodeImpl::isReadOnly), (NodeImpl::nextRenderer),
+	(NodeBaseImpl::NodeBaseImpl), (NodeBaseImpl::~NodeBaseImpl),
+	(NodeBaseImpl::insertBefore), (NodeBaseImpl::replaceChild),
+	(NodeBaseImpl::removeChild), (NodeBaseImpl::removeChildren),
+	(NodeBaseImpl::appendChild), (NodeBaseImpl::checkSameDocument),
+	(NodeBaseImpl::checkNoOwner), (NodeBaseImpl::addChild), (NodeBaseImpl::attach),
+	(NodeBaseImpl::detach), (NodeBaseImpl::cloneChildNodes),
+	(NodeBaseImpl::getElementsByTagNameNS), (NodeBaseImpl::getUpperLeftCorner),
+	(NodeBaseImpl::getLowerRightCorner), (NodeBaseImpl::getRect),
+	(NodeBaseImpl::setFocus), (NodeBaseImpl::setActive),
+	(NodeBaseImpl::dispatchChildInsertedEvents),
+	(NodeBaseImpl::dispatchChildRemovalEvents), (ChildNodeListImpl::nodeMatches),
+	(TagNodeListImpl::TagNodeListImpl), (TagNodeListImpl::nodeMatches),
+	(GenericRONamedNodeMapImpl::GenericRONamedNodeMapImpl),
+	(GenericRONamedNodeMapImpl::getNamedItem),
+	(GenericRONamedNodeMapImpl::setNamedItem),
+	(GenericRONamedNodeMapImpl::removeNamedItem), (GenericRONamedNodeMapImpl::item),
+	(GenericRONamedNodeMapImpl::length), (GenericRONamedNodeMapImpl::getNamedItemNS),
+	(GenericRONamedNodeMapImpl::setNamedItemNS),
+	(GenericRONamedNodeMapImpl::removeNamedItemNS),
+	(GenericRONamedNodeMapImpl::addNode):
+	* src/kdelibs/khtml/xml/dom_nodeimpl.h:
+	* src/kdelibs/khtml/xml/dom_stringimpl.cpp: (DOMStringImpl::toLengthArray),
+	(DOMStringImpl::lower), (DOMStringImpl::upper):
+	* src/kdelibs/khtml/xml/dom_stringimpl.h:
+	* src/kdelibs/khtml/xml/dom_textimpl.cpp: (CharacterDataImpl::CharacterDataImpl),
+	(CharacterDataImpl::setData), (CharacterDataImpl::substringData),
+	(CharacterDataImpl::appendData), (CharacterDataImpl::insertData),
+	(CharacterDataImpl::deleteData), (CharacterDataImpl::replaceData),
+	(CharacterDataImpl::nodeValue), (CharacterDataImpl::setNodeValue),
+	(CharacterDataImpl::dispatchModifiedEvent),
+	(CharacterDataImpl::checkCharDataOperation), (CharacterDataImpl::dump),
+	(CommentImpl::nodeName), (CommentImpl::cloneNode), (CommentImpl::id),
+	(TextImpl::splitText), (TextImpl::nodeName), (TextImpl::cloneNode),
+	(TextImpl::attach), (TextImpl::id), (TextImpl::recalcStyle),
+	(CDATASectionImpl::nodeName), (CDATASectionImpl::cloneNode):
+	* src/kdelibs/khtml/xml/dom_textimpl.h:
+	* src/kdelibs/khtml/xml/dom_xmlimpl.cpp: (EntityImpl::nodeName),
+	(EntityImpl::nodeType), (EntityImpl::cloneNode), (EntityReferenceImpl::nodeName),
+	(EntityReferenceImpl::cloneNode), (NotationImpl::publicId),
+	(NotationImpl::systemId), (NotationImpl::nodeName), (NotationImpl::nodeType),
+	(NotationImpl::cloneNode), (NotationImpl::childTypeAllowed),
+	(ProcessingInstructionImpl::ProcessingInstructionImpl),
+	(ProcessingInstructionImpl::target), (ProcessingInstructionImpl::data),
+	(ProcessingInstructionImpl::setData), (ProcessingInstructionImpl::nodeName),
+	(ProcessingInstructionImpl::setNodeValue),
+	(ProcessingInstructionImpl::cloneNode), (ProcessingInstructionImpl::localHref),
+	(ProcessingInstructionImpl::checkStyleSheet),
+	(ProcessingInstructionImpl::setStyleSheet):
+	* src/kdelibs/khtml/xml/dom_xmlimpl.h:
+	* src/kdelibs/khtml/xml/xml_tokenizer.cpp: (XMLHandler::startDocument),
+	(XMLHandler::startElement), (XMLHandler::endElement), (XMLHandler::startCDATA),
+	(XMLHandler::characters), (XMLHandler::errorString), (XMLHandler::fatalError),
+	(XMLHandler::enterText), (XMLHandler::exitText),
+	(XMLHandler::internalEntityDecl), (XMLHandler::notationDecl),
+	(XMLTokenizer::finish), (XMLTokenizer::addScripts),
+	(XMLTokenizer::executeScripts), (XMLTokenizer::notifyFinished):
+	* src/kdelibs/khtml/xml/xml_tokenizer.h:
+	* src/kdelibs/kjs/array_object.cpp: (ArrayInstanceImp::ArrayInstanceImp),
+	(ArrayInstanceImp::put), (ArrayInstanceImp::putDirect),
+	(ArrayPrototypeImp::ArrayPrototypeImp), (ArrayPrototypeImp::get),
+	(ArrayProtoFuncImp::ArrayProtoFuncImp), (ArrayProtoFuncImp::implementsCall),
+	(ArrayProtoFuncImp::call), (ArrayObjectImp::ArrayObjectImp),
+	(ArrayObjectImp::implementsConstruct), (ArrayObjectImp::construct),
+	(ArrayObjectImp::implementsCall), (ArrayObjectImp::call):
+	* src/kdelibs/kjs/array_object.h:
+	* src/kdelibs/kjs/bool_object.cpp: (BooleanInstanceImp::BooleanInstanceImp),
+	(BooleanPrototypeImp::BooleanPrototypeImp),
+	(BooleanProtoFuncImp::BooleanProtoFuncImp),
+	(BooleanProtoFuncImp::implementsCall), (BooleanProtoFuncImp::call),
+	(BooleanObjectImp::BooleanObjectImp), (BooleanObjectImp::implementsConstruct),
+	(BooleanObjectImp::construct), (BooleanObjectImp::implementsCall),
+	(BooleanObjectImp::call):
+	* src/kdelibs/kjs/bool_object.h:
+	* src/kdelibs/kjs/collector.cpp: (Collector::allocate), (Collector::collect),
+	(Collector::finalCheck):
+	* src/kdelibs/kjs/collector.h:
+	* src/kdelibs/kjs/date_object.cpp: (DateInstanceImp::DateInstanceImp),
+	(DatePrototypeImp::DatePrototypeImp), (DatePrototypeImp::get),
+	(DateProtoFuncImp::DateProtoFuncImp), (DateProtoFuncImp::implementsCall),
+	(DateProtoFuncImp::call), (DateObjectImp::DateObjectImp),
+	(DateObjectImp::implementsConstruct), (DateObjectImp::construct),
+	(DateObjectImp::implementsCall), (DateObjectImp::call),
+	(DateObjectFuncImp::DateObjectFuncImp), (DateObjectFuncImp::implementsCall),
+	(DateObjectFuncImp::call), (KJS::parseDate), (ymdhms_to_seconds),
+	(KJS::KRFCDate_parseDate), (KJS::timeClip):
+	* src/kdelibs/kjs/date_object.h:
+	* src/kdelibs/kjs/debugger.cpp: (Debugger::Debugger), (Debugger::~Debugger),
+	(Debugger::attach), (Debugger::detach), (Debugger::sourceParsed),
+	(Debugger::sourceUnused), (Debugger::exception), (Debugger::atStatement),
+	(Debugger::callEvent), (Debugger::returnEvent):
+	* src/kdelibs/kjs/debugger.h:
+	* src/kdelibs/kjs/error_object.cpp: (ErrorPrototypeImp::ErrorPrototypeImp),
+	(ErrorProtoFuncImp::ErrorProtoFuncImp), (ErrorProtoFuncImp::implementsCall),
+	(ErrorProtoFuncImp::call), (ErrorObjectImp::ErrorObjectImp),
+	(ErrorObjectImp::implementsConstruct), (ErrorObjectImp::construct),
+	(ErrorObjectImp::implementsCall), (ErrorObjectImp::call),
+	(NativeErrorPrototypeImp::NativeErrorPrototypeImp),
+	(NativeErrorImp::NativeErrorImp), (NativeErrorImp::implementsConstruct),
+	(NativeErrorImp::construct), (NativeErrorImp::implementsCall),
+	(NativeErrorImp::call), (NativeErrorImp::mark):
+	* src/kdelibs/kjs/error_object.h:
+	* src/kdelibs/kjs/function.cpp: (FunctionImp::FunctionImp),
+	(FunctionImp::~FunctionImp), (FunctionImp::mark), (FunctionImp::implementsCall),
+	(FunctionImp::call), (FunctionImp::processParameters),
+	(FunctionImp::processVarDecls), (FunctionImp::pushArgs), (FunctionImp::popArgs),
+	(DeclaredFunctionImp::DeclaredFunctionImp),
+	(DeclaredFunctionImp::~DeclaredFunctionImp),
+	(DeclaredFunctionImp::implementsConstruct), (DeclaredFunctionImp::construct),
+	(DeclaredFunctionImp::execute), (DeclaredFunctionImp::processVarDecls),
+	(ArgumentsImp::ArgumentsImp), (ActivationImp::ActivationImp),
+	(ActivationImp::~ActivationImp), (GlobalFuncImp::GlobalFuncImp),
+	(GlobalFuncImp::codeType), (GlobalFuncImp::implementsCall),
+	(GlobalFuncImp::call):
+	* src/kdelibs/kjs/function.h:
+	* src/kdelibs/kjs/function_object.cpp:
+	(FunctionPrototypeImp::FunctionPrototypeImp),
+	(FunctionPrototypeImp::~FunctionPrototypeImp),
+	(FunctionPrototypeImp::implementsCall), (FunctionPrototypeImp::call),
+	(FunctionProtoFuncImp::FunctionProtoFuncImp),
+	(FunctionProtoFuncImp::implementsCall), (FunctionProtoFuncImp::call),
+	(FunctionObjectImp::FunctionObjectImp), (FunctionObjectImp::~FunctionObjectImp),
+	(FunctionObjectImp::implementsConstruct), (FunctionObjectImp::construct),
+	(FunctionObjectImp::implementsCall), (FunctionObjectImp::call):
+	* src/kdelibs/kjs/function_object.h:
+	* src/kdelibs/kjs/grammar.y:
+	* src/kdelibs/kjs/internal.cpp: (UndefinedImp::toPrimitive),
+	(UndefinedImp::toBoolean), (UndefinedImp::toNumber), (UndefinedImp::toString),
+	(UndefinedImp::toObject), (NullImp::toPrimitive), (NullImp::toBoolean),
+	(NullImp::toNumber), (NullImp::toString), (NullImp::toObject),
+	(BooleanImp::toPrimitive), (BooleanImp::toBoolean), (BooleanImp::toNumber),
+	(BooleanImp::toString), (BooleanImp::toObject), (StringImp::StringImp),
+	(StringImp::toPrimitive), (StringImp::toBoolean), (StringImp::toNumber),
+	(StringImp::toString), (StringImp::toObject), (NumberImp::NumberImp),
+	(NumberImp::toPrimitive), (NumberImp::toBoolean), (NumberImp::toNumber),
+	(NumberImp::toString), (NumberImp::toObject), (ReferenceImp::ReferenceImp),
+	(ReferenceImp::mark), (ReferenceImp::toPrimitive), (ReferenceImp::toBoolean),
+	(ReferenceImp::toNumber), (ReferenceImp::toString), (ReferenceImp::toObject),
+	(LabelStack::LabelStack), (LabelStack::operator=), (LabelStack::push),
+	(LabelStack::contains), (LabelStack::pop), (LabelStack::~LabelStack),
+	(LabelStack::clear), (CompletionImp::CompletionImp),
+	(CompletionImp::~CompletionImp), (CompletionImp::mark),
+	(CompletionImp::toPrimitive), (CompletionImp::toBoolean),
+	(CompletionImp::toNumber), (CompletionImp::toString), (CompletionImp::toObject),
+	(ListImp::toPrimitive), (ListImp::toBoolean), (ListImp::toNumber),
+	(ListImp::toString), (ListImp::toObject), (ListImp::ListImp),
+	(ListImp::~ListImp), (ListImp::mark), (ListImp::append), (ListImp::prepend),
+	(ListImp::appendList), (ListImp::prependList), (ListImp::removeFirst),
+	(ListImp::removeLast), (ListImp::remove), (ListImp::clear), (ListImp::copy),
+	(ListImp::erase), (ListImp::isEmpty), (ListImp::size), (ListImp::at),
+	(ListImp::empty), (ContextImp::ContextImp), (ContextImp::~ContextImp),
+	(ContextImp::pushScope), (ContextImp::popScope), (Parser::parse),
+	(InterpreterImp::globalInit), (InterpreterImp::globalClear),
+	(InterpreterImp::InterpreterImp), (InterpreterImp::~InterpreterImp),
+	(InterpreterImp::clear), (InterpreterImp::mark), (InterpreterImp::checkSyntax),
+	(InterpreterImp::evaluate), (InterpreterImp::setDebugger),
+	(InternalFunctionImp::InternalFunctionImp),
+	(InternalFunctionImp::implementsHasInstance), (InternalFunctionImp::hasInstance),
+	(KJS::roundValue), (KJS::printInfo):
+	* src/kdelibs/kjs/internal.h:
+	* src/kdelibs/kjs/lexer.cpp: (Lexer::Lexer), (Lexer::curr), (Lexer::setCode),
+	(Lexer::lex), (Lexer::isLineTerminator), (Lexer::matchPunctuator),
+	(Lexer::scanRegExp):
+	* src/kdelibs/kjs/lexer.h:
+	* src/kdelibs/kjs/lexer.lut.h:
+	* src/kdelibs/kjs/lookup.cpp: (Lookup::findEntry), (Lookup::find):
+	* src/kdelibs/kjs/lookup.h:
+	* src/kdelibs/kjs/math_object.cpp: (MathObjectImp::MathObjectImp),
+	(MathObjectImp::get), (MathObjectImp::getValueProperty),
+	(MathFuncImp::MathFuncImp), (MathFuncImp::implementsCall), (MathFuncImp::call):
+	* src/kdelibs/kjs/math_object.h:
+	* src/kdelibs/kjs/math_object.lut.h:
+	* src/kdelibs/kjs/nodes.cpp: (Node::Node), (Node::~Node), (Node::finalCheck),
+	(Node::throwError), (StatementNode::StatementNode),
+	(StatementNode::~StatementNode), (StatementNode::setLoc),
+	(StatementNode::hitStatement), (StatementNode::abortStatement),
+	(NullNode::evaluate), (BooleanNode::evaluate), (NumberNode::evaluate),
+	(StringNode::evaluate), (RegExpNode::evaluate), (ThisNode::evaluate),
+	(ResolveNode::evaluate), (GroupNode::~GroupNode), (GroupNode::ref),
+	(GroupNode::deref), (GroupNode::evaluate), (ElisionNode::~ElisionNode),
+	(ElisionNode::ref), (ElisionNode::deref), (ElisionNode::evaluate),
+	(ElementNode::~ElementNode), (ElementNode::ref), (ElementNode::deref),
+	(ElementNode::evaluate), (ArrayNode::~ArrayNode), (ArrayNode::ref),
+	(ArrayNode::deref), (ArrayNode::evaluate),
+	(ObjectLiteralNode::~ObjectLiteralNode), (ObjectLiteralNode::ref),
+	(ObjectLiteralNode::deref), (ObjectLiteralNode::evaluate),
+	(PropertyValueNode::~PropertyValueNode), (PropertyValueNode::ref),
+	(PropertyValueNode::deref), (PropertyValueNode::evaluate),
+	(PropertyNode::evaluate), (AccessorNode1::~AccessorNode1), (AccessorNode1::ref),
+	(AccessorNode1::deref), (AccessorNode1::evaluate),
+	(AccessorNode2::~AccessorNode2), (AccessorNode2::ref), (AccessorNode2::deref),
+	(AccessorNode2::evaluate), (ArgumentListNode::ArgumentListNode),
+	(ArgumentListNode::~ArgumentListNode), (ArgumentListNode::ref),
+	(ArgumentListNode::deref), (ArgumentListNode::evaluate),
+	(ArgumentListNode::evaluateList), (ArgumentsNode::ArgumentsNode),
+	(ArgumentsNode::~ArgumentsNode), (ArgumentsNode::ref), (ArgumentsNode::deref),
+	(ArgumentsNode::evaluate), (ArgumentsNode::evaluateList),
+	(NewExprNode::~NewExprNode), (NewExprNode::ref), (NewExprNode::deref),
+	(NewExprNode::evaluate), (FunctionCallNode::~FunctionCallNode),
+	(FunctionCallNode::ref), (FunctionCallNode::deref), (FunctionCallNode::evaluate),
+	(PostfixNode::~PostfixNode), (PostfixNode::ref), (PostfixNode::deref),
+	(PostfixNode::evaluate), (DeleteNode::~DeleteNode), (DeleteNode::ref),
+	(DeleteNode::deref), (DeleteNode::evaluate), (VoidNode::~VoidNode),
+	(VoidNode::ref), (VoidNode::deref), (VoidNode::evaluate),
+	(TypeOfNode::~TypeOfNode), (TypeOfNode::ref), (TypeOfNode::deref),
+	(TypeOfNode::evaluate), (PrefixNode::~PrefixNode), (PrefixNode::ref),
+	(PrefixNode::deref), (PrefixNode::evaluate), (UnaryPlusNode::~UnaryPlusNode),
+	(UnaryPlusNode::ref), (UnaryPlusNode::deref), (UnaryPlusNode::evaluate),
+	(NegateNode::~NegateNode), (NegateNode::ref), (NegateNode::deref),
+	(NegateNode::evaluate), (BitwiseNotNode::~BitwiseNotNode), (BitwiseNotNode::ref),
+	(BitwiseNotNode::deref), (BitwiseNotNode::evaluate),
+	(LogicalNotNode::~LogicalNotNode), (LogicalNotNode::ref),
+	(LogicalNotNode::deref), (LogicalNotNode::evaluate), (MultNode::~MultNode),
+	(MultNode::ref), (MultNode::deref), (MultNode::evaluate), (AddNode::~AddNode),
+	(AddNode::ref), (AddNode::deref), (AddNode::evaluate), (ShiftNode::~ShiftNode),
+	(ShiftNode::ref), (ShiftNode::deref), (ShiftNode::evaluate),
+	(RelationalNode::~RelationalNode), (RelationalNode::ref),
+	(RelationalNode::deref), (RelationalNode::evaluate), (EqualNode::~EqualNode),
+	(EqualNode::ref), (EqualNode::deref), (EqualNode::evaluate),
+	(BitOperNode::~BitOperNode), (BitOperNode::ref), (BitOperNode::deref),
+	(BitOperNode::evaluate), (BinaryLogicalNode::~BinaryLogicalNode),
+	(BinaryLogicalNode::ref), (BinaryLogicalNode::deref),
+	(BinaryLogicalNode::evaluate), (ConditionalNode::~ConditionalNode),
+	(ConditionalNode::ref), (ConditionalNode::deref), (ConditionalNode::evaluate),
+	(AssignNode::~AssignNode), (AssignNode::ref), (AssignNode::deref),
+	(AssignNode::evaluate), (CommaNode::~CommaNode), (CommaNode::ref),
+	(CommaNode::deref), (CommaNode::evaluate), (StatListNode::~StatListNode),
+	(StatListNode::ref), (StatListNode::deref), (StatListNode::execute),
+	(StatListNode::processVarDecls), (AssignExprNode::~AssignExprNode),
+	(AssignExprNode::ref), (AssignExprNode::deref), (AssignExprNode::evaluate),
+	(VarDeclNode::VarDeclNode), (VarDeclNode::~VarDeclNode), (VarDeclNode::ref),
+	(VarDeclNode::deref), (VarDeclNode::evaluate), (VarDeclNode::processVarDecls),
+	(VarDeclListNode::~VarDeclListNode), (VarDeclListNode::ref),
+	(VarDeclListNode::deref), (VarDeclListNode::evaluate),
+	(VarDeclListNode::processVarDecls), (VarStatementNode::~VarStatementNode),
+	(VarStatementNode::ref), (VarStatementNode::deref), (VarStatementNode::execute),
+	(VarStatementNode::processVarDecls), (BlockNode::~BlockNode), (BlockNode::ref),
+	(BlockNode::deref), (BlockNode::execute), (BlockNode::processVarDecls),
+	(EmptyStatementNode::execute), (ExprStatementNode::~ExprStatementNode),
+	(ExprStatementNode::ref), (ExprStatementNode::deref),
+	(ExprStatementNode::execute), (IfNode::~IfNode), (IfNode::ref), (IfNode::deref),
+	(IfNode::execute), (IfNode::processVarDecls), (DoWhileNode::~DoWhileNode),
+	(DoWhileNode::ref), (DoWhileNode::deref), (DoWhileNode::execute),
+	(DoWhileNode::processVarDecls), (WhileNode::~WhileNode), (WhileNode::ref),
+	(WhileNode::deref), (WhileNode::execute), (WhileNode::processVarDecls),
+	(ForNode::~ForNode), (ForNode::ref), (ForNode::deref), (ForNode::execute),
+	(ForNode::processVarDecls), (ForInNode::ForInNode), (ForInNode::~ForInNode),
+	(ForInNode::ref), (ForInNode::deref), (ForInNode::execute),
+	(ForInNode::processVarDecls), (ContinueNode::execute), (BreakNode::execute),
+	(ReturnNode::~ReturnNode), (ReturnNode::ref), (ReturnNode::deref),
+	(ReturnNode::execute), (WithNode::~WithNode), (WithNode::ref), (WithNode::deref),
+	(WithNode::execute), (WithNode::processVarDecls),
+	(CaseClauseNode::~CaseClauseNode), (CaseClauseNode::ref),
+	(CaseClauseNode::deref), (CaseClauseNode::evaluate),
+	(CaseClauseNode::evalStatements), (CaseClauseNode::processVarDecls),
+	(ClauseListNode::~ClauseListNode), (ClauseListNode::ref),
+	(ClauseListNode::deref), (ClauseListNode::evaluate),
+	(ClauseListNode::processVarDecls), (CaseBlockNode::~CaseBlockNode),
+	(CaseBlockNode::ref), (CaseBlockNode::deref), (CaseBlockNode::evaluate),
+	(CaseBlockNode::evalBlock), (CaseBlockNode::processVarDecls),
+	(SwitchNode::~SwitchNode), (SwitchNode::ref), (SwitchNode::deref),
+	(SwitchNode::execute), (SwitchNode::processVarDecls), (LabelNode::~LabelNode),
+	(LabelNode::ref), (LabelNode::deref), (LabelNode::execute),
+	(LabelNode::processVarDecls), (ThrowNode::~ThrowNode), (ThrowNode::ref),
+	(ThrowNode::deref), (ThrowNode::execute), (CatchNode::~CatchNode),
+	(CatchNode::ref), (CatchNode::deref), (CatchNode::execute),
+	(CatchNode::processVarDecls), (FinallyNode::~FinallyNode), (FinallyNode::ref),
+	(FinallyNode::deref), (FinallyNode::execute), (FinallyNode::processVarDecls),
+	(TryNode::~TryNode), (TryNode::ref), (TryNode::deref), (TryNode::execute),
+	(TryNode::processVarDecls), (ParameterNode::~ParameterNode),
+	(ParameterNode::ref), (ParameterNode::deref), (ParameterNode::append),
+	(ParameterNode::evaluate), (FunctionBodyNode::FunctionBodyNode),
+	(FunctionBodyNode::~FunctionBodyNode), (FunctionBodyNode::ref),
+	(FunctionBodyNode::deref), (FunctionBodyNode::execute),
+	(FunctionBodyNode::processFuncDecl), (FunctionBodyNode::processVarDecls),
+	(FuncDeclNode::~FuncDeclNode), (FuncDeclNode::ref), (FuncDeclNode::deref),
+	(FuncDeclNode::processFuncDecl), (FuncExprNode::~FuncExprNode),
+	(FuncExprNode::ref), (FuncExprNode::deref), (FuncExprNode::evaluate),
+	(SourceElementNode::~SourceElementNode), (SourceElementNode::ref),
+	(SourceElementNode::deref), (SourceElementNode::execute),
+	(SourceElementNode::processFuncDecl), (SourceElementNode::processVarDecls),
+	(SourceElementsNode::~SourceElementsNode), (SourceElementsNode::ref),
+	(SourceElementsNode::deref), (SourceElementsNode::execute),
+	(SourceElementsNode::processFuncDecl), (SourceElementsNode::processVarDecls),
+	(ProgramNode::ProgramNode), (ProgramNode::~ProgramNode):
+	* src/kdelibs/kjs/nodes.h:
+	* src/kdelibs/kjs/number_object.cpp: (NumberInstanceImp::NumberInstanceImp),
+	(NumberPrototypeImp::NumberPrototypeImp),
+	(NumberProtoFuncImp::NumberProtoFuncImp), (NumberProtoFuncImp::implementsCall),
+	(NumberProtoFuncImp::call), (NumberObjectImp::NumberObjectImp),
+	(NumberObjectImp::get), (NumberObjectImp::getValueProperty),
+	(NumberObjectImp::implementsConstruct), (NumberObjectImp::construct),
+	(NumberObjectImp::implementsCall), (NumberObjectImp::call):
+	* src/kdelibs/kjs/number_object.h:
+	* src/kdelibs/kjs/object.cpp: (Object::Object), (Object::~Object),
+	(Object::operator=), (Object::classInfo), (Object::inherits),
+	(Object::dynamicCast), (Object::prototype), (Object::className), (Object::get),
+	(Object::put), (Object::canPut), (Object::hasProperty), (Object::deleteProperty),
+	(Object::defaultValue), (Object::implementsConstruct), (Object::construct),
+	(Object::implementsCall), (Object::call), (Object::implementsHasInstance),
+	(Object::hasInstance), (Object::scope), (Object::setScope), (Object::propList),
+	(Object::internalValue), (Object::setInternalValue), (ObjectImp::ObjectImp),
+	(ObjectImp::~ObjectImp), (ObjectImp::mark), (ObjectImp::classInfo),
+	(ObjectImp::inherits), (ObjectImp::type), (ObjectImp::prototype),
+	(ObjectImp::setPrototype), (ObjectImp::className), (ObjectImp::get),
+	(ObjectImp::getDirect), (ObjectImp::put), (ObjectImp::canPut),
+	(ObjectImp::hasProperty), (ObjectImp::deleteProperty),
+	(ObjectImp::deleteAllProperties), (ObjectImp::defaultValue),
+	(ObjectImp::findPropertyHashEntry), (ObjectImp::implementsConstruct),
+	(ObjectImp::construct), (ObjectImp::implementsCall), (ObjectImp::call),
+	(ObjectImp::implementsHasInstance), (ObjectImp::hasInstance), (ObjectImp::scope),
+	(ObjectImp::setScope), (ObjectImp::propList), (ObjectImp::internalValue),
+	(ObjectImp::setInternalValue), (ObjectImp::toPrimitive), (ObjectImp::toBoolean),
+	(ObjectImp::toNumber), (ObjectImp::toInteger), (ObjectImp::toInt32),
+	(ObjectImp::toUInt32), (ObjectImp::toUInt16), (ObjectImp::toString),
+	(ObjectImp::toObject), (Error::create):
+	* src/kdelibs/kjs/object.h:
+	* src/kdelibs/kjs/object_object.cpp: (ObjectPrototypeImp::ObjectPrototypeImp),
+	(ObjectProtoFuncImp::ObjectProtoFuncImp), (ObjectProtoFuncImp::implementsCall),
+	(ObjectProtoFuncImp::call), (ObjectObjectImp::ObjectObjectImp),
+	(ObjectObjectImp::implementsConstruct), (ObjectObjectImp::construct),
+	(ObjectObjectImp::implementsCall), (ObjectObjectImp::call):
+	* src/kdelibs/kjs/object_object.h:
+	* src/kdelibs/kjs/operations.cpp: (KJS::isPosInf), (KJS::isNegInf), (KJS::equal),
+	(KJS::strictEqual), (KJS::relation), (KJS::maxInt), (KJS::minInt), (KJS::add),
+	(KJS::mult):
+	* src/kdelibs/kjs/operations.h:
+	* src/kdelibs/kjs/regexp.cpp: (RegExp::RegExp), (RegExp::~RegExp),
+	(RegExp::match), (RegExp::test):
+	* src/kdelibs/kjs/regexp.h:
+	* src/kdelibs/kjs/regexp_object.cpp: (RegExpPrototypeImp::RegExpPrototypeImp),
+	(RegExpProtoFuncImp::RegExpProtoFuncImp), (RegExpProtoFuncImp::implementsCall),
+	(RegExpProtoFuncImp::call), (RegExpImp::RegExpImp), (RegExpImp::~RegExpImp),
+	(RegExpObjectImp::RegExpObjectImp), (RegExpObjectImp::~RegExpObjectImp),
+	(RegExpObjectImp::registerRegexp), (RegExpObjectImp::arrayOfMatches),
+	(RegExpObjectImp::get), (RegExpObjectImp::implementsConstruct),
+	(RegExpObjectImp::construct), (RegExpObjectImp::implementsCall),
+	(RegExpObjectImp::call):
+	* src/kdelibs/kjs/regexp_object.h:
+	* src/kdelibs/kjs/string_object.cpp: (StringInstanceImp::StringInstanceImp),
+	(StringPrototypeImp::StringPrototypeImp), (StringPrototypeImp::get),
+	(StringProtoFuncImp::StringProtoFuncImp), (StringProtoFuncImp::implementsCall),
+	(StringProtoFuncImp::call), (StringObjectImp::StringObjectImp),
+	(StringObjectImp::implementsConstruct), (StringObjectImp::construct),
+	(StringObjectImp::implementsCall), (StringObjectImp::call),
+	(StringObjectFuncImp::StringObjectFuncImp),
+	(StringObjectFuncImp::implementsCall), (StringObjectFuncImp::call):
+	* src/kdelibs/kjs/string_object.h:
+	* src/kdelibs/kjs/testkjs.cpp: (TestFunctionImp::call), (main):
+	* src/kdelibs/kjs/types.cpp: (Reference::Reference), (Reference::~Reference),
+	(Reference::operator=), (Reference::dynamicCast), (ListIterator::ListIterator),
+	(ListIterator::operator=), (ListIterator::~ListIterator),
+	(ListIterator::operator->), (ListIterator::operator*),
+	(ListIterator::operator++), (ListIterator::operator--),
+	(ListIterator::operator==), (ListIterator::operator!=), (List::List),
+	(List::~List), (List::operator=), (List::dynamicCast), (List::append),
+	(List::prepend), (List::appendList), (List::prependList), (List::removeFirst),
+	(List::removeLast), (List::remove), (List::clear), (List::copy), (List::begin),
+	(List::end), (List::isEmpty), (List::size), (List::at), (List::operator[]),
+	(List::empty), (Completion::Completion), (Completion::~Completion),
+	(Completion::operator=), (Completion::dynamicCast), (Completion::complType),
+	(Completion::value), (Completion::target), (Completion::isValueCompletion):
+	* src/kdelibs/kjs/types.h:
+	* src/kdelibs/kjs/ustring.cpp: (UChar::UChar), (UChar::toLower),
+	(UChar::toUpper), (UString::from), (UString::ascii), (UString::operator=),
+	(UString::is8Bit), (UString::toDouble), (KJS::operator==):
+	* src/kdelibs/kjs/ustring.h:
+
+2002-03-07  Don Melton  <gramps@apple.com>
+
+	Removed unused file in kdelibs that I missed in previous commit.
+
+	* src/kdelibs/khtml/test/layout.html:
+
+2002-03-06  Don Melton  <gramps@apple.com>
+
+	Removed unused files in kdelibs.
+
+	* src/kdelibs/AUTHORS:
+	* src/kdelibs/README:
+	* src/kdelibs/khtml/CHANGES:
+	* src/kdelibs/khtml/DESIGN.html:
+	* src/kdelibs/khtml/README.HTMLWidget:
+	* src/kdelibs/khtml/README.tags:
+	* src/kdelibs/khtml/SECURITY:
+	* src/kdelibs/khtml/TODO:
+	* src/kdelibs/khtml/design.h:
+	* src/kdelibs/khtml/domtreeview.cpp:
+	* src/kdelibs/khtml/domtreeview.h:
+	* src/kdelibs/khtml/ecma/AUTHORS:
+	* src/kdelibs/khtml/ecma/README:
+	* src/kdelibs/khtml/ecma/THANKS:
+	* src/kdelibs/khtml/ecma/TODO:
+	* src/kdelibs/khtml/ecma/jsk.html:
+	* src/kdelibs/khtml/ecma/testecma.cpp:
+	* src/kdelibs/khtml/html/dtd.dtd:
+	* src/kdelibs/khtml/java/KJAS_GRAMMAR.txt:
+	* src/kdelibs/khtml/java/README:
+	* src/kdelibs/khtml/java/TODO:
+	* src/kdelibs/khtml/java/build.xml:
+	* src/kdelibs/khtml/java/javaembed.cpp:
+	* src/kdelibs/khtml/java/kjava.jar:
+	* src/kdelibs/khtml/java/kjava.policy.in:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASAppletClassLoader.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASAppletContext.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASAppletStub.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASConsole.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASProtocolHandler.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASSecurityManager.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/KJASSoundPlayer.java:
+	* src/kdelibs/khtml/java/org/kde/kjas/server/Main.java:
+	* src/kdelibs/khtml/java/tests/badapplets/BadApplet.jar:
+	* src/kdelibs/khtml/java/tests/badapplets/BadApplet.java:
+	* src/kdelibs/khtml/java/tests/badapplets/applet.html:
+	* src/kdelibs/khtml/java/tests/good_sites:
+	* src/kdelibs/khtml/java/tests/testkjavaappletserver.cpp:
+	* src/kdelibs/khtml/khtml.desktop:
+	* src/kdelibs/khtml/khtml.rc:
+	* src/kdelibs/khtml/khtml_browser.rc:
+	* src/kdelibs/khtml/khtml_ext.cpp:
+	* src/kdelibs/khtml/khtml_factory.cpp:
+	* src/kdelibs/khtml/khtml_find.cpp:
+	* src/kdelibs/khtml/khtml_find.h:
+	* src/kdelibs/khtml/khtml_pagecache.cpp:
+	* src/kdelibs/khtml/khtml_pagecache.h:
+	* src/kdelibs/khtml/khtml_part.cpp:
+	* src/kdelibs/khtml/khtml_popupmenu.rc:
+	* src/kdelibs/khtml/khtml_run.cpp:
+	* src/kdelibs/khtml/khtml_run.h:
+	* src/kdelibs/khtml/khtmldefaults.h:
+	* src/kdelibs/khtml/khtmlimage.cpp:
+	* src/kdelibs/khtml/khtmlimage.desktop:
+	* src/kdelibs/khtml/khtmlimage.h:
+	* src/kdelibs/khtml/pics/hi16-action-images_display.png:
+	* src/kdelibs/khtml/pics/hi22-action-images_display.png:
+	* src/kdelibs/khtml/pics/hi32-action-images_display.png:
+	* src/kdelibs/khtml/test/README:
+	* src/kdelibs/khtml/test/URL1.html:
+	* src/kdelibs/khtml/test/URL2.html:
+	* src/kdelibs/khtml/test/align.html:
+	* src/kdelibs/khtml/test/align1.html:
+	* src/kdelibs/khtml/test/align2.html:
+	* src/kdelibs/khtml/test/anchor1.html:
+	* src/kdelibs/khtml/test/anchor2.html:
+	* src/kdelibs/khtml/test/badpages.html:
+	* src/kdelibs/khtml/test/buggy.html:
+	* src/kdelibs/khtml/test/button.html:
+	* src/kdelibs/khtml/test/color.html:
+	* src/kdelibs/khtml/test/fixed-background.html:
+	* src/kdelibs/khtml/test/image.gif:
+	* src/kdelibs/khtml/test/image_map.html:
+	* src/kdelibs/khtml/test/index.html:
+	* src/kdelibs/khtml/test/java.html:
+	* src/kdelibs/khtml/test/javascript.html:
+	* src/kdelibs/khtml/test/jsplugins.html:
+	* src/kdelibs/khtml/test/konqi.gif:
+	* src/kdelibs/khtml/test/lake.class:
+	* src/kdelibs/khtml/test/listing.html:
+	* src/kdelibs/khtml/test/lists.html:
+	* src/kdelibs/khtml/test/nav_bar.gif:
+	* src/kdelibs/khtml/test/nbsp.html:
+	* src/kdelibs/khtml/test/notitle.html:
+	* src/kdelibs/khtml/test/object.html:
+	* src/kdelibs/khtml/test/pseudo.html:
+	* src/kdelibs/khtml/test/renders.html:
+	* src/kdelibs/khtml/test/supsub.html:
+	* src/kdelibs/khtml/test/testpages.html:
+	* src/kdelibs/khtml/test/textarea.html:
+	* src/kdelibs/khtml/test/title.html:
+	* src/kdelibs/khtml/testcss.cpp:
+	* src/kdelibs/khtml/testkhtml.cpp:
+	* src/kdelibs/khtml/testkhtml.h:
+	* src/kdelibs/khtml/testrender.cpp:
+	* src/kdelibs/khtml/testrender.h:
+	* src/kdelibs/kjs/README:
+	* src/kdelibs/kjs/THANKS:
+	* src/kdelibs/kjs/create_hash_table:
+	* src/kdelibs/kjs/keywords.table:
+
+2002-03-06  Don Melton  <gramps@apple.com>
+
+	Cleaned up all our changes to kdelibs, removed bitrot, and replaced use
+	of _KWQ_ with new APPLE_CHANGES define.
+
+	* src/kdelibs/khtml/css/csshelper.cpp: (khtml::computeLengthFloat),
+	(khtml::setFontSize):
+	* src/kdelibs/khtml/css/cssstyleselector.cpp:
+	(CSSStyleSelector::CSSStyleSelector), (khtml::applyRule):
+	* src/kdelibs/khtml/dom/dom_misc.cpp:
+	* src/kdelibs/khtml/dom/dom_misc.h:
+	* src/kdelibs/khtml/dom/html_document.cpp: (HTMLDocument::cookie),
+	(HTMLDocument::setCookie):
+	* src/kdelibs/khtml/dom/html_element.cpp:
+	* src/kdelibs/khtml/ecma/kjs_binding.h:
+	* src/kdelibs/khtml/ecma/kjs_css.cpp: (DOMCSSStyleDeclarationFunc::tryExecute),
+	(DOMStyleSheetListFunc::tryExecute), (DOMMediaListFunc::tryExecute),
+	(DOMCSSStyleSheetFunc::tryExecute), (DOMCSSRuleListFunc::tryExecute),
+	(DOMCSSRuleFunc::tryExecute), (DOMCSSPrimitiveValueFunc::tryExecute),
+	(DOMCSSValueListFunc::tryExecute):
+	* src/kdelibs/khtml/ecma/kjs_css.h:
+	* src/kdelibs/khtml/ecma/kjs_dom.cpp: (DOMNodeFunc::tryExecute),
+	(DOMNodeListFunc::tryExecute), (DOMDocFunction::DOMDocFunction),
+	(DOMDocFunction::tryExecute), (DOMElementFunction::DOMElementFunction),
+	(DOMElementFunction::tryExecute),
+	(DOMDOMImplementationFunction::DOMDOMImplementationFunction),
+	(DOMDOMImplementationFunction::tryExecute),
+	(DOMNamedNodeMapFunction::DOMNamedNodeMapFunction),
+	(DOMNamedNodeMapFunction::tryExecute):
+	* src/kdelibs/khtml/ecma/kjs_dom.h:
+	* src/kdelibs/khtml/ecma/kjs_window.cpp: (Window::isSafeScript):
+	* src/kdelibs/khtml/html/html_formimpl.cpp: (HTMLFormElementImpl::formData),
+	(HTMLSelectElementImpl::state), (HTMLSelectElementImpl::restoreState):
+	* src/kdelibs/khtml/html/html_headimpl.cpp: (HTMLLinkElementImpl::detach),
+	(HTMLStyleElementImpl::detach), (HTMLTitleElementImpl::setTitle):
+	* src/kdelibs/khtml/html/html_objectimpl.cpp:
+	(HTMLEmbedElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/html_tableimpl.cpp:
+	(HTMLTableElementImpl::parseAttribute),
+	(HTMLTablePartElementImpl::parseAttribute):
+	* src/kdelibs/khtml/html/htmlparser.cpp: (KHTMLParser::parseToken),
+	(KHTMLParser::insertNode), (KHTMLParser::getElement),
+	(KHTMLParser::processCloseTag), (KHTMLParser::popBlock),
+	(KHTMLParser::popOneBlock):
+	* src/kdelibs/khtml/html/htmltokenizer.cpp: (HTMLTokenizer::parseSpecial),
+	(HTMLTokenizer::scriptHandler), (HTMLTokenizer::parseComment),
+	(HTMLTokenizer::parseTag), (HTMLTokenizer::processToken):
+	* src/kdelibs/khtml/html/htmltokenizer.h:
+	* src/kdelibs/khtml/java/kjavaprocess.h:
+	* src/kdelibs/khtml/khtml_part.h:
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::~KHTMLView), (KHTMLView::init),
+	(printRenderTree), (KHTMLView::drawContents), (KHTMLView::layout),
+	(KHTMLView::viewportMousePressEvent), (KHTMLView::viewportMouseDoubleClickEvent),
+	(KHTMLView::viewportMouseMoveEvent), (KHTMLView::viewportMouseReleaseEvent),
+	(KHTMLView::addFormCompletionItem):
+	* src/kdelibs/khtml/khtmlview.h:
+	* src/kdelibs/khtml/misc/decoder.cpp: (Decoder::setEncoding), (Decoder::decode):
+	* src/kdelibs/khtml/misc/helper.cpp: (khtml::setNamedColor):
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kdelibs/khtml/rendering/bidi.cpp: (RenderFlow::layoutInlineChildren):
+	* src/kdelibs/khtml/rendering/render_applet.cpp: (RenderApplet::RenderApplet):
+	* src/kdelibs/khtml/rendering/render_body.cpp: (RenderBody::layout):
+	* src/kdelibs/khtml/rendering/render_box.cpp: (RenderBox::printBackground):
+	* src/kdelibs/khtml/rendering/render_flow.cpp: (RenderFlow::print):
+	* src/kdelibs/khtml/rendering/render_form.cpp:
+	(RenderFormElement::baselinePosition), (RenderFormElement::slotClicked),
+	(RenderCheckBox::RenderCheckBox), (RenderCheckBox::performAction),
+	(RenderRadioButton::RenderRadioButton), (RenderRadioButton::slotClicked),
+	(RenderSubmitButton::RenderSubmitButton), (RenderSubmitButton::baselinePosition),
+	(RenderLineEdit::RenderLineEdit), (RenderLineEdit::calcMinMaxWidth),
+	(RenderLineEdit::performAction), (RenderFileButton::RenderFileButton),
+	(RenderSelect::RenderSelect), (RenderSelect::layout),
+	(RenderSelect::createListBox), (RenderSelect::createComboBox),
+	(RenderTextArea::RenderTextArea), (RenderTextArea::calcMinMaxWidth),
+	(RenderTextArea::layout):
+	* src/kdelibs/khtml/rendering/render_form.h:
+	* src/kdelibs/khtml/rendering/render_frames.cpp:
+	(RenderPartObject::updateWidget):
+	* src/kdelibs/khtml/rendering/render_hr.cpp: (RenderHR::print):
+	* src/kdelibs/khtml/rendering/render_image.cpp: (RenderImage::printObject):
+	* src/kdelibs/khtml/rendering/render_list.cpp: (RenderListMarker::printObject):
+	* src/kdelibs/khtml/rendering/render_style.h:
+	* src/kdelibs/khtml/rendering/render_table.cpp: (RenderTable::calcFinalColMax),
+	(RenderTable::layoutRows):
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration),
+	(TextSlaveArray::findFirstMatching), (RenderText::print):
+	* src/kdelibs/khtml/xml/dom_docimpl.cpp: (DocumentImpl::recalcStyle):
+	* src/kdelibs/khtml/xml/dom_nodeimpl.cpp: (NodeImpl::renderer):
+	* src/kdelibs/khtml/xml/dom_nodeimpl.h:
+	* src/kdelibs/khtml/xml/dom_stringimpl.cpp: (DOMStringImpl::toLengthList):
+
+2002-03-06  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/KWQKURL.mm: (KURL::KURL): If resolving a relative URL
+	fails, assume it's absolute and possibly malformed, rather than
+	appending it to the path of the previous URL. This fixes a
+	CPU-spinning hang that John and Richard found.
+
+2002-03-05  Richard Williamson  <rjw@apple.com>
+
+        Pass errors correctly to browser.
+        Removed old notification code.
+        Added support for IFError.
+        Lots of little cleanups.
+        
+	* src/kwq/KWQComboBox.mm: (QComboBox::setCurrentItem):
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidBeginLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidCancelLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDidFailLoadingWithResult:]), (KHTMLPart::openURL),
+	(KHTMLPart::closeURL):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	IFURLHandle:resourceDidFailLoadingWithResult:]):
+	* src/kwq/WCError.h:
+	* src/kwq/WCWebDataSource.h:
+	* src/kwq/external.h:
+
+2002-03-05  Richard Williamson  <rjw@apple.com>
+
+        With fonts now being correctly specified we're exercising some new code paths.  This introduced a new
+        class of weird string bugs.  Turns out that CFString is doing some mojo that I suspect is a performance
+        optimization.  Constants strings appears to be uniqued and hard-wired to have a -1 retain count.  It
+        looks like strings created by preferences are uniqued in this manner.  This plays havoc with our
+        copy-on-write QString implementation.  The following GDB exercise illustrates the problem:
+        
+        (gdb) po (id)[(id)[NSUserDefaults standardUserDefaults] objectForKey:(id)[NSString stringWithCString: "WebKitFixedFont"]]
+        Andale Mono
+        (gdb) p (int)[(id)[(id)[NSUserDefaults standardUserDefaults] objectForKey:(id)[NSString stringWithCString: "WebKitFixedFont"]] retainCount]
+        $28 = -1
+        (gdb) p (id)[(id)[NSUserDefaults standardUserDefaults] objectForKey:(id)[NSString stringWithCString: "WebKitFixedFont"]]
+        $27 = (objc_object *) 0x40172a4
+        (gdb) p (void)[$27 retain]
+        $29 = void
+        (gdb) p (int)[$27 retainCount]
+        $30 = -1
+        (gdb) p (void)[$27 release]
+        $33 = void
+        (gdb) p (int)[$27 retainCount]
+        $32 = -1
+        
+        So, it appears that these strings are permanently allocated.  It'd be interesting to find out what is in the uniqued string cache, and how big it is.
+        
+        I've fixed the problem by special casing our copy-on-write trigger to also check for -1.
+
+	* src/kwq/KWQString.mm: (QString::_copyIfNeededInternalString):
+
+2002-03-04  Richard Williamson  <rjw@apple.com>
+ 
+        Changes to support 'provisional' data sources.
+        API changes to IFBaseWebController, removed redundant methods.
+ 
+	* src/kwq/KWQKHTMLPart.mm: (WCSetIFWebDataSourceMakeFunc), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidBeginLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidCancelLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDidFailLoadingWithResult:]),
+	(KHTMLPart::khtmlMouseReleaseEvent), (KHTMLPart::submitForm),
+	(KHTMLPart::requestFrame):
+	* src/kwq/external.h:
+
+2002-02-28  Richard Williamson  <rjw@apple.com>
+
+        Finished up progress notification for main document.  
+        Made the IFLoadProgress allocator accessible to KHTMLPart.mm.
+        
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[KHTMLPartLoadClient
+	setDataSource:]), (KHTMLPart::openURL):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[URLLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]):
+	* src/kwq/WCLoadProgress.h:
+
+2002-02-27  Kenneth Kocienda  <kocienda@apple.com>
+
+	I have changed the way that WebCore is glued to WebFoundation and WebKit. 
+	If you used or relied upon any code in the following files, you should 
+	now use the IF* equivalents straight up. 
+
+	- Labyrinth/WebCore/include/WCBackForwardList.h
+	- Labyrinth/WebCore/include/WCURICache.h
+	- Labyrinth/WebCore/include/WCURICacheData.h
+	- Labyrinth/WebCore/include/WCURIEntry.h
+	- Labyrinth/WebCore/include/WCURIEntry.h
+
+	All changes in this commit are related to making dependant code work with the new convention.
+
+	* include/WCBackForwardList.h:
+	* include/WCURICache.h:
+	* include/WCURICacheData.h:
+	* include/WCURIEntry.h:
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidBeginLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidCancelLoading:]), (-[KHTMLPartLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[KHTMLPartLoadClient
+	IFURLHandle:resourceDidFailLoadingWithResult:]), (KHTMLPart::slotData),
+	(KHTMLPart::openURL):
+	* src/kwq/KWQKjobclasses.mm:
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient IFURLHandleResourceDidBeginLoading:]),
+	(-[URLLoadClient IFURLHandleResourceDidCancelLoading:]), (-[URLLoadClient
+	IFURLHandleResourceDidFinishLoading:data:]), (-[URLLoadClient
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[URLLoadClient
+	IFURLHandle:resourceDidFailLoadingWithResult:]):
+	* src/kwq/Makefile.am:
+	* src/kwq/kio/jobclasses.h:
+
+2002-02-27  Maciej Stachowiak  <mjs@apple.com>
+
+	Replace QDir and QFile with clean-room implementations. Add glob
+	support ot QRegExp reimplementation.
+
+	* src/kwq/KWQDir.mm: (QDir::KWQDirPrivate::KWQDirPrivate),
+	(QDir::KWQDirPrivate::~KWQDirPrivate), (QDir::QDir), (QDir::~QDir),
+	(QDir::absPath), (QDir::absFilePath), (QDir::cdUp), (QDir::exists),
+	(QDir::entryList), (QDir::operator=), (QDir::swap):
+	* src/kwq/KWQFile.mm: (QFile::KWQFilePrivate::KWQFilePrivate),
+	(QFile::KWQFilePrivate::~KWQFilePrivate), (QFile::QFile), (QFile::~QFile),
+	(QFile::exists), (QFile::open), (QFile::close), (QFile::readBlock),
+	(QFile::size):
+	* src/kwq/KWQRegExp.mm: (QRegExp::KWQRegExpPrivate::KWQRegExpPrivate),
+	(RegExpFromGlob), (QRegExp::KWQRegExpPrivate::compile), (QRegExp::QRegExp):
+	* src/kwq/KWQStrList.h:
+	* src/kwq/Makefile.am:
+	* src/kwq/qt/_qdir.h:
+	* src/kwq/qt/_qfile.h:
+	* src/kwq/qt/_qfileinfo.h:
+	* src/kwq/qt/qdir.h:
+	* src/kwq/qt/qfile.h:
+	* src/kwq/qt/qiodevice.h:
+	* src/kwq/qt/qregexp.h:
+
+2002-02-25  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix two significant memory leaks in QList found by our automated
+	leak-checking code.
+
+	* src/kwq/KWQListImpl.mm: (KWQListNode::~KWQListNode),
+	(KWQListImpl::KWQListPrivate::copyList),
+	(KWQListImpl::KWQListPrivate::~KWQListPrivate), (KWQListImpl::sort):
+
+	Fix a tiny bug tweaked by the new regexp code - we need to flush
+	the cache after calling out to QRegExp::match because it might
+	make calls on the string which create a cache. Caught by the
+	regression tests.
+	
+	* src/kwq/KWQString.mm: (QString::replace): 
+	
+2002-02-24  Maciej Stachowiak  <mjs@apple.com>
+
+	Reimplemented QRegExp in terms of POSIX regexp facilities. This
+	will only support Latin1, however, it won't support all languages.
+	
+	* src/kwq/qt/qregexp.h:
+	* src/kwq/KWQRegExp.mm: (QRegExp::KWQRegExpPrivate::KWQRegExpPrivate),
+	(QRegExp::KWQRegExpPrivate::compile),
+	(QRegExp::KWQRegExpPrivate::~KWQRegExpPrivate), (QRegExp::QRegExp),
+	(QRegExp::~QRegExp), (QRegExp::operator=), (QRegExp::pattern), (QRegExp::match):
+
+	Reimplement QValueList as a doubly-linked list, using a generic
+	implementation class and a templatized facade.
+	
+	* src/kwq/qt/qvaluelist.h:
+	* src/kwq/KWQValueListImpl.h:
+	* src/kwq/KWQValueListImpl.mm: (KWQValueListNodeImpl::KWQValueListNodeImpl),
+	(KWQValueListNodeImpl::~KWQValueListNodeImpl),
+	(KWQValueListIteratorImpl::KWQValueListIteratorImpl),
+	(KWQValueListIteratorImpl::~KWQValueListIteratorImpl),
+	(KWQValueListIteratorImpl::operator=), (KWQValueListIteratorImpl::operator==),
+	(KWQValueListIteratorImpl::operator!=), (KWQValueListIteratorImpl::node),
+	(KWQValueListIteratorImpl::operator++), (KWQValueListIteratorImpl::operator--),
+	(KWQValueListImpl::KWQValueListPrivate::KWQValueListPrivate),
+	(KWQValueListImpl::KWQValueListPrivate::~KWQValueListPrivate),
+	(KWQValueListImpl::KWQValueListPrivate::copyList),
+	(KWQValueListImpl::KWQValueListPrivate::deleteList),
+	(KWQValueListImpl::KWQValueListImpl), (KWQValueListImpl::~KWQValueListImpl),
+	(KWQValueListImpl::clear), (KWQValueListImpl::count),
+	(KWQValueListImpl::isEmpty), (KWQValueListImpl::appendNode),
+	(KWQValueListImpl::prependNode), (KWQValueListImpl::removeEqualNodes),
+	(KWQValueListImpl::containsEqualNodes), (KWQValueListImpl::removeIterator),
+	(KWQValueListImpl::fromLast), (KWQValueListImpl::firstNode),
+	(KWQValueListImpl::lastNode), (KWQValueListImpl::begin), (KWQValueListImpl::end),
+	(KWQValueListImpl::nodeAt), (KWQValueListImpl::operator=),
+	(KWQValueListImpl::copyOnWrite):
+	* src/kwq/Makefile.am:
+
+	* src/kwq/kio/netaccess.h: Don't declare private copy constructor
+	- this class needs to be copyable to be stored in a QValueList!
+
+	Hack these scripts a bit so the large tables they generate are
+	constant data.
+	
+	* src/kwq/make-charset-table.pl:
+	* src/kdelibs/khtml/css/makeprop:
+	* src/kdelibs/khtml/css/makevalues:
+	* src/kdelibs/khtml/misc/makeattrs:
+	* src/kdelibs/khtml/misc/maketags:
+
+2002-02-23  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/WCLoadProgress.h: Add the forgotten WCLoadProgress.h.
+
+2002-02-22  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix prebinding:
+
+	* src/Makefile.am: Enable prebinding, set first segment address to
+	0x2200000 to avoid colliding with apps or our other
+	frameworks. Change other link flags to support prebinding.
+
+	Set up some hacks to avoid link-time dependency on
+	WebKit. Prebinding is incompatible with - undefined suppress, so
+	we can't have WebCore depend on symbols provided by WebKit any
+	more:
+	
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKloader.mm: (WCSetIFLoadProgressMakeFunc), (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:data:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]):
+	* src/kwq/WCPluginWidget.h:
+	* src/kwq/WCPluginWidget.mm: (WCSetIFPluginMakeFunc),
+	(WCPluginWidget::WCPluginWidget):
+
+2002-02-22  Richard Williamson  <rjw@apple.com>
+
+        Added data: to IFURLHandleResourceDidFinishLoading:
+        
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidFinishLoading:data:userData:]):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:data:userData:]):
+
+2002-02-22  Kenneth Kocienda  <kocienda@apple.com>
+
+	Sent handle an autorelease message.
+
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]):
+
+2002-02-21  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/KWQString.mm: (QString::fill): Fix a bug that was
+	triggering assertion failures in CF.
+	
+	* src/kdelibs/kjs/kjs-test: Turn off some environment variables to
+	make the tests pass.
+
+2002-02-21  Richard Williamson  <rjw@apple.com>
+
+    Stop mostly working.
+    
+	* src/kwq/KWQKjobclasses.mm:
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]),
+	(Loader::servePendingRequests):
+	* src/kwq/kio/jobclasses.h:
+
+2002-02-21  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/KWQString.mm: (QString::fromCFString): Don't pass a
+	length to CFStringCreateMutableCopy, since that makes the string
+	fixed-length, which makes assertions fail when in debugging mode.
+
+2002-02-20  Richard Williamson  <rjw@apple.com>
+
+    Some groundwork to bring WebFoundation callbacks up to 
+    WebKit.
+    
+	* src/kdelibs/khtml/misc/loader.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidBeginLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]), (KHTMLPart::openURL),
+	(KHTMLPart::closeURL), (KHTMLPart::write), (KHTMLPart::checkCompleted):
+	* src/kwq/KWQKloader.mm: (CachedCSSStyleSheet::CachedCSSStyleSheet),
+	(CachedScript::CachedScript), (CachedImage::CachedImage), (-[URLLoadClient
+	initWithLoader:dataSource:]), (-[URLLoadClient
+	WCURLHandleResourceDidBeginLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]), (Loader::load),
+	(Loader::servePendingRequests), (Cache::requestImage),
+	(Cache::requestStyleSheet), (Cache::requestScript):
+	* src/kwq/kio/jobclasses.h:
+
+2002-02-20  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kdelibs/kjs/kjs-test:
+	* src/kwq/KWQKURL.mm: (KURL::setQuery):
+
+2002-02-18  Kenneth Kocienda  <kocienda@apple.com>
+
+	* src/Makefile.am:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseMoveEvent):
+	* src/kwq/KWQView.mm: (-[KWQHTMLView mouseUp:]), (-[KWQHTMLView mouseDown:]):
+	* src/kwq/kde/_kurl.cpp: (KURL::htmlRef):
+
+2002-02-18  Richard Williamson  <rjw@apple.com>
+
+        Fixed the prefences won't stay in front problem after John found 
+        and correctly diagnosed the problem.
+        
+	* src/kwq/KWQWidget.mm: (QWidget::show), (QWidget::hide):
+
+2002-02-18  Richard Williamson  <rjw@apple.com>
+
+        Performance measurement.
+        
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::begin), (KHTMLPart::write):
+
+2002-02-16  Maciej Stachowiak  <mjs@apple.com>
+
+	Reimplement KURL in terms of CFURL (many workarounds needed to
+	account for differing semantics).
+
+	* src/kwq/kdecore/kurl.h:
+	* src/kwq/KWQKURL.mm: (KURL::KWQKURLPrivate::KWQKURLPrivate),
+	(KURL::KWQKURLPrivate::~KWQKURLPrivate), (KURL::KWQKURLPrivate::init),
+	(KURL::KWQKURLPrivate::makeRef), (CFStringToQString), (escapeQString),
+	(pathEndsWithSlash), (KWQCFURLCopyEscapedPath),
+	(KURL::KWQKURLPrivate::decompose), (KURL::KWQKURLPrivate::compose), (KURL::KURL),
+	(KURL::~KURL), (KURL::isEmpty), (KURL::isMalformed), (KURL::hasPath),
+	(KURL::url), (KURL::protocol), (KURL::host), (KURL::port), (KURL::pass),
+	(KURL::user), (KURL::ref), (KURL::query), (KURL::path), (KURL::setProtocol),
+	(KURL::setHost), (KURL::setPort), (KURL::setRef), (KURL::setQuery),
+	(KURL::setPath), (KURL::prettyURL), (KURL::operator=), (KURL::decode_string),
+	(KURL::copyOnWrite):
+	* src/kwq/Makefile.am: Add new file to build.
+
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::begin,
+	KHTMLPart::submitForm): Don't 
+
+	Minor tweaks to make it all build:
+
+	* src/kwq/kde/_kurl.cpp:
+	* src/kwq/qt/_qurl.cpp:
+	* src/kwq/qt/_qurl.h:
+
+2002-02-16  Richard Williamson  <rjw@apple.com>
+
+        Fixed problem with default text not showing up in text area.
+        Fixed problem with scroll widgets not showing up in select list.
+        
+	* src/kdelibs/khtml/rendering/render_form.cpp: (RenderSelect::layout):
+	* src/kwq/KWQListBox.mm: (QListBox::QListBox):
+	* src/kwq/KWQTextArea.mm: (-[KWQTextArea _createTextView]), (-[KWQTextArea
+	initWithFrame:widget:]), (-[KWQTextArea setFrame:]):
+
+2002-02-15  Richard Williamson  <rjw@apple.com>
+    
+    Lots of changes to support forms.
+
+	* src/kdelibs/khtml/rendering/render_form.cpp: (RenderFormElement::slotClicked),
+	(RenderCheckBox::performAction), (RenderRadioButton::slotClicked),
+	(RenderSelect::RenderSelect), (RenderSelect::layout),
+	(RenderSelect::performAction), (RenderTextArea::layout), (RenderTextArea::text),
+	(RenderTextArea::performAction):
+	* src/kdelibs/khtml/rendering/render_form.h:
+	* src/kwq/KWQCheckBox.mm: (QCheckBox::QCheckBox), (QCheckBox::isChecked):
+	* src/kwq/KWQComboBox.mm: (QComboBox::indexOfCurrentItem):
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::requestFrame):
+	* src/kwq/KWQListBox.h:
+	* src/kwq/KWQListBox.mm: (-[KWQBrowserDelegate initWithListBox:]),
+	(-[KWQBrowserDelegate browser:numberOfRowsInColumn:]), (-[KWQBrowserDelegate
+	browser:willDisplayCell:atRow:column:]), (-[KWQBrowserDelegate
+	browserSingleClick:]), (-[KWQBrowserDelegate browserDoubleClick:]),
+	(QListBox::QListBox), (QListBox::~QListBox), (QListBox::count),
+	(QListBox::scrollBarWidth), (QListBox::clear), (QListBox::setSelectionMode),
+	(QListBox::currentItem), (QListBox::insertItem), (QListBox::setSelected),
+	(QListBox::isSelected), (QListBoxItem::QListBoxItem),
+	(QListBoxItem::~QListBoxItem), (QListBoxItem::setSelectable),
+	(QListBoxItem::width), (QListBoxItem::height):
+	* src/kwq/KWQNSTextField.mm: (-[KWQNSTextField action:]), (-[KWQNSTextField
+	controlTextDidEndEditing:]):
+	* src/kwq/KWQScrollView.mm: (QScrollView::addChild):
+	* src/kwq/KWQTextArea.mm: (-[KWQTextArea initWithFrame:]), (-[KWQTextArea
+	_createTextView]), (-[KWQTextArea initWithFrame:widget:]), (-[KWQTextArea
+	textDidEndEditing:]), (-[KWQTextArea setFrame:]):
+	* src/kwq/KWQTextEdit.mm: (QMultiLineEdit::setCursorPosition),
+	(QMultiLineEdit::getCursorPosition):
+	* src/kwq/KWQView.mm: (-[KWQNSButton stateChanged:]), (-[KWQNSComboBox
+	initWithFrame:widget:]), (-[KWQNSComboBox action:]):
+	* src/kwq/KWQWidget.mm: (QWidget::endEditing):
+	* src/kwq/qt/qcheckbox.h:
+	* src/kwq/qt/qcombobox.h:
+	* src/kwq/qt/qobject.h:
+
+2002-02-13  Richard Williamson  <rjw@apple.com>
+    
+    Use NSSwitchButtons for check boxes.
+
+	* src/kwq/KWQCheckBox.mm: (QCheckBox::QCheckBox):
+
+2002-02-13  Richard Williamson  <rjw@apple.com>
+
+    Removed dead code from setView.
+    
+	* src/kwq/KWQWidget.mm: (QWidget::setView):
+
+2002-02-12  Richard Williamson  <rjw@apple.com>
+
+    Made basic forms work.
+
+	* src/kdelibs/khtml/rendering/render_form.cpp:
+	(RenderFormElement::performAction), (RenderLineEdit::RenderLineEdit),
+	(RenderLineEdit::performAction):
+	* src/kdelibs/khtml/rendering/render_form.h:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::submitForm):
+	* src/kwq/KWQLineEdit.mm: (QLineEdit::text):
+	* src/kwq/KWQNSTextField.mm: (-[KWQNSTextField initWithFrame:widget:]),
+	(-[KWQNSTextField action:]), (-[KWQNSTextField controlTextDidEndEditing:]),
+	(-[KWQNSTextField setMaximumLength:]), (-[KWQNSTextField maximumLength]):
+	* src/kwq/KWQObject.mm: (QObject::emitAction), (QObject::performAction):
+	* src/kwq/KWQWidget.mm: (QWidget::setView), (QWidget::endEditing):
+	* src/kwq/kwqdebug.mm: (KWQGetLogLevel):
+	* src/kwq/qt/qlineedit.h:
+	* src/kwq/qt/qobject.h:
+	* src/kwq/qt/qwidget.h:
+
+2002-02-12  Maciej Stachowiak  <mjs@apple.com>
+
+	Make some tweaks to glue together KDE's and CF's concepts of URLs
+	a bit better. In particular, CF thinks "file:/some/path" is an
+	invalid URL, while KDE thinks this is the canonical form for a
+	file URL.
+
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::openURL), (KHTMLPart::closeURL),
+	(KHTMLPart::checkCompleted):
+	* src/kwq/KWQKjobclasses.mm:
+
+2002-02-12  Maciej Stachowiak  <mjs@apple.com>
+
+	Reimplemented QList, QVector and QCollection from
+	scratch. Implemented copy-on-write optimization for QMap.
+
+	Minimally reimplement QCollection.
+
+	* src/kwq/qt/qcollection.h:
+	* src/kwq/KWQCollection.mm: (QCollection::QCollection), (QCollection::operator=),
+	(QCollection::~QCollection), (QCollection::autoDelete),
+	(QCollection::setAutoDelete):
+
+	* src/kwq/qt/qdict.h, src/kwq/qt/qptrdict.h: Include
+	qcollection.h, not _qcollection.h
+
+	Reimplement QList as a doubly-linked list.
+	
+	* src/kwq/qt/qlist.h:
+	* src/kwq/KWQListImpl.h:
+	* src/kwq/KWQListImpl.mm: (KWQListImpl::KWQListPrivate::copyList),
+	(KWQListImpl::KWQListPrivate::KWQListPrivate),
+	(KWQListImpl::KWQListPrivate::~KWQListPrivate),
+	(KWQListIteratorImpl::KWQListIteratorPrivate::KWQListIteratorPrivate),
+	(KWQListImpl::KWQListImpl), (KWQListImpl::~KWQListImpl), (KWQListImpl::isEmpty),
+	(KWQListImpl::count), (KWQListImpl::clear), (KWQListImpl::sort),
+	(KWQListImpl::at), (KWQListImpl::insert), (KWQListImpl::remove),
+	(KWQListImpl::removeFirst), (KWQListImpl::removeLast), (KWQListImpl::removeRef),
+	(KWQListImpl::getLast), (KWQListImpl::current), (KWQListImpl::first),
+	(KWQListImpl::last), (KWQListImpl::next), (KWQListImpl::prev),
+	(KWQListImpl::take), (KWQListImpl::append), (KWQListImpl::prepend),
+	(KWQListImpl::containsRef), (KWQListImpl::assign), (KWQListImpl::addIterator),
+	(KWQListImpl::removeIterator), (KWQListIteratorImpl::KWQListIteratorImpl),
+	(KWQListIteratorImpl::~KWQListIteratorImpl), (KWQListIteratorImpl::count),
+	(KWQListIteratorImpl::toFirst), (KWQListIteratorImpl::toLast),
+	(KWQListIteratorImpl::current), (KWQListIteratorImpl::operator--),
+	(KWQListIteratorImpl::operator++), (KWQListIteratorImpl::operator=):
+
+	Reimplement QVector in terms of CFArray.
+	
+	* src/kwq/qt/qvector.h:
+	* src/kwq/KWQVectorImpl.h:
+	* src/kwq/KWQVectorImpl.mm: (KWQVectorImpl::KWQVectorPrivate::KWQVectorPrivate),
+	(KWQVectorImpl::KWQVectorPrivate::~KWQVectorPrivate),
+	(KWQVectorImpl::KWQVectorImpl), (KWQVectorImpl::~KWQVectorImpl),
+	(KWQVectorImpl::clear), (KWQVectorImpl::isEmpty), (KWQVectorImpl::count),
+	(KWQVectorImpl::size), (KWQVectorImpl::remove), (KWQVectorImpl::resize),
+	(KWQVectorImpl::insert), (KWQVectorImpl::at), (KWQVectorImpl::assign),
+	(KWQVectorImpl::KWQVectorImpl::swap):
+
+	Implemented copy-on-write optimization for QMap. This had the
+	pleasant side effect of improving the separation between pointer
+	manipulation and key/value manipulation.
+
+	* src/kwq/qt/qmap.h:
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapImpl::KWQMapPrivate::KWQMapPrivate),
+	(KWQMapImpl::KWQMapPrivate::~KWQMapPrivate), (KWQMapImpl::KWQMapImpl),
+	(KWQMapImpl::~KWQMapImpl), (KWQMapImpl::copyOnWrite), (KWQMapImpl::copyTree),
+	(KWQMapImpl::rebalanceAfterInsert), (KWQMapImpl::rebalanceAfterRemove),
+	(KWQMapImpl::findInternal), (KWQMapImpl::insertInternal),
+	(KWQMapImpl::removeInternal), (KWQMapImpl::swap), (KWQMapImpl::countInternal),
+	(KWQMapImpl::clearInternal), (KWQMapImpl::beginInternal),
+	(KWQMapImpl::endInternal):
+
+	* src/kwq/Makefile.am: Add new files to build.
+
+	* src/kdelibs/khtml/rendering/render_text.cpp
+	(TextSlaveArray::findFirstMatching): Fix two places where the KDE
+	code was depending on implementation details of QVector.
+
+2002-02-07  Richard Williamson  <rjw@apple.com>
+
+    More changes to IFLocationChangeHandler API.
+
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent):
+
+2002-02-07  Richard Williamson  <rjw@apple.com>
+
+    Factored URL loading code out and moved to IFBaseWebController.
+    
+	* ChangeLog:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::requestFrame):
+
+2002-02-06  Richard Williamson  <rjw@apple.com>
+
+    Fixed allocation problems.
+    
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::requestFrame):
+
+2002-02-05  Richard Williamson  <rjw@apple.com>
+
+    Updated part to use 'official' controller APIs.
+    
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::~KHTMLPart),
+	(KHTMLPart::khtmlMouseReleaseEvent), (KHTMLPart::requestFrame),
+	(KHTMLPart::checkCompleted):
+
+2002-02-05  Richard Williamson  <rjw@apple.com>
+
+    Changes to support dynamic scroll bars in frames/iframes.
+
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent):
+	* src/kwq/KWQScrollView.mm: (QScrollView::addChild),
+	(QScrollView::resizeContents), (QScrollView::updateContents),
+	(QScrollView::repaintContents):
+	* src/kwq/KWQWidget.mm: (QWidget::resize), (QWidget::move),
+	(QWidget::internalSetGeometry):
+
+2002-02-05  Kenneth Kocienda  <kocienda@apple.com>
+
+	Changes to move these last bits of code to the new cache API.
+
+	* src/kwq/KWQKjobclasses.mm:
+	* src/kwq/WKPluginView.h:
+	* src/kwq/WKPluginView.mm: (-[WKPluginView drawRect:]), (-[WKPluginView
+	WCURLHandleResourceDidBeginLoading:userData:]), (-[WKPluginView
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[WKPluginView
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[WKPluginView
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]), (-[WKPluginView
+	WCURLHandle:resourceDidFailLoadingWithResult:userData:]):
+
+2002-02-04  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix everything for WK --> IF rename.
+
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::requestFrame), (KHTMLPart::checkCompleted):
+
+2002-02-01  Kenneth Kocienda  <kocienda@apple.com>
+
+	More cleanups to the no-copy NSData API.
+	This time the callback from the cache/loader has been
+	simplified from:
+	- (void)WKURLHandle:(WKURLHandle *)sender resourceDataDidBecomeAvailable:(UInt8 *)bytes offset:(unsigned)offset length:(unsigned)length;
+	to:
+	- (void)WKURLHandle:(WKURLHandle *)sender resourceDataDidBecomeAvailable:(NSData *)data;
+	This was made possible by some rearrangement in the private API.
+
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:userData:]):
+
+2002-02-01  Richard Williamson  <rjw@apple.com>
+
+    Added support for dynamic scrolling frames.  Also added first callback for
+    WKLocationChangeHandler.
+    
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::end), (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::checkCompleted):
+
+2002-02-01  Kenneth Kocienda  <kocienda@apple.com>
+
+        Made some cleanups to the no-copy NSData API, and those changes
+        make the use of the no-copy functionality in this client code
+        much cleaner.
+        
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:offset:length:userData:]):
+
+2002-01-31  Richard Williamson  <rjw@apple.com>
+
+    Added QString constructor, fixed javascript at head of document bug.
+    
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::openURL), (KHTMLPart::closeURL),
+	(KHTMLPart::write):
+	* src/kwq/KWQString.mm: (QString::QString):
+	* src/kwq/qt/qstring.h:
+
+2002-01-31  Richard Williamson  <rjw@apple.com>
+
+	* src/kdelibs/khtml/html/html_headimpl.cpp: (HTMLStyleElementImpl::detach):
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::write):
+
+2002-01-31  Kenneth Kocienda  <kocienda@apple.com>
+
+        Changes to incorporate use of the no-copy NSData object.
+
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:offset:length:userData:]):
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:offset:length:userData:]):
+
+2002-01-30  Richard Williamson  <rjw@apple.com>
+    
+    Cleaned up frame code a bit.  Fixed duplicate content problem.
+
+	* src/kdelibs/khtml/html/html_headimpl.cpp: (HTMLLinkElementImpl::detach):
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::layout):
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::~KHTMLPart), (KHTMLPart::openURL),
+	(KHTMLPart::requestFrame):
+
+2002-01-30  Kenneth Kocienda  <kocienda@apple.com>
+
+        Added *.lo, *.la, and .libs to .cvsignore files
+        
+	* .cvsignore:
+	* src/.cvsignore:
+	* src/kdelibs/khtml/css/.cvsignore:
+	* src/kdelibs/khtml/misc/.cvsignore:
+	* src/kdelibs/kjs/.cvsignore:
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+    Fixed QConstString to make a copy on initial chars.
+    
+	* ChangeLog:
+	* src/kwq/KWQString.mm: (QString::_copyIfNeededInternalString),
+	(QString::insert), (QString::remove), (QString::replace), (QString::truncate),
+	(QConstString::QConstString):
+	* src/kwq/qt/qstring.h:
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+	* src/kwq/KWQString.mm: (QString::_copyIfNeededInternalString),
+	(QString::insert), (QString::remove), (QString::replace), (QString::truncate),
+	(QConstString::QConstString):
+	* src/kwq/qt/qstring.h:
+
+2002-01-29  Kenneth Kocienda  <kocienda@apple.com>
+
+        - Added in a dummy protocol to clean up a warning that results
+        from calling a method on an id.
+        - Cleaned up handle variable in KWQKHTMLPart. This can now be freed
+        once we get a proper notification that a load is done.
+        - Support for reading text encoding from HTTP headers added back in.
+        
+	* include/WCURLHandle.h:
+	* src/kwq/KWQKHTMLPart.mm: (encodingFromContentType), (KHTMLPart::slotData),
+	(KHTMLPart::openURL), (KHTMLPart::closeURL):
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+    First pass as frame code.  Still needs cleanup.
+    
+	* src/kdelibs/khtml/dom/dom_misc.cpp: (DomShared::ref), (DomShared::deref):
+	* src/kdelibs/khtml/dom/dom_misc.h:
+	* src/kdelibs/khtml/khtmlview.cpp: (KHTMLView::~KHTMLView):
+	* src/kwq/KWQComboBox.mm: (QComboBox::setCurrentItem):
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::~KHTMLPart), (KHTMLPart::begin),
+	(KHTMLPart::end), (KHTMLPart::xmlDocImpl), (KHTMLPart::khtmlMouseReleaseEvent),
+	(KHTMLPart::requestFrameName), (KHTMLPart::requestFrame),
+	(KHTMLPart::requestObject), (KHTMLPart::checkCompleted):
+
+2002-01-29  Kenneth Kocienda  <kocienda@apple.com>
+
+        Checked in the missing file
+        
+	* include/WCURLHandle.h:
+
+2002-01-29  Kenneth Kocienda  <kocienda@apple.com>
+
+        Changed over to the new cache loader in WebFoundation
+        
+	* src/kwq/KWQKHTMLPart.h:
+	* src/kwq/KWQKHTMLPart.mm: (-[KHTMLPartLoadClient init]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidBeginLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[KHTMLPartLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:offset:length:userData:]),
+	(-[KHTMLPartLoadClient WCURLHandle:resourceDidFailLoadingWithResult:userData:]),
+	(-[KHTMLPartLoadClient dealloc]), (KHTMLPart::slotData), (KHTMLPart::openURL):
+	* src/kwq/KWQKjobclasses.mm:
+	* src/kwq/KWQKloader.mm: (-[URLLoadClient initWithLoader:]), (-[URLLoadClient
+	WCURLHandleResourceDidBeginLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidCancelLoading:userData:]), (-[URLLoadClient
+	WCURLHandleResourceDidFinishLoading:userData:]), (-[URLLoadClient
+	WCURLHandle:resourceDataDidBecomeAvailable:offset:length:userData:]),
+	(-[URLLoadClient WCURLHandle:resourceDidFailLoadingWithResult:userData:]),
+	(-[URLLoadClient dealloc]):
+	* src/kwq/kio/jobclasses.h:
+
+2002-01-29  Maciej Stachowiak  <mjs@apple.com>
+
+	Reimplement QDict, QMap, QPtrDict and QSortedList.
+
+	Reimplement QDict in terms of CFDictionary:
+	
+	* src/kwq/qt/qdict.h:
+	* src/kwq/KWQDictImpl.h:
+	* src/kwq/KWQDictImpl.mm: (KWQDictImpl::KWQDictImpl), (KWQDictImpl::insert),
+	(KWQDictImpl::remove), (KWQDictImpl::find),
+	(KWQDictIteratorImpl::KWQDictIteratorImpl),
+	(KWQDictIteratorImpl::currentStringKey):
+
+	Reimplement QMap as a right-threaded red-black tree, splitting
+	the work between template classes that manipulate keys and values
+	and non-template base classes that handle all the pointer
+	manipulation:
+	
+	* src/kwq/qt/qmap.h:
+	* src/kwq/KWQMapImpl.h:
+	* src/kwq/KWQMapImpl.mm: (KWQMapNodeImpl::KWQMapNodeImpl),
+	(KWQMapNodeImpl::left), (KWQMapNodeImpl::right), (KWQMapNodeImpl::predecessor),
+	(KWQMapNodeImpl::successor), (KWQMapIteratorImpl::KWQMapIteratorImpl),
+	(KWQMapIteratorImpl::incrementInternal), (KWQMapImpl::KWQMapImpl),
+	(KWQMapImpl::rotateRight), (KWQMapImpl::rotateLeft),
+	(KWQMapImpl::rebalanceAfterInsert), (KWQMapImpl::rebalanceAfterRemove),
+	(KWQMapImpl::findInternal), (KWQMapImpl::insertInternal),
+	(KWQMapImpl::removeInternal), (KWQMapImpl::swap), (KWQMapImpl::countInternal),
+	(KWQMapImpl::clearInternal), (KWQMapImpl::beginInternal),
+	(KWQMapImpl::endInternal):
+
+	Reimplement QPtrDict in terms of CFDictionary:
+
+	* src/kwq/qt/qptrdict.h:
+	* src/kwq/KWQPtrDictImpl.h:
+	* src/kwq/KWQPtrDictImpl.mm:
+	(KWQPtrDictImpl::KWQPtrDictPrivate::KWQPtrDictPrivate),
+	(KWQPtrDictImpl::KWQPtrDictPrivate::~KWQPtrDictPrivate),
+	(KWQPtrDictImpl::KWQPtrDictImpl), (KWQPtrDictImpl::~KWQPtrDictImpl),
+	(invokeDeleteFuncOnValue), (KWQPtrDictImpl::clear), (KWQPtrDictImpl::count),
+	(KWQPtrDictImpl::insert), (KWQPtrDictImpl::remove), (KWQPtrDictImpl::find),
+	(KWQPtrDictImpl::swap), (KWQPtrDictImpl::assign), (KWQPtrDictImpl::take),
+	(KWQPtrDictIteratorImpl::KWQPtrDictIteratorPrivate::KWQPtrDictIteratorPrivate),
+	(KWQPtrDictIteratorImpl::KWQPtrDictIteratorPrivate::~KWQPtrDictIteratorPrivate),
+	(KWQPtrDictIteratorImpl::KWQPtrDictIteratorImpl),
+	(KWQPtrDictIteratorImpl::~KWQPtrDictIteratorImpl),
+	(KWQPtrDictIteratorImpl::count), (KWQPtrDictIteratorImpl::current),
+	(KWQPtrDictIteratorImpl::currentKey), (KWQPtrDictIteratorImpl::toFirst),
+	(KWQPtrDictIteratorImpl::operator++):
+
+	Reimplement QSortedList:
+	
+	* src/kwq/qt/qsortedlist.h:
+
+	* src/kwq/KWQArrayImpl.mm: Remove stray include.
+
+	* src/kwq/Makefile.am: Add new files to build.
+
+	* src/kwq/qt/_qdict.h, src/kwq/qt/_qgdict.h,
+	src/kwq/qt/_qptrdict.h: Avoid causing problems when the relevant
+	defines are not defined.
+
+2002-01-22  Richard Williamson  <rjw@apple.com>
+
+    Implemented KWQDesktopWidget to represent main screen.  Used by javascript.
+    
+	* src/kwq/KWQApplication.mm: (KWQDesktopWidget::width),
+	(KWQDesktopWidget::height), (QApplication::desktop):
+
+2002-01-21  Maciej Stachowiak  <mjs@apple.com>
+
+	Reimplemented QArray, QBuffer, QStack and QStringList; also fixed
+	some files for borrowed switchability, and fixed some bugs found
+	by my new test cases.
+
+	# Reimplement QArray:
+
+	* src/kwq/qt/qarray.h:
+	* src/kwq/KWQArrayImpl.h:
+	* src/kwq/KWQArrayImpl.mm: (KWQArrayImpl::KWQArrayPrivate::KWQArrayPrivate),
+	(KWQArrayImpl::KWQArrayPrivate::~KWQArrayPrivate), (KWQArrayImpl::KWQArrayImpl),
+	(KWQArrayImpl::~KWQArrayImpl), (KWQArrayImpl::operator=), (KWQArrayImpl::at),
+	(KWQArrayImpl::data), (KWQArrayImpl::size), (KWQArrayImpl::resize),
+	(KWQArrayImpl::duplicate), (KWQArrayImpl::fill), (KWQArrayImpl::operator==):
+
+	# Reimplement QBuffer:
+
+	* src/kwq/qt/qbuffer.h:
+	* src/kwq/KWQBuffer.mm: (QBuffer::QBuffer), (QBuffer::~QBuffer),
+	(QBuffer::buffer), (QBuffer::size), (QBuffer::isOpen), (QBuffer::open),
+	(QBuffer::close), (QBuffer::writeBlock):
+	* src/kwq/qt/qiodevice.h:
+
+	# Reimplement QStringList:
+
+	* src/kwq/KWQStringList.mm: (QStringToCFString), (QStringList::split),
+	(QStringList::QStringList), (QStringList::~QStringList), (QStringList::join),
+	(QStringList::operator=):
+
+	# Reimplement QStack:
+	* src/kwq/qt/qstack.h:
+
+	* src/kwq/Makefile.am: Add new files to build.
+
+	* src/kwq/KWQString.mm: (QString::find): Fix bug which returned
+	the very first occurence in the string even when the optional
+	starting point was passed in. Some of my new regression tests
+	picked this up.
+
+	# Temporarily work around uses of non-kwq APIs:
+	
+	* src/kwq/WKPluginWidget.h:
+	* src/kwq/qt/_qfile.cpp
+	* src/kwq/qt/_qbuffer.cpp
+	
+	# Guard contents of all these with the appropriate USING ifdef:
+	
+	* src/kwq/KWQStrList.h:
+	* src/kwq/qt/_qarray.h:
+	* src/kwq/qt/_qgarray.h:
+	* src/kwq/qt/_qstrlist.h:
+	
+2002-01-19  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kdelibs/kjs/Makefile.am: Fix testkjs build.
+
+	Fix a couple more static initialization problems:
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::urlCursor):
+	* src/kwq/KWQRegion.mm: (QRegion::QRegion), (QRegion::operator=):
+
+	* src/.cvsignore, src/kdelibs/.cvsignore,
+	src/kdelibs/khtml/css/.cvsignore,
+	src/kdelibs/khtml/misc/.cvsignore, src/kdelibs/kjs/.cvsignore:
+	Ignore stamp files.
+
+2002-01-18  Richard Williamson  <rjw@apple.com>
+
+    First pass at new view/datasource/controller API.
+
+	* src/kwq/KWQApplication.mm: (QApplication::QApplication),
+	(QApplication::setMainWidget), (QApplication::exec):
+	* src/kwq/KWQRegion.mm: (QRegion::QRegion), (QRegion::~QRegion),
+	(QRegion::contains), (QRegion::isNull):
+	* src/kwq/Makefile.am:
+	* src/kwq/_KWQOwner.h:
+	* src/kwq/_KWQOwner.m:
+	* src/kwq/qt/qnamespace.h:
+
+2002-01-18  Maciej Stachowiak  <mjs@apple.com>
+
+	Avoid static initialization of objects as much as possible. Order
+	of static initializers is unpredictable and we had some
+	cross-dependencies, so avoid this practice as much as possible to
+	fix various startup crashes.
+
+	* src/kwq/KWQApplication.mm: (QApplication::palette),
+	(QApplication::globalStrut):
+	* src/kwq/KWQChar.mm:
+	* src/kwq/KWQColor.mm:
+	* src/kwq/KWQCursor.mm: (QCursor::QCursor), (QCursor::~QCursor):
+	* src/kwq/KWQEvent.mm:
+	* src/kwq/KWQKConfigBase.mm: (KConfigBase::readEntry),
+	(KConfigBase::readColorEntry), (KConfigBase::readListEntry):
+	* src/kwq/KWQKHTMLSettings.mm: (KHTMLSettings::encoding):
+	* src/kwq/KWQKJavaEmbed.mm: (KJavaEmbed::sizeHint),
+	(KJavaEmbed::minimumSizeHint):
+	* src/kwq/KWQKLocale.mm: (KLocale::language):
+	* src/kwq/KWQKMimeType.mm: (KMimeType::findByURL), (KMimeType::name):
+	* src/kwq/KWQKPrinter.mm: (KPrinter::margins):
+	* src/kwq/KWQKProtocolManager.mm: (KProtocolManager::httpProxy):
+	* src/kwq/KWQKWinModule.mm: (KWinModule::workArea):
+	* src/kwq/KWQKjobclasses.mm:
+	* src/kwq/KWQKnetaccess.mm:
+	* src/kwq/KWQPart.mm: (KParts::Part::widget), (KParts::ReadOnlyPart::url):
+	* src/kwq/KWQPixmap.mm: (QPixmap::mask):
+	* src/kwq/KWQToolTip.mm: (QToolTip::palette):
+	* src/kwq/kde/_kurl.cpp:
+	* src/kwq/kdecore/kurl.h:
+
+2002-01-17  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix a couple of problems that kept `make -j3' from working from a
+	clean start (use stamp files to serialize build a bit more where
+	needed)
+
+	* src/Makefile.am:
+	* src/kdelibs/khtml/css/Makefile.am:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/kjs/Makefile.am:
+
+2002-01-17  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/Makefile.am: Fix another bonehead mistake.
+
+2002-01-17  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix bonehead mistakes in last checkin which were killing Jersey.
+
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/html/Makefile.am:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kwq/kde/Makefile.am:
+
+2002-01-17  Maciej Stachowiak  <mjs@apple.com>
+
+	More build system speedups; instead of building static libraries
+	in each directory, build relocatble object files, using the magic
+	of incremental linking.
+
+	* src/Makefile.am:
+	* src/kdelibs/khtml/Makefile.am:
+	* src/kdelibs/khtml/css/Makefile.am:
+	* src/kdelibs/khtml/dom/Makefile.am:
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/html/Makefile.am:
+	* src/kdelibs/khtml/java/Makefile.am:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/xml/Makefile.am:
+	* src/kdelibs/kjs/Makefile.am:
+	* src/kwq/Makefile.am:
+	* src/kwq/kde/Makefile.am:
+	* src/kwq/qt/Makefile.am:
+
+2002-01-17  Maciej Stachowiak  <mjs@apple.com>
+
+	Build speedups: Don't use libtool, and don't link static libraries
+	into each other.
+	
+	* src/Makefile.am
+	* src/kdelibs/khtml/Makefile.am:
+	* src/kdelibs/khtml/css/Makefile.am:
+	* src/kdelibs/khtml/dom/Makefile.am:
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/html/Makefile.am:
+	* src/kdelibs/khtml/java/Makefile.am:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/xml/Makefile.am:
+	* src/kdelibs/kjs/Makefile.am:
+	* src/kwq/Makefile.am:
+	* src/kwq/kde/Makefile.am:
+	* src/kwq/qt/Makefile.am:
+
+2002-01-16  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/qt/_qpoint.h, src/kwq/qt/_qrect.h, src/kwq/qt/_qsize.h,
+	src/kwq/qt/qpoint.h, src/kwq/qt/qrect.h, src/kwq/qt/qsize.h: Make
+	QPoint, QRect and QSize easily turn-off-able again.
+
+2002-01-15  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kdelibs/kjs/Makefile.am: Add missing files to BUILT_SOURCES
+	and build rules to fix `make -j3'
+
+2002-01-14  Maciej Stachowiak  <mjs@apple.com>
+
+	* .cvsignore:
+	* Makefile.am:
+	* Makefile.in:
+	* include/.cvsignore:
+	* include/Makefile.am:
+	* include/private/.cvsignore:
+	* include/private/Makefile.am:
+	* lib/.cvsignore:
+	* lib/Makefile.in:
+	* src/.cvsignore:
+	* src/Makefile.am:
+	* src/kdelibs/.cvsignore:
+	* src/kdelibs/Makefile.am:
+	* src/kdelibs/kdecore/.cvsignore:
+	* src/kdelibs/kdecore/Makefile.am:
+	* src/kdelibs/kdecore/Makefile.in:
+	* src/kdelibs/khtml/.cvsignore:
+	* src/kdelibs/khtml/Makefile.am:
+	* src/kdelibs/khtml/Makefile.in:
+	* src/kdelibs/khtml/css/.cvsignore:
+	* src/kdelibs/khtml/css/Makefile.am:
+	* src/kdelibs/khtml/css/Makefile.in:
+	* src/kdelibs/khtml/dom/.cvsignore:
+	* src/kdelibs/khtml/dom/Makefile.am:
+	* src/kdelibs/khtml/dom/Makefile.in:
+	* src/kdelibs/khtml/ecma/.cvsignore:
+	* src/kdelibs/khtml/ecma/Makefile.am:
+	* src/kdelibs/khtml/ecma/Makefile.in:
+	* src/kdelibs/khtml/html/.cvsignore:
+	* src/kdelibs/khtml/html/Makefile.am:
+	* src/kdelibs/khtml/html/Makefile.in:
+	* src/kdelibs/khtml/java/.cvsignore:
+	* src/kdelibs/khtml/java/ChangeLog:
+	* src/kdelibs/khtml/java/Makefile.am:
+	* src/kdelibs/khtml/java/Makefile.in:
+	* src/kdelibs/khtml/java/tests/Makefile.am:
+	* src/kdelibs/khtml/misc/.cvsignore:
+	* src/kdelibs/khtml/misc/Makefile.am:
+	* src/kdelibs/khtml/misc/Makefile.in:
+	* src/kdelibs/khtml/pics/Makefile.am:
+	* src/kdelibs/khtml/rendering/.cvsignore:
+	* src/kdelibs/khtml/rendering/Makefile.am:
+	* src/kdelibs/khtml/rendering/Makefile.in:
+	* src/kdelibs/khtml/xml/.cvsignore:
+	* src/kdelibs/khtml/xml/Makefile.am:
+	* src/kdelibs/khtml/xml/Makefile.in:
+	* src/kdelibs/kjs/.cvsignore:
+	* src/kdelibs/kjs/ChangeLog:
+	* src/kdelibs/kjs/Makefile.am:
+	* src/kdelibs/kjs/Makefile.in:
+	* src/kdelibs/kjs/kjs-test:
+	* src/kdelibs/kjs/kjs-test.chk:
+	* src/kwq/.cvsignore:
+	* src/kwq/Makefile.am:
+	* src/kwq/Makefile.in:
+	* src/kwq/_KWQOwner.m: (-[_KWQOwner backForwardUriDone:]):
+	* src/kwq/kde/.cvsignore:
+	* src/kwq/kde/Makefile.am:
+	* src/kwq/kde/Makefile.in:
+	* src/kwq/kdecore/.cvsignore:
+	* src/kwq/kdecore/Makefile.in:
+	* src/kwq/khtml/khtml_factory.h:
+	* src/kwq/qt/.cvsignore:
+	* src/kwq/qt/Makefile.am:
+	* src/kwq/qt/Makefile.in:
+
+2002-01-09  Richard Williamson  <rjw@apple.com>
+
+        Re-implemented underlining.  Now it REALLY works, honest.
+        
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration):
+	* src/kwq/KWQFontMetrics.mm: (+[KWQLayoutInfo
+	drawUnderlineForString:atPoint:withFont:color:]):
+	* src/kwq/KWQMetrics.h:
+	* src/kwq/KWQPainter.mm: (QPainter::drawUnderlineForText):
+	* src/kwq/qt/qpainter.h:
+
+2001-12-20  Richard Williamson  <rjw@apple.com>
+        
+        More tweaks to text layout and underlining.
+
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration):
+	* src/kwq/KWQFontMetrics.mm: (QFontMetrics::baselineOffset),
+	(QFontMetrics::ascent), (QFontMetrics::descent), (QFontMetrics::height),
+	(QFontMetrics::width):
+	* src/kwq/KWQPainter.mm: (QPainter::drawText):
+	* src/kwq/qt/qfontmetrics.h:
+
+2001-12-18  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/KWQCString.mm: (QCString::QCString),
+	(QCString::isEmpty), (QCString::isNull), (QCString::length): Fix
+	some bugs found by the test suite in the emptiness/null semantics.
+
+	Reimplement QPoint, QSize and QRect:
+
+	* src/kwq/qt/qpoint.h, src/kwq/qt/qrect.h, src/kwq/qt/qsize.h:
+	Update.
+	* src/kwq/KWQPoint.mm: (QPoint::QPoint), (QPoint::x), (QPoint::y),
+	(QPoint::manhattanLength), (operator+), (operator-), (operator<<):
+	Fresh implementations.
+	* src/kwq/KWQRect.mm: (QRect::QRect), (QRect::isNull), (QRect::isValid),
+	(QRect::x), (QRect::y), (QRect::left), (QRect::top), (QRect::right),
+	(QRect::bottom), (QRect::width), (QRect::height), (QRect::topLeft),
+	(QRect::size), (QRect::setWidth), (QRect::setHeight), (QRect::intersect),
+	(QRect::intersects), (QRect::operator&), (operator==), (operator!=),
+	(operator<<): Likewise.
+	* src/kwq/KWQSize.mm: (QSize::QSize), (QSize::isValid), (QSize::width),
+	(QSize::height), (QSize::setWidth), (QSize::setHeight), (QSize::expandedTo),
+	(operator+), (operator==), (operator!=), (operator<<): Likewise.
+	* src/kwq/qt/_qpoint.cpp, src/kwq/qt/_qrect.cpp,
+	src/kwq/qt/_qsize.cpp: Disable the whole file contents when
+	building.
+	* src/kwq/Makefile.in: Add new files to build.
+	
+	Start moving away from QShared so we can remove it:
+
+	* src/kwq/qt/qbrush.h, src/kwq/KWQBrush.mm: (QBrush::QBrush),
+	(QBrush::color),
+	(QBrush::setColor), (QBrush::style), (QBrush::setStyle),
+	(QBrush::operator==), (QBrush::operator!=): Don't use shared data
+	for this simple value object, the optimization value is
+	quastionable anyway.
+	* src/kwq/qt/qpen.h, src/kwq/KWQPen.mm: (QPen::QPen),
+	(QPen::color), (QPen::width), (QPen::style),
+	(QPen::setColor), (QPen::setWidth), (QPen::setStyle),
+	(QPen::operator==): Likewise.
+	* src/kwq/KWQPainter.mm: (QPainter::setPen), (QPainter::setBrush):
+	Update for changes to pen.
+	* src/kwq/KWQRefPtr.h: New reference-counted pointer template.
+	* src/kwq/qt/qguardedptr.h, src/kwq/KWQGuardedPtr.mm:
+	(QGuardedPtrPrivate::QGuardedPtrPrivate): Use KWQRefPtr instead of
+	QShared.
+	* src/kwq/qt/qvariant.h, src/kwq/KWQVariant.mm:
+	(QVariant::QVariant), (QVariant::~QVariant),
+	(QVariant::operator=): Use KWQRefPtr instead of
+	QShared.
+	* src/kwq/qt/qnamespace.h: Remove private constructor and
+	destructor since people want to subclass this.
+
+	* src/kwq/_KWQOwner.h: Add include guards and standard license.
+
+	* src/kdelibs/khtml/ecma/kjs_binding.h: Add include of qvariant.h,
+	how could stuff ever compile without this?
+
+2001-12-18  Richard Williamson  <rjw@apple.com>
+
+        Finally fixed underlining.
+        
+	* src/kdelibs/khtml/rendering/render_text.cpp: (TextSlave::printDecoration):
+	* src/kwq/KWQFontMetrics.mm:
+
+2001-12-18  Maciej Stachowiak  <mjs@apple.com>
+
+	* src/kwq/Makefile.in: Re-apply my changes, which accidentally got
+	clobbered.
+
+2001-12-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Changes for international character set support. Still needs work,
+	but no worse than before. amazon.co.jp renders almost correctly.
+	
+	* src/kwq/KWQCharsets.h, src/kwq/KWQCharsets.mm:
+	(KWQCFStringEncodingFromIANACharsetName,
+	KWQCFStringEncodingFromMIB, KWQCFStringEncodingToIANACharsetName,
+	KWQCFStringEncodingToMIB): New functions that translate between
+	the Qt concept of charaxcter sets and the
+	(buildDictionaries): static helper function for the above.
+	* src/kwq/KWQtextcodec.mm: (codecForCFStringEncoding,
+	QTextCodec::codecForMib), QTextCodec::codecForName,
+	QTextCodec::codecForLocale, QTextCodec::name,QTextCodec::mibEnum):
+	Implement for real.
+	* src/kwq/KWQKCharsets.mm: (KCharsets::codecForName,
+	KCharsets::charsetForEncoding, KCharsets::charsetForEncoding):
+	Implement for real.
+	* src/kwq/KWQKHTMLPart.mm: (KHTMLPart::slotData): Get encoding
+	from headers if present.
+	(encodingFromContentType): Helper function for the above. 
+	(KHTMLPart::begin): Reinitialize decoder for every page.
+	(KHTMLPart::write): Minor bug fix.
+	(KHTMLPart::setEncoding): Implement.
+	(KHTMLPart::khtmlMouseMoveEvent,
+	KHTMLPart::khtmlMouseReleaseEvent, KHTMLPart::checkCompleted):
+	Simplify ifdefs to make prepare-ChangeLog happy.
+	* src/kwq/qt/qstring.h, src/kwq/KWQString.mm:
+	(QString::fromCFString): New convenience method to create a
+	QString from an immutable CFString by copying,
+	* src/kwq/character-sets.txt: IANA document describing character
+	sets.
+	* src/kwq/make-charset-table.pl, src/kwq/make-mac-encodings.c:
+	Helper programs to construct charset tables from IANA document.
+	* src/kwq/Makefile.in: Update to handle the autogenerated code.
+	* src/kwq/.cvsignore: Ignore new autogenerated files.
+	
+	* src/kdelibs/khtml/misc/decoder.cpp: (Decoder::decode): Fix
+	decoding when the encoding is specified in the http headers (which
+	seems like it could never have worked in KDE).
+
+	* include/WCBackForwardList.h, include/WCURICache.h,
+	include/WCURICacheData.h, include/WCURIEntry.h: Fix prototypes of
+	C functions with no arguments to use (void), not (), to avoid
+	warnings in WebKit.
+
+2001-12-11  Chris Blumenberg  <cblu@apple.com>
+
+	* ChangeLog:
+	* src/kwq/KWQKHTMLPart.mm:
+
+2001-12-11  Chris Blumenberg  <cblu@apple.com>
+
+	* src/kwq/KWQKHTMLPart.mm:
+
+2001-12-10  Kenneth Kocienda  <kocienda@apple.com>
+
+        Went back and did a better job of cleaning up the warnings
+        that resulted from comparing signed and unsigned numbers.
+
+	* src/kwq/KWQString.mm: (QString::insert), (QString::remove),
+	(QString::truncate):
+
+2001-12-07  Richard Williamson  <richwill@richwill.com>
+
+        Fixed bug that was highlighted when we turned on warnings.
+        
+	* src/kwq/KWQFontMetrics.mm:
+	* src/kwq/KWQMetrics.h:
+
+2001-12-07  Kenneth Kocienda  <kocienda@apple.com>
+
+        Fixed small bug in a comparison that was making -Wall complain
+
+	* src/kwq/KWQString.mm:
+

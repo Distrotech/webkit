@@ -1,0 +1,14 @@
+Makefile.in
+Makefile
+*.gperf
+cssvalues.c
+cssvalues.strip
+cssvalues.h
+cssproperties.c
+cssproperties.strip
+cssproperties.h
+.deps
+*-stamp
+*.lo
+*.la
+.libs

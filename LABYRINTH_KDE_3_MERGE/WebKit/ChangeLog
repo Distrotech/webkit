@@ -1,0 +1,1248 @@
+2002-03-20  Maciej Stachowiak  <mjs@apple.com>
+
+	Merged accumlated changes from HEAD, up to
+	MERGED_TO_KDE_3_MERGE_BRANCH tag.
+	
+2002-03-19  Maciej Stachowiak  <mjs@apple.com>
+
+	* WebView.subproj/IFWebView.mm: (-[IFWebView layout]): layout() no
+	longer takes an argument.
+
+2002-03-06  John Sullivan  <sullivan@apple.com>
+
+	* Misc.subproj/IFError.h: Removed stray but evil import.
+
+2002-03-06  Maciej Stachowiak  <mjs@apple.com>
+
+	* WebKit.pbproj/project.pbxproj: Turn on -Werror.
+
+2002-03-05  Richard Williamson  <rjw@apple.com>
+
+        Streamlined layout and drawing.  We now do the minimum amount of drawing and
+        layout.
+        
+	* WebView.subproj/IFWebFramePrivate.mm: (-[IFWebFrame _checkLoadComplete:]):
+	* WebView.subproj/IFWebView.mm: (-[IFWebView initWithFrame:]), (-[IFWebView
+	layout]), (-[IFWebView setNeedsDisplay:]), (-[IFWebView setNeedsLayout:]),
+	(-[IFWebView drawRect:]), (-[IFWebView setFrame:]), (-[IFWebView
+	windowResized:]):
+
+2002-03-05  John Sullivan  <sullivan@apple.com>
+
+	* WebView.subproj/IFWebDataSource.mm: (+[IFWebDataSource initialize]):
+	Tweak default font sizes so they match what algorithm used in Alexander
+	returns.
+
+2002-03-05  Richard Williamson  <rjw@apple.com>
+
+        Pass errors correctly to browser.
+        Removed old notification code.
+        Added support for IFError.
+        Lots of little cleanups.
+        Improved IFWebFrame state handling.
+
+	* Misc.subproj/IFError.h:
+	* Misc.subproj/IFError.m: (IFErrorMake), (+[IFError load]), (-[IFError
+	initWithErrorCode:]), (-[IFError errorCode]), (-[IFError errorDescription]):
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	receivedProgress:forResource:fromDataSource:]), (-[IFBaseWebController
+	receivedError:forResource:partialProgress:fromDataSource:]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource isLoading]):
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_startLoading:initiatedByUserEvent:]):
+	* WebView.subproj/IFWebFrame.mm: (-[IFWebFrame
+	initWithName:view:provisionalDataSource:controller:]), (-[IFWebFrame
+	setProvisionalDataSource:]):
+	* WebView.subproj/IFWebFramePrivate.h:
+	* WebView.subproj/IFWebFramePrivate.mm: (-[IFWebFrame
+	_transitionProvisionalToCommitted]), (-[IFWebFrame _state]), (-[IFWebFrame
+	_setState:]), (-[IFWebFrame _checkLoadComplete:]):
+
+2002-03-05  John Sullivan  <sullivan@apple.com>
+
+	* WebView.subproj/IFWebDataSource.mm: (+[IFWebDataSource initialize]):
+	Changed default font sizes to match scheme used in Alexander. There are
+	some serious wackinesses with KDE engine font size handling; if and when
+	we address those we might revisit these default sizes.
+
+2002-03-05  Maciej Stachowiak  <mjs@apple.com>
+
+	Removed references to IFAuthenticationHandler, since that protocol
+	now lives in WebFoundation and it's no longer quite appropriate to
+	include as part of a controller.
+
+	* WebView.subproj/IFBaseWebController.mm:
+	* WebView.subproj/IFWebController.h:
+
+2002-03-04  Richard Williamson  <rjw@apple.com>
+
+        Changes to support 'provisional' data sources.
+        API changes to IFBaseWebController, removed redundant methods.
+ 
+        * Misc.subproj/WebKitDebug.h:
+	* Plugins.subproj/IFPluginView.mm: (-[IFPluginView
+	getURLNotify:target:notifyData:]):
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController init]),
+	(-[IFBaseWebController initWithView:provisionalDataSource:]),
+	(-[IFBaseWebController createFrameNamed:for:inParent:]), (-[IFBaseWebController
+	receivedProgress:forResource:fromDataSource:]), (-[IFBaseWebController
+	receivedError:forResource:partialProgress:fromDataSource:]),
+	(-[IFBaseWebController locationChangeCommittedForFrame:]), (-[IFBaseWebController
+	_frameForDataSource:fromFrame:]), (-[IFBaseWebController mainFrame]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.mm: (IFWebDataSourceMake), (+[IFWebDataSource
+	load]):
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_startLoading:initiatedByUserEvent:]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.mm: (-[IFWebFrame init]), (-[IFWebFrame
+	initWithName:view:provisionalDataSource:controller:]), (-[IFWebFrame
+	setProvisionalDataSource:]), (-[IFWebFrame startLoading]), (-[IFWebFrame
+	stopLoading]), (-[IFWebFrame reload:]):
+	* WebView.subproj/IFWebFramePrivate.h:
+	* WebView.subproj/IFWebFramePrivate.mm: (-[IFWebFrame _setDataSource:]),
+	(-[IFWebFrame _transitionProvisionalToCommitted]):
+	* WebView.subproj/IFWebView.h:
+	* WebView.subproj/IFWebView.mm: (-[IFWebView provisionalDataSourceChanged:]),
+	(-[IFWebView dataSourceChanged:]):
+	* WebView.subproj/IFWebViewPrivate.h:
+	* WebView.subproj/IFWebViewPrivate.mm: (-[IFWebView _provisionalWidget]):
+
+2002-03-04  John Sullivan  <sullivan@apple.com>
+
+	Changed default fonts.
+
+	* WebView.subproj/IFWebDataSource.mm: 
+	(+[IFWebDataSource initialize]): Changed default fonts to ones
+	that actually exist (this was listing "Times-Roman" where it
+	meant either "Times" or "Times New Roman"). I'm about to check
+	in working font preferences, so it won't matter too much if you
+	don't like the defaults (although we should of course make sure
+	that the defaults are sensible, which I think they are).
+
+2002-03-04  John Sullivan  <sullivan@apple.com>
+
+	* WebView.subproj/IFWebDataSource.mm: (+[IFWebDataSource initialize]):
+	Reverted default fonts to what they were before I accidentally
+	checked in some debugging changes.
+
+2002-03-01  Richard Williamson  <rjw@apple.com>
+
+        Fixed a potentially large leak in frames.  View associated w/
+        frame was not being released.
+        
+        Added scaffolding for correct frame by frame load complete check.
+        
+        Moved private IFWebBaseController method implementations to 
+        IFWebBaseControllerPrivate.mm.
+        
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	createFrameNamed:for:inParent:]), (-[IFBaseWebController
+	receivedProgress:forResource:fromDataSource:]), (-[IFBaseWebController
+	receivedError:forResource:partialProgress:fromDataSource:]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm: (-[IFBaseWebControllerPrivate
+	dealloc]), (-[IFBaseWebController _changeLocationTo:forFrame:parent:]),
+	(-[IFBaseWebController _changeFrame:dataSource:]), (-[IFBaseWebController
+	_checkLoadCompleteForDataSource:]):
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSourcePrivate init]):
+	* WebView.subproj/IFWebView.mm: (-[IFWebView dataSourceChanged:]):
+
+2002-02-27  Kenneth Kocienda  <kocienda@apple.com>
+
+        I have changed the way that WebCore is glued to WebFoundation and WebKit. 
+        If you used or relied upon any code in the following files, you should
+        now use the IF* equivalents straight up.
+
+        - Labyrinth/WebCore/include/WCBackForwardList.h
+        - Labyrinth/WebCore/include/WCURICache.h
+        - Labyrinth/WebCore/include/WCURICacheData.h
+        - Labyrinth/WebCore/include/WCURIEntry.h
+        - Labyrinth/WebCore/include/WCURIEntry.h
+
+        All changes in this commit are related to making dependant code work with the new convention.
+
+	* History.subproj/IFURIEntry.h:
+	* History.subproj/IFURIEntry.m:
+	* Plugins.subproj/IFPluginView.mm: (-[IFPluginView
+	newStream:mimeType:notifyData:]), (-[IFPluginView
+	IFURLHandle:resourceDataDidBecomeAvailable:]), (-[IFPluginView
+	IFURLHandleResourceDidFinishLoading:data:]), (-[IFPluginView
+	IFURLHandleResourceDidBeginLoading:]), (-[IFPluginView
+	IFURLHandleResourceDidCancelLoading:]), (-[IFPluginView
+	IFURLHandle:resourceDidFailLoadingWithResult:]):
+	* WebKit.pbproj/kocienda.pbxuser:
+	* WebKit.pbproj/project.pbxproj:
+
+2002-02-26  John Sullivan  <sullivan@apple.com>
+
+	* History.subproj/IFURIEntry.m: (-[IFURIEntry dealloc]):
+	Added missing dealloc method that 'leaks' found.
+
+	* History.subproj/IFURIList.m: (-[IFURIList dealloc]):
+	Added missing [super dealloc] call that 'leaks' found.
+
+2002-02-22  Maciej Stachowiak  <mjs@apple.com>
+
+	Fix prebinding:
+
+	* WebKit.pbproj/project.pbxproj: Set first segment address
+	0x4000000 to avoid colliding with apps or our other frameworks.
+
+	Set up some hacks to avoid link-time dependency on
+	WebKit. Prebinding is incompatible with - undefined suppress, so
+	we can't have WebCore depend on symbols provided by WebKit any
+	more:
+
+	* Plugins.subproj/IFPluginView.mm: (IFPluginMake), (+[IFPluginView load]),
+	(startupVolumeName):
+	* WebView.subproj/IFBaseWebController.mm: (IFLoadProgressMake), (+[IFLoadProgress
+	load]):
+
+2002-02-22  John Sullivan  <sullivan@apple.com>
+
+	Updated for modified NSCalendarDate extensions API.
+
+	* History.subproj/IFWebHistoryPrivate.m: 
+	(-[IFWebHistoryPrivate findIndex:forDay:]): use compareDate: instead of 
+	daysSinceDate:, which no longer exists.
+
+2002-02-22  Richard Williamson  <rjw@apple.com>
+
+        Added data: to IFURLHandleResourceDidFinishLoading:
+        
+	* WebView.subproj/IFWebDataSource.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource isLoading]):
+
+2002-02-22  Richard Williamson  <rjw@apple.com>
+
+        Implemented missing getter for provisionalDataSource.
+        
+	* WebView.subproj/IFWebFrame.mm: (-[IFWebFrame provisionalDataSource]):
+	* WebView.subproj/IFWebFramePrivate.h:
+
+2002-02-22  Richard Williamson  <rjw@apple.com>
+
+        Normalized code paths for setMainDataSource on controller and setDataSource on frame.
+        
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	setMainView:andMainDataSource:]), (-[IFBaseWebController
+	createFrameNamed:for:inParent:]), (-[IFBaseWebController
+	_changeFrame:dataSource:]):
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_setController:]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.mm: (-[IFWebFrame init]), (-[IFWebFrame
+	initWithName:view:dataSource:controller:]), (-[IFWebFrame setView:]),
+	(-[IFWebFrame controller]), (-[IFWebFrame setController:]), (-[IFWebFrame
+	setDataSource:]), (-[IFWebFrame reset]):
+	* WebView.subproj/IFWebFramePrivate.h:
+	* WebView.subproj/IFWebFramePrivate.mm: (-[IFWebFramePrivate setController:]),
+	(-[IFWebFrame _setRenderFramePart:]), (-[IFWebFrame _renderFramePart]),
+	(-[IFWebFrame _setDataSource:]):
+
+2002-02-21  Richard Williamson  <rjw@apple.com>
+
+        Stop mostly working.
+    
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	_frameForDataSource:fromFrame:]), (-[IFBaseWebController frameForDataSource:]):
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource frame]),
+	(-[IFWebDataSource frameName]), (-[IFWebDataSource stopLoading]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSourcePrivate dealloc]),
+	(-[IFWebDataSource _addURLHandle:]), (-[IFWebDataSource _removeURLHandle:]),
+	(-[IFWebDataSource _stopLoading]), (-[IFWebDataSource
+	_recursiveStopLoadingfromDataSource:]):
+	* WebView.subproj/IFWebFrame.mm: (-[IFWebFrame setDataSource:]):
+
+2002-02-20  Richard Williamson  <rjw@apple.com>
+
+    Some groundwork to bring WebFoundation callbacks up to 
+    WebKit.
+    
+	* WebView.subproj/IFBaseWebController.mm: (-[IFLoadProgress init]),
+	(-[IFBaseWebController receivedProgress:forResource:fromDataSource:]),
+	(-[IFBaseWebController
+	receivedError:forResource:partialProgress:fromDataSource:]),
+	(-[IFBaseWebController _changeFrame:dataSource:]):
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource stopLoading]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFramePrivate.h:
+	* WebView.subproj/IFWebFramePrivate.mm: (-[IFWebFramePrivate
+	setProvisionalDataSource:]):
+
+2002-02-20  Maciej Stachowiak  <mjs@apple.com>
+
+	* WebView.subproj/IFWebController.h: Fix my WebController screw-up.
+
+2002-02-19  John Sullivan  <sullivan@apple.com>
+
+	Finished first cut at IFWebHistory implementation. All methods are implemented
+	except the string-matching ones.
+
+	* History.subproj/IFURIEntry.h:
+	* History.subproj/IFURIEntry.m: (-[IFURIEntry initWithURL:title:image:comment:]),
+	(-[IFURIEntry lastVisitedDate]), (-[IFURIEntry setModificationDate:]),
+	(-[IFURIEntry setLastVisitedDate:]):
+	Changed all NSDates to be NSCalendarDates.
+
+	* History.subproj/IFWebHistory.h:
+	* History.subproj/IFWebHistory.m: (-[IFWebHistory init]), (-[IFWebHistory
+	dealloc]), (-[IFWebHistory sendEntriesChangedNotification]), (-[IFWebHistory
+	addEntry:]), (-[IFWebHistory removeEntry:]), (-[IFWebHistory
+	removeEntriesForDay:]), (-[IFWebHistory removeAllEntries]), (-[IFWebHistory
+	orderedLastVisitedDays]), (-[IFWebHistory orderedEntriesLastVisitedOnDay:]),
+	(-[IFWebHistory entriesWithAddressContainingString:]), (-[IFWebHistory
+	entriesWithTitleOrAddressContainingString:]), (-[IFWebHistory containsURL:]):
+	Implemented all IFWebHistory methods by calling through to IFWebHistoryPrivate object.
+	Send a change notification each time the actual data changes. Removed all
+	canned-data mechanisms.
+
+	* History.subproj/IFWebHistoryPrivate.h:
+	* History.subproj/IFWebHistoryPrivate.m: (-[IFWebHistoryPrivate init]),
+	(-[IFWebHistoryPrivate dealloc]), (-[IFWebHistoryPrivate findIndex:forDay:]),
+	(-[IFWebHistoryPrivate insertEntry:atDateIndex:]), (-[IFWebHistoryPrivate
+	removeEntryForURLString:]), (-[IFWebHistoryPrivate addEntry:]),
+	(-[IFWebHistoryPrivate removeEntry:]), (-[IFWebHistoryPrivate
+	removeEntriesForDay:]), (-[IFWebHistoryPrivate removeAllEntries]),
+	(-[IFWebHistoryPrivate orderedLastVisitedDays]), (-[IFWebHistoryPrivate
+	orderedEntriesLastVisitedOnDay:]), (-[IFWebHistoryPrivate
+	entriesWithAddressContainingString:]), (-[IFWebHistoryPrivate
+	entriesWithTitleOrAddressContainingString:]), (-[IFWebHistoryPrivate
+	containsURL:]):
+	Implemented guts of history mechanism using a dictionary for URL lookup and
+	a sorted array of dates with entries and a sorted array of sorted arrays of 
+	entries per date.
+
+	* WebKit.pbproj/project.pbxproj: Updated for new files
+
+2002-02-18  John Sullivan  <sullivan@apple.com>
+
+	First piece of implementing IFWebHistory. None of the mutators do anything,
+	and the accessors return canned data. But at least all the temporary hackery
+	is hiding behind legitimate API.
+
+	* History.subproj/IFWebHistory.h:
+	* History.subproj/IFWebHistory.m: 
+
+	(+[IFWebHistory sharedWebHistory]):
+	Implemented sensibly.
+
+	(-[IFWebHistory createTestEntryWithURLString:title:date:]), 
+	(-[IFWebHistory	testDataDates]), (-[IFWebHistory testData]), 
+	Private temporary hackery to return fake data.	
+
+	(-[IFWebHistory orderedLastVisitedDays]), 
+	(-[IFWebHistory	orderedEntriesLastVisitedOnDay:]):
+	Implemented using temporary hackery.
+
+	(-[IFWebHistory addEntry:]),
+	(-[IFWebHistory removeEntry:]), 
+	(-[IFWebHistory removeAllEntries]):
+	Unimplemented mutator methods.
+
+	(-[IFWebHistory	entriesWithAddressContainingString:]), 
+	(-[IFWebHistory	entriesWithTitleOrAddressContainingString:]), 
+	(-[IFWebHistory containsURL:]):
+	Methods that we'll need eventually, currently unimplemented. We may flesh out
+	the API a little more before we actually implement any of these.
+
+	(-[NSCalendarDate daysSinceDate:]): Convenience method in category; will
+	probably move to another file soon.
+
+	* WebKit.pbproj/project.pbxproj: Updated for new files
+
+2002-02-18  Kenneth Kocienda  <kocienda@apple.com>
+
+	Fixed breakge that came up when project file merged.
+
+	* WebKit.pbproj/project.pbxproj:
+
+2002-02-18  Kenneth Kocienda  <kocienda@apple.com>
+
+        Changes to support building standalone Alexander with Frameworks
+        and libraries contained inside the app package.
+
+	* Makefile.am:
+	* WebKit.pbproj/kocienda.pbxuser:
+	* WebKit.pbproj/project.pbxproj:
+
+2002-02-18  Richard Williamson  <rjw@apple.com>
+
+        Performance measurement.
+        
+	* WebView.subproj/IFWebView.mm: (-[IFWebView layout]), (-[IFWebView drawRect:]):
+
+2002-02-16  Richard Williamson  <rjw@apple.com>
+
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource controller]):
+
+2002-02-16  Richard Williamson  <rjw@apple.com>
+
+        Reminders to change frame<->datasource ownership cycle.
+        
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource setFrame:]),
+	(-[IFWebDataSource frame]):
+
+2002-02-13  Richard Williamson  <rjw@apple.com>
+
+    Fixed cleanup.  Should revisit ownership graph.  Cycles may be avoidable.
+    
+	* WebView.subproj/IFBaseWebControllerPrivate.mm: (-[IFBaseWebControllerPrivate
+	dealloc]):
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource setFrame:]):
+	* WebView.subproj/IFWebFrame.m: (-[IFWebFrame reset]):
+	* WebView.subproj/IFWebViewPrivate.h:
+	* WebView.subproj/IFWebViewPrivate.mm: (-[IFWebView _resetWidget]):
+
+2002-02-12  Richard Williamson  <rjw@apple.com>
+
+    Made basic forms work.
+    
+	* WebView.subproj/IFBaseWebController.mm:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.mm: (+[IFWebDataSource initialize]),
+	(-[IFWebDataSource startLoading:]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_startLoading:initiatedByUserEvent:]):
+
+2002-02-11  John Sullivan  <sullivan@apple.com>
+
+	Fixed bug where clicking on empty browser page would crash. This could
+	happen when the start page was empty, or failed to load.
+
+	* WebView.subproj/IFWebView.mm: 
+	(-[IFWebView mouseUp:]), (-[IFWebView mouseDown:]):
+	Checked for nil widget before dispatching mouse events.
+
+2002-02-08  John Sullivan  <sullivan@apple.com>
+
+	Changed back & forward to goBack and goForward and made them not return
+	a value (so signatures match those in WebBrowser). Added backEntry and
+	forwardEntry that don't alter the list. These will be needed to ask to
+	go to the URL at the back position without altering the back list until
+	the change is committed.
+
+	* History.subproj/IFBackForwardList.h:
+	* History.subproj/IFBackForwardList.m: (-[IFBackForwardList goBack]),
+	(-[IFBackForwardList backEntry]), (-[IFBackForwardList currentEntry]),
+	(-[IFBackForwardList forwardEntry]), (-[IFBackForwardList goForward]):
+
+2002-02-07  Richard Williamson  <rjw@apple.com>
+    
+    More changes to IFLocationChangeHandler API.
+
+	* WebView.subproj/IFBaseWebController.mm:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource startLoading:]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_startLoading:initiatedByMouseEvent:]):
+	* WebView.subproj/IFWebFramePrivate.h:
+
+2002-02-07  Richard Williamson  <rjw@apple.com>
+
+    Update IFLocationChangeHandler API.  Added factored code for
+    URL loading.
+    
+	* ChangeLog:
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	setMainView:andMainDataSource:]), (-[IFBaseWebController
+	_changeLocationTo:forFrame:parent:]), (-[IFBaseWebController
+	_changeFrame:dataSource:]), (-[IFBaseWebController
+	locationChangeCommittedForFrame:]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource startLoading:]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.m: (-[IFWebFrame reset]):
+
+2002-02-06  Richard Williamson  <rjw@apple.com>
+
+    Fixed allocation problems.  Implemented parent->child management
+    for datasource correctly.
+    
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	changeLocationTo:forFrame:]):
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource addFrame:]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSource
+	_setController:]), (-[IFWebDataSource _part]), (-[IFWebDataSource _setParent:]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.m: (-[IFWebFrame _setRenderFramePart:]),
+	(-[IFWebFrame _renderFramePart]):
+	* WebView.subproj/IFWebView.mm: (-[IFWebView dataSourceChanged:]):
+
+2002-02-05  Richard Williamson  <rjw@apple.com>
+
+    Updated controller API to reflect frames.
+    
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	initWithView:dataSource:]), (-[IFBaseWebController
+	setMainView:andMainDataSource:]), (-[IFBaseWebController
+	createFrameNamed:for:inParent:]), (-[IFBaseWebController mainFrame]),
+	(-[IFBaseWebController mainView]), (-[IFBaseWebController mainDataSource]),
+	(-[IFBaseWebController changeLocationTo:forFrame:]), (-[IFBaseWebController
+	locationChangeStartedForFrame:]), (-[IFBaseWebController
+	locationChangeInProgressForFrame:]), (-[IFBaseWebController
+	locationChangeDone:forFrame:]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm: (-[IFBaseWebControllerPrivate
+	init]), (-[IFBaseWebControllerPrivate dealloc]):
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource initWithURL:]),
+	(-[IFWebDataSource setFrame:]), (-[IFWebDataSource frame]), (-[IFWebDataSource
+	frameName]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSourcePrivate dealloc]),
+	(-[IFWebDataSource _part]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.m: (-[IFWebFrame dealloc]), (-[IFWebFrame
+	dataSource]), (-[IFWebFrame setDataSource:]):
+	* WebView.subproj/IFWebView.h:
+	* WebView.subproj/IFWebView.mm: (-[IFWebView dataSourceChanged:]):
+
+2002-02-05  Maciej Stachowiak  <mjs@apple.com>
+
+	Remove old obsolete cache code from tree and build.
+
+	* Cache.subproj/NSURICache.h:
+	* Cache.subproj/NSURICache.m:
+	* Cache.subproj/NSURICacheData.h:
+	* Cache.subproj/NSURICacheData.m:
+	* Cache.subproj/NSURILoad.h:
+	* Cache.subproj/NSURILoad.m:
+	* Cache.subproj/NSURILoadReallyPrivate.h:
+	* Cache.subproj/_NSURICacheQueue.h:
+	* Cache.subproj/_NSURICacheQueue.m:
+	* Misc.subproj/WebKitReallyPrivate.h:
+	* Misc.subproj/_NSMonitor.h:
+	* Misc.subproj/_NSMonitor.m:
+	* WebKit.pbproj/project.pbxproj:
+
+2002-02-05  Richard Williamson  <rjw@apple.com>
+
+    Changes to support dynamic scroll bars in frames/iframes.
+
+	* WebView.subproj/IFBaseWebController.mm: (-[IFBaseWebController
+	createFrameNamed:for:inParent:]):
+	* WebView.subproj/IFWebView.mm: (-[IFWebView dataSourceChanged]):
+	* WebView.subproj/IFWebViewPrivate.mm: (-[IFWebView _setFrameScrollView:]):
+
+2002-02-04  Maciej Stachowiak  <mjs@apple.com>
+
+	Rename all classes from WK prefix to IF prefix.
+
+	* Cache.subproj/IFLoadChunk.h:
+	* Cache.subproj/IFWebCache.h:
+	* Cache.subproj/IFWebCacheClient.h:
+	* Cache.subproj/IFWebContentType.h:
+	* History.subproj/IFAttributedURL.h:
+	* History.subproj/IFBackForwardList.h:
+	* History.subproj/IFBackForwardList.m: (-[IFBackForwardList init]),
+	(-[IFBackForwardList addEntry:]), (-[IFBackForwardList back]),
+	(-[IFBackForwardList currentEntry]), (-[IFBackForwardList forward]),
+	(-[IFBackForwardList description]):
+	* History.subproj/IFURIEntry.h:
+	* History.subproj/IFURIEntry.m: (WCCreateURIEntry), (-[IFURIEntry isEqual:]),
+	(-[IFURIEntry description]):
+	* History.subproj/IFURIList.h:
+	* History.subproj/IFURIList.m: (newURIListNode), (freeNode), (-[IFURIList
+	dealloc]), (-[IFURIList addEntry:]), (-[IFURIList removeURL:]), (-[IFURIList
+	removeEntry:]), (-[IFURIList entryForURL:]), (-[IFURIList entryAtIndex:]),
+	(-[IFURIList removeEntryAtIndex:]), (-[IFURIList removeEntriesToIndex:]):
+	* Misc.subproj/IFException.h:
+	* Misc.subproj/IFException.m:
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm: (+[IFObjectHolder holderWithObject:]),
+	(-[IFBaseWebController init]), (-[IFBaseWebController initWithView:dataSource:]),
+	(-[IFBaseWebController setDirectsAllLinksToSystemBrowser:]),
+	(-[IFBaseWebController directsAllLinksToSystemBrowser]), (-[IFBaseWebController
+	setView:andDataSource:]), (-[IFBaseWebController
+	createFrameNamed:for:inParent:]), (-[IFBaseWebController viewForDataSource:]),
+	(-[IFBaseWebController dataSourceForView:]), (-[IFBaseWebController mainView]),
+	(-[IFBaseWebController mainDataSource]), (-[IFBaseWebController
+	setStatusText:forDataSource:]), (-[IFBaseWebController
+	statusTextForDataSource:]), (-[IFBaseWebController authenticate:]),
+	(-[IFBaseWebController receivedProgress:forResource:fromDataSource:]),
+	(-[IFBaseWebController
+	receivedError:forResource:partialProgress:fromDataSource:]),
+	(-[IFBaseWebController locationWillChangeTo:]), (-[IFBaseWebController
+	locationChangeStartedForDataSource:]), (-[IFBaseWebController
+	locationChangeInProgressForDataSource:]), (-[IFBaseWebController
+	locationChangeDone:forDataSource:]), (-[IFBaseWebController
+	receivedPageTitle:forDataSource:]), (-[IFBaseWebController
+	serverRedirectTo:forDataSource:]):
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm:
+	* WebView.subproj/IFDynamicScrollBarsView.h:
+	* WebView.subproj/IFDynamicScrollBarsView.m:
+	* WebView.subproj/IFGrabBag.h:
+	* WebView.subproj/IFPreferences.h:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.h:
+	* WebView.subproj/IFWebDataSource.mm: (-[IFWebDataSource _commonInitialization]),
+	(-[IFWebDataSource initWithURL:]), (-[IFWebDataSource frameName]),
+	(-[IFWebDataSource isMainDocument]), (-[IFWebDataSource parent]),
+	(-[IFWebDataSource children]), (-[IFWebDataSource addFrame:]), (-[IFWebDataSource
+	frameNamed:]), (-[IFWebDataSource frameNames]), (-[IFWebDataSource
+	findDataSourceForFrameNamed:]), (-[IFWebDataSource frameExists:]),
+	(-[IFWebDataSource openURL:inFrameNamed:]), (-[IFWebDataSource
+	openURL:inIFrame:]), (-[IFWebDataSource controller]), (-[IFWebDataSource
+	inputURL]), (-[IFWebDataSource finalURL]), (-[IFWebDataSource wasRedirected]),
+	(-[IFWebDataSource stopLoading]), (-[IFWebDataSource isLoading]),
+	(-[IFWebDataSource base]), (-[IFWebDataSource baseTarget]), (-[IFWebDataSource
+	encoding]), (-[IFWebDataSource setUserStyleSheetFromURL:]), (-[IFWebDataSource
+	setUserStyleSheetFromString:]), (-[IFWebDataSource icon]), (-[IFWebDataSource
+	isPageSecure]), (-[IFWebDataSource pageTitle]):
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm: (-[IFWebDataSourcePrivate dealloc]),
+	(-[IFWebDataSource _setController:]), (-[IFWebDataSource _part]),
+	(-[IFWebDataSource _setFrameName:]):
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.m: (-[IFWebFrame initWithName:view:dataSource:]),
+	(-[IFWebFrame dataSource]):
+	* WebView.subproj/IFWebView.h:
+	* WebView.subproj/IFWebView.mm: (-[IFWebView initWithFrame:]), (-[IFWebView
+	controller]), (-[IFWebView dataSourceChanged]), (-[IFWebView layout]),
+	(-[IFWebView stopAnimations]), (-[IFWebView setFontSizes:]), (-[IFWebView
+	fontSizes]), (-[IFWebView resetFontSizes]), (-[IFWebView setStandardFont:]),
+	(-[IFWebView standardFont]), (-[IFWebView setFixedFont:]), (-[IFWebView
+	fixedFont]), (-[IFWebView setCanDragFrom:]), (-[IFWebView setCanDragTo:]),
+	(-[IFWebView defaultContextMenuItemsForNode:]), (-[IFWebView
+	setContextMenusEnabled:]), (-[IFWebView deselectText]), (-[IFWebView
+	searchFor:direction:caseSensitive:]), (-[IFWebView selectedText]), (-[IFWebView
+	setNeedsLayout:]), (-[IFWebView drawRect:]), (-[IFWebView setIsFlipped:]),
+	(-[IFWebView isFlipped]), (-[IFWebView mouseUp:]), (-[IFWebView mouseDown:]):
+	* WebView.subproj/IFWebViewPrivate.h:
+	* WebView.subproj/IFWebViewPrivate.mm: (-[IFWebViewPrivate dealloc]),
+	(-[IFWebView _setController:]), (-[IFWebView _widget]), (-[IFWebView
+	_setFrameScrollView:]), (-[IFWebView _frameScrollView]):
+
+2002-02-04  Maciej Stachowiak  <mjs@apple.com>
+
+	Rename all WK files to IF (classes not renamed yet).
+
+	* Cache.subproj/IFLoadChunk.h:
+	* Cache.subproj/IFWebCache.h:
+	* Cache.subproj/IFWebCacheClient.h:
+	* Cache.subproj/IFWebContentType.h:
+	* Cache.subproj/WKLoadChunk.h:
+	* Cache.subproj/WKWebCache.h:
+	* Cache.subproj/WKWebCacheClient.h:
+	* Cache.subproj/WKWebContentType.h:
+	* History.subproj/IFAttributedURL.h:
+	* History.subproj/IFBackForwardList.h:
+	* History.subproj/IFBackForwardList.m:
+	* History.subproj/IFURIEntry.h:
+	* History.subproj/IFURIEntry.m:
+	* History.subproj/IFURIList.h:
+	* History.subproj/IFURIList.m:
+	* History.subproj/WKAttributedURL.h:
+	* History.subproj/WKBackForwardList.h:
+	* History.subproj/WKBackForwardList.m:
+	* History.subproj/WKURIEntry.h:
+	* History.subproj/WKURIEntry.m:
+	* History.subproj/WKURIList.h:
+	* History.subproj/WKURIList.m:
+	* Misc.subproj/WKException.h:
+	* Misc.subproj/WKException.m:
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/IFBaseWebController.h:
+	* WebView.subproj/IFBaseWebController.mm:
+	* WebView.subproj/IFBaseWebControllerPrivate.h:
+	* WebView.subproj/IFBaseWebControllerPrivate.mm:
+	* WebView.subproj/IFDefaultWebController.h:
+	* WebView.subproj/IFDefaultWebController.mm:
+	* WebView.subproj/IFDefaultWebControllerPrivate.h:
+	* WebView.subproj/IFDefaultWebControllerPrivate.mm:
+	* WebView.subproj/IFDynamicScrollBarsView.m:
+	* WebView.subproj/IFGrabBag.h:
+	* WebView.subproj/IFPreferences.h:
+	* WebView.subproj/IFWebController.h:
+	* WebView.subproj/IFWebDataSource.h:
+	* WebView.subproj/IFWebDataSource.mm:
+	* WebView.subproj/IFWebDataSourcePrivate.h:
+	* WebView.subproj/IFWebDataSourcePrivate.mm:
+	* WebView.subproj/IFWebFrame.h:
+	* WebView.subproj/IFWebFrame.m:
+	* WebView.subproj/IFWebView.h:
+	* WebView.subproj/IFWebView.mm:
+	* WebView.subproj/IFWebViewPrivate.h:
+	* WebView.subproj/IFWebViewPrivate.mm:
+	* WebView.subproj/WKDefaultWebController.h:
+	* WebView.subproj/WKDefaultWebController.mm:
+	* WebView.subproj/WKDefaultWebControllerPrivate.h:
+	* WebView.subproj/WKDefaultWebControllerPrivate.mm:
+	* WebView.subproj/WKDynamicScrollBarsView.h:
+	* WebView.subproj/WKDynamicScrollBarsView.m:
+	* WebView.subproj/WKGrabBag.h:
+	* WebView.subproj/WKPreferences.h:
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebDataSource.mm:
+	* WebView.subproj/WKWebDataSourcePrivate.h:
+	* WebView.subproj/WKWebDataSourcePrivate.mm:
+	* WebView.subproj/WKWebFrame.h:
+	* WebView.subproj/WKWebFrame.m:
+	* WebView.subproj/WKWebView.h:
+	* WebView.subproj/WKWebView.mm:
+	* WebView.subproj/WKWebViewPrivate.h:
+	* WebView.subproj/WKWebViewPrivate.mm:
+
+2002-02-01  Richard Williamson  <rjw@apple.com>
+
+    Changes for dynamic scrolling frames.  Added notification of complete
+    load.
+    
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController
+	createFrameNamed:for:inParent:]), (-[WKDefaultWebController
+	locationChangeDone:forDataSource:]):
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebView.mm: (-[WKWebView dataSourceChanged]):
+	* WebView.subproj/WKWebViewPrivate.h:
+	* WebView.subproj/WKWebViewPrivate.mm: (-[WKWebViewPrivate dealloc]),
+	(-[WKWebView _widget]), (-[WKWebView _setFrameScrollView:]), (-[WKWebView
+	_frameScrollView]):
+
+2002-02-01  John Sullivan  <sullivan@apple.com>
+
+	Added call to examine the entry at the current index in
+	the back/forward list without modifying the list. I needed
+	this to save context data (in my case, scroll position)
+	on the currently-viewed entry.
+
+	* History.subproj/WKBackForwardList.h:
+	* History.subproj/WKBackForwardList.m: 
+	(-[WKBackForwardList currentEntry]):
+	Just returns the entry at the current index.
+
+2002-01-31  John Sullivan  <sullivan@apple.com>
+
+	* History.subproj/WKURIList.m: (newURIListNode):
+	retain entries before adding them to list. The node-freeing
+	routine was releasing, but the node-adding routine wasn't
+	retaining. Bad asymmetry, made up for by WebViewTest not
+	autoreleasing. I fixed that too.
+
+2002-01-31  John Sullivan  <sullivan@apple.com>
+
+	* WebKit.pbproj: Removed -O0, so it will now get all the same
+	warnings as pbxbuild gets.
+
+2002-01-31  Kenneth Kocienda  <kocienda@apple.com>
+
+        Removed dependency on WC versions of these files
+        
+	* History.subproj/WKBackForwardList.h:
+	* History.subproj/WKBackForwardList.m:
+	* History.subproj/WKURIEntry.h:
+	* History.subproj/WKURIEntry.m:
+	* WebKit.pbproj/project.pbxproj:
+
+2002-01-31  John Sullivan  <sullivan@apple.com>
+
+	* WebKit.pbproj:
+	Marked WKURIList.h as a public header
+
+2002-01-30  Richard Williamson  <rjw@apple.com>
+
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController
+	createFrameNamed:for:inParent:]):
+	* WebView.subproj/WKWebDataSource.mm: (-[WKWebDataSource documentTextFromDOM]):
+
+2002-01-30  Richard Williamson  <rjw@apple.com>
+
+    Cleaned up API w/ respect to frames.
+    
+	* WebView.subproj/WKDefaultWebController.h:
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController
+	setView:andDataSource:]), (-[WKDefaultWebController
+	createFrameNamed:for:inParent:]):
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebDataSource.h:
+
+2002-01-30  Kenneth Kocienda  <kocienda@apple.com>
+
+        Added *.lo, *.la, Icon, and .libs to .cvsignore files
+        
+	* .cvsignore:
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+	* ChangeLog:
+	* WebView.subproj/WKDefaultWebController.h:
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController
+	setView:andDataSource:]), (-[WKDefaultWebController dataSourceForView:]):
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController
+	setView:andDataSource:]):
+
+2002-01-29  Richard Williamson  <rjw@apple.com>
+
+    First pass at frame code.  Still needs lots of cleanup.
+    
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/WKDefaultWebController.h:
+	* WebView.subproj/WKDefaultWebController.mm: (-[WKDefaultWebController init]):
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebDataSource.mm: (-[WKWebDataSource dealloc]),
+	(-[WKWebDataSource frameName]), (-[WKWebDataSource parent]), (-[WKWebDataSource
+	children]), (-[WKWebDataSource addFrame:]), (-[WKWebDataSource frameNamed:]):
+	* WebView.subproj/WKWebDataSourcePrivate.h:
+	* WebView.subproj/WKWebDataSourcePrivate.mm: (-[WKWebDataSourcePrivate init]),
+	(-[WKWebDataSourcePrivate dealloc]), (-[WKWebDataSource _setController:]),
+	(-[WKWebDataSource _setFrameName:]):
+	* WebView.subproj/WKWebView.mm: (-[WKWebView mouseUp:]):
+	* WebView.subproj/WKWebViewPrivate.h:
+	* WebView.subproj/WKWebViewPrivate.mm: (-[WKWebViewPrivate dealloc]),
+	(-[WKWebView _setController:]), (-[WKWebView _widget]):
+
+2002-01-29  Kenneth Kocienda  <kocienda@apple.com>
+
+        WebKit now links with WebFoundation
+        
+	* WebKit.pbproj/kocienda.pbxuser:
+	* WebKit.pbproj/project.pbxproj:
+
+
+2002-01-23  Ken Kocienda  <kocienda@apple.com>
+
+	Took out @executable_path hack added for Alexander demo.
+	This should clear up a class of crash-on-launch issues.
+
+	* WebKit.pbproj/project.pbxproj:
+
+2002-01-21  John Sullivan  <sullivan@apple.com>
+
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebView.h:
+	Changed WKConcreteWebController to WKDefaultWebController in a
+	couple of comments.
+
+2002-01-18  Richard Williamson  <rjw@apple.com>
+
+    First pass at new view/datasource/controller API.
+    
+	* Misc.subproj/WKException.h:
+	* Misc.subproj/WKException.m:
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/WKDefaultWebController.h:
+	* WebView.subproj/WKDefaultWebController.mm: (+[WKObjectHolder
+	holderWithObject:]), (-[WKObjectHolder initWithObject:]), (-[WKObjectHolder
+	dealloc]), (-[WKObjectHolder copyWithZone:]), (-[WKObjectHolder hash]),
+	(-[WKObjectHolder object]), (-[WKObjectHolder isEqual:]),
+	(-[WKDefaultWebController initWithView:dataSource:]), (-[WKDefaultWebController
+	dealloc]), (-[WKDefaultWebController setDirectsAllLinksToSystemBrowser:]),
+	(-[WKDefaultWebController directsAllLinksToSystemBrowser]),
+	(-[WKDefaultWebController setView:andDataSource:]), (-[WKDefaultWebController
+	viewForDataSource:]), (-[WKDefaultWebController dataSourceForView:]),
+	(-[WKDefaultWebController mainView]), (-[WKDefaultWebController mainDataSource]),
+	(-[WKDefaultWebController createViewForDataSource:inFrameNamed:]),
+	(-[WKDefaultWebController createViewForDataSource:inIFrame:]),
+	(-[WKDefaultWebController setStatusText:forDataSource:]),
+	(-[WKDefaultWebController statusTextForDataSource:]), (-[WKDefaultWebController
+	authenticate:]), (-[WKDefaultWebController
+	receivedProgress:forResource:fromDataSource:]), (-[WKDefaultWebController
+	receivedError:forResource:partialProgress:fromDataSource:]),
+	(-[WKDefaultWebController locationWillChangeTo:]), (-[WKDefaultWebController
+	locationChangeStartedForDataSource:]), (-[WKDefaultWebController
+	locationChangeInProgressForDataSource:]), (-[WKDefaultWebController
+	locationChangeDone:forDataSource:]), (-[WKDefaultWebController
+	receivedPageTitle:forDataSource:]), (-[WKDefaultWebController
+	serverRedirectTo:forDataSource:]):
+	* WebView.subproj/WKDefaultWebControllerPrivate.h:
+	* WebView.subproj/WKDefaultWebControllerPrivate.mm:
+	(-[WKDefaultWebControllerPrivate init]), (-[WKDefaultWebControllerPrivate
+	dealloc]):
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebController.mm:
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebDataSource.mm: (-[WKWebDataSource _commonInitialization]),
+	(-[WKWebDataSource initWithURL:]), (-[WKWebDataSource parent]),
+	(-[WKWebDataSource isMainDocument]), (-[WKWebDataSource children]),
+	(-[WKWebDataSource frameNames]), (-[WKWebDataSource
+	findDataSourceForFrameNamed:]), (-[WKWebDataSource frameExists:]),
+	(-[WKWebDataSource openURL:inFrameNamed:]), (-[WKWebDataSource
+	openURL:inIFrame:]), (-[WKWebDataSource controller]), (-[WKWebDataSource
+	inputURL]), (-[WKWebDataSource finalURL]), (-[WKWebDataSource wasRedirected]),
+	(-[WKWebDataSource startLoading:]), (-[WKWebDataSource stopLoading]),
+	(-[WKWebDataSource isLoading]), (-[WKWebDataSource documentText]),
+	(-[WKWebDataSource base]), (-[WKWebDataSource baseTarget]), (-[WKWebDataSource
+	encoding]), (-[WKWebDataSource setUserStyleSheetFromURL:]), (-[WKWebDataSource
+	setUserStyleSheetFromString:]), (-[WKWebDataSource icon]), (-[WKWebDataSource
+	isPageSecure]), (-[WKWebDataSource pageTitle]):
+	* WebView.subproj/WKWebDataSourcePrivate.h:
+	* WebView.subproj/WKWebDataSourcePrivate.mm: (-[WKWebDataSourcePrivate init]),
+	(-[WKWebDataSourcePrivate dealloc]), (-[WKWebDataSource _setController:]),
+	(-[WKWebDataSource _part]):
+	* WebView.subproj/WKWebView.h:
+	* WebView.subproj/WKWebView.mm: (-[WKWebView initWithFrame:]), (-[WKWebView
+	dealloc]), (-[WKWebView controller]), (-[WKWebView dataSourceChanged]),
+	(-[WKWebView layout]), (-[WKWebView stopAnimations]), (-[WKWebView
+	setFontSizes:]), (-[WKWebView fontSizes]), (-[WKWebView resetFontSizes]),
+	(-[WKWebView setStandardFont:]), (-[WKWebView standardFont]), (-[WKWebView
+	setFixedFont:]), (-[WKWebView fixedFont]), (-[WKWebView setCanDragFrom:]),
+	(-[WKWebView canDragFrom]), (-[WKWebView setCanDragTo:]), (-[WKWebView
+	canDragTo]), (-[WKWebView defaultContextMenuItemsForNode:]), (-[WKWebView
+	setContextMenusEnabled:]), (-[WKWebView deselectText]), (-[WKWebView
+	searchFor:direction:caseSensitive:]), (-[WKWebView selectedText]), (-[WKWebView
+	delayLayout:]), (-[WKWebView notificationReceived:]), (-[WKWebView
+	setNeedsLayout:]), (-[WKWebView drawRect:]), (-[WKWebView setIsFlipped:]),
+	(-[WKWebView isFlipped]), (-[WKWebView setFrame:]), (-[WKWebView mouseUp:]),
+	(-[WKWebView mouseDown:]), (-[WKWebView mouseDragged:]):
+	* WebView.subproj/WKWebViewPrivate.h:
+	* WebView.subproj/WKWebViewPrivate.mm: (-[WKWebViewPrivate init]),
+	(-[WKWebViewPrivate dealloc]), (-[WKWebView _resetView]), (-[WKWebView
+	_setController:]):
+
+2002-01-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Convert build system to automake
+
+	* Makefile.am: Add this
+	* Makefile.in: Remove this (now autogenerated)
+	* .cvsignore: Fix ignores
+	* WebKit.pbproj/project.pbxproj: Twiddle link flags
+
+2001-12-21  John Sullivan  <sullivan@apple.com>
+
+	* .cvsignore:
+	* WebKit.pbproj/.cvsignore:
+	Added files that were showing up on my machine to .cvsignores.
+
+2001-12-18  Kenneth Kocienda  <kocienda@apple.com>
+
+        Deleted one little word
+
+	* Documentation/WebKit-White-Paper/WebKit-White-Paper.html:
+
+2001-12-18  Richard Williamson  <rjw@apple.com>
+
+        Restructing of headers in prepartion for implementation.  Added new WK*
+        headers to PB project description.
+
+	* ChangeLog:
+	* WebKit.pbproj/project.pbxproj:
+	* WebView.subproj/NSWebPageDataSource.h:
+	* WebView.subproj/NSWebPageDataSource.mm:
+	* WebView.subproj/NSWebPageDataSourcePrivate.h:
+	* WebView.subproj/NSWebPageView.h:
+	* WebView.subproj/NSWebPageView.mm:
+	* WebView.subproj/NSWebPageViewPrivate.h:
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebController.mm:
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebDataSource.mm: (+[WKWebDataSource initialize]):
+	* WebView.subproj/WKWebDataSourcePrivate.h:
+	* WebView.subproj/WKWebView.h:
+	* WebView.subproj/WKWebView.mm:
+	* WebView.subproj/WKWebViewPrivate.h:
+
+2001-12-18  Kenneth Kocienda  <kocienda@apple.com>
+
+        Updated the white paper text and graphics.
+        
+	* Documentation/WebKit-White-Paper/WebKit-White-Paper.html:
+	* Documentation/WebKit-White-Paper/images/webkit-cache-loader.jpg:
+	* Documentation/WebKit-White-Paper/images/webkit-classes.jpg:
+
+2001-12-18  Kenneth Kocienda  <kocienda@apple.com>
+
+        Merged "Changes" information into individual files
+
+	* Cache.subproj/WKLoadChunk.h:
+	* Cache.subproj/WKWebCache.h:
+	* Cache.subproj/WKWebCacheClient.h:
+	* Cache.subproj/WKWebContentType.h:
+
+2001-12-17  Kenneth Kocienda  <kocienda@apple.com>
+
+        Fixed small cpp glitch in WKWebCache.
+        Added WKAttributedURL header.
+        Updated WKBackForwardList with ifdef'ed out new design.
+        
+	* Cache.subproj/WKWebCache.h:
+	* History.subproj/WKAttributedURL.h:
+	* History.subproj/WKBackForwardList.h:
+
+2001-12-17  Kenneth Kocienda  <kocienda@apple.com>
+
+        Added header files by chopping up the CacheAPI.h document I have been working on.
+
+	* Cache.subproj/WKLoadChunk.h:
+	* Cache.subproj/WKWebCache.h:
+	* Cache.subproj/WKWebCacheClient.h:
+	* Cache.subproj/WKWebContentType.h:
+
+2001-12-17  Kenneth Kocienda  <kocienda@apple.com>
+
+        Did some verb tense cleanup.
+
+	* Documentation/WebKit-White-Paper/WebKit-White-Paper.html:
+
+2001-12-17  Kenneth Kocienda  <kocienda@apple.com>
+
+        Added the current draft of the WebKit white paper.
+        
+	* Documentation/WebKit-White-Paper/WebKit-White-Paper.html:
+	* Documentation/WebKit-White-Paper/images/webkit-cache-loader.jpg:
+
+2001-12-14  Richard Williamson  <rjw@apple.com>
+
+        Remove WKContextMenuHandler for want of a better way to describe the
+        not-yet-existing WKDOMNode.  We can't think of any initial clients that want
+        to override the default behavior anyway.  Put it in WKGrabBag.h for now.
+
+	* WebView.subproj/WKWebController.h:   
+
+2001-12-14  Richard Williamson  <rjw@apple.com>
+        
+        Remove explicit API to get/set the selection range.  This will be postponed until we
+        have a DOM API that allows us to express selection ranges correctly.  Instead we have API
+        that should support searching and getting a NSAttributedString that corresponds to
+        the selected text.
+
+        Added the following methods:
+            - (void)searchFor: (NSString *)string direction: (BOOL)forward caseSensitive: (BOOL)case
+            - deselectText;
+            - (NSAttributedString *)selectedText;
+       
+	* WebView.subproj/WKWebView.h:    
+
+        Moved search API to WKWebView.
+        
+        Moved WKPreferences to a new file, WKPreferences.h.  We are still discussing
+        this item and it will not make it into the white paper.
+                    
+	Minor naming changes.
+
+	* WebView.subproj/WKDataSource.h:        
+
+2001-12-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Simplified WKLocationChangeHandler and updated
+	WKAuthenticationHandler.
+
+	* WebView.subproj/WKWebController.h:
+	(WKWebDataSource): Renamed methods to be forDataSource, not
+	byDataSource.
+	(-[WKWebDataSource locationChangeInProgressForDataSource:]): Added.
+	(-[WKWebDataSource locationChangeDone:forDataSource:]): Added as a
+	collapsed version of locationChangeCancelled:,
+	locationChangeStopped: and locationChangeFinished:.
+	(WKSimpleAuthenticationResult, WKSimpleAuthenticationRequest):
+	made these interfaces instead of structs.
+	
+2001-12-14  Maciej Stachowiak  <mjs@apple.com>
+
+	Minor cleanups, mostly for naming consistency.
+	
+	* WebView.subproj/WKWebController.h: 
+	(WKSimpleAuthenticationRequest) name field `url', not `uri'.
+	(-[WKWebDataSourceErrorHandler receivedError:forDataSource:]):
+	renamed from `error:inDataSource:' so that it's a verb phrase.
+	
+	* WebView.subproj/WKWebDataSource.h:
+	(-[WKWebDataSource initWithURL:]): Rename `inputUrl' argument to
+	`inputURL'.
+	(-[WKWebDataSource initWithLoader:]): Change argument type from
+	`WKURILoader' to `WKLoader'.
+	(-[WKWebDataSource wasRedirected]): Renamed from `isRedirected',
+	the past tense seems more appropriate here.
+	(-[WKWebDataSource setJavaEnabled:]): Add missing semicolon.
+	(-[WKWebDataSource pluginsEnabled:]): renamed from `pluginEnabled'
+	for consistency with `setPluginsEnabled:'.
+
+	* WebView.subproj/WKWebView.h:
+	(-[WKWebView fontSizes]): renamed from `fontSize' for sonsistency
+	with `setFontSizes:'.
+	(-[WKWebView setContextMenusEnabled]): renamed from
+	'setEnableContextMenus:' for consistency with
+	`contextMenusenabled'.
+
+2001-12-14  Maciej Stachowiak  <mjs@apple.com>
+
+	After discussion with Don, Removed all methods relating to
+	resolved URLs, since browsers don't actually treat aliases
+	specially.
+	
+	* WebView.subproj/WKWebController.h: removed inputURLresolvedTo: methods.
+	* WebView.subproj/WKWebDataSource.h: remove resolvedURL method,
+	and mentions of it in comments.
+
+2001-12-13  Richard Williamson  <rjw@apple.com>
+  
+        Removed WKFrameSetHandler, placed that functionality on WKWebDataSource.
+        
+        Changed WKLocationChangeHandler to add a parameter specifying the data source
+        that sent the message.
+
+	* WebView.subproj/WKWebController.h:
+
+2001-12-13  Maciej Stachowiak  <mjs@apple.com>
+
+	Warning fixes and support to pass the http headers along with
+	cache data items
+
+	* Cache.subproj/NSURICacheData.h, Cache.subproj/NSURICacheData.m:
+	(+[NSURICacheData
+	dataWithURL:status:error:headers:data:size:notificationString:userData:],
+	-[NSURICacheData
+	initWithURL:status:error:headers:data:size:notificationString:userData:]),
+	-[NSURICacheData dealloc], -[NSURICacheData error],
+	-[NSURICacheData headers]: 
+	NSURICacheData now carries a copy of the response headers
+	dictionary.
+	* Cache.subproj/NSURICache.m: include "WCURICache.h" to fix warnings.
+	(-[NSURICache requestWithURL:requestor:userData:]): 
+	Handle headers in CacheData.
+	* Cache.subproj/NSURILoad.h, Cache.subproj/NSURILoad.m:
+	(-[NSURILoad __NSURILoadReadStreamCallback:event:data:],
+	-[NSURILoad headers], -[NSURILoad dealloc], -[NSURILoad done]): 
+	An NSURILoad object now carries the response headers associated
+	with its connection, if any.
+
+	* History.subproj/WKBackForwardList.m: include WCBackForwardList.h
+	to fix warning.
+	* History.subproj/WKURIEntry.m: include WCURIEntry.h to fix
+	warning.
+	* Misc.subproj/WebKitDebug.h: Use (void) for C prototypes, not ().
+	* WebView.subproj/NSWebPageDataSource.mm: (+[NSWebPageDataSource
+	initialize]): Remove unused variable to fix warning.
+	* WebKit.pbproj/project.pbxproj: Enable many warning flags and -Werror
+
+2001-12-13  Maciej Stachowiak  <mjs@apple.com>
+
+	* WebView.subproj/WKWebController.h: Defined initial version of
+	WKAuthenticationHandler interface, and associated
+	WKSimpleAuthenticationRequest and WKSimpleAuthenticationResult
+	structs.
+
+2001-12-13  Richard Williamson  <rjw@apple.com>
+    
+        Remove setBase: and setBaseTarget:
+        
+        Changed return type of baseTarget to (NSString *)
+        
+        Added the following two methods:
+            - (WKDataSource *)parent;
+            - (NSArry *)children;
+            - (BOOL)isMainDocument;
+  
+        Added the following methods:
+        
+            - (NSArray *)frameNames;
+            - (WKWebDataSource) findDataSourceForFrameNamed: (NSString *)name;
+            - (BOOL)frameExists: (NSString *)name;
+            - (void)openURL: (NSURL *)url inFrameNamed: (NSString *)frameName;
+            - (void)openURL: (NSURL *)url inIFrame: (id)iFrameIdentifier;
+
+	* WebView.subproj/WKWebDataSource.h:
+
+2001-12-12  Richard Williamson  <rjw@apple.com>
+
+        Changed WKConcreteWebController to WKDefaultWebController.
+        
+        Changed WKLocationChangedHandler naming, replace "loadingXXX" with
+        "locationChangeXXX".
+
+        Changed loadingStopped in WKLocationChangedHandler to locationChangeStopped:(WKError *).
+
+        Changed loadingCancelled in WKLocationChangedHandler to locationChangeCancelled:(WKError *).
+        
+        Changed loadedPageTitle in WKLocationChangedHandler to receivedPageTitle:.
+
+        Added inputURL:(NSURL *) resolvedTo: (NSURL *) to WKLocationChangedHandler.
+        
+        Added the following two methods to WKLocationChangedHandler:
+        
+            - (void)inputURL: (NSURL *)inputURL resolvedTo: (NSURL *)resolvedURL;
+            - (void)serverRedirectTo: (NSURL *)url;
+       
+        Put locationWillChangeTo: back on WKLocationChangedHandler.
+        
+        Changed XXXforLocation in WKLoadHandler to XXXforResource.
+        
+        Changed timeoutForLocation: in WKLoadHandler to receivedError:forResource:partialProgress:
+        
+        Added the following two methods to WKDefaultWebController:
+        
+            - setDirectsAllLinksToSystemBrowser: (BOOL)flag
+            - (BOOL)directsAllLinksToSystemBrowser;
+            
+        Removed WKError.  This will be described in WKError.h.
+
+        * WebView.subproj/WKWebController.h:
+
+2001-12-12  Richard Williamson  <rjw@apple.com>
+    
+        After group discussion we decided to classify API as :
+        Tier 1:  Needed by our browser (or Sherlock).
+        Tier 2:  Nedded by Apple internal clients (Mail, Help, PB, other TBD).
+        Tier 3:  Third party software vendors.
+    
+        Added finalURL and isRedirected.
+	
+        * WebView.subproj/WKWebDataSource.h:
+
+2001-12-11  Chris Blumenberg  <cblu@apple.com>
+
+	* ChangeLog:
+	* WebView.subproj/NSWebPageDataSource.mm: (+[NSWebPageDataSource initialize]):
+
+2001-12-11  Chris Blumenberg  <cblu@apple.com>
+
+	* WebView.subproj/NSWebPageDataSource.mm: (+[NSWebPageDataSource initialize]):
+
+2001-12-10  John Sullivan  <sullivan@apple.com>
+
+	* WebView.subproj/WKWebController.h:
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebView.h:
+
+	Fixed some typos and misspellings.
+
+2001-12-07  Richard Williamson  <rjw@apple.com>
+
+	* WebView.subproj/NSWebPageDataSource.h:
+	* WebView.subproj/NSWebPageDataSourcePrivate.h:
+	* WebView.subproj/NSWebPageView.h:
+        
+        First pass at API for WKWebView and WKWebDataSource.  Note
+        that we have to change names from NS to WK!  The new API is conditionally
+        excluded #ifdef READY_FOR_PRIMETIME
+        
+        Added these files:
+        
+	* WebView.subproj/WKWebDataSource.h:
+	* WebView.subproj/WKWebView.h:
+	* WebView.subproj/WKWebController.h:
+
+2001-12-06  Maciej Stachowiak  <mjs@apple.com>
+
+	* Cache.subproj/NSURICacheData.m: (+[NSURICacheData
+	dataWithURL:status:error:data:size:notificationString:userData:]),
+	(-[NSURICacheData
+	initWithURL:status:error:data:size:notificationString:userData:]):
+	Remove redundant semicolons between the end of the prototype and
+	the open brace, because they confuse the changelog script.
+

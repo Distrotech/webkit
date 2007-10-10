@@ -1,0 +1,14 @@
+Makefile
+Makefile.in
+khtmldata.h
+htmltags.c
+htmltags.h
+htmltags.gperf
+htmlattrs.c
+htmlattrs.h
+htmlattrs.gperf
+.deps
+*-stamp
+*.lo
+*.la
+.libs
