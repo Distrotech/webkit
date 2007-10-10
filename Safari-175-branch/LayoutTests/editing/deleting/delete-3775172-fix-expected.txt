@@ -1,0 +1,9 @@
+layer at (0,0) size 800x600
+  RenderCanvas at (0,0) size 800x600
+layer at (0,0) size 800x600
+  RenderBlock {HTML} at (0,0) size 800x600
+    RenderBody {BODY} at (8,8) size 784x584
+selection is CARET:
+start:      position 0 of child 2 {BODY} of child 1 {HTML} of root {}
+upstream:   position 0 of child 2 {BODY} of child 1 {HTML} of root {}
+downstream: position 1 of child 2 {TEXT} of child 2 {BODY} of child 1 {HTML} of root {}
