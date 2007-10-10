@@ -1,0 +1,28 @@
+{\rtf1\mac\ansicpg10000\cocoartf102
+{\fonttbl\f0\fswiss\fcharset77 Helvetica-Bold;\f1\fswiss\fcharset77 Helvetica;\f2\fnil\fcharset77 Monaco;
+}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww16540\viewh12180\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f0\b\fs24 \cf0 API Cleanup:
+\f1\b0 \
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f2\fs20 \cf0 + Use "WebFrame" in the API when we refer to a WebFrame, rather than just "Frame".\
++ Change WebController's userStyleSheetLocation to an NSURL.\
++ Change WebController's setUsesBackForwardList to setMaintainsBackForwardList.\
++ Remove WebController's customUserAgent property.\
++ Remove suggestedFileExtensionForMIMEType from public API.\
++ On WebController:\
+    Add  -(BOOL)canGoBack, -(BOOL)canGoForward, -(BOOL)canCanel.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\fs24 \cf0 \
++ remove 
+\f2\fs20 \CocoaLigature0 suggestedFileExtensionForMIMEType\
++ remove canShowFile\
++ put class methods from WebContentTypes back on WebController (WebView)\
+move isDocumentHTML off WebFrameView and WebDataSource\
+}
