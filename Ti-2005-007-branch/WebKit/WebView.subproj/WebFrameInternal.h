@@ -1,0 +1,18 @@
+// This header contains WebFrame declarations that can be used anywhere in WebKit, but are neither SPI nor API.
+
+#import <WebKit/WebFramePrivate.h>
+
+@interface WebFrame (WebInternal)
+
+- (void)_updateDrawsBackground;
+- (void)_setInternalLoadDelegate:(id)internalLoadDelegate;
+- (id)_internalLoadDelegate;
+- (void)_safeLoadURL:(NSURL *)URL;
+- (void)_sendResourceLoadDelegateMessagesForURL:(NSURL *)URL response:(NSURLResponse *)response length:(unsigned)length;
+- (void)_unmarkAllMisspellings;
+
+@end
+
+@interface NSObject (WebInternalFrameLoadDelegate)
+- (void)webFrame:(WebFrame *)webFrame didFinishLoadWithError:(NSError *)error;
+@end;
