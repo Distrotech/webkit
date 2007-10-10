@@ -1,0 +1,2082 @@
+=== Alexander-51 ===
+
+=== Safari-50 (Alexander-48-branch) ===
+
+2003-01-09  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by Everybody
+
+        Changes merged from trunk onto the branch to patch critical data loss problems. 
+
+        2003-01-09  Trey Matteson  <trey@apple.com>    
+
+		Reviewed by Richard.
+
+		3142201 - home directory nuked during power download session
+
+		We add checks for various error cases that could combine to cause this problem.  While we
+		never got a reproducible case, we are confident that this is the only file removal done
+		in the download code, and its ability to wreak havoc has been clipped.
+
+		* Downloads.subproj/WebDownloadHandler.m:
+		(-[WebDownloadHandler cleanUpAfterFailure]):  Only nuke the partial download if in fact 
+		we created a new download file.  Never nuke a directory.
+		(-[WebDownloadHandler createFileIfNecessary]):  Don't add "." to the foo-1 filenames 
+		we generate
+		if the original filename doesn't have any extension.
+		* WebView.subproj/WebMainResourceClient.m:
+		(-[WebMainResourceClient continueAfterContentPolicy:response:]):
+		If the policyDelegate gives us a nil filename, just stop the whole load, instead of 
+		trying to overwrite the user's home directory.
+
+
+        2003-01-09  Darin Adler  <darin@apple.com>
+
+                Reviewed by Richard.
+
+                - fixed 3143332 -- if path returned is empty string (or "." or "..") it will 
+                trash the /tmp symlink
+
+                * Plugins.subproj/WebBaseNetscapePluginStream.m:
+                (-[WebBaseNetscapePluginStream finishedLoadingWithData:]):
+                Check for empty string, ".", and "..", and don't create files by those names.
+
+
+        2003-01-09  Darin Adler  <darin@apple.com>    
+
+		Reviewed by Chris.
+
+		- second pass on 3143332 - we still need a test case to be sure this is right
+
+		* Plugins.subproj/WebBaseNetscapePluginStream.m:
+		(-[WebBaseNetscapePluginStream finishedLoadingWithData:]):
+		Check for "/". Also report the failure instead of just hanging on forever.
+
+
+        2003-01-09  Trey Matteson  <trey@apple.com>    
+
+		Reviewed by Darin
+
+		WebKit:
+
+		3143294 - need short-term bulletproofing of download code against bad filenames
+
+		We protect against a download location that is not an absolute path.
+
+		* WebView.subproj/WebMainResourceClient.m:
+		(-[WebMainResourceClient continueAfterContentPolicy:response:]):
+		Bail on download if we don't have a abs path to write to.
+
+
+=== Alexander-48 ===
+
+2003-01-02  Richard Williamson   <rjw@apple.com>
+
+        Increase the minimum font size to 9pt.  This bounds the lower
+        size of the sizes array used for named sizes.  Net effect is
+        to increase xx-small from 8pt to 9pt.  xx-small is used by
+        www.microsoft.com.
+                
+        Reviewed by hyatt.
+
+        * WebView.subproj/WebPreferences.m:
+        (+[WebPreferences load]):
+
+2003-01-02  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+        - at Scott and Don's request, roll out small text anti-aliasing cutoff
+
+        Turns out this makes small text look worse, not better. We're not going to respect
+        this setting, and in Panther AppKit will almost certainly be changed not to either.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m: Rolled out yesterday's change using CVS.
+
+2003-01-02  Darin Adler  <darin@apple.com>
+
+        Reviewed by John and Don.
+
+	- fixed 3137661 -- REGRESSION: autoscroll selection is broken
+
+	The new logic in WebCore is slightly pickier, and can't abide a mouse-moved event
+	coming in during a drag. Unfortunately, we were sending a fake mouse-moved event
+	during a drag, so lets not do that.
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView mouseDown:]): Cancel any scheduled fake mouse-moved event.
+        (-[WebHTMLView mouseUp:]): Send a fake mouse-moved event because we didn't update during the drag.
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[WebHTMLView _frameOrBoundsChanged]):
+	Don't schedule a fake mouse-moved event if the mouse is down, because that means we are in the
+        middle of a drag.
+
+2003-01-02  Darin Adler  <darin@apple.com>
+
+        Reviewed by John and Ken.
+
+	- fixed 3135548 -- exception in Internet Explorer bookmark import code at first startup
+
+        * Bookmarks.subproj/WebBookmarkImporter.m:
+        (_breakStringIntoLines): Break lines before a <DT> or </DL>.
+        (_HREFTextFromSpec): Rewrite to simplify, search in a case-insensitive manner.
+        (-[WebBookmarkImporter initWithPath:]): Change prefix checks to be case-insensitive.
+	Don't discard folders altogether if the name can't be parsed as that would mess up
+	nesting w.r.t the next </DL>. Make the </DL> handling robust so we misparse, but don't
+	crash the whole application by raising an exception.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated for this change and recent changes.
+
+2003-01-01  Richard Williamson   <rjw@apple.com>
+
+        Obey the font smoothing size preference (3137618).
+        
+        Reviewed by Don and Darin.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+
+2002-12-31  Maciej Stachowiak  <mjs@apple.com>
+
+	Reviewed by Darin.
+
+	- fixed 3130831 - HOMEPAGE: JavaScript that tries to intercept onmousedown fails, image gets dragged instead
+	- fixed 3125554 - while dragging to select text in a nested frame, you can start dragging a link or image
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge handleMouseDragged:]): New method; call through the WebHTMLView.
+        (-[WebBridge mayStartDragWithMouseDown:]): Likewise.
+        (-[WebBridge handleAutoscrollForMouseDragged:]): Likewise.
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView mouseDragged:]): Instead of doing drag handling
+	here, just pass the event to WebCore.
+	(-[WebHTMLView draggedImage:endedAt:operation:]): Send a fake
+	mousemove event instead of sending the current event (likely a
+	mouse up as if it were a mouse move).
+        * WebView.subproj/WebHTMLViewPrivate.h:
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLViewPrivate dealloc]): Release drag element if any.
+        (-[WebHTMLView _dragImageForElement:]): New method. Split out the
+	code to make the special drag image for links.
+	(-[WebHTMLView _handleMouseDragged:]): Move all the drag handling
+	here. This method will get called only if WebCore hasn't blocked
+	default drag handling.
+        (-[WebHTMLView _handleAutoscrollForMouseDragged:]): Do
+	autoscroll. Autoscroll is still lame, we need a timer.
+        (-[WebHTMLView _mayStartDragWithMouseDown:]): Determine if the element
+	is a link or image and so may be dragged; remember the drag element.
+
+2003-01-01  Richard Williamson   <rjw@apple.com>
+
+        Correct fix for 3137430 that doesn't always effectively disable
+        the cache.
+        
+        Reviewed by kocienda.
+
+        * History.subproj/WebHistoryItem.m:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:request:]):
+
+2003-01-01  Richard Williamson   <rjw@apple.com>
+
+        Don't reset the cookie policy URL if it has already been set.  Fixes to 3109590.
+        
+        Reviewed by Maciej.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _addExtraFieldsToRequest:alwaysFromRequest:]):
+
+2003-01-01  Richard Williamson   <rjw@apple.com>
+
+        Don't attempt to restore page from page cache if the cache
+        doesn't contain valid page state.  This may happen after a
+        redirect.  Fixes 3137430.
+        
+        Reviewed by kocienda.
+
+        * History.subproj/WebHistoryItem.m:
+
+2002-12-31  Darin Adler  <darin@apple.com>
+
+        Reviewed by Trey.
+
+	- fixed 3137287 -- REGRESSION: Java applets don't work when you go back to them (Java 1.4.1 plug-in)
+
+	By attaching the plug-in controller to the frame, we run into trouble.
+	It really needs to be attached to the data source, which has the right lifetime
+	and is kept around in the page cache.
+
+        * Plugins.subproj/WebPluginController.h: Keep a reference to a data source, not a frame.
+	Add a new _started variable. Rename addPluginView: to addPlugin:, get rid of didAddPluginView:,
+	replace destroyAllPlugins with dataSourceWillBeDeallocated, add startAllPlugins and stopAllPlugins.
+        * Plugins.subproj/WebPluginController.m:
+        (-[WebPluginController initWithDataSource:]): Store a data source reference, not a frame reference.
+	Don't bother registering for the window will close notification, WebHTMLView handles that fine.
+        (-[WebPluginController startAllPlugins]): Do nothing if they are already started, call pluginStart on each otherwise.
+        (-[WebPluginController stopAllPlugins]): Do nothing if they are not started, call pluginStop on each otherwise.
+        (-[WebPluginController addPlugin:]): Initialize the plugin if it's not already in our list. Also start
+	it if we are in "started" mode.
+        (-[WebPluginController dataSourceWillBeDeallocated]): Stop all the plugins, then destroy them.
+	Also nil out the fields of the object. This is always called before the controller is released so we
+	don't need to override dealloc.
+        (-[WebPluginController showURL:inFrame:]): Added error checking and changed now that we start with a data source.
+        (-[WebPluginController showStatus:]): Ditto.
+
+        * WebCoreSupport.subproj/WebBridge.m: (-[WebBridge pluginViewWithPackage:attributes:baseURL:]):
+	Use the data source, not the view. Don't add the plugin here, wait until we are ready to start.
+
+        * WebView.subproj/WebDataSourcePrivate.h: Store a pointer to the plug-in controller here.
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSourcePrivate dealloc]): Tell the plug-in controller to go away.
+	(-[WebDataSource _makeHandleDelegates:deferCallbacks:]): Remove unused empty method.
+        (-[WebDataSource _pluginController]): Create a plug-in controller if needed.
+
+        * WebView.subproj/WebFramePrivate.h: Remove plug-in controller code.
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFramePrivate dealloc]): Remove plug-in controller code.
+        (-[WebFrame _detachFromParent]): Remove plug-in controller code.
+        (-[WebFrame _transitionToCommitted:]): Remove plug-in controller code.
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView viewWillMoveToWindow:]): Stop plug-ins when view moves out of a window.
+	This includes the case when the window is being destroyed.
+        (-[WebHTMLView viewDidMoveToWindow]): Start plug-ins when view moves into a window.
+        (-[WebHTMLView addSubview:]): Add plug-ins to the controller as they are added to us.
+
+        * WebView.subproj/WebController.m: Added now-needed include due to header change.
+        * WebView.subproj/WebDefaultContextMenuDelegate.m: Ditto.
+
+=== Alexander-47 ===
+
+2002-12-30  Darin Adler  <darin@apple.com>
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated for recent changes.
+
+2002-12-30  Trey Matteson  <trey@apple.com>
+
+	3137110 - REGRESSION: calls from 2nd and subsequent instances of Java 1.4.1 plug-in seem to be ignored
+
+	We had previously made changes to "numb" a plugin controller after its frame
+	was tossed or changed content.  We now finish the job by making sure a new
+	controller is created when we go to a new page with plugins.  To so this we
+	release the old controller whenever we flush the plugins from a page.
+
+        Reviewed by Maciej.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _detachFromParent]):  Call newly factored code.
+        (-[WebFrame _transitionToCommitted:]):  Call newly factored code.
+        (-[WebFrame _destroyPluginController]):  New method to tear down plugins.
+
+2002-12-30  Trey Matteson  <trey@apple.com>
+
+	3135025 - Assertion failure in _transitionToCommitted on espn nba scoreboard
+
+	For blank pages we decided that there would be no b/f entry.  This means that
+	subframes within such pages (created via doc.write()), should not try to make
+	WebHistoryItems, since they have no parent items to attach them to.
+
+        Reviewed by Darin.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]):  Don't make a history item for a subframe
+	it the parent frame has no item.
+
+2002-12-30  Trey Matteson  <trey@apple.com>
+
+	3135779 - REGRESSION: reproducible assertion failure, going back from ~orubin to the main spies.com page	
+	3136218 - REGRESSION: Assertion failure in _restoreScrollPosition running browser buster	
+
+	Both were caused by subtle interactions between new code for short-circuiting loading of
+	blank pages, and the WebHistoryItem manipulations we do for b/f and reload of child frames.
+
+        Reviewed by Maciej
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _loadURL:intoChild:]):  Setup provisional or current item before jumping into
+	the real work of loading the URL.
+        (-[WebFrame _restoreScrollPosition]):  Tweaked to make the assertion message clearer.
+
+2002-12-30  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don and Ken.
+
+	- fixed 3136797 -- crash when Adobe SVG Viewer plug-in puts up modal dialog
+
+        * Plugins.subproj/WebBaseNetscapePluginView.h: Add inSetWindow boolean.
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView sendEvent:]): Don't send any events to a plug-in while it's
+	inside NPP_SetWindow. We don't want to implement more general reentrancy protection, because
+	it could cause trouble for plugins that can handle it correctly, but it's unlikely that any
+	legitimate use would require reentrant calls while inside NPP_SetWindow, and that's the case
+	that crashes for the SVG viewer plug-in when it presents its registration dialog.
+        (-[WebBaseNetscapePluginView setWindow]): Set boolean.
+
+2002-12-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- fixed 3103287 -- body of page not rendered (page uses JavaScript trick to be both a frameset and a frame)
+
+	Our self-reference checks prevented this page from working.
+	I just removed the WebKit one, since it was really just working around a problem with the WebCore
+	one that I fixed (didn't ignore #xxx suffixes).
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge createChildFrameNamed:withURL:renderPart:allowsScrolling:marginWidth:marginHeight:]):
+	Remove self-reference check.
+
+2002-12-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- fixed 3136801 -- scrolling a page that contains a QuickTime movie leaves garbage behind
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView tellQuickTimeToChill]): Added. Calls a QuickDraw SPI
+	CallDrawingNotifications to let QuickTime know it should take a nature break.
+        (-[WebBaseNetscapePluginView viewWillMoveToWindow:]): Call tellQuickTimeToChill.
+        (-[WebBaseNetscapePluginView viewHasMoved:]): Call tellQuickTimeToChill.
+
+2002-12-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- follow-on to my fix for 3125877 that fixes a crash I observed when a plug-in fails to NPP_New
+        
+        I filed bug 3136870 about the fact that we don't do a good job reporting the error.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView sendEvent:]): Return quietly if this is called when
+	the plug-in is not started rather than asserting (and doing bad things on Deployment).
+        (-[WebBaseNetscapePluginView setWindow]): Ditto.
+        (-[WebBaseNetscapePluginView viewHasMoved:]): Just call setWindow since it now checks isStarted.
+
+2002-12-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- fixed 3120630 -- spacebar scrolls the page as well as pausing the QuickTime movie
+
+	Imitate Mozilla and OmniWeb by not propagating keyboard events after passing them to
+	plug-ins regardless of what the plug-in returns, rather than imitating MacIE, which
+        looks at the return value from NPP_HandleEvent.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView keyUp:]): Remove call to super, add comment.
+        (-[WebBaseNetscapePluginView keyDown:]): Ditto.
+
+2002-12-29  Darin Adler  <darin@apple.com>
+
+        Reviewed by Ken and Don.
+
+	- fixed 3136120 -- much content missing at www.olympic.org
+
+	This site gives modern CSS to "Internet Explorer" or "Netscape 6". Since we are neither of
+	those, we need to pretend to be one or the other. So we add olympic.org to our MacIE spoofing list.
+
+        * WebView.subproj/WebUserAgentSpoofTable.gperf: Add olympic.org to the list of pages that give us better
+	CSS if we claim to be Internet Explorer.
+        * WebView.subproj/WebUserAgentSpoofTable.c: Regenerated.
+
+=== Alexander-46 ===
+
+2002-12-28  Ken Kocienda  <kocienda@apple.com>
+
+         Reviewed by Gramps and Richard
+
+         Fix for this bug:
+
+         Radar 3112233 (400 response when attaching files at mail.yahoo.com)
+
+         I added the MIMETypeForPath method which accesses the WebFoundation mime
+         file map we maintain. KHTML can now access this map by using the bridge.
+
+         * WebCoreSupport.subproj/WebBridge.m:
+         (-[WebBridge MIMETypeForPath:])
+
+2002-12-28  Darin Adler  <darin@apple.com>
+
+        Reviewed by Gramps and Ken
+	Checked in by Ken
+
+	- fixed 3125877 -- RealPlayer plug-in doesn't work in Safari
+
+        * Plugins.subproj/WebBaseNetscapePluginView.h: Remove some methods that don't have
+	any need to be public, getCarbonEvent:, sendEvent:, sendUpdateEvent, setUpWindowAndPort.
+	Make setWindow public.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView saveAndSetPortStateForUpdate:]): Added. This replaces the
+	old setUpWindowAndPort. Besides setting up the port and the window, it also sets up the
+	port's origin, clip, visible, and update regions properly, and sets the current port.
+	In the case of an update event, we have extra work to do, which was formerly done in drawRect:.
+        (-[WebBaseNetscapePluginView saveAndSetPortState]): Calls saveAndSetPortStateForUpdate:NO.
+        (-[WebBaseNetscapePluginView restorePortState:]): Undoes the port state changes done by the
+	saveAndSetPortState calls.
+        (-[WebBaseNetscapePluginView sendEvent:]): Call saveAndSetPortStateForUpdate: before sending
+	the event to the plug-in. This is the core of fixing the bug. We need to have the port set
+	up properly. Specifically, RealPlayer depended on the port's origin being set and the update
+	region being set. Also added a "draw green" debugging aid to builds without NDEBUG set.
+        (-[WebBaseNetscapePluginView sendNullEvent]): Update text of a FIXME.
+        (-[WebBaseNetscapePluginView setWindow]): Call the new saveAndSetPortState method instead of
+	the old setUpWindowAndPort method.
+        (-[WebBaseNetscapePluginView drawRect:]): Remove bug workarounds that are now inside the
+	saveAndSetPortStateForUpdate: method.
+        (-[WebBaseNetscapePluginView viewDidMoveToWindow]): Add missing call to super.
+        (-[WebBaseNetscapePluginView windowBecameKey:]): Don't send an update event to the plugin directly.
+	Instead mark this view as needing display so we'll get a drawRect later.
+        (-[WebBaseNetscapePluginView windowResignedKey:]): Ditto.
+        (-[WebBaseNetscapePluginView requestWithURLCString:]): Corrected handling of URLs. Absolute URLs
+	are handled by the relative URL function, so there's no need to do an explicit check. Also use
+	requestWithURL instead of doing a three-method dance that does the same thing.
+        (-[WebBaseNetscapePluginView invalidateRect:]): Use setNeedsDisplayInRect: to schedule redrawing
+	rather than forcing an update right away by doing a sendUpdateEvent directly.
+        (-[WebBaseNetscapePluginView invalidateRegion:]): Ditto.
+        (-[WebBaseNetscapePluginView forceRedraw]): Use setNeedsDisplay: and displayIfNeeded to do the
+	drawing through the view system instead of doing a sendUpdateEvent directly.
+
+        * Plugins.subproj/WebNetscapePluginDocumentView.m: (-[WebNetscapePluginDocumentView layout]):
+	Do a setWindow rather than a setUpWindowAndPort when the size of the view changes. This matches
+	what other browsers do and extends the bug fix for the Java plug-in to the resize case as well as
+	the scrolling case.
+
+        * Plugins.subproj/WebNetscapePluginPackage.m: (-[WebNetscapePluginPackage initWithPath:]):
+	Remove RealPlayer antibodies.
+
+2002-12-27  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- fixed 3136206 -- Can't display images in Ambrosia Software image viewer
+
+	WebKit wasn't creating the frames correctly when they weren't HTML.
+
+        * WebView.subproj/WebFramePrivate.m: (-[WebFrame _makeDocumentView]): Added. Calls the
+	WebView to make the document view and then installs the new view, as WebHTMLView used to do.
+        (-[WebFrame _transitionToCommitted:]): Call _makeDocumentView instead of calling WebView
+	directly. These are all the calls to _makeDocumentViewForDataSource:.
+
+        * WebView.subproj/WebViewPrivate.h: Add return value to _makeDocumentViewForDataSource:.
+        * WebView.subproj/WebViewPrivate.m: (-[WebView _makeDocumentViewForDataSource:]):
+	Return the newly-created view.
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView setDataSource:]): Removed the code here
+	since it's done by WebFrame now.
+
+2002-12-25  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+	- fixed 3133611 -- Java "ticker" applet renders badly when scrolling page
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m: (-[WebBaseNetscapePluginView viewHasMoved:]):
+	Call setWindow so we make a call to the plugin each time it moves, rather than just adjusting
+	the data structure we had passed to it earlier.
+
+2002-12-24  Darin Adler  <darin@apple.com>
+
+        Reviewed by Richard and Don.
+
+	- fixed 3132192 -- HOMEPAGE: Quicktime plug in with AVI content brings Plug-ins not found panel
+
+        * Plugins.subproj/WebPluginDatabase.m: (-[WebPluginDatabase pluginForKey:withEnumeratorSelector:]):
+	Lower-case the key before searching for it. This is needed for both MIME types and extensions,
+	since we want case insensitive comparison in both cases.
+
+=== Alexander-45 ===
+
+2002-12-23  Ken Kocienda  <kocienda@apple.com>
+
+        Reviewed by Darin and Gramps
+
+	Workaround for this bug:
+
+	Radar 3134219 (MPEG-4 files don't work with the QuickTime plugin in Safari, 
+	work fine in Mozilla, IE)
+
+	For beta 1, when getting the MIME information for the QuickTime plugin, we directly 
+	insert the information to handle MP4.
+
+	In the future, we will use the additional plugin entry points to dynamically load 
+	this information from the plugin itself.
+
+        * Plugins.subproj/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage getMIMEInformation])
+
+2002-12-23  Darin Adler  <darin@apple.com>
+
+        Reviewed by John and Don.
+
+	- fixed 3134282 -- REGRESSION: text encoding setting reverts when you go to a new location
+
+        * WebView.subproj/WebFrame.m: (-[WebFrame loadRequest:]): Propagate an override encoding if there
+	was an existing data source and it had an override encoding.
+        * WebView.subproj/WebFramePrivate.m: (-[WebFrame _loadRequest:triggeringAction:loadType:]): Ditto.
+
+=== Alexander-44 ===
+
+2002-12-20  Trey Matteson  <trey@apple.com>
+
+        Do not add empty URLs to the back forward list.
+
+	Reviewed by Richard, Darin
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]):
+
+2002-12-20  Trey Matteson  <trey@apple.com>
+
+	3133829 - crash leaving page with a running applet
+
+	This fixes some holes in how we teardown plugins.  An additional fix is expected
+	from Mike Hay to finish the issue. (3133981)
+
+        Reviewed by Richard
+
+        * Plugins.subproj/WebPluginController.m:
+        (-[WebPluginController destroyAllPlugins]):  frame=nil, so we don't do any more
+	messaging back to WK after this step.
+        (-[WebPluginController showURL:inFrame:]):  bail if !frame
+        (-[WebPluginController showStatus:]):  bail if !frame
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _detachFromParent]):  destroy plugins here.  We were only doing it
+	in the non-frame case.
+
+=== Alexander-43 ===
+
+2002-12-20  Trey Matteson  <trey@apple.com>
+
+	3131841 - crash when switching encodings on a page with frames
+
+        Reviewed by rjw
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]):  Create a docView in the LoadStale case, like
+	every other kind of load does.
+
+2002-12-20  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3133261.  This fix really has two parts.  This first part
+        is here in WebTextRenderer.  The second part adds some width
+        caching to RenderText.  I was using a stack allocated array,
+        this would blow out the stack for large strings.
+
+        Reviewed by john.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+
+2002-12-20  Trey Matteson  <trey@apple.com>
+
+	We now build with symbols the B&I.  Deployment builds are without symbols,
+	so it is easy to generate a non-huge app as a one-off.
+
+        Reviewed by Darin
+
+        * WebKit.pbproj/project.pbxproj:
+
+=== Alexander-42 ===
+
+2002-12-19  John Sullivan  <sullivan@apple.com>
+
+	- WebKit part of fix for 3124949 -- Alexander recreates the 
+	default set of bookmarks every time a separate app copy is launched
+
+        Reviewed by Darin
+
+        * Bookmarks.subproj/WebBookmarkGroup.h:
+	new _tag ivar and -tag method.
+
+        * Bookmarks.subproj/WebBookmarkGroup.m:
+        (-[WebBookmarkGroup dealloc]):
+	release _tag
+        (-[WebBookmarkGroup tag]):
+	return _tag
+        (-[WebBookmarkGroup _loadBookmarkGroupGuts]):
+	read _tag from the dictionary in the file (or leave it at
+	nil if there's no value in the file).
+
+        * English.lproj/StringsNotToBeLocalized.txt:
+	kept this file up to date
+
+2002-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+	- corrected the name of a method that was leading to trouble elsewhere
+
+        * WebView.subproj/WebDataSource.h: Change fileType to fileExtension for clarity.
+        * WebView.subproj/WebDataSource.m: (-[WebDataSource fileExtension]): Ditto.
+
+=== Alexander-41 ===
+
+2002-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+	- probably fixed 3129395 -- Reproducible crash when running a javascript at www.scenespot.org
+
+        * WebCoreSupport.subproj/WebViewFactory.m:
+        (-[WebViewFactory runJavaScriptTextInputPanelWithPrompt:defaultText:returningText:]):
+        Close the window. Before we relied on it being released which was bad. But it's not clear this
+        actually was the cause of the bug.
+
+2002-12-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+        - fixed 31323455 -- REGRESSION: Crash in plugin code closing popup window on lordoftherings.net
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView sendEvent:]): Added an assert.
+        (-[WebBaseNetscapePluginView setWindow]): Added an assert.
+        (-[WebBaseNetscapePluginView stop]): Cancel perform requests, now that we are using them for
+	URL navigation.
+        (-[WebBaseNetscapePluginView frameStateChanged:]): Only notify if the plugin is still running.
+        (-[WebBaseNetscapePluginView loadPluginRequest:]): Added. Does the actual load at idle time.
+	Also fixed to only notify if plugin is loaded. Added a number of FIXMEs for other problems here.
+	Also send JavaScript to the appropriate frame, not always the top level.
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:]): Use loadPluginRequest:
+	to do the request after a delay. Also remove the special cases for special frame names; they
+	were trying to avoid calling a plugin that has gone away, but we do that a better way now.
+        (-[WebBaseNetscapePluginView getURLNotify:target:notifyData:]): Added logging.
+        (-[WebBaseNetscapePluginView status:]): Use Windows Latin-1 rather than MacRoman for messages.
+	I guess we should test later to find out which is used by MacIE and conform to that, but for now
+	this seems like a better default.
+        (-[WebPluginRequest initWithRequest:frame:notifyData:]): Added.
+        (-[WebPluginRequest dealloc]): Added.
+        (-[WebPluginRequest request]): Added.
+        (-[WebPluginRequest webFrame]): Added.
+        (-[WebPluginRequest notifyData]): Added.
+
+2002-12-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+	- fixed fix for 3132056 -- Supply Finder bits for decoded BinHex files
+
+        * Downloads.subproj/WebBinHexDecoder.m: (-[WebBinHexDecoder decodeHeader]):
+	Mask off fewer Finder flag bits. Use the same mask as for MacBinary, in fact.
+
+2002-12-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Richard.
+
+	- fixed 3127490 -- pages w/frames sometimes show up blank
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView drawRect:]):
+	Updated the optimization where we draw the entire view if we did a layout
+	so that it works properly for the case where the clip is narrower because of
+	the parent WebHTMLView.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated for recent changes.
+
+=== Alexander-40 ===
+
+2002-12-18  Trey Matteson  <trey@apple.com>
+
+	3098388 - Pressing the back button goes back two levels at allmusic.com
+
+	I rewrote the logic we use to decide whether a given redirect should be
+	treated as part of the previous navigation.  We make use of WebCore's
+	lockHistory setting, the delay time and the frame state.
+
+        Reviewed by Darin.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge reportClientRedirectToURL:delay:fireDate:lockHistory:]):
+	Pass lockHistory up to the frame.
+        * WebView.subproj/WebFramePrivate.h:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _clientRedirectedTo:delay:fireDate:lockHistory:]):
+	New logic.  No quick summary, best to read the code.
+
+2002-12-18  Chris Blumenberg  <cblu@apple.com>
+
+	Reject the RealPlayer plug-in because we know it doesn't work.
+
+        Reviewed by sullivan.
+
+        * English.lproj/StringsNotToBeLocalized.txt:
+        * Plugins.subproj/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage initWithPath:]): reject the RealPlayer plug-in
+
+2002-12-18  Maciej Stachowiak  <mjs@apple.com>
+
+	Reviewed by John.
+
+	- fixed 3131171 - Change Alex versions to satisfy both marketing and B&I requirements
+	
+        * English.lproj/InfoPlist.strings:
+
+2002-12-18  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3129951.  Don't allow pages that are stopping to enter the page cache.
+        (Fixed yesterday, forgot to checkin.)
+         
+        Reviewed by trey.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _setState:]):
+
+2002-12-18  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin and Trey.
+
+	- fixed 3124933 - abcnews.com leads to empty window with sheet complaining about javascript: URL
+	- fixed 3091248 - picture does not show up in window from epinions
+	- made "about:blank" load synchronously, which I'm told is required by some sites.
+
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge createWindowWithURL:frameName:]): If the URL is nil
+	or empty, pass a nil request - otherwise WebBrowser will try to
+	load it, resulting in an extra back/forward list entry.
+        (-[WebBridge loadEmptyDocumentSynchronously]): Tell the frame to
+	load a request with an empty URL - this will cause a synchronous
+	load of an empty html document
+        * WebView.subproj/WebBaseResourceHandleDelegate.h:
+        * WebView.subproj/WebBaseResourceHandleDelegate.m:
+	(-[WebBaseResourceHandleDelegate loadWithRequest:]): Split off
+	startLoading: part of method to allow behavior to be subclassed.
+        (-[WebBaseResourceHandleDelegate startLoading:]): 
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSource _commitIfReady:]): Lie and claim the URL is
+	"about:blank" if it's really empty to avoid confusing WebCore.
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]): Don't put the empty URL in
+	global history.
+        (-[WebFrame
+	_checkNavigationPolicyForRequest:dataSource:andCall:withSelector:]):
+	Don't check policy if URL is empty - this is likely to confuse the
+	client and we know what the right behavior here is.
+        * WebView.subproj/WebMainResourceClient.m:
+	(-[WebMainResourceClient startLoading:]): Try to load
+	"about:blank" and the empty URL synchronously, bypassing
+	WebFoundation.
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): Ditto.
+        (-[WebMainResourceClient setDefersCallbacks:]): Ditto.
+        * English.lproj/StringsNotToBeLocalized.txt: Updated.
+
+2002-12-18  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 2862385 - need to pass browser's user agent and version to plug-ins
+	Added some more error checking to the plug-in code
+
+        Reviewed by trey.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.h:
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (+[WebBaseNetscapePluginView setCurrentPluginView:]): new, sets a global variable for the current plug-in
+        (+[WebBaseNetscapePluginView currentPluginView]): new, returns the current plug-in
+        (-[WebBaseNetscapePluginView start]): check if NPP_New fails, return NO if it does, set the current plug-in view. Currently, this is the only place we need to do this.
+        (-[WebBaseNetscapePluginView userAgent]): made instance-specific because it depends on the plug-in view's WebController
+        * Plugins.subproj/WebBaseNetscapePluginViewPrivate.h:
+        * Plugins.subproj/WebNetscapePluginEmbeddedView.m:
+        (-[WebNetscapePluginEmbeddedView viewDidMoveToWindow]): don't start the stream is start fails
+        * Plugins.subproj/npapi.m: 
+        (NPN_MemAlloc): tweak
+        (NPN_RequestRead): tweak
+        (pluginViewForInstance): returns the instance's plug-in view if it has one, if not, return the current plug-in view
+        (NPN_GetURLNotify): get the instance from pluginViewForInstance  
+        (NPN_GetURL):
+        (NPN_PostURLNotify):
+        (NPN_PostURL):
+        (NPN_NewStream):
+        (NPN_Write):
+        (NPN_DestroyStream):
+        (NPN_UserAgent):
+        (NPN_Status):
+        (NPN_InvalidateRect):
+        (NPN_InvalidateRegion):
+        (NPN_ForceRedraw):
+        (NPN_GetValue):
+        (NPN_SetValue):
+        (NPN_GetJavaEnv):
+        (NPN_GetJavaPeer):
+
+2002-12-18  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3109590.  We now set the cookie policy URL to a frame's URL if the
+        contents of the frame changes as a result of user action.  The site mentioned
+        is this bug branded a service by wrapping it in their own frameset.  That frameset
+        had a different domain than the service, so our cookie policy prevented cookies
+        from being set.
+        
+        Reviewed by trey.
+
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSource _startLoading:]):
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame loadRequest:]):
+        * WebView.subproj/WebFramePrivate.h:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _loadItem:fromItem:withLoadType:]):
+        (-[WebFrame _addExtraFieldsToRequest:alwaysFromRequest:]):
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]):
+        (-[WebFrame _postWithURL:data:contentType:triggeringEvent:]):
+
+2002-12-18  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3131714 - System becomes unresponsive while downloading
+
+	While downloading a file, Safari and the Finder take up 30%-40% of the CPU each. This is happening because for every chunk of data we write to disk, we call -[NSWorkspace noteFileSystemChanged:]. noteFileSystemChanged is inefficient. It calls 2 AppleEvents each with 60 timeouts. The event also cause the Finder to do a lot of work.
+
+	We should:
+	- Send 1 AppleEvent ourselves with no timeout since we don't care about the reply
+	- Call the notification/event less often. The only benefit of sending the event for every chunk written is that the file size updates in the Finder. Not worth the performance impact.
+
+        Reviewed by kocienda.
+
+        * Downloads.subproj/WebDownloadHandler.m:
+        (-[WebDownloadHandler cleanUpAfterFailure]): call _web_noteFileChangedAtPath
+        (-[WebDownloadHandler createFileIfNecessary]): call _web_noteFileChangedAtPath
+        (-[WebDownloadHandler writeDataForkData:resourceForkData:]): don't call noteFileSystemChanged
+        (-[WebDownloadHandler finishedLoading]): call _web_noteFileChangedAtPath
+        * Misc.subproj/WebNSWorkspaceExtras.h: Added.
+        * Misc.subproj/WebNSWorkspaceExtras.m: Added.
+        (-[NSWorkspace _web_noteFileChangedAtPath:]): Notifies the Finder (or any other app that cares) that we added, removed or changed the attributes of a file. This method is better than calling noteFileSystemChanged: because noteFileSystemChanged: sends 2 apple events both with a 60 second timeout. This method returns immediately.
+        * WebKit.pbproj/project.pbxproj:
+
+2002-12-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed 3098293 -- Shockwave plug-in doesn't work
+
+	The problem is that the Shockwave plug-in depends on being able to do LMGetCurApRefNum
+	and then do a PBGetFCBInfoSync on the result, and if it gets an error it will refuse
+	to initialize.
+
+        * Plugins.subproj/WebNetscapePluginPackage.m: (+[WebNetscapePluginPackage initialize]):
+	Supply a bogus CurApRefNum. Do it only if CurApRefNum is -1, so we don't screw things
+	up if we are used in a Carbon application.
+
+2002-12-17  Darin Adler  <darin@apple.com>
+
+        Reviewed by Trey.
+
+        * WebKit.pbproj/project.pbxproj: Remove signature.
+        * WebView.subproj/WebController.m: Turn off inlining so we can build even on the
+	compiler that warns about static data in inline functions.
+
+2002-12-17  John Sullivan  <sullivan@apple.com>
+
+	- fixed 2895826 -- ICON: Need a "no plug-in" icon
+
+        * Resources/nullplugin.tiff:
+	new plug-in icon. Blue 3-D lego with question marks.
+
+2002-12-17  Richard Williamson   <rjw@apple.com>
+
+        Added support for Aki's 20% boost to line height.  This is
+        done with a horrible hack and should be removed when 3129490
+        is fixed.
+        
+        Reviewed by hyatt.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+
+=== Alexander-39 ===
+
+=== Alexander-38 ===
+
+2002-12-17  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3127932.  Added WebFrameLoadTypeReloadAllowingStaleData to cases that do not
+        get cached in the b/f cache.
+        
+        Reviewed by trey.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _setState:]):
+
+2002-12-17  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3128794.  Use CG directy to get font metrics rather than the appkit.  The appkit
+        has a bug (3129490) that sometimes causes line height to be 20% too large.
+        
+        Reviewed by hyatt.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (-[WebTextRenderer initWithFont:]):
+        (-[WebTextRenderer ascent]):
+        (-[WebTextRenderer descent]):
+        (-[WebTextRenderer lineSpacing]):
+
+2002-12-17  Trey Matteson  <trey@apple.com>
+
+	Reworking the code to update the page icon led me to roll the WebIconDB API
+	for URL to NSString.  In addition, the vestigial "Site" was removed.
+
+	Everything below is renaming, except where noted.
+
+        Reviewed by Darin
+
+        * English.lproj/StringsNotToBeLocalized.txt:
+        * History.subproj/WebHistoryItem.m:
+        (-[WebHistoryItem _retainIconInDatabase:]):
+        (-[WebHistoryItem icon]):
+        * Misc.subproj/WebIconDatabase.h:
+        * Misc.subproj/WebIconDatabase.m:
+        (-[WebIconDatabase init]):
+        (-[WebIconDatabase iconForURL:withSize:cache:]):  Use _web_isFileURL.
+        (-[WebIconDatabase iconForURL:withSize:]):
+        (-[WebIconDatabase retainIconForURL:]):
+        (-[WebIconDatabase releaseIconForURL:]):
+        (-[WebIconDatabase _iconDictionariesAreGood]):
+        (-[WebIconDatabase _loadIconDictionaries]):
+        (-[WebIconDatabase _updateFileDatabase]):
+        (-[WebIconDatabase _iconForFileURL:withSize:]):  Cons up a NSURL to get the path.
+	Test explicitly for .htm and .html suffixes.
+        (-[WebIconDatabase _setIcon:forIconURL:]):
+        (-[WebIconDatabase _setIconURL:forURL:]):
+        (-[WebIconDatabase _releaseIconForIconURLString:]):
+        (-[WebIconDatabase _retainFutureIconForURL:]):
+        (-[WebIconDatabase _releaseFutureIconForURL:]):
+        (-[WebIconDatabase _sendNotificationForURL:]):
+        * Misc.subproj/WebIconDatabasePrivate.h:
+        * Misc.subproj/WebIconLoader.m:
+        (-[WebIconLoader handleDidFinishLoading:]):
+        * WebKit.exp:
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSource _updateIconDatabaseWithURL:]):
+        (-[WebDataSource _loadIcon]):
+
+2002-12-17  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3113073 - link on http://studio.adobe.com/explore/ redirects to not found page in Alex
+
+        Reviewed by darin.
+
+        * Misc.subproj/WebNSPasteboardExtras.m:
+        (-[NSPasteboard _web_bestURL]): don't trim whitespace because _web_URLWithString does this for us
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView pluginURLFromCString:]): tweak
+
+2002-12-17  John Sullivan  <sullivan@apple.com>
+
+	- to help with performance of various bookmark operations,
+	added a call that returns the internal array of children,
+	to complement the safer call that returns a copy.
+
+        Reviewed by Darin
+
+        * Bookmarks.subproj/WebBookmark.h:
+	commented -children and new -rawChildren
+        * Bookmarks.subproj/WebBookmark.m:
+        (-[WebBookmark rawChildren]):
+	new method, returns nil at this level.
+        (-[WebBookmark contentMatches:]):
+	use -rawChildren instead of -children
+
+        * Bookmarks.subproj/WebBookmarkList.m:
+        (-[WebBookmarkList rawChildren]):
+	new method, returns internal array without copying
+
+2002-12-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don and Maciej.
+
+        * WebView.subproj/WebUserAgentSpoofTable.gperf: Added a couple of new domains to the list we
+	spoof as Mac IE, and added comments.
+        * WebView.subproj/WebUserAgentSpoofTable.c: Regenerated.
+
+        * WebKit.pbproj/project.pbxproj: Set MACOSX_DEPLOYMENT_TARGET to 10.2
+
+2002-12-16  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3129503 - Crash cancelling download after closing browser window that started download
+
+        Reviewed by rjw.
+
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSource _setLoading:]): Added comment about our tragic dependence on a non-retained reference to the controller.
+        (-[WebDataSource _recursiveStopLoading]): Call webFrame before calling _stopLoading because we release the controller in _stopLoading and we depend on it in webFrame.
+
+=== Alexander-37 ===
+
+2002-12-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by no one but it's just a version bump.
+
+        * WebKit.pbproj/project.pbxproj: Bump version to 37u3
+
+2002-12-16  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed 3128858 -- Supply Finder bits for decoded BinHex files
+
+        * Downloads.subproj/WebBinHexDecoder.h: Add a _finderFlags field.
+        * Downloads.subproj/WebBinHexDecoder.m:
+        (-[WebBinHexDecoder decodeHeader]): Decode Finder flags.
+        (-[WebBinHexDecoder fileAttributes]): Put Finder flags in dictionary.
+
+        * Downloads.subproj/WebMacBinaryDecoder.m: Tweaked things for no good reason.
+	(It is good to always import your own header first as a check that it's self-sufficient).
+
+        * WebKit.pbproj/project.pbxproj: Let Electron wipe the slate clean of pre-Electron iniquity.
+
+2002-12-15  Chris Blumenberg  <cblu@apple.com>
+	
+	Fixed: 3094928 - Apply Finder bits to decoded downloads
+
+        Reviewed by darin.
+
+        * Downloads.subproj/WebDownloadHandler.m:
+        (-[WebDownloadHandler createFileIfNecessary]): call _web_createFileAtPath:contents:attributes: so we set Finder bits
+        * Downloads.subproj/WebMacBinaryDecoder.h:
+        * Downloads.subproj/WebMacBinaryDecoder.m:
+        (-[WebMacBinaryDecoder decodeData:dataForkData:resourceForkData:]): save Finder bits
+        (-[WebMacBinaryDecoder fileAttributes]): return Finder bits
+
+=== WebKit-37u2 ===
+
+2002-12-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+	- fixed likely B&I build problem.
+
+        * WebKit.pbproj/project.pbxproj: Get at other frameworks in B&I
+	build. Bump version to 37u2.
+
+2002-12-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+	- implemented user-agent spoofing as described in bug 3044569
+
+        * WebView.subproj/WebController.m: (-[WebController userAgentForURL:]):
+	Find the suffix of the host name that contains exactly one dot, lower-case it,
+	and look it up in the user-agent spoof table. For now, anything in the table
+	pretends to be MacIE. Don't fret that this table is simple. We will complicate it
+	as needed. The technique is flexible, even though it may not look it now.
+
+        * WebView.subproj/WebControllerPrivate.h: Add userAgentWhenPretendingToBeMacIE field.
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebControllerPrivate dealloc]): Release userAgentWhenPretendingToBeMacIE.
+        (-[WebController _defaultsDidChange]): Release and nil userAgentWhenPretendingToBeMacIE.
+
+        * Makefile.am: Added rules to build WebUserAgentSpoofTable.c using gperf.
+        * WebView.subproj/WebUserAgentSpoofTable.c: Added. Generated file.
+        * WebView.subproj/WebUserAgentSpoofTable.gperf: Added. Table 
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for above changes.
+
+	- fixed a crash I saw in a simplistic way
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[WebHTMLView _elementAtPoint:]):
+	Don't assert if the webFrame is nil, just return a partial dictionary.
+
+2002-12-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by Trey.
+
+	- fixed 3128260 -- REGRESSION: context menus in frames are always the generic page menu
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[WebHTMLView hitTest:]):
+	Check the control key in the mouse down event. If it's down, then do no magic.
+
+2002-12-15  Darin Adler  <darin@apple.com>
+
+        Reviewed by Dave.
+
+	- fixed 3128651 -- REGRESSION: Mouse wheeling is busted on frames pages
+
+        * WebView.subproj/WebHTMLViewPrivate.m: (-[WebHTMLView hitTest:]):
+	Only do the hitTest magic for left mouse downs; the rest of the clicks end up going
+	to the correct view anyway, without our help. This makes this stop making trouble for
+	the scroll wheel events.
+
+2002-12-14  Don Melton  <gramps@apple.com>
+
+	Fixed 3127173 -- REGRESSION: fboweb.com renders incorrectly
+
+        Reviewed by darin
+
+        * English.lproj/StringsNotToBeLocalized.txt:
+        * WebView.subproj/WebController.m:
+        (-[WebController userAgentForURL:]):
+
+	Changed "PPC" in our user agent string to "PPC Mac OS X" in order to
+	match Mozilla and make the silly server-side user agent string checking
+	work at fboweb.com.  Actually, just "PPC " would work fine at
+	fboweb.com.  Go figure.
+
+2002-12-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don.
+
+        * WebView.subproj/WebController.m: (-[WebController userAgentForURL:]):
+	Add "(like Gecko)" string and change "WebKit" to "AppleWebKit".
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for these changes.
+        * Misc.subproj/WebUnicode.h: No need for & 0xFF since we cast to unsigned char.
+
+2002-12-13  John Sullivan  <sullivan@apple.com>
+
+	- WebKit part of fix for 3028061 -- visiting a bookmarked site
+	that now has a site icon will not update bookmark's icon
+
+	No longer store the icon in the WebHistoryItem, since there's no
+	mechanism for keeping it fresh and telling interested clients
+	when it changes. Instead, the latest icon is always returned from
+	the icon database, and it's up to clients to get a fresh one when
+	they notice that the icon for a URL has been updated.
+
+        Reviewed by Darin
+
+        * History.subproj/WebHistoryItem.h:
+	remove _icon and _loadedIcon ivars
+
+        * History.subproj/WebHistoryItem.m:
+        (-[WebHistoryItem dealloc]):
+	don't release _icon
+        (-[WebHistoryItem icon]):
+	just return fresh icon from database, don't store
+        (-[WebHistoryItem setURL:]):
+	don't set _loadedIcon to NO
+
+=== Alexander-37u1 ===
+
+2002-12-13  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for recent changes.
+
+2002-12-13  Trey Matteson  <trey@apple.com>
+
+	3108976 - assert _private provisionalItem in -[WebFrame(WebPrivate) _transitionToCommitted
+	3108865 - frames not maintained going back at directory.apple.com
+
+	Both bugs are fixed by the same small change.  We no longer try to inherit loadType
+	across redirects.  Instead we just make sure the right thing happens in _transitionToCommitted:
+	for redirects in the loadType=Standard case.
+
+	3122721 - History stores both original and redirected sites
+
+	Easy fix while in the neighborhood.  We just don't add to History when doing a redirect.
+
+        Reviewed by rjw
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]):  On redirect, update the URL of the frame's current
+	item, not the current item in the b/f list.  Also do not add to history on redirect.
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]):  Cut out funny business
+	that tried to guess when to inherit loadtype across redirects.
+
+2002-12-13  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3127225.  Scale page cache based on available memory.
+        Also added support for setting WebCore object cache size via
+        a preference.
+        Fixed 3126267.  Increase CG glyph cache size if font smoothing
+        is turned on.
+        
+        Reviewed by gramps.
+
+        * History.subproj/WebBackForwardList.m:
+        (+[WebBackForwardList pageCacheSize]):
+        * Misc.subproj/WebKitLogging.h:
+        * Misc.subproj/WebKitLogging.m:
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge getObjectCacheSize]):
+        * WebCoreSupport.subproj/WebTextRendererFactory.m:
+        (getAppDefaultValue):
+        (getUserDefaultValue):
+        (getLCDScaleParameters):
+        * WebView.subproj/WebPreferences.m:
+        (+[WebPreferences load]):
+        (-[WebPreferences _pageCacheSize]):
+        (-[WebPreferences _objectCacheSize]):
+        * WebView.subproj/WebPreferencesPrivate.h:
+
+2002-12-13  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3105486 - c|net news.com site seems to have lost its favicon again
+
+        Reviewed by darin.
+
+        * Misc.subproj/WebIconDatabase.m:
+        (-[WebIconDatabase _updateFileDatabase]): Only save icons with a size of 16 x 16 since that's the only size we use.
+
+2002-12-13  Chris Blumenberg  <cblu@apple.com>
+
+	Catch NULL status strings passed to NPN_Status.
+	
+        Reviewed by darin.
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView status:]): check the incoming string before calling [NSString stringWithCString]
+
+2002-12-12  Trey Matteson  <trey@apple.com>
+
+	3117101 - PLT slows down as history fills up
+
+	I saw a 3% sloth effect from a huge (100k) history.  This change cut that cost in half.
+	I think we still have a marginally measurable cost for our worst practical case.
+
+        Reviewed by rjw
+
+        * History.subproj/WebHistoryPrivate.m:
+        (-[WebHistoryPrivate insertEntry:atDateIndex:]):  Comment.
+        (-[WebHistoryPrivate removeEntryForURLString:]):  Use removeIdentical
+	instead of remove, since we don't need to do all the equals comparisons.
+
+2002-12-12  Richard Williamson   <rjw@apple.com>
+
+        Changes to fix 3116584.
+        Reviewed by hyatt.
+        
+        Changes to support emptying the page cache from the
+        "Empty Cache" menu.
+        Reviewed by trey.
+
+        * ChangeLog:
+        * History.subproj/WebBackForwardList.h:
+        * History.subproj/WebBackForwardList.m:
+        (-[WebBackForwardList clearPageCache]):
+        * History.subproj/WebHistoryItem.m:
+        (+[WebHistoryItem _scheduleReleaseTimer]):
+        (-[WebHistoryItem _scheduleRelease]):
+        (+[WebHistoryItem _releasePageCache:]):
+        (-[WebHistoryItem setHasPageCache:]):
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _opened]):
+
+2002-12-12  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3119693.  Restore scroll position when going back
+        to item in b/f cache.
+        
+        Reviewed by trey.
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _opened]):
+
+=== Alexander-36 ===
+
+2002-12-12  Richard Williamson   <rjw@apple.com>
+
+        Change relating to 3083287.  This doesn't fix the problem but
+        flips the geometry calcs to get most incremental images to draw
+        correctly.  .mac now slideshows draw with the incorrect sliding 
+        behavior while loading.
+        
+        3083287 has been moved to 0.9/1.
+        
+        Reviewed by darin.
+
+        * WebCoreSupport.subproj/WebImageRenderer.m:
+        (-[WebImageRenderer incrementalLoadWithBytes:length:complete:]):
+        (-[WebImageRenderer drawClippedToValidInRect:fromRect:]):
+
+2002-12-12  Trey Matteson  <trey@apple.com>
+
+	Fixed 3094525 - Need to use SPI to fix flipped drag image problem
+
+	We call the new SPI.  I also had to rework the dissolve steps to get it
+	to non flip the image in Panther in millions (but leave the old code for
+	the Jaguar case).
+
+        Reviewed by cblu
+
+        * Misc.subproj/WebNSImageExtras.m:
+        (+[NSImage load]):  Call the SPI.
+        (-[NSImage _web_dissolveToFraction:]):  Add new way of building the image for Panther.
+
+2002-12-12  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+        - fixed most likely cause of 3125565 -- 2% regression running the PLT for uncached loads
+        
+        Don't recompute the user agent when it doesn't change. It almost never changes.
+
+        * WebView.subproj/WebController.m:
+        (-[WebController initWithView:controllerSetName:]): Add observer so we know when defaults change.
+        (-[WebController dealloc]): Remove observer.
+        (-[WebController setApplicationNameForUserAgent:]): Clear out computed user agent to force it
+	to be recomputed later.
+        (-[WebController applicationNameForUserAgent]): Just retain since we copied when we stored it
+	so we know it's not mutable.
+        (-[WebController customUserAgent]): Ditto.
+        (-[WebController userAgentForURL:]): Use the cached user agent if it's good. Otherwise compute
+	and cache the user agent string. This means that we will almost never recompute it.
+
+        * WebView.subproj/WebControllerPrivate.h: Add userAgent field to cache in.
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebControllerPrivate dealloc]): Release userAgent.
+        (-[WebController _defaultsDidChange]): Release and nil userAgent.
+
+2002-12-12  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed 3125504 -- REGRESSION: Selection not working correctly for text area on http://glish.com/css/7.asp
+
+	The problem is that the text area lost its first responder status because WebHTMLView took the click,
+	and NSWindow wanted WebHTMLView to become first responder too.
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView acceptsFirstResponder]):
+	Don't allow the NSWindow to make this the first responder during the early part of mouseDown event
+	handling. But do allow anyone else to make this the first responder, for example from keyboard events,
+	or from calls back from WebCore once we begin mouse-down event handling.
+
+2002-12-12  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej and Richard.
+
+        - fixed reentrancy crash I ran into while debugging infinite recursion bugs
+
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLView _updateMouseoverWithFakeEvent]): Added. Does part of what _frameOrBoundsChanged did.
+        (-[WebHTMLView _frameOrBoundsChanged]): Schedule the mouseover update to happen soon, rather than
+        doing it right away. If we do it right away, we might reenter because sending a mouse moved event
+        can result in another layout since mouse moved events are the same as mouse dragged events in KHTML.
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView viewWillMoveToWindow:]): Cancel the scheduled mouseover update.
+
+        * WebKit.pbproj/project.pbxproj: Electron uber alles.
+
+2002-12-12  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3125585.  One click crasher option clicking on
+        any link.  Added additional check to curtail overly
+        zealous ASSERT.
+        
+        Reviewed by mjs.
+
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebController _mainReceivedError:fromDataSource:complete:]):
+
+2002-12-11  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3125425.  Just call super if view isn't in view heirarchy,
+        rather than asserting.  The assert was firing because NSText 
+        was trying to perform a background layout on an item view that
+        was moved to the page cache.
+        
+        Reviewed by gramps.
+
+        * WebCoreSupport.subproj/WebImageRenderer.m:
+        (-[WebImageRenderer incrementalLoadWithBytes:length:complete:]):
+        (-[WebImageRenderer drawClippedToValidInRect:fromRect:]):
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView visibleRect]):
+
+2002-12-11  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3124121, 3124716 (and other dupes).  Regressions related to b/f crash.
+        
+        Reviewed by hyatt.
+
+        * ChangeLog:
+        * History.subproj/WebHistoryItem.m:
+        (-[WebHistoryItem _scheduleRelease]):
+        * WebCoreSupport.subproj/WebBridge.m:
+        (-[WebBridge saveDocumentToPageCache:]):
+        * WebCoreSupport.subproj/WebImageRenderer.m:
+        (-[WebImageRenderer incrementalLoadWithBytes:length:complete:]):
+        (-[WebImageRenderer drawClippedToValidInRect:fromRect:]):
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _setState:]):
+
+2002-12-11  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3123375.  Provide SPI to release all pending page caches
+        
+        Reviewed by kocienda.
+
+        * History.subproj/WebBackForwardList.m:
+        * History.subproj/WebHistoryItem.h:
+        * History.subproj/WebHistoryItem.m:
+        * History.subproj/WebHistoryItemPrivate.h: Added.
+        * WebCoreSupport.subproj/WebBridge.m:
+        * WebKit.pbproj/project.pbxproj:
+        * WebView.subproj/WebFramePrivate.m:
+
+2002-12-11  Darin Adler  <darin@apple.com>
+
+        Reviewed by Richard.
+
+	- fixed 3124837 -- Crash trying to handle weird javascript URL in page address field
+
+        * Plugins.subproj/WebBaseNetscapePluginView.m:
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:]):
+	Use the new _web_scriptIfJavaScriptURL to simplify the check for JavaScript URLs,
+	and to use a more tolerant unescaper.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated.
+
+2002-12-11  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+	- turned on the mechanism that passes events through WebCore, now that it's working better
+
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLView hitTest:]): Moved this function in here. Rewrote it. It has a new feature where
+	you can set a global and do a normal hit test, needed for the mouse-moved handling below. Also,
+	for efficiency, it does the actual hit testing of itself, rather than calling super, which recurses,
+	and ignoring the result. The sum total is that it always returns self for mouse-moved events, so
+	we pass them all over the bridge at the topmost frame.
+
+        (-[WebHTMLView _updateMouseoverWithEvent:]):
+        * WebView.subproj/WebHTMLView.m: Moved hitTest: out of here.
+
+2002-12-11  John Sullivan  <sullivan@apple.com>
+
+	- fixed 3124640 -- Crash importing IE Favorites if there 
+	are no IE favorites
+
+        Reviewed by Darin
+
+        * Bookmarks.subproj/WebBookmarkImporter.m:
+        (-[WebBookmarkImporter initWithPath:]):
+	use alloc/init instead of autoreleasing constructor for error since
+	it's kept around until dealloc.
+
+2002-12-11  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+	- fixed 3117611 -- REGRESSION: exception in mouseoverTextForElement with accented characters in status
+
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[NSMutableDictionary _web_setObjectIfNotNil:forKey:]):
+	Remove the object from the dictionary rather than just leaving the dictionary alone if it's nil.
+	This is needed since we now are reusing an already-existing dictionary.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for recent changes.
+
+2002-12-11  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3118430 - crash / loop trying to copy url of link to clipboard
+	Fixed: 3122585 - REGRESSION: dragging links to the desktop or a Finder window does not do anything
+
+        Reviewed by john.
+
+	We were reusing the drag types from the previous drag pasteboard. For example, we would declare image types when dragging URLs. This would confuse the Finder, so location files weren't being created. This would occasional cause us to crash because we weren't providing the declared data. 
+
+        * Misc.subproj/WebNSPasteboardExtras.h:
+        * Misc.subproj/WebNSPasteboardExtras.m:
+        (+[NSPasteboard _web_dragTypesForURL]): Added more types that we handle
+        (-[NSPasteboard _web_writeURL:andTitle:withOwner:declareTypes:]): declares the provided types, writes URL and title
+        (-[NSPasteboard _web_writeURL:andTitle:withOwner:]): call _web_writeURL:andTitle:withOwner:types: with _web_dragTypesForURL
+        * Misc.subproj/WebNSViewExtras.h:
+        * Misc.subproj/WebNSViewExtras.m:
+        (-[NSView _web_dragPromisedImage:origin:URL:fileType:title:event:]): call _web_writeURL:andTitle:withOwner: types: plus images types
+
+2002-12-10  Trey Matteson  <trey@apple.com>
+
+	3092966 - going back goes to different page (can't go back to a POST page)
+	3123450 - if the user refuses a navigation, the b/f menus is wrong
+
+	We will rePOST data upon back/forward/refresh if our caches fail us.  The policy delegate
+	gets a crack at confirming this operation.  Latent bugs where the policy delegate was double
+	queried are fixed.  A bug in the b/f cursor when a page failed to load is fixed.
+
+        Reviewed by Maciej.
+
+        * English.lproj/StringsNotToBeLocalized.txt:  Usual suspects.
+        * History.subproj/WebHistoryItem.h:  Add state for reposting forms.
+        * History.subproj/WebHistoryItem.m:  Boilerplate changes for new state.
+        (-[WebHistoryItem dealloc]):
+        (-[WebHistoryItem setFormData:]):
+        (-[WebHistoryItem setFormContentType:]):
+        (-[WebHistoryItem formData]):
+        (-[WebHistoryItem formContentType]):
+        (-[WebHistoryItem description]):
+        * WebView.subproj/WebController.m:
+        (-[WebController _goToItem:withLoadType:]):  Tighten up an assert as I clarified an
+	assumption as I worked through this task.
+        * WebView.subproj/WebControllerPolicyDelegate.h:  New WebNavigationType's for back/forward,
+	refresh, and repost.
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame loadRequest:]):  Eliminate extra copy of a request.
+        (-[WebFrame reload]):  Eliminate extra copy of a request.  Setup triggeringAction properly
+	if we're about to rePOST.
+        * WebView.subproj/WebFramePrivate.h:  Started moving some private methods into the .m file.
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _createItem]):  Save form state with history items.
+        (-[WebFrame _isLoadComplete]):  Fix up b/f cursor on page error before commit succeeds.
+        (-[WebFrame _loadItem:fromItem:withLoadType:]):  Set up request to rePOST if that's what the
+	HistoryItem demands.  Add call to _addExtraFieldsToRequest so we don't do a double
+	query of the policy delegate.  Pre-flight the form post vs. WF cache to setup triggering
+	action properly.
+        (-[WebFrame _actionInformationForLoadType:isFormSubmission:event:originalURL:]):
+	New utility method to help build action dict.
+        (-[WebFrame _continueAfterNavigationPolicy:]):  Comment only.
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]):  Call new utility method
+	instead (just code factoring).
+        (-[WebFrame _postWithURL:data:contentType:triggeringEvent:]):  Call new utility method
+	instead (just code factoring).  Add call to _addExtraFieldsToRequest so we don't do a double
+	query of the policy delegate.
+        (-[WebFrame _reloadAllowingStaleDataWithOverrideEncoding:]):  Whitespace only.
+        (-[WebFrame _resetBackForwardListToCurrent]):  Utility routine to fix up b/f cursor on page error.
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:request:]):  Fix up b/f cursor on page
+	error before commit succeeds.
+
+2002-12-10  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed 3124302 -- REGRESSION: Can't use directory.apple.com because
+	frame resize bar intercepts mouse clicks
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView hitTest:]):
+	Don't steal clicks for views that are inside nested WebViews.
+        This isn't the real fix, but it's good enough for now. The real fix will be in WebCore.
+
+2002-12-10  Darin Adler  <darin@apple.com>
+
+	- fixed fix for 3124081 -- REGRESSION: partial progress is left in address field after download
+
+        Reviewed by Chris.
+
+	Need to move it down one line so the data source is clear before callback.
+
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient interruptForPolicyChangeAndKeepLoading:]):
+	Do the _clearProvisionalDataSource before the locationChangeDone: callback.
+
+2002-12-10  John Sullivan  <sullivan@apple.com>
+
+	Fixed more "Alexander"s that were lurking in places I forgot 
+	to look before.
+
+        Reviewed by Darin
+
+        * Makefile.am:
+	"rm -rf $(SYMROOTS)/Safari.app/Frameworks/WebKit.framework"
+
+2002-12-10  Darin Adler  <darin@apple.com>
+
+	- fixed 3124081 -- REGRESSION: partial progress is left in address field after download
+
+        Reviewed by Chris.
+
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient interruptForPolicyChangeAndKeepLoading:]):
+	Put in code to call the locationChangeDone: method on the location change delegate if
+	keepLoading is YES. Since the data source is not finished loading WebFrame won't do it.
+
+2002-12-10  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3124079 - REGRESSION: Downloads never complete
+
+        Reviewed by darin.
+
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient handleDidFinishLoading:]): release and set to nil the download handler after calling [super handleDidFinishLoading:h]
+
+2002-12-10  Richard Williamson   <rjw@apple.com>
+
+        Fixed 3115427.  Page now draws instantly instead of 20 seconds.
+        I added the substitution font we get from the appkit to the character to glyph
+        cache.
+        
+        Fixed early return optimization from letter forming function.  It was too
+        eager to return!
+        
+        Reviewed by mjs.
+
+        * Misc.subproj/WebUnicode.m:
+        (shapedString):
+        * WebCoreSupport.subproj/WebTextRenderer.h:
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (glyphForCharacter):
+        (glyphForUnicodeCharacter):
+        (widthForGlyph):
+        (widthForCharacter):
+        (_fontContainsString):
+        (-[WebTextRenderer substituteFontForString:families:]):
+        (-[WebTextRenderer _computeWidthForSpace]):
+        (-[WebTextRenderer _floatWidthForCharacters:stringLength:fromCharacterPosition:numberOfCharacters:withPadding:applyRounding:attemptFontSubstitution:widths:fonts:glyphs:numGlyphs:letterSpacing:wordSpacing:fontFamilies:]):
+        (-[WebTextRenderer extendUnicodeCharacterToGlyphMapToInclude:]):
+        (-[WebTextRenderer updateGlyphEntryForCharacter:glyphID:font:]):
+        (-[WebTextRenderer extendCharacterToGlyphMapToInclude:]):
+        (-[WebTextRenderer extendGlyphToWidthMapToInclude:]):
+
+2002-12-10  John Sullivan  <sullivan@apple.com>
+
+	- tweaked the API of WebBookmarkImporter while implementing
+	real "Import IE Favorites" UI
+
+        Reviewed by Ken
+
+        * Bookmarks.subproj/WebBookmarkImporter.h:
+	fixed a typo in a constant
+        * Bookmarks.subproj/WebBookmarkImporter.m:
+        (-[WebBookmarkImporter initWithPath:]):
+	Don't pass a group here. This method now creates the topBookmark
+	(as it was doing before) but does not attempt to insert it
+	anywhere. It's up to the client to fetch the topBookmark and do
+	something with it. Also, don't name the new folder here; leave
+	that to the caller also.
+
+        * English.lproj/Localizable.strings:
+	kept this file up to date
+
+2002-12-10  Darin Adler  <darin@apple.com>
+
+        Reviewed by John.
+
+	- fixed 3108912 -- onclick handlers not supported on form elements
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView hitTest:]):
+	Take over hit testing so that all clicks on subviews are handled by the WebHTMLView.
+	WebCore now handles getting the mouse events to the subviews after passing
+	the events through the DOM.
+
+2002-12-09  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Trey.
+
+	- fixed 3123057 - SJ: DHTML doesn't always work on http://www.pixar.com/howwedoit/
+	
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]):
+	Treat a click on a link to the same URL with an anchor as a scroll
+	to anchor, not a same URL load.
+        (-[WebFrame _continueFragmentScrollAfterNavigationPolicy:request:]): Avoid
+	adding the same anchor URL to the back/forward list many times.
+
+2002-12-09  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed 3028664 -- change user agent string to include application name and version
+
+        * WebView.subproj/WebController.m:
+        (-[WebController setApplicationNameForUserAgent:]): Remove locking, unneeded since we changed
+	how WebFoundation handles user agent.
+        (-[WebController setCustomUserAgent:]): Ditto.
+        (-[WebController resetUserAgent]): Ditto.
+        (-[WebController userAgentForURL:]): Remove locking. Also add new algorithm for computing the
+	user agent which takes the preferred language into account, and incorporates the WebKit version
+	and the application name.
+
+        * WebView.subproj/WebControllerPrivate.h: No need for a lock.
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebControllerPrivate init]): Don't create a lock.
+        (-[WebControllerPrivate dealloc]): Don't release a lock.
+
+        * WebKit.pbproj/project.pbxproj: Bump versions to 0.8 and 35u.
+	* English.lproj/InfoPlist.strings: In here too.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated for these and other recent changes.
+
+2002-12-09  Richard Williamson   <rjw@apple.com>
+
+        Many changes for b/f list.
+        1.  Always attempt to cache snap back items.
+        2.  Lazily release resources from page cache.  This garners gains on the PLT (and presumably iBench) tests, both for uncached.
+        3.  Set the page cache size to 4 (+ snap back items).  After releasing resources we hover around 28MB footprint.  Closing windows releases all resources.
+        4.  Turn on the back/forward cache by default.  The menu item still allows you to toggle b/f on and off.  Useful when conducting speed comparison in the PLT.
+        5.  Addition of lazy update to PLT memory statistics to show footprint after lazy release of page cache resources.
+        6.  Delayed to leak detector to account for lazy release of resources.
+        7.  A change when saving a page to back/forward cache to clear and restore the documents root renderer.  Without this fix pages would appear to 'flicker' more when content arrived.
+        8.  A change to ensure a layout when restoring a page from the b/f cache.  Without this fix scrollbars wouldn't appear correctly.
+        9.  A change to ensure that khtmlview layout and paint timers are unscheduled when a page is placed in the b/f cache.
+        10.  A fix to decouple of khtmlview from it's part when placed in the b/f cache.  This fixed a crash caused by inappropriate deference of the part when a page cache item was released.
+        11.  A comment in KHTMLPageCache.h explaining the that our page cache is not the same as the khtml page cache.  (Their cache just cached the html source.)
+        12.  Reapply styles when loading page from cache.  This ensures that visited link get the appropriate style.
+
+        Reviewed by kocienda.
+
+        * History.subproj/WebBackForwardList.m:
+        (+[WebBackForwardList pageCacheSize]):
+        (+[WebBackForwardList setUsesPageCache:]):
+        (+[WebBackForwardList usesPageCache]):
+        * History.subproj/WebHistoryItem.h:
+        * History.subproj/WebHistoryItem.m:
+        (-[WebHistoryItem setAlwaysAttemptToUsePageCache:]):
+        (-[WebHistoryItem alwaysAttemptToUsePageCache]):
+        (+[WebHistoryItem _invalidateReleaseTimer]):
+        (-[WebHistoryItem _scheduleRelease]):
+        (+[WebHistoryItem _releaseAllPendingPageCaches]):
+        (-[WebHistoryItem _releasePageCache:]):
+        (-[WebHistoryItem setHasPageCache:]):
+        (-[WebWindowWatcher windowWillClose:]):
+        * WebView.subproj/WebDataSourcePrivate.h:
+        * WebView.subproj/WebDataSourcePrivate.m:
+        (-[WebDataSource _startLoading:]):
+        (-[WebDataSource _commitIfReady:]):
+        (-[WebDataSource _loadingFromPageCache]):
+        * WebView.subproj/WebDynamicScrollBarsView.h:
+        * WebView.subproj/WebFramePrivate.h:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _purgePageCache]):
+        (+[WebFrame _timeOfLastCompletedLoad]):
+        (-[WebFrame _setState:]):
+        (-[WebFrame _opened]):
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:request:]):
+        * WebView.subproj/WebPreferences.m:
+        (+[WebPreferences load]):
+
+2002-12-09  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+	- fixed 3122608 -- REGRESSION: Downloads can't be cancelled
+
+	When I fixed the leak for other categories of policy interruption, I messed
+	things up for downloads. Added new parameters to handle this right.
+
+        * WebView.subproj/WebBaseResourceHandleDelegate.h: Remove isDownload flag.
+        * WebView.subproj/WebBaseResourceHandleDelegate.m:
+        (-[WebBaseResourceHandleDelegate isDownload]): Return NO, override in subclass.
+        (-[WebBaseResourceHandleDelegate handle:didReceiveResponse:]): Call isDownload
+	method instead of looking at flag directly.
+
+        * WebView.subproj/WebControllerPrivate.h: Add complete: parameter to _mainReceivedError:.
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebController _mainReceivedError:fromDataSource:complete:]): If complete is NO, then
+	don't mark the primary load as complete.
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient isDownload]): Added. Returns YES if downloadHandler is non-nil.
+        (-[WebMainResourceClient receivedError:complete:]): Added complete parameter. Call the
+	_setPrimaryLoadComplete: method in the download case (fixes a possible leak), and pass
+	the complete parameter through to the controller.
+        (-[WebMainResourceClient cancel]): Pass complete:YES.
+        (-[WebMainResourceClient interruptForPolicyChangeAndKeepLoading:]): Added the keepLoading
+	flag, and pass complete:!keepLoading.
+        (-[WebMainResourceClient stopLoadingForPolicyChange]): Pass keepLoading:NO.
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): Pass keepLoading:YES,
+	and remove the call to the now-obsolete setIsDownload:.
+        (-[WebMainResourceClient handle:didFailLoadingWithError:]): Pass complete:YES.
+
+2002-12-08  Darin Adler  <darin@apple.com>
+
+        Reviewed by Don and Dave.
+
+	- fixed 3120578 -- REGRESSION: going to about:blank creates null view
+
+	This part of the fix makes sure that a renderer is created, even when there are no bytes
+	of data passed through. This makes the empty document about:blank case work just like the
+	"document with just whitespace in it case". There's another part of the fix in WebCore that
+	takes care of the remaining problem. 
+
+        * WebView.subproj/WebHTMLRepresentation.m:
+        (-[WebHTMLRepresentation finishedLoadingWithDataSource:]):
+	Call receivedData:withDataSource: on the bridge with nil for the data. It would be even more
+	elegant to add a new call for the case where we finish, but it's not necessary, since the
+	existing receivedData: call does all the right things if passed nil.
+
+        * WebView.subproj/WebDataSourcePrivate.m: (-[WebDataSource _finishedLoading]):
+	Call finishedLoadingWithDataSource: here, to make sure it's done after committing.	
+	This parallels what we already do for the didReceiveData call.
+        * WebView.subproj/WebMainResourceClient.m: (-[WebMainResourceClient handleDidFinishLoading:]):
+	Remove the call to finishedLoadingWithDataSource: because it's handled by _finishedLoading now.
+	This parallels what we already do for the didReceiveData call.
+
+	- fixed long standing problem where resizing could make you see a "null view"
+
+        * WebView.subproj/WebView.m:
+        (-[WebView drawRect:]): Add a "paint cyan" feature in development builds.
+	Null view problems are particularly hard to debug without something like this,
+	and we don't care if development builds are slightly slower. No change in deployment.
+        (-[WebView setFrameSize:]): Tell the scroll view to draw the background if we are
+	resized. We can't do our "let the old bits show through" thing any more if we have to
+	redraw because of resizing.
+
+	- other changes
+
+        * WebKit.pbproj/project.pbxproj: Remove the old -DAPPLE_CHANGES and -DHAVE_CONFIG_H that we
+        once needed when WebKit used to compile  C++ headers from the KHTML part of WebCore.
+        We haven't needed those for ages. Also sort things a bit, using the new Electron feature for
+	sorting lists of files alphabetically, and some by hand.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Update for recent changes.
+
+2002-12-08  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3121627 - REGRESSION: partial progress is left in address field after download
+
+        Reviewed by: darin
+
+	In WebMainResourceClient, make sure to always call receivedError before _clearProvisionalDataSource so that
+	receivedError works. This is done in multiple places, so I factored this out into one method interuptForPolicyChange.
+
+        * WebView.subproj/WebControllerPrivate.m:
+        (-[WebController _mainReceivedError:fromDataSource:]): added asserts for nil error, dataSource and frame
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient interruptForPolicyChange]): renamed from notifyDelegatesOfInterruptionByPolicyChange because it now also sets the provisionalDataSource on the frame to nil. 
+        (-[WebMainResourceClient stopLoadingForPolicyChange]): call interruptForPolicyChange, stop load
+        (-[WebMainResourceClient continueAfterContentPolicy:response:]): call interruptForPolicyChange
+
+2002-12-06  Trey Matteson  <trey@apple.com>
+
+	Clean up some printfs.  Use WebKitLogPageCache for page cache info.
+
+        Reviewed by: rjw
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _transitionToCommitted:]):
+        (-[WebFrame _purgePageCache]):
+        (-[WebFrame _setState:]):
+        (-[WebFrame _continueLoadRequestAfterNavigationPolicy:request:]):
+
+2002-12-06  Trey Matteson  <trey@apple.com>
+
+	3118584 - implement desired behavior for load - reload - b/f
+	3119241 - page cache needs to be refreshed after reload
+	3118096 - isTargetItem:NO saved to disk with every bookmark
+
+	The most noticeable changes are the addition of the "Same" loadType, and that reload
+	does not restore form state.  3119241 was noticed in passing, and is related.
+	3118096 is a nit with a possible small perf benefit.
+
+        Reviewed by: rjw
+
+        * History.subproj/WebHistoryItem.h:
+        * History.subproj/WebHistoryItem.m:
+        (-[WebHistoryItem dealloc]):  New originalURL field.
+        (-[WebHistoryItem originalURL]):  New getter.
+        (-[WebHistoryItem setOriginalURL:]):  New setter.
+        (-[WebHistoryItem dictionaryRepresentation]):  Dont save isTarget.
+        (-[WebHistoryItem initFromDictionaryRepresentation:]):  Dont save isTarget.
+        * WebView.subproj/WebFrame.m:
+        (-[WebFrame loadRequest:]):  Test for going to same URL, invoke loadTypeSame case.
+        * WebView.subproj/WebFramePrivate.h:  Add loadTypeSame
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _addBackForwardItemClippedAtTarget:]):  Remove a line of dead code.
+        (-[WebFrame _createItem]):  Set originalURL when item is created.
+        (-[WebFrame _transitionToCommitted:]):  For loadTypeSame, clear page cache
+        (-[WebFrame _purgePageCache]):  Added logging.
+        (-[WebFrame _setState:]):  Don't add to page cache if doing a reload.
+        (-[WebFrame _isLoadComplete]):  LoadTypeSame is a NOP.
+        (-[WebFrame _loadItem:fromItem:withLoadType:]):  LoadTypeSame is an ASSERT.
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]):  In
+	the LoadTypeSame case load from origin and never do anchor nav.  If asked to load
+	the same URL, invoke LoadTypeSame case.
+        (-[WebFrame _loadURL:intoChild:]):  Latent bug: WebFrameLoadTypeReloadAllowingStaleData
+	should restore child frame content like reload does.
+        (-[WebFrame _itemForRestoringDocState]):  Prevent form state restore on reload and loadSame.
+        (-[WebFrame _shouldTreatURLAsSameAsCurrent:]):  New utility function.
+
+2002-12-06  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by: Darin Adler
+
+	- made framework embedding work correctly with buildit
+
+        * WebKit.pbproj/project.pbxproj: Give framework a relative
+	install path, don't install it the normal way, and copy it
+	manually to /AppleInternal/Library/Frameworks if installing. Also
+	look for other frameworks in
+	${DSTROOT}/AppleInternal/Library/Frameworks.
+
+2002-12-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Trey.
+
+	- fixed 3103691 -- assertion in WebHTMLView addMouseMovedObserver at versiontracker
+
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView addMouseMovedObserver]): Instead of asserting, do the checks here to
+	determine if the observer should be installed.
+        (-[WebHTMLView viewDidMoveToWindow]): Remove checks, since addMouseMovedObserver now checks.
+        (-[WebHTMLView windowDidBecomeMain:]): Remove checks, since addMouseMovedObserver now checks.
+
+2002-12-05  Richard Williamson   <rjw@apple.com>
+
+        Don't ceil spaces if not a fixed pitch font.  This make sites
+        that have hard coded block widths have less wrapping beyond what the
+        designer expected.  Fixes 3117225.
+        
+        Reviewed by: mjs
+
+        * WebCoreSupport.subproj/WebTextRenderer.h:
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (widthForGlyph):
+        (-[WebTextRenderer _computeWidthForSpace]):
+        (-[WebTextRenderer initWithFont:]):
+        (-[WebTextRenderer _floatWidthForCharacters:stringLength:fromCharacterPosition:numberOfCharacters:withPadding:applyRounding:attemptFontSubstitution:widths:fonts:glyphs:numGlyphs:letterSpacing:wordSpacing:fontFamilies:]):
+
+2002-12-05  Chris Blumenberg  <cblu@apple.com>
+
+	Added WebDocumentText protocol. Made WebHTMLView and WebTextView implement it.
+
+        Reviewed by: rjw
+
+        * WebView.subproj/WebController.m:
+        (-[WebController supportsTextEncoding]): check if protocol is WebDocumentText
+        * WebView.subproj/WebDocument.h:
+        * WebView.subproj/WebHTMLView.h:
+        * WebView.subproj/WebHTMLView.m:
+        (-[WebHTMLView hasSelection]): call selectedString
+        (-[WebHTMLView takeFindStringFromSelection:]): call selectedString
+        (-[WebHTMLView selectAll:]): call selectAll
+        (-[WebHTMLView string]): part of WebDocumentText protocol
+        (-[WebHTMLView attributedString]): part of WebDocumentText protocol
+        (-[WebHTMLView selectedString]): part of WebDocumentText protocol
+        (-[WebHTMLView selectedAttributedString]): part of WebDocumentText protocol
+        (-[WebHTMLView selectAll]): part of WebDocumentText protocol
+        (-[WebHTMLView deselectAll]): part of WebDocumentText protocol
+        * WebView.subproj/WebHTMLViewPrivate.m:
+        (-[WebHTMLView _writeSelectionToPasteboard:]): call selectedAttributedString
+        * WebView.subproj/WebTextView.h:
+        * WebView.subproj/WebTextView.m:
+        (-[WebTextView string]): part of WebDocumentText protocol
+        (-[WebTextView attributedString]): part of WebDocumentText protocol
+        (-[WebTextView selectedString]): part of WebDocumentText protocol
+        (-[WebTextView selectedAttributedString]): part of WebDocumentText protocol
+        (-[WebTextView selectAll]): part of WebDocumentText protocol
+        (-[WebTextView deselectAll]): part of WebDocumentText protocol
+
+2002-12-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Richard.
+
+	- fixed 3107240 -- world leak: reproducible, trying to open TIFF file
+
+        * WebView.subproj/WebMainResourceClient.m:
+        (-[WebMainResourceClient notifyDelegatesOfInterruptionByPolicyChange]):
+	Send error to the delegate using receivedError: rather than directly.
+	This results in the frame properly stopping the load and fixes the leak.
+
+2002-12-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Chris.
+
+        * Downloads.subproj/WebDownloadHandler.m: (-[WebDownloadHandler initWithDataSource:]):
+	Add WebGZipDecoder to the list.
+
+        * Downloads.subproj/WebGZipDecoder.h: Finished this.
+        * Downloads.subproj/WebGZipDecoder.m: Finished this.
+
+        * English.lproj/StringsNotToBeLocalized.txt: Updated for recent changes.
+
+2002-12-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by: Darin
+
+        * English.lproj/InfoPlist.strings: removed letters from
+	CFBundleShortVersionString to make buildit happy.
+
+=== Alexander-35 ===
+
+2002-12-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Ken.
+
+	- fixed 3118647 -- REGRESSION: click policy no longer works
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _actionInformationForNavigationType:event:originalURL:]):
+	Allow mouse up events too. Those are usually the ones that trigger navigation.
+
+2002-12-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Maciej.
+
+	- fixed assert when you choose an item from a menu, for example, and that navigates
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _actionInformationForNavigationType:event:originalURL:]):
+	If the event is over some other element, just don't include the element info.
+
+2002-12-04  Chris Blumenberg  <cblu@apple.com>
+
+	Fixed: 3116294 - Need "Reload" feature in Downloads window
+
+        Reviewed by: rjw
+
+        * WebKit.pbproj/project.pbxproj: made WebFramePrivate.h private so that WebBrowser can call _downloadRequest:toPath:
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _loadDataSource:withLoadType:]): commented out assert that complains about lack of WebView. Long-term solution is to catch this earlier and have a lone datasource download mechanism 3118355.
+
+2002-12-04  Trey Matteson  <trey@apple.com>
+
+	3097585 - Crash in -[WebFrame(WebPrivate) _isLoadComplete] at result of google image search
+
+	The root of this problem was that we would detach child frames by calling detach
+	on them all, then clearing the whole array.  This would fail because detaching a
+	frame might have to stop a load, which calls checkLoadComplete, which visits the
+	entire frame tree.  But if a previously detached child is still sitting in that
+	tree, we end up with an assertion failure.  The solution is to remove the kids as
+	they are detached.
+
+        Reviewed by: Darin Adler
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _createItem]):   Method rename (a nit I missed from an earlier change)
+        (-[WebFrame _createItemTreeWithTargetFrame:clippedAtTarget:]):  Method rename
+        (-[WebFrame _detachChildren]):   new method to do detaching right
+        (-[WebFrame _detachFromParent]):  call new method
+        (-[WebFrame _setDataSource:]):  call new method
+        (-[WebFrame _transitionToCommitted:]):    Method rename
+
+2002-12-04  Darin Adler  <darin@apple.com>
+
+        Reviewed by Trey and Maciej.
+
+	- fixed 3117558 -- Assertion failure in KWQKHTMLPart::slotData after typing "amazon.com" twice
+	- update NSEvent handling in preparation for NSView mouse event handling going through WebCore
+
+        * WebView.subproj/WebFramePrivate.m:
+        (-[WebFrame _loadItem:fromItem:withLoadType:]): Added FIXME comments about matching the _loadURL
+	case more closely.
+        (-[WebFrame _actionInformationForNavigationType:event:originalURL:]): Only use the event if it's
+	a mouse down event. This prevents trouble when we have other kinds of events coming through.
+        (-[WebFrame _continueFragmentScrollAfterNavigationPolicy:request:]): Call the new scrollToAnchorWithURL:
+	instead of openURL:. This fixes the assertion failure in the bug above.
+        (-[WebFrame _loadURL:loadType:triggeringEvent:isFormSubmission:]): Update checks here to more closely
+	match the ones in KHTMLPart::openURL that we are replacing. Add more comments.
+
+        * WebView.subproj/WebHTMLView.m: (-[WebHTMLView hitTest:]): Function to intercept all clicks at the
+	WebHTMLView level, disabled for now because we are not yet ready.
+
+	- started a gzip download decoder, not yet hooked up
+
+        * Downloads.subproj/WebGZipDecoder.h: Added.
+        * Downloads.subproj/WebGZipDecoder.m: Added.
+        * WebKit.pbproj/project.pbxproj: Add WebGZipDecoder and zlib.
+
+	- other changes
+
+        * Panels.subproj/WebAuthenticationPanel.m: Fixed screwed-up indentation.
+
+2002-12-04  Richard Williamson   <rjw@apple.com>
+
+        Cache the fallback font in the same way we cache other
+        fonts.
+        
+        Reviewed by: Darin
+
+        * WebCoreSupport.subproj/WebTextRendererFactory.h:
+        * WebCoreSupport.subproj/WebTextRendererFactory.m:
+        (-[WebTextRendererFactory fallbackFontWithTraits:size:]):
+        (-[WebTextRendererFactory fontWithFamilies:traits:size:]):
+        (-[WebTextRendererFactory cachedFontFromFamily:traits:size:]):
+
+2002-12-04  Richard Williamson   <rjw@apple.com>
+
+        Fixed massive performance regression.
+        We were leaking WebFontCacheKey.
+        Added a cache of missing fonts to avoid
+        expensive appkit lookup.
+        
+        Reviewed by: Maciej
+
+        * WebCoreSupport.subproj/WebTextRendererFactory.m:
+        (-[WebTextRendererFactory cachedFontFromFamily:traits:size:]):
+        (-[WebTextRendererFactory cachedFontFromFamilies:traits:size:]):
+
+2002-12-03  Darin Adler  <darin@apple.com>
+
+	- fixed 3117193 -- REGRESSION: Hang on Hixie's weblog
+
+        Reviewed by Maciej.
+
+        * WebCoreSupport.subproj/WebTextRenderer.m:
+        (-[WebTextRenderer substituteFontForString:families:]):
+	Do the operation on the whole string at once instead of a character at a time.
+        I decided to do this rather than correct the bug in the character-at-a-time version.
+
+== Rolled over to ChangeLog-2002-12-03 ==
