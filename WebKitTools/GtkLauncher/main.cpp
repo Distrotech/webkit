@@ -7,9 +7,11 @@
 
 static GtkWidget* gURLBarEntry;
 static GtkWidget* gTopLevelWindow;
-static WebKitGtkPage* gPage;
+static GtkStatusbar* gStatusbar;
+static WebKitPage* gPage;
 static gchar* gTitle;
 static gint gProgress;
+static guint gStatusbarContextId;
 
 static bool stringIsEqual(const char* str1, const char* str2)
 {
@@ -34,7 +36,7 @@ static void goToURLBarText(GtkWidget* urlBarEntry)
         return;
 
     gchar* parsedURL = autocorrectURL(url);
-    webkit_gtk_page_open(gPage, parsedURL);
+    webkit_page_open(gPage, parsedURL);
     g_free(parsedURL);
 }
 
@@ -57,7 +59,15 @@ static void updateWindowTitle()
     g_free(title);
 }
 
-static void titleChanged(WebKitGtkPage*, const gchar* title, const gchar* url, WebKitGtkPage*)
+static void hoveringOverLink(WebKitPage*, const gchar*, const gchar* link, void*)
+{
+    // underflow is allowed
+    gtk_statusbar_pop(gStatusbar, gStatusbarContextId);
+    if (link)
+        gtk_statusbar_push(gStatusbar, gStatusbarContextId, link);
+}
+
+static void titleChanged(WebKitPage*, const gchar* title, const gchar* url, WebKitPage*)
 {
     gtk_entry_set_text(GTK_ENTRY(gURLBarEntry), url);
 
@@ -67,7 +77,7 @@ static void titleChanged(WebKitGtkPage*, const gchar* title, const gchar* url, W
     updateWindowTitle();
 }
 
-static void progressChanged(WebKitGtkPage*, gint progress, WebKitGtkPage*)
+static void progressChanged(WebKitPage*, gint progress, WebKitPage*)
 {
     gProgress = progress;
     updateWindowTitle();
@@ -81,13 +91,13 @@ static void frameDestroyCallback(GtkWidget*, gpointer)
 static void menuMainBackCallback(gpointer data)
 {
     g_assert(!data);
-    webkit_gtk_page_go_backward(gPage);
+    webkit_page_go_backward(gPage);
 }
 
 static void menuMainForwardCallback(gpointer data)
 {
     g_assert(!data);
-    webkit_gtk_page_go_forward(gPage);
+    webkit_page_go_forward(gPage);
 }
 
 static void menuMainQuitCallback(gpointer)
@@ -98,7 +108,7 @@ static void menuMainQuitCallback(gpointer)
 int main(int argc, char* argv[]) 
 {
     gtk_init(&argc, &argv);
-    webkit_gtk_init();
+    webkit_init();
 
     gchar* url = "http://www.google.com";
     bool exitAfterLoading = false;
@@ -169,13 +179,18 @@ int main(int argc, char* argv[])
     GtkWidget* scrolledWindow = gtk_scrolled_window_new(NULL,NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindow),
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-    gPage = WEBKIT_GTK_PAGE(webkit_gtk_page_new());
+    gPage = WEBKIT_PAGE(webkit_page_new());
     gtk_container_add(GTK_CONTAINER(scrolledWindow), GTK_WIDGET(gPage));
     gtk_box_pack_start(GTK_BOX(vbox), scrolledWindow, TRUE, TRUE, 0);
+
+    gStatusbar = GTK_STATUSBAR(gtk_statusbar_new());
+    gStatusbarContextId = gtk_statusbar_get_context_id(gStatusbar, "Link Hover");
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(gStatusbar), FALSE, FALSE, 0); 
     
     g_signal_connect(gPage, "title-changed", G_CALLBACK(titleChanged), gPage);
     g_signal_connect(gPage, "load-progress-changed", G_CALLBACK(progressChanged), gPage);
-    webkit_gtk_page_open(gPage, url);
+    g_signal_connect(gPage, "hovering-over-link", G_CALLBACK(hoveringOverLink), gPage);
+    webkit_page_open(gPage, url);
 
     gtk_widget_show_all(gTopLevelWindow);
     gtk_main();

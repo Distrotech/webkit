@@ -3,22 +3,20 @@ editing
 
 # ------- tests that fail against Qt 4.3 due to bugs and missing features in QXmlStream
 fast/dom/set-innerHTML.xhtml
-dom/xhtml/level3/core/nodelookupnamespaceuri01.xhtml
-dom/xhtml/level3/core/nodelookupprefix19.xhtml
-fast/parser/entities-in-attributes.xhtml
-fast/xpath/string-value.html
+fast/encoding/css-charset-default.xhtml
+fast/encoding/default-xhtml-encoding.xhtml
+fast/encoding/meta-in-xhtml.xhtml
 
-# ------- infinite hangs
-editing/selection/extend-by-word-002.html
+# ------- failures due to missing XSLT support
+fast/dom/Window/get-set-properties.html
+fast/dom/Window/window-properties.html
 
-# ------- platform dependent stuff in text only tests
-fast/css/computed-style-without-renderer.html
+# ------- tests that require synchrounous XmlHttpRequest
+fast/encoding/char-decoding.html
 
 
 # ------- failures for tests with results
-fast/dom/open-and-close-by-DOM.html
 fast/dom/xmlhttprequest-html-response-encoding.html
-fast/dom/Window/new-window-opener.html
 fast/dom/Window/window-early-properties.html
 fast/forms/drag-out-of-textarea.html
 fast/forms/select-double-onchange.html
@@ -31,10 +29,9 @@ fast/overflow/003.xml
 fast/text/zero-width-characters.html
 fast/text/international/bidi-menulist.html
 fast/text/international/wrap-CJK-001.html
+fast/xpath/string-value.html
 
 # ------- all other failures (not looked at)
-css2.1/t0801-c412-hz-box-00-b-a.html
-css2.1/t040302-c61-ex-len-00-b-a.html
 dom/svg/level3/xpath/Conformance_Expressions.svg
 dom/svg/level3/xpath/Conformance_ID.svg
 dom/svg/level3/xpath/Text_Nodes.svg
@@ -65,35 +62,16 @@ dom/svg/level3/xpath/XPathResult_snapshotItem_UNORDERED_NODE_SNAPSHOT_TYPE_count
 dom/svg/level3/xpath/XPathResult_snapshotLength_ORDERED_NODE_SNAPSHOT_TYPE.svg
 dom/svg/level3/xpath/XPathResult_snapshotLength_UNORDERED_NODE_SNAPSHOT_TYPE.svg
 dom/svg/level3/xpath/XPathResult_stringValue.svg
-dom/xhtml/level2/html/HTMLBaseElement01.xhtml
-dom/xhtml/level2/html/HTMLBaseElement02.xhtml
-dom/xhtml/level2/html/HTMLIFrameElement11.xhtml
-dom/xhtml/level3/core/canonicalform08.xhtml
-dom/xhtml/level3/core/canonicalform09.xhtml
-fast/block/float/025.html
-fast/block/float/026.html
-fast/block/float/027.html
-fast/block/float/028.html
 fast/block/float/float-avoidance.html
-fast/block/float/float-in-float-hit-testing.html
 fast/box-sizing/percentage-height.html
-fast/clip/014.html
-fast/css-generated-content/hover-style-change.html
-fast/css-generated-content/positioned-background-hit-test-crash.html
-fast/css-generated-content/spellingToolTip-assert.html
 fast/css/acid2-pixel.html
 fast/css/acid2.html
 fast/css/case-transform.html
-fast/css/computed-style.html
 fast/css/continuationCrash.html
-fast/css/hover-subselector.html
 fast/css/ignore-text-zoom.html
 fast/css/ignore-text-zoom.html
-fast/css/layerZOrderCrash.html
 fast/css/pseudostyle-anonymous-text.html
-fast/css/resize-corner-tracking.html
 fast/css/rtl-ordering.html
-fast/css/universal-hover-quirk.html
 fast/dom/capturing-event-listeners.html
 fast/dom/clientWidthAfterDocumentIsRemoved.html
 fast/dom/focus-contenteditable.html
@@ -101,66 +79,30 @@ fast/dom/gc-8.html
 fast/dom/gc-10.html
 fast/dom/global-constructors.html
 fast/dom/isindex-002.html
-fast/dom/location-hash.html
 fast/dom/object-embed-plugin-scripting.html
 fast/dom/replaceChild.html
-fast/dom/title-text-property-2.html
-fast/dom/title-text-property.html
 fast/dom/wrapper-classes.html
-fast/dom/xmlhttprequest-get.xhtml
-fast/dom/Document/document-charset.html
-fast/dom/Document/early-document-access.html
 fast/dom/Element/onclick-case.html
 fast/dom/HTMLButtonElement/value/getset.html
-fast/dom/HTMLHeadElement/head-check.html
-fast/dom/Window/Plug-ins.html
-fast/dom/Window/get-set-properties.html
-fast/dom/Window/setting-properties-on-closed-window.html
 fast/dom/Window/window-onFocus.html
-fast/dom/Window/window-properties.html
-fast/dynamic/containing-block-change.html
-fast/dynamic/flash-replacement-test.html
 fast/dynamic/layer-hit-test-crash.html
-fast/encoding/char-decoding.html
-fast/encoding/char-decoding.html
+# seems to trigger some bugs/missing features in QTextCodec
 fast/encoding/char-encoding.html
-fast/encoding/char-encoding.html
-fast/encoding/css-charset-default.xhtml
-fast/encoding/default-xhtml-encoding.xhtml
-fast/encoding/frame-default-enc.html
+# QUrl::from/toACE seems to be stricter than what ICU does.
 fast/encoding/idn-security.html
 fast/encoding/invalid-UTF-8.html
-fast/encoding/invalid-UTF-8.html
-fast/encoding/meta-in-xhtml.xhtml
 fast/encoding/percent-escaping.html
-fast/encoding/percent-escaping.html
-fast/encoding/utf-32-big-endian-bom.html
-fast/encoding/utf-32-big-endian-nobom.xml
-fast/encoding/utf-32-little-endian-bom.html
-fast/encoding/utf-32-little-endian-nobom.xml
-fast/encoding/xmacroman-encoding-test.html
 fast/encoding/xmacroman-encoding-test.html
 fast/encoding/GBK/EUC-CN.html
-fast/encoding/GBK/EUC-CN.html
-fast/encoding/GBK/chinese.html
 fast/encoding/GBK/chinese.html
 fast/encoding/GBK/cn-gb.html
-fast/encoding/GBK/cn-gb.html
-fast/encoding/GBK/csgb2312.html
 fast/encoding/GBK/csgb2312.html
 fast/encoding/GBK/csgb231280.html
-fast/encoding/GBK/csgb231280.html
-fast/encoding/GBK/gb2312.html
 fast/encoding/GBK/gb2312.html
 fast/encoding/GBK/gb_2312-80.html
-fast/encoding/GBK/gb_2312-80.html
-fast/encoding/GBK/gbk.html
 fast/encoding/GBK/gbk.html
 fast/encoding/GBK/iso-ir-58.html
-fast/encoding/GBK/iso-ir-58.html
 fast/encoding/GBK/x-euc-cn.html
-fast/encoding/GBK/x-euc-cn.html
-fast/encoding/GBK/x-gbk.html
 fast/encoding/GBK/x-gbk.html
 fast/events/5056619.html
 fast/events/arrow-navigation.html
@@ -169,8 +111,6 @@ fast/events/click-count.html
 fast/events/content-changed-during-drop.html
 fast/events/dblclick-addEventListener.html
 fast/events/drag-in-frames.html
-fast/events/event-listener-on-link.html
-fast/events/event-sender-mouse-moved.html
 fast/events/fire-scroll-event.html
 fast/events/focusingUnloadedFrame.html
 fast/events/frame-tab-focus.html
@@ -181,7 +121,6 @@ fast/events/keydown-keypress-focus-change.html
 fast/events/keydown-keypress-preventDefault.html
 fast/events/keypress-focus-change.html
 fast/events/keypress-insert-tab.html
-fast/events/label-focus.html
 fast/events/mousedown_in_scrollbar.html
 fast/events/mouseout-dead-node.html
 fast/events/mouseover-mouseout2.html
@@ -196,16 +135,13 @@ fast/events/onchange-searchfield.html
 fast/events/onchange-select-popup.html
 fast/events/onchange-textfield.html
 fast/events/ondragenter.html
-fast/events/onload-re-entry.html
 fast/events/onsearch-enter.html
-fast/events/onsubmit-bubbling.html
 fast/events/option-tab.html
 fast/events/overflow-events.html
 fast/events/reveal-link-when-focused.html
 fast/events/standalone-image-drag-to-editable.html
 fast/events/updateLayoutForHitTest.html
 fast/events/xsl-onload.xhtml
-fast/flexbox/009.html
 fast/forms/001.html
 fast/forms/access-key.html
 fast/forms/box-shadow-override.html
@@ -227,17 +163,13 @@ fast/forms/form-data-encoding-normalization-overrun.html
 fast/forms/form-element-geometry.html
 fast/forms/form-post-urlencoded.html
 fast/forms/hidden-listbox.html
-fast/forms/input-appearance-preventDefault.html
-fast/forms/input-paste-undo.html
 fast/forms/input-readonly-autoscroll.html
-fast/forms/input-text-click-inside.html
 fast/forms/input-text-click-outside.html
 fast/forms/input-text-double-click.html
 fast/forms/input-text-drag-down.html
 fast/forms/input-text-enter.html
 fast/forms/input-text-option-delete.html
 fast/forms/input-text-scroll-left-on-blur.html
-fast/forms/input-text-self-emptying-click.html
 fast/forms/input-truncate-newline.html
 fast/forms/input-value.html
 fast/forms/listbox-clip.html
@@ -266,7 +198,6 @@ fast/forms/textarea-scroll-height.html
 fast/forms/textarea-scrollbar.html
 fast/forms/textarea-scrolled-type.html
 fast/forms/textarea-type-spaces.html
-fast/forms/textfield-drag-into-disabled.html
 fast/frames/frame-navigation.html
 fast/frames/iframe-window-focus.html
 fast/frames/inline-object-inside-frameset.html
@@ -276,7 +207,6 @@ fast/history/history_reload.html
 fast/html/keygen.html
 fast/html/tab-order.html
 fast/images/animated-background-image-crash.html
-fast/images/imagemap-case.html
 fast/inline/dirtyLinesForInline.html
 fast/invalid/missing-end-tag.xhtml
 fast/invalid/residual-style.html
@@ -320,7 +250,6 @@ fast/repaint/flexible-box-overflow.html
 fast/repaint/float-move-during-layout.html
 fast/repaint/float-overflow-right.html
 fast/repaint/float-overflow.html
-fast/repaint/focus-layers.html
 fast/repaint/inline-block-overflow.html
 fast/repaint/inline-outline-repaint.html
 fast/repaint/intermediate-layout-position-clip.html
@@ -359,13 +288,10 @@ fast/repaint/text-selection-rect-in-overflow-2.html
 fast/repaint/text-selection-rect-in-overflow.html
 fast/repaint/text-shadow-horizontal.html
 fast/repaint/text-shadow.html
-fast/replaced/object-align-hspace-vspace.html
 fast/replaced/replaced-breaking.html
 fast/replaced/width100percent-button.html
 fast/replaced/width100percent-textarea.html
 fast/selectors/056.html
-fast/selectors/unqualified-hover-strict.html
-fast/table/edge-offsets.html
 fast/table/empty-section-crash.html
 fast/table/giantCellspacing.html
 fast/text/atsui-pointtooffset-calls-cg.html
@@ -416,7 +342,6 @@ plugins/bindings-test.html
 plugins/call-as-function-test.html
 plugins/destroy-stream-twice.html
 plugins/embed-attributes-setting.html
-plugins/embed-attributes-style.html
 plugins/embed-inside-object.html
 plugins/get-empty-url.html
 plugins/get-url-that-the-resource-load-delegate-will-disallow.html
@@ -674,7 +599,6 @@ svg/W3C-SVG-1.1/struct-dom-03-b.svg
 svg/W3C-SVG-1.1/struct-dom-04-b.svg
 svg/W3C-SVG-1.1/struct-dom-05-b.svg
 svg/W3C-SVG-1.1/struct-dom-06-b.svg
-svg/W3C-SVG-1.1/struct-frag-01-t.svg
 svg/W3C-SVG-1.1/struct-frag-02-t.svg
 svg/W3C-SVG-1.1/struct-frag-03-t.svg
 svg/W3C-SVG-1.1/struct-frag-04-t.svg
@@ -743,7 +667,6 @@ svg/carto.net/textbox.svg
 svg/carto.net/window.svg
 svg/custom/SVGNumber-interface.svg
 svg/custom/SVGPoint-interface.svg
-svg/custom/SVGPoint-matrixTransform.svg
 svg/custom/SVGRect-interface.svg
 svg/custom/attribute-namespace-check.svg
 svg/custom/circular-marker-reference-1.svg
@@ -769,20 +692,13 @@ svg/custom/dynamic-svg-document-creation.svg
 svg/custom/dynamic-viewBox.svg
 svg/custom/embedded-svg-disallowed-in-dashboard.xml
 svg/custom/empty-merge.svg
-svg/custom/empty-merge.svg
 svg/custom/evt-onload.svg
 svg/custom/feComponentTransfer-Discrete.svg
-svg/custom/feComponentTransfer-Discrete.svg
-svg/custom/feComponentTransfer-Gamma.svg
 svg/custom/feComponentTransfer-Gamma.svg
 svg/custom/feComponentTransfer-Linear.svg
-svg/custom/feComponentTransfer-Linear.svg
 svg/custom/feComponentTransfer-Table.svg
-svg/custom/feComponentTransfer-Table.svg
-svg/custom/feDisplacementMap-01.svg
 svg/custom/feDisplacementMap-01.svg
 svg/custom/fill-update.svg
-svg/custom/filter-source-alpha.svg
 svg/custom/filter-source-alpha.svg
 svg/custom/foreign-object-skew.svg
 svg/custom/fractional-rects.svg
@@ -797,22 +713,14 @@ svg/custom/gradient-stop-corner-cases.svg
 svg/custom/gradient-stop-style-change.svg
 svg/custom/gradient-stroke-width.svg
 svg/custom/grayscale-gradient-mask.svg
-svg/custom/grayscale-gradient-mask.svg
 svg/custom/hit-test-path-stroke.svg
-svg/custom/hit-test-path.svg
-svg/custom/hit-test-path.svg
-svg/custom/hover-default-fill.svg
 svg/custom/hover-default-fill.svg
 svg/custom/image-clipped-hit.svg
 svg/custom/image-with-transform-clip-filter.svg
-svg/custom/image-with-transform-clip-filter.svg
-svg/custom/inner-percent.svg
 svg/custom/inner-percent.svg
 svg/custom/inner-svg-hit-test.svg
 svg/custom/invalid-css.svg
-svg/custom/invalid-css.svg
 svg/custom/invalid-fill-hex.svg
-svg/custom/invalid-fill.svg
 svg/custom/invalid-fill.svg
 svg/custom/invalid-transforms.svg
 svg/custom/invisible-text-after-scrolling.xhtml
@@ -896,15 +804,12 @@ svg/custom/svg-float-border-padding.xml
 svg/custom/svg-overflow-types.svg
 svg/custom/svgpolyparser-extra-space.svg
 svg/custom/text-clip.svg
-svg/custom/text-ctm.svg
 svg/custom/text-filter.svg
 svg/custom/text-filter.svg
 svg/custom/text-gradient-no-content.svg
 svg/custom/text-gradient-no-content.svg
 svg/custom/text-hit-test.svg
 svg/custom/text-image-opacity.svg
-svg/custom/text-repaint-including-stroke.svg
-svg/custom/text-whitespace-handling.svg
 svg/custom/transform-ignore-after-invalid.svg
 svg/custom/transform-invalid.svg
 svg/custom/transform-scale-parse.svg
@@ -933,7 +838,6 @@ svg/custom/use-on-use.svg
 svg/custom/use-property-changes-through-dom.svg
 svg/custom/use-property-changes-through-svg-dom.svg
 svg/custom/use-recursion-1.svg
-svg/custom/use-recursion-2.svg
 svg/custom/use-recursion-3.svg
 svg/custom/use-recursion-4.svg
 svg/custom/use-referencing-nonexisting-symbol.svg
@@ -956,7 +860,6 @@ svg/hixie/cascade/001-broken.xml
 svg/hixie/cascade/002.xml
 svg/hixie/data-types/001.xml
 svg/hixie/data-types/002.xhtml
-svg/hixie/dynamic/002.xml
 svg/hixie/dynamic/003.xml
 svg/hixie/dynamic/004.xml
 svg/hixie/dynamic/005-broken.xml
@@ -964,8 +867,6 @@ svg/hixie/dynamic/006.xml
 svg/hixie/error/001.xml
 svg/hixie/error/002.xml
 svg/hixie/error/003.xml
-svg/hixie/error/004.xml
-svg/hixie/error/005.xml
 svg/hixie/error/007.xml
 svg/hixie/error/008.xml
 svg/hixie/error/009.xml
@@ -997,8 +898,6 @@ svg/hixie/perf/004.xml
 svg/hixie/perf/005.xml
 svg/hixie/perf/006.xml
 svg/hixie/perf/007.xml
-svg/hixie/processing-model/003.xml
-svg/hixie/processing-model/004.xml
 svg/hixie/processing-model/005.xml
 svg/hixie/rendering-model/001.xml
 svg/hixie/rendering-model/002.xml

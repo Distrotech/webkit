@@ -2572,8 +2572,12 @@ void FrameLoader::transitionToCommitted(PassRefPtr<CachedPage> cachedPage)
 
         case FrameLoadTypeStandard:
             updateHistoryForStandardLoad();
+#ifndef BUILDING_ON_TIGER
+            // This code was originally added for a Leopard performance imporvement. We decided to 
+            // ifdef it to fix correctness issues on Tiger documented in <rdar://problem/5441823>.
             if (m_frame->view())
                 m_frame->view()->suppressScrollbars(true);
+#endif
             m_client->makeDocumentView();
             break;
 
@@ -3340,7 +3344,7 @@ void FrameLoader::receivedMainResourceError(const ResourceError& error, bool isC
             handleFallbackContent();
     }
     
-    if (m_state == FrameStateProvisional) {
+    if (m_state == FrameStateProvisional && m_provisionalDocumentLoader) {
         KURL failedURL = m_provisionalDocumentLoader->originalRequestCopy().url();
         didNotOpenURL(failedURL);
             

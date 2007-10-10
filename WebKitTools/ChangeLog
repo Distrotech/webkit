@@ -1,3 +1,238 @@
+2007-10-09  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by Simon.
+
+        implement layoutTestController.encode/decodeHostName. We still don't pass fast/encoding/idn-security.html, since our QUrl::from/toACE is somewhat stricter than ICU.
+
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::encodeHostName):
+        (LayoutTestController::decodeHostName):
+        * DumpRenderTree/qt/jsobjects.h:
+
+2007-10-09  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by Simon.
+
+        Don't set up connections inside QWebPage::createFrame, as users might be reimplementing that method. Make sure we get only one titleChanged() signal per title change, and implement the support for testing this in DRT.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::WebPage::createFrame):
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::titleChanged):
+        * DumpRenderTree/qt/DumpRenderTree.h:
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::reset):
+        * DumpRenderTree/qt/jsobjects.h:
+
+2007-10-09  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by Simon.
+
+        add a dummy implementation for layoutTestController.display() and implement layoutTestController.clearBackForwardList().
+
+        * DumpRenderTree/qt/DumpRenderTree.h:
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::clearBackForwardList):
+        * DumpRenderTree/qt/jsobjects.h:
+
+2007-10-09  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by Simon.
+
+        make --git-reviewer work again.
+
+        * Scripts/prepare-ChangeLog:
+
+2007-10-07  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber stamped by Eric.
+
+        Connect to the "hovering-over-link" signal emitted by WebKitPage and
+        show the current link inside the statusbar.
+        This shows how to make use of this signal and allows to easily test
+        http://bugs.webkit.org/show_bug.cgi?id=15299.
+
+        * GtkLauncher/main.cpp:
+        (hoveringOverLink):
+        (main):
+
+2007-10-05  Lars Knoll  <lars@trolltech.com>
+
+        add proper error messages to the FrameLoaderClient.
+        Implement ChromeClientQt::closeWindowSoon and
+        FrameLoaderClientQt::dispatchCreatePage (which should go away IMO).
+        Some fixes in DRT to make it work correctly with multiple windows.
+
+        Reviewed by Maciej.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::createWindow):
+        (WebCore::DumpRenderTree::windowCount):
+        * DumpRenderTree/qt/DumpRenderTree.h:
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::maybeDump):
+        (LayoutTestController::windowCount):
+        * DumpRenderTree/qt/jsobjects.h:
+
+2007-10-05  Lars Knoll  <lars@trolltech.com>
+
+        Add a dummy plugin to DRT  to fix fast/dom/Window/Plug-Ins.html.
+        Add support for layoutTextController.setCanOpenWindows() to DRT
+        fixing another 2 test cases in fast/dom/Window.
+
+        Reviewed by Maciej.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::WebPage::WebPage):
+        (WebCore::WebPage::createWindow):
+        (WebCore::DumpRenderTree::resetJSObjects):
+        (WebCore::DumpRenderTree::createWindow):
+        * DumpRenderTree/qt/DumpRenderTree.h:
+        * DumpRenderTree/qt/DumpRenderTree.pro:
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::LayoutTestController):
+        (LayoutTestController::reset):
+        * DumpRenderTree/qt/jsobjects.h:
+        * DumpRenderTree/qt/main.cpp:
+        * DumpRenderTree/qt/testplugin.cpp: Added.
+        * DumpRenderTree/qt/testplugin.h: Added.
+
+2007-10-04  Sam Weinig  <sam@webkit.org>
+
+        Rubber stamped by Adam.
+
+        Remove empty directories.
+
+        * DumpRenderTree/DumpRenderTree.qtproj: Removed.
+        * DumpRenderTree/DumpRenderTree.qtproj/fonts: Removed.
+
+2007-10-03  Darin Adler  <darin@apple.com>
+
+        Reviewed by Adam.
+
+        * Scripts/webkitdirs.pm: Automatically use "Debug_Internal" if
+        we find the internal libraries in the libraries directory. This
+        is helpful for Safari team engineers at Apple.
+
+2007-10-03  Adam Roben  <aroben@apple.com>
+
+        Update the location of AHEM___.TTF after r25968
+
+        Reviewed by Sam.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:
+
+2007-10-03  Alp Toker  <alp@atoker.com>
+
+        Reviewed by Adam.
+
+        http://bugs.webkit.org/show_bug.cgi?id=14726
+        [gtk] API design. Mapping the WebView delegates to signals.
+
+        Change the API namespace of the Gtk+ port from 'WebKitGtk' to 'WebKit'.
+
+        * GtkLauncher/main.cpp:
+        (goToURLBarText):
+        (titleChanged):
+        (progressChanged):
+        (menuMainBackCallback):
+        (menuMainForwardCallback):
+        (main):
+
+2007-10-03  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by Rob.
+
+        This fixes --strict mode in run-webkit-tests again after
+        the platform dependent test results have been moved.
+
+        * Scripts/run-webkit-tests:
+
+2007-10-03  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by bdash.
+
+        remove the hack in run-webkit-tests that forced text only test
+        to be taken from the platform independent dir. It was only left
+        there from early days.
+        
+        Remove platform dependent results for tests that are text only nowadays,
+        and add one platform dependent result for a text only test that requires it.
+
+        * Scripts/run-webkit-tests:
+
+2007-10-03  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by olliej.
+
+        Move the Qt version of DRT into the correct place and put the binary into BUILDDIR/bin.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.cpp.
+        (WebCore::WebFrame::WebFrame):
+        (WebCore::WebPage::WebPage):
+        (WebCore::WebPage::createFrame):
+        (WebCore::WebPage::javaScriptAlert):
+        (WebCore::WebPage::javaScriptConsoleMessage):
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::~DumpRenderTree):
+        (WebCore::DumpRenderTree::open):
+        (WebCore::DumpRenderTree::readStdin):
+        (WebCore::DumpRenderTree::resetJSObjects):
+        (WebCore::DumpRenderTree::initJSObjects):
+        (WebCore::DumpRenderTree::dumpFramesAsText):
+        (WebCore::DumpRenderTree::dump):
+        * DumpRenderTree/qt/DumpRenderTree.h: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.h.
+        (WebCore::DumpRenderTree::layoutTestController):
+        (WebCore::DumpRenderTree::eventSender):
+        * DumpRenderTree/qt/DumpRenderTree.pro: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/DumpRenderTree.pro.
+        * DumpRenderTree/qt/fonts.conf: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/fonts.conf.
+        * DumpRenderTree/qt/fonts/AHEM____.TTF: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/fonts/AHEM____.TTF.
+        * DumpRenderTree/qt/jsobjects.cpp: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/jsobjects.cpp.
+        (HackWebFrame::mousePressEvent):
+        (HackWebFrame::mouseReleaseEvent):
+        (HackWebFrame::mouseMoveEvent):
+        (HackWebFrame::HackWebFrame):
+        (HackWebFrame::~HackWebFrame):
+        (LayoutTestController::LayoutTestController):
+        (LayoutTestController::reset):
+        (LayoutTestController::maybeDump):
+        (LayoutTestController::waitUntilDone):
+        (LayoutTestController::notifyDone):
+        (LayoutTestController::dumpEditingCallbacks):
+        (LayoutTestController::queueReload):
+        (LayoutTestController::provisionalLoad):
+        (LayoutTestController::timerEvent):
+        (EventSender::EventSender):
+        (EventSender::mouseDown):
+        (EventSender::mouseUp):
+        (EventSender::mouseMoveTo):
+        (EventSender::leapForward):
+        (EventSender::keyDown):
+        (EventSender::frameUnderMouse):
+        * DumpRenderTree/qt/jsobjects.h: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/jsobjects.h.
+        (LayoutTestController::isLoading):
+        (LayoutTestController::setLoading):
+        (LayoutTestController::shouldDumpAsText):
+        (LayoutTestController::shouldDumpChildrenAsText):
+        (LayoutTestController::shouldWaitUntilDone):
+        (LayoutTestController::dumpAsText):
+        (LayoutTestController::dumpChildFramesAsText):
+        * DumpRenderTree/qt/main.cpp: Renamed from WebKitTools/DumpRenderTree/DumpRenderTree.qtproj/main.cpp.
+        (messageHandler):
+        (crashHandler):
+        (main):
+        * Scripts/run-webkit-tests:
+
+2007-10-03  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Alp Toker.
+
+        Fix build-webkit when both QTDIR and --gtk are set.  The presence of --gtk
+        should take precedence over QTDIR when determining which port we are working with.
+
+        * Scripts/webkitdirs.pm: 
+
 2007-10-02  Adam Roben  <aroben@apple.com>
 
         Add keychain to the list of default packages to install

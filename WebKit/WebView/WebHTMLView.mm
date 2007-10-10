@@ -1746,7 +1746,6 @@ static void _updateMouseoverTimerCallback(CFRunLoopTimerRef timer, void *info)
     // 1. The background color used to draw behind selected content (active | inactive color)
     // 2. Caret blinking (blinks | does not blink)
     // 3. The drawing of a focus ring around links in web pages.
-    // 4. Changing the tint of controls from clear to aqua/graphite and vice versa
     //
     // Also, this is responsible for letting the bridge know if the window has gained or lost focus
     // so we can send focus and blur events.
@@ -3266,7 +3265,8 @@ noPromisedData:
     page->focusController()->setFocusedFrame(frame);
     if (Document* document = frame->document())
         document->setFocusedNode(0);
-    page->focusController()->setInitialFocus(frame->eventHandler()->currentKeyboardEvent().get());
+    page->focusController()->setInitialFocus(direction == NSSelectingNext ? FocusDirectionForward : FocusDirectionBackward,
+                                             frame->eventHandler()->currentKeyboardEvent().get());
     return YES;
 }
 

@@ -41,8 +41,9 @@
 using namespace WebCore;
 
 namespace WebKit {
-ChromeClient::ChromeClient(WebKitGtkPage* page)
+ChromeClient::ChromeClient(WebKitPage* page)
     : m_webPage(page)
+    , m_didSendLinkSignal(false)
 {
 }
 
@@ -87,11 +88,11 @@ void ChromeClient::unfocus()
 Page* ChromeClient::createWindow(Frame*, const FrameLoadRequest&)
 {
     /* TODO: FrameLoadRequest is not used */
-    WebKitGtkPage* page = WEBKIT_GTK_PAGE_GET_CLASS(m_webPage)->create_page(m_webPage);
+    WebKitPage* page = WEBKIT_PAGE_GET_CLASS(m_webPage)->create_page(m_webPage);
     if (!page)
         return 0;
 
-    WebKitGtkPagePrivate *privateData = WEBKIT_GTK_PAGE_GET_PRIVATE(WEBKIT_GTK_PAGE(page));
+    WebKitPagePrivate *privateData = WEBKIT_PAGE_GET_PRIVATE(WEBKIT_PAGE(page));
     return privateData->page;
 }
 
@@ -198,19 +199,19 @@ void ChromeClient::addMessageToConsole(const WebCore::String& message, unsigned 
     CString messageString = message.utf8();
     CString sourceIdString = sourceId.utf8();
 
-    WEBKIT_GTK_PAGE_GET_CLASS(m_webPage)->java_script_console_message(m_webPage, messageString.data(), lineNumber, sourceIdString.data());
+    WEBKIT_PAGE_GET_CLASS(m_webPage)->java_script_console_message(m_webPage, messageString.data(), lineNumber, sourceIdString.data());
 }
 
 void ChromeClient::runJavaScriptAlert(Frame* frame, const String& message)
 {
     CString messageString = message.utf8();
-    WEBKIT_GTK_PAGE_GET_CLASS(m_webPage)->java_script_alert(m_webPage, kit(frame), messageString.data());
+    WEBKIT_PAGE_GET_CLASS(m_webPage)->java_script_alert(m_webPage, kit(frame), messageString.data());
 }
 
 bool ChromeClient::runJavaScriptConfirm(Frame* frame, const String& message)
 {
     CString messageString = message.utf8();
-    return WEBKIT_GTK_PAGE_GET_CLASS(m_webPage)->java_script_confirm(m_webPage, kit(frame), messageString.data());
+    return WEBKIT_PAGE_GET_CLASS(m_webPage)->java_script_confirm(m_webPage, kit(frame), messageString.data());
 }
 
 bool ChromeClient::runJavaScriptPrompt(Frame* frame, const String& message, const String& defaultValue, String& result)
@@ -218,7 +219,7 @@ bool ChromeClient::runJavaScriptPrompt(Frame* frame, const String& message, cons
     CString messageString = message.utf8();
     CString defaultValueString = defaultValue.utf8(); 
 
-    gchar* cresult = WEBKIT_GTK_PAGE_GET_CLASS(m_webPage)->java_script_prompt(m_webPage,
+    gchar* cresult = WEBKIT_PAGE_GET_CLASS(m_webPage)->java_script_prompt(m_webPage,
                                                                               kit(frame),
                                                                               messageString.data(),
                                                                               defaultValueString.data());
@@ -273,13 +274,19 @@ void ChromeClient::updateBackingStore()
 void ChromeClient::mouseDidMoveOverElement(const HitTestResult& hit, unsigned modifierFlags)
 {
     // check if the element is a link...
-    KURL url = hit.absoluteLinkURL();
-    if(!url.isEmpty()) {
-        CString titleString = hit.title().utf8();
-        DeprecatedCString urlString = url.prettyURL().utf8();
-        g_signal_emit_by_name(m_webPage, "hovering_over_link", titleString.data(), urlString.data());
-    } else
+    bool isLink = hit.isLiveLink();
+    if (isLink && !m_didSendLinkSignal) {
+        KURL url = hit.absoluteLinkURL();
+        if (!url.isEmpty()) {
+            CString titleString = hit.title().utf8();
+            DeprecatedCString urlString = url.prettyURL().utf8();
+            g_signal_emit_by_name(m_webPage, "hovering_over_link", titleString.data(), urlString.data());
+            m_didSendLinkSignal = true;
+        }
+    } else if (!isLink && m_didSendLinkSignal) {
         g_signal_emit_by_name(m_webPage, "hovering_over_link", 0, 0);
+        m_didSendLinkSignal = false;
+    }
 }
 
 void ChromeClient::setToolTip(const String&)

@@ -1,3 +1,234 @@
+2007-10-08  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Steve Falkenburg.
+
+        Fix for <rdar://problem/5519698> CrashTracer: [USER] 47 crashes in Safari at com.apple.WebCore: WebCore::XMLTokenizer::lineNumber const + 9
+
+        Test: fast/innerHTML/innerHTML-script-tag-crash.xhtml
+
+        * dom/XMLTokenizer.cpp:
+        (WebCore::XMLTokenizer::lineNumber): Return 1 when there is no context.
+        (WebCore::XMLTokenizer::columnNumber): ditto.
+
+2007-10-08  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 15305: Crash when dragging an image when "load images automatically" preference is off
+
+        http://bugs.webkit.org/show_bug.cgi?id=15305
+        <rdar://problem/5524774>
+
+        Reviewed by Eric Seidel.
+
+        No test possible: to reproduce this you have to change a WebKit
+        preference and reload the page. See
+        http://bugs.webkit.org/show_bug.cgi?id=15414
+
+        * platform/win/ClipboardWin.cpp:
+        (WebCore::createGlobalImageFileDescriptor): ASSERT that we have an
+        image and that it has a SharedBuffer.
+        (WebCore::writeImageToDataObject): The fix: null-check imageBuffer.
+
+2007-10-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        New fix for <rdar://problem/5522487> REGRESSION: With JavaScript 
+        disabled, any page load causes a crash in PropertyMap::put
+        
+        Explicitly remove the "document" property from the window. The old 
+        solution would leave a stale "document" property around after JavaScript
+        was re-enabled.
+
+        The architecture for disabling JavaScript could use some consolidation. 
+        It seems wrong that a script proxy even exists when JavaScript is 
+        disabled. It also seems wrong that so many individual call sites are 
+        responsible for checking whether JavaScript is enabled. I've filed a 
+        bug about this: http://bugs.webkit.org/show_bug.cgi?id=15385.
+
+        * bindings/js/kjs_proxy.cpp:
+        (WebCore::KJSProxy::clearDocumentWrapper):
+        * bindings/js/kjs_proxy.h:
+        * page/Frame.cpp:
+        (WebCore::Frame::setDocument):
+
+2007-10-05  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Anders.
+
+        <rdar://5520913> Ticketmaster.com doesn't display correctly (Flash
+        related?)
+
+        The plugin is requesting files that don't exist on the server, and
+        we are passing the 404 error page to the plugin. This change cancels the
+        stream if the response code indicates a failure.
+
+        This is a port of the safari / mac code.
+
+        * loader/win/NetscapePlugInStreamLoaderWin.cpp:
+        (WebCore::NetscapePlugInStreamLoader::didReceiveResponse): If the
+        response code indicates a failure, cancel the stream
+
+2007-10-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Fixed <rdar://problem/5522487> REGRESSION: With JavaScript disabled, 
+        any page load causes a crash in PropertyMap::put
+        
+        The problem was that we were using JavaScript when JavaScript was
+        disabled. The architecture for disabling JavaScript could use some
+        consolidation, but this is the simplest, safest change for now.
+        
+        Currently passing layout tests still pass.
+
+        * bindings/js/kjs_proxy.cpp:
+        (WebCore::KJSProxy::updateDocumentWrapper):
+
+2007-10-04  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by John Sullivan.
+
+        Fix for <rdar://problem/5441823> REGRESSION (r25142, Tiger only): 
+        Vertical scroll bar not redrawn properly when going back in history 
+        (15033)
+
+        This fix if-defs r25142 to be Leopard-only since it causes 
+        correctness issues on Tiger and does not seem to have any 
+        performance impact on Tiger either.
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::transitionToCommitted):
+
+2007-10-05  Ada Chan  <adachan@apple.com>
+
+        <rdar://problem/5436617> Favicons sometimes don't show up even when they are
+        in the database
+        - A client can try to retain an icon for a page before the database is actually
+        opened.  Since isOpened() is not a requirement to retain an icon, remove the check
+        for that.  Instead, we'll check to make sure whether this database is enabled
+        before proceeding.
+
+        Reviewed by Brady.
+
+        * loader/icon/IconDatabase.cpp:
+        (WebCore::IconDatabase::retainIconForPageURL):
+        (WebCore::IconDatabase::releaseIconForPageURL): only check isOpen() before we
+        schedule for a sync.
+
+2007-10-05  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by olliej.
+
+        fix a hang in editing/selection/extend-by-word-002.html
+
+        * platform/qt/TextBreakIteratorQt.cpp:
+        (WebCore::CharBreakIteratorQt::next):
+        (WebCore::characterBreakIterator):
+
+2007-10-04  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver.
+
+        Switch to default level of debugging symbols to resolve <rdar://problem/5488678>.
+        The "full" level appears to offer no observable benefits even though the documentation
+        suggests it be used for dead code stripping.  This should also decrease link times.
+
+        * Configurations/Base.xcconfig:
+
+2007-10-04  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        WebCore part of fix for <rdar://problem/5369017> REGRESSION: Can't tab to webview that doesn't have editable content
+
+        * page/FocusController.h: Added FocusDirection argument.
+        * page/FocusController.cpp: (WebCore::FocusController::setInitialFocus):
+          Use FocusDirection argument instead of key modifiers to send direction to advanceFocus.
+        * WebCore.exp: Updated symbol.
+
+2007-10-04  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by John.
+        
+        <rdar://problems/5516309>
+        
+        * page/FrameView.cpp:
+        (WebCore::FrameView::updateControlTints): Avoid the expense of updating tints on controls for the
+        empty-window case since this can take a significant amount of time even on windows that have no
+        content at all. Note this fix specifically optimizes the empty window/tab case; for a more broad
+        fix John wrote up rdar://problem/5521050.
+
+2007-10-04  Darin Adler  <darin@apple.com>
+
+        * page/Frame.h: Put functions into categories to indicate other classes
+        we'd like to move them into in the future. Just organizational -- no code
+        change.
+
+2007-10-04  Lars Knoll  <lars@trolltech.com>
+
+        Reviewed by maciej.
+
+        fix a crash in the FrameLoader that can happen under certain
+        conditions in the Qt port.
+
+        Test: fast/loader/iframe-crash-on-missing-image.xhtml
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::receivedMainResourceError):
+
+2007-10-03  Alp Toker  <alp@atoker.com>
+
+        Reviewed by Adam.
+
+        http://bugs.webkit.org/show_bug.cgi?id=14726
+        [gtk] API design. Mapping the WebView delegates to signals.
+
+        Change the API namespace of the Gtk+ port from 'WebKitGtk' to 'WebKit'.
+
+        * WebCore.pro:
+
+2007-10-03  Alp Toker  <alp@atoker.com>
+
+        Reviewed by Eric.
+
+        http://bugs.webkit.org/show_bug.cgi?id=14129
+        [CAIRO] Support the canvas element
+
+        Add a new canvas implementation using Cairo for rendering.
+
+        * html/CanvasGradient.cpp:
+        (WebCore::CanvasGradient::CanvasGradient):
+        (WebCore::CanvasGradient::~CanvasGradient):
+        (WebCore::CanvasGradient::addColorStop):
+        (WebCore::CanvasGradient::platformShading):
+        * html/CanvasGradient.h:
+        * html/CanvasRenderingContext2D.cpp:
+        (WebCore::CanvasRenderingContext2D::setFillStyle):
+        (WebCore::CanvasRenderingContext2D::fill):
+        (WebCore::CanvasRenderingContext2D::stroke):
+        (WebCore::CanvasRenderingContext2D::fillRect):
+        (WebCore::CanvasRenderingContext2D::drawImage):
+        (WebCore::CanvasRenderingContext2D::applyStrokePattern):
+        * html/CanvasStyle.cpp:
+        (WebCore::CanvasStyle::applyStrokeColor):
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::~HTMLCanvasElement):
+        (WebCore::HTMLCanvasElement::reset):
+        (WebCore::HTMLCanvasElement::paint):
+        (WebCore::HTMLCanvasElement::createDrawingContext):
+        (WebCore::HTMLCanvasElement::createPlatformImage):
+        * html/HTMLCanvasElement.h:
+
+2007-10-03  Lars Knoll  <lars@trolltech.com>
+
+        Signed off by olliej.
+
+        move WebKitQt to WebKit/qt for consistency with the other ports.
+
+        WARNING: NO TEST CASES ADDED OR CHANGED
+
+        * WebCore.pro:
+
 2007-10-02  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Oliver and Adam.

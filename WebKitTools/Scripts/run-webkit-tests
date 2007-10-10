@@ -249,7 +249,7 @@ $testHTTP = 0 if isQt();
 
 setConfigurationProductDir(Cwd::abs_path($root)) if (defined($root));
 my $productDir = productDir();
-$productDir .= "/WebKitTools/DumpRenderTree/DumpRenderTree.qtproj" if (isQt());
+$productDir .= "/bin" if (isQt());
 
 chdirWebKit();
 
@@ -531,9 +531,6 @@ for my $test (@tests) {
 
     my $expected;
     my $expectedDir = expectedDirectoryForTest($base, $isText);
-    if (isQt() && $isText) {
-        $expectedDir = $testDirectory;
-    }
 
     if (!$resetResults && open EXPECTED, "<", "$expectedDir/$base-$expectedTag.txt") {
         $expected = "";
@@ -545,7 +542,7 @@ for my $test (@tests) {
     }
     my $expectedMac;
     if (!isOSX() && $strictTesting && !$isText) {
-      if (!$resetResults && open EXPECTED, "<", "$expectedDirectory/$base-$expectedTag.txt") {
+      if (!$resetResults && open EXPECTED, "<", "$testDirectory/platform/mac/$base-$expectedTag.txt") {
         $expectedMac = "";
         while (<EXPECTED>) {
           $expectedMac .= $_;

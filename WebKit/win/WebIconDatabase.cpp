@@ -32,6 +32,7 @@
 #include "WebPreferences.h"
 #include "WebNotificationCenter.h"
 #pragma warning(push, 0)
+#include <WebCore/BString.h>
 #include <WebCore/IconDatabase.h>
 #include <WebCore/Image.h>
 #include <WebCore/PlatformString.h>
@@ -229,14 +230,25 @@ HRESULT STDMETHODCALLTYPE WebIconDatabase::removeAllIcons(void)
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::delayDatabaseCleanup(void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    IconDatabase::delayDatabaseCleanup();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE WebIconDatabase::allowDatabaseCleanup(void)
 {
-    ASSERT_NOT_REACHED();
-    return E_NOTIMPL;
+    IconDatabase::allowDatabaseCleanup();
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE WebIconDatabase::iconURLForURL( 
+        /* [in] */ BSTR url,
+        /* [retval][out] */ BSTR* iconURL)
+{
+    if (!url || !iconURL)
+        return E_POINTER;
+    BString iconURLBSTR(iconDatabase()->iconURLForPageURL(String(url, SysStringLen(url))));
+    *iconURL = iconURLBSTR.release();
+    return S_OK;
 }
 
 HBITMAP createDIB(LPSIZE size)

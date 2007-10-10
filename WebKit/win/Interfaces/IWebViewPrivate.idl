@@ -115,4 +115,6 @@ interface IWebViewPrivate : IUnknown
 
     HRESULT setCustomDropTarget([in] IDropTarget* dt);
     HRESULT removeCustomDropTarget();
+
+    HRESULT setInitialFocus([in] BOOL forward);
 }
