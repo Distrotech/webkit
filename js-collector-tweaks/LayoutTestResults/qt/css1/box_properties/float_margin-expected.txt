@@ -1,0 +1,165 @@
+layer at (0,0) size 800x1906
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x1906
+  RenderBlock {HTML} at (0,0) size 800x1906
+    RenderBody {BODY} at (8,8) size 784x1890 [bgcolor=#CCCCCC]
+      RenderBlock {P} at (0,0) size 784x16
+        RenderText {#text} at (0,0) size 352x16
+          text run at (0,0) width 352: "The style declarations which apply to the text below are:"
+      RenderBlock {PRE} at (0,30) size 784x144
+        RenderText {#text} at (0,0) size 280x144
+          text run at (0,0) width 172: "P.test {background: white; font-size: 20px;"
+          text run at (172,0) width 0: " "
+          text run at (0,16) width 280: "        margin-left: 30px; margin-right: 10px; padding: 0; border: 0;}"
+          text run at (280,16) width 0: " "
+          text run at (0,32) width 156: "IMG {padding: 0; border: 0; margin: 0;}"
+          text run at (156,32) width 0: " "
+          text run at (0,48) width 100: "P.test IMG {float: left;}"
+          text run at (100,48) width 0: " "
+          text run at (0,64) width 176: "#img2 {margin-top: 30px; margin-left: 30px;}"
+          text run at (176,64) width 0: " "
+          text run at (0,80) width 184: "#img3 {margin-top: -30px; margin-left: -30px;}"
+          text run at (184,80) width 0: " "
+          text run at (0,96) width 192: "#img4 {margin-right: 30px; margin-bottom: 30px;}"
+          text run at (192,96) width 0: " "
+          text run at (0,112) width 200: "#img5 {margin-right: -30px; margin-bottom: -30px;}"
+          text run at (200,112) width 0: " "
+          text run at (0,128) width 0: " "
+      RenderBlock {HR} at (0,188) size 784x2 [border: (1px inset #000000)]
+      RenderBlock {P} at (30,210) size 744x92 [bgcolor=#FFFFFF]
+        RenderText {#text} at (0,0) size 734x91
+          text run at (0,0) width 690: "This paragraph should have a white background which extends to the edges of the"
+          text run at (0,23) width 125: "element's box. "
+          text run at (125,23) width 461: "There is no padding set on this paragraph whatsoever. "
+          text run at (586,23) width 148: "If the background"
+          text run at (0,46) width 712: "of the entire box is not white, this may cause problems with the following tests; at any"
+          text run at (0,69) width 290: "rate, it must be taken into account."
+      RenderBlock {P} at (30,322) size 744x115 [bgcolor=#FFFFFF]
+        RenderImage {IMG} at (0,0) size 60x60
+        RenderText {#text} at (60,0) size 734x114
+          text run at (60,0) width 653: "The image in the upper left corner of this paragraph should be floated left, and"
+          text run at (60,23) width 120: "nothing more. "
+          text run at (180,23) width 554: "The edges of the white background should line up with the top and"
+          text run at (60,46) width 202: "left edges of the image. "
+          text run at (262,46) width 467: "This paragraph should have a white background, first of"
+          text run at (0,69) width 440: "all, which extends to the edges of the element's box. "
+          text run at (440,69) width 256: "There is no padding set on this"
+          text run at (0,92) width 195: "paragraph whatsoever."
+      RenderBlock {P} at (30,457) size 744x115 [bgcolor=#FFFFFF]
+        RenderImage {IMG} at (30,30) size 60x60
+        RenderText {#text} at (90,0) size 723x114
+          text run at (90,0) width 633: "The image in the upper left corner of this paragraph should be pushed down"
+          text run at (90,23) width 626: "and to the right 30 pixels each from the upper left corner of the paragraph's"
+          text run at (90,46) width 423: "box, and displace the paragraph text accordingly. "
+          text run at (513,46) width 188: "This paragraph should"
+          text run at (90,69) width 589: "have a white background, first of all, which extends to the edges of the"
+          text run at (0,92) width 125: "element's box. "
+          text run at (125,92) width 456: "There is no padding set on this paragraph whatsoever."
+      RenderBlock {P} at (30,592) size 744x115 [bgcolor=#FFFFFF]
+        RenderImage {IMG} at (-30,-30) size 60x60
+        RenderText {#text} at (30,0) size 742x114
+          text run at (30,0) width 698: "The image in the upper left corner of this paragraph should be pushed up and to the"
+          text run at (30,23) width 708: "left 30 pixels each from the upper left corner of the paragraph's box, thus causing the"
+          text run at (0,46) width 641: "edges of the white background to align with the thick gray lines in the image. "
+          text run at (641,46) width 35: "This"
+          text run at (0,69) width 742: "paragraph should have a white background, first of all, which extends to the edges of the"
+          text run at (0,92) width 125: "element's box. "
+          text run at (125,92) width 456: "There is no padding set on this paragraph whatsoever."
+      RenderBlock {P} at (30,727) size 744x138 [bgcolor=#FFFFFF]
+        RenderImage {IMG} at (0,0) size 60x60
+        RenderText {#text} at (90,0) size 743x137
+          text run at (90,0) width 653: "The image in the upper left corner of this paragraph should be floated left, and"
+          text run at (90,23) width 635: "the edges of the white background should line up with the top and left edges"
+          text run at (90,46) width 115: "of the image. "
+          text run at (205,46) width 518: "However, there should be 30 pixels of space between the right"
+          text run at (90,69) width 551: "and bottom edges of the image and the paragraph text around it. "
+          text run at (641,69) width 35: "This"
+          text run at (0,92) width 742: "paragraph should have a white background, first of all, which extends to the edges of the"
+          text run at (0,115) width 125: "element's box. "
+          text run at (125,115) width 456: "There is no padding set on this paragraph whatsoever."
+      RenderBlock {P} at (30,885) size 744x138 [bgcolor=#FFFFFF]
+        RenderImage {IMG} at (0,0) size 60x60
+        RenderText {#text} at (30,0) size 720x137
+          text run at (30,0) width 684: "The image in the upper left corner of this paragraph should be floated left, and the"
+          text run at (30,23) width 657: "edges of the white background should line up with the top and left edges of the"
+          text run at (0,46) width 62: "image. "
+          text run at (62,46) width 648: "However, the text should overlap the image's right and bottom sides, lining up"
+          text run at (0,69) width 311: "with the thick gray lines in the image. "
+          text run at (311,69) width 409: "This paragraph should have a white background,"
+          text run at (0,92) width 498: "first of all, which extends to the edges of the element's box. "
+          text run at (498,92) width 222: "There is no padding set on"
+          text run at (0,115) width 229: "this paragraph whatsoever."
+      RenderTable {TABLE} at (0,1043) size 784x847 [border: (1px outset #808080)]
+        RenderTableSection {TBODY} at (1,1) size 782x845
+          RenderTableRow {TR} at (0,0) size 782x24
+            RenderTableCell {TD} at (0,0) size 782x24 [bgcolor=#C0C0C0] [border: (1px inset #808080)] [r=0 c=0 rs=1 cs=2]
+              RenderInline {STRONG} at (0,0) size 157x16
+                RenderText {#text} at (4,4) size 157x16
+                  text run at (4,4) width 157: "TABLE Testing Section"
+          RenderTableRow {TR} at (0,24) size 782x821
+            RenderTableCell {TD} at (0,422) size 12x24 [bgcolor=#C0C0C0] [border: (1px inset #808080)] [r=1 c=0 rs=1 cs=1]
+              RenderText {#text} at (4,4) size 4x16
+                text run at (4,4) width 4: " "
+            RenderTableCell {TD} at (12,24) size 770x821 [border: (1px inset #808080)] [r=1 c=1 rs=1 cs=1]
+              RenderBlock {P} at (34,4) size 722x92 [bgcolor=#FFFFFF]
+                RenderText {#text} at (0,0) size 709x91
+                  text run at (0,0) width 690: "This paragraph should have a white background which extends to the edges of the"
+                  text run at (0,23) width 125: "element's box. "
+                  text run at (125,23) width 461: "There is no padding set on this paragraph whatsoever. "
+                  text run at (586,23) width 43: "If the"
+                  text run at (0,46) width 709: "background of the entire box is not white, this may cause problems with the following"
+                  text run at (0,69) width 398: "tests; at any rate, it must be taken into account."
+              RenderBlock {P} at (34,116) size 722x115 [bgcolor=#FFFFFF]
+                RenderImage {IMG} at (0,0) size 60x60
+                RenderText {#text} at (60,0) size 720x114
+                  text run at (60,0) width 653: "The image in the upper left corner of this paragraph should be floated left, and"
+                  text run at (60,23) width 120: "nothing more. "
+                  text run at (180,23) width 517: "The edges of the white background should line up with the top"
+                  text run at (60,46) width 239: "and left edges of the image. "
+                  text run at (299,46) width 409: "This paragraph should have a white background,"
+                  text run at (0,69) width 498: "first of all, which extends to the edges of the element's box. "
+                  text run at (498,69) width 222: "There is no padding set on"
+                  text run at (0,92) width 229: "this paragraph whatsoever."
+              RenderBlock {P} at (34,251) size 722x115 [bgcolor=#FFFFFF]
+                RenderImage {IMG} at (30,30) size 60x60
+                RenderText {#text} at (90,0) size 721x114
+                  text run at (90,0) width 582: "The image in the upper left corner of this paragraph should be pushed"
+                  text run at (90,23) width 572: "down and to the right 30 pixels each from the upper left corner of the"
+                  text run at (90,46) width 528: "paragraph's box, and displace the paragraph text accordingly. "
+                  text run at (618,46) width 35: "This"
+                  text run at (90,69) width 602: "paragraph should have a white background, first of all, which extends to"
+                  text run at (0,92) width 265: "the edges of the element's box. "
+                  text run at (265,92) width 456: "There is no padding set on this paragraph whatsoever."
+              RenderBlock {P} at (34,386) size 722x115 [bgcolor=#FFFFFF]
+                RenderImage {IMG} at (-30,-30) size 60x60
+                RenderText {#text} at (30,0) size 721x114
+                  text run at (30,0) width 667: "The image in the upper left corner of this paragraph should be pushed up and to"
+                  text run at (30,23) width 638: "the left 30 pixels each from the upper left corner of the paragraph's box, thus"
+                  text run at (0,46) width 675: "causing the edges of the white background to align with the thick gray lines in the"
+                  text run at (0,69) width 62: "image. "
+                  text run at (62,69) width 642: "This paragraph should have a white background, first of all, which extends to"
+                  text run at (0,92) width 265: "the edges of the element's box. "
+                  text run at (265,92) width 456: "There is no padding set on this paragraph whatsoever."
+              RenderBlock {P} at (34,521) size 722x138 [bgcolor=#FFFFFF]
+                RenderImage {IMG} at (0,0) size 60x60
+                RenderText {#text} at (90,0) size 709x137
+                  text run at (90,0) width 616: "The image in the upper left corner of this paragraph should be floated left,"
+                  text run at (90,23) width 616: "and the edges of the white background should line up with the top and left"
+                  text run at (90,46) width 171: "edges of the image. "
+                  text run at (261,46) width 445: "However, there should be 30 pixels of space between"
+                  text run at (90,69) width 619: "the right and bottom edges of the image and the paragraph text around it."
+                  text run at (0,92) width 673: "This paragraph should have a white background, first of all, which extends to the"
+                  text run at (0,115) width 234: "edges of the element's box. "
+                  text run at (234,115) width 456: "There is no padding set on this paragraph whatsoever."
+              RenderBlock {P} at (34,679) size 722x138 [bgcolor=#FFFFFF]
+                RenderImage {IMG} at (0,0) size 60x60
+                RenderText {#text} at (30,0) size 720x137
+                  text run at (30,0) width 684: "The image in the upper left corner of this paragraph should be floated left, and the"
+                  text run at (30,23) width 657: "edges of the white background should line up with the top and left edges of the"
+                  text run at (0,46) width 62: "image. "
+                  text run at (62,46) width 648: "However, the text should overlap the image's right and bottom sides, lining up"
+                  text run at (0,69) width 311: "with the thick gray lines in the image. "
+                  text run at (311,69) width 409: "This paragraph should have a white background,"
+                  text run at (0,92) width 498: "first of all, which extends to the edges of the element's box. "
+                  text run at (498,92) width 222: "There is no padding set on"
+                  text run at (0,115) width 229: "this paragraph whatsoever."
