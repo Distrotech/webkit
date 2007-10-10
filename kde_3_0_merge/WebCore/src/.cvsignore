@@ -1,0 +1,9 @@
+Makefile.in
+Makefile
+.deps
+*.dylib
+*-stamp
+*.la
+*.lo
+.libs
+libwebcorecombined.exp
