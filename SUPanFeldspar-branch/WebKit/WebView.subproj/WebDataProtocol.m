@@ -1,0 +1,211 @@
+/*
+    WebDataProtocol.m
+    Copyright 2003, Apple, Inc. All rights reserved.
+*/
+#import <WebKit/WebDataProtocol.h>
+
+#import <Foundation/NSURLResponse.h>
+#import <Foundation/NSURLResponsePrivate.h>
+#import <Foundation/NSError_NSURLExtras.h>
+#import <Foundation/NSString_NSURLExtras.h>
+#import <WebKit/WebAssertions.h>
+#import <WebKit/WebKitErrorsPrivate.h>
+
+NSString *WebDataProtocolScheme = @"applewebdata";
+static NSString *WebDataRequestPropertyKey = @"WebDataRequest";
+
+@interface WebDataRequestParameters : NSObject <NSCopying>
+{
+@public
+    NSData *data;
+    NSString *MIMEType;
+    NSString *encoding;
+    NSURL *baseURL;
+}
+@end
+
+@implementation WebDataRequestParameters
+
+-(id)copyWithZone:(NSZone *)zone
+{
+    WebDataRequestParameters *newInstance = [[WebDataRequestParameters allocWithZone:zone] init];
+    newInstance->data = [data copyWithZone:zone];
+    newInstance->encoding = [encoding copyWithZone:zone];
+    newInstance->baseURL = [baseURL copyWithZone:zone];
+    newInstance->MIMEType = [MIMEType copyWithZone:zone];
+    return newInstance;
+}
+
+- (void)dealloc
+{
+    [data release];
+    [MIMEType release];
+    [encoding release];
+    [baseURL release];
+    [super dealloc];
+}
+
+@end
+
+@implementation NSURLRequest (WebDataRequest)
+
++ (NSURL *)_webDataRequestURLForData:(NSData *)data
+{
+    static BOOL registered;
+    
+    if (!registered) {
+        [NSURLProtocol registerClass:[WebDataProtocol class]];
+        registered = YES;
+    }
+
+    static unsigned int counter = 1;
+    
+    // The URL we generate is meaningless.  The only interesting properties of the URL
+    // are it's scheme and that they be unique for the lifespan of the application.
+    NSURL *fakeURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%p", WebDataProtocolScheme, counter++, 0]];
+    return fakeURL;
+}
+
+- (WebDataRequestParameters *)_webDataRequestParametersForReading
+{
+    return [NSURLProtocol propertyForKey:WebDataRequestPropertyKey inRequest:self];
+}
+
+- (NSData *)_webDataRequestData
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForReading];
+    return parameters ? parameters->data : nil;
+}
+
+- (NSString *)_webDataRequestEncoding
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForReading];
+    return parameters ? parameters->encoding : nil;
+}
+
+- (NSString *)_webDataRequestMIMEType
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForReading];
+    return parameters ? parameters->MIMEType : nil;
+}
+
+- (NSURL *)_webDataRequestBaseURL
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForReading];
+    return parameters ? parameters->baseURL : nil;
+}
+
+- (NSMutableURLRequest *)_webDataRequestExternalRequest
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForReading];
+    NSMutableURLRequest *newRequest = nil;
+    
+    if (parameters){
+        newRequest = [[self mutableCopyWithZone:[self zone]] autorelease];
+        NSURL *baseURL = [self _webDataRequestBaseURL];
+        if (baseURL)
+            [newRequest setURL:baseURL]; 
+        else
+            [newRequest setURL:[NSURL URLWithString:@"about:blank"]];
+    } 
+    return newRequest;
+}
+
+@end
+
+@implementation NSMutableURLRequest (WebDataRequest)
+
+- (WebDataRequestParameters *)_webDataRequestParametersForWriting
+{
+    WebDataRequestParameters *result = [NSURLProtocol propertyForKey:WebDataRequestPropertyKey inRequest:self];
+    if (!result) {
+        result = [[WebDataRequestParameters alloc] init];
+        [NSURLProtocol setProperty:result forKey:WebDataRequestPropertyKey inRequest:self];
+        [result release];
+    }
+    return result;
+}
+
+- (void)_webDataRequestSetData:(NSData *)data
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForWriting];
+    [parameters->data release];
+    parameters->data = [data retain];
+}
+
+- (void)_webDataRequestSetEncoding:(NSString *)encoding
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForWriting];
+    [parameters->encoding release];
+    parameters->encoding = [encoding retain];
+}
+
+- (void)_webDataRequestSetMIMEType:(NSString *)type
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForWriting];
+    [parameters->MIMEType release];
+    parameters->MIMEType = [type retain];
+}
+
+- (void)_webDataRequestSetBaseURL:(NSURL *)baseURL
+{
+    WebDataRequestParameters *parameters = [self _webDataRequestParametersForWriting];
+    [parameters->baseURL release];
+    parameters->baseURL = [baseURL retain];
+}
+
+@end
+
+
+
+// Implement the required methods for the concrete subclass of WebProtocolHandler
+// that will handle our custom protocol.
+@implementation WebDataProtocol
+
++(BOOL)_webIsDataProtocolURL:(NSURL *)URL
+{
+    ASSERT(URL);
+    NSString *scheme = [URL scheme];
+    return scheme && [scheme _web_isCaseInsensitiveEqualToString:WebDataProtocolScheme];
+}
+
++(BOOL)canInitWithRequest:(NSURLRequest *)request
+{
+    NSURL *URL = [request URL];
+    ASSERT(request);
+    ASSERT(URL);
+    return [self _webIsDataProtocolURL:URL];
+}
+
++(NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request
+{
+    return request;
+}
+
+- (void)startLoading
+{
+    id<NSURLProtocolClient> client = [self client];
+    NSURLRequest *request = [self request];
+    NSData *data = [request _webDataRequestData];
+
+    if (data) {
+        NSURLResponse *response = [[NSURLResponse alloc] initWithURL:[request URL] MIMEType:[request _webDataRequestMIMEType] expectedContentLength:[data length] textEncodingName:[request _webDataRequestEncoding]];
+        [client URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+        [client URLProtocol:self didLoadData:data];
+        [client URLProtocolDidFinishLoading:self];
+        [response release];
+    } else {
+        int resultCode;
+
+        resultCode = NSURLErrorResourceUnavailable;
+
+        [client URLProtocol:self didFailWithError:[NSError _webKitErrorWithDomain:NSURLErrorDomain code:resultCode URL:[request URL]]];
+    }
+}
+
+- (void)stopLoading
+{
+}
+
+@end
+
