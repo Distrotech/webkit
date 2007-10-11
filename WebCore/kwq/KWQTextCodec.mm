@@ -48,7 +48,7 @@ private:
     OSStatus createTECConverter();
     OSStatus convertOneChunkUsingTEC(const unsigned char *inputBuffer, int inputBufferLength, int &inputLength,
         void *outputBuffer, int outputBufferLength, int &outputLength);
-    static void appendOmittingNullsAndBOMs(QString &s, const UniChar *characters, int byteCount);
+    static void appendOmittingBOMs(QString &s, const UniChar *characters, int byteCount);
     
     KWQTextDecoder(const KWQTextDecoder &);
     KWQTextDecoder &operator=(const KWQTextDecoder &);
@@ -328,14 +328,14 @@ OSStatus KWQTextDecoder::createTECConverter()
     return noErr;
 }
 
-void KWQTextDecoder::appendOmittingNullsAndBOMs(QString &s, const UniChar *characters, int byteCount)
+void KWQTextDecoder::appendOmittingBOMs(QString &s, const UniChar *characters, int byteCount)
 {
     ASSERT(byteCount % sizeof(UniChar) == 0);
     int start = 0;
     int characterCount = byteCount / sizeof(UniChar);
     for (int i = 0; i != characterCount; ++i) {
         UniChar c = characters[i];
-        if (c == 0 || c == BOM) {
+        if (c == BOM) {
             if (start != i) {
                 s.append(reinterpret_cast<const QChar *>(&characters[start]), i - start);
             }
@@ -470,7 +470,7 @@ QString KWQTextDecoder::convertUsingTEC(const unsigned char *chs, int len, bool 
                 return QString();
         }
 
-        appendOmittingNullsAndBOMs(result, buffer, bytesWritten);
+        appendOmittingBOMs(result, buffer, bytesWritten);
 
         bufferWasFull = status == kTECOutputBufferFullStatus;
     }
@@ -478,7 +478,7 @@ QString KWQTextDecoder::convertUsingTEC(const unsigned char *chs, int len, bool 
     if (flush) {
         unsigned long bytesWritten = 0;
         TECFlushText(_converter, reinterpret_cast<unsigned char *>(buffer), sizeof(buffer), &bytesWritten);
-        appendOmittingNullsAndBOMs(result, buffer, bytesWritten);
+        appendOmittingBOMs(result, buffer, bytesWritten);
     }
 
     // Workaround for a bug in the Text Encoding Converter (see bug 3225472).
