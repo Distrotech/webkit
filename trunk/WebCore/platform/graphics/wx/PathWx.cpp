@@ -56,7 +56,7 @@ Path::Path()
     if (renderer)
     {
         wxGraphicsPath path = renderer->CreatePath();
-        m_path = &path;
+        m_path = new wxGraphicsPath(path);
     }
 #endif
 }
@@ -108,7 +108,7 @@ void Path::clear()
     if (renderer)
     {
         wxGraphicsPath path = renderer->CreatePath();
-        m_path = &path;
+        m_path = new wxGraphicsPath(path);
     }
 #endif
 }
