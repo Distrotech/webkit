@@ -1485,16 +1485,9 @@ bool Window::isSafeScript(ExecState *exec) const
   // Always allow local pages to execute any JS.
   if (actDomain.isNull())
     return true;
-    
-  const KURL& thisURL = thisDocument->securityPolicyURL();
-  const KURL& actURL = actDocument->securityPolicyURL();
   
-  // data: URL's are not allowed access to anything other than themselves.
-  if (equalIgnoringCase(thisURL.protocol(), "data") || equalIgnoringCase(actURL.protocol(), "data")) 
-    return false; 
-
   DOM::DOMString thisDomain = thisDocument->domain();
-  
+
   // if this document is being initially loaded as empty by its parent
   // or opener, allow access from any document in the same domain as
   // the parent or opener.
@@ -1510,9 +1503,6 @@ bool Window::isSafeScript(ExecState *exec) const
 
   //kdDebug(6070) << "current domain:" << actDomain.string() << ", frame domain:" << thisDomain.string() << endl;
   if ( actDomain == thisDomain )
-    return true;
-  
-  if (equalIgnoringCase(actURL.host(), thisURL.host()) && equalIgnoringCase(actURL.protocol(), thisURL.protocol()) && actURL.port() == thisURL.port())
     return true;
 
 #if APPLE_CHANGES

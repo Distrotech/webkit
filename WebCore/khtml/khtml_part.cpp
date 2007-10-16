@@ -2018,13 +2018,6 @@ KURL KHTMLPart::baseURL() const
   return d->m_doc->baseURL();
 }
 
-KURL KHTMLPart::URL() const
-{
-    if ( !d->m_doc ) return KURL();
-    
-    return d->m_doc->URL();
-}
-
 QString KHTMLPart::baseTarget() const
 {
   if ( !d->m_doc ) return QString::null;
@@ -5384,9 +5377,6 @@ KHTMLPart *KHTMLPart::opener()
 void KHTMLPart::setOpener(KHTMLPart *_opener)
 {
     d->m_opener = _opener;
-    
-    if (xmlDocImpl())
-        xmlDocImpl()->initSecurityPolicyURL();
 }
 
 bool KHTMLPart::openedByJS()

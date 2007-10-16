@@ -782,9 +782,6 @@ public:
     void radioButtonChecked(HTMLInputElementImpl *caller, HTMLFormElementImpl *form);
     HTMLInputElementImpl* checkedRadioButtonForGroup(DOMString name, HTMLFormElementImpl *form);
     void removeRadioButtonGroup(DOMString name, HTMLFormElementImpl *form);
-    
-    void initSecurityPolicyURL();
-    const KURL& securityPolicyURL() const { return m_securityPolicyURL; }
 
 private:
     void updateTitle();
@@ -819,8 +816,6 @@ private:
     int m_selfOnlyRefCount;
     
     QPtrDict< QDict<HTMLInputElementImpl> > *m_selectedRadioButtons;
-    
-    KURL m_securityPolicyURL;
 
 #endif
 };

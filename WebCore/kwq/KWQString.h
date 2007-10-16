@@ -372,7 +372,7 @@ struct KWQStringData {
     mutable char *_ascii;
     uint _maxUnicode:30;
     uint _isUnicodeValid:1;
-    uint _isHeapAllocated:1;    // Fragile, but the only way we can be sure the instance was created with 'new'.
+    uint _isHeapAllocated:1;	// Fragile, but the only way we can be sure the instance was created with 'new'.
     uint _maxAscii:31;
     uint _isAsciiValid:1;
     
@@ -572,7 +572,6 @@ private:
 
     friend bool operator==(const QString &, const QString &);
     friend bool operator==(const QString &, const char *);
-    friend bool equalIgnoringCase(const QString &, const QString &); 
 
     friend class QConstString;
     friend class QGDict;
