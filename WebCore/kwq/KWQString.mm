@@ -2757,6 +2757,26 @@ bool operator==(const QString &s1, const char *chs)
     return chs[len] == '\0';
 }
 
+bool equalIgnoringCase(const QString& a, const QString& b) 
+{ 
+    unsigned len = a.length(); 
+    if (len != b.length()) 
+        return false; 
+    
+    KWQStringData* dataA = a.dataHandle[0]; 
+    KWQStringData* dataB = b.dataHandle[0]; 
+    
+    if (dataA->_isAsciiValid != dataB->_isAsciiValid) 
+        return false; 
+    
+    if (dataA->_isAsciiValid && dataB->_isAsciiValid) 
+        return strncasecmp(dataA->_ascii, dataB->_ascii, len) == 0; 
+    
+    ASSERT(dataA->_isUnicodeValid); 
+    ASSERT(dataB->_isUnicodeValid); 
+    return equalCaseInsensitive(dataA->_unicode, dataB->_unicode, len); 
+}
+
 // Golden ratio - arbitrary start value to avoid mapping all 0's to all 0's
 // or anything like that.
 const unsigned PHI = 0x9e3779b9U;

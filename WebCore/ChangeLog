@@ -1,3 +1,8 @@
+2007-10-16  Mark Rowe  <mrowe@apple.com>
+
+        Reinstate equalIgnoringCase that was added as part of r25691 but subsequently rolled out.
+        Other merged changes depend on it existing.
+
 === WebCore-419.2.3 ===
 
 2007-10-15  Mark Rowe  <mrowe@apple.com>

@@ -572,6 +572,7 @@ private:
 
     friend bool operator==(const QString &, const QString &);
     friend bool operator==(const QString &, const char *);
+    friend bool equalIgnoringCase(const QString &, const QString &); 
 
     friend class QConstString;
     friend class QGDict;
