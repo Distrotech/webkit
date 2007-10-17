@@ -1585,6 +1585,8 @@ void KHTMLPart::begin( const KURL &url, int xOffset, int yOffset )
   if (!d->m_doc->attached())
     d->m_doc->attach( );
   d->m_doc->setURL( m_url.url() );
+  d->m_doc->initSecurityPolicyURL();
+  
   // We prefer m_baseURL over m_url because m_url changes when we are
   // about to load a new page.
   d->m_doc->setBaseURL( baseurl.url() );
@@ -2016,6 +2018,13 @@ KURL KHTMLPart::baseURL() const
   if ( !d->m_doc ) return KURL();
 
   return d->m_doc->baseURL();
+}
+
+KURL KHTMLPart::URL() const
+{
+    if ( !d->m_doc ) return KURL();
+    
+    return d->m_doc->URL();
 }
 
 QString KHTMLPart::baseTarget() const
@@ -5377,6 +5386,9 @@ KHTMLPart *KHTMLPart::opener()
 void KHTMLPart::setOpener(KHTMLPart *_opener)
 {
     d->m_opener = _opener;
+    
+    if (xmlDocImpl())
+        xmlDocImpl()->initSecurityPolicyURL();
 }
 
 bool KHTMLPart::openedByJS()
