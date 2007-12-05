@@ -1,5 +1,0 @@
-# 
-fast/cookies/local-file-can-set-cookies.html
-
-# For this test to work on Tiger we'd need a new Foundation
-http/tests/xmlhttprequest/small-chunks-response-text.html

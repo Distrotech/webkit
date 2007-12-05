@@ -1,2 +1,0 @@
-EDITING DELEGATE: webViewDidChangeSelection:WebViewDidChangeSelectionNotification
-(0, 0): 0,582,0,18
