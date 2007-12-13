@@ -1,5 +1,19 @@
 2007-12-10  Mark Rowe  <mrowe@apple.com>
 
+        Merge r28064.
+
+    2007-11-26  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Fix for <rdar://problem/5591583> CrashTracer: [USER] 157 in Mail crashes at -[WebCoreFrameBridge reapplyStylesForDeviceType:]
+
+        * page/Frame.cpp: Add nil checks since every other caller of requestCSSStyleSheet checks for nil.
+        (WebCore::UserStyleSheetLoader::UserStyleSheetLoader):
+        (WebCore::UserStyleSheetLoader::~UserStyleSheetLoader):
+
+2007-12-10  Mark Rowe  <mrowe@apple.com>
+
         Merge r27796.
 
     2007-11-14  Justin Garcia  <justin.garcia@apple.com>
