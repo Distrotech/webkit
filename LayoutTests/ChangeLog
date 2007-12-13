@@ -1,3 +1,16 @@
+2007-12-10  Mark Rowe  <mrowe@apple.com>
+
+        Merge r27796.
+
+    2007-11-14  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Alexey Proskuryakov.
+        
+        <rdar://problem/5546763> CrashTracer: [USER] 362 crashes at WebCore::DeleteSelectionCommand::mergeParagraphs
+
+        * editing/deleting/5546763-expected.txt: Added.
+        * editing/deleting/5546763.html: Added.
+
 2007-12-01  Mark Rowe  <mrowe@apple.com>
 
         Merge r28056 to Safari-3-branch.
