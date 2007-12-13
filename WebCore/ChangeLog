@@ -1,5 +1,18 @@
 2007-12-10  Mark Rowe  <mrowe@apple.com>
 
+        Merge r28066.
+
+    2007-11-26  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Darin.
+
+        Update to last change.  Moved addPendingSheet call to within nil check for m_cachedSheet.
+
+        * page/Frame.cpp:
+        (WebCore::UserStyleSheetLoader::UserStyleSheetLoader):
+
+2007-12-10  Mark Rowe  <mrowe@apple.com>
+
         Merge r28064.
 
     2007-11-26  Adele Peterson  <adele@apple.com>
