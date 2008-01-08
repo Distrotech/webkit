@@ -1,3 +1,10 @@
+2008-01-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix.
+
+        * WebCore.vcproj/WebCore.sln:
+        * WebCore.vcproj/WebCore.submit.sln:
+
 2007-12-22  Dan Bernstein  <mitz@apple.com>
 
         - Windows build fix
