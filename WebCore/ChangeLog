@@ -5,6 +5,17 @@
         * WebCore.vcproj/WebCore.sln:
         * WebCore.vcproj/WebCore.submit.sln:
 
+2007-12-23  Alexey Proskuryakov  <ap@webkit.org>
+
+        Fix Debug and Release QTMovieWin bulds.
+
+        * WebCore.vcproj/QTMovieWin.vcproj:
+        * WebCore.vcproj/debug.vsprops:
+        * WebCore.vcproj/debug_internal.vsprops:
+        * WebCore.vcproj/release.vsprops:
+        Use LibraryConfigSuffix instead of WebKitConfigSuffix for pthreadVC2.
+        Build release import lib into \lib, not \bin.
+
 2007-12-22  Dan Bernstein  <mitz@apple.com>
 
         - Windows build fix
