@@ -1,3 +1,9 @@
+2008-01-07  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix.
+
+        * WebKit.vcproj/InterfacesGenerated.vcproj:
+
 2007-12-21  Antti Koivisto  <antti@apple.com>
 
         Reviewed by Steve.
