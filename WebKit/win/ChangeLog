@@ -1,3 +1,10 @@
+2008-01-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix
+
+        * WebKit.vcproj/WebKit.sln:
+        * WebKit.vcproj/WebKit.submit.sln:
+
 2008-01-19  Mark Rowe  <mrowe@apple.com>
 
         Fix inconsistent line endings and set svn:eol-style=native
