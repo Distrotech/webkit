@@ -1,3 +1,9 @@
+2008-01-24  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix.
+
+        * JavaScriptCore.vcproj/JavaScriptCoreSubmit.sln:
+
 2008-01-18  Kevin McCullough  <kmccullough@apple.com>
 
         - Build fix.
