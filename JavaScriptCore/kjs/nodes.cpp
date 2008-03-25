@@ -26,6 +26,7 @@
 #include "config.h"
 #include "nodes.h"
 
+#include "CodeGenerator.h"
 #include "ExecState.h"
 #include "JSGlobalObject.h"
 #include "Parser.h"
@@ -109,6 +110,11 @@ static inline bool isConstant(const LocalStorage& localStorage, size_t index)
 {
     ASSERT(index < localStorage.size());
     return localStorage[index].attributes & ReadOnly;
+}
+
+static inline UString::Rep* rep(const Identifier& ident)
+{
+    return ident.ustring().rep();
 }
 
 // ------------------------------ Node -----------------------------------------
@@ -453,6 +459,11 @@ JSValue* TrueNode::evaluate(ExecState*)
 
 // ------------------------------ NumberNode -----------------------------------
 
+RegisterID* NumberNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), m_double);
+}
+
 JSValue* NumberNode::evaluate(ExecState*)
 {
     // Number nodes are only created when the number can't fit in a JSImmediate, so no need to check again.
@@ -533,6 +544,14 @@ JSValue* ThisNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ ResolveNode ----------------------------------
+
+RegisterID* ResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.getRegister(m_ident))
+        return dst ? generator.emitMove(dst, r0) : r0;
+
+    return generator.emitResolve(dst ? dst : generator.newTemporary(), m_ident);
+}
 
 // ECMA 11.1.2 & 10.1.4
 JSValue* ResolveNode::inlineEvaluate(ExecState* exec)
@@ -996,6 +1015,12 @@ uint32_t DotAccessorNode::evaluateToUInt32(ExecState* exec)
 
 // ------------------------------ ArgumentListNode -----------------------------
 
+RegisterID* ArgumentListNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    ASSERT(m_expr);
+    return m_expr->emitCode(generator, dst);
+}
+
 void ArgumentListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
@@ -1185,6 +1210,16 @@ JSValue* FunctionCallValueNode::evaluate(ExecState* exec)
     JSObject* thisObj =  exec->dynamicGlobalObject();
 
     return func->call(exec, thisObj, argList);
+}
+
+RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = dst ? dst : generator.newTemporary();
+    if (RegisterID* r1 = generator.getRegister(m_ident))
+        return generator.emitCall(r0, r1, m_args.get());
+
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)
@@ -1536,6 +1571,21 @@ uint32_t FunctionCallDotNode::evaluateToUInt32(ExecState* exec)
 // ECMA 11.3
 
 // ------------------------------ PostfixResolveNode ----------------------------------
+
+RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    // FIXME: I think we can detect the absense of dependent expressions here, 
+    // and emit a PreInc instead of a PostInc. A post-pass to eliminate dead
+    // code would work, too.
+    if (RegisterID* r0 = generator.getRegister(m_ident))
+        return generator.emitPostInc(dst ? dst : generator.newTemporary(), r0);
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RefPtr<RegisterID> r1 = generator.emitObjectGet(generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r1.get());
+    generator.emitObjectPut(r0.get(), m_ident, r1.get());
+    return r2;
+}
 
 // Increment
 void PostIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2011,6 +2061,17 @@ JSValue* TypeOfValueNode::evaluate(ExecState* exec)
 // ECMA 11.4.4 and 11.4.5
 
 // ------------------------------ PrefixResolveNode ----------------------------------
+
+RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.getRegister(m_ident))
+        return generator.emitPreInc(r0);
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* r1 = generator.emitObjectGet(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    generator.emitPreInc(r1);
+    return generator.emitObjectPut(r0.get(), m_ident, r1);
+}
 
 void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
@@ -2598,6 +2659,13 @@ static inline double addToNumber(ExecState* exec, JSValue* v1, JSValue* v2)
     return addSlowCaseToNumber(exec, v1, v2);
 }
 
+RegisterID* AddNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitAdd(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void AddNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2877,6 +2945,13 @@ static inline bool lessThanEq(ExecState* exec, JSValue* v1, JSValue* v2)
         return n1 <= n2;
 
     return !(static_cast<const StringImp*>(p2)->value() < static_cast<const StringImp*>(p1)->value());
+}
+
+RegisterID* LessNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitLess(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void LessNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3520,6 +3595,18 @@ void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable
 
 // ------------------------------ AssignResolveNode -----------------------------------
 
+RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.getRegister(m_ident)) {
+        RegisterID* r1 = generator.emitNode(r0, m_right.get());
+        return dst ? generator.emitMove(dst, r1) : r1;
+    }
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* r1 = generator.emitNode(dst, m_right.get());
+    return generator.emitObjectPut(r0.get(), m_ident, r1);
+}
+
 void AssignResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
@@ -3917,6 +4004,18 @@ JSValue* ConstStatementNode::execute(ExecState* exec)
 
 // ------------------------------ Helper functions for handling Vectors of StatementNode -------------------------------
 
+static inline RegisterID* statementListEmitCode(StatementVector& statements, CodeGenerator& generator, RegisterID* dst = 0)
+{
+    RegisterID* r0 = dst;
+
+    StatementVector::iterator end = statements.end();
+    for (StatementVector::iterator it = statements.begin(); it != end; ++it)
+        if (RegisterID* r1 = generator.emitNode(dst, it->get()))
+            r0 = r1;
+    
+    return r0;
+}
+
 static inline void statementListPushFIFO(StatementVector& statements, DeclarationStacks::NodeStack& stack)
 {
     StatementVector::iterator it = statements.end();
@@ -3966,6 +4065,11 @@ BlockNode::BlockNode(SourceElements* children)
         children->releaseContentsIntoVector(m_children);
 }
 
+RegisterID* BlockNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return statementListEmitCode(m_children, generator, dst);
+}
+
 void BlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     statementListPushFIFO(m_children, nodeStack);
@@ -3979,6 +4083,11 @@ JSValue* BlockNode::execute(ExecState* exec)
 
 // ------------------------------ EmptyStatementNode ---------------------------
 
+RegisterID* EmptyStatementNode::emitCode(CodeGenerator&, RegisterID* dst)
+{
+    return dst;
+}
+
 // ECMA 12.3
 JSValue* EmptyStatementNode::execute(ExecState* exec)
 {
@@ -3986,6 +4095,12 @@ JSValue* EmptyStatementNode::execute(ExecState* exec)
 }
 
 // ------------------------------ ExprStatementNode ----------------------------
+
+RegisterID* ExprStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    ASSERT(m_expr);
+    return generator.emitNode(dst, m_expr.get());
+}
 
 void ExprStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -4003,6 +4118,12 @@ JSValue* ExprStatementNode::execute(ExecState* exec)
 }
 
 // ------------------------------ VarStatementNode ----------------------------
+
+RegisterID* VarStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    ASSERT(m_expr);
+    return generator.emitNode(dst, m_expr.get());
+}
 
 void VarStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -4138,6 +4259,24 @@ JSValue* WhileNode::execute(ExecState* exec)
 }
 
 // ------------------------------ ForNode --------------------------------------
+
+RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    generator.emitNode(m_expr1.get());
+
+    RefPtr<LabelID> l0 = generator.newLabel();
+    RefPtr<LabelID> l1 = generator.newLabel(); 
+    generator.emitJump(l1.get());
+
+    generator.emitLabel(l0.get());
+    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
+    generator.emitNode(m_expr3.get());
+
+    generator.emitLabel(l1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    generator.emitJumpIfTrue(r1, l0.get());
+    return r0.get();
+}
 
 void ForNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -4340,6 +4479,12 @@ JSValue* BreakNode::execute(ExecState* exec)
 }
 
 // ------------------------------ ReturnNode -----------------------------------
+
+RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = m_value->emitCode(generator, dst);
+    return generator.emitReturn(r0);
+}
 
 void ReturnNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -4635,7 +4780,6 @@ EvalNode* EvalNode::create(SourceElements* children, VarStack* varStack, Functio
 
 FunctionBodyNode::FunctionBodyNode(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
     : ScopeNode(children, varStack, funcStack, usesEval, needsClosure)
-    , m_initialized(false)
 {
 }
 
@@ -4646,31 +4790,78 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
     return new FunctionBodyNode(children, varStack, funcStack, usesEval, needsClosure);
 }
 
-void FunctionBodyNode::initializeSymbolTable(ExecState* exec)
+void FunctionBodyNode::generateCode(ExecState* exec)
 {
-    SymbolTable& symbolTable = exec->variableObject()->symbolTable();
-    ASSERT(symbolTable.isEmpty());
+    m_code.set(new CodeBlock);
+    
+    unsigned localCount = m_functionStack.size() + m_varStack.size();
+    CodeGenerator generator(exec->scopeChain(), &m_symbolTable, localCount, m_parameters.size(), this, m_code.get());
 
-    size_t localStorageIndex = 0;
+    for (size_t i = 0, size = m_parameters.size(); i < size; ++i)
+        generator.addParameter(m_parameters[i]);
 
-    // Order must match the order in processDeclarations.
+    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
+        generator.addVar(m_varStack[i].first);
 
-    for (size_t i = 0, size = m_parameters.size(); i < size; ++i, ++localStorageIndex) {
-        UString::Rep* rep = m_parameters[i].ustring().rep();
-        symbolTable.set(rep, localStorageIndex);
+    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
+        generator.addFunction(m_functionStack[i]->m_ident);
+
+    generator.generate(exec);
+
+    m_children.shrinkCapacity(0);
+}
+
+RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
+{
+    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
+        if (RegisterID* r0 = generator.getRegister(m_varStack[i].first))
+            generator.emitLoad(r0, jsUndefined());
+
+    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
+        if (RegisterID* r0 = generator.getRegister(m_functionStack[i]->m_ident))
+            generator.emitNewFunction(r0, m_functionStack[i]);
+
+    statementListEmitCode(m_children, generator);
+    if (!m_children.size() || !m_children.last()->isReturnNode()) {
+        RegisterID* r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
+        generator.emitReturn(r0);
     }
+    return 0;
+}
 
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i, ++localStorageIndex) {
-        UString::Rep* rep = m_functionStack[i]->m_ident.ustring().rep();
-        symbolTable.set(rep, localStorageIndex);
-    }
+RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
+{
+    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
+        if (RegisterID* r0 = generator.getRegister(m_varStack[i].first))
+            generator.emitLoad(r0, jsUndefined());
 
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i, ++localStorageIndex) {
-        Identifier& ident = m_varStack[i].first;
-        if (ident == exec->propertyNames().arguments)
-            continue;
-        symbolTable.add(ident.ustring().rep(), localStorageIndex);
-    }
+    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
+        if (RegisterID* r0 = generator.getRegister(m_functionStack[i]->m_ident))
+            generator.emitNewFunction(r0, m_functionStack[i]);
+
+    RegisterID* r0 = statementListEmitCode(m_children, generator);
+    if (!r0)
+        r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
+    generator.emitEnd(r0);
+    return 0;
+}
+
+void ProgramNode::generateCode(ExecState* exec)
+{
+    m_code.set(new CodeBlock);
+    
+    unsigned localCount = m_functionStack.size() + m_varStack.size();
+    CodeGenerator generator(exec->scopeChain(), &exec->dynamicGlobalObject()->symbolTable(), localCount, 0, this, m_code.get());
+
+    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
+        generator.addVar(m_varStack[i].first);
+
+    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
+        generator.addFunction(m_functionStack[i]->m_ident);
+
+    generator.generate(exec);
+
+    m_children.shrinkCapacity(0);
 }
 
 void ProgramNode::initializeSymbolTable(ExecState* exec)
@@ -4738,49 +4929,6 @@ void ScopeNode::optimizeVariableAccess(ExecState* exec)
         --size;
         node = nodeStack[size];
         nodeStack.shrink(size);
-    }
-}
-
-void FunctionBodyNode::processDeclarations(ExecState* exec)
-{
-    if (!m_initialized)
-        initializeSymbolTable(exec);
-
-    if (!m_functionStack.isEmpty())
-        exec->dynamicGlobalObject()->tearOffActivation(exec);
-
-    LocalStorage& localStorage = exec->variableObject()->localStorage();
-
-    // We can't just resize localStorage here because that would temporarily
-    // leave uninitialized entries, which would crash GC during the mark phase.
-    size_t totalSize = m_varStack.size() + m_parameters.size() + m_functionStack.size();
-    if (totalSize > localStorage.capacity()) // Doing this check inline avoids function call overhead.
-        localStorage.reserveCapacity(totalSize);
-
-    int minAttributes = DontDelete;
-
-    // In order for our localStorage indexes to be correct, we must match the
-    // order of addition in initializeSymbolTable().
-
-    const List& args = *exec->arguments();
-    for (size_t i = 0, size = m_parameters.size(); i < size; ++i)
-        localStorage.uncheckedAppend(LocalStorageEntry(args[i], DontDelete));
-
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i) {
-        FuncDeclNode* node = m_functionStack[i];
-        localStorage.uncheckedAppend(LocalStorageEntry(node->makeFunction(exec), minAttributes));
-    }
-
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i) {
-        int attributes = minAttributes;
-        if (m_varStack[i].second & DeclarationStacks::IsConstant)
-            attributes |= ReadOnly;
-        localStorage.uncheckedAppend(LocalStorageEntry(jsUndefined(), attributes));
-    }
-
-    if (!m_initialized) {
-        optimizeVariableAccess(exec);
-        m_initialized = true;
     }
 }
 
@@ -4890,12 +5038,6 @@ JSValue* EvalNode::execute(ExecState* exec)
     return ScopeNode::execute(exec);
 }
 
-JSValue* FunctionBodyNode::execute(ExecState* exec)
-{
-    processDeclarations(exec);
-    return ScopeNode::execute(exec);
-}
-
 // ------------------------------ FunctionBodyNodeWithDebuggerHooks ---------------------------------
 
 FunctionBodyNodeWithDebuggerHooks::FunctionBodyNodeWithDebuggerHooks(SourceElements* children, DeclarationStacks::VarStack* varStack, DeclarationStacks::FunctionStack* funcStack, bool usesEval, bool needsClosure)
@@ -4939,6 +5081,11 @@ FunctionImp* FuncDeclNode::makeFunction(ExecState* exec)
     func->putDirect(exec->propertyNames().prototype, proto, DontDelete);
     func->putDirect(exec->propertyNames().length, jsNumber(m_body->parameters().size()), ReadOnly | DontDelete | DontEnum);
     return func;
+}
+
+RegisterID* FuncDeclNode::emitCode(CodeGenerator&, RegisterID* dst)
+{
+    return dst;
 }
 
 JSValue* FuncDeclNode::execute(ExecState* exec)

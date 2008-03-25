@@ -64,7 +64,7 @@ namespace KJS  {
         bool hadException() const { return !!m_exception; }
         JSValue* takeException() { JSValue* exception = m_exception; m_exception = 0; return exception; }
         
-        const ScopeChain& scopeChain() const { return m_scopeChain; }
+        ScopeChain& scopeChain() { return m_scopeChain; }
         void pushScope(JSObject* s) { m_scopeChain.push(s); }
         void popScope() { m_scopeChain.pop(); }
         void replaceScopeChainTop(JSObject* o) { m_scopeChain.replaceTop(o); }

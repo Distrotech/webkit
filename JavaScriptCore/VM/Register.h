@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,44 +25,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef Register_h
+#define Register_h
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
-
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include <wtf/VectorTraits.h>
 
 namespace KJS {
 
-    struct IdentifierRepHash {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static bool equal(const RefPtr<UString::Rep>& a, const RefPtr<UString::Rep>& b) { return a == b; }
-        static const bool safeToCompareToEmptyOrDeleted = true;
+    class CodeBlock;
+    class FunctionImp;
+    class Instruction;
+    class JSObject;
+    class JSValue;
+    class ScopeChain;
+    
+    struct Register {
+        union {
+            CodeBlock* codeBlock;
+            Instruction* vPC;
+            JSValue* jsValue;
+            JSObject* jsObject;
+            ScopeChain* scopeChain;
+            Register* r;
+            int i;
+        } u;
     };
-
-    struct IdentifierRepHashTraits : HashTraits<RefPtr<UString::Rep> > {
-        static const RefPtr<UString::Rep>& deletedValue()
-        {
-            return *reinterpret_cast<RefPtr<UString::Rep>*>(&nullRepPtr);
-        }
-
-    private:
-        static UString::Rep* nullRepPtr;
-    };
-
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
-
-    struct SymbolTableIndexHashTraits {
-        typedef size_t TraitType;
-        typedef SymbolTableIndexHashTraits StorageTraits;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-        static const bool emptyValueIsZero = false;
-        static const bool needsDestruction = false;
-        static const bool needsRef = false;
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, IdentifierRepHashTraits, SymbolTableIndexHashTraits> SymbolTable;
-
+    
 } // namespace KJS
 
-#endif // SymbolTable_h
+namespace WTF {
+
+    template<> struct VectorTraits<KJS::Register> : VectorTraitsBase<true, KJS::Register> { };
+
+} // namespace WTF
+
+#endif // Register_h
