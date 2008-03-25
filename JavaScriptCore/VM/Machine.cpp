@@ -137,6 +137,51 @@ bool Machine::isOpcode(Opcode opcode)
 #endif
 }
 
+static void NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+{
+    int r0 = (vPC + 1)->u.operand;
+    int k0 = (vPC + 2)->u.operand;
+
+    ScopeChainIterator iter = scopeChain->begin();
+    ScopeChainIterator end = scopeChain->end();
+    ASSERT(iter != end);
+
+    PropertySlot slot;
+    Identifier& ident = codeBlock->identifiers[k0];
+    do {
+        JSObject* o = *iter;
+        if (o->getPropertySlot(exec, ident, slot)) {
+            r[r0].u.jsValue = slot.getValue(exec, o, ident);
+            return;
+        }
+    } while (++iter != end);
+
+    ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
+}
+
+static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+{
+    int r0 = (vPC + 1)->u.operand;
+    int k0 = (vPC + 2)->u.operand;
+
+    ScopeChainIterator iter = scopeChain->begin();
+    ScopeChainIterator end = scopeChain->end();
+    ASSERT(iter != end);
+
+    PropertySlot slot;
+    Identifier& ident = codeBlock->identifiers[k0];
+    JSObject* base;
+    do {
+        base = *iter;
+        if (base->getPropertySlot(exec, ident, slot)) {
+            r[r0].u.jsValue = base;
+            return;
+        }
+    } while (++iter != end);
+
+    r[r0].u.jsValue = base;
+}
+
 void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     // One-time initialization of our address tables. We have to put this code
@@ -226,50 +271,15 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve) {
-        int r0 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
-
-        ScopeChainIterator iter = scopeChain->begin();
-        ScopeChainIterator end = scopeChain->end();
-        ASSERT(iter != end);
-
-        PropertySlot slot;
-        Identifier& ident = codeBlock->identifiers[k0];
-        do {
-            JSObject* o = *iter;
-            if (o->getPropertySlot(exec, ident, slot)) {
-                r[r0].u.jsValue = slot.getValue(exec, o, ident);
-                ++vPC;
-                NEXT_OPCODE;
-            }
-        } while (++iter != end);
-
-        ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
+        resolve(exec, vPC, r, scopeChain, codeBlock);
+        vPC += 3;
+        
+        NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base) {
-        int r0 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
+        resolveBase(exec, vPC, r, scopeChain, codeBlock);
+        vPC += 3;
 
-        ScopeChainIterator iter = scopeChain->begin();
-        ScopeChainIterator end = scopeChain->end();
-        ASSERT(iter != end);
-
-        PropertySlot slot;
-        Identifier& ident = codeBlock->identifiers[k0];
-        JSObject* base;
-        do {
-            base = *iter;
-            if (base->getPropertySlot(exec, ident, slot)) {
-                r[r0].u.jsValue = base;
-
-                ++vPC;
-                NEXT_OPCODE;
-            }
-        } while (++iter != end);
-
-        r[r0].u.jsValue = base;
-
-        ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_object_get) {

@@ -2935,7 +2935,7 @@ namespace KJS {
 
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
-        ALWAYS_INLINE FunctionImp* makeFunction(ExecState*) KJS_FAST_CALL;
+        FunctionImp* makeFunction(ExecState*) KJS_FAST_CALL;
 
         Identifier m_ident;
 
