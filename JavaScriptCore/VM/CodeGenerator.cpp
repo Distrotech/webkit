@@ -111,11 +111,13 @@ namespace KJS {
 
 */
 
-void CodeGenerator::generate(ExecState* exec)
+void CodeGenerator::generate()
 {
     m_scopeNode->emitCode(*this);
 
-    m_codeBlock->dump(exec);
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
+    InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+    m_codeBlock->dump(&tmpExec);
 }
 
 void CodeGenerator::addVar(const Identifier& ident)
@@ -124,7 +126,7 @@ void CodeGenerator::addVar(const Identifier& ident)
         return;
 
     int index = m_nextLocal--;
-    m_symbolTable->add(ident.ustring().rep(), index);
+    symbolTable().add(ident.ustring().rep(), index);
 
     m_localsMap.add(index, m_locals.size());
     m_locals.append(index);
@@ -135,7 +137,7 @@ void CodeGenerator::addVar(const Identifier& ident)
 void CodeGenerator::addFunction(const Identifier& ident)
 {
     int index = m_nextLocal--;
-    m_symbolTable->set(ident.ustring().rep(), index);
+    symbolTable().set(ident.ustring().rep(), index);
 
     m_localsMap.set(index, m_locals.size());
     m_locals.append(index);
@@ -146,7 +148,7 @@ void CodeGenerator::addFunction(const Identifier& ident)
 void CodeGenerator::addParameter(const Identifier& ident)
 {
     int index = m_nextParameter++;
-    m_symbolTable->set(ident.ustring().rep(), index);
+    symbolTable().set(ident.ustring().rep(), index);
 
     m_localsMap.set(index, m_locals.size());
     m_locals.append(index);
@@ -156,7 +158,7 @@ void CodeGenerator::addParameter(const Identifier& ident)
 
 RegisterID* CodeGenerator::getRegister(const Identifier& ident)
 {
-    unsigned index = m_symbolTable->get(ident.ustring().rep());
+    unsigned index = symbolTable().get(ident.ustring().rep());
     if (index == missingSymbolMarker())
         return 0;
     return &m_locals[m_localsMap.get(index)];

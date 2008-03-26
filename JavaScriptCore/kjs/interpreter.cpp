@@ -72,8 +72,7 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     if (!programNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL));
     
-    InterpreterExecState newExec(exec->dynamicGlobalObject(), exec->dynamicGlobalObject(), programNode.get());
-    CodeBlock& codeBlock = programNode->code(&newExec);
+    CodeBlock& codeBlock = programNode->code(exec->scopeChain());
     machine().execute(exec, &exec->scopeChain(), &codeBlock);
 
     return Completion(Normal, jsUndefined());
