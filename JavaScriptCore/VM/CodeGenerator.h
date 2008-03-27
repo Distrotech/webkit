@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -88,11 +89,28 @@ namespace KJS {
         
         RegisterID* emitMove(RegisterID*, RegisterID*);
 
+        RegisterID* emitEqual(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitNotEqual(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitStrictEqual(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitNotStrictEqual(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitLess(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitLessEq(RegisterID*, RegisterID*, RegisterID*);
 
         RegisterID* emitPreInc(RegisterID*);
         RegisterID* emitPostInc(RegisterID*, RegisterID*);
         RegisterID* emitAdd(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitMult(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitDiv(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitMod(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitSub(RegisterID*, RegisterID*, RegisterID*);
+
+        RegisterID* emitLeftShift(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitRightShift(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitUnsignedRightShift(RegisterID*, RegisterID*, RegisterID*);
+
+        RegisterID* emitBitAnd(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitBitXOr(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitBitOr(RegisterID*, RegisterID*, RegisterID*);
 
         RegisterID* emitResolve(RegisterID*, const Identifier&);
         RegisterID* emitResolve(RegisterID*, int);

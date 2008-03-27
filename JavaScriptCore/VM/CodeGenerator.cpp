@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -245,9 +246,54 @@ RegisterID* CodeGenerator::emitMove(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_equal));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitNotEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_nequal));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitStrictEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_stricteq));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitNotStrictEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_nstricteq));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitLess(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
     instructions().append(machine().getOpcode(op_less));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitLessEq(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_lesseq));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
@@ -272,6 +318,96 @@ RegisterID* CodeGenerator::emitPostInc(RegisterID* r0, RegisterID* r1)
 RegisterID* CodeGenerator::emitAdd(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
     instructions().append(machine().getOpcode(op_add));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitMult(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_mult));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitDiv(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_div));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitMod(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_mod));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitSub(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_sub));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitLeftShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_lshift));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitRightShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_rshift));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitUnsignedRightShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_urshift));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitBitAnd(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_bitand));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitBitXOr(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_bitxor));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitBitOr(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_bitor));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());

@@ -2445,6 +2445,13 @@ bool LogicalNotNode::evaluateToBoolean(ExecState* exec)
 
 // ------------------------------ Multiplicative Nodes -----------------------------------
 
+RegisterID* MultNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitMult(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void MultNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2486,6 +2493,13 @@ uint32_t MultNode::evaluateToUInt32(ExecState* exec)
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
 
+RegisterID* DivNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitDiv(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void DivNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2519,6 +2533,13 @@ int32_t DivNode::evaluateToInt32(ExecState* exec)
 uint32_t DivNode::evaluateToUInt32(ExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
+}
+
+RegisterID* ModNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitMod(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void ModNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2773,6 +2794,13 @@ JSValue* AddStringRightNode::evaluate(ExecState* exec)
     return jsString(p1->toString(exec) + static_cast<StringImp*>(v2)->value());
 }
 
+RegisterID* SubNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitSub(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void SubNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2810,6 +2838,13 @@ uint32_t SubNode::evaluateToUInt32(ExecState* exec)
 
 // ------------------------------ Shift Nodes ------------------------------------
 
+RegisterID* LeftShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitLeftShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void LeftShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2845,6 +2880,13 @@ uint32_t LeftShiftNode::evaluateToUInt32(ExecState* exec)
     return inlineEvaluateToInt32(exec);
 }
 
+RegisterID* RightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitRightShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void RightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
@@ -2878,6 +2920,13 @@ int32_t RightShiftNode::evaluateToInt32(ExecState* exec)
 uint32_t RightShiftNode::evaluateToUInt32(ExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
+}
+
+RegisterID* UnsignedRightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
+    RegisterID* r1 = generator.emitNode(m_term2.get());
+    return generator.emitUnsignedRightShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void UnsignedRightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3016,6 +3065,13 @@ bool LessStringsNode::evaluateToBoolean(ExecState* exec)
     return inlineEvaluateToBoolean(exec);
 }
 
+RegisterID* GreaterNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
+    RegisterID* r1 = generator.emitNode(m_expr1.get());
+    return generator.emitLess(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void GreaterNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3042,6 +3098,13 @@ bool GreaterNode::evaluateToBoolean(ExecState* exec)
     return inlineEvaluateToBoolean(exec);
 }
 
+RegisterID* LessEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitLessEq(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void LessEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3066,6 +3129,13 @@ JSValue* LessEqNode::evaluate(ExecState* exec)
 bool LessEqNode::evaluateToBoolean(ExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
+}
+
+RegisterID* GreaterEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
+    RegisterID* r1 = generator.emitNode(m_expr1.get());
+    return generator.emitLessEq(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void GreaterEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3184,6 +3254,13 @@ bool InNode::evaluateToBoolean(ExecState* exec)
 
 // ------------------------------ Equality Nodes ------------------------------------
 
+RegisterID* EqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void EqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3209,6 +3286,13 @@ JSValue* EqualNode::evaluate(ExecState* exec)
 bool EqualNode::evaluateToBoolean(ExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
+}
+
+RegisterID* NotEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitNotEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void NotEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3238,6 +3322,13 @@ bool NotEqualNode::evaluateToBoolean(ExecState* exec)
     return inlineEvaluateToBoolean(exec);
 }
 
+RegisterID* StrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitStrictEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void StrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3263,6 +3354,13 @@ JSValue* StrictEqualNode::evaluate(ExecState* exec)
 bool StrictEqualNode::evaluateToBoolean(ExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
+}
+
+RegisterID* NotStrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitNotStrictEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void NotStrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3293,6 +3391,13 @@ bool NotStrictEqualNode::evaluateToBoolean(ExecState* exec)
 }
 
 // ------------------------------ Bit Operation Nodes ----------------------------------
+
+RegisterID* BitAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitBitAnd(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
 
 void BitAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -3339,6 +3444,13 @@ uint32_t BitAndNode::evaluateToUInt32(ExecState* exec)
     return inlineEvaluateToInt32(exec);
 }
 
+RegisterID* BitXOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitBitXOr(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void BitXOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3376,6 +3488,13 @@ int32_t BitXOrNode::evaluateToInt32(ExecState* exec)
 uint32_t BitXOrNode::evaluateToUInt32(ExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
+}
+
+RegisterID* BitOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitBitOr(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
 }
 
 void BitOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
