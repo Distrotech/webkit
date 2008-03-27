@@ -212,8 +212,6 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
         return throwError(exec, SyntaxError, "Syntax error in parameter list");
     }
   
-    List consArgs;
-
     JSObject* objCons = exec->lexicalGlobalObject()->objectConstructor();
     JSObject* prototype = objCons->construct(exec, exec->emptyList());
     prototype->putDirect(exec->propertyNames().constructor, fimp, DontEnum);
