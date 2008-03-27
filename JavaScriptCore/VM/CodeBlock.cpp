@@ -188,7 +188,13 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
         case op_jtrue: {
             int r0 = (++it)->u.operand;
             int offset = (++it)->u.operand;
-            printf("[%4d] jtrue\t\tr[%d], %d\t\t; %d\n", location, r0, offset, (it - begin) + offset);
+            printf("[%4d] jtrue\t\tr[%d], %d\t\t\t; %d\n", location, r0, offset, (it - begin) + offset);
+            break;
+        }
+        case op_jfalse: {
+            int r0 = (++it)->u.operand;
+            int offset = (++it)->u.operand;
+            printf("[%4d] jfalse\t\tr[%d], %d\t\t\t; %d\n", location, r0, offset, (it - begin) + offset);
             break;
         }
         case op_new_func: {

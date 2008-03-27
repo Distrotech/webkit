@@ -211,6 +211,14 @@ PassRefPtr<LabelID> CodeGenerator::emitJumpIfTrue(RegisterID* r0, LabelID* l0)
     return l0;
 }
 
+PassRefPtr<LabelID> CodeGenerator::emitJumpIfFalse(RegisterID* r0, LabelID* l0)
+{
+    instructions().append(machine().getOpcode(op_jfalse));
+    instructions().append(r0->index());
+    instructions().append(l0->offsetFrom(instructions().size()));
+    return l0;
+}
+
 unsigned CodeGenerator::addConstant(FuncDeclNode* n)
 {
     // No need to explicitly unique function body nodes -- they're unique already.
@@ -411,6 +419,14 @@ RegisterID* CodeGenerator::emitBitOr(RegisterID* r0, RegisterID* r1, RegisterID*
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitLoad(RegisterID* r0, bool b)
+{
+    instructions().append(machine().getOpcode(op_load));
+    instructions().append(r0->index());
+    instructions().append(addConstant(jsBoolean(b)));
     return r0;
 }
 
