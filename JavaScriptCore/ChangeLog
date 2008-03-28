@@ -1,3 +1,28 @@
+2008-03-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        Add emitCode support for UnaryPlusNode, NegateNode, BitwiseNotNode and LogicalNotNode.
+
+        * VM/CodeBlock.cpp:
+        (KJS::printUnaryOp):
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitToJSNumber):
+        (KJS::CodeGenerator::emitNegate):
+        (KJS::CodeGenerator::emitBitNot):
+        (KJS::CodeGenerator::emitNot):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::UnaryPlusNode::emitCode):
+        (KJS::NegateNode::emitCode):
+        (KJS::BitwiseNotNode::emitCode):
+        (KJS::LogicalNotNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-27  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej Stachowiak.
