@@ -155,7 +155,7 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             break;
         }
         case op_instance_of: {
-            printBinaryOp(location, it, "instanceOf");
+            printBinaryOp(location, it, "instance_of");
             break;
         }
         case op_resolve: {

@@ -429,26 +429,15 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
-        
+
         JSValue* v2 = r[r2].u.jsValue;
 
         // FIXME: this should throw a TypeError excpetion
         ASSERT(v2->isObject());
 
         JSObject* o2 = static_cast<JSObject*>(v2);
+        r[r0].u.jsValue = jsBoolean(o2->implementsHasInstance() ? o2->hasInstance(exec, r[r1].u.jsValue) : false);
 
-        // According to the spec, only some types of objects "implement" the [[HasInstance]] property.
-        // But we are supposed to throw an exception where the object does not "have" the [[HasInstance]]
-        // property. It seems that all objects have the property, but not all implement it, so in this
-        // case we return false (consistent with Mozilla).
-        if (!o2->implementsHasInstance()) {
-            r[r0].u.jsValue = jsBoolean(false);
-            ++vPC;
-            NEXT_OPCODE;
-        }
-
-        r[r0].u.jsValue = jsBoolean(o2->hasInstance(exec, r[r1].u.jsValue));
-        
         ++vPC;
         NEXT_OPCODE;
     }
