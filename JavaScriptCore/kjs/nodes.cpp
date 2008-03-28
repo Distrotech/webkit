@@ -3560,6 +3560,19 @@ uint32_t BitOrNode::evaluateToUInt32(ExecState* exec)
 
 // ------------------------------ Binary Logical Nodes ----------------------------
 
+RegisterID* LogicalAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> newDst = dst ? dst : generator.newTemporary();
+    RefPtr<LabelID> l1 = generator.newLabel();
+    
+    generator.emitNode(newDst.get(), m_expr1.get());
+    generator.emitJumpIfFalse(newDst.get(), l1.get());
+    generator.emitNode(newDst.get(), m_expr2.get());
+    generator.emitLabel(l1.get());
+
+    return newDst.get();
+}
+
 void LogicalAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
@@ -3585,6 +3598,19 @@ bool LogicalAndNode::evaluateToBoolean(ExecState* exec)
     bool b = m_expr1->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return b && m_expr2->evaluateToBoolean(exec);
+}
+
+RegisterID* LogicalOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> newDst = dst ? dst : generator.newTemporary();
+    RefPtr<LabelID> l1 = generator.newLabel();
+    
+    generator.emitNode(newDst.get(), m_expr1.get());
+    generator.emitJumpIfTrue(newDst.get(), l1.get());
+    generator.emitNode(newDst.get(), m_expr2.get());
+    generator.emitLabel(l1.get());
+
+    return newDst.get();
 }
 
 void LogicalOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
