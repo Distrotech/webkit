@@ -584,4 +584,41 @@ void CodeGenerator::emitPopScope()
     m_scopeDepth--;
 }
 
+void CodeGenerator::pushLoopContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
+{
+    LoopContext scope = { labels, continueTarget, breakTarget };
+    m_loopContextStack.append(scope);
+}
+
+void CodeGenerator::popLoopContext()
+{
+    ASSERT(m_loopContextStack.size());
+    m_loopContextStack.removeLast();
+}
+
+CodeGenerator::LoopContext* CodeGenerator::loopContextForIdentifier(const Identifier& label)
+{
+    ASSERT(m_loopContextStack.size());
+    if (label.isEmpty())
+        return &m_loopContextStack.last();
+    for (int i = m_loopContextStack.size() - 1; i >= 0; i--) {
+        LoopContext* scope = &m_loopContextStack[i];
+        if (scope->labels->contains(label))
+            return scope;
+    }
+    return 0;
+}
+
+LabelID* CodeGenerator::labelForContinue(const Identifier& label)
+{
+    LoopContext* scope = loopContextForIdentifier(label);
+    return scope ? scope->continueTarget : 0;
+}
+
+LabelID* CodeGenerator::labelForBreak(const Identifier& label)
+{
+    LoopContext* scope = loopContextForIdentifier(label);
+    return scope ? scope->breakTarget : 0;
+}
+
 } // namespace KJS

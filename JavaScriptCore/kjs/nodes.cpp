@@ -4407,10 +4407,17 @@ RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<LabelID> l0 = generator.newLabel();
     generator.emitLabel(l0.get());
 
+    RefPtr<LabelID> conditionTarget = generator.newLabel();
+    RefPtr<LabelID> breakTarget = generator.newLabel();
+    
+    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
-
+    generator.popLoopContext();
+    
+    generator.emitLabel(conditionTarget.get());
     RegisterID* r1 = generator.emitNode(m_expr.get());
     generator.emitJumpIfTrue(r1, l0.get());
+    generator.emitLabel(breakTarget.get());
     return r0.get();
 }
 
@@ -4459,17 +4466,23 @@ JSValue* DoWhileNode::execute(ExecState* exec)
 RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> l1 = generator.newLabel(); 
-    generator.emitJump(l1.get());
+    RefPtr<LabelID> conditionTarget = generator.newLabel();
+    RefPtr<LabelID> breakTarget = generator.newLabel();
 
+    generator.emitJump(conditionTarget.get());
     generator.emitLabel(l0.get());
+    
+    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     generator.emitNode(dst, m_statement.get());
+    generator.popLoopContext();
 
-    generator.emitLabel(l1.get());
+    generator.emitLabel(conditionTarget.get());
     RegisterID* r1 = generator.emitNode(m_expr.get());
     generator.emitJumpIfTrue(r1, l0.get());
 
-    // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
+    generator.emitLabel(breakTarget.get());
+    
+    // FIXME: This should return the last statement executed so that it can be returned as a Completion
     return 0;
 }
 
@@ -4517,18 +4530,24 @@ JSValue* WhileNode::execute(ExecState* exec)
 RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     generator.emitNode(m_expr1.get());
-
+    
     RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> l1 = generator.newLabel(); 
+    RefPtr<LabelID> l1 = generator.newLabel();
+    RefPtr<LabelID> conditionTarget = generator.newLabel(); 
+    RefPtr<LabelID> breakTarget = generator.newLabel(); 
     generator.emitJump(l1.get());
 
     generator.emitLabel(l0.get());
+    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
+    generator.popLoopContext();
+    generator.emitLabel(conditionTarget.get());  
     generator.emitNode(m_expr3.get());
 
     generator.emitLabel(l1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
     generator.emitJumpIfTrue(r1, l0.get());
+    generator.emitLabel(breakTarget.get());
     return r0.get();
 }
 
@@ -4711,6 +4730,16 @@ JSValue* ForInNode::execute(ExecState* exec)
 // ------------------------------ ContinueNode ---------------------------------
 
 // ECMA 12.7
+RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    LabelID* target = generator.labelForContinue(m_ident);
+    ASSERT(target);
+    
+    generator.emitJump(target);
+    
+    return dst;
+}
+
 JSValue* ContinueNode::execute(ExecState* exec)
 {
     if (m_ident.isEmpty() && !exec->inIteration())
@@ -4723,6 +4752,16 @@ JSValue* ContinueNode::execute(ExecState* exec)
 // ------------------------------ BreakNode ------------------------------------
 
 // ECMA 12.8
+RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    LabelID* target = generator.labelForBreak(m_ident);
+    ASSERT(target);
+    
+    generator.emitJump(target);
+    
+    return dst;
+}
+
 JSValue* BreakNode::execute(ExecState* exec)
 {
     if (m_ident.isEmpty() && !exec->inIteration() && !exec->inSwitch())
@@ -4929,6 +4968,10 @@ JSValue* SwitchNode::execute(ExecState* exec)
 }
 
 // ------------------------------ LabelNode ------------------------------------
+RegisterID* LabelNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitNode(dst, m_statement.get());
+}
 
 void LabelNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
