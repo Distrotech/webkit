@@ -4758,10 +4758,10 @@ JSValue* ForInNode::execute(ExecState* exec)
 // ECMA 12.7
 RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    LabelID* target = generator.labelForContinue(m_ident);
-    ASSERT(target);
+    LoopContext* targetContext = generator.loopContextForLabel(m_ident);
+    ASSERT(targetContext);
     
-    generator.emitJump(target);
+    generator.emitJumpScopes(targetContext->continueTarget, targetContext->scopeDepth);
     
     return dst;
 }
@@ -4780,11 +4780,11 @@ JSValue* ContinueNode::execute(ExecState* exec)
 // ECMA 12.8
 RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    LabelID* target = generator.labelForBreak(m_ident);
-    ASSERT(target);
+    LoopContext* targetContext = generator.loopContextForLabel(m_ident);
+    ASSERT(targetContext);
     
-    generator.emitJump(target);
-    
+    generator.emitJumpScopes(targetContext->breakTarget, targetContext->scopeDepth);
+
     return dst;
 }
 

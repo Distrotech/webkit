@@ -1,3 +1,26 @@
+2008-03-28  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18204: SquirrelFish: continue/break do not correctly handle scope popping
+        <http://bugs.webkit.org/show_bug.cgi?id=18204>
+
+        We now track the scope depth as part of a loop context, and add an
+        extra instruction op_jump_scopes that is used to perform a jump across
+        dynamic scope boundaries.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitJumpScopes):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::ContinueNode::emitCode):
+        (KJS::BreakNode::emitCode):
+
 2008-03-28  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.
