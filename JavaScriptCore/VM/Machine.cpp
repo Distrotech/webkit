@@ -199,7 +199,7 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
-void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock)
+void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Register>* registers, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
@@ -217,16 +217,15 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         return;
     }
     
-    Vector<Register> registers;
-    registers.reserveCapacity(512);
+    registers->reserveCapacity(512);
 
-    registers.resize(codeBlock->numRegisters());
-    Register* r = registers.data() + codeBlock->numVars;
+    registers->resize(codeBlock->numRegisters());
+    Register* r = registers->data() + codeBlock->numVars;
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
 
 #ifndef NDEBUG
-    dumpRegisters(registers, r);
+    dumpRegisters(*registers, r);
 #endif
 
 #if HAVE(COMPUTED_GOTO)
@@ -556,7 +555,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         ASSERT(v->isObject(&FunctionImp::info));
         FunctionImp* function = static_cast<FunctionImp*>(v);
         
-        int rOffset = r - registers.data();
+        int rOffset = r - registers->data();
         Register* returnInfo = r + argv - returnInfoSize;
 
         returnInfo[0].u.codeBlock = codeBlock; // codeBlock after return
@@ -578,19 +577,19 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
 
         int offset = rOffset + argv + argc + newCodeBlock->numVars;
         if (argc == newCodeBlock->numParameters) { // correct number of arguments
-            registers.resize(offset + newCodeBlock->numVars + newCodeBlock->numTemporaries);
-            r = registers.data() + offset;
+            registers->resize(offset + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            r = registers->data() + offset;
         } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
             int omittedArgCount = newCodeBlock->numParameters - argc;
-            registers.resize(offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries);
-            r = registers.data() + omittedArgCount + offset;
+            registers->resize(offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            r = registers->data() + omittedArgCount + offset;
             
             Register* end = r;
             for (Register* it = r - omittedArgCount; it != end; ++it)
                 (*it).u.jsValue = jsUndefined();
         } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-            registers.resize(offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries);
-            r = registers.data() + returnInfoSize + newCodeBlock->numParameters + offset;
+            registers->resize(offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            r = registers->data() + returnInfoSize + newCodeBlock->numParameters + offset;
 
             int shift = returnInfoSize + argc;
             Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
@@ -602,7 +601,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         if (newCodeBlock->needsActivation) {
             COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
             scopeChain = new (&returnInfo[6]) ScopeChain(function->scope());
-            scopeChain->push(new JSActivation(functionBody, &registers, r - registers.data()));
+            scopeChain->push(new JSActivation(functionBody, registers, r - registers->data()));
         } else
             scopeChain = &function->scope();
         
@@ -630,7 +629,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         k = codeBlock->jsValues.data();
         vPC = returnInfo[1].u.vPC;
         scopeChain = returnInfo[2].u.scopeChain;
-        r = registers.data() + returnInfo[3].u.i;
+        r = registers->data() + returnInfo[3].u.i;
         int r0 = returnInfo[4].u.i;
         r[r0] = *returnValue;
         

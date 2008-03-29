@@ -23,8 +23,9 @@
 #ifndef KJS_GlobalObject_h
 #define KJS_GlobalObject_h
 
-#include "JSVariableObject.h"
 #include "Activation.h"
+#include "JSVariableObject.h"
+#include "Register.h"
 
 namespace KJS {
 
@@ -137,6 +138,8 @@ namespace KJS {
 
             ActivationStackNode* activations;
             size_t activationCount;
+            
+            Vector<Register> registers;
         };
 
     public:
@@ -239,6 +242,8 @@ namespace KJS {
         virtual bool isDynamicScope() const;
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
+        
+        Vector<Register>& registers() { return d()->registers; }
 
     private:
         void init();
