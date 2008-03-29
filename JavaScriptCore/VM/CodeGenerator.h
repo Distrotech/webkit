@@ -63,7 +63,11 @@ namespace KJS {
             , m_nextLocal(-1)
             , m_nextParameter(-localCount - parameterCount)
             , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
+            , m_thisIdentifier(&CommonIdentifiers::shared()->thisIdentifier)
         {
+            // Put "this" in scope as the implicit first parameter.
+            --m_nextParameter;
+            addParameter(*m_thisIdentifier);
         }
 
         void generate();
@@ -132,7 +136,7 @@ namespace KJS {
         RegisterID* emitObjectGet(RegisterID*, RegisterID*, const Identifier& ident);
         RegisterID* emitObjectPut(RegisterID*, const Identifier& ident, RegisterID*);
 
-        RegisterID* emitCall(RegisterID*, RegisterID*, ArgumentsNode*);
+        RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitReturn(RegisterID*);
         RegisterID* emitEnd(RegisterID*);
 
@@ -189,6 +193,7 @@ namespace KJS {
         JSValueMap m_jsValueMap;
 
         const Identifier* m_argumentsIdentifier;
+        const Identifier* m_thisIdentifier;
     };
 
 }
