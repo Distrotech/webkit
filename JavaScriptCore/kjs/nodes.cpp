@@ -554,7 +554,7 @@ JSValue* RegExpNode::evaluate(ExecState* exec)
 
 RegisterID* ThisNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.getRegister(CommonIdentifiers::shared()->thisIdentifier);
+    RegisterID* r0 = generator.registerForLocal(generator.thisIdentifier());
     return dst ? generator.emitMove(dst, r0) : r0;
 }
 
@@ -568,7 +568,7 @@ JSValue* ThisNode::evaluate(ExecState* exec)
 
 RegisterID* ResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.getRegister(m_ident))
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return dst ? generator.emitMove(dst, r0) : r0;
 
     return generator.emitResolve(dst ? dst : generator.newTemporary(), m_ident);
@@ -1236,7 +1236,7 @@ JSValue* FunctionCallValueNode::evaluate(ExecState* exec)
 RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RegisterID* r0 = dst ? dst : generator.newTemporary();
-    if (RegisterID* r1 = generator.getRegister(m_ident))
+    if (RegisterID* r1 = generator.registerForLocal(m_ident))
         return generator.emitCall(r0, r1, 0, m_args.get());
 
     ASSERT_NOT_REACHED();
@@ -1598,7 +1598,7 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     // FIXME: I think we can detect the absense of dependent expressions here, 
     // and emit a PreInc instead of a PostInc. A post-pass to eliminate dead
     // code would work, too.
-    if (RegisterID* r0 = generator.getRegister(m_ident))
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPostInc(dst ? dst : generator.newTemporary(), r0);
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
@@ -2085,7 +2085,7 @@ JSValue* TypeOfValueNode::evaluate(ExecState* exec)
 
 RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.getRegister(m_ident))
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPreInc(r0);
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
@@ -2494,7 +2494,7 @@ RegisterID* MultNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitMult(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitMult(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void MultNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2542,7 +2542,7 @@ RegisterID* DivNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitDiv(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitDiv(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void DivNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2584,7 +2584,7 @@ RegisterID* ModNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitMod(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitMod(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void ModNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2729,7 +2729,7 @@ RegisterID* AddNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitAdd(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitAdd(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void AddNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2843,7 +2843,7 @@ RegisterID* SubNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitSub(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitSub(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void SubNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2887,7 +2887,7 @@ RegisterID* LeftShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitLeftShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitLeftShift(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void LeftShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2929,7 +2929,7 @@ RegisterID* RightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitRightShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitRightShift(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void RightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2971,7 +2971,7 @@ RegisterID* UnsignedRightShiftNode::emitCode(CodeGenerator& generator, RegisterI
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
     RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitUnsignedRightShift(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitUnsignedRightShift(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void UnsignedRightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3045,7 +3045,7 @@ RegisterID* LessNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitLess(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitLess(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void LessNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3114,7 +3114,7 @@ RegisterID* GreaterNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
     RegisterID* r1 = generator.emitNode(m_expr1.get());
-    return generator.emitLess(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitLess(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void GreaterNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3147,7 +3147,7 @@ RegisterID* LessEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitLessEq(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitLessEq(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void LessEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3180,7 +3180,7 @@ RegisterID* GreaterEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
     RegisterID* r1 = generator.emitNode(m_expr1.get());
-    return generator.emitLessEq(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitLessEq(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void GreaterEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3213,7 +3213,7 @@ RegisterID* InstanceOfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitInstanceOf(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitInstanceOf(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void InstanceOfNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3310,7 +3310,7 @@ RegisterID* EqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitEqual(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void EqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3344,7 +3344,7 @@ RegisterID* NotEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitNotEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitNotEqual(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void NotEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3378,7 +3378,7 @@ RegisterID* StrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitStrictEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitStrictEqual(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void StrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3412,7 +3412,7 @@ RegisterID* NotStrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* d
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitNotStrictEqual(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitNotStrictEqual(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void NotStrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3448,7 +3448,7 @@ RegisterID* BitAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitAnd(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitBitAnd(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void BitAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3500,7 +3500,7 @@ RegisterID* BitXOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitXOr(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitBitXOr(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void BitXOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3546,7 +3546,7 @@ RegisterID* BitOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
     RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitOr(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+    return generator.emitBitOr(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), r1);
 }
 
 void BitOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3794,7 +3794,7 @@ void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable
 
 RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.getRegister(m_ident)) {
+    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
         RegisterID* r1 = generator.emitNode(r0, m_right.get());
         return dst ? generator.emitMove(dst, r1) : r1;
     }
@@ -5127,11 +5127,11 @@ void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
     for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.getRegister(m_varStack[i].first))
+        if (RegisterID* r0 = generator.registerForLocal(m_varStack[i].first))
             generator.emitLoad(r0, jsUndefined());
 
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.getRegister(m_functionStack[i]->m_ident))
+        if (RegisterID* r0 = generator.registerForLocal(m_functionStack[i]->m_ident))
             generator.emitNewFunction(r0, m_functionStack[i]);
 
     statementListEmitCode(m_children, generator);
@@ -5145,11 +5145,11 @@ RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
     for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.getRegister(m_varStack[i].first))
+        if (RegisterID* r0 = generator.registerForLocal(m_varStack[i].first))
             generator.emitLoad(r0, jsUndefined());
 
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.getRegister(m_functionStack[i]->m_ident))
+        if (RegisterID* r0 = generator.registerForLocal(m_functionStack[i]->m_ident))
             generator.emitNewFunction(r0, m_functionStack[i]);
 
     RegisterID* r0 = statementListEmitCode(m_children, generator);

@@ -75,12 +75,28 @@ namespace KJS {
         void addVar(const Identifier&);
         void addFunction(const Identifier&);
         void addParameter(const Identifier&);
-        RegisterID* getRegister(const Identifier&);
 
+        // Returns the register corresponding to a local variable, or 0 if no
+        // such register exists. Registers returned by registerForLocal do not
+        // require explicit reference counting.
+        RegisterID* registerForLocal(const Identifier&);
+
+        // Returns the next available temporary register. Registers returned by
+        // newTemporary require a modified form of reference counting: any
+        // register with a refcount of 0 is considered "available", meaning that
+        // the next instruction may overwrite it.
         RegisterID* newTemporary();
-        RegisterID* newTemporary(RegisterID* suggestion) { return suggestion->isTemporary() ? suggestion : newTemporary(); }
+
+        // The same as newTemporary(), but this function returns "suggestion" if
+        // "suggestion" is a temporary. This function is helpful in situations
+        // where you've put "suggestion" in a RefPtr, but you'd like to allow
+        // the next instruction to overwrite it anyway.
+        RegisterID* newTemporaryOr(RegisterID* suggestion) { return suggestion->isTemporary() ? suggestion : newTemporary(); }
 
         PassRefPtr<LabelID> newLabel();
+        
+        const Identifier& thisIdentifier() { return *m_thisIdentifier; }
+        const Identifier& argumentsIdentifier() { return *m_argumentsIdentifier; }
         
         // The emitNode functions are just syntactic sugar for calling
         // Node::emitCode. They're the only functions that accept a NULL register.
