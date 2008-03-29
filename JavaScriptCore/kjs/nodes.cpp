@@ -3667,6 +3667,26 @@ bool LogicalOrNode::evaluateToBoolean(ExecState* exec)
 
 // ------------------------------ ConditionalNode ------------------------------
 
+RegisterID* ConditionalNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> newDst = dst ? dst : generator.newTemporary();
+    RefPtr<LabelID> l0 = generator.newLabel();
+    RefPtr<LabelID> l1 = generator.newLabel();
+
+    RegisterID* r1 = generator.emitNode(m_logical.get());
+    generator.emitJumpIfFalse(r1, l0.get());
+
+    generator.emitNode(newDst.get(), m_expr1.get());
+    generator.emitJump(l1.get());
+
+    generator.emitLabel(l0.get());
+    generator.emitNode(newDst.get(), m_expr2.get());
+
+    generator.emitLabel(l1.get());
+
+    return newDst.get();
+}
+
 void ConditionalNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
