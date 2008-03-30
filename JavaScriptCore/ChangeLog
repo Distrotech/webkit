@@ -1,3 +1,13 @@
+2008-03-30  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Sam.
+
+        Implement CommaNode.
+        
+        * kjs/nodes.cpp:
+        (KJS::CommaNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-30  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.

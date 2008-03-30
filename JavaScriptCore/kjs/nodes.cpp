@@ -4146,6 +4146,12 @@ JSValue* ReadModifyBracketNode::evaluate(ExecState* exec)
 
 // ------------------------------ CommaNode ------------------------------------
 
+RegisterID* CommaNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    return generator.emitNode(dst ? dst : generator.newTemporaryOr(r0.get()), m_expr2.get());
+}
+
 void CommaNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
