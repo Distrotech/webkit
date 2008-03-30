@@ -36,6 +36,7 @@ namespace KJS {
         
     #define FOR_EACH_OPCODE_ID(macro) \
         macro(op_load) \
+        macro(op_new_object) \
         macro(op_mov) \
         \
         macro(op_equal) \
