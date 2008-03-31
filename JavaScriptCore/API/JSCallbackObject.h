@@ -59,7 +59,7 @@ public:
     virtual bool implementsHasInstance() const;
     virtual bool hasInstance(ExecState *exec, JSValue *value);
 
-    virtual bool implementsCall() const;
+    virtual CallType getCallData(CallData&);
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List &args);
 
     virtual void getPropertyNames(ExecState*, PropertyNameArray&);

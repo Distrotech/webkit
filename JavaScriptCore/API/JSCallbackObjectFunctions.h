@@ -295,13 +295,13 @@ bool JSCallbackObject<Base>::hasInstance(ExecState *exec, JSValue *value)
 
 
 template <class Base>
-bool JSCallbackObject<Base>::implementsCall() const
+CallType JSCallbackObject<Base>::getCallData(CallData&)
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsFunction)
-            return true;
+            return CallTypeNative;
     
-    return false;
+    return CallTypeNone;
 }
 
 template <class Base>
@@ -322,7 +322,7 @@ JSValue* JSCallbackObject<Base>::callAsFunction(ExecState* exec, JSObject* thisO
         }
     }
     
-    ASSERT_NOT_REACHED(); // implementsCall should prevent us from reaching here
+    ASSERT_NOT_REACHED(); // getCallData should prevent us from reaching here
     return 0;
 }
 

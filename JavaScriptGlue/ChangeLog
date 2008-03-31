@@ -1,3 +1,11 @@
+2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Build fix.
+
+        * ForwardingHeaders/wtf/UnusedParam.h: Copied from ForwardingHeaders/wtf/OwnPtr.h.
+
 2008-03-20  Maciej Stachowiak  <mjs@apple.com>
 
         - fix build

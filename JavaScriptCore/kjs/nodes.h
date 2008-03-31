@@ -30,7 +30,7 @@
 #include "regexp.h"
 #include "RegisterID.h"
 #include "SymbolTable.h"
-#include "UnusedParam.h"
+#include <wtf/UnusedParam.h>
 #include <wtf/ListRefPtr.h>
 #include <wtf/MathExtras.h>
 #include <wtf/OwnPtr.h>

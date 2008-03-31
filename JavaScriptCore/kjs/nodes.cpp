@@ -1278,12 +1278,11 @@ JSValue* FunctionCallValueNode::evaluate(ExecState* exec)
 
 RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = dst ? dst : generator.newTemporary();
-    if (RegisterID* r1 = generator.registerForLocal(m_ident))
-        return generator.emitCall(r0, r1, 0, m_args.get());
-
-    ASSERT_NOT_REACHED();
-    return 0;
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
+        return generator.emitCall(dst ? dst : generator.newTemporary(), r0, 0, m_args.get());
+ 
+    RefPtr<RegisterID> r0 = generator.emitResolve(generator.newTemporary(), m_ident);
+    return generator.emitCall(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), 0, m_args.get());
 }
 
 void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)

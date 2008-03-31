@@ -71,17 +71,10 @@ void FunctionImp::mark()
     _scope.mark();
 }
 
-JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValue* FunctionImp::callAsFunction(ExecState*, JSObject*, const List&)
 {
-    FunctionExecState newExec(exec->dynamicGlobalObject(), thisObj, body.get(), exec, this, args);
-    JSValue* result = body->execute(&newExec);
-    if (newExec.completionType() == ReturnValue)
-        return result;
-    if (newExec.completionType() == Throw) {
-        exec->setException(result);
-        return result;
-    }
-    return jsUndefined();
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier& propertyName, const PropertySlot& slot)
@@ -206,6 +199,13 @@ JSObject* FunctionImp::construct(ExecState* exec, const List& args)
     return static_cast<JSObject*>(res);
   else
     return obj;
+}
+
+CallType FunctionImp::getCallData(CallData& callData)
+{
+    callData.js.functionBody = body.get();
+    callData.js.scopeChain = &_scope;
+    return CallTypeJS;
 }
 
 // ------------------------------ IndexToNameMap ---------------------------------

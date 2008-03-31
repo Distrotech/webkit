@@ -286,6 +286,10 @@ sub GenerateHeader
         push(@headerContent, "#include <kjs/object_object.h>\n");
     }
 
+    if ($dataNode->extendedAttributes->{"CustomCall"}) {
+        push(@headerContent, "#include <kjs/CallData.h>\n");
+    }
+
     # Get correct pass/store types respecting PODType flag
     my $podType = $dataNode->extendedAttributes->{"PODType"};
     my $passType = $podType ? "JSSVGPODTypeWrapper<$podType>*" : "$implClassName*";
@@ -366,7 +370,7 @@ sub GenerateHeader
     # Custom call functions
     if ($dataNode->extendedAttributes->{"CustomCall"}) {
         push(@headerContent, "    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);\n");
-        push(@headerContent, "    virtual bool implementsCall() const;\n\n");
+        push(@headerContent, "    virtual KJS::CallType getCallData(KJS::CallData&);\n\n");
     }
 
     # Custom deleteProperty function
