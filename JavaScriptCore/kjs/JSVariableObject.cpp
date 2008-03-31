@@ -94,7 +94,7 @@ void JSVariableObject::getPropertyNames(ExecState* exec, PropertyNameArray& prop
 
 bool JSVariableObject::getPropertyAttributes(const Identifier& propertyName, unsigned& attributes) const
 {
-    size_t index = symbolTable().get(propertyName.ustring().rep());
+    int index = symbolTable().get(propertyName.ustring().rep());
     if (index != missingSymbolMarker()) {
         attributes = localStorage()[index].attributes;
         return true;

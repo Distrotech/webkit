@@ -50,12 +50,12 @@ namespace KJS {
         static UString::Rep* nullRepPtr;
     };
 
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
+    static ALWAYS_INLINE int missingSymbolMarker() { return std::numeric_limits<int>::max(); }
 
     struct SymbolTableIndexHashTraits {
-        typedef size_t TraitType;
+        typedef int TraitType;
         typedef SymbolTableIndexHashTraits StorageTraits;
-        static size_t emptyValue() { return missingSymbolMarker(); }
+        static int emptyValue() { return missingSymbolMarker(); }
         static const bool emptyValueIsZero = false;
         static const bool needsDestruction = false;
         static const bool needsRef = false;

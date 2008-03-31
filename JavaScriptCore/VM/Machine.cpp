@@ -592,7 +592,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
         // returnInfo[6] gets optionally set later
 
-        r[argv].u.jsValue = r2 == static_cast<int>(missingSymbolMarker()) ? jsNull() : r[r2].u.jsValue; // "this" value
+        r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
         // WARNING: If code generation wants to optimize resolves to parent scopes,
         // it needs to be aware that, for functions that require activations,

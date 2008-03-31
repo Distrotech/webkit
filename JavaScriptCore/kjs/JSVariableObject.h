@@ -93,7 +93,7 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot)
     {
-        size_t index = symbolTable().get(propertyName.ustring().rep());
+        int index = symbolTable().get(propertyName.ustring().rep());
         if (index != missingSymbolMarker()) {
 #ifndef NDEBUG
             // During initialization, the variable object needs to advertise that it has certain
@@ -102,7 +102,7 @@ namespace KJS {
             
             // In a release build, we optimize this check away and just return an invalid pointer.
             // There's no harm in an invalid pointer, since no one dereferences it.
-            if (index >= d->localStorage.size()) {
+            if (index < 0 || static_cast<unsigned>(index) >= d->localStorage.size()) {
                 slot.setUngettable(this);
                 return true;
             }
@@ -115,7 +115,7 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTablePut(const Identifier& propertyName, JSValue* value)
     {
-        size_t index = symbolTable().get(propertyName.ustring().rep());
+        int index = symbolTable().get(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
         LocalStorageEntry& entry = d->localStorage[index];
@@ -127,7 +127,7 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTableInitializeVariable(const Identifier& propertyName, JSValue* value, unsigned attributes)
     {
-        size_t index = symbolTable().get(propertyName.ustring().rep());
+        int index = symbolTable().get(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
         LocalStorageEntry& entry = d->localStorage[index];

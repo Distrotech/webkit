@@ -447,14 +447,14 @@ namespace KJS {
     protected:
         ALWAYS_INLINE JSValue* inlineEvaluate(ExecState*);
         Identifier m_ident;
-        size_t m_index; // Used by LocalVarAccessNode and ScopedVarAccessNode.
+        int m_index; // Used by LocalVarAccessNode and ScopedVarAccessNode.
         size_t m_scopeDepth; // Used by ScopedVarAccessNode
     };
 
     class LocalVarAccessNode : public ResolveNode {
     public:
         // Overwrites a ResolveNode in place.
-        LocalVarAccessNode(size_t i) KJS_FAST_CALL
+        LocalVarAccessNode(int i) KJS_FAST_CALL
             : ResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -474,7 +474,7 @@ namespace KJS {
     class ScopedVarAccessNode : public ResolveNode {
     public:
         // Overwrites a ResolveNode in place.
-        ScopedVarAccessNode(size_t i, size_t scopeDepth) KJS_FAST_CALL
+        ScopedVarAccessNode(int i, size_t scopeDepth) KJS_FAST_CALL
         : ResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -856,7 +856,7 @@ namespace KJS {
     
     class LocalVarFunctionCallNode : public FunctionCallResolveNode {
     public:
-        LocalVarFunctionCallNode(size_t i) KJS_FAST_CALL
+        LocalVarFunctionCallNode(int i) KJS_FAST_CALL
             : FunctionCallResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -875,7 +875,7 @@ namespace KJS {
     
     class ScopedVarFunctionCallNode : public FunctionCallResolveNode {
     public:
-        ScopedVarFunctionCallNode(size_t i, size_t depth) KJS_FAST_CALL
+        ScopedVarFunctionCallNode(int i, size_t depth) KJS_FAST_CALL
             : FunctionCallResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -998,7 +998,7 @@ namespace KJS {
 
     class PostIncLocalVarNode : public PostIncResolveNode {
     public:
-        PostIncLocalVarNode(size_t i) KJS_FAST_CALL
+        PostIncLocalVarNode(int i) KJS_FAST_CALL
             : PostIncResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1011,7 +1011,7 @@ namespace KJS {
 
     class PostIncConstNode : public PostIncResolveNode {
     public:
-        PostIncConstNode(size_t i) KJS_FAST_CALL
+        PostIncConstNode(int i) KJS_FAST_CALL
             : PostIncResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1042,7 +1042,7 @@ namespace KJS {
 
     class PostDecLocalVarNode : public PostDecResolveNode {
     public:
-        PostDecLocalVarNode(size_t i) KJS_FAST_CALL
+        PostDecLocalVarNode(int i) KJS_FAST_CALL
             : PostDecResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1062,7 +1062,7 @@ namespace KJS {
 
     class PostDecConstNode : public PostDecResolveNode {
     public:
-        PostDecConstNode(size_t i) KJS_FAST_CALL
+        PostDecConstNode(int i) KJS_FAST_CALL
             : PostDecResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1297,7 +1297,7 @@ namespace KJS {
 
     class LocalVarTypeOfNode : public TypeOfResolveNode {
     public:
-        LocalVarTypeOfNode(size_t i) KJS_FAST_CALL
+        LocalVarTypeOfNode(int i) KJS_FAST_CALL
             : TypeOfResolveNode(PlacementNewAdopt)
         {
             m_expectedReturnType = StringType;
@@ -1347,7 +1347,7 @@ namespace KJS {
 
     class PreIncLocalVarNode : public PreIncResolveNode {
     public:
-        PreIncLocalVarNode(size_t i) KJS_FAST_CALL
+        PreIncLocalVarNode(int i) KJS_FAST_CALL
             : PreIncResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1359,7 +1359,7 @@ namespace KJS {
 
     class PreIncConstNode : public PreIncResolveNode {
     public:
-        PreIncConstNode(size_t i) KJS_FAST_CALL
+        PreIncConstNode(int i) KJS_FAST_CALL
             : PreIncResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1390,7 +1390,7 @@ namespace KJS {
 
     class PreDecLocalVarNode : public PreDecResolveNode {
     public:
-        PreDecLocalVarNode(size_t i) KJS_FAST_CALL
+        PreDecLocalVarNode(int i) KJS_FAST_CALL
             : PreDecResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -1402,7 +1402,7 @@ namespace KJS {
 
     class PreDecConstNode : public PreDecResolveNode {
     public:
-        PreDecConstNode(size_t i) KJS_FAST_CALL
+        PreDecConstNode(int i) KJS_FAST_CALL
             : PreDecResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -2278,7 +2278,7 @@ namespace KJS {
 
     class ReadModifyLocalVarNode : public ReadModifyResolveNode {
     public:
-        ReadModifyLocalVarNode(size_t i) KJS_FAST_CALL
+        ReadModifyLocalVarNode(int i) KJS_FAST_CALL
             : ReadModifyResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -2290,7 +2290,7 @@ namespace KJS {
 
     class ReadModifyConstNode : public ReadModifyResolveNode {
     public:
-        ReadModifyConstNode(size_t i) KJS_FAST_CALL
+        ReadModifyConstNode(int i) KJS_FAST_CALL
             : ReadModifyResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
@@ -2330,7 +2330,7 @@ namespace KJS {
 
     class AssignLocalVarNode : public AssignResolveNode {
     public:
-        AssignLocalVarNode(size_t i) KJS_FAST_CALL
+        AssignLocalVarNode(int i) KJS_FAST_CALL
             : AssignResolveNode(PlacementNewAdopt)
         {
             ASSERT(i != missingSymbolMarker());
