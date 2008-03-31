@@ -528,6 +528,12 @@ uint32_t ImmediateNumberNode::evaluateToUInt32(ExecState*)
 
 // ------------------------------ StringNode -----------------------------------
 
+RegisterID* StringNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    // FIXME: should we try to atomize constant strings?
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), jsOwnedString(m_value));
+}
+
 JSValue* StringNode::evaluate(ExecState*)
 {
     return jsOwnedString(m_value);
@@ -2016,6 +2022,12 @@ JSValue* DeleteValueNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ VoidNode -------------------------------------
+
+RegisterID* VoidNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
+    return generator.emitLoad(dst ? dst : generator.newTemporaryOr(r0.get()), jsUndefined());
+}
 
 void VoidNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
