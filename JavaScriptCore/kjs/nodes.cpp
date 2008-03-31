@@ -1264,6 +1264,12 @@ JSValue* EvalFunctionCallNode::evaluate(ExecState* exec)
     return resolveAndCall<EvalOperator, true>(exec, exec->propertyNames().eval, m_args.get());
 }
 
+RegisterID* FunctionCallValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    return generator.emitCall(dst ? dst : generator.newTemporary(), r0, 0, m_args.get());
+}
+
 void FunctionCallValueNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
