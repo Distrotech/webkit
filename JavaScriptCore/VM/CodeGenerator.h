@@ -72,11 +72,15 @@ namespace KJS {
             , m_nextParameter(-localCount - parameterCount)
             , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
             , m_thisIdentifier(&CommonIdentifiers::shared()->thisIdentifier)
+            , m_propertyNames(CommonIdentifiers::shared())
+
         {
             // Put "this" in scope as the implicit first parameter.
             --m_nextParameter;
             addParameter(*m_thisIdentifier);
         }
+
+        const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
 
         void generate();
 
@@ -116,6 +120,7 @@ namespace KJS {
         RegisterID* emitLoad(RegisterID*, JSValue*);
         
         RegisterID* emitNewObject(RegisterID*);
+        RegisterID* emitNewArray(RegisterID*);
 
         RegisterID* emitNewFunction(RegisterID*, FuncDeclNode*);
         
@@ -159,8 +164,10 @@ namespace KJS {
         RegisterID* emitResolveBase(RegisterID*, int);
         RegisterID* emitResolveBase(RegisterID*, int, int);
         
-        RegisterID* emitObjectGet(RegisterID*, RegisterID*, const Identifier& ident);
-        RegisterID* emitObjectPut(RegisterID*, const Identifier& ident, RegisterID*);
+        RegisterID* emitGetPropId(RegisterID*, RegisterID*, const Identifier& ident);
+        RegisterID* emitPutPropId(RegisterID*, const Identifier& ident, RegisterID*);
+
+        RegisterID* emitPutPropIndex(RegisterID*, unsigned index, RegisterID*);
 
         RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitReturn(RegisterID*);
@@ -213,6 +220,7 @@ namespace KJS {
 
         const Identifier* m_argumentsIdentifier;
         const Identifier* m_thisIdentifier;
+        CommonIdentifiers* m_propertyNames;
     };
 
 }

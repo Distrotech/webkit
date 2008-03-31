@@ -496,6 +496,13 @@ RegisterID* CodeGenerator::emitNewObject(RegisterID* r0)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitNewArray(RegisterID* r0)
+{
+    instructions().append(machine().getOpcode(op_new_array));
+    instructions().append(r0->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitResolve(RegisterID* r0, const Identifier& ident)
 {
     instructions().append(machine().getOpcode(op_resolve));
@@ -512,20 +519,29 @@ RegisterID* CodeGenerator::emitResolveBase(RegisterID* r0, const Identifier& ide
     return r0;
 }
 
-RegisterID* CodeGenerator::emitObjectGet(RegisterID* r0, RegisterID* r1, const Identifier& ident)
+RegisterID* CodeGenerator::emitGetPropId(RegisterID* r0, RegisterID* r1, const Identifier& ident)
 {
-    instructions().append(machine().getOpcode(op_object_get));
+    instructions().append(machine().getOpcode(op_get_prop_id));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(addConstant(ident));
     return r0;
 }
 
-RegisterID* CodeGenerator::emitObjectPut(RegisterID* r0, const Identifier& ident, RegisterID* r1)
+RegisterID* CodeGenerator::emitPutPropId(RegisterID* r0, const Identifier& ident, RegisterID* r1)
 {
-    instructions().append(machine().getOpcode(op_object_put));
+    instructions().append(machine().getOpcode(op_put_prop_id));
     instructions().append(r0->index());
     instructions().append(addConstant(ident));
+    instructions().append(r1->index());
+    return r1;
+}
+
+RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* r0, unsigned index, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_put_prop_index));
+    instructions().append(r0->index());
+    instructions().append(index);
     instructions().append(r1->index());
     return r1;
 }

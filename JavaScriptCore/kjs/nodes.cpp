@@ -842,6 +842,25 @@ JSValue* ElementNode::evaluate(ExecState* exec)
 
 // ------------------------------ ArrayNode ------------------------------------
 
+
+RegisterID* ArrayNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNewArray(dst ? dst : generator.newTemporary());
+    unsigned length = 0;
+
+    RegisterID* r1;
+    for (ElementNode* n = m_element.get(); n; n = n->m_next.get()) {
+        r1 = generator.emitNode(n->m_node.get());
+        length += n->m_elision;
+        generator.emitPutPropIndex(r0.get(), length++, r1);
+    }
+
+    r1 = generator.emitLoad(generator.newTemporary(), jsNumber(m_elision + length));
+    generator.emitPutPropId(r0.get(), generator.propertyNames().length, r1);
+
+    return r0.get();
+}
+
 void ArrayNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_element)
@@ -908,7 +927,7 @@ RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst
         
         switch (p->m_node->m_type) {
             case PropertyNode::Constant: {
-                generator.emitObjectPut(r0.get(), p->m_node->name(), r1);
+                generator.emitPutPropId(r0.get(), p->m_node->name(), r1);
                 break;
             }
             // FIXME: No support for getters and setters yet, as it caused a performance regression
@@ -1028,7 +1047,7 @@ uint32_t BracketAccessorNode::evaluateToUInt32(ExecState* exec)
 RegisterID* DotAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RegisterID* r0 = generator.emitNode(m_base.get());
-    return generator.emitObjectGet(dst ? dst : generator.newTemporary(), r0, m_ident);
+    return generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0, m_ident);
 }
 
 void DotAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1644,9 +1663,9 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
         return generator.emitPostInc(dst ? dst : generator.newTemporary(), r0);
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RefPtr<RegisterID> r1 = generator.emitObjectGet(generator.newTemporary(), r0.get(), m_ident);
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
     RegisterID* r2 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r1.get());
-    generator.emitObjectPut(r0.get(), m_ident, r1.get());
+    generator.emitPutPropId(r0.get(), m_ident, r1.get());
     return r2;
 }
 
@@ -2137,9 +2156,9 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
         return generator.emitPreInc(r0);
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* r1 = generator.emitObjectGet(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
     generator.emitPreInc(r1);
-    return generator.emitObjectPut(r0.get(), m_ident, r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
 void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -3869,7 +3888,7 @@ RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
     RegisterID* r1 = generator.emitNode(dst, m_right.get());
-    return generator.emitObjectPut(r0.get(), m_ident, r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
 void AssignResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
@@ -4017,7 +4036,7 @@ RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());;
     RegisterID* r1 = generator.emitNode(dst, m_right.get());
-    return generator.emitObjectPut(r0.get(), m_ident, r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
 void AssignDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)

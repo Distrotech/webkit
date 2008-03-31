@@ -37,6 +37,7 @@ namespace KJS {
     #define FOR_EACH_OPCODE_ID(macro) \
         macro(op_load) \
         macro(op_new_object) \
+        macro(op_new_array) \
         macro(op_mov) \
         \
         macro(op_equal) \
@@ -70,8 +71,9 @@ namespace KJS {
         \
         macro(op_resolve) \
         macro(op_resolve_base) \
-        macro(op_object_get) \
-        macro(op_object_put) \
+        macro(op_get_prop_id) \
+        macro(op_put_prop_id) \
+        macro(op_put_prop_index) \
         \
         macro(op_jmp) \
         macro(op_jtrue) \

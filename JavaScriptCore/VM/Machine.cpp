@@ -254,6 +254,13 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_new_array) {
+        int r0 = (++vPC)->u.operand;
+        r[r0].u.jsValue = exec->lexicalGlobalObject()->arrayConstructor()->construct(exec, exec->emptyList());
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_mov) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
@@ -491,7 +498,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_object_get) {
+    BEGIN_OPCODE(op_get_prop_id) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int id0 = (++vPC)->u.operand;
@@ -502,13 +509,23 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_object_put) {
+    BEGIN_OPCODE(op_put_prop_id) {
         int r0 = (++vPC)->u.operand;
         int id0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
 
         Identifier& ident = codeBlock->identifiers[id0];
         r[r0].u.jsObject->put(exec, ident, r[r1].u.jsValue);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_put_prop_index) {
+        int r0 = (++vPC)->u.operand;
+        unsigned n0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+
+        r[r0].u.jsObject->put(exec, n0, r[r1].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
