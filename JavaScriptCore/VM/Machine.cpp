@@ -157,14 +157,14 @@ bool Machine::isOpcode(Opcode opcode)
 static void NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     int r0 = (vPC + 1)->u.operand;
-    int k0 = (vPC + 2)->u.operand;
+    int id0 = (vPC + 2)->u.operand;
 
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
     ASSERT(iter != end);
 
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[k0];
+    Identifier& ident = codeBlock->identifiers[id0];
     do {
         JSObject* o = *iter;
         if (o->getPropertySlot(exec, ident, slot)) {
@@ -179,14 +179,14 @@ static void NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r,
 static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     int r0 = (vPC + 1)->u.operand;
-    int k0 = (vPC + 2)->u.operand;
+    int id0 = (vPC + 2)->u.operand;
 
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
     ASSERT(iter != end);
 
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[k0];
+    Identifier& ident = codeBlock->identifiers[id0];
     JSObject* base;
     do {
         base = *iter;
@@ -494,9 +494,9 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     BEGIN_OPCODE(op_object_get) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
+        int id0 = (++vPC)->u.operand;
 
-        Identifier& ident = codeBlock->identifiers[k0];
+        Identifier& ident = codeBlock->identifiers[id0];
         r[r0].u.jsValue = r[r1].u.jsObject->get(exec, ident);
 
         ++vPC;
@@ -504,10 +504,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     }
     BEGIN_OPCODE(op_object_put) {
         int r0 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
+        int id0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
 
-        Identifier& ident = codeBlock->identifiers[k0];
+        Identifier& ident = codeBlock->identifiers[id0];
         r[r0].u.jsObject->put(exec, ident, r[r1].u.jsValue);
 
         ++vPC;
@@ -543,9 +543,9 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     }
     BEGIN_OPCODE(op_new_func) {
         int r0 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
+        int f0 = (++vPC)->u.operand;
 
-        r[r0].u.jsValue = codeBlock->functions[k0]->makeFunction(exec, *scopeChain);
+        r[r0].u.jsValue = codeBlock->functions[f0]->makeFunction(exec, *scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
