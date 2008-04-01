@@ -1,5 +1,14 @@
 2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
+        Reviewed by Geoff.
+
+        Fix the build -- r31492 removed activation tear-off, but r31493 used it.
+
+        * kjs/nodes.cpp:
+        (KJS::FuncExprNode::makeFunction):
+
+2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
         Reviewed by Maciej.
 
         Add support for FuncExprNode to SquirrelFish.
