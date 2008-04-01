@@ -229,6 +229,14 @@ unsigned CodeGenerator::addConstant(FuncDeclNode* n)
     return index;
 }
 
+unsigned CodeGenerator::addConstant(FuncExprNode* n)
+{
+    // No need to explicitly unique function expression nodes -- they're unique already.
+    int index = m_codeBlock->functions.size();
+    m_codeBlock->functionExpressions.append(n);
+    return index;
+}
+
 unsigned CodeGenerator::addConstant(const Identifier& ident)
 {
     UString::Rep* rep = ident.ustring().rep();
@@ -567,6 +575,14 @@ RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* r0, unsigned index, Regi
 RegisterID* CodeGenerator::emitNewFunction(RegisterID* r0, FuncDeclNode* n)
 {
     instructions().append(machine().getOpcode(op_new_func));
+    instructions().append(r0->index());
+    instructions().append(addConstant(n));
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitNewFunctionExpression(RegisterID* r0, FuncExprNode* n)
+{
+    instructions().append(machine().getOpcode(op_new_func_exp));
     instructions().append(r0->index());
     instructions().append(addConstant(n));
     return r0;

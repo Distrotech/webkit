@@ -319,6 +319,12 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] new_func\t\t%s, f%d\n", location, registerName(r0).c_str(), f0);
             break;
         }
+        case op_new_func_exp: {
+            int r0 = (++it)->u.operand;
+            int f0 = (++it)->u.operand;
+            printf("[%4d] new_func_exp\t\t%s, f%d\n", location, registerName(r0).c_str(), f0);
+            break;
+        }
         case op_call: {
             int r0 = (++it)->u.operand;
             int r1 = (++it)->u.operand;

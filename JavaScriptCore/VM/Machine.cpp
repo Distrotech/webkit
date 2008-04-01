@@ -603,6 +603,15 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_new_func_exp) {
+        int r0 = (++vPC)->u.operand;
+        int f0 = (++vPC)->u.operand;
+
+        r[r0].u.jsValue = codeBlock->functionExpressions[f0]->makeFunction(exec, *scopeChain);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_call) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
