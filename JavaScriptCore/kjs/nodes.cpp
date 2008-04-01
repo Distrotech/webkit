@@ -1140,6 +1140,12 @@ void ArgumentsNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const
 
 // ------------------------------ NewExprNode ----------------------------------
 
+RegisterID* NewExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
+    return generator.emitConstruct(dst ? dst : generator.newTemporary(), r0.get(), m_args.get());
+}
+
 void NewExprNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_args)

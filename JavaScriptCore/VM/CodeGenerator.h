@@ -177,6 +177,8 @@ namespace KJS {
         RegisterID* emitReturn(RegisterID*);
         RegisterID* emitEnd(RegisterID*);
 
+        RegisterID* emitConstruct(RegisterID*, RegisterID*, ArgumentsNode*);
+
         PassRefPtr<LabelID> emitLabel(LabelID*);
         PassRefPtr<LabelID> emitJump(LabelID*);
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
