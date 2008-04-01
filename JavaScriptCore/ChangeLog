@@ -2,6 +2,27 @@
 
         Reviewed by Beth Dakin.
 
+        Next step toward global code: Removed more obsolete API, moved
+        saveLocalStorage and restoreLocalStorage to JSGlobalObject subclass,
+        since it's only intended for use there.
+        
+        * ChangeLog:
+        * JavaScriptCore.exp:
+        * kjs/Activation.h:
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::saveLocalStorage):
+        (KJS::JSGlobalObject::restoreLocalStorage):
+        * kjs/JSGlobalObject.h:
+        * kjs/JSVariableObject.cpp:
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
+        * kjs/function.cpp:
+        (KJS::ActivationImp::ActivationImp):
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+
         Next step toward global code: subclass JSActivation + JSActivationData
         from JSVariableObject + JSVariableObjectData.
         

@@ -344,8 +344,8 @@ bool Arguments::deleteProperty(ExecState* exec, const Identifier& propertyName)
 const ClassInfo ActivationImp::info = { "Activation", 0, 0 };
 
 ActivationImp::ActivationImp(const ActivationData& oldData, bool leaveRelic)
+    : JSVariableObject(new ActivationData(oldData))
 {
-    JSVariableObject::d = new ActivationData(oldData);
     d()->leftRelic = leaveRelic;
 }
 
