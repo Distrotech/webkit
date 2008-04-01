@@ -193,7 +193,18 @@ namespace KJS {
         void emitPopScope();
         
     private:
-        typedef HashMap<JSValue*, unsigned> JSValueMap;
+        struct JSValueHashTraits  {
+            typedef JSValue* TraitType;
+            typedef JSValueHashTraits StorageTraits;
+            static const bool emptyValueIsZero = true;
+            static const bool needsDestruction = false;
+            static const bool needsRef = false;
+            static JSValue* emptyValue() { return 0; }
+            static JSValue* deletedValue() { return JSImmediate::impossibleValue(); }
+        };
+
+
+        typedef HashMap<JSValue*, unsigned, DefaultHash<JSValue*>::Hash, JSValueHashTraits> JSValueMap;
         
         unsigned addConstant(FuncDeclNode*);
         unsigned addConstant(FuncExprNode*);

@@ -1,3 +1,18 @@
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Sam.
+        
+        - fix HashTable assertion on some SunSpider tests
+        
+        Don't use -1 as the deleted value for JSValue*-keyed hashtables,
+        since it is a valid value (it's the immediate for -1).
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::JSValueHashTraits::emptyValue):
+        (KJS::CodeGenerator::JSValueHashTraits::deletedValue):
+        * kjs/JSImmediate.h:
+        (KJS::JSImmediate::impossibleValue):
+
 2008-04-01  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Maciej Stachowiak.
