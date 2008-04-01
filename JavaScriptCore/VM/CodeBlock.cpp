@@ -184,9 +184,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             break;
         }
         case op_post_inc: {
-            int r0 = (++it)->u.operand;
-            int r1 = (++it)->u.operand;
-            printf("[%4d] post_inc\t\t%s, %s\n", location, registerName(r0).c_str(), registerName(r1).c_str());
+            printUnaryOp(location, it, "post_inc");
+            break;
+        }
+        case op_post_dec: {
+            printUnaryOp(location, it, "post_dec");
             break;
         }
         case op_to_jsnumber: {
