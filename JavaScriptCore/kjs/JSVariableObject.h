@@ -33,6 +33,7 @@
 #include "Register.h"
 #include "SymbolTable.h"
 #include "object.h"
+#include <wtf/UnusedParam.h>
 
 namespace KJS {
 
@@ -142,6 +143,7 @@ namespace KJS {
             return false;
         // FIXME: Implement attribute support by storing attributes in the symbol table.
         ASSERT(!attributes);
+        UNUSED_PARAM(attributes);
         valueAt(index) = value;
         return true;
     }
