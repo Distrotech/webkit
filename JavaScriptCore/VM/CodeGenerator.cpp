@@ -537,6 +537,24 @@ RegisterID* CodeGenerator::emitPutPropId(RegisterID* r0, const Identifier& ident
     return r1;
 }
 
+RegisterID* CodeGenerator::emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
+{
+    instructions().append(machine().getOpcode(op_get_prop_val));
+    instructions().append(dst->index());
+    instructions().append(base->index());
+    instructions().append(property->index());
+    return dst;
+}
+
+RegisterID* CodeGenerator::emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* val)
+{
+    instructions().append(machine().getOpcode(op_put_prop_val));
+    instructions().append(base->index());
+    instructions().append(property->index());
+    instructions().append(val->index());
+    return val;
+}
+
 RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* r0, unsigned index, RegisterID* r1)
 {
     instructions().append(machine().getOpcode(op_put_prop_index));
