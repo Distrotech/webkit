@@ -75,7 +75,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject)
-                : JSVariableObjectData(&inlineSymbolTable)
+                : JSVariableObjectData(&symbolTable, &registers)
                 , globalExec(globalObject)
             {
             }
@@ -129,7 +129,7 @@ namespace KJS {
             NativeErrorPrototype* typeErrorPrototype;
             NativeErrorPrototype* URIErrorPrototype;
             
-            SymbolTable inlineSymbolTable;
+            SymbolTable symbolTable;
 
             ExecStateStack activeExecStates;
 
@@ -233,8 +233,6 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
         
-        Vector<Register>& registers() { return d()->registers; }
-
     private:
         void init();
         

@@ -480,7 +480,7 @@ void JSGlobalObject::mark()
     for (ExecStateStack::const_iterator it = d()->activeExecStates.begin(); it != end; ++it)
         (*it)->m_scopeChain.mark();
         
-    Collector::markStackObjectsConservatively(d()->registers.data(), &d()->registers.last());
+    Collector::markStackObjectsConservatively(registers().data(), &registers().last());
         
     markIfNeeded(d()->globalExec.exception());
 
