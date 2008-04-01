@@ -1594,6 +1594,13 @@ static const char* dotExprDoesNotAllowCallsString()
     return "Object %s (result of expression %s.%s) does not allow calls.";
 }
 
+RegisterID* FunctionCallDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    return generator.emitCall(r0.get(), r1.get(), r0.get(), m_args.get());
+}
+
 void FunctionCallDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
