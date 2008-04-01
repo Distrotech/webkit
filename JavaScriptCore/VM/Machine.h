@@ -69,7 +69,7 @@ namespace KJS {
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
         
         void privateExecute(ExecutionFlag, ExecState* = 0, Vector<Register>* = 0, ScopeChain* = 0, CodeBlock* = 0);
-        void dumpRegisters(const Vector<Register>&, Register*);
+        void dumpRegisters(const Vector<Register>*, Register*);
 #if HAVE(COMPUTED_GOTO)        
         Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
         HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
