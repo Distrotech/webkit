@@ -1533,6 +1533,14 @@ uint32_t NonLocalVarFunctionCallNode::evaluateToUInt32(ExecState* exec)
     return v->toUInt32(exec);
 }
 
+RegisterID* FunctionCallBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_base.get());
+    RegisterID* r1 = generator.emitNode(dst, m_subscript.get());
+    RegisterID* r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1);
+    return generator.emitCall(r0.get(), r2.get(), r0.get(), m_args.get());
+}
+
 void FunctionCallBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
