@@ -2148,6 +2148,15 @@ JSValue* LocalVarTypeOfNode::evaluate(ExecState* exec)
     return typeStringForValue(exec->localStorage()[m_index].value);
 }
 
+RegisterID* TypeOfResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
+        return generator.emitTypeOf(dst ? dst : generator.newTemporary(), r0);
+
+    RegisterID* r0 = generator.emitResolve(generator.newTemporary(), m_ident);
+    return generator.emitTypeOf(dst ? dst : r0, r0);
+}
+
 JSValue* TypeOfResolveNode::evaluate(ExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
@@ -2173,6 +2182,12 @@ JSValue* TypeOfResolveNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ TypeOfValueNode -----------------------------------
+
+RegisterID* TypeOfValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
+    return generator.emitTypeOf(dst ? dst : generator.newTemporary(), r0.get());
+}
 
 JSValue* TypeOfValueNode::evaluate(ExecState* exec)
 {

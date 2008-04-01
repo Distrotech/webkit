@@ -40,6 +40,7 @@ namespace KJS {
         macro(op_new_array) \
         macro(op_mov) \
         \
+        macro(op_not) \
         macro(op_equal) \
         macro(op_nequal) \
         macro(op_stricteq) \
@@ -66,9 +67,9 @@ namespace KJS {
         macro(op_bitor) \
         macro(op_bitnot) \
         \
-        macro(op_not) \
-        \
         macro(op_instance_of) \
+        \
+        macro(op_type_of) \
         \
         macro(op_resolve) \
         macro(op_resolve_base) \

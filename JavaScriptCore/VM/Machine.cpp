@@ -138,6 +138,33 @@ static inline JSValue* jsAdd(ExecState* exec, JSValue* v1, JSValue* v2)
     return jsAddSlowCase(exec, v1, v2);
 }
 
+static JSValue* jsTypeStringForValue(JSValue* v)
+{
+    switch (v->type()) {
+        case UndefinedType:
+            return jsString("undefined");
+        case NullType:
+            return jsString("object");
+        case BooleanType:
+            return jsString("boolean");
+        case NumberType:
+            return jsString("number");
+        case StringType:
+            return jsString("string");
+        default:
+            if (v->isObject()) {
+                // Return "undefined" for objects that should be treated
+                // as null when doing comparisons.
+                if (static_cast<JSObject*>(v)->masqueradeAsUndefined())
+                    return jsString("undefined");
+                else if (static_cast<JSObject*>(v)->implementsCall())
+                    return jsString("function");
+            }
+
+            return jsString("object");
+    }
+}
+
 Machine::Machine()
 {
     privateExecute(InitializeAndReturn);
@@ -491,6 +518,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
         JSObject* o2 = static_cast<JSObject*>(v2);
         r[r0].u.jsValue = jsBoolean(o2->implementsHasInstance() ? o2->hasInstance(exec, r[r1].u.jsValue) : false);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_type_of) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsTypeStringForValue(r[r1].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
