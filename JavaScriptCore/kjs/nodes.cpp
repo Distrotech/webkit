@@ -3879,6 +3879,54 @@ static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(ExecState* exec, JSVa
 
 // ------------------------------ ReadModifyResolveNode -----------------------------------
 
+// FIXME: should this be moved to be a method on CodeGenerator?
+static ALWAYS_INLINE RegisterID* emitReadModifyAssignment(CodeGenerator& generator, RegisterID* r0, RegisterID* r1, Operator oper)
+{
+    switch (oper) {
+        case OpMultEq:
+            return generator.emitMult(r0, r0, r1);
+        case OpDivEq:
+            return generator.emitDiv(r0, r0, r1);
+        case OpPlusEq:
+            return generator.emitAdd(r0, r0, r1);
+        case OpMinusEq:
+            return generator.emitSub(r0, r0, r1);
+        case OpLShift:
+            return generator.emitLeftShift(r0, r0, r1);
+        case OpRShift:
+            return generator.emitRightShift(r0, r0, r1);
+        case OpURShift:
+            return generator.emitUnsignedRightShift(r0, r0, r1);
+        case OpAndEq:
+            return generator.emitBitAnd(r0, r0, r1);
+        case OpXOrEq:
+            return generator.emitBitXOr(r0, r0, r1);
+        case OpOrEq:
+            return generator.emitBitOr(r0, r0, r1);
+        case OpModEq:
+            return generator.emitMod(r0, r0, r1);
+        default:
+            ASSERT_NOT_REACHED();
+    }
+
+    return r0;
+}
+
+RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
+        RegisterID* r1 = generator.emitNode(m_right.get());
+        RegisterID* r2 = emitReadModifyAssignment(generator, r0, r1, m_operator);
+        return dst ? generator.emitMove(dst, r2) : r2;
+    }
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitNode(m_right.get());
+    RegisterID* r3 = emitReadModifyAssignment(generator, r1.get(), r2, m_operator);
+    return generator.emitPutPropId(r0.get(), m_ident, r3);
+}
+
 void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
