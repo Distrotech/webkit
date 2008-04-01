@@ -1,5 +1,16 @@
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Beth Dakin.
+        
+        Next step toward global code: store "rOffset" in JSVariableObjectData.
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Maciej Stachowiak.
         
         Next steps toward global code:

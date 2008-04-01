@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 /*
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
- *  Copyright (C) 2007 Apple Inc. All rights reserved.
+ *  Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -75,7 +75,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject)
-                : JSVariableObjectData(&symbolTable, &registers)
+                : JSVariableObjectData(&symbolTable, &registers, 0)
                 , globalExec(globalObject)
             {
             }
