@@ -1,3 +1,17 @@
+2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Change CodeGenerator::emitCall() so it increments the reference count of
+        registers passed to it, and change its callers so they don't needlessly
+        increment the reference count of the registers they are passing.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitCall):
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallResolveNode::emitCode):
+        (KJS::FunctionCallDotNode::emitCode):
+
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

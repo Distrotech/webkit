@@ -606,6 +606,9 @@ RegisterID* CodeGenerator::emitNewFunctionExpression(RegisterID* r0, FuncExprNod
 
 RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, RegisterID* r2, ArgumentsNode* argumentsNode)
 {
+    RefPtr<RegisterID> ref1 = r1;
+    RefPtr<RegisterID> ref2 = r2;
+    
     // Reserve space for return info.
     Vector<RefPtr<RegisterID>, Machine::returnInfoSize> returnInfo;
     for (int i = 0; i < Machine::returnInfoSize; ++i)

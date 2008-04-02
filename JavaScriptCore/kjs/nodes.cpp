@@ -1320,8 +1320,8 @@ RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, Register
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitCall(dst ? dst : generator.newTemporary(), r0, 0, m_args.get());
  
-    RefPtr<RegisterID> r0 = generator.emitResolve(generator.newTemporary(), m_ident);
-    return generator.emitCall(dst ? dst : generator.newTemporaryOr(r0.get()), r0.get(), 0, m_args.get());
+    RegisterID* r0 = generator.emitResolve(generator.newTemporary(), m_ident);
+    return generator.emitCall(dst ? dst : generator.newTemporaryOr(r0), r0, 0, m_args.get());
 }
 
 void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)
@@ -1611,8 +1611,8 @@ static const char* dotExprDoesNotAllowCallsString()
 RegisterID* FunctionCallDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
-    return generator.emitCall(r0.get(), r1.get(), r0.get(), m_args.get());
+    RegisterID* r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    return generator.emitCall(r0.get(), r1, r0.get(), m_args.get());
 }
 
 void FunctionCallDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
