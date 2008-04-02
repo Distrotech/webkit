@@ -1,3 +1,15 @@
+2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Bug 18274: ResolveNode::emitCode() doesn't make a new temporary when dst
+                   is 0, leading to incorrect codegen
+        <http://bugs.webkit.org/show_bug.cgi?id=18274>
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallBracketNode::emitCode):
+        (KJS::FunctionCallDotNode::emitCode):
+
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

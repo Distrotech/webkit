@@ -1540,10 +1540,10 @@ uint32_t NonLocalVarFunctionCallNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* FunctionCallBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_base.get());
-    RegisterID* r1 = generator.emitNode(dst, m_subscript.get());
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RegisterID* r1 = generator.emitNode(m_subscript.get());
     RegisterID* r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1);
-    return generator.emitCall(r0.get(), r2, r0.get(), m_args.get());
+    return generator.emitCall(dst ? dst : generator.newTemporaryOr(r0.get()), r2, r0.get(), m_args.get());
 }
 
 void FunctionCallBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1615,9 +1615,9 @@ static const char* dotExprDoesNotAllowCallsString()
 
 RegisterID* FunctionCallDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_base.get());
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
     RegisterID* r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
-    return generator.emitCall(r0.get(), r1, r0.get(), m_args.get());
+    return generator.emitCall(dst ? dst : generator.newTemporaryOr(r0.get()), r1, r0.get(), m_args.get());
 }
 
 void FunctionCallDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
