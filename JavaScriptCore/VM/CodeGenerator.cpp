@@ -719,4 +719,21 @@ PassRefPtr<LabelID> CodeGenerator::emitJumpScopes(LabelID* target, int targetSco
     return target;
 }
 
+RegisterID* CodeGenerator::emitNextPropertyName(RegisterID* dest, RegisterID* iterator, LabelID* target)
+{
+    instructions().append(machine().getOpcode(op_next_pname));
+    instructions().append(dest->index());
+    instructions().append(iterator->index());
+    instructions().append(target->offsetFrom(instructions().size()));
+    return dest;
+}
+
+RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* iterator, RegisterID* object)
+{
+    instructions().append(machine().getOpcode(op_get_pnames));
+    instructions().append(iterator->index());
+    instructions().append(object->index());
+    return iterator;
+}
+
 } // namespace KJS

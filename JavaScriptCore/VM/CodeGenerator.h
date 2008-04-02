@@ -185,6 +185,9 @@ namespace KJS {
         PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpScopes(LabelID* target, int targetScopeDepth);
         
+        RegisterID* emitGetPropertyNames(RegisterID*, RegisterID*);
+        RegisterID* emitNextPropertyName(RegisterID*, RegisterID*, LabelID*);
+        
         void pushLoopContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
         void popLoopContext();
         LoopContext* loopContextForLabel(const Identifier&);
