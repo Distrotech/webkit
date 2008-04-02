@@ -1141,6 +1141,8 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
     };
