@@ -2902,7 +2902,8 @@ namespace KJS {
         
         bool usesEval() const { return m_usesEval; }
         bool needsClosure() const { return m_needsClosure; }
-        
+        void mark();
+
     protected:
         void optimizeVariableAccess(ExecState*) KJS_FAST_CALL;
         virtual void generateCode(ScopeChain&) KJS_FAST_CALL { ASSERT_NOT_REACHED(); }
@@ -2987,6 +2988,8 @@ namespace KJS {
         virtual Precedence precedence() const { return PrecMember; }
         virtual bool needsParensIfLeftmost() const { return true; }
 
+        FunctionBodyNode* body() { return m_body.get(); }
+
     private:
         void addParams() KJS_FAST_CALL;
 
@@ -3021,6 +3024,8 @@ namespace KJS {
         FunctionImp* makeFunction(ExecState*, ScopeChain&) KJS_FAST_CALL;
 
         Identifier m_ident;
+
+        FunctionBodyNode* body() { return m_body.get(); }
 
     private:
         void addParams() KJS_FAST_CALL;

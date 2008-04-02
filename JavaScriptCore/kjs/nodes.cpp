@@ -5322,6 +5322,12 @@ ScopeNode::ScopeNode(SourceElements* children, VarStack* varStack, FunctionStack
         m_functionStack = *funcStack;
 }
 
+void ScopeNode::mark()
+{
+    if (m_code)
+        m_code->mark();
+}
+
 // ------------------------------ ProgramNode -----------------------------
 
 ProgramNode::ProgramNode(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
