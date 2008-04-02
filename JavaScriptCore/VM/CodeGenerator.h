@@ -124,7 +124,8 @@ namespace KJS {
 
         RegisterID* emitNewFunction(RegisterID*, FuncDeclNode*);
         RegisterID* emitNewFunctionExpression(RegisterID*, FuncExprNode*);
-        
+        RegisterID* emitNewRegExp(RegisterID*, RegExp*);
+
         RegisterID* emitMove(RegisterID*, RegisterID*);
 
         RegisterID* emitNot(RegisterID*, RegisterID*);
@@ -213,6 +214,7 @@ namespace KJS {
         unsigned addConstant(FuncExprNode*);
         unsigned addConstant(const Identifier&);
         unsigned addConstant(JSValue*);
+        unsigned addRegExp(RegExp* r);
         
         Vector<Instruction>& instructions() { return m_codeBlock->instructions; }
         SymbolTable& symbolTable() { return *m_symbolTable; }

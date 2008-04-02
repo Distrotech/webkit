@@ -256,6 +256,13 @@ unsigned CodeGenerator::addConstant(JSValue* v)
     return result.first->second;
 }
 
+unsigned CodeGenerator::addRegExp(RegExp* r)
+{
+    int index = m_codeBlock->regexps.size();
+    m_codeBlock->regexps.append(r);
+    return index;
+}
+
 RegisterID* CodeGenerator::emitMove(RegisterID* r0, RegisterID* r1)
 {
     instructions().append(machine().getOpcode(op_mov));
@@ -595,6 +602,15 @@ RegisterID* CodeGenerator::emitNewFunction(RegisterID* r0, FuncDeclNode* n)
     instructions().append(addConstant(n));
     return r0;
 }
+
+RegisterID* CodeGenerator::emitNewRegExp(RegisterID* r0, RegExp* re)
+{
+    instructions().append(machine().getOpcode(op_new_regexp));
+    instructions().append(r0->index());
+    instructions().append(addRegExp(re));
+    return r0;
+}
+
 
 RegisterID* CodeGenerator::emitNewFunctionExpression(RegisterID* r0, FuncExprNode* n)
 {
