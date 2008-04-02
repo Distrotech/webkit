@@ -62,22 +62,19 @@ namespace KJS {
 
     class CodeGenerator {
     public:
-        CodeGenerator(const ScopeChain& scopeChain, SymbolTable* symbolTable, unsigned localCount, unsigned parameterCount, ScopeNode* scopeNode, CodeBlock* codeBlock)
+        CodeGenerator(const ScopeChain& scopeChain, SymbolTable* symbolTable, unsigned localCount, ScopeNode* scopeNode, CodeBlock* codeBlock)
             : m_scopeChain(&scopeChain)
             , m_symbolTable(symbolTable)
             , m_scopeNode(scopeNode)
             , m_codeBlock(codeBlock)
             , m_scopeDepth(0)
-            , m_nextLocal(-1)
-            , m_nextParameter(-localCount - parameterCount)
+            , m_nextVar(-1)
+            , m_nextParameter(-localCount)
             , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
             , m_thisIdentifier(&CommonIdentifiers::shared()->thisIdentifier)
             , m_propertyNames(CommonIdentifiers::shared())
 
         {
-            // Put "this" in scope as the implicit first parameter.
-            --m_nextParameter;
-            addParameter(*m_thisIdentifier);
         }
 
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
@@ -234,7 +231,7 @@ namespace KJS {
 
         Vector<LoopContext> m_loopContextStack;
 
-        int m_nextLocal;
+        int m_nextVar;
         int m_nextParameter;
 
         // Constant pool

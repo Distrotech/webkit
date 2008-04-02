@@ -1,3 +1,37 @@
+2008-04-01  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
+        
+        Cleaned up a few loose ends.
+
+        * JavaScriptCore.exp: Export dumpRegisters, so it's visible to gdb even
+        if we don't explicitly call it in the source text.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): No need to call dumpRegisters anymore,
+        since that was just a hack for gdb's sake.
+
+        * kjs/JSActivation.h: Removed obsolete comment.
+
+        * VM/CodeGenerator.cpp: Added ASSERTs to verify that the localCount
+        we're given matches the number of locals actually allocated.
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::CodeGenerator): Changed "localCount" to include
+        the parameter count, since we're using the word "local" to mean
+        parameter, var, function, or "this". Renamed "m_nextLocal" to
+        "m_nextVar", since "m_nextLocal" doesn't contrast well with
+        "m_nextParameter".
+        
+        Also moved tracking of implicit "this" parameter from here...
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionBodyNode::generateCode): ... to here
+        (KJS::ProgramNode::generateCode): ... and here
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump): Added missing "\n".
+
 2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.

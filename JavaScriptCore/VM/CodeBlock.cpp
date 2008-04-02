@@ -148,6 +148,8 @@ void CodeBlock::dump(ExecState* exec)
     printf("\nRegExps:\n");
     for (size_t i = 0; i < regexps.size(); ++i)
         printf("  re%u = %s\n", static_cast<unsigned>(i), regexpToSourceString(regexps[i].get()).ascii());
+        
+    printf("\n");
 }
 
 void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it)
