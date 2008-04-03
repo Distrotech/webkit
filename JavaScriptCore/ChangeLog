@@ -1,5 +1,15 @@
 2008-04-02  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Geoff.
+        
+        - fix 2x perf regression in 3d-morph
+        
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): If we subbed in null for the global object,
+        don't toObject it, since that will throw an exception (very slowly).
+
+2008-04-02  Maciej Stachowiak  <mjs@apple.com>
+
         Rubber stamped by Geoff
         
         - fix Release build
