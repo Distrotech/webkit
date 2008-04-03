@@ -727,7 +727,7 @@ uint32_t LocalVarAccessNode::evaluateToUInt32(ExecState* exec)
     return inlineEvaluate(exec)->toUInt32(exec);
 }
 
-static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t index, size_t scopeDepth)
+static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t, size_t scopeDepth)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -735,8 +735,8 @@ static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t index, size_t s
         ASSERT(iter != chain.end());
     JSObject* scope = *iter;
     ASSERT(scope->isVariableObject());
-    JSVariableObject* variableObject = static_cast<JSVariableObject*>(scope);
-    return variableObject->localStorage()[index].value;
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 JSValue* ScopedVarAccessNode::inlineEvaluate(ExecState* exec)
@@ -5502,7 +5502,8 @@ void ScopeNode::optimizeVariableAccess(ExecState* exec)
         return;
 
     const SymbolTable& symbolTable = exec->variableObject()->symbolTable();
-    const LocalStorage& localStorage = exec->variableObject()->localStorage();
+    ASSERT_NOT_REACHED();
+    const LocalStorage localStorage;
     while (true) {
         node->optimizeVariableAccess(exec, symbolTable, localStorage, nodeStack);
 
@@ -5529,7 +5530,8 @@ void ProgramNode::processDeclarations(ExecState* exec)
 
     initializeSymbolTable(exec);
 
-    LocalStorage& localStorage = exec->variableObject()->localStorage();
+    ASSERT_NOT_REACHED();
+    LocalStorage localStorage;
 
     // We can't just resize localStorage here because that would temporarily
     // leave uninitialized entries, which would crash GC during the mark phase.

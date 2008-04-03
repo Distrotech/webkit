@@ -411,16 +411,8 @@ void ActivationImp::initializeVariable(ExecState*, const Identifier& propertyNam
 
 void ActivationImp::markChildren()
 {
-    LocalStorage& localStorage = d()->localStorage;
-    size_t size = localStorage.size();
-    
-    for (size_t i = 0; i < size; ++i) {
-        JSValue* value = localStorage[i].value;
-        
-        if (!value->marked())
-            value->mark();
-    }
-    
+    ASSERT_NOT_REACHED();
+
     if (!d()->function->marked())
         d()->function->mark();
     

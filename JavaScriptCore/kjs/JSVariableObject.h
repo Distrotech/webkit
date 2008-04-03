@@ -29,7 +29,6 @@
 #ifndef JSVariableObject_h
 #define JSVariableObject_h
 
-#include "LocalStorage.h"
 #include "Register.h"
 #include "SymbolTable.h"
 #include "object.h"
@@ -42,21 +41,19 @@ namespace KJS {
     class JSVariableObject : public JSObject {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
-        LocalStorage& localStorage() const { return d->localStorage; }
 
-        Vector<Register>& registers() { return *d->registers; }
-        JSValue*& valueAt(int index) { return registers()[d->rOffset + index].u.jsValue; }
+        Vector<Register>& registers() const { return *d->registers; }
+        JSValue*& valueAt(int index) const { return registers()[d->rOffset + index].u.jsValue; }
 
-        // FIXME: Implement this check for real by storing property attributes in the symbol table.
-        bool isReadOnly(int) { return false; }
+        // FIXME: Implement these checks for real by storing property attributes in the symbol table.
+        bool isReadOnly(int) const { return false; }
+        bool isDontEnum(int) const { return false; }
         
         virtual void initializeVariable(ExecState*, const Identifier&, JSValue*, unsigned attributes) = 0;
         
         virtual bool deleteProperty(ExecState*, const Identifier&);
         virtual void getPropertyNames(ExecState*, PropertyNameArray&);
         
-        virtual void mark();
-
         virtual bool isVariableObject() const;
         virtual bool isDynamicScope() const = 0;
 
@@ -76,8 +73,7 @@ namespace KJS {
                 ASSERT(registers_);
             }
 
-            LocalStorage localStorage; // Storage for variables in the symbol table.
-            SymbolTable* symbolTable; // Maps name -> index in localStorage.
+            SymbolTable* symbolTable; // Maps name -> offset from "r" in register file.
 
             Vector<Register>* registers; // The register file.
             int rOffset; // Offset of "r", the register past the end of local storage.
