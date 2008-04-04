@@ -4670,9 +4670,9 @@ RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<LabelID> conditionTarget = generator.newLabel();
     RefPtr<LabelID> breakTarget = generator.newLabel();
     
-    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
-    generator.popLoopContext();
+    generator.popJumpContext();
     
     generator.emitLabel(conditionTarget.get());
     RegisterID* r1 = generator.emitNode(m_expr.get());
@@ -4732,9 +4732,9 @@ RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     generator.emitJump(conditionTarget.get());
     generator.emitLabel(l0.get());
     
-    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     generator.emitNode(dst, m_statement.get());
-    generator.popLoopContext();
+    generator.popJumpContext();
 
     generator.emitLabel(conditionTarget.get());
     RegisterID* r1 = generator.emitNode(m_expr.get());
@@ -4798,9 +4798,9 @@ RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     generator.emitJump(l1.get());
 
     generator.emitLabel(l0.get());
-    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
-    generator.popLoopContext();
+    generator.popJumpContext();
     generator.emitLabel(conditionTarget.get());  
     generator.emitNode(m_expr3.get());
 
@@ -4929,9 +4929,9 @@ RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitPutPropVal(base.get(), subscript, propertyName);
     }   
     
-    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
     generator.emitNode(dst, m_statement.get());
-    generator.popLoopContext();
+    generator.popJumpContext();
 
     generator.emitLabel(conditionTarget.get());
     generator.emitNextPropertyName(propertyName, iteratorRegister.get(), loopStart.get());
@@ -5041,9 +5041,14 @@ JSValue* ForInNode::execute(ExecState* exec)
 // ECMA 12.7
 RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    LoopContext* targetContext = generator.loopContextForLabel(m_ident);
+    JumpContext* targetContext = generator.jumpContextForLabel(m_ident);
+
+    // FIXME: A SyntaxError, "Label m_ident not found", should be thrown here.
     ASSERT(targetContext);
-    
+
+    // FIXME: A SyntaxError, "Invalid continue statement", should be thrown here.
+    ASSERT(targetContext->continueTarget);
+
     generator.emitJumpScopes(targetContext->continueTarget, targetContext->scopeDepth);
     
     return dst;
@@ -5063,9 +5068,14 @@ JSValue* ContinueNode::execute(ExecState* exec)
 // ECMA 12.8
 RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    LoopContext* targetContext = generator.loopContextForLabel(m_ident);
+    JumpContext* targetContext = generator.jumpContextForLabel(m_ident);
+
+    // FIXME: A SyntaxError, "Label m_ident not found", should be thrown here.
     ASSERT(targetContext);
-    
+
+    // FIXME: A SyntaxError, "Invalid break statement", should be thrown here.
+    ASSERT(targetContext->breakTarget);
+
     generator.emitJumpScopes(targetContext->breakTarget, targetContext->scopeDepth);
 
     return dst;
@@ -5170,11 +5180,50 @@ void ClauseListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
 
 // ------------------------------ CaseBlockNode --------------------------------
 
-CaseBlockNode::CaseBlockNode(ClauseListNode* list1, CaseClauseNode* defaultClause, ClauseListNode* list2)
-    : m_list1(list1)
-    , m_defaultClause(defaultClause)
-    , m_list2(list2)
+RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID* dst, RegisterID* input)
 {
+    Vector<RefPtr<LabelID>, 8> labelVector;
+
+    // Setup jumps
+    for (ClauseListNode* list = m_list1.get(); list; list = list->getNext()) {
+        RegisterID* r0 = generator.emitNode(generator.newTemporary(), list->getClause()->expr());
+        generator.emitStrictEqual(r0, r0, input);
+        labelVector.append(generator.newLabel());
+        generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
+    }
+
+    for (ClauseListNode* list = m_list2.get(); list; list = list->getNext()) {
+        RegisterID* r0 = generator.emitNode(generator.newTemporary(), list->getClause()->expr());
+        generator.emitStrictEqual(r0, r0, input);
+        labelVector.append(generator.newLabel());
+        generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
+    }
+
+    RefPtr<LabelID> defaultLabel;
+    if (m_defaultClause) {
+        defaultLabel = generator.newLabel();
+        generator.emitJump(defaultLabel.get());
+    }
+
+    size_t i = 0;
+    for (ClauseListNode* list = m_list1.get(); list; list = list->getNext()) {
+        generator.emitLabel(labelVector[i++].get());
+        dst = statementListEmitCode(list->getClause()->children(), generator, dst);
+    }
+
+    if (m_defaultClause) {
+        generator.emitLabel(defaultLabel.get());
+        dst = statementListEmitCode(m_defaultClause->children(), generator, dst);
+    }
+
+    for (ClauseListNode* list = m_list2.get(); list; list = list->getNext()) {
+        generator.emitLabel(labelVector[i++].get());
+        dst = statementListEmitCode(list->getClause()->children(), generator, dst);
+    }
+
+    ASSERT(i == labelVector.size());
+
+    return dst;
 }
 
 void CaseBlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5246,6 +5295,21 @@ step18:
 }
 
 // ------------------------------ SwitchNode -----------------------------------
+
+RegisterID* SwitchNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> breakTarget = generator.newLabel();
+
+    RefPtr<RegisterID> r0 = generator.emitNode(generator.newTemporary(), m_expr.get());
+
+    generator.pushJumpContext(&m_labelStack, 0, breakTarget.get());
+    RegisterID* r1 = m_block->emitCodeForBlock(generator, dst, r0.get());
+    generator.popJumpContext();
+
+    generator.emitLabel(breakTarget.get());
+
+    return r1;
+}
 
 void SwitchNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
