@@ -3988,6 +3988,7 @@ RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID
     }
 
     RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    // FIXME: should not write temp value to dst if dst is a local!
     RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
     RegisterID* r2 = generator.emitNode(m_right.get());
     RegisterID* r3 = emitReadModifyAssignment(generator, r1.get(), r2, m_operator);
@@ -4265,6 +4266,22 @@ JSValue* AssignBracketNode::evaluate(ExecState* exec)
     base->put(exec, propertyName, v);
     return v;
 }
+
+RegisterID* ReadModifyBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+
+    // FIXME: should not write temp value to dst if dst is a local!
+    RefPtr<RegisterID> r2 = generator.emitGetPropVal(dst ? dst : generator.newTemporary(), r0.get(), r1.get());
+    RegisterID* r3 = generator.emitNode(m_right.get());
+    RegisterID* r4 = emitReadModifyAssignment(generator, r2.get(), r3, m_operator);
+
+    generator.emitPutPropVal(r0.get(), r1.get(), r4);
+
+    return r4;
+}
+
 void ReadModifyBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());

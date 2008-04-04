@@ -1,3 +1,12 @@
+2008-04-03  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+
+        * kjs/nodes.cpp:
+        (KJS::ReadModifyResolveNode::emitCode):
+        (KJS::ReadModifyBracketNode::emitCode):
+        * kjs/nodes.h:
+
 2008-04-02  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.
