@@ -62,27 +62,14 @@ namespace KJS {
 
     class CodeGenerator {
     public:
-        CodeGenerator(const ScopeChain& scopeChain, SymbolTable* symbolTable, unsigned localCount, ScopeNode* scopeNode, CodeBlock* codeBlock)
-            : m_scopeChain(&scopeChain)
-            , m_symbolTable(symbolTable)
-            , m_scopeNode(scopeNode)
-            , m_codeBlock(codeBlock)
-            , m_scopeDepth(0)
-            , m_nextVar(-1)
-            , m_nextParameter(-localCount)
-            , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
-            , m_thisIdentifier(&CommonIdentifiers::shared()->thisIdentifier)
-            , m_propertyNames(CommonIdentifiers::shared())
-        {
-        }
+        typedef DeclarationStacks::VarStack VarStack;
+        typedef DeclarationStacks::FunctionStack FunctionStack;
+        CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&);
+        CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier> parameters);
 
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
 
         void generate();
-
-        void addVar(const Identifier&);
-        void addFunction(const Identifier&);
-        void addParameter(const Identifier&);
 
         // Returns the register corresponding to a local variable, or 0 if no
         // such register exists. Registers returned by registerForLocal do not
@@ -102,9 +89,6 @@ namespace KJS {
         RegisterID* newTemporaryOr(RegisterID* suggestion) { return suggestion->isTemporary() ? suggestion : newTemporary(); }
 
         PassRefPtr<LabelID> newLabel();
-        
-        const Identifier& thisIdentifier() { return *m_thisIdentifier; }
-        const Identifier& argumentsIdentifier() { return *m_argumentsIdentifier; }
         
         // The emitNode functions are just syntactic sugar for calling
         // Node::emitCode. They're the only functions that accept a NULL register.
@@ -209,6 +193,22 @@ namespace KJS {
 
         typedef HashMap<JSValue*, unsigned, DefaultHash<JSValue*>::Hash, JSValueHashTraits> JSValueMap;
         
+        // Maps a register index in the symbol table to a RegisterID index in m_locals.
+        int localsIndex(int registerIndex) { return -registerIndex - 1; }
+        
+        // Returns the RegisterID corresponding to ident.
+        RegisterID* addVar(const Identifier& ident)
+        {
+            RegisterID* r0;
+            addVar(ident, r0);
+            return r0;
+        }
+
+        // Returns true if a new RegisterID was added, false if a pre-existing RegisterID was re-used.
+        bool addVar(const Identifier&, RegisterID*&);
+
+        void addParameter(const Identifier&);
+
         unsigned addConstant(FuncDeclNode*);
         unsigned addConstant(FuncExprNode*);
         unsigned addConstant(const Identifier&);
@@ -223,14 +223,14 @@ namespace KJS {
         
         ScopeNode* m_scopeNode;
         CodeBlock* m_codeBlock;
+        
+        HashSet<RefPtr<UString::Rep>, IdentifierRepHash, IdentifierRepHashTraits> m_functions;
 
         Vector<RegisterID, 128> m_locals;
         Vector<RegisterID, 128> m_temporaries;
         Vector<LabelID, 128> m_labels;
         int m_scopeDepth;
         
-        HashMap<int, int, DefaultHash<int>::Hash, LocalsHashTraits> m_localsMap; // Maps register index to index in m_locals.
-
         Vector<JumpContext> m_jumpContextStack;
 
         int m_nextVar;
@@ -240,8 +240,6 @@ namespace KJS {
         SymbolTable m_identifierMap;
         JSValueMap m_jsValueMap;
 
-        const Identifier* m_argumentsIdentifier;
-        const Identifier* m_thisIdentifier;
         CommonIdentifiers* m_propertyNames;
     };
 

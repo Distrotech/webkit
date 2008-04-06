@@ -123,45 +123,113 @@ void CodeGenerator::generate()
 #endif
 }
 
-void CodeGenerator::addVar(const Identifier& ident)
+bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)
 {
-    if (ident == argumentsIdentifier())
-        return;
-        
-    ASSERT(m_nextVar >= m_nextParameter);
+    int index = m_nextVar;
+    pair<SymbolTable::iterator, bool> result = symbolTable().add(ident.ustring().rep(), index);
 
-    int index = m_nextVar--;
-    symbolTable().add(ident.ustring().rep(), index);
+    if (!result.second)
+        index = result.first->second;
+    else {
+        --m_nextVar;
+        ++m_codeBlock->numVars;
+        m_locals.append(index);
+    }
 
-    m_localsMap.add(index, m_locals.size());
-    m_locals.append(index);
-
-    ++m_codeBlock->numVars;
+    r0 = &m_locals[localsIndex(index)];
+    return result.second;
 }
 
-void CodeGenerator::addFunction(const Identifier& ident)
+CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack)
+    : m_scopeChain(&scopeChain)
+    , m_symbolTable(symbolTable)
+    , m_scopeNode(programNode)
+    , m_codeBlock(codeBlock)
+    , m_scopeDepth(0)
+    , m_nextVar(-1)
+    , m_propertyNames(CommonIdentifiers::shared())
+
 {
-    ASSERT(m_nextVar >= m_nextParameter);
+    // Global code can inherit previously defined symbols.
+    if (int size = symbolTable->size()) {
+        ASSERT(symbolTable->contains(m_propertyNames->thisIdentifier.ustring().rep()));
+        
+        // Add previously defined symbols to bookkeeping.
+        m_locals.resize(size);
+        SymbolTable::iterator end = symbolTable->end();
+        for (SymbolTable::iterator it = symbolTable->begin(); it != end; ++it)
+            m_locals[localsIndex(it->second)].setIndex(it->second);
 
-    int index = m_nextVar--;
-    symbolTable().set(ident.ustring().rep(), index);
+        // Shift new symbols so they get stored prior to previously defined symbols.
+        m_nextVar -= size;
+    } else
+        addVar(m_propertyNames->thisIdentifier); // No need to make "this" a true parameter, since it's not passed by our caller.
 
-    m_localsMap.set(index, m_locals.size());
-    m_locals.append(index);
+    for (size_t i = 0; i < functionStack.size(); ++i) {
+        FuncDeclNode* funcDecl = functionStack[i];
+        emitNewFunction(addVar(funcDecl->m_ident), funcDecl);
+    }
 
-    ++m_codeBlock->numVars;
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
+    ASSERT(globalObject->isGlobalObject());
+
+    // FIXME: Remove this once we figure out how ExecState should work in squirrelfish.
+    InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+
+    for (size_t i = 0; i < varStack.size(); ++i)
+        if (!globalObject->hasProperty(&tmpExec, varStack[i].first))
+             emitLoad(addVar(varStack[i].first), jsUndefined());
+}
+
+CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier> parameters)
+    : m_scopeChain(&scopeChain)
+    , m_symbolTable(symbolTable)
+    , m_scopeNode(functionBody)
+    , m_codeBlock(codeBlock)
+    , m_scopeDepth(0)
+    , m_nextVar(-1)
+    , m_propertyNames(CommonIdentifiers::shared())
+{
+    for (size_t i = 0; i < functionStack.size(); ++i) {
+        FuncDeclNode* funcDecl = functionStack[i];
+        const Identifier& ident = funcDecl->m_ident;
+        
+        m_functions.add(ident.ustring().rep());
+        emitNewFunction(addVar(ident), funcDecl);
+    }
+
+    for (size_t i = 0; i < varStack.size(); ++i) {
+        const Identifier& ident = varStack[i].first;
+        if (ident == m_propertyNames->arguments)
+            continue;
+        
+        RegisterID* r0;
+        if (addVar(ident, r0))
+            emitLoad(r0, jsUndefined());
+    }
+
+    m_nextParameter = m_nextVar - parameters.size();
+    m_locals.resize(localsIndex(m_nextParameter) + 1);
+
+    addParameter(m_propertyNames->thisIdentifier);
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        addParameter(parameters[i]);
+    }
 }
 
 void CodeGenerator::addParameter(const Identifier& ident)
 {
-    ASSERT(m_nextVar >= m_nextParameter);
-
-    int index = m_nextParameter++;
-    symbolTable().set(ident.ustring().rep(), index);
-
-    m_localsMap.set(index, m_locals.size());
-    m_locals.append(index);
+    // Parameters overwrite var declarations, but not function declarations,
+    // in the symbol table.
+    UString::Rep* rep = ident.ustring().rep();
+    if (!m_functions.contains(rep)) {
+        symbolTable().set(rep, m_nextParameter);
+        m_locals[localsIndex(m_nextParameter)].setIndex(m_nextParameter);
+    }
     
+    // To maintain the calling convention, we have to allocate unique space for
+    // each parameter, even if the parameter doesn't make it into the symbol table.
+    ++m_nextParameter;
     ++m_codeBlock->numParameters;
 }
 
@@ -172,7 +240,7 @@ RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
     int index = symbolTable().get(ident.ustring().rep());
     if (index == missingSymbolMarker())
         return 0;
-    return &m_locals[m_localsMap.get(index)];
+    return &m_locals[localsIndex(index)];
 }
 
 RegisterID* CodeGenerator::newTemporary()

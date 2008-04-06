@@ -1,3 +1,58 @@
+2008-04-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Support for evaluating multiple scripts in the same global environment.
+        (Still don't support re-entrant evaluation yet.)
+
+        The main changes here are:
+
+        (1) Obey the ECMA 10.1.3 rules regarding how to resolve collisions when
+        a given symbol is declared more than once. (This patch fixes the same
+        issue for function code, too.)
+        
+        (2) In the case of var and/or function collisions, reuse the existing
+        storage slot. For global code, this is required for previously
+        generated instructions to continue to work. For function code, it's
+        more of a "nice to have": it makes register layout in the case of
+        collisions easier to understand, and has the added benefit of saving
+        memory.
+        
+        (3) Allocate slots in the CodeGenerator's m_locals vector in parallel
+        to register indexes in the symbol table. This ensures that, given an
+        index in the symbol table, we can find the corresponding RegisterID
+        without hashing, which speeds up codegen. 
+        
+        I moved responsibility for emitting var and function initialization
+        instructions into the CodeGenerator, because bookkeeping in cases where
+        var, function, and/or parameter names collide requires a lot of
+        internal knowledge about the CodeGenerator.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar): Removed responsibility for checking whether
+        a var declaration overwrites "arguments", because the check is
+        inappropriate for global code, which may not have a pre-existing
+        "arguments" symbol in scope. Also changed this function to return a
+        boolean indicating whether addVar actually created a new RegisterID,
+        or just reused an old one.
+        
+        (KJS::CodeGenerator::CodeGenerator): Split out the constructors for
+        function code and global code, since they're quite different now.
+        
+        (KJS::CodeGenerator::registerForLocal): This function does its job
+        without any hashing now.
+        
+        * VM/Machine.cpp: Move old globals and update "r" before executing a
+        new script. That way, old globals stay at a constant offset from "r",
+        and previously optimized code still works.
+        
+        * VM/RegisterID.h: Added the ability to allocate a RegisterID before
+        initializing its index field. We use this for parameters now.
+
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTableGet): Changed the ungettable getter
+        ASSERT to account for the fact that symbol indexes are all negative.
+
 2008-04-05  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.

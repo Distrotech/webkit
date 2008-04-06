@@ -109,7 +109,7 @@ namespace KJS {
             // In a release build, we optimize this check away and just return an invalid pointer.
             // There's no harm in an invalid pointer, since no one dereferences it.
             int offset = d->rOffset + index;
-            if (offset < 0 || static_cast<unsigned>(offset) >= registers().size()) {
+            if (offset < 0) {
                 slot.setUngettable(this);
                 return true;
             }

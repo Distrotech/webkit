@@ -565,7 +565,7 @@ JSValue* RegExpNode::evaluate(ExecState* exec)
 
 RegisterID* ThisNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.registerForLocal(generator.thisIdentifier());
+    RegisterID* r0 = generator.registerForLocal(generator.propertyNames().thisIdentifier);
     return dst ? generator.emitMove(dst, r0) : r0;
 }
 
@@ -5489,21 +5489,8 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
 void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 {
     m_code.set(new CodeBlock(usesEval(), needsClosure()));
-    
-    unsigned localCount = m_functionStack.size() + m_varStack.size() + m_parameters.size() + 1;
-    CodeGenerator generator(scopeChain, &m_symbolTable, localCount, this, m_code.get());
 
-    generator.addParameter(CommonIdentifiers::shared()->thisIdentifier);
-
-    for (size_t i = 0, size = m_parameters.size(); i < size; ++i)
-        generator.addParameter(m_parameters[i]);
-
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        generator.addVar(m_varStack[i].first);
-
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        generator.addFunction(m_functionStack[i]->m_ident);
-
+    CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
     generator.generate();
 
     m_children.shrinkCapacity(0);
@@ -5511,14 +5498,6 @@ void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 
 RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.registerForLocal(m_varStack[i].first))
-            generator.emitLoad(r0, jsUndefined());
-
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.registerForLocal(m_functionStack[i]->m_ident))
-            generator.emitNewFunction(r0, m_functionStack[i]);
-
     statementListEmitCode(m_children, generator);
     if (!m_children.size() || !m_children.last()->isReturnNode()) {
         RegisterID* r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
@@ -5529,14 +5508,6 @@ RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 
 RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.registerForLocal(m_varStack[i].first))
-            generator.emitLoad(r0, jsUndefined());
-
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        if (RegisterID* r0 = generator.registerForLocal(m_functionStack[i]->m_ident))
-            generator.emitNewFunction(r0, m_functionStack[i]);
-
     RegisterID* r0 = statementListEmitCode(m_children, generator);
     if (!r0)
         r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
@@ -5551,17 +5522,7 @@ void ProgramNode::generateCode(ScopeChain& scopeChain)
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
-    unsigned localCount = m_functionStack.size() + m_varStack.size() + 1;
-    CodeGenerator generator(scopeChain, &globalObject->symbolTable(), localCount, this, m_code.get());
-
-    generator.addParameter(CommonIdentifiers::shared()->thisIdentifier);
-
-    for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
-        generator.addVar(m_varStack[i].first);
-
-    for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
-        generator.addFunction(m_functionStack[i]->m_ident);
-
+    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack);
     generator.generate();
 
     m_children.shrinkCapacity(0);
