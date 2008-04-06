@@ -4300,6 +4300,17 @@ JSValue* AssignDotNode::evaluate(ExecState* exec)
     return v;
 }
 
+RegisterID* ReadModifyDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+
+    // FIXME: should not write temp value to dst if dst is a local!
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitNode(m_right.get());
+    RegisterID* r3 = emitReadModifyAssignment(generator, r1.get(), r2, m_operator);
+    return generator.emitPutPropId(r0.get(), m_ident, r3);
+}
+
 void ReadModifyDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
