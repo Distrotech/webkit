@@ -93,12 +93,12 @@ static CString regexpName(int re, RegExp* regexp)
     return (regexpToSourceString(regexp) + "(@re" + UString::from(re) + ")").UTF8String();
 }
 
-static int jumpTarget(const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it, int offset)
+static int jumpTarget(const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator& it, int offset)
 {
     return it - begin + offset;
 }
 
-static void printUnaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
+static void printUnaryOp(int location, Vector<Instruction>::const_iterator& it, const char* op)
 {
     int r0 = (++it)->u.operand;
     int r1 = (++it)->u.operand;
@@ -106,7 +106,7 @@ static void printUnaryOp(int location, Vector<Instruction>::iterator& it, const 
     printf("[%4d] %s\t\t%s, %s\n", location, op, registerName(r0).c_str(), registerName(r1).c_str());
 }
 
-static void printBinaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
+static void printBinaryOp(int location, Vector<Instruction>::const_iterator& it, const char* op)
 {
     int r0 = (++it)->u.operand;
     int r1 = (++it)->u.operand;
@@ -114,45 +114,59 @@ static void printBinaryOp(int location, Vector<Instruction>::iterator& it, const
     printf("[%4d] %s\t\t%s, %s, %s\n", location, op, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str());
 }
 
-static void printConditionalJump(const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it, int location, const char* op)
+static void printConditionalJump(const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator& it, int location, const char* op)
 {
     int r0 = (++it)->u.operand;
     int offset = (++it)->u.operand;
     printf("[%4d] %s\t\t%s, %d(->%d)\n", location, op, registerName(r0).c_str(), offset, jumpTarget(begin, it, offset));
 }
 
-void CodeBlock::dump(ExecState* exec)
+void CodeBlock::dump(ExecState* exec) const
 {
-    Vector<Instruction>::iterator begin = instructions.begin();
-    Vector<Instruction>::iterator end = instructions.end();
+    Vector<Instruction>::const_iterator begin = instructions.begin();
+    Vector<Instruction>::const_iterator end = instructions.end();
 
     size_t instructionCount = 0;
-    for (Vector<Instruction>::iterator it = begin; it != end; ++it)
+    for (Vector<Instruction>::const_iterator it = begin; it != end; ++it)
         if (machine().isOpcode(it->u.opcode))
             ++instructionCount;
 
     printf("%lu instructions; %lu bytes at %p; %d locals (%d parameters); %d temporaries\n\n", instructionCount, instructions.size() * sizeof(Instruction), this, numParameters + numVars, numParameters, numTemporaries);
     
-    for (Vector<Instruction>::iterator it = begin; it != end; ++it)
+    for (Vector<Instruction>::const_iterator it = begin; it != end; ++it)
         dump(exec, begin, it);
 
-    printf("\nIdentifiers:\n");
+    if (identifiers.size()) {
+        printf("\nIdentifiers:\n");
+        size_t i = 0;
+        do {
+            printf("  id%u = %s\n", static_cast<unsigned>(i), identifiers[i].ascii());
+            ++i;
+        } while (i != identifiers.size());
+    }
+
+    if (jsValues.size()) {
+        printf("\nConstants:\n");
+        size_t i = 0;
+        do {
+            printf("  k%u = %s\n", static_cast<unsigned>(i), valueToSourceString(exec, jsValues[i]).ascii());
+            ++i;
+        } while (i < jsValues.size());
+    }
     
-    for (size_t i = 0; i < identifiers.size(); ++i)
-        printf("  id%u = %s\n", static_cast<unsigned>(i), identifiers[i].ascii());
-
-    printf("\nConstants:\n");
-    for (size_t i = 0; i < jsValues.size(); ++i)
-        printf("  k%u = %s\n", static_cast<unsigned>(i), valueToSourceString(exec, jsValues[i]).ascii());
-
-    printf("\nRegExps:\n");
-    for (size_t i = 0; i < regexps.size(); ++i)
-        printf("  re%u = %s\n", static_cast<unsigned>(i), regexpToSourceString(regexps[i].get()).ascii());
+    if (regexps.size()) {
+        printf("\nRegExps:\n");
+        size_t i = 0;
+        do {
+            printf("  re%u = %s\n", static_cast<unsigned>(i), regexpToSourceString(regexps[i].get()).ascii());
+            ++i;
+        } while (i < regexps.size());
+    }
         
     printf("\n");
 }
 
-void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it)
+void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator& it) const
 {
     int location = it - begin;
     switch (machine().getOpcodeID(it->u.opcode)) {

@@ -51,7 +51,7 @@ namespace KJS {
         {
         }
         
-        void dump(ExecState*);
+        void dump(ExecState*) const;
         
         void mark();
 
@@ -73,7 +73,7 @@ namespace KJS {
         Vector<RefPtr<RegExp> > regexps;
         
     private:
-        void dump(ExecState*, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator&);
+        void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
     };
     
 } // namespace KJS
