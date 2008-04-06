@@ -72,6 +72,8 @@ namespace KJS {
         \
         macro(op_type_of) \
         \
+        macro(op_in) \
+        \
         macro(op_resolve) \
         macro(op_resolve_base) \
         macro(op_get_prop_id) \

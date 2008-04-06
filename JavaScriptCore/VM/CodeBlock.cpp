@@ -289,6 +289,10 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printUnaryOp(location, it, "type_of");
             break;
         }
+        case op_in: {
+            printBinaryOp(location, it, "in");
+            break;
+        }
         case op_resolve: {
             int r0 = (++it)->u.operand;
             int id0 = (++it)->u.operand;
