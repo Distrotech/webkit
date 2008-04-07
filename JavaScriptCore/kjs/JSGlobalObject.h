@@ -75,7 +75,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject)
-                : JSVariableObjectData(&symbolTable, &registers, 0)
+                : JSVariableObjectData(&symbolTable, registerVector.dataSlot(), 0)
                 , globalExec(globalObject)
             {
             }
@@ -133,7 +133,7 @@ namespace KJS {
 
             ExecStateStack activeExecStates;
 
-            Vector<Register> registers;
+            Vector<Register> registerVector;
         };
 
     public:
@@ -236,9 +236,8 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
         
-        void setROffset(int rOffset) { d()->rOffset = rOffset; }
-        int rOffset() { return d()->rOffset; }
-        
+        Vector<Register>& registerVector() { return d()->registerVector; }
+
     private:
         void init();
         

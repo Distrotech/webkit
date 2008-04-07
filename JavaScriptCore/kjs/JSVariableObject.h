@@ -42,8 +42,13 @@ namespace KJS {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
 
-        Vector<Register>& registers() const { return *d->registers; }
-        JSValue*& valueAt(int index) const { return registers()[d->rOffset + index].u.jsValue; }
+        Register** registerBase() const { return d->registerBase; }
+        Register* registers() const { return *registerBase(); }
+
+        void setRegisterOffset(int registerOffset) { d->registerOffset = registerOffset; }
+        int registerOffset() const { return d->registerOffset; }
+
+        JSValue*& valueAt(int index) const { return registers()[registerOffset() + index].u.jsValue; }
 
         // FIXME: Implement these checks for real by storing property attributes in the symbol table.
         bool isReadOnly(int) const { return false; }
@@ -64,19 +69,19 @@ namespace KJS {
         // without increasing their own size (since there's a hard limit on the
         // size of a JSCell).
         struct JSVariableObjectData {
-            JSVariableObjectData(SymbolTable* symbolTable_, Vector<Register>* registers_, int rOffset_)
+            JSVariableObjectData(SymbolTable* symbolTable_, Register** registerBase_, int registerOffset_)
                 : symbolTable(symbolTable_)
-                , registers(registers_)
-                , rOffset(rOffset_)
+                , registerBase(registerBase_)
+                , registerOffset(registerOffset_)
             {
                 ASSERT(symbolTable_);
-                ASSERT(registers_);
+                ASSERT(registerBase_);
             }
 
             SymbolTable* symbolTable; // Maps name -> offset from "r" in register file.
 
-            Vector<Register>* registers; // The register file.
-            int rOffset; // Offset of "r", the register past the end of local storage.
+            Register** registerBase; // Location where a pointer to the base of the register file is stored.
+            int registerOffset; // Offset of "r", the register past the end of local storage.
         };
 
         JSVariableObject(JSVariableObjectData* data)
@@ -108,7 +113,7 @@ namespace KJS {
             
             // In a release build, we optimize this check away and just return an invalid pointer.
             // There's no harm in an invalid pointer, since no one dereferences it.
-            int offset = d->rOffset + index;
+            int offset = registerOffset() + index;
             if (offset < 0) {
                 slot.setUngettable(this);
                 return true;
