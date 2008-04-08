@@ -73,7 +73,7 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL));
     
     CodeBlock& codeBlock = programNode->code(exec->scopeChain());
-    machine().execute(exec, &exec->dynamicGlobalObject()->registerVector(), &exec->scopeChain(), &codeBlock);
+    machine().execute(exec, &exec->dynamicGlobalObject()->registerFile(), &exec->scopeChain(), &codeBlock);
 
     return Completion(Normal, jsUndefined());
 }

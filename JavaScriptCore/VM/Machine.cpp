@@ -40,15 +40,15 @@
 
 namespace KJS {
 
-void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, const Register** registerBase, const Register* r)
+void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, RegisterFile* registerFile, const Register* r)
 {
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain->bottom());
     InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
     codeBlock->dump(&tmpExec);
-    dumpRegisters(codeBlock, registerBase, r);
+    dumpRegisters(codeBlock, registerFile, r);
 }
 
-void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register** registerBase, const Register* r)
+void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFile, const Register* r)
 {
     printf("Register frame: \n\n");
     printf("----------------------------------------\n");
@@ -61,11 +61,11 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register** registe
     const Register* end;
     
     if (isGlobalFrame) {
-        it = *registerBase;
+        it = r - registerFile->numGlobals();
         end = r;
         if (it != end) {
             do {
-                printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
+                printf("[global var]  | %10p | %10p \n", it, (*it).u.jsValue);
                 ++it;
             } while (it != end);
             printf("----------------------------------------\n");
@@ -283,7 +283,7 @@ NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue)
     return exceptionValue;
 }
 
-NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Vector<Register>* registers, Register*& r)
+NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r)
 {
     if (!codeBlock->numParameters) {
         // Global Scope
@@ -316,17 +316,17 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
 
     k = codeBlock->jsValues.data();
     scopeChain = returnInfo[2].u.scopeChain;
-    r = registers->data() + returnInfo[3].u.i;
+    r = (*registerBase) + returnInfo[3].u.i;
     return returnInfo[1].u.vPC;
 }
 
-NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Vector<Register>* registers, Register*& r, const Instruction* vPC)
+NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
 {
     while (codeBlock) {
         int expectedDepth;        
         Instruction* handlerPC = 0;
         if (!codeBlock->getHandlerForVPC(vPC, handlerPC, expectedDepth)) {
-            vPC = unwindCallFrame(codeBlock, k, scopeChain, registers, r);
+            vPC = unwindCallFrame(codeBlock, k, scopeChain, registerBase, r);
             continue;
         }
         // Now unwind the scope chain
@@ -349,7 +349,7 @@ NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue
 static void* throwTarget = 0;
 #endif
 
-void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Register>* registers, ScopeChain* scopeChain, CodeBlock* codeBlock)
+void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
@@ -368,26 +368,12 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         return;
     }
 
-    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
+    registerFile->addGlobals(codeBlock->numVars);
+    registerFile->resize(codeBlock->numTemporaries);
     JSValue* exceptionData = 0;
     
-    registers->reserveCapacity(512);
-
-    int oldRegisterOffset = globalObject->registerOffset();
-
-    // Allocate enough register space for this code block.
-    Register** registerBase = globalObject->registerBase();
-    int registerOffset = oldRegisterOffset + codeBlock->numVars + codeBlock->numParameters;
-
-    registers->resize(registerOffset + codeBlock->numTemporaries);
-    globalObject->setRegisterOffset(registerOffset);
-
-    // Move previously defined locals to make room for newly defined locals.
-    int shift = registerOffset - oldRegisterOffset;
-    if (oldRegisterOffset && shift)
-        memmove((*registerBase) + shift, (*registerBase), oldRegisterOffset * sizeof(Register));
-
-    Register* r = (*registerBase) + registerOffset;
+    Register** registerBase = registerFile->basePointer();
+    Register* r = (*registerBase);
     Instruction* vPC = codeBlock->instructions.begin();
     Instruction* exceptionTarget = 0;
     JSValue** k = codeBlock->jsValues.data();
@@ -898,14 +884,12 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             int offset = registerOffset + argv + argc + newCodeBlock->numVars;
             if (argc == newCodeBlock->numParameters) { // correct number of arguments
                 size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                if (registers->size() < size)
-                    registers->grow(size);
+                registerFile->resize(size);
                 r = (*registerBase) + offset;
             } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
                 int omittedArgCount = newCodeBlock->numParameters - argc;
                 size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                if (registers->size() < size)
-                    registers->grow(size);
+                registerFile->resize(size);
                 r = (*registerBase) + omittedArgCount + offset;
                 
                 Register* end = r;
@@ -913,8 +897,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
                     (*it).u.jsValue = jsUndefined();
             } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
                 size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                if (registers->size() < size)
-                    registers->grow(size);
+                registerFile->resize(size);
                 r = (*registerBase) + returnInfoSize + newCodeBlock->numParameters + offset;
 
                 int shift = returnInfoSize + argc;
@@ -1070,8 +1053,8 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     BEGIN_OPCODE(op_throw) {
         int e = (++vPC)->u.operand;
         exceptionData = prepareException(exec, r[e].u.jsValue);
-        if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registers, r, vPC))) {
-            globalObject->setRegisterOffset(oldRegisterOffset);
+        if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registerBase, r, vPC))) {
+            registerFile->resize(0);
             return;
         }
 
@@ -1094,8 +1077,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 #else
         UNUSED_PARAM(r0);
 #endif
-        int registerOffset = r - (*registerBase);
-        registers->resize(registerOffset);
+        registerFile->resize(0);
         return;
     }
     }

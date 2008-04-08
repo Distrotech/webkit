@@ -24,7 +24,7 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
-#include "Register.h"
+#include "RegisterFile.h"
 
 namespace KJS {
 
@@ -75,7 +75,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject)
-                : JSVariableObjectData(&symbolTable, registerVector.dataSlot(), 0)
+                : JSVariableObjectData(&symbolTable, registerFile.basePointer(), 0)
                 , globalExec(globalObject)
             {
             }
@@ -133,7 +133,7 @@ namespace KJS {
 
             ExecStateStack activeExecStates;
 
-            Vector<Register> registerVector;
+            RegisterFile registerFile;
         };
 
     public:
@@ -236,7 +236,7 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
         
-        Vector<Register>& registerVector() { return d()->registerVector; }
+        RegisterFile& registerFile() { return d()->registerFile; }
 
     private:
         void init();
