@@ -75,6 +75,7 @@ void RegisterFile::addGlobals(size_t count)
         memmove(m_buffer + count, m_buffer, count * sizeof(Register));
     }
     m_base += count;
+    m_capacity -= count;
 }
 
 void RegisterFile::clear()
