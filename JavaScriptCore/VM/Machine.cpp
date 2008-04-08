@@ -270,6 +270,84 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
+NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue) 
+{
+    if (exceptionValue->isObject()) {
+        JSObject* exception = static_cast<JSObject*>(exceptionValue);
+        if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
+            // Need to set line and sourceURL properties on the exception, but that is not currently possible
+            exception->put(exec, "line", jsNumber(42));
+            exception->put(exec, "sourceURL", jsString("FIXME: need sourceURL"));
+        }
+    }
+    return exceptionValue;
+}
+
+NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Vector<Register>* registers, Register*& r)
+{
+    if (!codeBlock->numParameters) {
+        // Global Scope
+        codeBlock = 0;
+        return 0;
+    }
+
+    CodeBlock* oldCodeBlock = codeBlock;
+
+    Register* returnInfo = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - returnInfoSize;
+    
+    if (oldCodeBlock->needsActivation) {
+        // Find the functions activation in the scope chain
+        ScopeChainIterator iter = scopeChain->begin(); 
+        ScopeChainIterator end = scopeChain->end();
+        while (!((*iter)->isActivationObject())) {
+            ++iter;
+            ASSERT(iter != end);
+        }
+
+        // Clean up the activation if'n it's necessary
+        ASSERT((*iter)->isActivationObject());
+        static_cast<JSActivation*>(*iter)->copyRegisters();
+        scopeChain->~ScopeChain();
+    }
+    
+    codeBlock = returnInfo[0].u.codeBlock;
+    if (!codeBlock)
+        return 0; // 0 means we've hit a native call frame
+
+    k = codeBlock->jsValues.data();
+    scopeChain = returnInfo[2].u.scopeChain;
+    r = registers->data() + returnInfo[3].u.i;
+    return returnInfo[1].u.vPC;
+}
+
+NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Vector<Register>* registers, Register*& r, const Instruction* vPC)
+{
+    while (codeBlock) {
+        int expectedDepth;        
+        Instruction* handlerPC = 0;
+        if (!codeBlock->getHandlerForVPC(vPC, handlerPC, expectedDepth)) {
+            vPC = unwindCallFrame(codeBlock, k, scopeChain, registers, r);
+            continue;
+        }
+        // Now unwind the scope chain
+        // Step 1) work out how deep the scope chain is
+        int scopeDepth = scopeChain->depth();
+        
+        // Step 2) reduce to the expect depth
+        int scopeDelta = scopeDepth - expectedDepth;
+        
+        // Step 3) Cry :-(
+        ASSERT(scopeDelta >= 0);
+        while (scopeDelta--)
+            scopeChain->pop();
+        return handlerPC;
+    }
+    return 0;
+}
+
+#if HAVE(COMPUTED_GOTO)
+static void* throwTarget = 0;
+#endif
 
 void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Register>* registers, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
@@ -285,12 +363,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
                 FOR_EACH_OPCODE_ID(ADD_OPCODE_ID);
             #undef ADD_OPCODE
             ASSERT(m_opcodeIDTable.size() == numOpcodeIDs);
+            throwTarget = &&gcc_dependency_hack;
         #endif // HAVE(COMPUTED_GOTO)
         return;
     }
 
     JSGlobalObject* globalObject = exec->dynamicGlobalObject();
-
+    JSValue* exceptionData = 0;
+    
     registers->reserveCapacity(512);
 
     int oldRegisterOffset = globalObject->registerOffset();
@@ -309,6 +389,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
     Register* r = (*registerBase) + registerOffset;
     Instruction* vPC = codeBlock->instructions.begin();
+    Instruction* exceptionTarget = 0;
     JSValue** k = codeBlock->jsValues.data();
     
 #if HAVE(COMPUTED_GOTO)
@@ -976,6 +1057,34 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         while (scopeDelta--)
             scopeChain->pop();
         vPC += offset;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_catch) {
+        ASSERT(exceptionData);
+        int r0 = (++vPC)->u.operand;
+        r[r0].u.jsValue = exceptionData;
+        exceptionData = 0;
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_throw) {
+        int e = (++vPC)->u.operand;
+        exceptionData = prepareException(exec, r[e].u.jsValue);
+        if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registers, r, vPC))) {
+            globalObject->setRegisterOffset(oldRegisterOffset);
+            return;
+        }
+
+#if HAVE(COMPUTED_GOTO)
+        // Hack around gcc performance quirk by performing an indirect goto
+        // in order to set the vPC -- attempting to do so directly results in a
+        // significant regression.
+        goto *throwTarget; // indirect goto -> gcc_dependency_hack
+    }
+    gcc_dependency_hack: {
+#endif
+
+        vPC = exceptionTarget;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {

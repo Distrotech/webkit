@@ -97,6 +97,8 @@ namespace KJS {
 
         void mark();
 
+        int depth();
+    
 #ifndef NDEBUG        
         void print();
 #endif

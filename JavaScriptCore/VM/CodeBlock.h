@@ -40,6 +40,13 @@ namespace KJS {
 
     class ExecState;
 
+    struct HandlerInfo {
+        unsigned start;
+        unsigned end;
+        unsigned target;
+        unsigned scopeDepth;
+    };
+
     struct CodeBlock {
         CodeBlock(bool usesEval_, bool needsClosure_)
             : numTemporaries(0)
@@ -70,8 +77,10 @@ namespace KJS {
         Vector<RefPtr<FuncDeclNode> > functions;
         Vector<RefPtr<FuncExprNode> > functionExpressions;
         Vector<JSValue*> jsValues;
-        Vector<RefPtr<RegExp> > regexps;
-        
+        Vector<RefPtr<RegExp> > regexps;        
+        Vector<HandlerInfo> exceptionHandlers;
+
+        bool getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth);
     private:
         void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
     };

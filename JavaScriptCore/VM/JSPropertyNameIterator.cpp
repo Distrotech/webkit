@@ -117,9 +117,8 @@ JSPropertyNameIterator* JSPropertyNameIterator::create(ExecState* exec, JSValue*
 {
     if (v->isUndefinedOrNull())
         return new JSPropertyNameIterator(0, 0, 0);
-    
+
     JSObject* o = v->toObject(exec);
-    ASSERT(!exec->hadException()); // toObject should never throw for any non-null/undefined value
     PropertyNameArray propertyNames;
     o->getPropertyNames(exec, propertyNames);    
     size_t numProperties = propertyNames.size();

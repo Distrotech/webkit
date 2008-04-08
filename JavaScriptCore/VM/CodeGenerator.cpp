@@ -854,4 +854,19 @@ RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* iterator, RegisterID
     return iterator;
 }
 
+RegisterID* CodeGenerator::emitCatch(RegisterID* targetRegister, LabelID* start, LabelID* end)
+{
+    HandlerInfo info = { start->offsetFrom(0), end->offsetFrom(0), instructions().size(), m_scopeDepth };
+    exceptionHandlers().append(info);
+    instructions().append(machine().getOpcode(op_catch));
+    instructions().append(targetRegister->index());
+    return targetRegister;
+}
+    
+void CodeGenerator::emitThrow(RegisterID* exception)
+{
+    instructions().append(machine().getOpcode(op_throw));
+    instructions().append(exception->index());
+}
+
 } // namespace KJS

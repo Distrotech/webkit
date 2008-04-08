@@ -1,3 +1,39 @@
+2008-04-07  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18338: Support exceptions in SquirrelFish <http://bugs.webkit.org/show_bug.cgi?id=18338>
+        
+        Initial support for exceptions in SquirrelFish, only supports finalisers in the
+        simple cases (eg. exceptions and non-goto/return across finaliser boundaries).
+        This doesn't add the required exception checks to existing code, it merely adds
+        support for throw, catch, and the required stack unwinding.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        (KJS::CodeBlock::getHandlerForVPC):
+        * VM/CodeBlock.h:
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitCatch):
+        (KJS::CodeGenerator::emitThrow):
+        * VM/CodeGenerator.h:
+        * VM/JSPropertyNameIterator.cpp:
+        (KJS::JSPropertyNameIterator::create):
+        * VM/Machine.cpp:
+        (KJS::prepareException):
+        (KJS::Machine::unwindCallFrame):
+        (KJS::Machine::throwException):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::ThrowNode::emitCode):
+        (KJS::TryNode::emitCode):
+        * kjs/nodes.h:
+        * kjs/scope_chain.cpp:
+        (KJS::ScopeChain::depth):
+        * kjs/scope_chain.h:
+
 2008-04-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

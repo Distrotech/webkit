@@ -5480,6 +5480,12 @@ JSValue* LabelNode::execute(ExecState* exec)
 
 // ------------------------------ ThrowNode ------------------------------------
 
+RegisterID* ThrowNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    generator.emitThrow(generator.emitNode(dst, m_expr.get()));
+    return dst;
+}
+
 void ThrowNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
@@ -5496,6 +5502,45 @@ JSValue* ThrowNode::execute(ExecState* exec)
 }
 
 // ------------------------------ TryNode --------------------------------------
+
+RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> tryStartLabel = generator.newLabel();
+    RefPtr<LabelID> tryEndLabel = generator.newLabel();
+    RefPtr<LabelID> handlerEndLabel = generator.newLabel();
+    
+    generator.emitLabel(tryStartLabel.get());
+    generator.emitNode(dst, m_tryBlock.get());
+    generator.emitLabel(tryEndLabel.get());
+    
+    generator.emitJump(handlerEndLabel.get());
+
+    if (m_catchBlock) {
+        RefPtr<RegisterID> exceptionRegister = generator.emitCatch(generator.newTemporary(), tryStartLabel.get(), tryEndLabel.get());
+        RegisterID* newScope = generator.emitNewObject(generator.newTemporary());
+        generator.emitPutPropId(newScope, m_exceptionIdent, exceptionRegister.get());
+        exceptionRegister = 0; // Release register used for temporaries
+        generator.emitPushScope(newScope);
+        m_catchBlock->emitCode(generator, dst);
+        generator.emitPopScope();
+        if (!m_finallyBlock)
+            generator.emitLabel(handlerEndLabel.get());
+    } 
+
+    if (m_finallyBlock) {
+        RefPtr<LabelID> finallyStartLabel = generator.newLabel();
+        generator.emitLabel(finallyStartLabel.get());
+        generator.emitJump(handlerEndLabel.get());
+        RefPtr<RegisterID> tempExceptionRegister = generator.emitCatch(generator.newTemporary(), tryStartLabel.get(), finallyStartLabel.get());
+        m_finallyBlock->emitCode(generator, dst);
+        generator.emitThrow(tempExceptionRegister.get());
+        generator.emitLabel(handlerEndLabel.get());
+        m_finallyBlock->emitCode(generator, dst);
+    }
+
+    return dst;
+}
+
 
 void TryNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {

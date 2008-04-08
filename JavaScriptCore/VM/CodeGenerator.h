@@ -180,7 +180,9 @@ namespace KJS {
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
-        
+
+        RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
+        void emitThrow(RegisterID*);
     private:
         struct JSValueHashTraits  {
             typedef JSValue* TraitType;
@@ -218,7 +220,8 @@ namespace KJS {
         
         Vector<Instruction>& instructions() { return m_codeBlock->instructions; }
         SymbolTable& symbolTable() { return *m_symbolTable; }
-        
+        Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
+
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
         
