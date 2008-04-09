@@ -30,63 +30,75 @@
 #include "RegisterFile.h"
 
 #include "Register.h"
-#include "collector.h"
 
 namespace KJS {
 
 using namespace std;
 
-void RegisterFile::reallocate(size_t minCapacity)
+size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity)
 {
-    size_t numGlobals = this->numGlobals();
-    size_t size = m_size + numGlobals;
-    size_t capacity = m_capacity + numGlobals;
-    minCapacity += numGlobals;
-
     capacity = (max(minCapacity, max<size_t>(16, capacity + capacity / 4 + 1)));
     Register* newBuffer = static_cast<Register*>(fastCalloc(capacity, sizeof(Register))); // zero-filled memory
 
-    if (size) {
-        ASSERT(m_buffer);
-        memcpy(newBuffer, m_buffer, size * sizeof(Register));
-    }
-
     if (m_buffer)
-        fastFree(m_buffer);
+        memcpy(newBuffer, m_buffer, size * sizeof(Register));
 
-    m_buffer = newBuffer;
-    m_base = m_buffer + numGlobals;
-    m_capacity = capacity - numGlobals;
+    setBuffer(newBuffer);
+    return capacity;
 }
 
-void RegisterFile::addGlobals(size_t count)
+void RegisterFile::growBuffer(size_t minCapacity)
+{
+    size_t numGlobalSlots = this->numGlobalSlots();
+    size_t size = m_size + numGlobalSlots;
+    size_t capacity = m_capacity + numGlobalSlots;
+    minCapacity += numGlobalSlots;
+    
+    capacity = newBuffer(size, capacity, minCapacity);
+
+    setBase(m_buffer + numGlobalSlots);
+    m_capacity = capacity - numGlobalSlots;
+}
+
+void RegisterFile::addGlobalSlots(size_t count)
 {
     if (!count)
         return;
 
-    size_t newCapacity = m_size + count;
-    if (newCapacity > m_capacity)
-        reallocate(newCapacity);
+    size_t numGlobalSlots = this->numGlobalSlots();
+    size_t size = m_size + numGlobalSlots;
+    size_t capacity = m_capacity + numGlobalSlots;
+    size_t minCapacity = size + count;
+    
+    if (minCapacity < capacity)
+        memmove(m_buffer + count, m_buffer, size * sizeof(Register));
+    else
+        capacity = newBuffer(size, capacity, minCapacity);
 
-    if (m_base != m_buffer) {
-        // FIXME: This move overwrites nested register frames, so it's only safe
-        // when executed in the top-level register frame.
-        ASSERT(!m_size);
-        memmove(m_buffer + count, m_buffer, count * sizeof(Register));
-    }
-    m_base += count;
-    m_capacity -= count;
+    numGlobalSlots += count;
+
+    setBase(m_buffer + numGlobalSlots);
+    m_capacity = capacity - numGlobalSlots;
+}
+
+void RegisterFile::copyGlobals(RegisterFile* src)
+{
+    size_t numGlobalSlots = src->numGlobalSlots();
+    if (!numGlobalSlots)
+        return;
+    memcpy(m_buffer, src->m_buffer, numGlobalSlots * sizeof(Register));
+}
+
+void RegisterFile::setBase(Register* base)
+{
+    m_base = base;
+    m_stack->baseChanged(this);
 }
 
 void RegisterFile::clear()
 {
-    m_base = m_buffer;
+    setBase(m_buffer);
     m_size = 0;
-}
-
-void RegisterFile::mark()
-{
-    Collector::markStackObjectsConservatively(m_buffer, m_base + m_size);
 }
 
 } // namespace KJS
