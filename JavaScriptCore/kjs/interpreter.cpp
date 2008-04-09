@@ -72,9 +72,10 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     if (!programNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL));
     
-    machine().execute(programNode.get(), exec, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain());
-
-    return Completion(Normal, jsUndefined());
+    JSValue* exception;
+    JSValue* result = machine().execute(programNode.get(), exec, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain(), &exception);
+    
+    return result ? Completion(Normal, result) : Completion(Throw, exception);
 }
 
 static bool printExceptions = false;
