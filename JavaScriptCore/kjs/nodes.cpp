@@ -5216,7 +5216,7 @@ JSValue* BreakNode::execute(ExecState* exec)
 
 RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = m_value->emitCode(generator, dst);
+    RegisterID* r0 = m_value ? m_value->emitCode(generator, dst) : generator.emitLoad(dst ? dst : generator.newTemporary(), jsNull());
     return generator.emitReturn(r0);
 }
 
