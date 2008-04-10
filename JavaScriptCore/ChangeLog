@@ -1,5 +1,19 @@
 2008-04-10  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed op_construct for CallTypeNative to reacquire "r" before setting
+        its return value, since registerBase can theoretically change during the
+        execution of arbitrary code. (Not sure if any native constructors
+        actually make this possible.)
+
+        sunspider --squirrelfish does not seem to complain.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-04-10  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt and Sam Weinig.
         
         Re-entrant execution of function code (global code -> built-in function
