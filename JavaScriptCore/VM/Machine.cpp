@@ -85,6 +85,7 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
                 printf("[param]       | %10p | %10p \n", it, (*it).u.jsValue);
                 ++it;
             } while (it != end);
+            printf("----------------------------------------\n");
         }
 
         end = it + codeBlock->numVars;
@@ -93,6 +94,7 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
                 printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
                 ++it;
             } while (it != end);
+            printf("----------------------------------------\n");
         }
     }
 
@@ -352,7 +354,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFil
 
     CodeBlock* codeBlock = &programNode->code(*scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
-    registerFile->resize(codeBlock->numTemporaries);
+    registerFile->grow(codeBlock->numTemporaries);
 
     JSValue* result = privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
 
@@ -365,7 +367,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, R
     RegisterFile* registerFile = registerFileStack->current();
     CodeBlock* codeBlock = &functionBodyNode->code(*scopeChain);
 
-    registerFile->resize(registerFile->size() + returnInfoSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
+    registerFile->grow(registerFile->size() + returnInfoSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
     // put return info in place
         // use 0 codeBlock to indicate termination
     // put args in place
@@ -898,29 +900,26 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
-            // WARNING: If code generation wants to optimize resolves to parent scopes,
-            // it needs to be aware that, for functions that require activations,
-            // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-            int offset = registerOffset + argv + argc + newCodeBlock->numVars;
+            registerOffset += argv + argc + newCodeBlock->numVars;
             if (argc == newCodeBlock->numParameters) { // correct number of arguments
-                size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                registerFile->resize(size);
-                r = (*registerBase) + offset;
+                size_t size = registerOffset + newCodeBlock->numTemporaries;
+                registerFile->grow(size);
+                r = (*registerBase) + registerOffset;
             } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
                 int omittedArgCount = newCodeBlock->numParameters - argc;
-                size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                registerFile->resize(size);
-                r = (*registerBase) + omittedArgCount + offset;
+                size_t size = registerOffset + omittedArgCount + newCodeBlock->numTemporaries;
+                registerFile->grow(size);
+                r = (*registerBase) + omittedArgCount + registerOffset;
                 
                 Register* end = r;
                 for (Register* it = r - omittedArgCount; it != end; ++it)
                     (*it).u.jsValue = jsUndefined();
             } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-                size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-                registerFile->resize(size);
-                r = (*registerBase) + returnInfoSize + newCodeBlock->numParameters + offset;
+                size_t size = registerOffset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
+                registerFile->grow(size);
+                r = (*registerBase) + returnInfoSize + newCodeBlock->numParameters + registerOffset;
 
                 int shift = returnInfoSize + argc;
                 Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
@@ -1080,7 +1079,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         exceptionData = prepareException(exec, r[e].u.jsValue);
         if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registerBase, r, vPC))) {
             // Removing this line of code causes a measurable regression on squirrelfish/function-missing-args.js.
-            registerFile->resize(0);
+            registerFile->shrink(0);
             *exception = exceptionData;
             return 0;
         }

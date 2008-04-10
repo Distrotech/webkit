@@ -54,7 +54,7 @@ void RegisterFileStack::popRegisterFile()
 {
     // Common case: This is the only register file: clear its call frames.
     if (!hasPrevious()) {
-        current()->resize(0);
+        current()->shrink(0);
         return;
     }
 
