@@ -85,7 +85,6 @@ namespace KJS {
         void clear()
         {
             m_vector.clear();
-            m_buffer = 0;
             m_size = 0;
         }
 

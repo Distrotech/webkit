@@ -75,7 +75,7 @@ namespace KJS {
         bool isOpcode(Opcode opcode);
         
         JSValue* execute(ProgramNode*, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
-        JSValue* execute(FunctionBodyNode*, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
+        JSValue* execute(FunctionBodyNode*, const List& args, JSObject* thisObj, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
         
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
@@ -83,7 +83,7 @@ namespace KJS {
         NEVER_INLINE Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&);
         NEVER_INLINE Instruction* throwException(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&, const Instruction*);
 
-        JSValue* privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, ScopeChain* = 0, CodeBlock* = 0, JSValue** exception = 0);
+        JSValue* privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, Register* = 0, ScopeChain* = 0, CodeBlock* = 0, JSValue** exception = 0);
 
         void dumpCallFrame(const CodeBlock*, const ScopeChain*, RegisterFile*, const Register*);
         void dumpRegisters(const CodeBlock*, RegisterFile*, const Register*);

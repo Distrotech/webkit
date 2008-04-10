@@ -1,3 +1,47 @@
+2008-04-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt and Sam Weinig.
+        
+        Re-entrant execution of function code (global code -> built-in function
+        -> JS function):
+        
+        Miraculously, sunspider --squirrelfish does not seem to complain.
+
+        A re-entrant function call is the same as a normal function call with
+        one exception: the re-entrant call leaves everything except for
+        CallerCodeBlock in the call frame header uninitialized, since the call
+        doesn't need to return to JS code. (It sets CallerCodeBlock to 0, to
+        indicate that the call shouldn't return to JS code.)
+        
+        Also fixed a few issues along the way:
+        
+        - Fixed two bugs in the read-write List implementation that caused
+        m_size and m_buffer to go stale.
+        
+        - Changed native call code to update "r" *before* setting the return
+        value, since the call may in turn call JS code, which changes the value
+        of "r".
+        
+        - Migrated initialization of "r" outside of Machine::privateExecute,
+        because global code and function code initialize "r" differently.
+        
+        - Migrated a codegen warning from Machine::privateExecute to the wiki.
+        
+        - Removed unnecessary "r" parameter from slideRegisterWindowForCall
+
+        * VM/Machine.cpp:
+        (KJS::slideRegisterWindowForCall):
+        (KJS::scopeChainForCall):
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+        * kjs/list.cpp:
+        (KJS::List::getSlice):
+        * kjs/list.h:
+        (KJS::List::clear):
+
 2008-04-10  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
