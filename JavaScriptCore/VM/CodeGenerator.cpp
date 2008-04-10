@@ -73,17 +73,17 @@ namespace KJS {
     f(1);
     
     >                        <------------------------------
-    <                        >  reserved: return info |  1 | <-- value held
+    <                        >  reserved: call frame  |  1 | <-- value held
     >         >snip<         <------------------------------
     <                        > +0 | +1 | +2 | +3 | +4 | +5 | <-- register index
     >                        <------------------------------
     | params->|<-locals      | temps->    
     
-    The call instruction fills in the "return info" registers. It also pads
+    The call instruction fills in the "call frame" registers. It also pads
     missing arguments at the end of the call:
     
     >                        <-----------------------------------
-    <                        >  reserved: return info |  1 |  ? | <-- value held ("?" stands for "undefined")
+    <                        >  reserved: call frame  |  1 |  ? | <-- value held ("?" stands for "undefined")
     >         >snip<         <-----------------------------------
     <                        > +0 | +1 | +2 | +3 | +4 | +5 | +6 | <-- register index
     >                        <-----------------------------------
@@ -93,7 +93,7 @@ namespace KJS {
     stack frame to overlap the end of the old stack frame:
 
                              |---------------------------------->                        <
-                             |  reserved: return info |  1 |  ? <                        > <-- value held ("?" stands for "undefined")
+                             |  reserved: call frame  |  1 |  ? <                        > <-- value held ("?" stands for "undefined")
                              |---------------------------------->         >snip<         <
                              | -7 | -6 | -5 | -4 | -3 | -2 | -1 <                        > <-- register index
                              |---------------------------------->                        <
@@ -103,9 +103,9 @@ namespace KJS {
     
     If the caller supplies too many arguments, this trick doesn't work. The
     extra arguments protrude into space reserved for locals and temporaries.
-    In that case, the call instruction makes a real copy of the return info,
+    In that case, the call instruction makes a real copy of the call frame header,
     along with just the arguments expected by the callee, leaving the original
-    return info and arguments behind. (The call instruction can't just discard
+    call frame header and arguments behind. (The call instruction can't just discard
     extra arguments, because the "arguments" object may access them later.)
     This copying strategy ensures that all named values will be at the indices
     expected by the callee.
@@ -747,10 +747,10 @@ RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, RegisterID* 
     RefPtr<RegisterID> ref1 = r1;
     RefPtr<RegisterID> ref2 = r2;
     
-    // Reserve space for return info.
-    Vector<RefPtr<RegisterID>, Machine::returnInfoSize> returnInfo;
-    for (int i = 0; i < Machine::returnInfoSize; ++i)
-        returnInfo.append(newTemporary());
+    // Reserve space for call frame.
+    Vector<RefPtr<RegisterID>, Machine::CallFrameHeaderSize> callFrame;
+    for (int i = 0; i < Machine::CallFrameHeaderSize; ++i)
+        callFrame.append(newTemporary());
 
     // Generate code for arguments.
     Vector<RefPtr<RegisterID>, 16> argv;
@@ -786,10 +786,10 @@ RegisterID* CodeGenerator::emitEnd(RegisterID* r0)
 
 RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, ArgumentsNode* argumentsNode)
 {
-    // Reserve space for return info.
-    Vector<RefPtr<RegisterID>, Machine::returnInfoSize> returnInfo;
-    for (int i = 0; i < Machine::returnInfoSize; ++i)
-        returnInfo.append(newTemporary());
+    // Reserve space for call frame.
+    Vector<RefPtr<RegisterID>, Machine::CallFrameHeaderSize> callFrame;
+    for (int i = 0; i < Machine::CallFrameHeaderSize; ++i)
+        callFrame.append(newTemporary());
 
     // Generate code for arguments.
     Vector<RefPtr<RegisterID>, 16> argv;
