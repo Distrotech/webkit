@@ -1,5 +1,19 @@
 2008-04-10  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+
+        - More code cleanup in preparation for JS constructors
+
+        Factor the remaining interesting parts of JS function calls into
+        slideRegisterWindowForCall and scopeChainForCall.
+        
+        * VM/Machine.cpp:
+        (KJS::slideRegisterWindowForCall):
+        (KJS::scopeChainForCall):
+        (KJS::Machine::privateExecute):
+
+2008-04-10  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
         
         - Code cleanup in preparation for JS constructors
