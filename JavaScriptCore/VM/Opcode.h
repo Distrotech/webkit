@@ -77,6 +77,7 @@ namespace KJS {
         \
         macro(op_resolve) \
         macro(op_resolve_base) \
+        macro(op_resolve_base_and_func) \
         macro(op_get_prop_id) \
         macro(op_put_prop_id) \
         macro(op_delete_prop_id) \
