@@ -2,6 +2,21 @@
 
         Reviewed by Oliver Hunt.
         
+        Pass a function body node its function's scope chain, rather than the
+        current execution context's scope chain, when compiling it.
+        
+        This doesn't matter yet, but it will once we start using the scope
+        chain during compilation.
+
+        sunspider --squirrelfish notes a tiny speedup.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-04-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Fix two bugs when throwing exceptions from re-entrant JS calls:
         
         (1) Don't shrink the register file to 0, since our caller may still

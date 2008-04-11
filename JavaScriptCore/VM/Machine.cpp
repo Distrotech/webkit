@@ -964,15 +964,16 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             Register* callFrame = r + argv - CallFrameHeaderSize;
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
-
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
-            CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
+            
+            ScopeChain* callDataScopeChain = callData.js.scopeChain;
+            FunctionBodyNode* functionBodyNode = callData.js.functionBody;
 
-            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
-            scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
-            k = newCodeBlock->jsValues.data();
-            vPC = newCodeBlock->instructions.begin();
-            codeBlock = newCodeBlock;
+            codeBlock = &functionBodyNode->code(*callDataScopeChain);
+            r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
+            k = codeBlock->jsValues.data();
+            vPC = codeBlock->instructions.begin();
 
             NEXT_OPCODE;
         }
@@ -1067,13 +1068,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             r[argv].u.jsValue = newObject; // "this" value
 
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1);
-            CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
+            
+            ScopeChain* callDataScopeChain = callData.js.scopeChain;
+            FunctionBodyNode* functionBodyNode = callData.js.functionBody;
 
-            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
-            scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
-            k = newCodeBlock->jsValues.data();
-            vPC = newCodeBlock->instructions.begin();
-            codeBlock = newCodeBlock;
+            codeBlock = &functionBodyNode->code(*callDataScopeChain);
+            r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
+            k = codeBlock->jsValues.data();
+            vPC = codeBlock->instructions.begin();
 
             NEXT_OPCODE;
         }
