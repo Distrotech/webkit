@@ -212,6 +212,11 @@ CallType JSCell::getCallData(CallData&)
     return CallTypeNone;
 }
 
+ConstructType JSCell::getConstructData(ConstructData&)
+{
+    return ConstructTypeNone;
+}
+
 JSCell* jsString(const char* s)
 {
     return new StringImp(s ? s : "");

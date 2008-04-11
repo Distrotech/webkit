@@ -73,6 +73,13 @@ void FunctionImp::mark()
     _scope.mark();
 }
 
+CallType FunctionImp::getCallData(CallData& callData)
+{
+    callData.js.functionBody = body.get();
+    callData.js.scopeChain = &_scope;
+    return CallTypeJS;
+}
+
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
     JSValue* exception = 0;
@@ -186,30 +193,34 @@ Identifier FunctionImp::getParameterName(int index)
 }
 
 // ECMA 13.2.2 [[Construct]]
-JSObject* FunctionImp::construct(ExecState* exec, const List& args)
+ConstructType FunctionImp::getConstructData(ConstructData& constructData)
 {
-  JSObject* proto;
-  JSValue* p = get(exec, exec->propertyNames().prototype);
-  if (p->isObject())
-    proto = static_cast<JSObject*>(p);
-  else
-    proto = exec->lexicalGlobalObject()->objectPrototype();
-
-  JSObject* obj(new JSObject(proto));
-
-  JSValue* res = call(exec,obj,args);
-
-  if (res->isObject())
-    return static_cast<JSObject*>(res);
-  else
-    return obj;
+    constructData.js.functionBody = body.get();
+    constructData.js.scopeChain = &_scope;
+    return ConstructTypeJS;
 }
 
-CallType FunctionImp::getCallData(CallData& callData)
+JSObject* FunctionImp::construct(ExecState* exec, const List& args)
 {
-    callData.js.functionBody = body.get();
-    callData.js.scopeChain = &_scope;
-    return CallTypeJS;
+    JSObject* proto;
+    JSValue* p = get(exec, exec->propertyNames().prototype);
+    if (p->isObject())
+        proto = static_cast<JSObject*>(p);
+    else
+        proto = exec->lexicalGlobalObject()->objectPrototype();
+
+    JSObject* newObject = new JSObject(proto);
+
+    JSValue* exception = 0;
+    JSValue* result = machine().execute(body.get(), args, newObject, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
+    if (exception) {
+        exec->setException(exception);
+        return newObject;
+    }
+
+    if (result->isObject())
+        return static_cast<JSObject*>(result);
+    return newObject;
 }
 
 // ------------------------------ IndexToNameMap ---------------------------------

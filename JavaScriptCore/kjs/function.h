@@ -64,11 +64,10 @@ namespace KJS {
     virtual void put(ExecState*, const Identifier& propertyName, JSValue*);
     virtual bool deleteProperty(ExecState*, const Identifier& propertyName);
 
-    virtual bool implementsConstruct() const { return true; }
+    virtual ConstructType getConstructData(ConstructData&);
     virtual JSObject* construct(ExecState*, const List& args);
-    
-    virtual CallType getCallData(CallData&);
 
+    virtual CallType getCallData(CallData&);
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
 
     // Note: unlike body->paramName, this returns Identifier::null for parameters 

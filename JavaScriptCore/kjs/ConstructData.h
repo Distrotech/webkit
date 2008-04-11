@@ -25,22 +25,22 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#ifndef CallData_h
-#define CallData_h
+
+#ifndef ConstructData_h
+#define ConstructData_h
 
 namespace KJS {
 
     class FunctionBodyNode;
     class ScopeChain;
 
-    enum CallType {
-        CallTypeNone,
-        CallTypeNative,
-        CallTypeJS
+    enum ConstructType {
+        ConstructTypeNone,
+        ConstructTypeNative,
+        ConstructTypeJS
     };
 
-    union CallData {
+    union ConstructData {
         struct {
             FunctionBodyNode* functionBody;
             ScopeChain* scopeChain;
@@ -49,4 +49,4 @@ namespace KJS {
 
 } // namespace KJS
 
-#endif // CallData_h
+#endif // ConstructData_h

@@ -419,11 +419,6 @@ void JSObject::defineSetter(ExecState*, const Identifier& propertyName, JSObject
     gs->setSetter(setterFunc);
 }
 
-bool JSObject::implementsConstruct() const
-{
-  return false;
-}
-
 JSObject* JSObject::construct(ExecState*, const List& /*args*/)
 {
   ASSERT(false);

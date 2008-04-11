@@ -303,16 +303,6 @@ namespace KJS {
     virtual JSValue *defaultValue(ExecState *exec, JSType hint) const;
 
     /**
-     * Whether or not the object implements the construct() method. If this
-     * returns false you should not call the construct() method on this
-     * object (typically, an assertion will fail to indicate this).
-     *
-     * @return true if this object implements the construct() method, otherwise
-     * false
-     */
-    virtual bool implementsConstruct() const;
-
-    /**
      * Creates a new object based on this object. Typically this means the
      * following:
      * 1. A new object is created
@@ -329,8 +319,8 @@ namespace KJS {
      * will be set. This can be tested for with ExecState::hadException().
      * Under some circumstances, the exception object may also be returned.
      *
-     * Note: This function should not be called if implementsConstruct() returns
-     * false, in which case it will result in an assertion failure.
+     * Note: This function should not be called if getConstructData() returns
+     * ConstructTypeNone, in which case it will result in an assertion failure.
      *
      * @param exec The current execution state
      * @param args The arguments to be passed to call() once the new object has
