@@ -75,10 +75,9 @@ void FunctionImp::mark()
 
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
-    JSValue* exception;
+    JSValue* exception = 0;
     JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
-    if (!result)
-        exec->setException(exception);
+    exec->setException(exception);
     return result;
 }
 
