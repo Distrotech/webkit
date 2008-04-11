@@ -1,3 +1,13 @@
+2008-04-10  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Fixed Interpreter::execute to honor the new model for returning non-NULL
+        values when an exception is thrown.
+
+        * kjs/interpreter.cpp:
+        (KJS::Interpreter::evaluate):
+
 2008-04-10  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

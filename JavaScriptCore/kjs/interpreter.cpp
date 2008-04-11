@@ -74,8 +74,7 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     
     JSValue* exception;
     JSValue* result = machine().execute(programNode.get(), exec, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain(), &exception);
-    
-    return result ? Completion(Normal, result) : Completion(Throw, exception);
+    return exception ? Completion(Throw, exception) : Completion(Normal, result);
 }
 
 static bool printExceptions = false;
