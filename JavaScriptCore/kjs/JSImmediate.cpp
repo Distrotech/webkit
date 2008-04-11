@@ -24,6 +24,7 @@
 
 #include "JSGlobalObject.h"
 #include "bool_object.h"
+#include "JSNotAnObject.h"
 #include "number_object.h"
 #include "object.h"
 
@@ -33,9 +34,9 @@ JSObject *JSImmediate::toObject(const JSValue *v, ExecState *exec)
 {
     ASSERT(isImmediate(v));
     if (v == jsNull())
-        return throwError(exec, TypeError, "Null value");
+        return new JSNotAnObject(throwError(exec, TypeError, "Null value"));
     else if (v == jsUndefined())
-        return throwError(exec, TypeError, "Undefined value");
+        return new JSNotAnObject(throwError(exec, TypeError, "Undefined value"));
     else if (isBoolean(v)) {
         List args;
         args.append(const_cast<JSValue *>(v));
