@@ -1,3 +1,14 @@
+2008-04-10  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Fix SquirrelFish interpreter to pass internal exceptions back to 
+        native code correctly.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-10  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.
