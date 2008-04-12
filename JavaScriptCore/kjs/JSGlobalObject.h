@@ -25,6 +25,7 @@
 
 #include "JSVariableObject.h"
 #include "RegisterFileStack.h"
+#include <wtf/HashSet.h>
 
 namespace KJS {
 
@@ -48,6 +49,7 @@ namespace KJS {
     class NumberPrototype;
     class ObjectObjectImp;
     class ObjectPrototype;
+    class ProgramCodeBlock;
     class PrototypeReflexiveFunction;
     class RangeError;
     class RangeErrorPrototype;
@@ -133,6 +135,8 @@ namespace KJS {
 
             ExecStateStack activeExecStates;
 
+            HashSet<ProgramCodeBlock*> codeBlocks;
+            
             RegisterFileStack registerFileStack;
         };
 
@@ -236,6 +240,8 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
         
+        HashSet<ProgramCodeBlock*>& codeBlocks() { return d()->codeBlocks; }
+
         RegisterFileStack& registerFileStack() { return d()->registerFileStack; }
 
     private:
