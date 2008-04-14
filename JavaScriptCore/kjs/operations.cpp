@@ -125,4 +125,11 @@ bool strictEqual(ExecState *exec, JSValue *v1, JSValue *v2)
     return false;
 }
 
+JSValue* throwOutOfMemoryError(ExecState* exec)
+{
+    JSObject* error = Error::create(exec, GeneralError, "Out of memory");
+    exec->setException(error);
+    return error;
+}
+
 }

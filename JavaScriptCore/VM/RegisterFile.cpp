@@ -28,6 +28,7 @@
  
 #include "config.h"
 #include "RegisterFile.h"
+#include "RegisterFileStack.h"
 
 #include "Register.h"
 

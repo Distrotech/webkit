@@ -29,7 +29,7 @@
 #include "config.h"
 #include "JSPropertyNameIterator.h"
 
-#include "Identifier.h"
+#include "identifier.h"
 #include "object.h"
 #include "PropertyNameArray.h"
 

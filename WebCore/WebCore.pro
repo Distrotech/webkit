@@ -188,6 +188,7 @@ gtk-port {
 INCLUDEPATH +=  $$PWD \
                 $$PWD/ForwardingHeaders \
                 $$PWD/.. \
+                $$PWD/../JavaScriptCore/VM \
                 $$PWD/../JavaScriptCore/kjs \
                 $$PWD/../JavaScriptCore/bindings \
                 $$PWD/../JavaScriptCore/wtf \
