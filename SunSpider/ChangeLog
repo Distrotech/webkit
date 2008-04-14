@@ -1,6 +1,21 @@
 2008-04-14  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by Oliver.
+        
+        - move ubench tests properly.
+
+        * tests/ubench: Added.
+        * tests/ubench/function-closure.js: Added.
+        * tests/ubench/function-empty.js: Added.
+        * tests/ubench/function-missing-args.js: Added.
+        * tests/ubench/function-sum.js: Added.
+        * tests/ubench/loop-empty-resolve.js: Added.
+        * tests/ubench/loop-empty.js: Added.
+        * tests/ubench/loop-sum.js: Added.
+
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Oliver.
 
         * sunspider: Don't force --runs=1 in squirrelfish mode any more.
 
