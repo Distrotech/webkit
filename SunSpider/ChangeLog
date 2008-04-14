@@ -1,3 +1,16 @@
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - make --squirrelfish mode use the real harness, but a reduced set of tests
+
+        Also add a new ubench mode which runs the older squirrelfish microbenchmarks.
+
+        * sunspider:
+        * tests/LIST-SQUIRRELFISH:
+        * tests/LIST-UBENCH: Added.
+        * tests/squirrelfish: Moved to tests/ubench
+
 2008-04-14  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
