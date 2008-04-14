@@ -1,5 +1,11 @@
 2008-04-14  Maciej Stachowiak  <mjs@apple.com>
 
+        Rubber stamped by Oliver.
+
+        * sunspider: Don't force --runs=1 in squirrelfish mode any more.
+
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
 
         - make --squirrelfish mode use the real harness, but a reduced set of tests
