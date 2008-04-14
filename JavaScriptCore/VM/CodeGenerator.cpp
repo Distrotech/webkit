@@ -249,11 +249,13 @@ void CodeGenerator::addParameter(const Identifier& ident)
 
 RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
 {
-    if (m_scopeDepth)
+    if (!shouldOptimizeLocals() && ident != m_propertyNames->thisIdentifier)
         return 0;
+
     int index = symbolTable().get(ident.ustring().rep());
     if (index == missingSymbolMarker())
         return 0;
+
     return &m_locals[localsIndex(index)];
 }
 
@@ -834,7 +836,7 @@ void CodeGenerator::emitPopScope()
 
 void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
 {
-    JumpContext scope = { labels, continueTarget, breakTarget, m_scopeDepth};
+    JumpContext scope = { labels, continueTarget, breakTarget, m_scopeDepth };
     m_jumpContextStack.append(scope);
 }
 

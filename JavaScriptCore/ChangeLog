@@ -1,3 +1,19 @@
+2008-04-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Fixed access to "this" inside dynamic scopes.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::registerForLocal): Always return a register for
+        "this", even if we're not optimizing access to other locals. Because
+        "this" is a keyword, it's always in a register and always accessible.
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::shouldOptimizeLocals): Factored out a function
+        for determining whether we should optimize access to locals, since
+        eval will need to make this test a little more complicated.
+
 2008-04-14  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Adam.
