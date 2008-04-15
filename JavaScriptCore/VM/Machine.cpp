@@ -50,9 +50,10 @@
 
 namespace KJS {
 
-void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, RegisterFile* registerFile, const Register* r)
+void Machine::dumpCallFrame(const CodeBlock* codeBlock, ScopeChainNode* scopeChain, RegisterFile* registerFile, const Register* r)
 {
-    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain->bottom());
+    ScopeChain sc(scopeChain);
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(sc.bottom());
     InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
     codeBlock->dump(&tmpExec);
     dumpRegisters(codeBlock, registerFile, r);
