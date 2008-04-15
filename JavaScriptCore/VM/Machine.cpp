@@ -538,7 +538,10 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
     scopeChain = scopeChainForCall(newCodeBlock, sc, functionBodyNode, callFrame, registerBase, r);            
-    return privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
+
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
+    registerFile->shrink(oldSize);
+    return result;
 }
 
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
