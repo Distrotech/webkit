@@ -235,7 +235,7 @@ bool Machine::isOpcode(Opcode opcode)
 #endif
 }
 
-static NEVER_INLINE bool resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
+static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
     int r0 = (vPC + 1)->u.operand;
     int id0 = (vPC + 2)->u.operand;
@@ -257,7 +257,7 @@ static NEVER_INLINE bool resolve(ExecState* exec, Instruction* vPC, Register* r,
     return false;
 }
 
-static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
 {
     int r0 = (vPC + 1)->u.operand;
     int id0 = (vPC + 2)->u.operand;
@@ -280,7 +280,7 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
-static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
 {
     int r0 = (vPC + 1)->u.operand;
     int r1 = (vPC + 2)->u.operand;
@@ -319,7 +319,7 @@ static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
     ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
 }
 
-ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
+ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChainNode* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
 {
     callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
     callFrame[Machine::ReturnVPC].u.vPC = vPC + 1;
@@ -364,21 +364,19 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
     return r;
 }
 
-ALWAYS_INLINE ScopeChain* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
+ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
 {
-    ScopeChain* scopeChain;
-
     if (newCodeBlock->needsActivation) {
         COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(callFrame[Machine::OptionalCalleeScopeChain]), ScopeChain_fits_in_register);
-        scopeChain = new (&callFrame[Machine::OptionalCalleeScopeChain]) ScopeChain(*callDataScopeChain);
-        scopeChain->push(new JSActivation(functionBody, registerBase, r - (*registerBase)));
-    } else
-        scopeChain = callDataScopeChain;
+        ScopeChain* sc = new (&callFrame[Machine::OptionalCalleeScopeChain]) ScopeChain(*callDataScopeChain);
+        sc->push(new JSActivation(functionBody, registerBase, r - (*registerBase)));
+        return sc->node();
+    } 
 
-    return scopeChain;
+    return callDataScopeChain->node();
 }
 
-NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r)
+NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register** registerBase, Register*& r)
 {
     if (isGlobalCallFrame(registerBase, r)) {
         codeBlock = 0;
@@ -401,7 +399,7 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
         // Clean up the activation if'n it's necessary
         ASSERT((*iter)->isActivationObject());
         static_cast<JSActivation*>(*iter)->copyRegisters();
-        scopeChain->~ScopeChain();
+        scopeChain->deref();
     }
     
     codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
@@ -414,7 +412,7 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
     return callFrame[ReturnVPC].u.vPC;
 }
 
-NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exceptionValue, CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
+NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exceptionValue, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
 {
     if (exceptionValue->isObject()) {
         JSObject* exception = static_cast<JSObject*>(exceptionValue);
@@ -432,9 +430,11 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
             vPC = unwindCallFrame(codeBlock, k, scopeChain, registerBase, r);
             continue;
         }
+
         // Now unwind the scope chain
+        ScopeChain sc(scopeChain);
         // Step 1) work out how deep the scope chain is
-        int scopeDepth = scopeChain->depth();
+        int scopeDepth = sc.depth();
         
         // Step 2) reduce to the expect depth
         int scopeDelta = scopeDepth - expectedDepth;
@@ -442,7 +442,10 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
         // Step 3) Cry :-(
         ASSERT(scopeDelta >= 0);
         while (scopeDelta--)
-            scopeChain->pop();
+            sc.pop();
+
+        scopeChain = sc.node();
+        
         return handlerVPC;
     }
     return 0;
@@ -464,18 +467,18 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFil
 {
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
 
-    CodeBlock* codeBlock = &programNode->code(*scopeChain);
+    CodeBlock* codeBlock = &programNode->code(scopeChain->node());
     registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->grow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
 
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain->node(), codeBlock, exception);
 
     registerFileStack->popRegisterFile();
     return result;
 }
 
-JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, JSObject* thisObj, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
+JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, JSObject* thisObj, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* sc, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->current();
 
@@ -500,13 +503,14 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     for (List::const_iterator it = args.begin(); it != end; ++it)
         (*++dst).u.jsValue = *it;
 
-    CodeBlock* newCodeBlock = &functionBodyNode->code(*scopeChain);
+    ScopeChainNode* scopeChain = sc->node();
+    CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
-    scopeChain = scopeChainForCall(newCodeBlock, scopeChain, functionBodyNode, callFrame, registerBase, r);            
+    scopeChain = scopeChainForCall(newCodeBlock, sc, functionBodyNode, callFrame, registerBase, r);            
     return privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
 }
 
-JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue** exception)
+JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
@@ -1018,7 +1022,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         int f0 = (++vPC)->u.operand;
 
-        r[r0].u.jsValue = codeBlock->functions[f0]->makeFunction(exec, *scopeChain);
+        r[r0].u.jsValue = codeBlock->functions[f0]->makeFunction(exec, scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
@@ -1027,7 +1031,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         int f0 = (++vPC)->u.operand;
 
-        r[r0].u.jsValue = codeBlock->functionExpressions[f0]->makeFunction(exec, *scopeChain);
+        r[r0].u.jsValue = codeBlock->functionExpressions[f0]->makeFunction(exec, scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
@@ -1050,11 +1054,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
-            
+
             ScopeChain* callDataScopeChain = callData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = callData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(*callDataScopeChain);
+            codeBlock = &functionBodyNode->code(callDataScopeChain->node());
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
@@ -1099,9 +1103,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSValue* returnValue = r[r1].u.jsValue;
         
         if (oldCodeBlock->needsActivation) {
-            ASSERT(scopeChain->top()->isActivationObject());
-            static_cast<JSActivation*>(scopeChain->top())->copyRegisters();
-            scopeChain->~ScopeChain();
+            ASSERT(scopeChain->object->isActivationObject());
+            static_cast<JSActivation*>(scopeChain->object)->copyRegisters();
+            scopeChain->deref();
         }
 
         if (callFrame[CalledAsConstructor].u.i && !returnValue->isObject()) {
@@ -1154,7 +1158,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             ScopeChain* callDataScopeChain = constructData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = constructData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(*callDataScopeChain);
+            codeBlock = &functionBodyNode->code(callDataScopeChain->node());
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
@@ -1191,12 +1195,18 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* o = v->toObject(exec);
         VM_CHECK_EXCEPTION();
         
-        scopeChain->push(o);
+        ScopeChain sc(scopeChain);
+        sc.push(o);
+        scopeChain = sc.node();
+
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pop_scope) {
-        scopeChain->pop();
+        ScopeChain sc(scopeChain);
+        sc.pop();
+        scopeChain = sc.node();
+
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1226,8 +1236,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_jmp_scopes) {
         int scopeDelta = (++vPC)->u.operand;
         int offset = (++vPC)->u.operand;
+        UNUSED_PARAM(scopeDelta);
+#if 0
+        ScopeChain sc(scopeChain);
         while (scopeDelta--)
-            scopeChain->pop();
+            sc.pop();
+        scopeChain = sc.node();
+#endif
         vPC += offset;
         NEXT_OPCODE;
     }

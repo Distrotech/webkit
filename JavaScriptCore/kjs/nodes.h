@@ -2949,7 +2949,7 @@ namespace KJS {
         
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
 
-        ProgramCodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        ProgramCodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
         {
             if (!m_code)
                 generateCode(scopeChain);
@@ -2959,7 +2959,7 @@ namespace KJS {
     private:
         ProgramNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        void generateCode(ScopeChain&) KJS_FAST_CALL;
+        void generateCode(ScopeChainNode*) KJS_FAST_CALL;
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         void initializeSymbolTable(ExecState*) KJS_FAST_CALL;
@@ -2978,7 +2978,7 @@ namespace KJS {
         
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
 
-        ProgramCodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        ProgramCodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
         {
             if (!m_code)
                 generateCode(scopeChain);
@@ -2989,7 +2989,7 @@ namespace KJS {
         EvalNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
         ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
-        void generateCode(ScopeChain&) KJS_FAST_CALL;
+        void generateCode(ScopeChainNode*) KJS_FAST_CALL;
 
         OwnPtr<ProgramCodeBlock> m_code;
     };
@@ -3006,7 +3006,7 @@ namespace KJS {
         
         SymbolTable& symbolTable() { return m_symbolTable; } // FIXME: Remove this
         
-        CodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        CodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
         {
             if (!m_code)
                 generateCode(scopeChain);
@@ -3019,7 +3019,7 @@ namespace KJS {
         FunctionBodyNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
     private:
-        void generateCode(ScopeChain&) KJS_FAST_CALL;
+        void generateCode(ScopeChainNode*) KJS_FAST_CALL;
         
         Vector<Identifier> m_parameters;
         SymbolTable m_symbolTable;
@@ -3037,7 +3037,7 @@ namespace KJS {
         }
 
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
-        FunctionImp* makeFunction(ExecState*, ScopeChain&) KJS_FAST_CALL;
+        FunctionImp* makeFunction(ExecState*, ScopeChainNode*) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual Precedence precedence() const { return PrecMember; }
@@ -3076,7 +3076,7 @@ namespace KJS {
 
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
-        FunctionImp* makeFunction(ExecState*, ScopeChain&) KJS_FAST_CALL;
+        FunctionImp* makeFunction(ExecState*, ScopeChainNode*) KJS_FAST_CALL;
 
         Identifier m_ident;
 

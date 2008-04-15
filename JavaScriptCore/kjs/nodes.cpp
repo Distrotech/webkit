@@ -5594,8 +5594,9 @@ EvalNode::~EvalNode()
 {
 }
 
-void EvalNode::generateCode(ScopeChain& scopeChain)
+void EvalNode::generateCode(ScopeChainNode* sc)
 {
+    ScopeChain scopeChain(sc);
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
@@ -5633,10 +5634,11 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
     return new FunctionBodyNode(children, varStack, funcStack, usesEval, needsClosure);
 }
 
-void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
+void FunctionBodyNode::generateCode(ScopeChainNode* sc)
 {
     m_code.set(new CodeBlock(usesEval(), needsClosure()));
 
+    ScopeChain scopeChain(sc);
     CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
     generator.generate();
 
@@ -5662,8 +5664,9 @@ RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
     return 0;
 }
 
-void ProgramNode::generateCode(ScopeChain& scopeChain)
+void ProgramNode::generateCode(ScopeChainNode* sc)
 {
+    ScopeChain scopeChain(sc);
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
@@ -5772,7 +5775,7 @@ void ProgramNode::processDeclarations(ExecState* exec)
 
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i) {
         FuncDeclNode* node = m_functionStack[i];
-        LocalStorageEntry entry = LocalStorageEntry(node->makeFunction(exec, exec->scopeChain()), minAttributes);
+        LocalStorageEntry entry = LocalStorageEntry(node->makeFunction(exec, exec->scopeChain().node()), minAttributes);
         size_t index = m_functionIndexes[i];
 
         if (index == localStorage.size())
@@ -5822,7 +5825,7 @@ void EvalNode::processDeclarations(ExecState* exec)
 
     for (i = 0, size = m_functionStack.size(); i < size; ++i) {
         FuncDeclNode* funcDecl = m_functionStack[i];
-        variableObject->initializeVariable(exec, funcDecl->m_ident, funcDecl->makeFunction(exec, exec->scopeChain()), 0);
+        variableObject->initializeVariable(exec, funcDecl->m_ident, funcDecl->makeFunction(exec, exec->scopeChain().node()), 0);
     }
 }
 
@@ -5885,9 +5888,9 @@ void FuncDeclNode::addParams()
         m_body->parameters().append(p->ident());
 }
 
-FunctionImp* FuncDeclNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
+FunctionImp* FuncDeclNode::makeFunction(ExecState* exec, ScopeChainNode* scopeChain)
 {
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), ScopeChain(scopeChain));
 
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
@@ -5913,7 +5916,7 @@ RegisterID* FuncExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNewFunctionExpression(dst ? dst : generator.newTemporary(), this);
 }
 
-FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
+FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChainNode* scopeChain)
 {
     bool named = !m_ident.isNull();
     JSObject* functionScopeObject = 0;
@@ -5926,7 +5929,7 @@ FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
         exec->pushScope(functionScopeObject);
     }
 
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), ScopeChain(scopeChain));
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
     func->putDirect(exec->propertyNames().prototype, proto, DontDelete);
