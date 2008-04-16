@@ -1,5 +1,127 @@
 2008-04-15  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+        
+        - fix codegen handling of dst registers
+        
+        1.006x speedup (not sure why).
+        
+        Most emitCode functions take an optional "dst" parameter that says
+        where the output of the instruction should be written. I made some
+        functions for convenient handling of the dst register:
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::tempDestination): Takes the dst register. Returns it if
+        it is not null and is a temporary, otherwise allocates a new temporary. This is
+        intended for cases where an intermediate value might be written into the dst
+
+        (KJS::CodeGenerator::finalDestination): Takes the dst register and an optional
+        register that was used as a temp destination. Picks the right thing for the final
+        output. Intended to be used as the output register for the instruction that generates
+        the final value of a particular node.
+        
+        (KJS::CodeGenerator::moveToDestinationIfNeeded): Takes dst and a
+        RegisterID; moves from the register to dst if dst is defined and
+        different from the register. This is intended for cases where the
+        result of a node is already in a specific register (likely a
+        local), and so no code needs to be generated unless a specific
+        destination has been requested, in which case a move is needed.
+        
+        I also applied these methods throughout emitCode functions. In
+        some cases this was just cleanup, in other cases I fixed actual
+        codegen bugs. Below I have given specific comments for the cases
+        where I believe I fixed a codegen bug, or improved quality of codegen.
+        
+        * kjs/nodes.cpp:
+        (KJS::NullNode::emitCode):
+        (KJS::FalseNode::emitCode):
+        (KJS::TrueNode::emitCode):
+        (KJS::NumberNode::emitCode):
+        (KJS::StringNode::emitCode):
+        (KJS::RegExpNode::emitCode):
+        (KJS::ThisNode::emitCode): Now avoids emitting a mov when dst is
+        the same as the this register (the unlikely case of "this = this");
+        (KJS::ResolveNode::emitCode): Now avoids emitting a mov when dst
+        is the same as the local regiester, in the local var case (the
+        unlikely case of "x = x");
+        (KJS::ArrayNode::emitCode): Fixed a codegen bug where array
+        literal element expressions may have observed an intermediate
+        value of constructing the array.
+        (KJS::ObjectLiteralNode::emitCode): 
+        (KJS::PropertyListNode::emitCode): Fixed a codegen bug where object literal
+        property definition expressions may have obesrved an intermediate value of
+        constructing the object.
+        (KJS::BracketAccessorNode::emitCode):
+        (KJS::DotAccessorNode::emitCode):
+        (KJS::NewExprNode::emitCode):
+        (KJS::FunctionCallValueNode::emitCode):
+        (KJS::FunctionCallBracketNode::emitCode):
+        (KJS::FunctionCallDotNode::emitCode):
+        (KJS::PostIncResolveNode::emitCode):
+        (KJS::PostDecResolveNode::emitCode):
+        (KJS::PostIncBracketNode::emitCode):
+        (KJS::PostDecBracketNode::emitCode):
+        (KJS::PostIncDotNode::emitCode):
+        (KJS::PostDecDotNode::emitCode):
+        (KJS::DeleteResolveNode::emitCode):
+        (KJS::DeleteBracketNode::emitCode):
+        (KJS::DeleteDotNode::emitCode):
+        (KJS::DeleteValueNode::emitCode):
+        (KJS::VoidNode::emitCode):
+        (KJS::TypeOfResolveNode::emitCode):
+        (KJS::TypeOfValueNode::emitCode):
+        (KJS::PreIncResolveNode::emitCode): Fixed a codegen bug where the final
+        value would not be output to the dst register in the local var case.
+        (KJS::PreDecResolveNode::emitCode): Fixed a codegen bug where the final
+        value would not be output to the dst register in the local var case.
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+        (KJS::UnaryPlusNode::emitCode):
+        (KJS::NegateNode::emitCode):
+        (KJS::BitwiseNotNode::emitCode):
+        (KJS::LogicalNotNode::emitCode):
+        (KJS::MultNode::emitCode):
+        (KJS::DivNode::emitCode):
+        (KJS::ModNode::emitCode):
+        (KJS::AddNode::emitCode):
+        (KJS::SubNode::emitCode):
+        (KJS::LeftShiftNode::emitCode):
+        (KJS::RightShiftNode::emitCode):
+        (KJS::UnsignedRightShiftNode::emitCode):
+        (KJS::LessNode::emitCode):
+        (KJS::GreaterNode::emitCode):
+        (KJS::LessEqNode::emitCode):
+        (KJS::GreaterEqNode::emitCode):
+        (KJS::InstanceOfNode::emitCode):
+        (KJS::InNode::emitCode):
+        (KJS::EqualNode::emitCode):
+        (KJS::NotEqualNode::emitCode):
+        (KJS::StrictEqualNode::emitCode):
+        (KJS::NotStrictEqualNode::emitCode):
+        (KJS::BitAndNode::emitCode):
+        (KJS::BitXOrNode::emitCode):
+        (KJS::BitOrNode::emitCode):
+        (KJS::LogicalAndNode::emitCode):
+        (KJS::LogicalOrNode::emitCode):
+        (KJS::ConditionalNode::emitCode):
+        (KJS::emitReadModifyAssignment): Allow an out argument separate from the operands,
+        needed for fixes below.
+        (KJS::ReadModifyResolveNode::emitCode): Fixed a codegen bug where the right side of
+        the expression may observe an intermediate value.
+        (KJS::AssignResolveNode::emitCode): Fixed a codegen bug where the right side of the
+        expression may observe an intermediate value.
+        (KJS::ReadModifyDotNode::emitCode): Fixed a codegen bug where the right side of the
+        expression may observe an intermediate value.
+        (KJS::ReadModifyBracketNode::emitCode): Fixed a codegen bug where the right side of the
+        expression may observe an intermediate value.
+        (KJS::CommaNode::emitCode): Avoid writing temporary value to dst register.
+        (KJS::ReturnNode::emitCode): Void return should return undefined, not null.
+        (KJS::FuncExprNode::emitCode):
+
+2008-04-15  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
 
         - fix huge performance regression (from trunk) in string-unpack-code
