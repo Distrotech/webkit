@@ -731,10 +731,16 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_add) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsAdd(exec, r[r1].u.jsValue, r[r2].u.jsValue);
+        /* add dst(r) src1(r) src2(r)
+
+           Adds the contents of registers src1 and src2, and puts the
+           result in register dst.
+        */
+
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsAdd(exec, r[src1].u.jsValue, r[src2].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
@@ -921,14 +927,21 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_get_prop_id) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int id0 = (++vPC)->u.operand;
+        /* get_prop_id dst(r) base(r) property(id)
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec);
+           Converts the contents of register base to Object, gets the
+           specified property from the object, and puts the result in
+           register dst.
+        */
 
-        Identifier& ident = codeBlock->identifiers[id0];
-        r[r0].u.jsValue = base->get(exec, ident);
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec);
+
+        Identifier& ident = codeBlock->identifiers[property];
+        r[dst].u.jsValue = baseObj->get(exec, ident);
         VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
@@ -1280,13 +1293,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_jmp_scopes) {
         int scopeDelta = (++vPC)->u.operand;
         int offset = (++vPC)->u.operand;
-        UNUSED_PARAM(scopeDelta);
-#if 0
         ScopeChain sc(scopeChain);
         while (scopeDelta--)
             sc.pop();
         scopeChain = sc.node();
-#endif
         vPC += offset;
         NEXT_OPCODE;
     }

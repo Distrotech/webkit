@@ -469,13 +469,13 @@ RegisterID* CodeGenerator::emitNegate(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
-RegisterID* CodeGenerator::emitAdd(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_add));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitMult(RegisterID* r0, RegisterID* r1, RegisterID* r2)
