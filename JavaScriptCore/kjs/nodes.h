@@ -3153,7 +3153,7 @@ namespace KJS {
         {
         }
 
-        RegisterID* emitCodeForBlock(CodeGenerator&, RegisterID* dst, RegisterID* input) KJS_FAST_CALL;
+        RegisterID* emitCodeForBlock(CodeGenerator&, RegisterID* input, RegisterID* dst = 0) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         JSValue* executeBlock(ExecState*, JSValue *input) KJS_FAST_CALL;

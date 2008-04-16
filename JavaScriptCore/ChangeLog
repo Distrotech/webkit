@@ -1,3 +1,30 @@
+2008-04-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt and Maciej Stachowiak.
+        
+        Fixed a codegen bug in with and switch, and added an ASSERT to
+        make sure it doesn't happen again.
+        
+        emitCode() assumes that dst, if non-zero, is either referenced or
+        non-temporary (i.e., it assumes that newTemporary() will return a
+        register not equal to dst). Certain callers to emitCode() weren't
+        guaranteeing that to be so, so temporary register values were being
+        overwritten.
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::emitNode): ASSERT that dst is referenced or non-temporary.
+
+        * kjs/nodes.cpp:
+        (KJS::CommaNode::emitCode): Reference the dst we pass.
+
+        (KJS::WithNode::emitCode): No need to pass an explicit dst register.
+        
+        (KJS::CaseBlockNode::emitCodeForBlock): No need to pass an explicit dst register.
+        (KJS::SwitchNode::emitCode): No need to pass an explicit dst register.
+
+        * kjs/nodes.h: Made dst the last parameter to emitCodeForBlock, to match
+        emitCode.
+
 2008-04-15  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
