@@ -2,6 +2,18 @@
 
         Reviewed by Oliver.
         
+        - fix incorrect result on 3d-raytrace test
+        
+        Oliver found and tracked down this bug, I just typed in the fix.
+
+        * VM/Machine.cpp:
+        (KJS::slideRegisterWindowForCall): When setting omitted parameters to undefined,
+        account for the space for local variables.
+
+2008-04-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
         - fix codegen handling of dst registers
         
         1.006x speedup (not sure why).
