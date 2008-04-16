@@ -207,9 +207,11 @@ namespace KJS {
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
+        int scopeDepth() { return m_scopeDepth; }
 
         RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
         void emitThrow(RegisterID*);
+
     private:
         struct JSValueHashTraits  {
             typedef JSValue* TraitType;

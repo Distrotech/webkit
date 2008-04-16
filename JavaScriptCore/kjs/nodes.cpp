@@ -5214,6 +5214,11 @@ JSValue* BreakNode::execute(ExecState* exec)
 RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RegisterID* r0 = m_value ? m_value->emitCode(generator, dst) : generator.emitLoad(generator.finalDestination(dst), jsUndefined());
+    if (generator.scopeDepth()) {
+        RefPtr<LabelID> l0 = generator.newLabel();
+        generator.emitJumpScopes(l0.get(), 0);
+        generator.emitLabel(l0.get());
+    }
     return generator.emitReturn(r0);
 }
 
