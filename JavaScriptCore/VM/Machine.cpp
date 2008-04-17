@@ -495,7 +495,7 @@ static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBl
 static void* throwTarget;
 #endif
 
-JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
+JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
 
@@ -503,6 +503,9 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFil
     registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->grow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
+
+    ASSERT(exec->dynamicGlobalObject()->symbolTable().get(CommonIdentifiers::shared()->thisIdentifier.ustring().rep()) == ProgramCodeThisRegister);
+    r[ProgramCodeThisRegister].u.jsValue = thisObj;
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain->node(), codeBlock, exception);
 
