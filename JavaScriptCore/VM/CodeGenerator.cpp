@@ -162,6 +162,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     , m_scopeNode(programNode)
     , m_codeBlock(codeBlock)
     , m_scopeDepth(0)
+    , m_isEvalCode(false)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 
@@ -203,6 +204,7 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     , m_scopeNode(functionBody)
     , m_codeBlock(codeBlock)
     , m_scopeDepth(0)
+    , m_isEvalCode(false)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 {
@@ -232,6 +234,19 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     for (size_t i = 0; i < parameters.size(); ++i) {
         addParameter(parameters[i]);
     }
+}
+
+CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock)
+    : m_scopeChain(&scopeChain)
+    , m_symbolTable(symbolTable)
+    , m_scopeNode(evalNode)
+    , m_codeBlock(codeBlock)
+    , m_scopeDepth(0)
+    , m_isEvalCode(true)
+    , m_nextVar(-1)
+    , m_propertyNames(CommonIdentifiers::shared())
+{
+    addVar(m_propertyNames->thisIdentifier);
 }
 
 void CodeGenerator::addParameter(const Identifier& ident)
@@ -769,6 +784,18 @@ RegisterID* CodeGenerator::emitNewFunctionExpression(RegisterID* r0, FuncExprNod
 
 RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, RegisterID* r2, ArgumentsNode* argumentsNode)
 {
+    return emitCall(op_call, r0, r1, r2, argumentsNode);
+}
+
+RegisterID* CodeGenerator::emitCallEval(RegisterID* r0, RegisterID* r1, RegisterID* r2, ArgumentsNode* argumentsNode)
+{
+    return emitCall(op_call_eval, r0, r1, r2, argumentsNode);
+}
+
+RegisterID* CodeGenerator::emitCall(OpcodeID opcodeID, RegisterID* r0, RegisterID* r1, RegisterID* r2, ArgumentsNode* argumentsNode)
+{
+    ASSERT(opcodeID == op_call || opcodeID == op_call_eval);
+
     RefPtr<RegisterID> ref1 = r1;
     RefPtr<RegisterID> ref2 = r2;
     
@@ -785,7 +812,7 @@ RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, RegisterID* 
         emitNode(argv.last().get(), n);
     }
 
-    instructions().append(machine().getOpcode(op_call));
+    instructions().append(machine().getOpcode(opcodeID));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2 ? r2->index() : missingSymbolMarker()); // We encode the "this" value in the instruction stream, to avoid an explicit instruction for copying or loading it.

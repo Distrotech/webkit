@@ -798,6 +798,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2990,6 +2991,7 @@ namespace KJS {
 
         ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
         void generateCode(ScopeChainNode*) KJS_FAST_CALL;
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         OwnPtr<ProgramCodeBlock> m_code;
     };

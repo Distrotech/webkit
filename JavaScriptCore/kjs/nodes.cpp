@@ -1264,7 +1264,6 @@ inline JSValue* ExpressionNode::resolveAndCall(ExecState* exec, const Identifier
             if (callerType == EvalOperator) {
                 if (base == exec->lexicalGlobalObject() && func == exec->lexicalGlobalObject()->evalFunction()) {
                     ASSERT_NOT_REACHED();
-                    return eval(exec, exec->scopeChain(), exec->variableObject(), exec->dynamicGlobalObject(), exec->thisValue(), argList);
                 }
             }
             return func->call(exec, thisObj, argList);
@@ -1273,6 +1272,14 @@ inline JSValue* ExpressionNode::resolveAndCall(ExecState* exec, const Identifier
     } while (iter != end);
 
     return throwUndefinedVariableError(exec, ident);
+}
+
+RegisterID* EvalFunctionCallNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.tempDestination(dst);
+    RegisterID* r1 = generator.newTemporary();
+    generator.emitResolveBaseAndFunc(r0.get(), r1, CommonIdentifiers::shared()->eval);
+    return generator.emitCallEval(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
 }
 
 void EvalFunctionCallNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5601,6 +5608,15 @@ EvalNode::~EvalNode()
 {
 }
 
+RegisterID* EvalNode::emitCode(CodeGenerator& generator, RegisterID*)
+{
+    RegisterID* r0 = statementListEmitCode(m_children, generator);
+    if (!r0)
+        r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
+    generator.emitEnd(r0);
+    return 0;
+}
+
 void EvalNode::generateCode(ScopeChainNode* sc)
 {
     ScopeChain scopeChain(sc);
@@ -5609,7 +5625,10 @@ void EvalNode::generateCode(ScopeChainNode* sc)
     
     m_code.set(new ProgramCodeBlock(usesEval(), needsClosure(), globalObject));
     
-    ASSERT_NOT_REACHED();
+    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get());
+    generator.generate();
+
+    m_children.shrinkCapacity(0);
 }
 
 EvalNode* EvalNode::create(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)

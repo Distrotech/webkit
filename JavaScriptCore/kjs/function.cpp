@@ -683,41 +683,6 @@ static double parseFloat(const UString& s)
     return s.toDouble( true /*tolerant*/, false /* NaN for empty string */ );
 }
 
-JSValue* eval(ExecState* exec, const ScopeChain& scopeChain, JSVariableObject* variableObject, JSGlobalObject* globalObject, JSObject* thisObj, const List& args)
-{
-    JSValue* x = args[0];
-    if (!x->isString())
-        return x;
-
-    UString s = x->toString(exec);
-
-    int sourceId;
-    int errLine;
-    UString errMsg;
-    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
-
-    Debugger* dbg = exec->dynamicGlobalObject()->debugger();
-    if (dbg) {
-        bool cont = dbg->sourceParsed(exec, sourceId, UString(), s, 0, errLine, errMsg);
-        if (!cont)
-            return jsUndefined();
-    }
-
-    if (!evalNode)
-        return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
-
-    EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, variableObject);
-
-    JSValue* value = evalNode->execute(&newExec);
-
-    if (newExec.completionType() == Throw) {
-        exec->setException(value);
-        return value;
-    }
-
-    return value ? value : jsUndefined();
-}
-
 JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, JSObject* thisObj, const List& args)
 {
     JSGlobalObject* globalObject = thisObj->isGlobalObject() ? static_cast<JSGlobalObject*>(thisObj) : 0;
@@ -726,7 +691,34 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
         return throwError(exec, EvalError, "The \"this\" value passed to eval must be the global object from which eval originated");
 
     ScopeChain scopeChain(globalObject);
-    return eval(exec, scopeChain, globalObject, globalObject, globalObject, args);
+
+    JSValue* x = args[0];
+    if (!x->isString())
+        return x;
+    
+    UString s = x->toString(exec);
+    
+    int sourceId;
+    int errLine;
+    UString errMsg;
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+    
+    if (!evalNode)
+        return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
+
+    ASSERT(!exec->dynamicGlobalObject()->debugger());
+    
+    EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, globalObject);
+    
+    JSValue* exception = 0;
+    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception);
+    
+    if (exception) {
+        exec->setException(exception);
+        return value;
+    }
+    
+    return value ? value : jsUndefined();
 }
 
 JSValue* globalFuncParseInt(ExecState* exec, JSObject*, const List& args)
