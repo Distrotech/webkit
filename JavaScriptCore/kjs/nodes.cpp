@@ -2750,9 +2750,9 @@ bool LogicalNotNode::evaluateToBoolean(ExecState* exec)
 
 RegisterID* MultNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitMult(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_term1.get());
+    RegisterID* src2 = generator.emitNode(m_term2.get());
+    return generator.emitMul(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void MultNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2798,9 +2798,9 @@ uint32_t MultNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* DivNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitDiv(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> dividend = generator.emitNode(m_term1.get());
+    RegisterID* divisor = generator.emitNode(m_term2.get());
+    return generator.emitDiv(generator.finalDestination(dst, dividend.get()), dividend.get(), divisor);
 }
 
 void DivNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2840,9 +2840,9 @@ uint32_t DivNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* ModNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitMod(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> dividend = generator.emitNode(m_term1.get());
+    RegisterID* divisor = generator.emitNode(m_term2.get());
+    return generator.emitMod(generator.finalDestination(dst, dividend.get()), dividend.get(), divisor);
 }
 
 void ModNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3092,9 +3092,9 @@ JSValue* AddStringRightNode::evaluate(ExecState* exec)
 
 RegisterID* SubNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitSub(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_term1.get());
+    RegisterID* src2 = generator.emitNode(m_term2.get());
+    return generator.emitSub(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void SubNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3136,9 +3136,9 @@ uint32_t SubNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* LeftShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitLeftShift(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> val = generator.emitNode(m_term1.get());
+    RegisterID* shift = generator.emitNode(m_term2.get());
+    return generator.emitLeftShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
 void LeftShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3178,9 +3178,9 @@ uint32_t LeftShiftNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* RightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitRightShift(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> val = generator.emitNode(m_term1.get());
+    RegisterID* shift = generator.emitNode(m_term2.get());
+    return generator.emitRightShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
 void RightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3220,9 +3220,9 @@ uint32_t RightShiftNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* UnsignedRightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitUnsignedRightShift(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> val = generator.emitNode(m_term1.get());
+    RegisterID* shift = generator.emitNode(m_term2.get());
+    return generator.emitUnsignedRightShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
 void UnsignedRightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3704,9 +3704,9 @@ bool NotStrictEqualNode::evaluateToBoolean(ExecState* exec)
 
 RegisterID* BitAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitAnd(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitBitAnd(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void BitAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3756,9 +3756,9 @@ uint32_t BitAndNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* BitXOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitXOr(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitBitXOr(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void BitXOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3802,9 +3802,9 @@ uint32_t BitXOrNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* BitOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitBitOr(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitBitOr(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void BitOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4057,51 +4057,51 @@ static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(ExecState* exec, JSVa
 // ------------------------------ ReadModifyResolveNode -----------------------------------
 
 // FIXME: should this be moved to be a method on CodeGenerator?
-static ALWAYS_INLINE RegisterID* emitReadModifyAssignment(CodeGenerator& generator, RegisterID* r0, RegisterID* r1, RegisterID* r2, Operator oper)
+static ALWAYS_INLINE RegisterID* emitReadModifyAssignment(CodeGenerator& generator, RegisterID* dst, RegisterID* src1, RegisterID* src2, Operator oper)
 {
     switch (oper) {
         case OpMultEq:
-            return generator.emitMult(r0, r1, r2);
+            return generator.emitMul(dst, src1, src2);
         case OpDivEq:
-            return generator.emitDiv(r0, r1, r2);
+            return generator.emitDiv(dst, src1, src2);
         case OpPlusEq:
-            return generator.emitAdd(r0, r1, r2);
+            return generator.emitAdd(dst, src1, src2);
         case OpMinusEq:
-            return generator.emitSub(r0, r1, r2);
+            return generator.emitSub(dst, src1, src2);
         case OpLShift:
-            return generator.emitLeftShift(r0, r1, r2);
+            return generator.emitLeftShift(dst, src1, src2);
         case OpRShift:
-            return generator.emitRightShift(r0, r1, r2);
+            return generator.emitRightShift(dst, src1, src2);
         case OpURShift:
-            return generator.emitUnsignedRightShift(r0, r1, r2);
+            return generator.emitUnsignedRightShift(dst, src1, src2);
         case OpAndEq:
-            return generator.emitBitAnd(r0, r1, r2);
+            return generator.emitBitAnd(dst, src1, src2);
         case OpXOrEq:
-            return generator.emitBitXOr(r0, r1, r2);
+            return generator.emitBitXOr(dst, src1, src2);
         case OpOrEq:
-            return generator.emitBitOr(r0, r1, r2);
+            return generator.emitBitOr(dst, src1, src2);
         case OpModEq:
-            return generator.emitMod(r0, r1, r2);
+            return generator.emitMod(dst, src1, src2);
         default:
             ASSERT_NOT_REACHED();
     }
 
-    return r0;
+    return dst;
 }
 
 RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
-        RegisterID* r1 = generator.emitNode(m_right.get());
-        RegisterID* r2 = emitReadModifyAssignment(generator, r0, r0, r1, m_operator);
-        return generator.moveToDestinationIfNeeded(dst, r2);
+    if (RegisterID* dst = generator.registerForLocal(m_ident)) {
+        RegisterID* src2 = generator.emitNode(m_right.get());
+        RegisterID* result = emitReadModifyAssignment(generator, dst, dst, src2, m_operator);
+        return generator.moveToDestinationIfNeeded(dst, result);
     }
 
-    RefPtr<RegisterID> r1 = generator.tempDestination(dst);
-    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
-    RegisterID* r2 = generator.emitNode(m_right.get());
-    RegisterID* r3 = emitReadModifyAssignment(generator, generator.finalDestination(dst, r1.get()), r1.get(), r2, m_operator);
-    return generator.emitPutPropId(r0.get(), m_ident, r3);
+    RefPtr<RegisterID> src1 = generator.tempDestination(dst);
+    RefPtr<RegisterID> base = generator.emitResolveBaseAndProperty(generator.newTemporary(), src1.get(), m_ident);
+    RegisterID* src2 = generator.emitNode(m_right.get());
+    RegisterID* result = emitReadModifyAssignment(generator, generator.finalDestination(dst, src1.get()), src1.get(), src2, m_operator);
+    return generator.emitPutPropId(base.get(), m_ident, result);
 }
 
 void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)

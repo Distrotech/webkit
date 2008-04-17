@@ -265,8 +265,8 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printBinaryOp(location, it, "add");
             break;
         }
-        case op_mult: {
-            printBinaryOp(location, it, "mult");
+        case op_mul: {
+            printBinaryOp(location, it, "mul");
             break;
         }
         case op_div: {

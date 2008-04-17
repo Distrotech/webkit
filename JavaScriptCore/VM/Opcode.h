@@ -56,7 +56,7 @@ namespace KJS {
         macro(op_to_jsnumber) \
         macro(op_negate) \
         macro(op_add) \
-        macro(op_mult) \
+        macro(op_mul) \
         macro(op_div) \
         macro(op_mod) \
         macro(op_sub) \

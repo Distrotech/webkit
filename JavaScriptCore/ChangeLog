@@ -1,3 +1,40 @@
+2008-04-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - add documentation (and meaningful parameter names) for arithmetic and bitwise binary ops
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitMul):
+        (KJS::CodeGenerator::emitDiv):
+        (KJS::CodeGenerator::emitMod):
+        (KJS::CodeGenerator::emitSub):
+        (KJS::CodeGenerator::emitLeftShift):
+        (KJS::CodeGenerator::emitRightShift):
+        (KJS::CodeGenerator::emitUnsignedRightShift):
+        (KJS::CodeGenerator::emitBitAnd):
+        (KJS::CodeGenerator::emitBitXOr):
+        (KJS::CodeGenerator::emitBitOr):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::MultNode::emitCode):
+        (KJS::DivNode::emitCode):
+        (KJS::ModNode::emitCode):
+        (KJS::SubNode::emitCode):
+        (KJS::LeftShiftNode::emitCode):
+        (KJS::RightShiftNode::emitCode):
+        (KJS::UnsignedRightShiftNode::emitCode):
+        (KJS::BitAndNode::emitCode):
+        (KJS::BitXOrNode::emitCode):
+        (KJS::BitOrNode::emitCode):
+        (KJS::emitReadModifyAssignment):
+        (KJS::ReadModifyResolveNode::emitCode):
+
 2008-04-16  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
