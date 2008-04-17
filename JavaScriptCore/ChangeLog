@@ -1,5 +1,21 @@
 2008-04-17  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Sam Weinig.
+        
+        Added some ASSERTs to document codegen failures in
+        run-javascriptcore-tests.
+        
+        For all tests, program-level codegen now either succeeds, or fails with
+        an ASSERT.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::newTemporary):
+        (KJS::CodeGenerator::newLabel):
+
+2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Maciej Stachowiak.
         
         Fixed another case of a dst register being an unreferenced temporary
