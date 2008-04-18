@@ -52,7 +52,7 @@ namespace KJS {
                ReturnValueRegister,
                ArgumentStartRegister,
                CalledAsConstructor,
-               OptionalCalleeScopeChain,
+               OptionalCalleeActivation,
                CallFrameHeaderSize};
         
         enum { ProgramCodeThisRegister = -1 };

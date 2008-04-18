@@ -1,3 +1,19 @@
+2008-04-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - ensure that activations are kept in a register to protect them from GC
+        
+        Also renamed OptionalCalleeScopeChain constant to OptionalCalleeActivation, since
+        that is what is now kept there, and there is no more need to keep the scope chain in
+        the register file.
+
+        * VM/Machine.cpp:
+        (KJS::initializeCallFrame):
+        (KJS::scopeChainForCall):
+        * VM/Machine.h:
+        (KJS::Machine::):
+
 2008-04-16  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
