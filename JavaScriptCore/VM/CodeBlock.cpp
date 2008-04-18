@@ -154,6 +154,10 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printBinaryOp(location, it, "bitor");
             break;
         }
+        case op_instance_of: {
+            printBinaryOp(location, it, "instanceOf");
+            break;
+        }
         case op_resolve: {
             int r0 = (++it)->u.operand;
             int k0 = (++it)->u.operand;

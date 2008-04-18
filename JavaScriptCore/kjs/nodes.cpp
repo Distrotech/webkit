@@ -3174,6 +3174,13 @@ bool GreaterEqNode::evaluateToBoolean(ExecState* exec)
     return inlineEvaluateToBoolean(exec);
 }
 
+RegisterID* InstanceOfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
+    RegisterID* r1 = generator.emitNode(m_expr2.get());
+    return generator.emitInstanceOf(dst ? dst : generator.newTemporary(r0.get()), r0.get(), r1);
+}
+
 void InstanceOfNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
