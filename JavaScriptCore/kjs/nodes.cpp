@@ -4784,12 +4784,12 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
     return new FunctionBodyNode(children, varStack, funcStack, usesEval, needsClosure);
 }
 
-void FunctionBodyNode::generateCode(ExecState* exec)
+void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 {
-    m_code.set(new CodeBlock);
+    m_code.set(new CodeBlock(usesEval(), needsClosure()));
     
     unsigned localCount = m_functionStack.size() + m_varStack.size();
-    CodeGenerator generator(exec->scopeChain(), &m_symbolTable, localCount, m_parameters.size(), this, m_code.get());
+    CodeGenerator generator(scopeChain, &m_symbolTable, localCount, m_parameters.size(), this, m_code.get());
 
     for (size_t i = 0, size = m_parameters.size(); i < size; ++i)
         generator.addParameter(m_parameters[i]);
@@ -4800,7 +4800,7 @@ void FunctionBodyNode::generateCode(ExecState* exec)
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
         generator.addFunction(m_functionStack[i]->m_ident);
 
-    generator.generate(exec);
+    generator.generate();
 
     m_children.shrinkCapacity(0);
 }
@@ -4840,12 +4840,12 @@ RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
     return 0;
 }
 
-void ProgramNode::generateCode(ExecState* exec)
+void ProgramNode::generateCode(ScopeChain& scopeChain)
 {
-    m_code.set(new CodeBlock);
+    m_code.set(new CodeBlock(usesEval(), needsClosure()));
     
     unsigned localCount = m_functionStack.size() + m_varStack.size();
-    CodeGenerator generator(exec->scopeChain(), &exec->dynamicGlobalObject()->symbolTable(), localCount, 0, this, m_code.get());
+    CodeGenerator generator(scopeChain, &static_cast<JSGlobalObject*>(scopeChain.bottom())->symbolTable(), localCount, 0, this, m_code.get());
 
     for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
         generator.addVar(m_varStack[i].first);
@@ -4853,7 +4853,7 @@ void ProgramNode::generateCode(ExecState* exec)
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i)
         generator.addFunction(m_functionStack[i]->m_ident);
 
-    generator.generate(exec);
+    generator.generate();
 
     m_children.shrinkCapacity(0);
 }
@@ -4953,7 +4953,7 @@ void ProgramNode::processDeclarations(ExecState* exec)
 
     for (size_t i = 0, size = m_functionStack.size(); i < size; ++i) {
         FuncDeclNode* node = m_functionStack[i];
-        LocalStorageEntry entry = LocalStorageEntry(node->makeFunction(exec), minAttributes);
+        LocalStorageEntry entry = LocalStorageEntry(node->makeFunction(exec, exec->scopeChain()), minAttributes);
         size_t index = m_functionIndexes[i];
 
         if (index == localStorage.size())
@@ -5003,7 +5003,7 @@ void EvalNode::processDeclarations(ExecState* exec)
 
     for (i = 0, size = m_functionStack.size(); i < size; ++i) {
         FuncDeclNode* funcDecl = m_functionStack[i];
-        variableObject->putWithAttributes(exec, funcDecl->m_ident, funcDecl->makeFunction(exec), 0);
+        variableObject->putWithAttributes(exec, funcDecl->m_ident, funcDecl->makeFunction(exec, exec->scopeChain()), 0);
     }
 }
 
@@ -5066,9 +5066,9 @@ void FuncDeclNode::addParams()
         m_body->parameters().append(p->ident());
 }
 
-FunctionImp* FuncDeclNode::makeFunction(ExecState* exec)
+FunctionImp* FuncDeclNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
 {
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), exec->scopeChain());
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
 
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);

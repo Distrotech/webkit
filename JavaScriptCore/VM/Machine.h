@@ -40,7 +40,7 @@ namespace KJS {
 
     class Machine {
     public:
-        static const int returnInfoSize = 6;
+        static const int returnInfoSize = 7;
 
         Machine();
         
