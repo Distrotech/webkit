@@ -654,6 +654,15 @@ RegisterID* CodeGenerator::emitResolveBase(RegisterID* r0, const Identifier& ide
     return r0;
 }
 
+RegisterID* CodeGenerator::emitResolveBaseAndFunc(RegisterID* r0, RegisterID* r1, const Identifier& ident)
+{
+    instructions().append(machine().getOpcode(op_resolve_base_and_func));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(addConstant(ident));
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& ident)
 {
     instructions().append(machine().getOpcode(op_get_prop_id));

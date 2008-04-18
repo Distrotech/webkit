@@ -271,6 +271,45 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
+static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+{
+    int r0 = (vPC + 1)->u.operand;
+    int r1 = (vPC + 2)->u.operand;
+    int id0 = (vPC + 3)->u.operand;
+
+    ScopeChainIterator iter = scopeChain->begin();
+    ScopeChainIterator end = scopeChain->end();
+    
+    // FIXME: add scopeDepthIsZero optimization
+    
+    ASSERT(iter != end);
+    
+    PropertySlot slot;
+    Identifier& ident = codeBlock->identifiers[id0];
+    JSObject* base;
+    do {
+        base = *iter;
+        if (base->getPropertySlot(exec, ident, slot)) {            
+            JSObject* thisObj = base;
+            // ECMA 11.2.3 says that in this situation the this value should be null.
+            // However, section 10.2.3 says that in the case where the value provided
+            // by the caller is null, the global object should be used. It also says
+            // that the section does not apply to internal functions, but for simplicity
+            // of implementation we use the global object anyway here. This guarantees
+            // that in host objects you always get a valid object for this.
+            if (thisObj->isActivationObject())
+                thisObj = exec->dynamicGlobalObject();
+            
+            r[r0].u.jsValue = thisObj;
+            r[r1].u.jsValue = slot.getValue(exec, base, ident);
+            return;
+        }
+        ++iter;
+    } while (iter != end);
+    
+    ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
+}
+
 ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
 {
     callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
@@ -815,6 +854,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_resolve_base) {
         resolveBase(exec, vPC, r, scopeChain, codeBlock);
         vPC += 3;
+
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_resolve_base_and_func) {
+        resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock);
+        vPC += 4;
 
         NEXT_OPCODE;
     }
