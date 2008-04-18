@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -75,6 +76,21 @@ static inline bool jsLess(ExecState* exec, JSValue* v1, JSValue* v2)
         return n1 < n2;
 
     return static_cast<const StringImp*>(p1)->value() < static_cast<const StringImp*>(p2)->value();
+}
+
+static inline bool jsLessEq(ExecState* exec, JSValue* v1, JSValue* v2)
+{
+    double n1;
+    double n2;
+    JSValue* p1;
+    JSValue* p2;
+    bool wasNotString1 = v1->getPrimitiveNumber(exec, n1, p1);
+    bool wasNotString2 = v2->getPrimitiveNumber(exec, n2, p2);
+
+    if (wasNotString1 | wasNotString2)
+        return n1 <= n2;
+
+    return !(static_cast<const StringImp*>(p2)->value() < static_cast<const StringImp*>(p1)->value());
 }
 
 static JSValue* jsAddSlowCase(ExecState* exec, JSValue* v1, JSValue* v2)
@@ -240,11 +256,56 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_equal) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(equal(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_nequal) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(!equal(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_stricteq) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(strictEqual(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_nstricteq) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(!strictEqual(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_less) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsBoolean(jsLess(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_lesseq) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(jsLessEq(exec, r[r1].u.jsValue, r[r2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
@@ -271,6 +332,96 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r2 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsAdd(exec, r[r1].u.jsValue, r[r2].u.jsValue);
 
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_mult) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) * r[r2].u.jsValue->toNumber(exec));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_div) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) / r[r2].u.jsValue->toNumber(exec));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_mod) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(fmod(r[r1].u.jsValue->toNumber(exec), r[r2].u.jsValue->toNumber(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_sub) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) - r[r2].u.jsValue->toNumber(exec));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_lshift) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) << (r[r2].u.jsValue->toUInt32(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_rshift) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) >> (r[r2].u.jsValue->toUInt32(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_urshift) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toUInt32(exec)) >> (r[r2].u.jsValue->toUInt32(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_bitand) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) & (r[r2].u.jsValue->toInt32(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_bitxor) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) ^ (r[r2].u.jsValue->toInt32(exec)));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_bitor) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) | (r[r2].u.jsValue->toInt32(exec)));
+        
         ++vPC;
         NEXT_OPCODE;
     }

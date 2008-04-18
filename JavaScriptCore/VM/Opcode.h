@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,11 +38,27 @@ namespace KJS {
         macro(op_load) \
         macro(op_mov) \
         \
+        macro(op_equal) \
+        macro(op_nequal) \
+        macro(op_stricteq) \
+        macro(op_nstricteq) \
         macro(op_less) \
+        macro(op_lesseq) \
         \
         macro(op_pre_inc) \
         macro(op_post_inc) \
         macro(op_add) \
+        macro(op_mult) \
+        macro(op_div) \
+        macro(op_mod) \
+        macro(op_sub) \
+        \
+        macro(op_lshift) \
+        macro(op_rshift) \
+        macro(op_urshift) \
+        macro(op_bitand) \
+        macro(op_bitxor) \
+        macro(op_bitor) \
         \
         macro(op_resolve) \
         macro(op_resolve_base) \
