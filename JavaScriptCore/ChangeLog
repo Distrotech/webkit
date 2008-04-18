@@ -1,3 +1,14 @@
+2008-03-27  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej Stachowiak.
+
+        Add support for LogicalAndNode and LogicalOrNode.
+
+        * kjs/nodes.cpp:
+        (KJS::LogicalAndNode::emitCode):
+        (KJS::LogicalOrNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-27  Sam Weinig  <sam@webkit.org>
 
         Clean up code and debug output.
