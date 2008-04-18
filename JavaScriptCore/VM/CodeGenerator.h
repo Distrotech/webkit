@@ -265,9 +265,9 @@ namespace KJS {
         
         HashSet<RefPtr<UString::Rep>, IdentifierRepHash, IdentifierRepHashTraits> m_functions;
 
-        Vector<RegisterID, 128> m_locals;
-        Vector<RegisterID, 128> m_temporaries;
-        Vector<LabelID, 128> m_labels;
+        Vector<RegisterID, 512> m_locals;
+        Vector<RegisterID, 512> m_temporaries;
+        Vector<LabelID, 512> m_labels;
         int m_scopeDepth;
         bool m_isEvalCode;
         
