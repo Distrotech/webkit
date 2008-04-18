@@ -66,20 +66,22 @@ namespace KJS {
 
         bool isOpcode(Opcode opcode);
         
-        void execute(ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, CodeBlock* codeBlock)
-        {
-            RegisterFile* registerFile = registerFileStack->pushRegisterFile();
-            privateExecute(Normal, exec, registerFile, scopeChain, codeBlock);
-            registerFileStack->popRegisterFile();
-        }
+        void execute(ProgramNode*, ExecState*, RegisterFileStack*, ScopeChain*);
+        void execute(FunctionBodyNode*, ExecState*, RegisterFileStack*, ScopeChain*);
         
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
-        NEVER_INLINE static Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&);
-        NEVER_INLINE static Instruction* throwException(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&, const Instruction*);
+
+        NEVER_INLINE Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&);
+        NEVER_INLINE Instruction* throwException(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&, const Instruction*);
+
         void privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, ScopeChain* = 0, CodeBlock* = 0);
+
         void dumpCallFrame(const CodeBlock*, const ScopeChain*, RegisterFile*, const Register*);
         void dumpRegisters(const CodeBlock*, RegisterFile*, const Register*);
+        
+        bool isGlobalCallFrame(Register** registerBase, const Register* r) { return (*registerBase) == r; }
+
 #if HAVE(COMPUTED_GOTO)        
         Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
         HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
