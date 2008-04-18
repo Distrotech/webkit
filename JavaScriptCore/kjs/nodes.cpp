@@ -5322,25 +5322,27 @@ RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID
         generator.emitJump(defaultLabel.get());
     }
 
+    RegisterID* result = 0;
+
     size_t i = 0;
     for (ClauseListNode* list = m_list1.get(); list; list = list->getNext()) {
         generator.emitLabel(labelVector[i++].get());
-        dst = statementListEmitCode(list->getClause()->children(), generator, dst);
+        result = statementListEmitCode(list->getClause()->children(), generator, dst);
     }
 
     if (m_defaultClause) {
         generator.emitLabel(defaultLabel.get());
-        dst = statementListEmitCode(m_defaultClause->children(), generator, dst);
+        result = statementListEmitCode(m_defaultClause->children(), generator, dst);
     }
 
     for (ClauseListNode* list = m_list2.get(); list; list = list->getNext()) {
         generator.emitLabel(labelVector[i++].get());
-        dst = statementListEmitCode(list->getClause()->children(), generator, dst);
+        result = statementListEmitCode(list->getClause()->children(), generator, dst);
     }
 
     ASSERT(i == labelVector.size());
 
-    return dst;
+    return result;
 }
 
 void CaseBlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
