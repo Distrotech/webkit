@@ -2,6 +2,17 @@
 
         Reviewed by Sam Weinig.
         
+        Fixed up logging of jump instructions to follow the following style:
+        
+        jump    offset(->absoluteTarget)
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
         Changed the SymbolTable API to use int instead of size_t. It has been
         using int internally for a while now (since squirrelfish symbols can
         have negative indices).

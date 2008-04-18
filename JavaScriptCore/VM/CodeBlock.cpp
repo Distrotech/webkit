@@ -75,6 +75,11 @@ static CString idName(int id0, const Identifier& ident)
     return (ident.ustring() + "(@id" + UString::from(id0) +")").UTF8String();
 }
 
+static int jumpTarget(const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it, int offset)
+{
+    return it - begin + offset;
+}
+
 static void printUnaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
 {
     int r0 = (++it)->u.operand;
@@ -89,6 +94,13 @@ static void printBinaryOp(int location, Vector<Instruction>::iterator& it, const
     int r1 = (++it)->u.operand;
     int r2 = (++it)->u.operand;
     printf("[%4d] %s\t\t%s, %s, %s\n", location, op, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str());
+}
+
+static void printConditionalJump(const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it, int location, const char* op)
+{
+    int r0 = (++it)->u.operand;
+    int offset = (++it)->u.operand;
+    printf("[%4d] %s\t\t%s, %d(->%d)\n", location, op, registerName(r0).c_str(), offset, jumpTarget(begin, it, offset));
 }
 
 void CodeBlock::dump(ExecState* exec)
@@ -276,19 +288,15 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
         }
         case op_jmp: {
             int offset = (++it)->u.operand;
-            printf("[%4d] jmp\t\t%d\t\t\t; %d\n", location, offset, (it - begin) + offset);
+            printf("[%4d] jmp\t\t%d(->%d)\n", location, offset, jumpTarget(begin, it, offset));
             break;
         }
         case op_jtrue: {
-            int r0 = (++it)->u.operand;
-            int offset = (++it)->u.operand;
-            printf("[%4d] jtrue\t\t%s, %d\t\t\t; %d\n", location, registerName(r0).c_str(), offset, (it - begin) + offset);
+            printConditionalJump(begin, it, location, "jtrue");
             break;
         }
         case op_jfalse: {
-            int r0 = (++it)->u.operand;
-            int offset = (++it)->u.operand;
-            printf("[%4d] jfalse\t\t%s, %d\t\t\t; %d\n", location, registerName(r0).c_str(), offset, (it - begin) + offset);
+            printConditionalJump(begin, it, location, "jfalse");
             break;
         }
         case op_new_func: {
@@ -323,7 +331,7 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
         case op_jmp_scopes: {
             int scopeDelta = (++it)->u.operand;
             int offset = (++it)->u.operand;
-            printf("[%4d] jmp_scopes\t^%d, %d\t\t; %d\n", location, scopeDelta, offset, (it - begin) + offset);
+            printf("[%4d] jmp_scopes\t^%d, %d(->%d)\n", location, scopeDelta, offset, jumpTarget(begin, it, offset));
             break;
         }
         case op_end: {
