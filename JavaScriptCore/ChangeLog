@@ -1,6 +1,30 @@
 2008-03-30  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
+
+        Improve dumping of bytecode and fix coding style accordingly.
+        
+        Registers are printed as lr1 for locals, tr1 for temp registers. Identifiers print as
+        foobar(@id0) and constants print as "foo"(@k1) or 312.4(@k2) or the like. Constant and
+        identifier tables are dumped for reference.
+        
+        * VM/CodeBlock.cpp:
+        (KJS::escapeQuotes):
+        (KJS::valueToSourceString):
+        (KJS::registerName):
+        (KJS::constantName):
+        (KJS::idName):
+        (KJS::printUnaryOp):
+        (KJS::printBinaryOp):
+        (KJS::CodeBlock::dump):
+        * VM/Machine.cpp:
+        (KJS::resolve):
+        (KJS::resolveBase):
+        (KJS::Machine::privateExecute):
+
+2008-03-30  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
         
         Implement StringNode and VoidNode (both pretty trivial).
 
