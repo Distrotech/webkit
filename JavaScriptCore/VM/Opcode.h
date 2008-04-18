@@ -32,8 +32,6 @@
 #include <wtf/Assertions.h>
 
 namespace KJS {
-
-    typedef void* Opcode;
         
     #define FOR_EACH_OPCODE_ID(macro) \
         macro(op_load) \
@@ -68,6 +66,12 @@ namespace KJS {
     #define VERIFY_OPCODE_ID(id) COMPILE_ASSERT(id <= op_end, ASSERT_THAT_JS_OPCODE_IDS_ARE_VALID);
         FOR_EACH_OPCODE_ID(VERIFY_OPCODE_ID);
     #undef VERIFY_OPCODE_ID
+
+#if HAVE(COMPUTED_GOTO)
+    typedef void* Opcode;
+#else
+    typedef OpcodeID Opcode;
+#endif
 
 } // namespace KJS
 

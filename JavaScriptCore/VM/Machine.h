@@ -44,8 +44,23 @@ namespace KJS {
 
         Machine();
         
-        Opcode getOpcode(OpcodeID id) { return m_opcodeTable[id]; }
-        OpcodeID getOpcodeID(Opcode opcode) { ASSERT(isOpcode(opcode)); return m_opcodeIDTable.get(opcode); }
+        Opcode getOpcode(OpcodeID id) {
+            #if HAVE(COMPUTED_GOTO)
+                return m_opcodeTable[id]; 
+            #else
+                return id;
+            #endif
+        }
+
+        OpcodeID getOpcodeID(Opcode opcode) {
+            #if HAVE(COMPUTED_GOTO)
+                ASSERT(isOpcode(opcode));
+                return m_opcodeIDTable.get(opcode);
+            #else
+                return opcode;
+            #endif
+        }
+
         bool isOpcode(Opcode opcode);
         
         void execute(ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, scopeChain, codeBlock); }
@@ -55,9 +70,10 @@ namespace KJS {
         
         void privateExecute(ExecutionFlag, ExecState* = 0, ScopeChain* = 0, CodeBlock* = 0);
         void dumpRegisters(const Vector<Register>&, Register*);
-        
+#if HAVE(COMPUTED_GOTO)        
         Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
         HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
+#endif
     };
     
     Machine& machine();
