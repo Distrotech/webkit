@@ -115,9 +115,11 @@ void CodeGenerator::generate()
 {
     m_scopeNode->emitCode(*this);
 
+#ifndef NDEBUG
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
     InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
     m_codeBlock->dump(&tmpExec);
+#endif
 }
 
 void CodeGenerator::addVar(const Identifier& ident)
