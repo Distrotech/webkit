@@ -65,14 +65,14 @@ void JSActivation::copyRegisters()
 
 bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName, PropertySlot& slot)
 {
-    // FIXME: Make SymbolTable store int, not size_t, since symbol indexes can be negative.
     int index = symbolTable().get(propertyName.ustring().rep());
-    if (index != static_cast<int>(missingSymbolMarker())) {
+    if (index != missingSymbolMarker()) {
         slot.setValueSlot(this, &registers()[d()->rOffset + index].u.jsValue);
         return true;
     }
     
     // FIXME: Implement "arguments" property.
+    ASSERT(propertyName != CommonIdentifiers::shared()->arguments);
 
     if (JSValue** location = getDirectLocation(propertyName)) {
         slot.setValueSlot(this, location);
