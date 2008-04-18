@@ -62,6 +62,7 @@ void JSActivation::copyRegisters()
 
     d()->registerArray = registerArray;
     d()->registerBase = &d()->registerArray;
+    d()->registerOffset = numRegisters;
 }
 
 bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName, PropertySlot& slot)
