@@ -39,7 +39,7 @@ namespace KJS {
     class JSObject;
     class JSPropertyNameIterator;
     class JSValue;
-    class ScopeChain;
+    class ScopeChainNode;
     
     struct Register {
         union {
@@ -47,7 +47,7 @@ namespace KJS {
             Instruction* vPC;
             JSValue* jsValue;
             JSObject* jsObject;
-            ScopeChain* scopeChain;
+            ScopeChainNode* scopeChain;
             JSPropertyNameIterator* jsPropertyNameIterator;
             Register* r;
             int i;

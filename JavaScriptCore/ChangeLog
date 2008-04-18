@@ -1,3 +1,59 @@
+2008-04-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fixed "SquirrelFish crashes due to bad scope chain on some SunSpider tests"
+        https://bugs.webkit.org/show_bug.cgi?id=18508
+
+        3d-raytrace and string-unpack-code now run.
+        
+        The basic approach is to pass around ScopeChainNode* instead of
+        ScopeChain*, which in addition to not becoming suddenly an invalid
+        pointer also saves an indirection.
+        
+        This is an 0.4% speedup on SunSpider --squirrelfish (1.8% on --ubench)
+        
+        * VM/Machine.cpp:
+        (KJS::resolve):
+        (KJS::resolveBase):
+        (KJS::resolveBaseAndFunc):
+        (KJS::initializeCallFrame):
+        (KJS::scopeChainForCall):
+        (KJS::Machine::unwindCallFrame):
+        (KJS::Machine::throwException):
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        * VM/Register.h:
+        (KJS::Register::):
+        * kjs/nodes.cpp:
+        (KJS::EvalNode::generateCode):
+        (KJS::FunctionBodyNode::generateCode):
+        (KJS::ProgramNode::generateCode):
+        (KJS::ProgramNode::processDeclarations):
+        (KJS::EvalNode::processDeclarations):
+        (KJS::FuncDeclNode::makeFunction):
+        (KJS::FuncExprNode::makeFunction):
+        * kjs/nodes.h:
+        (KJS::ProgramNode::):
+        (KJS::EvalNode::):
+        (KJS::FunctionBodyNode::):
+        * kjs/object.h:
+        * kjs/scope_chain.h:
+        (KJS::ScopeChainNode::ScopeChainNode):
+        (KJS::ScopeChainNode::deref):
+        (KJS::ScopeChainIterator::ScopeChainIterator):
+        (KJS::ScopeChainIterator::operator*):
+        (KJS::ScopeChainIterator::operator->):
+        (KJS::ScopeChain::ScopeChain):
+        (KJS::ScopeChain::node):
+        (KJS::ScopeChain::deref):
+        (KJS::ScopeChain::ref):
+        (KJS::ScopeChainNode::ref):
+        (KJS::ScopeChainNode::release):
+        (KJS::ScopeChainNode::begin):
+        (KJS::ScopeChainNode::end):
+
 2008-04-14  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
