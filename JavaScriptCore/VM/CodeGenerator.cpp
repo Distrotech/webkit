@@ -702,25 +702,25 @@ void CodeGenerator::emitPopScope()
     m_scopeDepth--;
 }
 
-void CodeGenerator::pushLoopContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
+void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
 {
-    LoopContext scope = { labels, continueTarget, breakTarget, m_scopeDepth};
-    m_loopContextStack.append(scope);
+    JumpContext scope = { labels, continueTarget, breakTarget, m_scopeDepth};
+    m_jumpContextStack.append(scope);
 }
 
-void CodeGenerator::popLoopContext()
+void CodeGenerator::popJumpContext()
 {
-    ASSERT(m_loopContextStack.size());
-    m_loopContextStack.removeLast();
+    ASSERT(m_jumpContextStack.size());
+    m_jumpContextStack.removeLast();
 }
 
-LoopContext* CodeGenerator::loopContextForLabel(const Identifier& label)
+JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label)
 {
-    ASSERT(m_loopContextStack.size());
+    ASSERT(m_jumpContextStack.size());
     if (label.isEmpty())
-        return &m_loopContextStack.last();
-    for (int i = m_loopContextStack.size() - 1; i >= 0; i--) {
-        LoopContext* scope = &m_loopContextStack[i];
+        return &m_jumpContextStack.last();
+    for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
+        JumpContext* scope = &m_jumpContextStack[i];
         if (scope->labels->contains(label))
             return scope;
     }
