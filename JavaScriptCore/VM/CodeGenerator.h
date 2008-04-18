@@ -219,6 +219,8 @@ namespace KJS {
         Vector<Instruction>& instructions() { return m_codeBlock->instructions; }
         SymbolTable& symbolTable() { return *m_symbolTable; }
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
+        
+        bool shouldOptimizeLocals() { return !m_scopeDepth; }
 
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
