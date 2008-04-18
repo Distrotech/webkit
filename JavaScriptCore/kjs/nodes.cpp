@@ -2879,13 +2879,6 @@ uint32_t ModNode::evaluateToUInt32(ExecState* exec)
 
 // ------------------------------ Additive Nodes --------------------------------------
 
-static JSValue* throwOutOfMemoryError(ExecState* exec)
-{
-    JSObject* error = Error::create(exec, GeneralError, "Out of memory");
-    exec->setException(error);
-    return error;
-}
-
 static double throwOutOfMemoryErrorToNumber(ExecState* exec)
 {
     JSObject* error = Error::create(exec, GeneralError, "Out of memory");

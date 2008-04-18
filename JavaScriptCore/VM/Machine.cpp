@@ -38,6 +38,15 @@
 #include "JSPropertyNameIterator.h"
 #include "Register.h"
 #include "internal.h"
+#include "operations.h"
+#include <kjs/operations.h>
+
+#if COMPILER(GCC)
+#define UNLIKELY(x) \
+  __builtin_expect ((x), 0)
+#else
+#define UNLIKELY(x) x
+#endif
 
 namespace KJS {
 
