@@ -748,10 +748,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_add) {
         /* add dst(r) src1(r) src2(r)
 
-           Adds the contents of registers src1 and src2, and puts the
-           result in register dst.
+           Adds registers src1 and src2, and puts the result in
+           register dst. (JS add may be string concatenation or
+           numeric add, depending on the types of the operands.)
         */
-
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
@@ -760,92 +760,151 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_mult) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) * r[r2].u.jsValue->toNumber(exec));
+    BEGIN_OPCODE(op_mul) {
+        /* mul dst(r) src1(r) src2(r)
+
+           Multiplies the registers src1 and src2 (converted to
+           numbers), and puts the product in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber(r[src1].u.jsValue->toNumber(exec) * r[src2].u.jsValue->toNumber(exec));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_div) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) / r[r2].u.jsValue->toNumber(exec));
+        /* div dst(r) dividend(r) divisor(r)
+
+           Divides register dividend (converted to number) by the
+           register divisor (converted to number), and puts the
+           quotient in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int dividend = (++vPC)->u.operand;
+        int divisor = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber(r[dividend].u.jsValue->toNumber(exec) / r[divisor].u.jsValue->toNumber(exec));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_mod) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(fmod(r[r1].u.jsValue->toNumber(exec), r[r2].u.jsValue->toNumber(exec)));
+        /* mod dst(r) dividend(r) divisor(r)
+
+           Divides register dividend (converted to number) by 
+           register divisor (converted to number), and puts the
+           remainder in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int dividend = (++vPC)->u.operand;
+        int divisor = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber(fmod(r[dividend].u.jsValue->toNumber(exec), r[divisor].u.jsValue->toNumber(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_sub) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(r[r1].u.jsValue->toNumber(exec) - r[r2].u.jsValue->toNumber(exec));
+        /* sub dst(r) src1(r) src2(r)
+
+           Subtracts the register src2 (converted to number) from
+           register src1 (converted to number), and puts the
+           difference in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber(r[src1].u.jsValue->toNumber(exec) - r[src2].u.jsValue->toNumber(exec));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_lshift) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) << (r[r2].u.jsValue->toUInt32(exec)));
+        /* lshift dst(r) val(r) shift(r)
+
+           Performs left shift of register val (converted to int32) by
+           register shift (converted to uint32), and puts the result
+           in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int val = (++vPC)->u.operand;
+        int shift = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[val].u.jsValue->toInt32(exec)) << (r[shift].u.jsValue->toUInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_rshift) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) >> (r[r2].u.jsValue->toUInt32(exec)));
+        /* rshift dst(r) val(r) shift(r)
+
+           Performs arithmetic right shift of register val (converted
+           to int32) by register shift (converted to
+           uint32), and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int val = (++vPC)->u.operand;
+        int shift = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[val].u.jsValue->toInt32(exec)) >> (r[shift].u.jsValue->toUInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_urshift) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toUInt32(exec)) >> (r[r2].u.jsValue->toUInt32(exec)));
+        /* rshift dst(r) val(r) shift(r)
+
+           Performs logical right shift of register val (converted
+           to uint32) by register shift (converted to
+           uint32), and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int val = (++vPC)->u.operand;
+        int shift = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[val].u.jsValue->toUInt32(exec)) >> (r[shift].u.jsValue->toUInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_bitand) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) & (r[r2].u.jsValue->toInt32(exec)));
+        /* bitand dst(r) src1(r) src2(r)
+
+           Computes bitwise AND of register src1 (converted to int32)
+           and the register src2 (converted to int32), and puts the
+           result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[src1].u.jsValue->toInt32(exec)) & (r[src2].u.jsValue->toInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_bitxor) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) ^ (r[r2].u.jsValue->toInt32(exec)));
+        /* bitxor dst(r) src1(r) src2(r)
+
+           Computes bitwise XOR of register src1 (converted to int32)
+           and register src2 (converted to int32), and puts the result
+           in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[src1].u.jsValue->toInt32(exec)) ^ (r[src2].u.jsValue->toInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_bitor) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) | (r[r2].u.jsValue->toInt32(exec)));
+        /* bitor dst(r) src1(r) src2(r)
+
+           Computes bitwise OR of register src1 (converted to int32)
+           and register src2 (converted to int32), and puts the
+           result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber((r[src1].u.jsValue->toInt32(exec)) | (r[src2].u.jsValue->toInt32(exec)));
         
         ++vPC;
         NEXT_OPCODE;
@@ -944,9 +1003,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_get_prop_id) {
         /* get_prop_id dst(r) base(r) property(id)
 
-           Converts the contents of register base to Object, gets the
-           specified property from the object, and puts the result in
-           register dst.
+           Converts register base to Object, gets the property
+           named by identifier property from the object, and puts the
+           result in register dst.
         */
 
         int dst = (++vPC)->u.operand;

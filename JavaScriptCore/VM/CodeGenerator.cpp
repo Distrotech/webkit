@@ -478,94 +478,94 @@ RegisterID* CodeGenerator::emitAdd(RegisterID* dst, RegisterID* src1, RegisterID
     return dst;
 }
 
-RegisterID* CodeGenerator::emitMult(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitMul(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
-    instructions().append(machine().getOpcode(op_mult));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(machine().getOpcode(op_mul));
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitDiv(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitDiv(RegisterID* dst, RegisterID* dividend, RegisterID* divisor)
 {
     instructions().append(machine().getOpcode(op_div));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(dividend->index());
+    instructions().append(divisor->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitMod(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitMod(RegisterID* dst, RegisterID* dividend, RegisterID* divisor)
 {
     instructions().append(machine().getOpcode(op_mod));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(dividend->index());
+    instructions().append(divisor->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitSub(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitSub(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_sub));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLeftShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitLeftShift(RegisterID* dst, RegisterID* val, RegisterID* shift)
 {
     instructions().append(machine().getOpcode(op_lshift));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(val->index());
+    instructions().append(shift->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitRightShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitRightShift(RegisterID* dst, RegisterID* val, RegisterID* shift)
 {
     instructions().append(machine().getOpcode(op_rshift));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(val->index());
+    instructions().append(shift->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitUnsignedRightShift(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitUnsignedRightShift(RegisterID* dst, RegisterID* val, RegisterID* shift)
 {
     instructions().append(machine().getOpcode(op_urshift));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(val->index());
+    instructions().append(shift->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitBitAnd(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitBitAnd(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_bitand));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitBitXOr(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitBitXOr(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_bitxor));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitBitOr(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitBitOr(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_bitor));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitBitNot(RegisterID* r0, RegisterID* r1)
