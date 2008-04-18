@@ -290,6 +290,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_new_regexp) {
+        int r0 = (++vPC)->u.operand;
+        int re0 = (++vPC)->u.operand;
+        r[r0].u.jsValue = exec->lexicalGlobalObject()->regExpConstructor()->createRegExpImp(exec, codeBlock->regexps[re0]);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_mov) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
