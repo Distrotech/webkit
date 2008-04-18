@@ -2004,6 +2004,15 @@ JSValue* PostfixErrorNode::evaluate(ExecState* exec)
 
 // ------------------------------ DeleteResolveNode -----------------------------------
 
+RegisterID* DeleteResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (generator.registerForLocal(m_ident))
+        return generator.emitLoad(dst ? dst : generator.newTemporary(), false);
+
+    RegisterID* r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    return generator.emitDeletePropId(dst ? dst : r0, r0, m_ident);
+}
+
 void DeleteResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
@@ -2045,6 +2054,13 @@ JSValue* LocalVarDeleteNode::evaluate(ExecState*)
 
 // ------------------------------ DeleteBracketNode -----------------------------------
 
+RegisterID* DeleteBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    return generator.emitDeletePropVal(dst ? dst : generator.newTemporary(), r0.get(), r1.get());
+}
+
 void DeleteBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
@@ -2070,6 +2086,12 @@ JSValue* DeleteBracketNode::evaluate(ExecState* exec)
 
 // ------------------------------ DeleteDotNode -----------------------------------
 
+RegisterID* DeleteDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_base.get());
+    return generator.emitDeletePropId(dst ? dst : generator.newTemporary(), r0, m_ident);
+}
+
 void DeleteDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_base.get());
@@ -2085,6 +2107,14 @@ JSValue* DeleteDotNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ DeleteValueNode -----------------------------------
+
+RegisterID* DeleteValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    generator.emitNode(m_expr.get());
+
+    // delete on a non-location expression ignores the value and returns true
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), true);
+}
 
 void DeleteValueNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
