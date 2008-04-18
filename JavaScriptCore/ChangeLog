@@ -2,6 +2,14 @@
 
         Reviewed by Oliver Hunt.
         
+        Moved a few files around in the XCode project.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Made closures work.
         
         An activation object aliases to the register file until its associated

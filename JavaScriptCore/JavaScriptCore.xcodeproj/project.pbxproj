@@ -776,6 +776,10 @@
 		149B15DF0D81F887009CB8C7 /* Compiler */ = {
 			isa = PBXGroup;
 			children = (
+				149B15E90D81F986009CB8C7 /* CodeGenerator.cpp */,
+				149B15E80D81F986009CB8C7 /* CodeGenerator.h */,
+				149B20D80D8A0891009CB8C7 /* LabelID.cpp */,
+				149B20D70D8A0891009CB8C7 /* LabelID.h */,
 				F692A8650255597D01FF60F7 /* lexer.cpp */,
 				F692A8660255597D01FF60F7 /* lexer.h */,
 				F692A86D0255597D01FF60F7 /* nodes.cpp */,
@@ -783,6 +787,8 @@
 				F5FFE656026B47A6018635CA /* nodes2string.cpp */,
 				93F0B3A909BB4DC00068FCE3 /* Parser.cpp */,
 				93F0B3AA09BB4DC00068FCE3 /* Parser.h */,
+				149B16B90D82583F009CB8C7 /* RegisterID.cpp */,
+				149B16B80D82583F009CB8C7 /* RegisterID.h */,
 			);
 			name = Compiler;
 			sourceTree = "<group>";
@@ -792,20 +798,14 @@
 			children = (
 				149B1A9E0D86ED73009CB8C7 /* CodeBlock.cpp */,
 				149B1A9D0D86ED73009CB8C7 /* CodeBlock.h */,
-				149B15E90D81F986009CB8C7 /* CodeGenerator.cpp */,
-				149B15E80D81F986009CB8C7 /* CodeGenerator.h */,
 				149B1AA20D86ED7C009CB8C7 /* Instruction.cpp */,
 				149B1AA10D86ED7C009CB8C7 /* Instruction.h */,
 				149B15E70D81F986009CB8C7 /* Machine.cpp */,
 				149B15E60D81F986009CB8C7 /* Machine.h */,
 				149B15E50D81F986009CB8C7 /* Opcode.cpp */,
 				149B15E40D81F986009CB8C7 /* Opcode.h */,
-				149B16B90D82583F009CB8C7 /* RegisterID.cpp */,
-				149B16B80D82583F009CB8C7 /* RegisterID.h */,
-				149B20D70D8A0891009CB8C7 /* LabelID.h */,
-				149B20D80D8A0891009CB8C7 /* LabelID.cpp */,
-				149B24FF0D8AF6D1009CB8C7 /* Register.h */,
 				149B25000D8AF6D1009CB8C7 /* Register.cpp */,
+				149B24FF0D8AF6D1009CB8C7 /* Register.h */,
 			);
 			name = VM;
 			sourceTree = "<group>";
