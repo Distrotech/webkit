@@ -1,3 +1,14 @@
+2008-04-17  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Add more exception checking to toNumber conversions
+
+        This corrects op_pre_dec, op_negate, op_mod and op_sub.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-17  Geoffrey Garen  <ggaren@apple.com> and Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver Hunt.
