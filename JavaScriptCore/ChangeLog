@@ -2,6 +2,17 @@
 
         Reviewed by Geoff.
         
+        - take a shot at marking constant pools for global and eval code
+        
+        Geoff says this won't really work in all cases but is an ok stopgap.
+
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::mark):
+
+2008-04-02  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
         - fix 2x perf regression in 3d-morph
         
         * VM/Machine.cpp:
