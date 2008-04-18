@@ -163,7 +163,7 @@ RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
 {
     if (m_scopeDepth)
         return 0;
-    unsigned index = symbolTable().get(ident.ustring().rep());
+    int index = symbolTable().get(ident.ustring().rep());
     if (index == missingSymbolMarker())
         return 0;
     return &m_locals[m_localsMap.get(index)];
