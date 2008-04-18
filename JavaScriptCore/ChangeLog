@@ -2,6 +2,15 @@
 
         Reviewed by Oliver.
 
+        Dump code that codegen can't handle yet, so it's easier to prioritize missing nodes.
+        
+        * kjs/nodes.h:
+        (KJS::Node::emitCode):
+
+2008-03-30  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
         Improve dumping of bytecode and fix coding style accordingly.
         
         Registers are printed as lr1 for locals, tr1 for temp registers. Identifiers print as

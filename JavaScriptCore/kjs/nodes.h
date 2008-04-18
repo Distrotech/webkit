@@ -163,7 +163,12 @@ namespace KJS {
             because the assignment node, "x =", passes r[x] as dst to the number
             node, "1".
         */
-        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* dst = 0) KJS_FAST_CALL { ASSERT_NOT_REACHED(); UNUSED_PARAM(dst); return 0; } // FIXME: Make this pure virtual.
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* dst = 0) KJS_FAST_CALL 
+        {
+            ASSERT_WITH_MESSAGE(0, "Don't know how to generate code for:\n%s\n", toString().ascii());
+            UNUSED_PARAM(dst); 
+            return 0; 
+        } // FIXME: Make this pure virtual.
 
         UString toString() const KJS_FAST_CALL;
         int lineNo() const KJS_FAST_CALL { return m_line; }
