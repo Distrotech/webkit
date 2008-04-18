@@ -150,7 +150,7 @@ bool Machine::isOpcode(Opcode opcode)
         && opcode != HashTraits<Opcode>::deletedValue()
         && m_opcodeIDTable.contains(opcode);
 #else
-    return opcode >= 0 && opcode < op_end;
+    return opcode >= 0 && opcode <= op_end;
 #endif
 }
 

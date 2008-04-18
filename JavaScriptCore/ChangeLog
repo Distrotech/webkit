@@ -1,3 +1,12 @@
+2008-03-31  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
+        Fix non-computed goto version of isOpcode. op_end is a valid opcode.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::isOpcode):
+
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
