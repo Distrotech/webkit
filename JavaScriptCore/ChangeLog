@@ -1,3 +1,33 @@
+2008-03-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Added support for "this".
+        
+        Supply an implicit "this" value as the first argument to every function.
+        Alias the "this" keyword to that argument.
+        
+        1% regression overall, 2.5% regression on empty function calls. Seems
+        like a reasonable cost for now, since we're doing more work.
+        (Eventually, we might decide to create a version of op_call specialized
+        for a known null "this" value.)
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitCall):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/CommonIdentifiers.cpp:
+        (KJS::CommonIdentifiers::CommonIdentifiers):
+        * kjs/CommonIdentifiers.h:
+        * kjs/nodes.cpp:
+        (KJS::ThisNode::emitCode):
+        (KJS::FunctionCallResolveNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-28  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

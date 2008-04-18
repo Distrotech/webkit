@@ -531,7 +531,7 @@ RegisterID* CodeGenerator::emitNewFunction(RegisterID* r0, FuncDeclNode* n)
     return r0;
 }
 
-RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, ArgumentsNode* argumentsNode)
+RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, RegisterID* r2, ArgumentsNode* argumentsNode)
 {
     // Reserve space for return info.
     Vector<RefPtr<RegisterID>, Machine::returnInfoSize> returnInfo;
@@ -540,6 +540,7 @@ RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, ArgumentsNod
 
     // Generate code for arguments.
     Vector<RefPtr<RegisterID>, 16> argv;
+    argv.append(newTemporary()); // reserve space for "this"
     for (ArgumentListNode* n = argumentsNode->m_listNode.get(); n; n = n->m_next.get()) {
         argv.append(newTemporary());
         emitNode(argv.last().get(), n);
@@ -548,6 +549,7 @@ RegisterID* CodeGenerator::emitCall(RegisterID* r0, RegisterID* r1, ArgumentsNod
     instructions().append(machine().getOpcode(op_call));
     instructions().append(r0->index());
     instructions().append(r1->index());
+    instructions().append(r2 ? r2->index() : missingSymbolMarker()); // We encode the "this" value in the instruction stream, to avoid an explicit instruction for copying or loading it.
     instructions().append(argv.size() ? argv[0]->index() : m_temporaries.size()); // argv
     instructions().append(argv.size()); // argc
 

@@ -547,9 +547,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     BEGIN_OPCODE(op_call) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
         int argv = (++vPC)->u.operand;
         int argc = (++vPC)->u.operand;
-
+        
         JSValue* v = r[r1].u.jsValue;
 
         ASSERT(v->isObject(&FunctionImp::info));
@@ -564,9 +565,12 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         returnInfo[3].u.i = rOffset; // r value after return
         returnInfo[4].u.i = r0; // return value slot
         returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
-        
+        // returnInfo[6] gets optionally set later
+
+        r[argv].u.jsValue = r2 == static_cast<int>(missingSymbolMarker()) ? jsNull() : r[r2].u.jsValue; // "this" value
+
         FunctionBodyNode* functionBody = function->body.get();
-        
+
         // WARNING: If code generation wants to optimize resolves to parent scopes,
         // it needs to be aware that, for functions that require activations,
         // the scope chain is off by one, since the activation hasn't been pushed yet.

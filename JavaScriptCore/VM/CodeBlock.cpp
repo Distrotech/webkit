@@ -233,9 +233,10 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
         case op_call: {
             int r0 = (++it)->u.operand;
             int r1 = (++it)->u.operand;
+            int r2 = (++it)->u.operand;
             int tempCount = (++it)->u.operand;
             int argCount = (++it)->u.operand;
-            printf("[%4d] call\t\tr[%d], r[%d], %d, %d\n", location, r0, r1, tempCount, argCount);
+            printf("[%4d] call\t\tr[%d], r[%d], r[%d], %d, %d\n", location, r0, r1, r2, tempCount, argCount);
             break;
         }
         case op_ret: {
