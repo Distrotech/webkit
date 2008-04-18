@@ -4860,6 +4860,55 @@ void ForInNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const Loc
         nodeStack.append(m_init.get());
 }
 
+RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> loopStart = generator.newLabel();
+    RefPtr<LabelID> conditionTarget = generator.newLabel(); 
+    RefPtr<LabelID> breakTarget = generator.newLabel(); 
+
+    if (m_init)
+        generator.emitNode(m_init.get());
+    RegisterID* iterObject = generator.emitNode(m_expr.get());
+    RefPtr<RegisterID> iteratorRegister = generator.emitGetPropertyNames(generator.newTemporary(), iterObject);
+    generator.emitJump(conditionTarget.get());
+    generator.emitLabel(loopStart.get());
+    RegisterID* propertyName;
+    if (m_lexpr->isResolveNode()) {
+        const Identifier& ident = static_cast<ResolveNode*>(m_lexpr.get())->identifier();
+        propertyName = generator.registerForLocal(m_ident);
+        if (!propertyName) {
+            propertyName = generator.newTemporary();
+            RefPtr<RegisterID> protect = propertyName;
+            RegisterID* base = generator.emitResolveBase(generator.newTemporary(), ident);
+            generator.emitPutPropId(base, ident, propertyName);
+        }
+    } else if (m_lexpr->isDotAccessorNode()) {
+        DotAccessorNode* assignNode = static_cast<DotAccessorNode*>(m_lexpr.get());
+        const Identifier& ident = assignNode->identifier();
+        propertyName = generator.newTemporary();
+        RefPtr<RegisterID> protect = propertyName;
+        RegisterID* base = generator.emitNode(assignNode->base());
+        generator.emitPutPropId(base, ident, propertyName);
+    } else {
+        ASSERT(m_lexpr->isBracketAccessorNode());
+        BracketAccessorNode* assignNode = static_cast<BracketAccessorNode*>(m_lexpr.get());
+        propertyName = generator.newTemporary();
+        RefPtr<RegisterID> protect = propertyName;
+        RefPtr<RegisterID> base = generator.emitNode(assignNode->base());
+        RegisterID* subscript = generator.emitNode(assignNode->subscript());
+        generator.emitPutPropVal(base.get(), subscript, propertyName);
+    }   
+    
+    generator.pushLoopContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.emitNode(dst, m_statement.get());
+    generator.popLoopContext();
+
+    generator.emitLabel(conditionTarget.get());
+    generator.emitNextPropertyName(propertyName, iteratorRegister.get(), loopStart.get());
+    generator.emitLabel(breakTarget.get());
+    return dst;
+}
+
 // ECMA 12.6.4
 JSValue* ForInNode::execute(ExecState* exec)
 {

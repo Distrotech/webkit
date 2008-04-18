@@ -43,6 +43,7 @@ namespace KJS {
         const Identifier& operator[](unsigned i) const { return m_vector[i]; }
 
         void swap(PropertyNameArray&);
+        Identifier* releaseIdentifiers() { return size() ? m_vector.releaseBuffer() : 0; }
     private:
         typedef HashSet<UString::Rep*, PtrHash<UString::Rep*> > IdentifierSet;
         IdentifierSet m_set;

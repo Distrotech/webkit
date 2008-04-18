@@ -133,6 +133,7 @@ class JSCell : public JSValue {
     friend class StringImp;
     friend class JSObject;
     friend class GetterSetterImp;
+    friend class JSPropertyNameIterator;
 private:
     JSCell();
     virtual ~JSCell();
