@@ -30,7 +30,6 @@
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
 #include "HitTestResult.h"
-#include "InspectorController.h"
 #include "JSDOMWindow.h"
 #include "Page.h"
 #include "PageGroup.h"
@@ -42,6 +41,10 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
+
+#if ENABLE(DOM_STORAGE)
+#include "SessionStorage.h"
+#endif
 
 namespace WebCore {
 
@@ -113,7 +116,15 @@ void Chrome::takeFocus(FocusDirection direction) const
     
 Page* Chrome::createWindow(Frame* frame, const FrameLoadRequest& request, const WindowFeatures& features) const
 {
-    return m_client->createWindow(frame, request, features);
+    Page* newPage = m_client->createWindow(frame, request, features);
+#if ENABLE(DOM_STORAGE)
+    
+    if (newPage) {
+        if (SessionStorage* oldSessionStorage = m_page->sessionStorage(false))
+                newPage->setSessionStorage(oldSessionStorage->copy(newPage));
+    }
+#endif
+    return newPage;
 }
 
 void Chrome::show() const
@@ -191,14 +202,6 @@ bool Chrome::menubarVisible() const
 void Chrome::setResizable(bool b) const
 {
     m_client->setResizable(b);
-}
-
-void Chrome::addMessageToConsole(MessageSource source, MessageLevel level, const String& message, unsigned lineNumber, const String& sourceID)
-{
-    if (source == JSMessageSource)
-        m_client->addMessageToConsole(message, lineNumber, sourceID);
-
-    m_page->inspectorController()->addMessageToConsole(source, level, message, lineNumber, sourceID);
 }
 
 bool Chrome::canRunBeforeUnloadConfirmPanel()

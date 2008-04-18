@@ -33,7 +33,6 @@
 #import "DOMHTMLTextAreaElementInternal.h"
 #import "DOMRangeInternal.h"
 #import "WebArchive.h"
-#import "WebArchiver.h"
 #import "WebDataSourceInternal.h"
 #import "WebDocument.h"
 #import "WebEditingDelegatePrivate.h"
@@ -50,6 +49,7 @@
 #import <WebCore/EditAction.h>
 #import <WebCore/EditCommand.h>
 #import <WebCore/KeyboardEvent.h>
+#import <WebCore/LegacyWebArchive.h>
 #import <WebCore/PlatformKeyboardEvent.h>
 #import <WebCore/PlatformString.h>
 #import <WebCore/WebCoreObjCExtras.h>
@@ -295,12 +295,6 @@ void WebEditorClient::didWriteSelectionToPasteboard()
 void WebEditorClient::didSetSelectionTypesForPasteboard()
 {
     [[m_webView _editingDelegateForwarder] webView:m_webView didSetSelectionTypesForPasteboard:[NSPasteboard generalPasteboard]];
-}
-
-NSData* WebEditorClient::dataForArchivedSelection(Frame* frame)
-{
-    WebArchive *archive = [WebArchiver archiveSelectionInFrame:kit(frame)];
-    return [archive data];
 }
 
 NSString* WebEditorClient::userVisibleString(NSURL *URL)

@@ -116,9 +116,9 @@ const WebCore::Cursor& WebCore::moveCursor() { return localCursor; }
 
 void WebCore::findWordBoundary(UChar const* str,int len,int position,int* start, int* end) { notImplemented(); *start=position; *end=position; }
 
-PluginSet PluginDatabase::getPluginsInPaths() const { notImplemented(); return PluginSet(); }
-Vector<String> PluginDatabase::defaultPluginPaths() { notImplemented(); return Vector<String>(); }
-bool PluginDatabase::isPreferredPluginPath(const String&) { notImplemented(); return false; }
+void PluginDatabase::getPluginPathsInDirectories(HashSet<String>&) const { notImplemented(); }
+Vector<String> PluginDatabase::defaultPluginDirectories() { notImplemented(); return Vector<String>(); }
+bool PluginDatabase::isPreferredPluginDirectory(const String&) { notImplemented(); return false; }
 int PluginPackage::compare(const PluginPackage&) const { notImplemented(); return 0; }
 bool PluginPackage::fetchInfo() { notImplemented(); return false; }
 unsigned PluginPackage::hash() const { notImplemented(); return 0; }
@@ -127,8 +127,8 @@ bool PluginPackage::load() { notImplemented(); return false; }
 
 void Widget::setIsSelected(bool) { notImplemented(); }
 
-void GraphicsContext::setShadow(IntSize const&,int,Color const&) { notImplemented(); }
-void GraphicsContext::clearShadow() { notImplemented(); }
+void GraphicsContext::setPlatformShadow(IntSize const&,int,Color const&) { notImplemented(); }
+void GraphicsContext::clearPlatformShadow() { notImplemented(); }
 void GraphicsContext::beginTransparencyLayer(float) { notImplemented(); }
 void GraphicsContext::endTransparencyLayer() { notImplemented(); }
 void GraphicsContext::clearRect(const FloatRect&) { notImplemented(); }

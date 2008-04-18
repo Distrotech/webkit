@@ -24,24 +24,26 @@
 #define CSSBorderImageValue_h
 
 #include "CSSValue.h"
+
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 
 namespace WebCore {
 
-class CSSImageValue;
 class Rect;
 
 class CSSBorderImageValue : public CSSValue {
 public:
     CSSBorderImageValue();
-    CSSBorderImageValue(PassRefPtr<CSSImageValue>, PassRefPtr<Rect>, int horizontalRule, int verticalRule);
+    CSSBorderImageValue(PassRefPtr<CSSValue>, PassRefPtr<Rect>, int horizontalRule, int verticalRule);
 
     virtual String cssText() const;
 
+    CSSValue* imageValue() const { return m_image.get(); }
+ 
 public:
     // The border image.
-    RefPtr<CSSImageValue> m_image;
+    RefPtr<CSSValue> m_image;
 
     // These four values are used to make "cuts" in the image.  They can be numbers
     // or percentages.

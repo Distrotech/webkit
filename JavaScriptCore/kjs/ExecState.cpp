@@ -42,10 +42,9 @@ static inline List* globalEmptyList()
 // ECMA 10.2
 
 // The constructor for the globalExec pseudo-ExecState
-inline ExecState::ExecState(JSGlobalObject* globalObject)
+inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject)
     : m_globalObject(globalObject)
     , m_exception(0)
-    , m_exceptionSource(0)
     , m_propertyNames(CommonIdentifiers::shared())
     , m_emptyList(globalEmptyList())
     , m_callingExec(0)
@@ -53,9 +52,11 @@ inline ExecState::ExecState(JSGlobalObject* globalObject)
     , m_function(0)
     , m_arguments(0)
     , m_activation(0)
+    , m_localStorage(&globalObject->localStorage())
     , m_inlineScopeChainNode(0, 0)
     , m_variableObject(globalObject)
-    , m_thisValue(globalObject)
+    , m_thisValue(thisObject)
+    , m_globalThisValue(thisObject)
     , m_iterationDepth(0)
     , m_switchDepth(0) 
     , m_codeType(GlobalCode)
@@ -63,10 +64,9 @@ inline ExecState::ExecState(JSGlobalObject* globalObject)
     m_scopeChain.push(globalObject);
 }
 
-inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* /*thisObject*/, ProgramNode* programNode)
+inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, ProgramNode* programNode)
     : m_globalObject(globalObject)
     , m_exception(0)
-    , m_exceptionSource(0)
     , m_propertyNames(CommonIdentifiers::shared())
     , m_emptyList(globalEmptyList())
     , m_callingExec(0)
@@ -74,16 +74,15 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* /*thisObject
     , m_function(0)
     , m_arguments(0)
     , m_activation(0)
+    , m_localStorage(&globalObject->localStorage())
     , m_inlineScopeChainNode(0, 0)
     , m_variableObject(globalObject)
-    , m_thisValue(globalObject)
+    , m_thisValue(thisObject)
+    , m_globalThisValue(thisObject)
     , m_iterationDepth(0)
     , m_switchDepth(0) 
     , m_codeType(GlobalCode)
 {
-    // FIXME: This function ignores the "thisObject" parameter, which means that the API for evaluating
-    // a script with a this object that's not the same as the global object is broken, and probably
-    // has been for some time.
     ASSERT(m_scopeNode);
     m_scopeChain.push(globalObject);
 }
@@ -91,7 +90,6 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* /*thisObject
 inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, EvalNode* evalNode, ExecState* callingExec, const ScopeChain& scopeChain, JSVariableObject* variableObject)
     : m_globalObject(globalObject)
     , m_exception(0)
-    , m_exceptionSource(0)
     , m_propertyNames(callingExec->m_propertyNames)
     , m_emptyList(callingExec->m_emptyList)
     , m_callingExec(callingExec)
@@ -99,10 +97,12 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, 
     , m_function(0)
     , m_arguments(0)
     , m_activation(0)
+    , m_localStorage(callingExec->m_localStorage)
     , m_scopeChain(scopeChain)
     , m_inlineScopeChainNode(0, 0)
     , m_variableObject(variableObject)
     , m_thisValue(thisObject)
+    , m_globalThisValue(thisObject)
     , m_iterationDepth(0)
     , m_switchDepth(0) 
     , m_codeType(EvalCode)
@@ -118,8 +118,8 @@ JSGlobalObject* ExecState::lexicalGlobalObject() const
     return m_globalObject;
 }
 
-GlobalExecState::GlobalExecState(JSGlobalObject* globalObject)
-    : ExecState(globalObject)
+GlobalExecState::GlobalExecState(JSGlobalObject* globalObject, JSObject* thisObject)
+    : ExecState(globalObject, thisObject)
 {
 }
 

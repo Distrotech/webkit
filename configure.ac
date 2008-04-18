@@ -97,6 +97,9 @@ fi
 # Check for glib-genmarshal and glib-mkenums
 AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
 AC_PATH_PROG([GLIB_MKENUMS],[glib-mkenums])
+if test -z "$GLIB_GENMARSHAL" || test -z "$GLIB_MKENUMS"; then
+   AC_MSG_ERROR([You need the GLib dev tools in your path])
+fi
 
 # Check whether a C++ was found (AC_PROG_CXX sets $CXX to "g++" even when it
 # doesn't exist)
@@ -116,7 +119,7 @@ AC_HEADER_STDBOOL
 # pthread (not needed on Windows)
 if test "$os_win32" = "no"; then
 AC_CHECK_HEADERS([pthread.h],
-                 AC_DEFINE([HAVE_PTHREAD_H],[1],[Define if pthread exist]),
+                 AC_DEFINE([HAVE_PTHREAD_H],[1],[Define if pthread exists]),
                  AC_MSG_ERROR([pthread support is required to build WebKit]))
 fi
 
@@ -223,7 +226,7 @@ GTK_REQUIRED_VERSION=2.8
 
 # optional modules
 LIBCURL_REQUIRED_VERSION=7.15
-LIBSOUP_REQUIRED_VERSION=2.4
+LIBSOUP_REQUIRED_VERSION=2.23
 LIBXSLT_REQUIRED_VERSION=1.1.7
 SQLITE_REQUIRED_VERSION=3.0
 GSTREAMER_REQUIRED_VERSION=0.10
@@ -263,11 +266,19 @@ AC_ARG_ENABLE(cross_document_messaging,
               [],[enable_cross_document_messaging="yes"])
 AC_MSG_RESULT([$enable_cross_document_messaging])
 
+# check whether to enable HTML5 client-side session and persitent storage support
+AC_MSG_CHECKING([whether to enable HTML5 client-side session and persistent storage support])
+AC_ARG_ENABLE(dom_storage,
+              AC_HELP_STRING([--enable-dom-storage],
+                             [enable HTML5 client-side session and persistent storage support [default=no]]),
+              [],[enable_dom_storage="no"])
+AC_MSG_RESULT([$enable_dom_storage])
+
 # check whether to build with database support
-AC_MSG_CHECKING([whether to enable HTML5 client-side storage support])
+AC_MSG_CHECKING([whether to enable HTML5 client-side database storage support])
 AC_ARG_ENABLE(database,
               AC_HELP_STRING([--enable-database],
-                             [enable HTML5 client-side storage support [default=yes]]),
+                             [enable HTML5 client-side database storage support [default=yes]]),
               [],[enable_database="yes"])
 AC_MSG_RESULT([$enable_database])
 
@@ -498,6 +509,7 @@ AM_CONDITIONAL([USE_PANGO], [test "$with_font_backend" = "pango"])
 # WebKit feature conditionals
 AM_CONDITIONAL([ENABLE_DEBUG],[test "$enable_debug" = "yes"])
 AM_CONDITIONAL([ENABLE_CROSS_DOCUMENT_MESSAGING],[test "$enable_cross_document_messaging" = "yes"])
+AM_CONDITIONAL([ENABLE_DOM_STORAGE],[test "$enable_dom_storage" = "yes"])
 AM_CONDITIONAL([ENABLE_DATABASE],[test "$enable_database" = "yes"])
 AM_CONDITIONAL([ENABLE_ICONDATABASE],[test "$enable_icon_database" = "yes"])
 AM_CONDITIONAL([ENABLE_XPATH],[test "$enable_xpath" = "yes"])
@@ -526,27 +538,28 @@ echo "
 WebKit was configured with the following options:
 
 Build configuration:
- Enable debugging (slow)           : $enable_debug
- Code coverage support             : $enable_coverage
- Unicode backend                   : $unicode_backend
- HTTP backend                      : $with_http_backend
- Font backend                      : $with_font_backend
- Optimized memory allocator        : $enable_fast_malloc
+ Enable debugging (slow)                                  : $enable_debug
+ Code coverage support                                    : $enable_coverage
+ Unicode backend                                          : $unicode_backend
+ HTTP backend                                             : $with_http_backend
+ Font backend                                             : $with_font_backend
+ Optimized memory allocator                               : $enable_fast_malloc
 Features:
- HTML5 cross-document messaging    : $enable_cross_document_messaging
- HTML5 client-side storage support : $enable_database
- HTML5 video element support       : $enable_video
- Icon database support             : $enable_icon_database
- SVG support                       : $enable_svg
- SVG animation support             : $enable_svg_animation
- SVG filters support               : $enable_svg_filters
- SVG fonts support                 : $enable_svg_fonts
- SVG foreign object support        : $enable_svg_foreign_object
- SVG as image support              : $enable_svg_as_image
- SVG use element support           : $enable_svg_use_element
- XPATH support                     : $enable_xpath
- XSLT support                      : $enable_xslt
+ HTML5 cross-document messaging                           : $enable_cross_document_messaging
+ HTML5 client-side session and persistent storage support : $enable_dom_storage
+ HTML5 client-side database storage support               : $enable_database
+ HTML5 video element support                              : $enable_video
+ Icon database support                                    : $enable_icon_database
+ SVG support                                              : $enable_svg
+ SVG animation support                                    : $enable_svg_animation
+ SVG filters support                                      : $enable_svg_filters
+ SVG fonts support                                        : $enable_svg_fonts
+ SVG foreign object support                               : $enable_svg_foreign_object
+ SVG as image support                                     : $enable_svg_as_image
+ SVG use element support                                  : $enable_svg_use_element
+ XPATH support                                            : $enable_xpath
+ XSLT support                                             : $enable_xslt
 GTK+ configuration:
- GDK target                        : $with_target
- Hildon UI extensions              : $with_hildon
+ GDK target                                               : $with_target
+ Hildon UI extensions                                     : $with_hildon
 "

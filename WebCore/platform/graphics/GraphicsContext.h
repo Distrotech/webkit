@@ -39,7 +39,9 @@ typedef struct CGContext PlatformGraphicsContext;
 #elif PLATFORM(CAIRO)
 typedef struct _cairo PlatformGraphicsContext;
 #elif PLATFORM(QT)
+QT_BEGIN_NAMESPACE
 class QPainter;
+QT_END_NAMESPACE
 typedef QPainter PlatformGraphicsContext;
 #elif PLATFORM(WX)
 class wxGCDC;
@@ -81,6 +83,7 @@ namespace WebCore {
 
     class AffineTransform;
     class Font;
+    class Generator;
     class GraphicsContextPrivate;
     class GraphicsContextPlatformPrivate;
     class ImageBuffer;
@@ -135,6 +138,7 @@ namespace WebCore {
         
         void fillRect(const IntRect&, const Color&);
         void fillRect(const FloatRect&, const Color&);
+        void fillRect(const FloatRect&, Generator&);
         void fillRoundedRect(const IntRect&, const IntSize& topLeft, const IntSize& topRight, const IntSize& bottomLeft, const IntSize& bottomRight, const Color&);
         void clearRect(const FloatRect&);
         void strokeRect(const FloatRect&, float lineWidth);
@@ -145,14 +149,12 @@ namespace WebCore {
         void drawImage(Image*, const IntRect& destRect, const IntRect& srcRect, CompositeOperator = CompositeSourceOver, bool useLowQualityScale = false);
         void drawImage(Image*, const FloatRect& destRect, const FloatRect& srcRect = FloatRect(0, 0, -1, -1),
                        CompositeOperator = CompositeSourceOver, bool useLowQualityScale = false);
-        void drawImage(ImageBuffer*, const FloatRect& srcRect, const FloatRect& destRect);
         void drawTiledImage(Image*, const IntRect& destRect, const IntPoint& srcPoint, const IntSize& tileSize,
                        CompositeOperator = CompositeSourceOver);
         void drawTiledImage(Image*, const IntRect& destRect, const IntRect& srcRect, 
                             Image::TileRule hRule = Image::StretchTile, Image::TileRule vRule = Image::StretchTile,
                             CompositeOperator = CompositeSourceOver);
 
-        void paintBuffer(ImageBuffer*, const IntRect&);
 #if PLATFORM(CG)
         void setUseLowQualityImageInterpolation(bool = true);
         bool useLowQualityImageInterpolation() const;
@@ -161,13 +163,13 @@ namespace WebCore {
         bool useLowQualityImageInterpolation() const { return false; }
 #endif
 
-        void clip(const IntRect&);
+        void clip(const FloatRect&);
         void addRoundedRectClip(const IntRect&, const IntSize& topLeft, const IntSize& topRight, const IntSize& bottomLeft, const IntSize& bottomRight);
         void addInnerRoundedRectClip(const IntRect&, int thickness);
         void clipOut(const IntRect&);
         void clipOutEllipseInRect(const IntRect&);
         void clipOutRoundedRect(const IntRect&, const IntSize& topLeft, const IntSize& topRight, const IntSize& bottomLeft, const IntSize& bottomRight);
-        void clipToImageBuffer(const IntRect&, const ImageBuffer*);
+        void clipToImageBuffer(const FloatRect&, const ImageBuffer*);
 
         int textDrawingMode();
         void setTextDrawingMode(int);

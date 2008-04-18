@@ -54,6 +54,7 @@ class KURL;
 class MediaQueryEvaluator;
 class Node;
 class Settings;
+class StyleImage;
 class StyleSheet;
 class StyleSheetList;
 class StyledElement;
@@ -137,6 +138,7 @@ public:
 
         // This function fixes up the default font size if it detects that the current generic font family has changed. -dwh
         void checkForGenericFamilyChange(RenderStyle*, RenderStyle* parentStyle);
+        void checkForZoomChange(RenderStyle*, RenderStyle* parentStyle);
         void checkForTextSizeAdjust();
 
         void adjustRenderStyle(RenderStyle*, Element*);
@@ -193,6 +195,8 @@ public:
         void applySVGProperty(int id, CSSValue*);
 #endif
 
+        StyleImage* styleImage(CSSValue* value);
+        
         PseudoState checkPseudoState(Element*, bool checkVisited = true);
 
         // We collect the set of decls that match in |m_matchedDecls|.  We then walk the

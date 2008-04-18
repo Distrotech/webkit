@@ -28,9 +28,12 @@
 #include <QtNetwork/qnetworkaccessmanager.h>
 #endif
 
+QT_BEGIN_NAMESPACE
+class QNetworkRequest;
+QT_END_NAMESPACE
+
 class QWebPage;
 class QWebViewPrivate;
-class QNetworkRequest;
 class QWebNetworkRequest;
 
 class QWEBKIT_EXPORT QWebView : public QWidget
@@ -42,6 +45,7 @@ class QWEBKIT_EXPORT QWebView : public QWidget
     Q_PROPERTY(QString selectedText READ selectedText)
     Q_PROPERTY(bool modified READ isModified)
     Q_PROPERTY(Qt::TextInteractionFlags textInteractionFlags READ textInteractionFlags WRITE setTextInteractionFlags)
+    Q_PROPERTY(int textZoomFactor READ textZoomFactor WRITE setTextZoomFactor)
 public:
     explicit QWebView(QWidget *parent = 0);
     virtual ~QWebView();
@@ -78,6 +82,8 @@ public:
     Qt::TextInteractionFlags textInteractionFlags() const;
     void setTextInteractionFlags(Qt::TextInteractionFlags flags);
 
+    QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+
     /* #### QTextBrowser compatibility?
     bool openLinks() const;
     void setOpenLinks(bool open);
@@ -87,6 +93,10 @@ public:
     */
 
     QSize sizeHint() const;
+
+    void setTextZoomFactor(int percent);
+    int textZoomFactor() const;
+
 public Q_SLOTS:
     void stop();
     void backward();
@@ -124,6 +134,7 @@ protected:
     virtual void dropEvent(QDropEvent *);
     virtual void focusInEvent(QFocusEvent*);
     virtual void focusOutEvent(QFocusEvent*);
+    virtual void inputMethodEvent(QInputMethodEvent*);
 
     virtual bool focusNextPrevChild(bool next);
 

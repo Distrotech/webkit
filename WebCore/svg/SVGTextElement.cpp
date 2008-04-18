@@ -1,6 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2007, 2008 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005, 2006 Rob Buis <buis@kde.org>
+                  2004, 2005, 2006, 2008 Rob Buis <buis@kde.org>
 
     This file is part of the KDE project
 
@@ -104,10 +104,24 @@ RenderObject* SVGTextElement::createRenderer(RenderArena* arena, RenderStyle* st
 
 bool SVGTextElement::childShouldCreateRenderer(Node* child) const
 {
-    if (child->isTextNode() || child->hasTagName(SVGNames::altGlyphTag) || child->hasTagName(SVGNames::tspanTag) ||
-        child->hasTagName(SVGNames::trefTag) || child->hasTagName(SVGNames::aTag) || child->hasTagName(SVGNames::textPathTag))
+    if (child->isTextNode()
+#if ENABLE(SVG_FONTS)
+        || child->hasTagName(SVGNames::altGlyphTag)
+#endif
+        || child->hasTagName(SVGNames::tspanTag) || child->hasTagName(SVGNames::trefTag) || child->hasTagName(SVGNames::aTag) || child->hasTagName(SVGNames::textPathTag))
         return true;
     return false;
+}
+
+void SVGTextElement::svgAttributeChanged(const QualifiedName& attrName)
+{
+    SVGTextPositioningElement::svgAttributeChanged(attrName);
+
+    if (!renderer())
+        return;
+
+    if (SVGTextPositioningElement::isKnownAttribute(attrName))
+        renderer()->setNeedsLayout(true);
 }
 
 }

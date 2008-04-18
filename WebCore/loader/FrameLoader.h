@@ -53,6 +53,8 @@ namespace KJS {
 
 namespace WebCore {
 
+    class Archive;
+    class ArchiveResource;
     class AuthenticationChallenge;
     class CachedPage;
     class Document;
@@ -140,7 +142,6 @@ namespace WebCore {
         void prepareForLoadStart();
         void setupForReplace();
         void setupForReplaceByMIMEType(const String& newMIMEType);
-        void finalSetupForReplace(DocumentLoader*);
         void load(const KURL&, Event*);
         void load(const FrameLoadRequest&, bool lockHistory, bool userGesture,
             Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
@@ -157,24 +158,26 @@ namespace WebCore {
         
         void load(DocumentLoader*);
         void load(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>);
+        
+        void loadURLIntoChildFrame(const KURL&, const String& referer, Frame*);
+        void loadArchive(PassRefPtr<Archive> archive);
 
         static bool canLoad(const KURL&, const String& referrer);
         static bool canLoad(const KURL&, const Document*);
         static bool canLoad(const CachedResource&, const Document*);
-        static void reportLocalLoadFailed(const Page*, const String& url);
+        static void reportLocalLoadFailed(Frame*, const String& url);
 
         static bool shouldHideReferrer(const KURL& url, const String& referrer);
 
         Frame* createWindow(FrameLoader* frameLoaderForFrameLookup, const FrameLoadRequest&, const WindowFeatures&, bool& created);
 
-        void loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
+        unsigned long loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
 
         bool canHandleRequest(const ResourceRequest&);
 
         // Also not cool.
         void stopAllLoaders();
         void stopForUserCancel(bool deferCheckLoadComplete = false);
-        void cancelPendingArchiveLoad(ResourceLoader*);
 
         bool isLoadingMainResource() const { return m_isLoadingMainResource; }
         bool isLoading() const;
@@ -214,8 +217,8 @@ namespace WebCore {
         ResourceError cancelledError(const ResourceRequest&) const;
         ResourceError fileDoesNotExistError(const ResourceResponse&) const;
         ResourceError blockedError(const ResourceRequest&) const;
-        bool willUseArchive(ResourceLoader*, const ResourceRequest&, const KURL&) const;
-        bool isArchiveLoadPending(ResourceLoader*) const;
+        ResourceError cannotShowURLError(const ResourceRequest&) const;
+
         void cannotShowMIMEType(const ResourceResponse&);
         ResourceError interruptionForPolicyChangeError(const ResourceRequest&);
 
@@ -460,7 +463,7 @@ namespace WebCore {
         void redirectionTimerFired(Timer<FrameLoader>*);
         void checkCompletedTimerFired(Timer<FrameLoader>*);
         void checkLoadCompleteTimerFired(Timer<FrameLoader>*);
-
+        
         void cancelRedirection(bool newLoadInProgress = false);
 
         void started();
@@ -639,7 +642,7 @@ namespace WebCore {
         RefPtr<HistoryItem> m_provisionalHistoryItem;
         
         bool m_didPerformFirstNavigation;
-
+        
 #ifndef NDEBUG
         bool m_didDispatchDidCommitLoad;
 #endif

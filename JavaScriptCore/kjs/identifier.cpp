@@ -1,6 +1,5 @@
 /*
- *  This file is part of the KDE libraries
- *  Copyright (C) 2003 Apple Computer, Inc
+ *  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -29,6 +28,10 @@
 #include <wtf/Assertions.h>
 #include <wtf/FastMalloc.h>
 #include <wtf/HashSet.h>
+#if USE(MULTIPLE_THREADS)
+#include <wtf/ThreadSpecific.h>
+using namespace WTF;
+#endif
 
 namespace WTF {
 
@@ -49,18 +52,36 @@ namespace WTF {
 
 namespace KJS {
 
-typedef HashSet<UString::Rep *> IdentifierTable;
-static IdentifierTable *table;
+typedef HashSet<UString::Rep*> IdentifierTable;
+typedef HashMap<const char*, UString::Rep*, PtrHash<const char*> > LiteralIdentifierTable;
 
 static inline IdentifierTable& identifierTable()
 {
-    ASSERT(JSLock::lockCount() > 0);
-
-    if (!table)
-        table = new IdentifierTable;
+#if USE(MULTIPLE_THREADS)
+    static ThreadSpecific<IdentifierTable> table;
     return *table;
+#else
+    static IdentifierTable table;
+    return table;
+#endif
 }
 
+static inline LiteralIdentifierTable& literalIdentifierTable()
+{
+#if USE(MULTIPLE_THREADS)
+    static ThreadSpecific<LiteralIdentifierTable> table;
+    return *table;
+#else
+    static LiteralIdentifierTable table;
+    return table;
+#endif
+}
+
+void Identifier::initializeIdentifierThreading()
+{
+    identifierTable();
+    literalIdentifierTable();
+}
 
 bool Identifier::equal(const UString::Rep *r, const char *s)
 {
@@ -116,7 +137,7 @@ struct CStringTranslator
             d[i] = static_cast<unsigned char>(c[i]); // use unsigned char to zero-extend instead of sign-extend
         
         UString::Rep *r = UString::Rep::create(d, static_cast<int>(length)).releaseRef();
-        r->isIdentifier = 1;
+        r->isIdentifier = true;
         r->rc = 0;
         r->_hash = hash;
 
@@ -124,7 +145,7 @@ struct CStringTranslator
     }
 };
 
-PassRefPtr<UString::Rep> Identifier::add(const char *c)
+PassRefPtr<UString::Rep> Identifier::add(const char* c)
 {
     if (!c) {
         UString::Rep::null.hash();
@@ -135,8 +156,18 @@ PassRefPtr<UString::Rep> Identifier::add(const char *c)
         UString::Rep::empty.hash();
         return &UString::Rep::empty;
     }
-    
-    return *identifierTable().add<const char *, CStringTranslator>(c).first;
+
+    LiteralIdentifierTable& literalTableLocalRef = literalIdentifierTable();
+
+    const LiteralIdentifierTable::iterator& iter = literalTableLocalRef.find(c);
+    if (iter != literalTableLocalRef.end())
+        return iter->second;
+
+    UString::Rep* addedString = *identifierTable().add<const char*, CStringTranslator>(c).first;
+    literalTableLocalRef.add(c, addedString);
+    addedString->ref();
+
+    return addedString;
 }
 
 struct UCharBuffer {
@@ -163,7 +194,7 @@ struct UCharBufferTranslator
             d[i] = buf.s[i];
         
         UString::Rep *r = UString::Rep::create(d, buf.length).releaseRef();
-        r->isIdentifier = 1;
+        r->isIdentifier = true;
         r->rc = 0;
         r->_hash = hash;
         

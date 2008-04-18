@@ -15,6 +15,7 @@ CONFIG(QTDIR_build) {
     GENERATED_SOURCES_DIR = $$PWD/generated
     include($$QT_SOURCE_TREE/src/qbase.pri)
     PRECOMPILED_HEADER = $$PWD/../WebKit/qt/WebKit_pch.h
+    DEFINES *= NDEBUG
 }
 
 isEmpty(GENERATED_SOURCES_DIR):GENERATED_SOURCES_DIR = tmp
@@ -29,7 +30,7 @@ INCLUDEPATH += $$GENERATED_SOURCES_DIR
 }
 
 DEPENDPATH += css dom loader editing history html \
-    loader page platform platform/graphics platform/network platform/text plugins rendering xml \
+    loader/icon page platform platform/graphics platform/network platform/text plugins rendering xml \
     bindings/js bridge bridge/c bridge/qt
 
 include($$OUTPUT_DIR/config.pri)
@@ -188,13 +189,13 @@ gtk-port {
 INCLUDEPATH +=  $$PWD \
                 $$PWD/ForwardingHeaders \
                 $$PWD/.. \
-                $$PWD/../JavaScriptCore/VM \
                 $$PWD/../JavaScriptCore/kjs \
                 $$PWD/../JavaScriptCore/bindings \
                 $$PWD/../JavaScriptCore/wtf \
                 $$PWD/platform \
                 $$PWD/platform/network \
                 $$PWD/platform/graphics \
+                $$PWD/svg/animation \
                 $$PWD/svg/graphics \
                 $$PWD/svg/graphics/filters \
                 $$PWD/platform/sql \
@@ -254,9 +255,7 @@ STYLESHEETS_EMBED = $$PWD/css/html4.css
 LUT_FILES += \
     bindings/js/JSDOMWindowBase.cpp \
     bindings/js/JSEventTargetBase.cpp \
-    bindings/js/JSLocation.cpp \
     bindings/js/JSRGBColor.cpp \
-    bindings/js/JSXMLHttpRequest.cpp \
     bindings/js/JSXSLTProcessor.cpp
 
 LUT_TABLE_FILES += \
@@ -387,6 +386,7 @@ IDL_BINDINGS += \
     page/DOMSelection.idl \
     page/DOMWindow.idl \
     page/History.idl \
+    page/Location.idl \
     page/Screen.idl \
     page/Navigator.idl \
     plugins/Plugin.idl \
@@ -394,6 +394,7 @@ IDL_BINDINGS += \
     plugins/PluginArray.idl \
     plugins/MimeTypeArray.idl \
     xml/DOMParser.idl \
+    xml/XMLHttpRequest.idl \
     xml/XMLHttpRequestException.idl \
     xml/XMLSerializer.idl
 
@@ -404,6 +405,7 @@ SOURCES += \
     bindings/js/JSCanvasPixelArrayCustom.cpp \
     bindings/js/JSCanvasRenderingContext2DCustom.cpp \
     bindings/js/JSClipboardCustom.cpp \
+    bindings/js/JSConsoleCustom.cpp \
     bindings/js/JSCSSRuleCustom.cpp \
     bindings/js/JSCSSStyleDeclarationCustom.cpp \
     bindings/js/JSCSSValueCustom.cpp \
@@ -412,6 +414,7 @@ SOURCES += \
     bindings/js/JSDocumentCustom.cpp \
     bindings/js/JSDOMWindowBase.cpp \
     bindings/js/JSDOMWindowCustom.cpp \
+    bindings/js/JSDOMWindowWrapper.cpp \
     bindings/js/JSElementCustom.cpp \
     bindings/js/JSEventCustom.cpp \
     bindings/js/JSEventTargetBase.cpp \
@@ -433,7 +436,9 @@ SOURCES += \
     bindings/js/JSHTMLOptionsCollectionCustom.cpp \
     bindings/js/JSHTMLSelectElementCustom.cpp \
     bindings/js/JSImageConstructor.cpp \
-    bindings/js/JSLocation.cpp \
+    bindings/js/JSInspectedObjectWrapper.cpp \
+    bindings/js/JSInspectorCallbackWrapper.cpp \
+    bindings/js/JSLocationCustom.cpp \
     bindings/js/JSNamedNodeMapCustom.cpp \
     bindings/js/JSNamedNodesCollection.cpp  \
     bindings/js/JSNavigatorCustom.cpp  \
@@ -442,11 +447,13 @@ SOURCES += \
     bindings/js/JSNodeFilterCustom.cpp \
     bindings/js/JSNodeIteratorCustom.cpp \
     bindings/js/JSNodeListCustom.cpp \
+    bindings/js/JSQuarantinedObjectWrapper.cpp \
     bindings/js/JSRGBColor.cpp \
     bindings/js/JSStyleSheetCustom.cpp \
     bindings/js/JSStyleSheetListCustom.cpp \
     bindings/js/JSTreeWalkerCustom.cpp \
-    bindings/js/JSXMLHttpRequest.cpp \
+    bindings/js/JSXMLHttpRequestConstructor.cpp \
+    bindings/js/JSXMLHttpRequestCustom.cpp \
     bindings/js/JSXSLTProcessor.cpp \
     bindings/js/JSPluginCustom.cpp \
     bindings/js/JSPluginArrayCustom.cpp \
@@ -469,6 +476,7 @@ SOURCES += \
     bridge/c/c_runtime.cpp \
     bridge/c/c_utility.cpp \
     css/CSSBorderImageValue.cpp \
+    css/CSSCanvasValue.cpp \
     css/CSSCharsetRule.cpp \
     css/CSSComputedStyleDeclaration.cpp \
     css/CSSCursorImageValue.cpp \
@@ -477,8 +485,10 @@ SOURCES += \
     css/CSSFontFaceSrcValue.cpp \
     css/CSSFontSelector.cpp \
     css/CSSFontFaceSource.cpp \
+    css/CSSGradientValue.cpp \
     css/CSSHelper.cpp \
     css/CSSImageValue.cpp \
+    css/CSSImageGeneratorValue.cpp \
     css/CSSImportRule.cpp \
     css/CSSInheritedValue.cpp \
     css/CSSInitialValue.cpp \
@@ -740,7 +750,9 @@ SOURCES += \
     loader/SubresourceLoader.cpp \
     loader/TextDocument.cpp \
     loader/TextResourceDecoder.cpp \
-    page/AnimationController.cpp \
+    page/AccessibilityObject.cpp \    
+    page/AnimationController.cpp \    
+    page/AXObjectCache.cpp \
     page/BarInfo.cpp \
     page/Chrome.cpp \
     page/Console.cpp \
@@ -757,6 +769,7 @@ SOURCES += \
     page/History.cpp \
     page/InspectorController.cpp \
     page/JavaScriptDebugServer.cpp \
+    page/Location.cpp \
     page/MouseEventWithHitTestResults.cpp \
     page/Page.cpp \
     page/PageGroup.cpp \
@@ -779,6 +792,7 @@ SOURCES += \
     platform/DragData.cpp \
     platform/DragImage.cpp \
     platform/FileChooser.cpp \
+    platform/graphics/FontDescription.cpp \
     platform/graphics/FontFamily.cpp \
     platform/graphics/AffineTransform.cpp \
     platform/graphics/BitmapImage.cpp \
@@ -788,6 +802,8 @@ SOURCES += \
     platform/graphics/FloatRect.cpp \
     platform/graphics/FloatSize.cpp \
     platform/graphics/FontData.cpp \
+    platform/graphics/GeneratedImage.cpp \
+    platform/graphics/Gradient.cpp \
     platform/graphics/GraphicsContext.cpp \
     platform/graphics/GraphicsTypes.cpp \
     platform/graphics/Image.cpp \
@@ -799,7 +815,6 @@ SOURCES += \
     platform/KURL.cpp \
     platform/Logging.cpp \
     platform/MIMETypeRegistry.cpp \
-    platform/MainThread.cpp \
     platform/network/AuthenticationChallengeBase.cpp \
     platform/network/Credential.cpp \
     platform/network/FormData.cpp \
@@ -862,6 +877,7 @@ SOURCES += \
     rendering/RenderFrameSet.cpp \
     rendering/RenderHTMLCanvas.cpp \
     rendering/RenderImage.cpp \
+    rendering/RenderImageGeneratedContent.cpp \
     rendering/RenderInline.cpp \
     rendering/RenderLayer.cpp \
     rendering/RenderLegend.cpp \
@@ -950,6 +966,7 @@ qt-port {
     platform/graphics/qt/ColorQt.cpp \
     platform/graphics/qt/FloatPointQt.cpp \
     platform/graphics/qt/FloatRectQt.cpp \
+    platform/graphics/qt/GradientQt.cpp \
     platform/graphics/qt/GraphicsContextQt.cpp \
     platform/graphics/qt/IconQt.cpp \
     platform/graphics/qt/ImageBufferQt.cpp \
@@ -980,7 +997,6 @@ qt-port {
     platform/graphics/qt/SimpleFontDataQt.cpp \
     platform/qt/KURLQt.cpp \
     platform/qt/Localizations.cpp \
-    platform/qt/MainThreadQt.cpp \
     platform/qt/MIMETypeRegistryQt.cpp \
     platform/qt/PasteboardQt.cpp \
     platform/qt/PlatformKeyboardEventQt.cpp \
@@ -1031,6 +1047,7 @@ qt-port {
             ../WebKit/qt/Api/qwebnetworkinterface.cpp \
             ../WebKit/qt/Api/qcookiejar.cpp
 
+        DEFINES += QT_BEGIN_NAMESPACE="" QT_END_NAMESPACE=""
      }
 }
 
@@ -1081,7 +1098,6 @@ gtk-port {
         platform/gtk/Language.cpp \
         platform/gtk/LocalizedStringsGtk.cpp \
         platform/gtk/LoggingGtk.cpp \
-        platform/gtk/MainThreadGtk.cpp \
         platform/gtk/MIMETypeRegistryGtk.cpp \
         platform/gtk/MouseEventGtk.cpp \
         platform/gtk/PasteboardGtk.cpp \
@@ -1198,6 +1214,27 @@ contains(DEFINES, ENABLE_DATABASE=1) {
         storage/SQLTransaction.idl
 }
 
+contains(DEFINES, ENABLE_DOM_STORAGE=1) {
+    FEATURE_DEFINES_JAVASCRIPT += ENABLE_DOM_STORAGE =1
+
+    SOURCES += \
+        storage/LocalStorage.cpp \
+        storage/LocalStorageArea.cpp \
+        storage/Storage.cpp \
+        storage/StorageArea.cpp \
+        storage/StorageEvent.cpp \
+        storage/StorageMap.cpp \
+        storage/SessionStorage.cpp \
+        storage/SessionStorageArea.cpp \
+        bindings/js/JSStorage.cpp \
+        bindings/js/JSStorageCustom.cpp \
+        bindings/js/JSStorageEvent.cpp \
+
+    IDL_BINDINGS += \
+        storage/Storage.idl \
+        storage/StorageEvent.idl
+}
+
 contains(DEFINES, ENABLE_ICONDATABASE=1) {
     SOURCES += \
         loader/icon/IconDatabase.cpp \
@@ -1303,9 +1340,9 @@ contains(DEFINES, ENABLE_SVG=1) {
 
     XLINK_NAMES = $$PWD/svg/xlinkattrs.in
 
-    IDL_BINDINGS += svg/SVGZoomEvent.idl \
+    IDL_BINDINGS += \
+        svg/SVGZoomEvent.idl \
         svg/SVGAElement.idl \
-        svg/SVGAltGlyphElement.idl \
         svg/SVGAngle.idl \
         svg/SVGAnimateColorElement.idl \
         svg/SVGAnimatedAngle.idl \
@@ -1436,6 +1473,10 @@ contains(DEFINES, ENABLE_SVG=1) {
         svg/SVGUseElement.idl \
         svg/SVGViewElement.idl 
 
+    # ### SVG_FONTS
+    # IDL_BINDINGS += \
+    #  svg/SVGAltGlyphElement.idl \
+
     SOURCES += \
 # TODO: this-one-is-not-auto-added! FIXME! tmp/SVGElementFactory.cpp \
         bindings/js/JSSVGElementWrapperFactory.cpp \
@@ -1454,8 +1495,6 @@ contains(DEFINES, ENABLE_SVG=1) {
         rendering/PointerEventsHitRules.cpp \
         svg/SVGDocumentExtensions.cpp \
         svg/SVGImageLoader.cpp \
-        svg/SVGTimer.cpp \
-        svg/TimeScheduler.cpp \
         svg/ColorDistance.cpp \
         svg/SVGAElement.cpp \
         svg/SVGAltGlyphElement.cpp \
@@ -1583,6 +1622,9 @@ contains(DEFINES, ENABLE_SVG=1) {
         svg/SVGViewElement.cpp \
         svg/SVGViewSpec.cpp \
         svg/SVGZoomAndPan.cpp \
+        svg/animation/SMILTime.cpp \
+        svg/animation/SMILTimeContainer.cpp \
+        svg/animation/SVGSMILElement.cpp \
         svg/graphics/filters/SVGFEBlend.cpp \
         svg/graphics/filters/SVGFEColorMatrix.cpp \
         svg/graphics/filters/SVGFEComponentTransfer.cpp \

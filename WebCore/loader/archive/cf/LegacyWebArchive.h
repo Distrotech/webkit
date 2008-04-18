@@ -29,6 +29,39 @@
 #ifndef LegacyWebArchive_h
 #define LegacyWebArchive_h
 
-// FIXME:  Code will go here!
+#include "Archive.h"
+
+#include <wtf/PassRefPtr.h>
+
+namespace WebCore {
+
+class Frame;
+class Node;
+class Range;
+
+class LegacyWebArchive : public Archive {
+public:    
+    static PassRefPtr<LegacyWebArchive> create();
+    static PassRefPtr<LegacyWebArchive> create(SharedBuffer*);
+    static PassRefPtr<LegacyWebArchive> create(PassRefPtr<ArchiveResource> mainResource, Vector<PassRefPtr<ArchiveResource> >& subresources, Vector<PassRefPtr<LegacyWebArchive> >& subframeArchives);
+    static PassRefPtr<LegacyWebArchive> create(Node*);
+    static PassRefPtr<LegacyWebArchive> create(Frame*);
+    static PassRefPtr<LegacyWebArchive> createFromSelection(Frame* frame);
+    static PassRefPtr<LegacyWebArchive> create(Range*);
+    static PassRefPtr<LegacyWebArchive> create(const String& markupString, Frame*, Vector<Node*>& nodes);
+
+    RetainPtr<CFDataRef> rawDataRepresentation();
+
+private:
+    LegacyWebArchive();
+    bool init(SharedBuffer*);
+    bool extract(CFDictionaryRef);
+    
+};
+
+ResourceResponse createResourceResponseFromMacArchivedData(CFDataRef);
+RetainPtr<CFDataRef> propertyListDataFromResourceResponse(const ResourceResponse&);
+
+}
 
 #endif // Archive

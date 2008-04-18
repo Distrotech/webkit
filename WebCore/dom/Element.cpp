@@ -28,8 +28,6 @@
 
 #include "CSSStyleSelector.h"
 #include "CString.h"
-#include "ClassNames.h"
-#include "ClassNodeList.h"
 #include "Document.h"
 #include "Editor.h"
 #include "ExceptionCode.h"
@@ -149,7 +147,7 @@ PassRefPtr<Node> Element::cloneNode(bool deep)
     
     // clone attributes
     if (namedAttrMap)
-        *clone->attributes() = *namedAttrMap;
+        clone->attributes()->setAttributes(*namedAttrMap);
 
     clone->copyNonAttributeProperties(this);
     
@@ -168,10 +166,10 @@ void Element::removeAttribute(const QualifiedName& name, ExceptionCode& ec)
     }
 }
 
-void Element::setAttribute(const QualifiedName& name, const String &value)
+void Element::setAttribute(const QualifiedName& name, const AtomicString& value)
 {
-    ExceptionCode ec = 0;
-    setAttribute(name, value.impl(), ec);
+    ExceptionCode ec;
+    setAttribute(name, value, ec);
 }
 
 void Element::setBooleanAttribute(const QualifiedName& name, bool b)
@@ -185,14 +183,15 @@ void Element::setBooleanAttribute(const QualifiedName& name, bool b)
 }
 
 // Virtual function, defined in base class.
-NamedAttrMap *Element::attributes() const
+NamedAttrMap* Element::attributes() const
 {
     return attributes(false);
 }
 
 NamedAttrMap* Element::attributes(bool readonly) const
 {
-    updateStyleAttributeIfNeeded();
+    if (!m_isStyleAttributeValid)
+        updateStyleAttribute();
     if (!readonly && !namedAttrMap)
         createAttributeMap();
     return namedAttrMap.get();
@@ -201,11 +200,6 @@ NamedAttrMap* Element::attributes(bool readonly) const
 Node::NodeType Element::nodeType() const
 {
     return ELEMENT_NODE;
-}
-
-const ClassNames* Element::getClassNames() const
-{
-    return 0;
 }
 
 const AtomicString& Element::getIDAttribute() const
@@ -220,8 +214,8 @@ bool Element::hasAttribute(const QualifiedName& name) const
 
 const AtomicString& Element::getAttribute(const QualifiedName& name) const
 {
-    if (name == styleAttr)
-        updateStyleAttributeIfNeeded();
+    if (name == styleAttr && !m_isStyleAttributeValid)
+        updateStyleAttribute();
 
     if (namedAttrMap)
         if (Attribute* a = namedAttrMap->getAttributeItem(name))
@@ -470,8 +464,8 @@ static inline bool shouldIgnoreAttributeCase(const Element* e)
 const AtomicString& Element::getAttribute(const String& name) const
 {
     String localName = shouldIgnoreAttributeCase(this) ? name.lower() : name;
-    if (localName == styleAttr.localName())
-        updateStyleAttributeIfNeeded();
+    if (localName == styleAttr.localName() && !m_isStyleAttributeValid)
+        updateStyleAttribute();
     
     if (namedAttrMap)
         if (Attribute* a = namedAttrMap->getAttributeItem(localName))
@@ -485,14 +479,14 @@ const AtomicString& Element::getAttributeNS(const String& namespaceURI, const St
     return getAttribute(QualifiedName(nullAtom, localName, namespaceURI));
 }
 
-void Element::setAttribute(const String& name, const String& value, ExceptionCode& ec)
+void Element::setAttribute(const AtomicString& name, const AtomicString& value, ExceptionCode& ec)
 {
     if (!Document::isValidName(name)) {
         ec = INVALID_CHARACTER_ERR;
         return;
     }
 
-    String localName = shouldIgnoreAttributeCase(this) ? name.lower() : name;
+    const AtomicString& localName = (shouldIgnoreAttributeCase(this) && !name.string().impl()->isLower()) ? AtomicString(name.string().lower()) : name;
 
     // allocate attributemap if necessary
     Attribute* old = attributes(false)->getAttributeItem(localName);
@@ -511,14 +505,14 @@ void Element::setAttribute(const String& name, const String& value, ExceptionCod
     if (old && value.isNull())
         namedAttrMap->removeAttribute(old->name());
     else if (!old && !value.isNull())
-        namedAttrMap->addAttribute(createAttribute(QualifiedName(nullAtom, localName, nullAtom), value.impl()));
+        namedAttrMap->addAttribute(createAttribute(QualifiedName(nullAtom, localName, nullAtom), value));
     else if (old && !value.isNull()) {
         old->setValue(value);
         attributeChanged(old);
     }
 }
 
-void Element::setAttribute(const QualifiedName& name, StringImpl* value, ExceptionCode& ec)
+void Element::setAttribute(const QualifiedName& name, const AtomicString& value, ExceptionCode& ec)
 {
     document()->incDOMTreeVersion();
 
@@ -534,40 +528,40 @@ void Element::setAttribute(const QualifiedName& name, StringImpl* value, Excepti
     if (name == idAttr)
         updateId(old ? old->value() : nullAtom, value);
     
-    if (old && !value)
+    if (old && value.isNull())
         namedAttrMap->removeAttribute(name);
-    else if (!old && value)
+    else if (!old && !value.isNull())
         namedAttrMap->addAttribute(createAttribute(name, value));
-    else if (old && value) {
+    else if (old) {
         old->setValue(value);
         attributeChanged(old);
     }
 }
 
-Attribute* Element::createAttribute(const QualifiedName& name, StringImpl* value)
+Attribute* Element::createAttribute(const QualifiedName& name, const AtomicString& value)
 {
     return new Attribute(name, value);
 }
 
-void Element::setAttributeMap(NamedAttrMap* list)
+void Element::setAttributeMap(PassRefPtr<NamedAttrMap> list)
 {
     document()->incDOMTreeVersion();
 
     // If setting the whole map changes the id attribute, we need to call updateId.
 
-    Attribute *oldId = namedAttrMap ? namedAttrMap->getAttributeItem(idAttr) : 0;
-    Attribute *newId = list ? list->getAttributeItem(idAttr) : 0;
+    Attribute* oldId = namedAttrMap ? namedAttrMap->getAttributeItem(idAttr) : 0;
+    Attribute* newId = list ? list->getAttributeItem(idAttr) : 0;
 
     if (oldId || newId)
         updateId(oldId ? oldId->value() : nullAtom, newId ? newId->value() : nullAtom);
 
     if (namedAttrMap)
-        namedAttrMap->element = 0;
+        namedAttrMap->m_element = 0;
 
     namedAttrMap = list;
 
     if (namedAttrMap) {
-        namedAttrMap->element = this;
+        namedAttrMap->m_element = this;
         unsigned len = namedAttrMap->length();
         for (unsigned i = 0; i < len; i++)
             attributeChanged(namedAttrMap->m_attributes[i].get());
@@ -577,7 +571,8 @@ void Element::setAttributeMap(NamedAttrMap* list)
 
 bool Element::hasAttributes() const
 {
-    updateStyleAttributeIfNeeded();
+    if (!m_isStyleAttributeValid)
+        updateStyleAttribute();
     return namedAttrMap && namedAttrMap->length() > 0;
 }
 
@@ -611,7 +606,7 @@ KURL Element::baseURI() const
     if (!parent)
         return base;
 
-    KURL parentBase = parent->baseURI();
+    const KURL& parentBase = parent->baseURI();
     if (parentBase.isNull())
         return base;
 
@@ -659,7 +654,7 @@ bool Element::contains(const Node* node) const
 
 void Element::createAttributeMap() const
 {
-    namedAttrMap = new NamedAttrMap(const_cast<Element*>(this));
+    namedAttrMap = NamedAttrMap::create(const_cast<Element*>(this));
 }
 
 bool Element::isURLAttribute(Attribute *attr) const
@@ -697,8 +692,7 @@ void Element::insertedIntoDocument()
     ContainerNode::insertedIntoDocument();
 
     if (hasID()) {
-        NamedAttrMap* attrs = attributes(true);
-        if (attrs) {
+        if (NamedAttrMap* attrs = namedAttrMap.get()) {
             Attribute* idItem = attrs->getAttributeItem(idAttr);
             if (idItem && !idItem->isNull())
                 updateId(nullAtom, idItem->value());
@@ -709,8 +703,7 @@ void Element::insertedIntoDocument()
 void Element::removedFromDocument()
 {
     if (hasID()) {
-        NamedAttrMap* attrs = attributes(true);
-        if (attrs) {
+        if (NamedAttrMap* attrs = namedAttrMap.get()) {
             Attribute* idItem = attrs->getAttributeItem(idAttr);
             if (idItem && !idItem->isNull())
                 updateId(idItem->value(), nullAtom);
@@ -1090,14 +1083,14 @@ PassRefPtr<Attr> Element::removeAttributeNode(Attr *attr, ExceptionCode& ec)
     return static_pointer_cast<Attr>(attrs->removeNamedItem(attr->qualifiedName(), ec));
 }
 
-void Element::setAttributeNS(const String& namespaceURI, const String& qualifiedName, const String& value, ExceptionCode& ec)
+void Element::setAttributeNS(const AtomicString& namespaceURI, const AtomicString& qualifiedName, const AtomicString& value, ExceptionCode& ec)
 {
     String prefix, localName;
     if (!Document::parseQualifiedName(qualifiedName, prefix, localName, ec))
         return;
 
     QualifiedName qName(prefix, localName, namespaceURI);
-    setAttribute(qName, value.impl(), ec);
+    setAttribute(qName, value, ec);
 }
 
 void Element::removeAttribute(const String& name, ExceptionCode& ec)

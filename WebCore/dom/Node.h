@@ -107,6 +107,8 @@ public:
     virtual NamedAttrMap* attributes() const;
 
     virtual KURL baseURI() const;
+    
+    void getSubresourceURLs(Vector<KURL>&) const;
 
     // These should all actually return a node, but this is only important for language bindings,
     // which will already know and hold a ref on the right node to return. Returning bool allows
@@ -117,7 +119,7 @@ public:
     virtual bool appendChild(PassRefPtr<Node> newChild, ExceptionCode&);
 
     virtual void remove(ExceptionCode&);
-    virtual bool hasChildNodes() const;
+    bool hasChildNodes() const { return firstChild(); }
     virtual PassRefPtr<Node> cloneNode(bool deep) = 0;
     virtual const AtomicString& localName() const;
     virtual const AtomicString& namespaceURI() const;
@@ -472,6 +474,8 @@ protected:
     virtual void willMoveToNewOwnerDocument() { }
     virtual void didMoveToNewOwnerDocument() { }
     
+    virtual void getSubresourceAttributeStrings(Vector<String>&) const { }
+
     OwnPtr<NodeListsNodeData> m_nodeLists;
 
     short m_tabIndex;
@@ -493,11 +497,10 @@ protected:
     bool m_inActiveChain : 1;
 
     bool m_inDetach : 1;
-    bool m_dispatchingSimulatedEvent : 1;
 
 public:
     bool m_inSubtreeMark : 1;
-    // 0 bits left
+    // 1 bit left
 
 private:
     Element* ancestorElement() const;

@@ -28,13 +28,13 @@
 namespace KJS {
 
     struct GregorianDateTime;
-
     class FunctionPrototype;
     class ObjectPrototype;
 
     class DateInstance : public JSWrapperObject {
     public:
         DateInstance(JSObject *proto);
+        virtual ~DateInstance();
         
         bool getTime(GregorianDateTime&, int& offset) const;
         bool getUTCTime(GregorianDateTime&) const;
@@ -43,6 +43,12 @@ namespace KJS {
         
         virtual const ClassInfo *classInfo() const { return &info; }
         static const ClassInfo info;
+
+        void msToGregorianDateTime(double, bool outputIsUTC, GregorianDateTime&) const;
+
+    private:
+        struct Cache;
+        mutable Cache* m_cache;
     };
 
     /**
@@ -121,14 +127,13 @@ namespace KJS {
      */
     class DateObjectImp : public InternalFunctionImp {
     public:
-        DateObjectImp(ExecState*, FunctionPrototype*, DatePrototype*);
+        DateObjectImp(ExecState *, FunctionPrototype *, DatePrototype *);
 
-        virtual ConstructType getConstructData(ConstructData&);
-        virtual JSObject* construct(ExecState*, const List& args);
+        virtual bool implementsConstruct() const;
+        virtual JSObject *construct(ExecState *, const List &args);
+        virtual JSValue *callAsFunction(ExecState *, JSObject *thisObj, const List &args);
 
-        virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
-
-        JSObject* construct(const List&);
+        JSObject *construct(const List &);
     };
 
 } // namespace

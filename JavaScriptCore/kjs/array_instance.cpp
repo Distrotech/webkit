@@ -23,7 +23,6 @@
 #include "config.h"
 #include "array_instance.h"
 
-#include "JSGlobalObject.h"
 #include "PropertyNameArray.h"
 #include <wtf/Assertions.h>
 
@@ -353,7 +352,7 @@ void ArrayInstance::getPropertyNames(ExecState* exec, PropertyNameArray& propert
         for (SparseArrayValueMap::iterator it = map->begin(); it != end; ++it)
             propertyNames.add(Identifier::from(it->first));
     }
- 
+
     JSObject::getPropertyNames(exec, propertyNames);
 }
 
@@ -402,7 +401,7 @@ void ArrayInstance::setLength(unsigned newLength)
             }
         }
     }
-  
+
     m_length = newLength;
 }
 
@@ -436,18 +435,20 @@ static int compareByStringPairForQSort(const void* a, const void* b)
     return compare(va->second, vb->second);
 }
 
-static ExecState* execForCompareByStringForQSort = 0;
-static int compareByStringForQSort(const void* a, const void* b)
-{
-    ExecState* exec = execForCompareByStringForQSort;
+class ArraySortComparator {
+public:
+    ArraySortComparator(ExecState* exec) : m_exec(exec) {}
 
-    JSValue* va = *static_cast<JSValue* const*>(a);
-    JSValue* vb = *static_cast<JSValue* const*>(b);
-    ASSERT(!va->isUndefined());
-    ASSERT(!vb->isUndefined());
+    bool operator()(JSValue* va, JSValue* vb)
+    {
+        ASSERT(!va->isUndefined());
+        ASSERT(!vb->isUndefined());
+        return compare(va->toString(m_exec), vb->toString(m_exec)) < 0;
+    }
 
-    return compare(va->toString(exec), vb->toString(exec));
-}
+private:
+    ExecState* m_exec;
+};
 
 void ArrayInstance::sort(ExecState* exec)
 {
@@ -479,24 +480,21 @@ void ArrayInstance::sort(ExecState* exec)
         return;
     }
 
-    ExecState* oldExec = execForCompareByStringForQSort;
-    execForCompareByStringForQSort = exec;
-    qsort(m_storage->m_vector, lengthNotIncludingUndefined, sizeof(JSValue*), compareByStringForQSort);
-    execForCompareByStringForQSort = oldExec;
+    std::sort(m_storage->m_vector, m_storage->m_vector + lengthNotIncludingUndefined, ArraySortComparator(exec));
 }
 
 struct CompareWithCompareFunctionArguments {
     CompareWithCompareFunctionArguments(ExecState *e, JSObject *cf)
         : exec(e)
         , compareFunction(cf)
-        , globalObject(e->dynamicGlobalObject())
+        , globalThisValue(e->globalThisValue())
     {
     }
 
     ExecState *exec;
     JSObject *compareFunction;
     List arguments;
-    JSGlobalObject* globalObject;
+    JSObject* globalThisValue;
 };
 
 static CompareWithCompareFunctionArguments* compareWithCompareFunctionArguments = 0;
@@ -513,8 +511,7 @@ static int compareWithCompareFunctionForQSort(const void* a, const void* b)
     args->arguments.clear();
     args->arguments.append(va);
     args->arguments.append(vb);
-    double compareResult = args->compareFunction->call
-        (args->exec, args->globalObject, args->arguments)->toNumber(args->exec);
+    double compareResult = args->compareFunction->call(args->exec, args->globalThisValue, args->arguments)->toNumber(args->exec);
     return compareResult < 0 ? -1 : compareResult > 0 ? 1 : 0;
 }
 

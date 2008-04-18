@@ -33,6 +33,7 @@
 #include "operations.h"
 #include "PropertyNameArray.h"
 #include <math.h>
+#include <profiler/Profiler.h>
 #include <wtf/Assertions.h>
 
 // maximum global call stack size. Protects against accidental or
@@ -93,7 +94,16 @@ JSValue *JSObject::call(ExecState *exec, JSObject *thisObj, const List &args)
   }
 #endif
 
-  JSValue *ret = callAsFunction(exec,thisObj,args); 
+#if JAVASCRIPT_PROFILING
+    Profiler::profiler()->willExecute(exec, this);
+#endif
+  
+    JSValue *ret = callAsFunction(exec,thisObj,args); 
+
+#if JAVASCRIPT_PROFILING
+    Profiler::profiler()->didExecute(exec, this);
+#endif
+
 
 #if KJS_MAX_STACK > 0
   --depth;
@@ -261,7 +271,7 @@ void JSObject::put(ExecState* exec, const Identifier &propertyName, JSValue *val
           List args;
           args.append(value);
         
-          setterFunc->call(exec, this, args);
+          setterFunc->call(exec, this->toThisObject(exec), args);
           return;
         } else {
           // If there's an existing property on the object or one of its 
@@ -283,6 +293,16 @@ void JSObject::put(ExecState* exec, const Identifier &propertyName, JSValue *val
 void JSObject::put(ExecState* exec, unsigned propertyName, JSValue* value)
 {
     put(exec, Identifier::from(propertyName), value);
+}
+
+void JSObject::putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes)
+{
+    putDirect(propertyName, value, attributes);
+}
+
+void JSObject::putWithAttributes(ExecState* exec, unsigned propertyName, JSValue* value, unsigned attributes)
+{
+    putWithAttributes(exec, Identifier::from(propertyName), value, attributes);
 }
 
 // ECMA 8.6.2.4
@@ -337,7 +357,7 @@ static ALWAYS_INLINE JSValue *tryGetAndCallProperty(ExecState *exec, const JSObj
     JSObject *o = static_cast<JSObject*>(v);
     if (o->implementsCall()) { // spec says "not primitive type" but ...
       JSObject *thisObj = const_cast<JSObject*>(object);
-      JSValue* def = o->call(exec, thisObj, exec->emptyList());
+      JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
       JSType defType = def->type();
       ASSERT(defType != GetterSetterType);
       if (defType != ObjectType)
@@ -419,6 +439,51 @@ void JSObject::defineSetter(ExecState*, const Identifier& propertyName, JSObject
     gs->setSetter(setterFunc);
 }
 
+JSValue* JSObject::lookupGetter(ExecState*, const Identifier& propertyName)
+{
+    JSObject* obj = this;
+    while (true) {
+        JSValue* v = obj->getDirect(propertyName);
+        if (v) {
+            if (v->type() != GetterSetterType)
+                return jsUndefined();
+            JSObject* funcObj = static_cast<GetterSetterImp*>(v)->getGetter();
+            if (!funcObj)
+                return jsUndefined();
+            return funcObj;
+        }
+
+        if (!obj->prototype() || !obj->prototype()->isObject())
+            return jsUndefined();
+        obj = static_cast<JSObject*>(obj->prototype());
+    }
+}
+
+JSValue* JSObject::lookupSetter(ExecState*, const Identifier& propertyName)
+{
+    JSObject* obj = this;
+    while (true) {
+        JSValue* v = obj->getDirect(propertyName);
+        if (v) {
+            if (v->type() != GetterSetterType)
+                return jsUndefined();
+            JSObject* funcObj = static_cast<GetterSetterImp*>(v)->getSetter();
+            if (!funcObj)
+                return jsUndefined();
+            return funcObj;
+        }
+
+        if (!obj->prototype() || !obj->prototype()->isObject())
+            return jsUndefined();
+        obj = static_cast<JSObject*>(obj->prototype());
+    }
+}
+
+bool JSObject::implementsConstruct() const
+{
+  return false;
+}
+
 JSObject* JSObject::construct(ExecState*, const List& /*args*/)
 {
   ASSERT(false);
@@ -430,10 +495,9 @@ JSObject* JSObject::construct(ExecState* exec, const List& args, const Identifie
   return construct(exec, args);
 }
 
-bool JSObject::implementsCall()
+bool JSObject::implementsCall() const
 {
-    CallData callData;
-    return getCallData(callData) != CallTypeNone;
+  return false;
 }
 
 JSValue *JSObject::callAsFunction(ExecState* /*exec*/, JSObject* /*thisObj*/, const List &/*args*/)
@@ -528,23 +592,6 @@ double JSObject::toNumber(ExecState *exec) const
   return prim->toNumber(exec);
 }
 
-double JSObject::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    if (normalExitPC == exceptionExitPC) {
-        resultPC = normalExitPC;
-        return NaN;
-    }
-
-    JSValue *prim = toPrimitive(exec,NumberType);
-    if (exec->hadException()) {
-        exec->setExceptionSource(normalExitPC);
-        resultPC = exceptionExitPC;
-        return NaN;
-    }
-    resultPC = normalExitPC;
-    return prim->toNumber(exec);
-}
-
 UString JSObject::toString(ExecState *exec) const
 {
   JSValue *prim = toPrimitive(exec,StringType);
@@ -556,6 +603,16 @@ UString JSObject::toString(ExecState *exec) const
 JSObject *JSObject::toObject(ExecState*) const
 {
   return const_cast<JSObject*>(this);
+}
+
+JSObject* JSObject::toThisObject(ExecState*) const
+{
+    return const_cast<JSObject*>(this);
+}
+
+JSGlobalObject* JSObject::toGlobalObject(ExecState*) const
+{
+    return 0;
 }
 
 void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
@@ -583,7 +640,7 @@ void JSObject::fillGetterPropertySlot(PropertySlot& slot, JSValue **location)
     GetterSetterImp *gs = static_cast<GetterSetterImp *>(*location);
     JSObject *getterFunc = gs->getGetter();
     if (getterFunc)
-        slot.setGetterSlot(this, getterFunc);
+        slot.setGetterSlot(this->toThisObject(0), getterFunc);
     else
         slot.setUndefined(this);
 }

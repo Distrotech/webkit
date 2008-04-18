@@ -68,6 +68,9 @@ extern NSString *WebPreferencesRemovedNotification;
 - (BOOL)automaticallyDetectsCacheModel;
 - (void)setAutomaticallyDetectsCacheModel:(BOOL)automaticallyDetectsCacheModel;
 
+- (BOOL)webArchiveDebugModeEnabled;
+- (void)setWebArchiveDebugModeEnabled:(BOOL)webArchiveDebugModeEnabled;
+
 // zero means do AutoScale
 - (float)PDFScaleFactor;
 - (void)setPDFScaleFactor:(float)scale;

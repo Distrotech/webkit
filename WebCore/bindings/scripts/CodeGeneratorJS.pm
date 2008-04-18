@@ -4,7 +4,7 @@
 # Copyright (C) 2006, 2007 Samuel Weinig <sam@webkit.org>
 # Copyright (C) 2006 Alexey Proskuryakov <ap@webkit.org>
 # Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
-#
+# 
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
 # License as published by the Free Software Foundation; either
@@ -269,8 +269,8 @@ sub GenerateHeader
     @headerContent = split("\r", $headerTemplate);
 
     # - Add header protection
-    push(@headerContent, "\n#ifndef $className" . "_H");
-    push(@headerContent, "\n#define $className" . "_H\n\n");
+    push(@headerContent, "\n#ifndef $className" . "_h");
+    push(@headerContent, "\n#define $className" . "_h\n\n");
 
     my $conditionalString;
     if ($conditional) {
@@ -285,9 +285,8 @@ sub GenerateHeader
         push(@headerContent, "#include <kjs/JSGlobalObject.h>\n");
         push(@headerContent, "#include <kjs/object_object.h>\n");
     }
-
-    if ($dataNode->extendedAttributes->{"CustomCall"}) {
-        push(@headerContent, "#include <kjs/CallData.h>\n");
+    if ($interfaceName eq "Node") {
+        push(@headerContent, "#include \"EventTargetNode.h\"\n");
     }
 
     # Get correct pass/store types respecting PODType flag
@@ -305,6 +304,7 @@ sub GenerateHeader
 
     # Implementation class forward declaration
     AddClassForwardIfNeeded($implClassName) unless $podType;
+    AddClassForwardIfNeeded("JSDOMWindowWrapper") if $interfaceName eq "DOMWindow";
 
     # Class declaration
     push(@headerContent, "class $className : public $parentClassName {\n");
@@ -312,8 +312,8 @@ sub GenerateHeader
     push(@headerContent, "public:\n");
 
     # Constructor
-    if ($dataNode->extendedAttributes->{"DoNotCache"}) {
-        push(@headerContent, "    $className($passType);\n");
+    if ($interfaceName eq "DOMWindow") {
+        push(@headerContent, "    $className($passType, JSDOMWindowWrapper*);\n");
     } else {
         push(@headerContent, "    $className(KJS::JSObject* prototype, $passType" . (IsSVGTypeNeedingContextParameter($implClassName) ? ", SVGElement* context" : "") .");\n");
     }
@@ -370,7 +370,7 @@ sub GenerateHeader
     # Custom call functions
     if ($dataNode->extendedAttributes->{"CustomCall"}) {
         push(@headerContent, "    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);\n");
-        push(@headerContent, "    virtual KJS::CallType getCallData(KJS::CallData&);\n\n");
+        push(@headerContent, "    virtual bool implementsCall() const;\n\n");
     }
 
     # Custom deleteProperty function
@@ -499,10 +499,12 @@ sub GenerateHeader
             push(@headerContent, "KJS::JSValue* toJS(KJS::ExecState*, JSSVGPODTypeWrapper<$podType>*, SVGElement* context);\n");
         } elsif (IsSVGTypeNeedingContextParameter($implClassName)) {
             push(@headerContent, "KJS::JSValue* toJS(KJS::ExecState*, $passType, SVGElement* context);\n");
-        } elsif ($interfaceName eq "Node") {
-            push(@headerContent, "KJS::JSValue* toJS(KJS::ExecState*, PassRefPtr<Node>);\n");
         } else {
             push(@headerContent, "KJS::JSValue* toJS(KJS::ExecState*, $passType);\n");
+        }
+        if ($interfaceName eq "Node") {
+            # Resolve ambiguity with EventTarget that otherwise exists.
+            push(@headerContent, "inline KJS::JSValue* toJS(KJS::ExecState* exec, EventTargetNode* node) { return toJS(exec, static_cast<Node*>(node)); }\n");
         }
     }
     if (!$hasParent || $dataNode->extendedAttributes->{"GenerateNativeConverter"}) {
@@ -782,9 +784,10 @@ sub GenerateImplementation
     my $parentNeedsSVGContext = ($needsSVGContext and $parentClassName =~ /SVG/);
 
     # Constructor
-    if ($dataNode->extendedAttributes->{"DoNotCache"}) {
-        push(@implContent, "${className}::$className($passType impl)\n");
-        push(@implContent, "    : $parentClassName(${className}Prototype::self(), impl)\n");
+    if ($interfaceName eq "DOMWindow") {
+        AddIncludesForType("JSDOMWindowWrapper");
+        push(@implContent, "${className}::$className($passType impl, JSDOMWindowWrapper* wrapper)\n");
+        push(@implContent, "    : $parentClassName(${className}Prototype::self(), impl, wrapper)\n");
     } else {
         push(@implContent, "${className}::$className(JSObject* prototype, $passType impl" . ($needsSVGContext ? ", SVGElement* context" : "") . ")\n");
         if ($hasParent) {
@@ -1125,15 +1128,24 @@ sub GenerateImplementation
     # Functions
     if ($numFunctions > 0) {
         foreach my $function (@{$dataNode->functions}) {
+            AddIncludesForType($function->signature->type);
+
             my $functionName = $codeGenerator->WK_lcfirst($className) . "PrototypeFunction" . $codeGenerator->WK_ucfirst($function->signature->name);
             push(@implContent, "JSValue* ${functionName}(ExecState* exec, JSObject* thisObj, const List& args)\n");
             push(@implContent, "{\n");
-            push(@implContent, "    if (!thisObj->inherits(&${className}::s_info))\n");
-            push(@implContent, "        return throwError(exec, TypeError);\n");
 
-            AddIncludesForType($function->signature->type);
+            if ($interfaceName eq "DOMWindow") {
+                AddIncludesForType("JSDOMWindowWrapper");
+                push(@implContent, "    ASSERT(!thisObj->inherits(&JSDOMWindow::s_info));\n");
+                push(@implContent, "    if (!thisObj->inherits(&JSDOMWindowWrapper::s_info))\n");
+                push(@implContent, "        return throwError(exec, TypeError);\n");
+                push(@implContent, "    $className* castedThisObj = static_cast<JSDOMWindowWrapper*>(thisObj)->window();\n");
+            } else {
+                push(@implContent, "    if (!thisObj->inherits(&${className}::s_info))\n");
+                push(@implContent, "        return throwError(exec, TypeError);\n");
+                push(@implContent, "    $className* castedThisObj = static_cast<$className*>(thisObj);\n");
+            }
 
-            push(@implContent, "    $className* castedThisObj = static_cast<$className*>(thisObj);\n");
 
             if ($dataNode->extendedAttributes->{"CheckDomainSecurity"} && 
                 !$function->signature->extendedAttributes->{"DoNotCheckDomainSecurity"}) {
@@ -1348,9 +1360,8 @@ sub GetNativeTypeFromSignature
 }
 
 my %nativeType = (
-    "AtomicString" => "AtomicString",
     "CompareHow" => "Range::CompareHow",
-    "DOMString" => "String",
+    "DOMString" => "const UString&",
     "EventTarget" => "EventTargetNode*",
     "SVGLength" => "SVGLength",
     "SVGMatrix" => "AffineTransform",
@@ -1378,7 +1389,6 @@ sub GetNativeType
 }
 
 my %typeCanFailConversion = (
-    "AtomicString" => 0,
     "Attr" => 1,
     "CompareHow" => 0,
     "DOMString" => 0,
@@ -1442,7 +1452,6 @@ sub JSValueToNative
     return "static_cast<Range::CompareHow>($value->toInt32(exec))" if $type eq "CompareHow";
     return "static_cast<SVGPaint::SVGPaintType>($value->toInt32(exec))" if $type eq "SVGPaintType";
 
-    return "$value->toString(exec)" if $type eq "AtomicString";
     if ($type eq "DOMString") {
         return "valueToStringWithNullCheck(exec, $value)" if $signature->extendedAttributes->{"ConvertNullToNullString"};
         return "valueToStringWithUndefinedOrNullCheck(exec, $value)" if $signature->extendedAttributes->{"ConvertUndefinedOrNullToNullString"};
@@ -1761,7 +1770,7 @@ EOF
 
     if ($canConstruct) {
 $implContent .= << "EOF";
-    virtual ConstructType getConstructData(ConstructData&) { return ConstructTypeNative; }
+    virtual bool implementsConstruct() const { return true; }
     virtual JSObject* construct(ExecState* exec, const List& args) { return static_cast<JSObject*>(toJS(exec, ${interfaceName}::create())); }
 EOF
     }

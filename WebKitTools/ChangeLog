@@ -1,18 +1,357 @@
-2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+2008-04-17  Adam Roben  <aroben@apple.com>
 
-        Reviewed by Oliver.
+        Fix many tests on Windows
+
+        * Scripts/run-webkit-tests:
+        (readFromDumpToolWithTimer):
+         - Use read instead of sysread to ensure that we don't interfere with
+           other uses of buffered IO in this script.
+        (setFileHandleNonBlocking): Actually set the filehandle to blocking
+        when specified.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Fix ~10 tests
+
+        * Scripts/run-webkit-tests: Only remove the newline after #EOF, not
+        whatever newline happens to be at the end of what we've read.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Remove DRT/win's hang timer
+
+        run-webkit-tests takes care of this for us now
+
+        Reviewed by Anders Carlsson.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Don't wait for the hang timer twice in the case of a hang
+
+        Previously we'd wait for a hang while reading both stdout and stderr
+        from DRT. Now we'll only wait for one or the other.
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/run-webkit-tests:
+        (top level): Don't wait for stderr to time out if stdout already timed
+        out.
+        (readFromDumpToolWithTimer): If $dontWaitForTimeOut is true, quit
+        after the first read that returns no data.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Don't throw away the output from timed out tests
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/run-webkit-tests:
+        (top level): Updated for changes to readFromDumpToolWithTimer.
+        (readFromDumpToolWithTimer): Return a hash that contains both the
+        output and whether or not the test timed out.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Make the hang timer 60 seconds
+
+        * Scripts/run-webkit-tests:
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Get rid of carriage returns in DRT/win's stderr
+
+        Reviewed by Eric Seidel.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (main): Mark stderr as binary like we already do for stdout.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 17678: run-webkit-tests should have a watchdog timer (and
+        timeout long tests)
+
+        <https://bugs.webkit.org/show_bug.cgi?id=17678>
+
+        We now abort tests that take longer than 60 seconds to produce output.
+        This matches the watchdog timer in DRT/mac and DRT/win (which we can
+        now remove).
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/run-webkit-tests:
+        (top level): Read DRT's output using the new readFromDumpToolWithTimer
+        subroutine. If readFromDumpToolWithTimer returns undefined it means
+        the test timed out, so we register the test as a hang and move on.
+        (sub testCrashedOrTimedOut): Renamed from testCrashed. Now handles
+        both crashed and timed out tests. If the test timed out, we kill DRT
+        before returning.
+        (sub linksForTimedOutTest): Added. We don't have any output to link to for
+        tests that timed out.
+        (sub recordActualResultsAndDiff): Don't call length on undefined.
+        (sub readFromDumpToolWithTimer): Added. Performs non-blocking reads
+        from a filehandle until an #EOF is reached or
+        $maximumSecondsWithoutOutput have elapsed.
+        (sub setFileHandleNonBlocking): Marks a filehandle as blocking or
+        non-blocking.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Refactor test results page generation
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/run-webkit-tests:
+        (sub htmlForResultsSection): Added. Takes a set of tests, a
+        description, and a subroutine to generate the links for each test, and
+        creates a HTML string containing a table of the tests and their
+        links.
+        (sub linksForExpectedAndActualResults): Added. Replaces the
+        htmlForExpectedAndActualResults subroutine.
+        (sub linksForMismatchTest): Added.
+        (sub linksForCrashOrErrorTest): Added.
+        (sub linksForNewTest): Added.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Print the extension for all tests in the test results page
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/run-webkit-tests:
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Move code that counts finished tests into a subroutine
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/run-webkit-tests:
+        (sub countFinishedTest): Added.
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Move code that handles a crash into a subroutine
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/run-webkit-tests:
+        (sub testCrashed): Added.
+
+2008-04-17  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by hyatt.
         
-        - added support for --ubench mode
+        Rename RenderView to RenderViewport in the next rename patch.
 
-        * Scripts/run-sunspider:
+        * Scripts/do-webcore-rename:
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+2008-04-17  Mario Bensi  <mbensi@pleyo.com>
 
-        Reviewed by Oliver Hunt.
+        Reviewed by Alp Toker.
 
-        --squirrelfish mode: pared down tests for squirrelfish to chew on.
+        http://bugs.webkit.org/show_bug.cgi?id=18543
+        DumpRenderTree gtk freeze
 
-        * Scripts/run-sunspider:
+        fix DumpRenderTree gtk freeze 
+
+        * DumpRenderTree/gtk/DumpRenderTree.cpp:
+        (dump):
+
+2008-04-15  Anders Carlsson  <andersca@apple.com>
+
+        Add missing ;
+        
+        * Scripts/build-webkit:
+        
+2008-04-15  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add ENABLE_OFFLINE_WEB_APPLICATIONS to FEATURE_DEFINES.
+
+        * Scripts/build-webkit:
+
+2008-04-15  Andre Poenitz  <andre.poenitz@trolltech.com>
+
+        Reviewed by Simon.
+
+        Fix compilation with Qt namespaces
+
+        Qt can be configured to have all of its classes inside a specified namespaces.
+        This is for example used in plugin/component environments like Eclipse.
+
+        This change makes it possible to let the Qt port compile against a namespaced
+        Qt by the use of macros Qt provides to properly forward declare Qt classes in
+        the namespace.
+
+        * DumpRenderTree/qt/DumpRenderTree.h:
+
+2008-04-08  Kevin Ollivier  <kevino@theolliviers.com>
+
+        Reviewed by Darin Adler.
+
+        Add a script that propagates any file changes made to the Bakefiles
+        over to GTK and Qt build systems. Still needs to be wired into
+        those ports though.
+
+        * Scripts/update-sources-list.py: Added.
+
+2008-04-08  Mark Rowe  <mrowe@apple.com>
+
+        Clean up after Brady.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm: Add an include so that NSInteger can be found.
+
+2008-04-08  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mitzpettel
+
+        Fixed http://bugs.webkit.org/show_bug.cgi?id=18302
+        -WebArchive subresources dump in random order, intermittent failures
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (compareResourceURLs): Sorting function based on the resource URLs
+        (serializeWebArchiveToXML): Sort the subresource array
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        OMG, BUILD - please!
+
+        * Scripts/build-webkit:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Enable running http tests for Qt again. Failing tests can be put into the skipped list.
+        * Running these tests on windows and other platforms might need some work.
+
+        * Scripts/run-webkit-tests:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * For the http tests we need the output of the FrameLoaderClient. The QtWebKit API
+        is not exporting enough to create the output in DRT itself. Settle with the approach
+        Lars has taken for the Editing support and add branches to our FrameLoaderClient code.
+        * run-webkit-tests http/tests(/loading) can now be executed.
+        * For tests in loading/ directories we are going to throw away the dirty
+        QWebPage to start with something clean.
+        
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Treat http and https as special URLs as well. Change the main.cpp and
+        DumpRenderTree.cpp to handle http and https URIs as input.
+        * I'm not doing the clean up and merging of these two checks now.
+        
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::readStdin):
+        * DumpRenderTree/qt/main.cpp:
+        (main):
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Remove dumpFrameLoadCallbacks from simple-subframe.html because it is
+        located in a directory with the name "loading". And this will autoamtically
+        enable dumping.
+        * Remove this method from the LayoutTestController as it is unused now and this
+        avoids adding it to the DRT of the Qt port.
+        
+
+        * DumpRenderTree/LayoutTestController.cpp:
+        (setPrivateBrowsingEnabledCallback):
+
+2008-04-01  Christian Dywan  <christian@imendio.com>
+
+        Build fix for GCC 4.3.
+
+        * DumpRenderTree/gtk/WorkQueueItemGtk.cpp: include string.h
+
+2008-04-01  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Fix Qt DRT run by also printing EOF on stderr, as expected by
+        run-webkit-tests.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::dump):
+
+2008-03-31  Julien Chaffraix  <julien.chaffraix@gmail.com>
+
+        Reviewed by Darin.
+
+        Bug 17665: determineSourceDir() dies if $sourceDir has a trailing backslash
+
+        Remove trailing '/' in $sourceDir in determineSourceDir().
+
+        Fix suggested by Dmitriy Kazachkov.
+
+        * Scripts/webkitdirs.pm:
+
+2008-03-29  Adam Roben  <aroben@apple.com>
+
+        Update for rename of an IWebViewPrivate method
+
+        Reviewed by Mitz Pettel.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (createWebViewAndOffscreenWindow):
+
+2008-03-26  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Anders.
+        
+        Enable SVG animation support by default.
+
+        * Scripts/build-webkit:
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Windows build fix
+
+        * DumpRenderTree/win/TestNetscapePlugin/TestNetscapePlugin.vcproj:
+        Add $(WebKitLibrariesDir)\include to the include path so we can find
+        stdint.h there.
+
+2008-03-24  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by Mark.
+
+        Clean up SVG features message to be less confusing.
+
+        * Scripts/build-webkit:
+
+2008-03-24  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Dave Hyatt.
+
+        Add EventSender.zoomPageIn/zoomPageOut support to DRT.
+
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (resetWebViewToConsistentStateBeforeTesting):
+        * DumpRenderTree/mac/EventSendingController.mm:
+        (+[EventSendingController isSelectorExcludedFromWebScript:]):
+        (-[EventSendingController zoomPageIn]):
+        (-[EventSendingController zoomPageOut]):
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (resetWebViewToConsistentStateBeforeTesting):
+        * DumpRenderTree/win/EventSender.cpp:
+        (textZoomInCallback):
+        (textZoomOutCallback):
+        (zoomPageInCallback):
+        (zoomPageOutCallback):
 
 2008-03-24  Dan Bernstein  <mitz@apple.com>
 

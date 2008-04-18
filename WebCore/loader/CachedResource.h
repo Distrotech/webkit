@@ -34,6 +34,7 @@ namespace WebCore {
 
 class Cache;
 class CachedResourceClient;
+class CacheHandleBase;
 class DocLoader;
 class Request;
 
@@ -65,8 +66,11 @@ public:
         Cached        // regular case
     };
 
-    CachedResource(const String& url, Type, bool forCache = true, bool sendResourceLoadCallbacks = false);
+    CachedResource(const String& url, Type);
     virtual ~CachedResource();
+    
+    virtual void load(DocLoader* docLoader)  { load(docLoader, false, false, true); }
+    void load(DocLoader*, bool incremental, bool skipCanLoadCheck, bool sendResourceLoadCallbacks);
 
     virtual void setEncoding(const String&) { }
     virtual String encoding() const { return String(); }
@@ -76,8 +80,8 @@ public:
     const String &url() const { return m_url; }
     Type type() const { return m_type; }
 
-    virtual void ref(CachedResourceClient*);
-    void deref(CachedResourceClient*);
+    virtual void addClient(CachedResourceClient*);
+    void removeClient(CachedResourceClient*);
     bool referenced() const { return !m_clients.isEmpty(); }
 
     enum PreloadResult {

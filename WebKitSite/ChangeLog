@@ -1,3 +1,43 @@
+2008-04-08  Dean Jackson  <dino@apple.com>
+
+        Add some updated proposals for CSS specifications, such as 
+        Transforms and Transitions which are already implemented in TOT.
+
+        * specs/CSSVisualEffects: Added.
+        * specs/CSSVisualEffects/CSSAnimation.html: Added.
+        * specs/CSSVisualEffects/CSSTransforms.html: Added.
+        * specs/CSSVisualEffects/CSSTransitions.html: Added.
+
+2008-03-31  Mark Rowe  <mrowe@apple.com>
+
+        Add some images that were missed in the WordPress 2.5 upgrade.
+
+        * blog/: 
+
+2008-03-31  Mark Rowe  <mrowe@apple.com>
+
+        Upgrade to WordPress 2.5
+
+        * blog/:
+
+2008-03-28  Darin Adler  <darin@apple.com>
+
+        * building/build.html: Add another mention of using the Cygwin shell.
+        * building/tools.html: Fix a typo on the name Cygwin.
+
+2008-03-26  Maciej Stachowiak  <mjs@apple.com>
+
+        More screenshots for the blog.
+
+        * blog-files/acid3-full-rendering-pass.png: Added.
+        * blog-files/acid3-rendering-reference.png: Added.
+
+2008-03-26  Maciej Stachowiak  <mjs@apple.com>
+
+        Screenshot for blog post.
+
+        * blog-files/acid3-100.png: Added.
+
 2008-03-23  Antti Koivisto  <antti@apple.com>
 
         * blog-files/wsj-vs.png: Added.

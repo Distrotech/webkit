@@ -32,6 +32,7 @@
 #include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
 #include "ResourceResponse.h"
+#include "CookieJar.h"
 
 #include <libsoup/soup.h>
 #include <libsoup/soup-message.h>
@@ -39,6 +40,12 @@
 namespace WebCore {
 
 static SoupSession* session = 0;
+
+typedef enum
+{
+    ERROR_TRANSPORT,
+    ERROR_UNKNOWN_PROTOCOL
+};
 
 ResourceHandleInternal::~ResourceHandleInternal()
 {
@@ -52,33 +59,134 @@ ResourceHandle::~ResourceHandle()
 {
 }
 
-static void dataCallback(SoupSession *session, SoupMessage* msg, gpointer data)
+static void fillResponseFromMessage(SoupMessage* msg, ResourceResponse* response)
+{
+    SoupMessageHeadersIter iter;
+    const char* name = NULL;
+    const char* value = NULL;
+    soup_message_headers_iter_init(&iter, msg->response_headers);
+    while (soup_message_headers_iter_next(&iter, &name, &value))
+        response->setHTTPHeaderField(name, value);
+
+    String contentType = soup_message_headers_get(msg->response_headers, "Content-Type");
+    char* uri = soup_uri_to_string(soup_message_get_uri(msg), FALSE);
+    response->setUrl(KURL(uri));
+    g_free(uri);
+    response->setMimeType(extractMIMETypeFromMediaType(contentType));
+    response->setTextEncodingName(extractCharsetFromMediaType(contentType));
+    response->setExpectedContentLength(soup_message_headers_get_content_length(msg->response_headers));
+    response->setHTTPStatusCode(msg->status_code);
+    response->setSuggestedFilename(filenameFromHTTPContentDisposition(response->httpHeaderField("Content-Disposition")));
+}
+
+// Called each time the message is going to be sent again except the first time.
+// It's used mostly to let webkit know about redirects.
+static void restartedCallback(SoupMessage* msg, gpointer data)
 {
     ResourceHandle* handle = static_cast<ResourceHandle*>(data);
-    // TODO: maybe we should run this code even if there's no client?
     if (!handle)
+        return;
+    ResourceHandleInternal* d = handle->getInternal();
+    if (d->m_cancelled)
+        return;
+
+    char* uri = soup_uri_to_string(soup_message_get_uri(msg), FALSE);
+    String location = String(uri);
+    g_free(uri);
+    KURL newURL = KURL(handle->request().url(), location);
+
+    ResourceRequest request = handle->request();
+    ResourceResponse response;
+    request.setURL(newURL);
+    fillResponseFromMessage(msg, &response);
+    if (d->client())
+        d->client()->willSendRequest(handle, request, response);
+
+    d->m_request.setURL(newURL);
+}
+
+static void gotHeadersCallback(SoupMessage* msg, gpointer data)
+{
+    if (!SOUP_STATUS_IS_SUCCESSFUL(msg->status_code))
+        return;
+
+    ResourceHandle* handle = static_cast<ResourceHandle*>(data);
+    if (!handle)
+        return;
+    ResourceHandleInternal* d = handle->getInternal();
+    if (d->m_cancelled)
         return;
     ResourceHandleClient* client = handle->client();
     if (!client)
         return;
 
-    ResourceResponse response;
+    fillResponseFromMessage(msg, &d->m_response);
+    client->didReceiveResponse(handle, d->m_response);
+    soup_message_set_flags(msg, SOUP_MESSAGE_OVERWRITE_CHUNKS);
+}
 
-    String contentType = String(soup_message_headers_get(msg->response_headers, "Content-Type"));
-    response.setMimeType(extractMIMETypeFromMediaType(contentType));
-    response.setTextEncodingName(extractCharsetFromMediaType(contentType));
+static void gotChunkCallback(SoupMessage* msg, SoupBuffer* chunk, gpointer data)
+{
+    if (!SOUP_STATUS_IS_SUCCESSFUL(msg->status_code))
+        return;
 
-    response.setExpectedContentLength(msg->response_body->length);
-    response.setHTTPStatusCode(msg->status_code);
+    ResourceHandle* handle = static_cast<ResourceHandle*>(data);
+    if (!handle)
+        return;
+    ResourceHandleInternal* d = handle->getInternal();
+    if (d->m_cancelled)
+        return;
+    ResourceHandleClient* client = handle->client();
+    if (!client)
+        return;
 
-    client->didReceiveResponse(handle, response);
-    if (msg->response_body->data)
-        client->didReceiveData(handle, msg->response_body->data, msg->response_body->length, 0);
+    client->didReceiveData(handle, chunk->data, chunk->length, false);
+}
+
+// Called at the end of the message, with all the necessary about the last informations.
+// Doesn't get called for redirects.
+static void finishedCallback(SoupSession *session, SoupMessage* msg, gpointer data)
+{
+    ResourceHandle* handle = static_cast<ResourceHandle*>(data);
+    // TODO: maybe we should run this code even if there's no client?
+    if (!handle)
+        return;
+
+    ResourceHandleInternal* d = handle->getInternal();
+    // The message has been handled.
+    d->m_msg = NULL;
+
+    ResourceHandleClient* client = handle->client();
+    if (!client)
+        return;
+
+    if (d->m_cancelled)
+        return;
+
+    if (SOUP_STATUS_IS_TRANSPORT_ERROR(msg->status_code)) {
+        char* uri = soup_uri_to_string(soup_message_get_uri(msg), FALSE);
+        ResourceError error("webkit-network-error", ERROR_TRANSPORT, uri, String::fromUTF8(msg->reason_phrase));
+        g_free(uri);
+        client->didFail(handle, error);
+        return;
+    } else if (!SOUP_STATUS_IS_SUCCESSFUL(msg->status_code)) {
+        fillResponseFromMessage(msg, &d->m_response);
+        client->didReceiveResponse(handle, d->m_response);
+
+        // WebCore might have cancelled the job in the while
+        if (d->m_cancelled)
+            return;
+
+        if (msg->response_body->data)
+            client->didReceiveData(handle, msg->response_body->data, msg->response_body->length, true);
+    }
+
     client->didFinishLoading(handle);
 }
 
-static void parseDataUrl(ResourceHandle* handle)
+static gboolean parseDataUrl(gpointer callback_data)
 {
+    ResourceHandle* handle = static_cast<ResourceHandle*>(callback_data);
     String data = handle->request().url().string();
 
     ASSERT(data.startsWith("data:", false));
@@ -133,6 +241,8 @@ static void parseDataUrl(ResourceHandle* handle)
     g_free(outData);
 
     client->didFinishLoading(handle);
+
+    return FALSE;
 }
 
 bool ResourceHandle::start(Frame* frame)
@@ -148,16 +258,22 @@ bool ResourceHandle::start(Frame* frame)
     String protocol = url.protocol();
 
     if (equalIgnoringCase(protocol, "data")) {
-        parseDataUrl(this);
-        return false;
-    }
-
-    if (!equalIgnoringCase(protocol, "http") && !equalIgnoringCase(protocol, "https")) {
-        // TODO: didFail()?
-        return false;
+        // If parseDataUrl is called syncronously the job is not yet effectively started
+        // and webkit won't never know that the data has been parsed even didFinishLoading is called.
+        g_idle_add(parseDataUrl, this);
+        return true;
     }
 
     String urlString = url.string();
+
+    if (!equalIgnoringCase(protocol, "http") && !equalIgnoringCase(protocol, "https")) {
+        // If we don't call didFail the job is not complete for webkit even false is returned.
+        if (d->client()) {
+            ResourceError error("webkit-network-error", ERROR_UNKNOWN_PROTOCOL, urlString, protocol);
+            d->client()->didFail(this, error);
+        }
+        return false;
+    }
 
     if (url.isLocalFile()) {
         String query = url.query();
@@ -168,24 +284,27 @@ bool ResourceHandle::start(Frame* frame)
         d->m_response.setMimeType(MIMETypeRegistry::getMIMETypeForPath(String(urlString)));
     }
 
-    if (!session)
+    if (!session) {
         session = soup_session_async_new();
 
+        soup_session_add_feature(session, SOUP_SESSION_FEATURE(getCookieJar()));
+
+        const char* soup_debug = g_getenv("WEBKIT_SOUP_LOGGING");
+        if (soup_debug) {
+            int soup_debug_level = atoi(soup_debug);
+
+            SoupLogger* logger = soup_logger_new(static_cast<SoupLoggerLogLevel>(soup_debug_level), -1);
+            soup_logger_attach(logger, session);
+            g_object_unref(logger);
+        }
+    }
+
     SoupMessage* msg;
-    const char* method = 0;
+    msg = soup_message_new(request().httpMethod().utf8().data(), urlString.utf8().data());
+    g_signal_connect(msg, "restarted", G_CALLBACK(restartedCallback), this);
 
-    if (request().httpMethod() == "GET")
-        method = SOUP_METHOD_GET;
-    else if (request().httpMethod() == "POST")
-        method = SOUP_METHOD_POST;
-    else if (request().httpMethod() == "HEAD")
-        method = SOUP_METHOD_HEAD;
-    else if (request().httpMethod() == "PUT")
-        method = SOUP_METHOD_PUT;
-    else
-        g_debug ("Unknown method!");
-
-    msg = soup_message_new(method? method : SOUP_METHOD_GET, urlString.utf8().data());
+    g_signal_connect(msg, "got-headers", G_CALLBACK(gotHeadersCallback), this);
+    g_signal_connect(msg, "got-chunk", G_CALLBACK(gotChunkCallback), this);
 
     HTTPHeaderMap customHeaders = d->m_request.httpHeaderFields();
     if (!customHeaders.isEmpty()) {
@@ -209,19 +328,20 @@ bool ResourceHandle::start(Frame* frame)
                                  SOUP_MEMORY_COPY, body.data(), body.size());
     }
 
-    d->m_msg = (SoupMessage*)g_object_ref(msg);
-    d->session = session;
-    soup_session_queue_message(session, d->m_msg, dataCallback, this);
+    d->m_msg = static_cast<SoupMessage*>(g_object_ref(msg));
+    soup_session_queue_message(session, d->m_msg, finishedCallback, this);
 
     return true;
 }
 
 void ResourceHandle::cancel()
 {
-    if (d->m_msg)
-        soup_session_cancel_message (d->session, d->m_msg, SOUP_STATUS_CANCELLED);
-
-    client()->didFinishLoading(this);
+    d->m_cancelled = true;
+    if (d->m_msg) {
+        soup_session_cancel_message(session, d->m_msg, SOUP_STATUS_CANCELLED);
+        // For re-entrancy troubles we call didFinishLoading when the message hasn't been handled yet.
+        d->client()->didFinishLoading(this);
+    }
 }
 
 PassRefPtr<SharedBuffer> ResourceHandle::bufferedData()

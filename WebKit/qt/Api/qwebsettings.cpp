@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2007 Trolltech ASA
+    Copyright (C) 2007-2008 Trolltech ASA
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -26,11 +26,15 @@
 #include "qwebpage.h"
 #include "qwebpage_p.h"
 
+#include "Cache.h"
 #include "Page.h"
+#include "PageCache.h"
 #include "Settings.h"
 #include "KURL.h"
 #include "PlatformString.h"
 #include "IconDatabase.h"
+#include "Image.h"
+#include "IntSize.h"
 
 #include <QHash>
 #include <QSharedData>
@@ -160,6 +164,13 @@ QWebSettings *QWebSettings::defaultSettings()
 }
 
 /*!
+    \class QWebSettings
+    \since 4.4
+    \brief The QWebSettings class provides a objects that is used to store the settings
+    used by QWebPage and QWebFrame.
+*/
+
+/*!
     \internal
 */
 QWebSettings::QWebSettings()
@@ -272,6 +283,7 @@ QUrl QWebSettings::userStyleSheetLocation() const
 */
 void QWebSettings::setIconDatabaseEnabled(bool enabled, const QString &location)
 {
+    WebCore::iconDatabase()->delayDatabaseCleanup();
     WebCore::iconDatabase()->setEnabled(enabled);
     if (enabled) {
         QFileInfo info(location);
@@ -293,6 +305,36 @@ bool QWebSettings::iconDatabaseEnabled()
 }
 
 /*!
+    This will remove all the data from the icon database. If no
+    icon database is enabled noting is going to happen.
+
+    \sa iconDatabaseEnabled()
+*/
+void QWebSettings::clearIconDatabase()
+{
+    if (iconDatabaseEnabled())
+        WebCore::iconDatabase()->removeAllIcons();
+}
+
+/*!
+    Returns the site icon for \a url
+    If there is no icon for the url a null QIcon is returned.
+*/
+QPixmap QWebSettings::iconForUrl(const QUrl &url)
+{
+    WebCore::Image* image = WebCore::iconDatabase()->iconForPageURL(WebCore::KURL(url).string(),
+                                WebCore::IntSize(16, 16));
+    if (!image) {
+        return QPixmap();
+    }
+    QPixmap *icon = image->getPixmap();
+    if (!icon) {
+        return QPixmap();
+    }
+    return *icon;
+}
+
+/*!
     Sets \a graphic to be drawn when QtWebKit needs to drawn an image of the given \a type.
 */
 void QWebSettings::setWebGraphic(WebGraphic type, const QPixmap &graphic)
@@ -310,6 +352,24 @@ void QWebSettings::setWebGraphic(WebGraphic type, const QPixmap &graphic)
 QPixmap QWebSettings::webGraphic(WebGraphic type)
 {
     return graphics()->value(type);
+}
+
+/*!
+ @internal
+*/
+void QWebSettings::setPageCacheCapacity(int numberOfPages)
+{
+    WebCore::pageCache()->setCapacity(qMax(0, numberOfPages));
+}
+
+/*!
+ @internal
+*/
+void QWebSettings::setObjectCacheCapacities(int cacheMinDeadCapacity, int cacheMaxDead, int totalCapacity)
+{
+    WebCore::cache()->setCapacities(qMax(0, cacheMinDeadCapacity),
+                                    qMax(0, cacheMaxDead),
+                                    qMax(0, totalCapacity));
 }
 
 /*!

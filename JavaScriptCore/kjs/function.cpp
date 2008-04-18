@@ -28,9 +28,7 @@
 
 #include "Activation.h"
 #include "ExecState.h"
-#include "ExecStateInlines.h"
 #include "JSGlobalObject.h"
-#include "Machine.h"
 #include "Parser.h"
 #include "PropertyNameArray.h"
 #include "debugger.h"
@@ -41,7 +39,9 @@
 #include "nodes.h"
 #include "operations.h"
 #include "scope_chain_mark.h"
+#include "ExecStateInlines.h"
 #include <errno.h>
+#include <profiler/Profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,23 +69,20 @@ FunctionImp::FunctionImp(ExecState* exec, const Identifier& name, FunctionBodyNo
 void FunctionImp::mark()
 {
     InternalFunctionImp::mark();
-    body->mark();
     _scope.mark();
-}
-
-CallType FunctionImp::getCallData(CallData& callData)
-{
-    callData.js.functionBody = body.get();
-    callData.js.scopeChain = &_scope;
-    return CallTypeJS;
 }
 
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
-    JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
-    exec->setException(exception);
-    return result;
+    FunctionExecState newExec(exec->dynamicGlobalObject(), thisObj, exec->globalThisValue(), body.get(), exec, this, args);
+    JSValue* result = body->execute(&newExec);
+    if (newExec.completionType() == ReturnValue)
+        return result;
+    if (newExec.completionType() == Throw) {
+        exec->setException(result);
+        return result;
+    }
+    return jsUndefined();
 }
 
 JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier& propertyName, const PropertySlot& slot)
@@ -94,7 +91,7 @@ JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifi
   
   for (ExecState* e = exec; e; e = e->callingExecState())
     if (e->function() == thisObj) {
-      ASSERT_NOT_REACHED();
+      e->dynamicGlobalObject()->tearOffActivation(e, e != exec);
       return e->activationObject()->get(exec, propertyName);
     }
   
@@ -193,34 +190,23 @@ Identifier FunctionImp::getParameterName(int index)
 }
 
 // ECMA 13.2.2 [[Construct]]
-ConstructType FunctionImp::getConstructData(ConstructData& constructData)
-{
-    constructData.js.functionBody = body.get();
-    constructData.js.scopeChain = &_scope;
-    return ConstructTypeJS;
-}
-
 JSObject* FunctionImp::construct(ExecState* exec, const List& args)
 {
-    JSObject* proto;
-    JSValue* p = get(exec, exec->propertyNames().prototype);
-    if (p->isObject())
-        proto = static_cast<JSObject*>(p);
-    else
-        proto = exec->lexicalGlobalObject()->objectPrototype();
+  JSObject* proto;
+  JSValue* p = get(exec, exec->propertyNames().prototype);
+  if (p->isObject())
+    proto = static_cast<JSObject*>(p);
+  else
+    proto = exec->lexicalGlobalObject()->objectPrototype();
 
-    JSObject* newObject = new JSObject(proto);
+  JSObject* obj(new JSObject(proto));
 
-    JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, newObject, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
-    if (exception) {
-        exec->setException(exception);
-        return newObject;
-    }
+  JSValue* res = call(exec,obj,args);
 
-    if (result->isObject())
-        return static_cast<JSObject*>(result);
-    return newObject;
+  if (res->isObject())
+    return static_cast<JSObject*>(res);
+  else
+    return obj;
 }
 
 // ------------------------------ IndexToNameMap ---------------------------------
@@ -359,8 +345,8 @@ bool Arguments::deleteProperty(ExecState* exec, const Identifier& propertyName)
 const ClassInfo ActivationImp::info = { "Activation", 0, 0 };
 
 ActivationImp::ActivationImp(const ActivationData& oldData, bool leaveRelic)
-    : JSVariableObject(new ActivationData(oldData))
 {
+    JSVariableObject::d = new ActivationData(oldData);
     d()->leftRelic = leaveRelic;
 }
 
@@ -385,9 +371,34 @@ PropertySlot::GetValueFunc ActivationImp::getArgumentsGetter()
   return ActivationImp::argumentsGetter;
 }
 
-bool ActivationImp::getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&)
+bool ActivationImp::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    ASSERT_NOT_REACHED();
+    if (symbolTableGet(propertyName, slot))
+        return true;
+
+    if (JSValue** location = getDirectLocation(propertyName)) {
+        slot.setValueSlot(this, location);
+        return true;
+    }
+
+    // Only return the built-in arguments object if it wasn't overridden above.
+    if (propertyName == exec->propertyNames().arguments) {
+        for (ExecState* e = exec; e; e = e->callingExecState())
+            if (e->function() == d()->function) {
+                e->dynamicGlobalObject()->tearOffActivation(e, e != exec);
+                ActivationImp* newActivation = e->activationObject();
+                slot.setCustom(newActivation, newActivation->getArgumentsGetter());
+                return true;
+            }
+        
+        slot.setCustom(this, getArgumentsGetter());
+        return true;
+    }
+
+    // We don't call through to JSObject because there's no way to give an 
+    // activation object getter properties or a prototype.
+    ASSERT(!_prop.hasGetterSetterProperties());
+    ASSERT(prototype() == jsNull());
     return false;
 }
 
@@ -411,9 +422,9 @@ void ActivationImp::put(ExecState*, const Identifier& propertyName, JSValue* val
     _prop.put(propertyName, value, 0, true);
 }
 
-void ActivationImp::initializeVariable(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes)
+void ActivationImp::putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes)
 {
-    if (symbolTableInitializeVariable(propertyName, value, attributes))
+    if (symbolTablePutWithAttributes(propertyName, value, attributes))
         return;
 
     // We don't call through to JSObject because __proto__ and getter/setter 
@@ -425,8 +436,16 @@ void ActivationImp::initializeVariable(ExecState*, const Identifier& propertyNam
 
 void ActivationImp::markChildren()
 {
-    ASSERT_NOT_REACHED();
-
+    LocalStorage& localStorage = d()->localStorage;
+    size_t size = localStorage.size();
+    
+    for (size_t i = 0; i < size; ++i) {
+        JSValue* value = localStorage[i].value;
+        
+        if (!value->marked())
+            value->mark();
+    }
+    
     if (!d()->function->marked())
         d()->function->mark();
     
@@ -446,6 +465,11 @@ void ActivationImp::createArgumentsObject(ExecState* exec)
     // we can retrieve our argument list from the ExecState for our function 
     // call instead of storing the list ourselves.
     d()->argumentsObject = new Arguments(exec, d()->exec->function(), *d()->exec->arguments(), this);
+}
+
+JSObject* ActivationImp::toThisObject(ExecState* exec) const
+{
+    return exec->globalThisValue();
 }
 
 ActivationImp::ActivationData::ActivationData(const ActivationData& old)
@@ -563,7 +587,7 @@ static bool isStrWhiteSpace(unsigned short c)
         case 0x2029:
             return true;
         default:
-            return isSeparatorSpace(c);
+            return c > 0xff && isSeparatorSpace(c);
     }
 }
 
@@ -653,7 +677,7 @@ static double parseInt(const UString& s, int radix)
 
     if (number >= mantissaOverflowLowerBound) {
         if (radix == 10)
-            number = kjs_strtod(s.substr(firstDigitPosition, p - firstDigitPosition).ascii(), 0);
+            number = strtod(s.substr(firstDigitPosition, p - firstDigitPosition).ascii(), 0);
         else if (radix == 2 || radix == 4 || radix == 8 || radix == 16 || radix == 32)
             number = parseIntOverflow(s.substr(firstDigitPosition, p - firstDigitPosition).ascii(), p - firstDigitPosition, radix);
     }
@@ -683,42 +707,59 @@ static double parseFloat(const UString& s)
     return s.toDouble( true /*tolerant*/, false /* NaN for empty string */ );
 }
 
+JSValue* eval(ExecState* exec, const ScopeChain& scopeChain, JSVariableObject* variableObject, JSGlobalObject* globalObject, JSObject* thisObj, const List& args)
+{
+    JSValue* x = args[0];
+    if (!x->isString())
+        return x;
+
+    UString s = x->toString(exec);
+
+    int sourceId;
+    int errLine;
+    UString errMsg;
+
+#if JAVASCRIPT_PROFILING
+    Profiler::profiler()->willExecute(exec, UString(), 0);
+#endif
+
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+
+    Debugger* dbg = exec->dynamicGlobalObject()->debugger();
+    if (dbg) {
+        bool cont = dbg->sourceParsed(exec, sourceId, UString(), s, 0, errLine, errMsg);
+        if (!cont)
+            return jsUndefined();
+    }
+
+    if (!evalNode)
+        return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
+
+    EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, variableObject);
+
+    JSValue* value = evalNode->execute(&newExec);
+
+#if JAVASCRIPT_PROFILING
+    Profiler::profiler()->didExecute(exec, UString(), 0);
+#endif
+
+    if (newExec.completionType() == Throw) {
+        exec->setException(value);
+        return value;
+    }
+
+    return value ? value : jsUndefined();
+}
+
 JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, JSObject* thisObj, const List& args)
 {
-    JSGlobalObject* globalObject = thisObj->isGlobalObject() ? static_cast<JSGlobalObject*>(thisObj) : 0;
+    JSGlobalObject* globalObject = thisObj->toGlobalObject(exec);
 
     if (!globalObject || globalObject->evalFunction() != function)
         return throwError(exec, EvalError, "The \"this\" value passed to eval must be the global object from which eval originated");
 
     ScopeChain scopeChain(globalObject);
-
-    JSValue* x = args[0];
-    if (!x->isString())
-        return x;
-    
-    UString s = x->toString(exec);
-    
-    int sourceId;
-    int errLine;
-    UString errMsg;
-    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
-    
-    if (!evalNode)
-        return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
-
-    ASSERT(!exec->dynamicGlobalObject()->debugger());
-    
-    EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, globalObject);
-    
-    JSValue* exception = 0;
-    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception);
-    
-    if (exception) {
-        exec->setException(exception);
-        return value;
-    }
-    
-    return value ? value : jsUndefined();
+    return eval(exec, scopeChain, globalObject, globalObject, function->cachedGlobalObject()->toThisObject(exec), args);
 }
 
 JSValue* globalFuncParseInt(ExecState* exec, JSObject*, const List& args)
@@ -864,17 +905,26 @@ JSValue* PrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, c
 
 // ------------------------------ PrototypeReflexiveFunction -------------------------------
 
-PrototypeReflexiveFunction::PrototypeReflexiveFunction(ExecState* exec, FunctionPrototype* functionPrototype, int len, const Identifier& name, JSMemberFunction function)
+PrototypeReflexiveFunction::PrototypeReflexiveFunction(ExecState* exec, FunctionPrototype* functionPrototype, int len, const Identifier& name, JSMemberFunction function, JSGlobalObject* cachedGlobalObject)
     : InternalFunctionImp(functionPrototype, name)
     , m_function(function)
+    , m_cachedGlobalObject(cachedGlobalObject)
 {
     ASSERT_ARG(function, function);
+    ASSERT_ARG(cachedGlobalObject, cachedGlobalObject);
     putDirect(exec->propertyNames().length, jsNumber(len), DontDelete | ReadOnly | DontEnum);
 }
 
 JSValue* PrototypeReflexiveFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
     return m_function(exec, this, thisObj, args);
+}
+
+void PrototypeReflexiveFunction::mark()
+{
+    InternalFunctionImp::mark();
+    if (!m_cachedGlobalObject->marked())
+        m_cachedGlobalObject->mark();
 }
 
 } // namespace KJS

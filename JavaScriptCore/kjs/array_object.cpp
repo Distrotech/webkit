@@ -92,20 +92,16 @@ JSValue* arrayProtoFuncToString(ExecState* exec, JSObject* thisObj, const List&)
     if (!thisObj->inherits(&ArrayInstance::info))
         return throwError(exec, TypeError);
 
-    static HashSet<JSObject*> visitedElems;
-    static const UString* empty = new UString("");
-    static const UString* comma = new UString(",");
-    bool alreadyVisited = !visitedElems.add(thisObj).second;
+    bool alreadyVisited = !exec->dynamicGlobalObject()->arrayVisitedElements().add(thisObj).second;
+    Vector<UChar, 256> strBuffer;
     if (alreadyVisited)
-        return jsString(*empty);
-    UString separator = *comma;
-    UString str = *empty;
+        return jsString(UString(0, 0)); // return an empty string, avoding infinite recursion.
 
     unsigned length = thisObj->get(exec, exec->propertyNames().length)->toUInt32(exec);
     for (unsigned k = 0; k < length; k++) {
         if (k >= 1)
-            str += separator;
-        if (str.isNull()) {
+            strBuffer.append(',');
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
             break;
@@ -115,9 +111,10 @@ JSValue* arrayProtoFuncToString(ExecState* exec, JSObject* thisObj, const List&)
         if (element->isUndefinedOrNull())
             continue;
 
-        str += element->toString(exec);
+        UString str = element->toString(exec);
+        strBuffer.append(str.data(), str.size());
 
-        if (str.isNull()) {
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
         }
@@ -125,8 +122,8 @@ JSValue* arrayProtoFuncToString(ExecState* exec, JSObject* thisObj, const List&)
         if (exec->hadException())
             break;
     }
-    visitedElems.remove(thisObj);
-    return jsString(str);
+    exec->dynamicGlobalObject()->arrayVisitedElements().remove(thisObj);
+    return jsString(UString(strBuffer.data(), strBuffer.data() ? strBuffer.size() : 0));
 }
 
 JSValue* arrayProtoFuncToLocaleString(ExecState* exec, JSObject* thisObj, const List&)
@@ -134,20 +131,16 @@ JSValue* arrayProtoFuncToLocaleString(ExecState* exec, JSObject* thisObj, const 
     if (!thisObj->inherits(&ArrayInstance::info))
         return throwError(exec, TypeError);
 
-    static HashSet<JSObject*> visitedElems;
-    static const UString* empty = new UString("");
-    static const UString* comma = new UString(",");
-    bool alreadyVisited = !visitedElems.add(thisObj).second;
+    bool alreadyVisited = !exec->dynamicGlobalObject()->arrayVisitedElements().add(thisObj).second;
+    Vector<UChar, 256> strBuffer;
     if (alreadyVisited)
-        return jsString(*empty);
-    UString separator = *comma;
-    UString str = *empty;
+        return jsString(UString(0, 0)); // return an empty string, avoding infinite recursion.
 
     unsigned length = thisObj->get(exec, exec->propertyNames().length)->toUInt32(exec);
     for (unsigned k = 0; k < length; k++) {
         if (k >= 1)
-            str += separator;
-        if (str.isNull()) {
+            strBuffer.append(',');
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
             break;
@@ -159,12 +152,14 @@ JSValue* arrayProtoFuncToLocaleString(ExecState* exec, JSObject* thisObj, const 
 
         JSObject* o = element->toObject(exec);
         JSValue* conversionFunction = o->get(exec, exec->propertyNames().toLocaleString);
+        UString str;
         if (conversionFunction->isObject() && static_cast<JSObject*>(conversionFunction)->implementsCall())
-            str += static_cast<JSObject*>(conversionFunction)->call(exec, o, exec->emptyList())->toString(exec);
+            str = static_cast<JSObject*>(conversionFunction)->call(exec, o, exec->emptyList())->toString(exec);
         else
-            str += element->toString(exec);
+            str = element->toString(exec);
+        strBuffer.append(str.data(), str.size());
 
-        if (str.isNull()) {
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
         }
@@ -172,29 +167,25 @@ JSValue* arrayProtoFuncToLocaleString(ExecState* exec, JSObject* thisObj, const 
         if (exec->hadException())
             break;
     }
-    visitedElems.remove(thisObj);
-    return jsString(str);
+    exec->dynamicGlobalObject()->arrayVisitedElements().remove(thisObj);
+    return jsString(UString(strBuffer.data(), strBuffer.data() ? strBuffer.size() : 0));
 }
 
 JSValue* arrayProtoFuncJoin(ExecState* exec, JSObject* thisObj, const List& args)
 {
-    static HashSet<JSObject*> visitedElems;
-    static const UString* empty = new UString("");
-    static const UString* comma = new UString(",");
-    bool alreadyVisited = !visitedElems.add(thisObj).second;
+    bool alreadyVisited = !exec->dynamicGlobalObject()->arrayVisitedElements().add(thisObj).second;
+    Vector<UChar, 256> strBuffer;
     if (alreadyVisited)
-        return jsString(*empty);
-    UString separator = *comma;
-    UString str = *empty;
+        return jsString(UString(0, 0)); // return an empty string, avoding infinite recursion.
 
-    if (!args[0]->isUndefined())
-        separator = args[0]->toString(exec);
+    UChar comma = ',';
+    UString separator = args[0]->isUndefined() ? UString(&comma, 1) : args[0]->toString(exec);
 
     unsigned length = thisObj->get(exec, exec->propertyNames().length)->toUInt32(exec);
     for (unsigned k = 0; k < length; k++) {
         if (k >= 1)
-            str += separator;
-        if (str.isNull()) {
+            strBuffer.append(separator.data(), separator.size());
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
             break;
@@ -204,9 +195,10 @@ JSValue* arrayProtoFuncJoin(ExecState* exec, JSObject* thisObj, const List& args
         if (element->isUndefinedOrNull())
             continue;
 
-        str += element->toString(exec);
+        UString str = element->toString(exec);
+        strBuffer.append(str.data(), str.size());
 
-        if (str.isNull()) {
+        if (!strBuffer.data()) {
             JSObject* error = Error::create(exec, GeneralError, "Out of memory");
             exec->setException(error);
         }
@@ -214,8 +206,8 @@ JSValue* arrayProtoFuncJoin(ExecState* exec, JSObject* thisObj, const List& args
         if (exec->hadException())
             break;
     }
-    visitedElems.remove(thisObj);
-    return jsString(str);
+    exec->dynamicGlobalObject()->arrayVisitedElements().remove(thisObj);
+    return jsString(UString(strBuffer.data(), strBuffer.data() ? strBuffer.size() : 0));
 }
 
 JSValue* arrayProtoFuncConcat(ExecState* exec, JSObject* thisObj, const List& args)
@@ -404,7 +396,7 @@ JSValue* arrayProtoFuncSort(ExecState* exec, JSObject* thisObj, const List& args
                 List l;
                 l.append(jObj);
                 l.append(minObj);
-                compareResult = sortFunction->call(exec, exec->dynamicGlobalObject(), l)->toNumber(exec);
+                compareResult = sortFunction->call(exec, exec->globalThisValue(), l)->toNumber(exec);
             } else
                 compareResult = (jObj->toString(exec) < minObj->toString(exec)) ? -1 : 1;
 
@@ -502,7 +494,7 @@ JSValue* arrayProtoFuncFilter(ExecState* exec, JSObject* thisObj, const List& ar
     if (!eachFunction->implementsCall())
         return throwError(exec, TypeError);
 
-    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->dynamicGlobalObject() :  args[1]->toObject(exec);
+    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->globalThisValue() :  args[1]->toObject(exec);
     JSObject* resultArray = static_cast<JSObject*>(exec->lexicalGlobalObject()->arrayConstructor()->construct(exec, exec->emptyList()));
 
     unsigned filterIndex = 0;
@@ -535,7 +527,7 @@ JSValue* arrayProtoFuncMap(ExecState* exec, JSObject* thisObj, const List& args)
     if (!eachFunction->implementsCall())
         return throwError(exec, TypeError);
 
-    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->dynamicGlobalObject() :  args[1]->toObject(exec);
+    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->globalThisValue() :  args[1]->toObject(exec);
 
     unsigned length = thisObj->get(exec, exec->propertyNames().length)->toUInt32(exec);
 
@@ -575,7 +567,7 @@ JSValue* arrayProtoFuncEvery(ExecState* exec, JSObject* thisObj, const List& arg
     if (!eachFunction->implementsCall())
         return throwError(exec, TypeError);
 
-    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->dynamicGlobalObject() :  args[1]->toObject(exec);
+    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->globalThisValue() :  args[1]->toObject(exec);
 
     JSValue* result = jsBoolean(true);
 
@@ -610,7 +602,7 @@ JSValue* arrayProtoFuncForEach(ExecState* exec, JSObject* thisObj, const List& a
     if (!eachFunction->implementsCall())
         return throwError(exec, TypeError);
 
-    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->dynamicGlobalObject() :  args[1]->toObject(exec);
+    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->globalThisValue() :  args[1]->toObject(exec);
 
     unsigned length = thisObj->get(exec, exec->propertyNames().length)->toUInt32(exec);
     for (unsigned k = 0; k < length && !exec->hadException(); ++k) {
@@ -635,7 +627,7 @@ JSValue* arrayProtoFuncSome(ExecState* exec, JSObject* thisObj, const List& args
     if (!eachFunction->implementsCall())
         return throwError(exec, TypeError);
 
-    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->dynamicGlobalObject() :  args[1]->toObject(exec);
+    JSObject* applyThis = args[1]->isUndefinedOrNull() ? exec->globalThisValue() :  args[1]->toObject(exec);
 
     JSValue* result = jsBoolean(false);
 
@@ -730,9 +722,9 @@ ArrayObjectImp::ArrayObjectImp(ExecState* exec, FunctionPrototype* funcProto, Ar
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly|DontDelete|DontEnum);
 }
 
-ConstructType ArrayObjectImp::getConstructData(ConstructData&)
+bool ArrayObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.4.2

@@ -21,7 +21,8 @@
 #include "config.h"
 #include "kjs_proxy.h"
 
-#include "Chrome.h"
+#include "Console.h"
+#include "DOMWindow.h"
 #include "Document.h"
 #include "Event.h"
 #include "EventNames.h"
@@ -55,8 +56,8 @@ KJSProxy::KJSProxy(Frame* frame)
 
 KJSProxy::~KJSProxy()
 {
-    if (m_globalObject) {
-        m_globalObject = 0;
+    if (m_windowWrapper) {
+        m_windowWrapper = 0;
     
         // It's likely that releasing the global object has created a lot of garbage.
         gcController().garbageCollectSoon();
@@ -73,7 +74,7 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
     // and false for <script>doSomething()</script>. Check if it has the
     // expected value in all cases.
     // See smart window.open policy for where this is used.
-    ExecState* exec = m_globalObject->globalExec();
+    ExecState* exec = m_windowWrapper->window()->globalExec();
     m_processingInlineCode = filename.isNull();
 
     JSLock lock;
@@ -82,13 +83,10 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
     // so we start the keep alive timer here.
     m_frame->keepAlive();
 
-    // FIXME: Can this call to toJSDOMWindow be replaced by using m_globalObject.
-    JSValue* thisNode = toJSDOMWindow(m_frame);
+    m_windowWrapper->window()->startTimeoutCheck();
+    Completion comp = Interpreter::evaluate(exec, filename, baseLine, str.characters(), str.length(), m_windowWrapper);
+    m_windowWrapper->window()->stopTimeoutCheck();
 
-    m_globalObject->startTimeoutCheck();
-    Completion comp = Interpreter::evaluate(exec, filename, baseLine, str.characters(), str.length(), thisNode);
-    m_globalObject->stopTimeoutCheck();
-  
     if (comp.complType() == Normal || comp.complType() == ReturnValue) {
         m_processingInlineCode = false;
         return comp.value();
@@ -98,8 +96,7 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
         UString errorMessage = comp.value()->toString(exec);
         int lineNumber = comp.value()->toObject(exec)->get(exec, "line")->toInt32(exec);
         UString sourceURL = comp.value()->toObject(exec)->get(exec, "sourceURL")->toString(exec);
-        if (Page* page = m_frame->page())
-            page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, errorMessage, lineNumber, sourceURL);
+        m_frame->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, errorMessage, lineNumber, sourceURL);
     }
 
     m_processingInlineCode = false;
@@ -111,15 +108,15 @@ void KJSProxy::clear()
     // clear resources allocated by the global object, and make it ready to be used by another page
     // We have to keep it, so that the Window object for the frame remains the same.
     // (we used to delete and re-create it, previously)
-    if (m_globalObject)
-        m_globalObject->clear();
+    if (m_windowWrapper)
+        m_windowWrapper->clear();
 }
 
 EventListener* KJSProxy::createHTMLEventHandler(const String& functionName, const String& code, Node* node)
 {
     initScriptIfNeeded();
     JSLock lock;
-    return new JSLazyEventListener(functionName, code, toJSDOMWindow(m_frame), node, m_handlerLineno);
+    return new JSLazyEventListener(functionName, code, m_windowWrapper, node, m_handlerLineno);
 }
 
 #if ENABLE(SVG)
@@ -127,7 +124,7 @@ EventListener* KJSProxy::createSVGEventHandler(const String& functionName, const
 {
     initScriptIfNeeded();
     JSLock lock;
-    return new JSSVGLazyEventListener(functionName, code, toJSDOMWindow(m_frame), node, m_handlerLineno);
+    return new JSSVGLazyEventListener(functionName, code, m_windowWrapper, node, m_handlerLineno);
 }
 #endif
 
@@ -142,12 +139,12 @@ void KJSProxy::finishedWithEvent(Event* event)
 
 void KJSProxy::initScript()
 {
-    if (m_globalObject)
+    if (m_windowWrapper)
         return;
 
     JSLock lock;
 
-    m_globalObject = new JSDOMWindow(m_frame->domWindow());
+    m_windowWrapper = new JSDOMWindowWrapper(m_frame->domWindow());
 
     if (Page* page = m_frame->page())
         attachDebugger(page->debugger());
@@ -157,19 +154,19 @@ void KJSProxy::initScript()
 
 void KJSProxy::clearDocumentWrapper() 
 {
-    if (!m_globalObject)
+    if (!m_windowWrapper)
         return;
 
     JSLock lock;
-    m_globalObject->removeDirect("document");
+    m_windowWrapper->window()->removeDirect("document");
 }
 
 bool KJSProxy::processingUserGesture() const
 {
-    if (!m_globalObject)
+    if (!m_windowWrapper)
         return false;
 
-    if (Event* event = m_globalObject->currentEvent()) {
+    if (Event* event = m_windowWrapper->window()->currentEvent()) {
         const AtomicString& type = event->type();
         if ( // mouse events
             type == clickEvent || type == mousedownEvent ||
@@ -200,13 +197,13 @@ bool KJSProxy::isEnabled()
 
 void KJSProxy::attachDebugger(KJS::Debugger* debugger)
 {
-    if (!m_globalObject)
+    if (!m_windowWrapper)
         return;
 
     if (debugger)
-        debugger->attach(m_globalObject);
-    else if (KJS::Debugger* currentDebugger = m_globalObject->debugger())
-        currentDebugger->detach(m_globalObject);
+        debugger->attach(m_windowWrapper->window());
+    else if (KJS::Debugger* currentDebugger = m_windowWrapper->window()->debugger())
+        currentDebugger->detach(m_windowWrapper->window());
 }
 
 } // namespace WebCore

@@ -30,7 +30,7 @@
 #include "config.h"
 #include "JSGlobalObject.h"
 
-#include "CodeBlock.h"
+#include "Activation.h"
 #include "SavedBuiltins.h"
 #include "array_object.h"
 #include "bool_object.h"
@@ -92,6 +92,15 @@ static inline unsigned getCurrentTime()
 
 JSGlobalObject* JSGlobalObject::s_head = 0;
 
+void JSGlobalObject::deleteActivationStack()
+{
+    ActivationStackNode* prevNode = 0;
+    for (ActivationStackNode* currentNode = d()->activations; currentNode; currentNode = prevNode) {
+        prevNode = currentNode->prev;
+        delete currentNode;
+    }
+}
+
 JSGlobalObject::~JSGlobalObject()
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
@@ -104,10 +113,8 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
-
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->globalObject = 0;
+    
+    deleteActivationStack();
     
     delete d();
 }
@@ -131,47 +138,12 @@ void JSGlobalObject::init()
     d()->recursion = 0;
     d()->debugger = 0;
     
+    ActivationStackNode* newStackNode = new ActivationStackNode;
+    newStackNode->prev = 0;    
+    d()->activations = newStackNode;
+    d()->activationCount = 0;
+
     reset(prototype());
-}
-
-void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
-{
-    unsigned count = symbolTable().size();
-
-    p.properties.clear();
-    p.count = count;
-
-    if (!count)
-        return;
-
-    p.properties.set(new SavedProperty[count]);
-
-    SymbolTable::const_iterator end = symbolTable().end();
-    size_t i = 0;
-    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it) {
-        unsigned attributes = 0;
-        if (isReadOnly(it->second))
-            attributes |= ReadOnly;
-        if (isDontEnum(it->second))
-            attributes |= DontEnum;
-        p.properties[i].init(it->first.get(), valueAt(it->second), attributes);
-    }
-}
-
-void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
-{
-    unsigned count = p.count;
-    symbolTable().clear();
-    registerFileStack().current()->clear();
-    registerFileStack().current()->addGlobalSlots(count);
-    SavedProperty* property = p.properties.get();
-    for (int i = -count; i < 0; ++i, ++property) {
-        ASSERT(!symbolTable().contains(property->name()));
-        symbolTable().set(property->name(), i);
-        valueAt(i) = property->value();
-        // FIXME: Fetch attributes from the SavedProperty and store them in the symbol table.
-        ASSERT(property->attributes() & ReadOnly == 0 && property->attributes() & DontEnum == 0);
-    }
 }
 
 bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -188,9 +160,9 @@ void JSGlobalObject::put(ExecState* exec, const Identifier& propertyName, JSValu
     return JSVariableObject::put(exec, propertyName, value);
 }
 
-void JSGlobalObject::initializeVariable(ExecState* exec, const Identifier& propertyName, JSValue* value, unsigned attributes)
+void JSGlobalObject::putWithAttributes(ExecState* exec, const Identifier& propertyName, JSValue* value, unsigned attributes)
 {
-    if (symbolTableInitializeVariable(propertyName, value, attributes))
+    if (symbolTablePutWithAttributes(propertyName, value, attributes))
         return;
 
     JSValue* valueBefore = getDirect(propertyName);
@@ -216,7 +188,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    registerFileStack().current()->clear();
+    localStorage().clear();
     symbolTable().clear();
 
     // Prototypes
@@ -337,15 +309,25 @@ void JSGlobalObject::reset(JSValue* prototype)
     putDirect("URIError", d()->URIErrorConstructor);
 
     // Set global values.
-
-    putDirect("Math", new MathObjectImp(exec, d()->objectPrototype), DontEnum);
-    putDirect("NaN", jsNaN(), DontEnum | DontDelete);
-    putDirect("Infinity", jsNumber(Inf), DontEnum | DontDelete);
-    putDirect("undefined", jsUndefined(), DontEnum | DontDelete);
+    Identifier mathIdent = "Math";
+    JSValue* mathObject = new MathObjectImp(exec, d()->objectPrototype);
+    symbolTableInsert(mathIdent, mathObject, DontEnum | DontDelete);
+    
+    Identifier nanIdent = "NaN";
+    JSValue* nanValue = jsNaN();
+    symbolTableInsert(nanIdent, nanValue, DontEnum | DontDelete);
+    
+    Identifier infinityIdent = "Infinity";
+    JSValue* infinityValue = jsNumber(Inf);
+    symbolTableInsert(infinityIdent, infinityValue, DontEnum | DontDelete);
+    
+    Identifier undefinedIdent = "undefined";
+    JSValue* undefinedValue = jsUndefined();
+    symbolTableInsert(undefinedIdent, undefinedValue, DontEnum | DontDelete);
 
     // Set global functions.
 
-    d()->evalFunction = new PrototypeReflexiveFunction(exec, d()->functionPrototype, 1, exec->propertyNames().eval, globalFuncEval);
+    d()->evalFunction = new PrototypeReflexiveFunction(exec, d()->functionPrototype, 1, exec->propertyNames().eval, globalFuncEval, this);
     putDirectFunction(d()->evalFunction, DontEnum);
     putDirectFunction(new PrototypeFunction(exec, d()->functionPrototype, 2, "parseInt", globalFuncParseInt), DontEnum);
     putDirectFunction(new PrototypeFunction(exec, d()->functionPrototype, 1, "parseFloat", globalFuncParseFloat), DontEnum);
@@ -510,12 +492,10 @@ void JSGlobalObject::restoreBuiltins(const SavedBuiltins& builtins)
 void JSGlobalObject::mark()
 {
     JSVariableObject::mark();
-    
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->mark();
 
-    registerFileStack().mark();
+    ExecStateStack::const_iterator end = d()->activeExecStates.end();
+    for (ExecStateStack::const_iterator it = d()->activeExecStates.begin(); it != end; ++it)
+        (*it)->m_scopeChain.mark();
 
     markIfNeeded(d()->globalExec.exception());
 
@@ -554,9 +534,36 @@ void JSGlobalObject::mark()
     markIfNeeded(d()->URIErrorPrototype);
 }
 
+JSGlobalObject* JSGlobalObject::toGlobalObject(ExecState*) const
+{
+    return const_cast<JSGlobalObject*>(this);
+}
+
 ExecState* JSGlobalObject::globalExec()
 {
     return &d()->globalExec;
+}
+
+void JSGlobalObject::tearOffActivation(ExecState* exec, bool leaveRelic)
+{
+    ActivationImp* oldActivation = exec->activationObject();
+    if (!oldActivation || !oldActivation->isOnStack())
+        return;
+
+    ASSERT(exec->codeType() == FunctionCode);
+    ActivationImp* newActivation = new ActivationImp(*oldActivation->d(), leaveRelic);
+    
+    if (!leaveRelic) {
+        checkActivationCount();
+        d()->activationCount--;
+    }
+    
+    oldActivation->d()->localStorage.shrink(0);
+    
+    exec->setActivationObject(newActivation);
+    exec->setVariableObject(newActivation);
+    exec->setLocalStorage(&newActivation->localStorage());
+    exec->replaceScopeChainTop(newActivation);
 }
 
 bool JSGlobalObject::isDynamicScope() const

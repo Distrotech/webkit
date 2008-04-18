@@ -21,6 +21,11 @@
 #include "config.h"
 #include "CommonIdentifiers.h"
 
+#if USE(MULTIPLE_THREADS)
+#include <wtf/ThreadSpecific.h>
+using namespace WTF;
+#endif
+
 namespace KJS {
 
 const char* const nullCString = 0;
@@ -30,19 +35,19 @@ const char* const nullCString = 0;
 CommonIdentifiers::CommonIdentifiers()
     : nullIdentifier(nullCString)
     , underscoreProto("__proto__")
-    , thisIdentifier("this")
     KJS_COMMON_IDENTIFIERS_EACH_PROPERTY_NAME(INITIALIZE_PROPERTY_NAME)
 {
 }
 
 CommonIdentifiers* CommonIdentifiers::shared()
 {
-    static CommonIdentifiers* sharedInstance;
-    if (!sharedInstance) {
-        JSLock lock;
-        sharedInstance = new CommonIdentifiers;
-    }
+#if USE(MULTIPLE_THREADS)
+    static ThreadSpecific<CommonIdentifiers> sharedInstance;
     return sharedInstance;
+#else
+    static CommonIdentifiers sharedInstance;
+    return &sharedInstance;
+#endif
 }
 
 } // namespace KJS

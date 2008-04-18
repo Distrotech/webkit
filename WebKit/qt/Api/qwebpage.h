@@ -29,14 +29,18 @@
 
 #include <QtCore/qobject.h>
 #include <QtGui/qwidget.h>
+
+QT_BEGIN_NAMESPACE
 class QNetworkProxy;
 class QUndoStack;
 class QUrl;
-class QWebFrame;
-class QWebNetworkRequest;
 class QNetworkRequest;
 class QNetworkReply;
 class QNetworkAccessManager;
+QT_END_NAMESPACE
+
+class QWebFrame;
+class QWebNetworkRequest;
 class QWebHistory;
 
 class QWebPagePrivate;
@@ -191,6 +195,8 @@ public:
     virtual bool event(QEvent*);
     virtual bool focusNextPrevChild(bool next);
 
+    QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
+
 Q_SIGNALS:
     void loadProgressChanged(int progress);
     void hoveringOverLink(const QString &link, const QString &title, const QString &textContent = QString());
@@ -198,6 +204,8 @@ Q_SIGNALS:
     void selectionChanged();
     void frameCreated(QWebFrame *frame);
     void geometryChangeRequest(const QRect& geom);
+    void updateRequest(const QRect& dirtyRect);
+    void scrollRequest(int dx, int dy, const QRect& scrollViewRect);
 
 #if QT_VERSION >= 0x040400
     void handleUnsupportedContent(QNetworkReply *reply);
@@ -209,6 +217,8 @@ Q_SIGNALS:
     //void removeEmbeddableWidget(QWidget *widget);
     //QHash<QString, QWidget *> embeddableWidgets() const;
     //void clearEmbeddableWidgets();
+
+    void microFocusChanged();
 
 protected:
     virtual QWebPage *createWindow();

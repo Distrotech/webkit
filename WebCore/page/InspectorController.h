@@ -29,11 +29,15 @@
 #ifndef InspectorController_h
 #define InspectorController_h
 
-#include "Chrome.h"
+#include "Console.h"
 #include <JavaScriptCore/JSContextRef.h>
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
 #include <wtf/Vector.h>
+
+namespace KJS {
+    class UString;
+}
 
 namespace WebCore {
 
@@ -42,8 +46,10 @@ class DocumentLoader;
 class GraphicsContext;
 class InspectorClient;
 class Node;
+class Page;
 class ResourceResponse;
 class ResourceError;
+class SharedBuffer;
 
 struct ConsoleMessage;
 struct InspectorDatabaseResource;
@@ -85,6 +91,7 @@ public:
     bool windowVisible();
     void setWindowVisible(bool visible = true);
 
+    void addMessageToConsole(MessageSource, MessageLevel, KJS::ExecState*, const KJS::List& arguments, unsigned lineNumber, const String& sourceID);
     void addMessageToConsole(MessageSource, MessageLevel, const String& message, unsigned lineNumber, const String& sourceID);
 
     void attachWindow();
@@ -97,8 +104,8 @@ public:
 
     void scriptObjectReady();
 
-    void populateScriptResources();
-    void clearScriptResources();
+    void populateScriptObjects();
+    void resetScriptObjects();
 
     void didCommitLoad(DocumentLoader*);
     void frameDetachedFromParent(Frame*);
@@ -111,6 +118,7 @@ public:
     void didReceiveContentLength(DocumentLoader*, unsigned long identifier, int lengthReceived);
     void didFinishLoading(DocumentLoader*, unsigned long identifier);
     void didFailLoading(DocumentLoader*, unsigned long identifier, const ResourceError&);
+    void resourceRetrievedByXMLHttpRequest(unsigned long identifier, KJS::UString& sourceString);
 
 #if ENABLE(DATABASE)
     void didOpenDatabase(Database*, const String& domain, const String& name, const String& version);
@@ -125,11 +133,8 @@ public:
 private:
     void focusNode();
 
+    void addConsoleMessage(ConsoleMessage*);
     void addScriptConsoleMessage(const ConsoleMessage*);
-    void clearScriptConsoleMessages();
-
-    void clearNetworkTimeline();
-    void clearDatabaseScriptResources();
 
     void addResource(InspectorResource*);
     void removeResource(InspectorResource*);
@@ -151,6 +156,10 @@ private:
     JSObjectRef addDatabaseScriptResource(InspectorDatabaseResource*);
     void removeDatabaseScriptResource(InspectorDatabaseResource*);
 #endif
+
+    JSValueRef callSimpleFunction(JSContextRef, JSObjectRef thisObject, const char* functionName) const;
+
+    bool handleException(JSValueRef exception, unsigned lineNumber) const;
 
     Page* m_inspectedPage;
     InspectorClient* m_client;

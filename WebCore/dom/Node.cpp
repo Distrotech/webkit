@@ -137,7 +137,6 @@ Node::Node(Document *doc)
       m_hovered(false),
       m_inActiveChain(false),
       m_inDetach(false),
-      m_dispatchingSimulatedEvent(false),
       m_inSubtreeMark(false)
 {
 #ifndef NDEBUG
@@ -275,11 +274,6 @@ void Node::remove(ExceptionCode& ec)
     else
         ec = HIERARCHY_REQUEST_ERR;
     deref();
-}
-
-bool Node::hasChildNodes() const
-{
-    return false;
 }
 
 void Node::normalize()
@@ -1711,6 +1705,20 @@ bool NodeListsNodeData::isEmpty() const
     }
 
     return true;
+}
+
+void Node::getSubresourceURLs(Vector<KURL>& urls) const
+{
+    Vector<String> subresourceStrings;
+    getSubresourceAttributeStrings(subresourceStrings);
+    
+    for (unsigned i = 0; i < subresourceStrings.size(); ++i) {
+        String& subresourceString(subresourceStrings[i]);
+        
+        // FIXME: Is parseURL appropriate here?
+        if (subresourceString.length())
+            urls.append(document()->completeURL(parseURL(subresourceString)));
+    }
 }
 
 // --------

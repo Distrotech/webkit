@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
  * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2008 Trolltech ASA
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -47,8 +48,10 @@
 
 #include <unistd.h>
 #include <qdebug.h>
+
 extern void qt_drt_run(bool b);
 extern void qt_dump_set_accepts_editing(bool b);
+extern void qt_dump_frame_loader(bool b);
 
 
 namespace WebCore {
@@ -172,6 +175,8 @@ void DumpRenderTree::open()
 void DumpRenderTree::open(const QUrl& url)
 {
     resetJSObjects();
+
+    qt_dump_frame_loader(url.toString().contains("loading/"));
     m_page->mainFrame()->load(url);
 }
 
@@ -184,8 +189,14 @@ void DumpRenderTree::readStdin(int /* socket */)
     //fprintf(stderr, "\n    opening %s\n", line.constData());
     if (line.isEmpty())
         quit();
-    QFileInfo fi(line);
-    open(QUrl::fromLocalFile(fi.absoluteFilePath()));
+
+    if (line.startsWith("http:") || line.startsWith("https:"))
+        open(QUrl(line));
+    else {
+        QFileInfo fi(line);
+        open(QUrl::fromLocalFile(fi.absoluteFilePath()));
+    }
+
     fflush(stdout);
 }
 
@@ -259,6 +270,10 @@ void DumpRenderTree::dump()
     fprintf(stdout, "#EOF\n");
 
     fflush(stdout);
+
+    fprintf(stderr, "#EOF\n");
+
+    fflush(stderr);
 
     if (!m_notifier) {
         // Exit now in single file mode...

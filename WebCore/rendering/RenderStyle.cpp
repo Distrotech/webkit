@@ -22,12 +22,30 @@
 #include "config.h"
 #include "RenderStyle.h"
 
+#include "CachedImage.h"
 #include "CSSStyleSelector.h"
 #include "RenderArena.h"
+#include "RenderObject.h"
 
 namespace WebCore {
 
 static RenderStyle* defaultStyle;
+
+static bool imagesEquivalent(StyleImage* image1, StyleImage* image2)
+{
+    if (image1 != image2) {
+        if (!image1 || !image2)
+            return false;
+        return *image1 == *image2;
+    }
+    return true;
+}
+
+bool BorderImage::operator==(const BorderImage& o) const
+{
+    return imagesEquivalent(m_image.get(), o.m_image.get()) && m_slices == o.m_slices && m_horizontalRule == o.m_horizontalRule &&
+           m_verticalRule == o.m_verticalRule;
+}
 
 StyleSurroundData::StyleSurroundData()
     : margin(Fixed)
@@ -108,6 +126,99 @@ StyleVisualData::StyleVisualData(const StyleVisualData& o)
     , counterReset(o.counterReset)
     , m_zoom(RenderStyle::initialZoom())
 {
+}
+
+PassRefPtr<CSSValue> StyleCachedImage::cssValue()
+{
+    return new CSSPrimitiveValue(m_image->url(), CSSPrimitiveValue::CSS_URI);
+}
+
+bool StyleCachedImage::canRender(float multiplier) const
+{
+    return m_image->canRender(multiplier);
+}
+
+bool StyleCachedImage::isLoaded() const
+{
+    return m_image->isLoaded();
+}
+
+bool StyleCachedImage::errorOccurred() const
+{
+    return m_image->errorOccurred();
+}
+
+IntSize StyleCachedImage::imageSize(const RenderObject* /*renderer*/, float multiplier) const
+{
+    return m_image->imageSize(multiplier);
+}
+
+bool StyleCachedImage::imageHasRelativeWidth() const
+{
+    return m_image->imageHasRelativeWidth();
+}
+
+bool StyleCachedImage::imageHasRelativeHeight() const
+{
+    return m_image->imageHasRelativeHeight();
+}
+
+bool StyleCachedImage::usesImageContainerSize() const
+{
+    return m_image->usesImageContainerSize();
+}
+
+void StyleCachedImage::setImageContainerSize(const IntSize& size)
+{
+    return m_image->setImageContainerSize(size);
+}
+
+void StyleCachedImage::addClient(RenderObject* renderer)
+{
+    return m_image->addClient(renderer);
+}
+
+void StyleCachedImage::removeClient(RenderObject* renderer)
+{
+    return m_image->removeClient(renderer);
+}
+
+Image* StyleCachedImage::image(RenderObject* renderer, const IntSize&) const
+{
+    return m_image->image();
+}
+
+PassRefPtr<CSSValue> StyleGeneratedImage::cssValue()
+{
+    return m_generator;
+}
+
+IntSize StyleGeneratedImage::imageSize(const RenderObject* renderer, float /* multiplier */) const
+{
+    // We can ignore the multiplier, since we always store a raw zoomed size.
+    if (m_fixedSize)
+        return m_generator->fixedSize(renderer);
+    return m_containerSize;
+}
+
+void StyleGeneratedImage::setImageContainerSize(const IntSize& size)
+{
+    m_containerSize = size;
+}
+
+void StyleGeneratedImage::addClient(RenderObject* renderer)
+{
+    m_generator->addClient(renderer, IntSize());
+}
+
+void StyleGeneratedImage::removeClient(RenderObject* renderer)
+{
+    m_generator->removeClient(renderer);
+}
+
+Image* StyleGeneratedImage::image(RenderObject* renderer, const IntSize& size) const
+{
+    return m_generator->image(renderer, size);
 }
 
 BackgroundLayer::BackgroundLayer()
@@ -195,7 +306,7 @@ bool BackgroundLayer::operator==(const BackgroundLayer& o) const
 {
     // We do not check the "isSet" booleans for each property, since those are only used during initial construction
     // to propagate patterns into layers.  All layer comparisons happen after values have all been filled in anyway.
-    return m_image == o.m_image && m_xPosition == o.m_xPosition && m_yPosition == o.m_yPosition &&
+    return imagesEquivalent(m_image.get(), o.m_image.get()) && m_xPosition == o.m_xPosition && m_yPosition == o.m_yPosition &&
            m_bgAttachment == o.m_bgAttachment && m_bgClip == o.m_bgClip && 
            m_bgComposite == o.m_bgComposite && m_bgOrigin == o.m_bgOrigin && m_bgRepeat == o.m_bgRepeat &&
            m_backgroundSize.width == o.m_backgroundSize.width && m_backgroundSize.height == o.m_backgroundSize.height && 
@@ -329,6 +440,7 @@ StyleBackgroundData::StyleBackgroundData()
 StyleBackgroundData::StyleBackgroundData(const StyleBackgroundData& o)
     : RefCounted<StyleBackgroundData>()
     , m_background(o.m_background)
+    , m_color(o.m_color)
     , m_outline(o.m_outline)
 {
 }
@@ -834,7 +946,7 @@ bool StyleRareInheritedData::shadowDataEquivalent(const StyleRareInheritedData& 
 StyleInheritedData::StyleInheritedData()
     : indent(RenderStyle::initialTextIndent())
     , line_height(RenderStyle::initialLineHeight())
-    , style_image(RenderStyle::initialListStyleImage())
+    , list_style_image(RenderStyle::initialListStyleImage())
     , color(RenderStyle::initialColor())
     , m_effectiveZoom(RenderStyle::initialZoom())
     , horizontal_border_spacing(RenderStyle::initialHorizontalBorderSpacing())
@@ -853,7 +965,7 @@ StyleInheritedData::StyleInheritedData(const StyleInheritedData& o)
     : RefCounted<StyleInheritedData>()
     , indent(o.indent)
     , line_height(o.line_height)
-    , style_image(o.style_image)
+    , list_style_image(o.list_style_image)
     , cursorData(o.cursorData)
     , font(o.font)
     , color(o.color)
@@ -866,7 +978,7 @@ StyleInheritedData::StyleInheritedData(const StyleInheritedData& o)
 {
 }
 
-static bool cursorDataEqvuialent(const CursorList* c1, const CursorList* c2)
+static bool cursorDataEquivalent(const CursorList* c1, const CursorList* c2)
 {
     if (c1 == c2)
         return true;
@@ -880,8 +992,8 @@ bool StyleInheritedData::operator==(const StyleInheritedData& o) const
     return
         indent == o.indent &&
         line_height == o.line_height &&
-        style_image == o.style_image &&
-        cursorDataEqvuialent(cursorData.get(), o.cursorData.get()) &&
+        imagesEquivalent(list_style_image.get(), o.list_style_image.get()) &&
+        cursorDataEquivalent(cursorData.get(), o.cursorData.get()) &&
         font == o.font &&
         color == o.color &&
         m_effectiveZoom == o.m_effectiveZoom &&
@@ -1122,6 +1234,29 @@ bool RenderStyle::inheritedNotEqual(RenderStyle* other) const
            rareInheritedData != other->rareInheritedData;
 }
 
+bool positionedObjectMoved(const LengthBox& a, const LengthBox& b)
+{
+    // If any unit types are different, then we can't guarantee
+    // that this was just a movement.
+    if (a.left.type() != b.left.type() ||
+        a.right.type() != b.right.type() ||
+        a.top.type() != b.top.type() ||
+        a.bottom.type() != b.bottom.type())
+        return false;
+        
+    // Only one unit can be non-auto in the horizontal direction and
+    // in the vertical direction.  Otherwise the adjustment of values
+    // is changing the size of the box.
+    if (!a.left.isIntrinsicOrAuto() && !a.right.isIntrinsicOrAuto())
+        return false;
+    if (!a.top.isIntrinsicOrAuto() && !a.bottom.isIntrinsicOrAuto())
+        return false;
+        
+    // One of the units is fixed or percent in both directions and stayed
+    // that way in the new style.  Therefore all we are doing is moving.
+    return true;
+}
+
 /*
   compares two styles. The result gives an idea of the action that
   needs to be taken when replacing the old style with a new one.
@@ -1214,7 +1349,7 @@ RenderStyle::Diff RenderStyle::diff(const RenderStyle* other) const
 
     if (inherited->indent != other->inherited->indent ||
         inherited->line_height != other->inherited->line_height ||
-        inherited->style_image != other->inherited->style_image ||
+        inherited->list_style_image != other->inherited->list_style_image ||
         inherited->font != other->inherited->font ||
         inherited->horizontal_border_spacing != other->inherited->horizontal_border_spacing ||
         inherited->vertical_border_spacing != other->inherited->vertical_border_spacing ||
@@ -1288,8 +1423,12 @@ RenderStyle::Diff RenderStyle::diff(const RenderStyle* other) const
 
     // Make sure these left/top/right/bottom checks stay below all layout checks and above
     // all visible checks.
-    if (other->position() != StaticPosition) {
+    if (position() != StaticPosition) {
         if (surround->offset != other->surround->offset) {
+             // Optimize for the case where a positioned layer is moving but not changing size.
+            if (position() == AbsolutePosition && positionedObjectMoved(surround->offset, other->surround->offset))
+                return LayoutPositionedMovementOnly;
+
             // FIXME: We will need to do a bit of work in RenderObject/Box::setStyle before we
             // can stop doing a layout when relative positioned objects move.  In particular, we'll need
             // to update scrolling positions and figure out how to do a repaint properly of the updated layer.
@@ -1297,8 +1436,7 @@ RenderStyle::Diff RenderStyle::diff(const RenderStyle* other) const
             //    return RepaintLayer;
             //else
                 return Layout;
-        }
-        else if (box->z_index != other->box->z_index || box->z_auto != other->box->z_auto ||
+        } else if (box->z_index != other->box->z_index || box->z_auto != other->box->z_auto ||
                  visual->clip != other->visual->clip || visual->hasClip != other->visual->hasClip)
             return RepaintLayer;
     }
@@ -1386,7 +1524,7 @@ bool RenderStyle::contentDataEquivalent(const RenderStyle* otherStyle) const
                     return false;
                 break;
             case CONTENT_OBJECT:
-                if (c1->m_content.m_object != c2->m_content.m_object)
+                if (!imagesEquivalent(c1->m_content.m_image, c2->m_content.m_image))
                     return false;
                 break;
             case CONTENT_COUNTER:
@@ -1408,9 +1546,9 @@ void RenderStyle::clearContent()
         rareNonInheritedData->m_content->clear();
 }
 
-void RenderStyle::setContent(CachedResource* o, bool add)
+void RenderStyle::setContent(StyleImage* image, bool add)
 {
-    if (!o)
+    if (!image)
         return; // The object is null. Nothing to do. Just bail.
 
     ContentData*& content = rareNonInheritedData.access()->m_content;
@@ -1431,8 +1569,9 @@ void RenderStyle::setContent(CachedResource* o, bool add)
     else
         content = newContentData;
 
-    newContentData->m_content.m_object = o;
+    newContentData->m_content.m_image = image;
     newContentData->m_type = CONTENT_OBJECT;
+    image->ref();
 }
 
 void RenderStyle::setContent(StringImpl* s, bool add)
@@ -1507,7 +1646,9 @@ void ContentData::clear()
 {
     switch (m_type) {
         case CONTENT_NONE:
+            break;
         case CONTENT_OBJECT:
+            m_content.m_image->deref();
             break;
         case CONTENT_TEXT:
             m_content.m_text->deref();

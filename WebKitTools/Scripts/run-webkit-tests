@@ -48,6 +48,7 @@ use strict;
 use warnings;
 
 use Cwd;
+use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
 use File::Basename;
 use File::Copy;
 use File::Find;
@@ -58,7 +59,7 @@ use FindBin;
 use Getopt::Long;
 use IPC::Open2;
 use IPC::Open3;
-use Time::HiRes qw(time);
+use Time::HiRes qw(time usleep);
 
 use List::Util 'shuffle';
 
@@ -81,17 +82,21 @@ sub splitpath($);
 sub stripExtension($);
 sub isTextOnlyTest($);
 sub expectedDirectoryForTest($;$;$);
+sub countFinishedTest($$$$);
+sub testCrashedOrTimedOut($$$$$);
 sub printFailureMessageForTest($$);
 sub toURL($);
 sub toWindowsPath($);
 sub closeCygpaths();
 sub validateSkippedArg($$;$);
-sub htmlForExpectedAndActualResults($);
+sub htmlForResultsSection(\@$&);
 sub deleteExpectedAndActualResults($);
 sub recordActualResultsAndDiff($$);
 sub buildPlatformHierarchy();
 sub epiloguesAndPrologues($$);
 sub parseLeaksandPrintUniqueLeaks();
+sub readFromDumpToolWithTimer(*;$);
+sub setFileHandleNonBlocking(*$);
 
 # Argument handling
 my $addPlatformExceptions = 0;
@@ -129,7 +134,7 @@ my $mergeDepth;
 my @leaksFilenames;
 
 # Default to --no-http for Qt, Gtk and wx for now.
-$testHTTP = 0 if (isQt() || isGtk() || isWx());
+$testHTTP = 0 if (isGtk() || isWx());
 
 my $expectedTag = "expected";
 my $actualTag = "actual";
@@ -552,17 +557,17 @@ for my $test (@tests) {
         }
     }
 
-    my $actual = "";
-    while (<IN>) {
-        last if /#EOF/;
-        $actual .= $_;
-    }
+    my $actualRead = readFromDumpToolWithTimer(IN);
+    my $errorRead = readFromDumpToolWithTimer(ERROR, $actualRead->{timedout});
 
-    my $error = "";
-    while (<ERROR>) {
-       last if /#EOF/;
-       $error .= $_;
-    }
+    my $actual = $actualRead->{output};
+    my $error = $errorRead->{output};
+
+    if ($actualRead->{timedout} || $errorRead->{timedout}) {
+        testCrashedOrTimedOut($test, $base, 0, $actual, $error);
+        countFinishedTest($test, $base, "timedout", 0);
+        next;
+     }
 
     my $isText = isTextOnlyTest($actual);
 
@@ -717,22 +722,7 @@ for my $test (@tests) {
 
     if (dumpToolDidCrash()) {
         $result = "crash";
-
-        printFailureMessageForTest($test, "crashed");
-
-        my $dir = "$testResultsDirectory/$base";
-        $dir =~ s|/([^/]+)$|| or die "Failed to find test name from base\n";
-        mkpath $dir;
-
-        deleteExpectedAndActualResults($base);
-
-        open CRASH, ">", "$testResultsDirectory/$base-$errorTag.txt" or die;
-        print CRASH $error;
-        close CRASH;
-
-        recordActualResultsAndDiff($base, $actual);
-
-        closeDumpTool();
+        testCrashedOrTimedOut($test, $base, 1, $actual, $error);
     } elsif (!defined $expected) {
         if ($verbose) {
             print "new " . ($resetResults ? "result" : "test") ."\n";
@@ -853,22 +843,6 @@ for my $test (@tests) {
         }
     }
 
-    if (($count + 1) % $testsPerDumpTool == 0 || $count == $#tests) {
-        if ($shouldCheckLeaks) {
-            my $fileName;
-            if ($testsPerDumpTool == 1) {
-                $fileName = "$testResultsDirectory/$base-leaks.txt";
-            } else {
-                $fileName = "$testResultsDirectory/" . fileNameWithNumber($dumpToolName, $leaksOutputFileNumber) . "-leaks.txt";
-            }
-            my $leakCount = countAndPrintLeaks($dumpToolName, $dumpToolPID, $fileName);
-            $totalLeaks += $leakCount;
-            $leaksOutputFileNumber++ if ($leakCount);
-        }
-
-        closeDumpTool();
-    }
-    
     if ($error) {
         my $dir = "$testResultsDirectory/$base";
         $dir =~ s|/([^/]+)$|| or die "Failed to find test name from base\n";
@@ -882,10 +856,7 @@ for my $test (@tests) {
         push @{$tests{error}}, $test;
     }
 
-    $count++;
-    $counts{$result}++;
-    push @{$tests{$result}}, $test;
-    $testType{$test} = $isText;
+    countFinishedTest($test, $base, $result, $isText);
 }
 printf "\n%0.2fs total testing time\n", (time - $overallStartTime) . "";
 
@@ -945,11 +916,12 @@ my %text = (
     match => "succeeded",
     mismatch => "had incorrect layout",
     new => "were new",
+    timedout => "timed out",
     crash => "crashed",
     error => "had stderr output"
 );
 
-for my $type ("match", "mismatch", "new", "crash", "error") {
+for my $type ("match", "mismatch", "new", "timedout", "crash", "error") {
     my $c = $counts{$type};
     if ($c) {
         my $t = $text{$type};
@@ -974,74 +946,11 @@ print HTML "<title>Layout Test Results</title>\n";
 print HTML "</head>\n";
 print HTML "<body>\n";
 
-if ($counts{mismatch}) {
-    print HTML "<p>Tests where results did not match expected results:</p>\n";
-    print HTML "<table>\n";
-    for my $test (@{$tests{mismatch}}) {
-        my $base = stripExtension($test);
-        print HTML "<tr>\n";            
-        print HTML "<td><a href=\"" . toURL("$testDirectory/$test") . "\">$test</a></td>\n";
-        print HTML htmlForExpectedAndActualResults($base);
-        if ($pixelTests) {
-            if ($imagesPresent{$base}) {
-                print HTML "<td><a href=\"$base-$expectedTag.png\">expected image</a></td>\n";
-                print HTML "<td><a href=\"$base-$diffsTag.html\">image diffs</a>\n";
-                print HTML "<a href=\"$base-$diffsTag.png\">$imageDifferences{$base}%</a></td>\n";
-            } else {
-                print HTML "<td></td><td></td>\n";
-            }            
-        }
-        print HTML "</tr>\n";
-    }
-    print HTML "</table>\n";
-}
-
-if ($counts{crash}) {
-    print HTML "<p>Tests that caused the DumpRenderTree tool to crash:</p>\n";
-    print HTML "<table>\n";
-    for my $test (@{$tests{crash}}) {
-        my $base = stripExtension($test);
-        my $expectedDir = $expectedResultDirectory{$base};
-        print HTML "<tr>\n";
-        print HTML "<td><a href=\"" . toURL("$testDirectory/$test") . "\">$base</a></td>\n";
-        print HTML htmlForExpectedAndActualResults($base);
-        print HTML "<td><a href=\"$base-$errorTag.txt\">stderr</a></td>\n";
-        print HTML "</tr>\n";
-    }
-    print HTML "</table>\n";
-}
-
-if ($counts{error}) {
-    print HTML "<p>Tests that had stderr output:</p>\n";
-    print HTML "<table>\n";
-    for my $test (@{$tests{error}}) {
-        my $base = stripExtension($test);
-        my $expectedDir = $expectedResultDirectory{$base};
-        print HTML "<tr>\n";
-        print HTML "<td><a href=\"" . toURL("$testDirectory/$test") . "\">$base</a></td>\n";
-        print HTML htmlForExpectedAndActualResults($base);
-        print HTML "<td><a href=\"$base-$errorTag.txt\">stderr</a></td>\n";
-        print HTML "</tr>\n";
-    }
-    print HTML "</table>\n";
-}
-
-if ($counts{new}) {
-    print HTML "<p>Tests that had no expected results (probably new):</p>\n";
-    print HTML "<table>\n";
-    for my $test (@{$tests{new}}) {
-        my $base = stripExtension($test);
-        my $expectedDir = $expectedResultDirectory{$base};
-        print HTML "<tr>\n";
-        print HTML "<td><a href=\"" . toURL("$testDirectory/$test") . "\">$base</a></td>\n";
-        print HTML "<td><a href=\"" . toURL("$expectedDir/$base-$expectedTag.txt") . "\">results</a></td>\n";
-        if ($pixelTests && -f "$expectedDir/$base-$expectedTag.png") {
-            print HTML "<td><a href=\"" . toURL("$expectedDir/$base-$expectedTag.png") . "\">image</a></td>\n";
-        }
-        print HTML "</tr>\n";
-    }
-    print HTML "</table>\n";
-}
+print HTML htmlForResultsSection(@{$tests{mismatch}}, "Tests where results did not match expected results", \&linksForMismatchTest);
+print HTML htmlForResultsSection(@{$tests{timedout}}, "Tests that timed out", \&linksForErrorTest);
+print HTML htmlForResultsSection(@{$tests{crash}}, "Tests that caused the DumpRenderTree tool to crash", \&linksForErrorTest);
+print HTML htmlForResultsSection(@{$tests{error}}, "Tests that had stderr output", \&linksForErrorTest);
+print HTML htmlForResultsSection(@{$tests{new}}, "Tests that had no expected results (probably new)", \&linksForNewTest);
 
 print HTML "</body>\n";
 print HTML "</html>\n";
@@ -1467,6 +1376,55 @@ sub expectedDirectoryForTest($;$;$)
     return $isText ? $expectedDirectory : $platformHierarchy[$#platformHierarchy];
 }
 
+sub countFinishedTest($$$$) {
+    my ($test, $base, $result, $isText) = @_;
+
+    if (($count + 1) % $testsPerDumpTool == 0 || $count == $#tests) {
+        if ($shouldCheckLeaks) {
+            my $fileName;
+            if ($testsPerDumpTool == 1) {
+                $fileName = "$testResultsDirectory/$base-leaks.txt";
+            } else {
+                $fileName = "$testResultsDirectory/" . fileNameWithNumber($dumpToolName, $leaksOutputFileNumber) . "-leaks.txt";
+            }
+            my $leakCount = countAndPrintLeaks($dumpToolName, $dumpToolPID, $fileName);
+            $totalLeaks += $leakCount;
+            $leaksOutputFileNumber++ if ($leakCount);
+        }
+
+        closeDumpTool();
+    }
+    
+    $count++;
+    $counts{$result}++;
+    push @{$tests{$result}}, $test;
+    $testType{$test} = $isText;
+}
+
+sub testCrashedOrTimedOut($$$$$) {
+    my ($test, $base, $didCrash, $actual, $error) = @_;
+
+    printFailureMessageForTest($test, $didCrash ? "crashed" : "timed out");
+
+    my $dir = "$testResultsDirectory/$base";
+    $dir =~ s|/([^/]+)$|| or die "Failed to find test name from base\n";
+    mkpath $dir;
+
+    deleteExpectedAndActualResults($base);
+
+    if (defined($error) && length($error)) {
+        open CRASH, ">", "$testResultsDirectory/$base-$errorTag.txt" or die;
+        print CRASH $error;
+        close CRASH;
+    }
+
+    recordActualResultsAndDiff($base, $actual);
+
+    kill 9, $dumpToolPID unless $didCrash;
+
+    closeDumpTool();
+}
+
 sub printFailureMessageForTest($$)
 {
     my ($test, $description) = @_;
@@ -1552,15 +1510,90 @@ sub validateSkippedArg($$;$)
     $treatSkipped = $value;
 }
 
-sub htmlForExpectedAndActualResults($)
+sub htmlForResultsSection(\@$&)
+{
+    my ($tests, $description, $linkGetter) = @_;
+
+    my @html = ();
+    return join("\n", @html) unless @{$tests};
+
+    push @html, "<p>$description:</p>";
+    push @html, "<table>";
+    foreach my $test (@{$tests}) {
+        push @html, "<tr>";
+        push @html, "<td><a href=\"" . toURL("$testDirectory/$test") . "\">$test</a></td>";
+        foreach my $link (@{&{$linkGetter}($test)}) {
+            push @html, "<td><a href=\"$link->{href}\">$link->{text}</a></td>";
+        }
+        push @html, "</tr>";
+    }
+    push @html, "</table>";
+
+    return join("\n", @html);
+}
+
+sub linksForExpectedAndActualResults($)
 {
     my ($base) = @_;
 
-    return "<td></td><td></td><td></td>\n" unless -s "$testResultsDirectory/$base-$diffsTag.txt";
+    my @links = ();
 
-    return "<td><a href=\"$base-$expectedTag.txt\">expected</a></td>\n"
-         . "<td><a href=\"$base-$actualTag.txt\">actual</a></td>\n"
-         . "<td><a href=\"$base-$diffsTag.txt\">diffs</a></td>\n";
+    return \@links unless -s "$testResultsDirectory/$base-$diffsTag.txt";
+
+    push @links, { href => "$base-$expectedTag.txt", text => "expected" };
+    push @links, { href => "$base-$actualTag.txt", text => "actual" };
+    push @links, { href => "$base-$diffsTag.txt", text => "diffs" };
+
+    return \@links;
+}
+
+sub linksForMismatchTest
+{
+    my ($test) = @_;
+
+    my @links = ();
+
+    my $base = stripExtension($test);
+
+    push @links, @{linksForExpectedAndActualResults($base)};
+    return \@links unless $pixelTests && $imagesPresent{$base};
+
+    push @links, { href => "$base-$expectedTag.png", text => "expected image" };
+    push @links, { href => "$base-$diffsTag.html", text => "image diffs" };
+    push @links, { href => "$base-$diffsTag.png", text => "$imageDifferences{$base}%" };
+
+    return \@links;
+}
+
+sub linksForErrorTest
+{
+    my ($test) = @_;
+
+    my @links = ();
+
+    my $base = stripExtension($test);
+
+    push @links, @{linksForExpectedAndActualResults($base)};
+    push @links, { href => "$base-$errorTag.txt", text => "stderr" };
+
+    return \@links;
+}
+
+sub linksForNewTest
+{
+    my ($test) = @_;
+
+    my @links = ();
+
+    my $base = stripExtension($test);
+    my $expectedDir = $expectedResultDirectory{$base};
+
+    push @links, { href => toURL("$expectedDir/$base-$expectedTag.txt"), text => "results" };
+    if ($pixelTests && -f "$expectedDir/$base-$expectedTag.png") {
+        push @links, { href => toURL("$expectedDir/$base-$expectedTag.png"), text => "image" };
+    }
+
+    return \@links;
 }
 
 sub deleteExpectedAndActualResults($)
@@ -1576,7 +1609,7 @@ sub recordActualResultsAndDiff($$)
 {
     my ($base, $actual) = @_;
 
-    return unless length($actual);
+    return unless defined($actual) && length($actual);
 
     open ACTUAL, ">", "$testResultsDirectory/$base-$actualTag.txt" or die "Couldn't open actual results file for $base";
     print ACTUAL $actual;
@@ -1659,4 +1692,71 @@ sub parseLeaksandPrintUniqueLeaks() {
     print "WARNING: $uniqueLeakCount unique leaks found!\n";
     print "See above for individual leaks results.\n" if ($leaksOutputFileNumber > 2);
     
+}
+
+sub readFromDumpToolWithTimer(*;$)
+{
+    my ($fh, $dontWaitForTimeOut) = @_;
+
+    setFileHandleNonBlocking($fh, 1);
+
+    my $maximumSecondsWithoutOutput = 60;
+    my $microsecondsToWaitBeforeReadingAgain = 1000;
+
+    my $timeOfLastSuccessfulRead = time;
+
+    my $readSoFar = 0;
+    my $output = "";
+    my $timedOut = 0;
+
+    while (1) {
+        if (time - $timeOfLastSuccessfulRead > $maximumSecondsWithoutOutput) {
+            $timedOut = 1;
+            last;
+        }
+
+        my $read = read($fh, $output, 1024, $readSoFar);
+        if (!defined($read) && $! == EAGAIN) {
+            if ($dontWaitForTimeOut) {
+                last;
+            }
+
+            # No data ready
+            usleep($microsecondsToWaitBeforeReadingAgain);
+            next;
+        }
+
+        last if $read == 0;
+
+        if ($output =~ s/^#EOF\n//m) {
+            # In theory we should make sure we haven't read past the end of the
+            # #EOF, but since we know that #EOF is the last thing DRT prints
+            # until we give it another test to run, we can just assume #EOF is
+            # at the end of $output.
+            last;
+        }
+
+        $readSoFar += $read;
+        $timeOfLastSuccessfulRead = time;
+    }
+
+    setFileHandleNonBlocking($fh, 0);
+    return { output => $output, timedout => $timedOut };
+}
+
+sub setFileHandleNonBlocking(*$)
+{
+    my ($fh, $nonBlocking) = @_;
+
+    my $flags = fcntl($fh, F_GETFL, 0) or die "Couldn't get filehandle flags";
+
+    if ($nonBlocking) {
+        $flags |= O_NONBLOCK;
+    } else {
+        $flags &= ~O_NONBLOCK;
+    }
+
+    fcntl($fh, F_SETFL, $flags) or die "Couldn't set filehandle flags";
+
+    return 1;
 }

@@ -31,11 +31,12 @@
  *
  * The order of the values in the enums have to agree with the order specified
  * in CSSValueKeywords.in, otherwise some optimizations in the parser will fail,
- * and produce invaliud results.
+ * and produce invalid results.
  */
 
 #include "AffineTransform.h"
 #include "CSSHelper.h"
+#include "CSSImageGeneratorValue.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSValueList.h"
 #include "Color.h"
@@ -124,6 +125,101 @@ enum EPosition {
 
 enum EFloat {
     FNONE = 0, FLEFT, FRIGHT
+};
+
+typedef void* WrappedImagePtr;
+
+class StyleImage : public RefCounted<StyleImage>
+{
+public:
+    StyleImage()
+    : RefCounted<StyleImage>(0)
+    {}
+
+    virtual ~StyleImage()
+    {}
+    
+    
+    bool operator==(const StyleImage& other)
+    {
+        return data() == other.data();
+    }
+    
+    virtual PassRefPtr<CSSValue> cssValue() = 0;
+
+    virtual bool canRender(float multiplier) const { return true; }
+    virtual bool isLoaded() const { return true; }
+    virtual bool errorOccurred() const { return false; }
+    virtual IntSize imageSize(const RenderObject*, float multiplier) const = 0;
+    virtual bool imageHasRelativeWidth() const = 0;
+    virtual bool imageHasRelativeHeight() const = 0;
+    virtual bool usesImageContainerSize() const = 0;
+    virtual void setImageContainerSize(const IntSize&) = 0;
+    virtual void addClient(RenderObject*) = 0;
+    virtual void removeClient(RenderObject*) = 0;
+    virtual Image* image(RenderObject*, const IntSize&) const = 0;
+    virtual WrappedImagePtr data() const = 0;
+    virtual bool isCachedImage() const { return false; }
+    virtual bool isGeneratedImage() const { return false; }
+};
+
+class StyleCachedImage : public StyleImage
+{
+public:
+    StyleCachedImage(CachedImage* image)
+    : m_image(image)
+    {}
+
+    virtual WrappedImagePtr data() const { return m_image; }
+
+    virtual bool isCachedImage() const { return true; }
+    
+    virtual PassRefPtr<CSSValue> cssValue();
+    
+    CachedImage* cachedImage() const { return m_image; }
+
+    virtual bool canRender(float multiplier) const;
+    virtual bool isLoaded() const;
+    virtual bool errorOccurred() const;
+    virtual IntSize imageSize(const RenderObject*, float multiplier) const;
+    virtual bool imageHasRelativeWidth() const;
+    virtual bool imageHasRelativeHeight() const;
+    virtual bool usesImageContainerSize() const;
+    virtual void setImageContainerSize(const IntSize&);
+    virtual void addClient(RenderObject*);
+    virtual void removeClient(RenderObject*);
+    virtual Image* image(RenderObject*, const IntSize&) const;
+    
+private:
+    CachedImage* m_image;
+};
+
+class StyleGeneratedImage : public StyleImage
+{
+public:
+    StyleGeneratedImage(CSSImageGeneratorValue* val, bool fixedSize)
+    : m_generator(val), m_fixedSize(fixedSize)
+    {}
+    
+    virtual WrappedImagePtr data() const { return m_generator; }
+
+    virtual bool isGeneratedImage() const { return true; }
+    
+    virtual PassRefPtr<CSSValue> cssValue();
+
+    virtual IntSize imageSize(const RenderObject*, float multiplier) const;
+    virtual bool imageHasRelativeWidth() const { return !m_fixedSize; }
+    virtual bool imageHasRelativeHeight() const { return !m_fixedSize; }
+    virtual bool usesImageContainerSize() const { return !m_fixedSize; }
+    virtual void setImageContainerSize(const IntSize&);
+    virtual void addClient(RenderObject*);
+    virtual void removeClient(RenderObject*);
+    virtual Image* image(RenderObject*, const IntSize&) const;
+    
+private:
+    CSSImageGeneratorValue* m_generator; // The generator holds a reference to us.
+    IntSize m_containerSize;
+    bool m_fixedSize;
 };
 
 //------------------------------------------------
@@ -223,22 +319,18 @@ enum EBorderImageRule {
 class BorderImage {
 public:
     BorderImage() :m_image(0), m_horizontalRule(BI_STRETCH), m_verticalRule(BI_STRETCH) {}
-    BorderImage(CachedImage* image, LengthBox slices, EBorderImageRule h, EBorderImageRule v) 
+    BorderImage(StyleImage* image, LengthBox slices, EBorderImageRule h, EBorderImageRule v) 
       :m_image(image), m_slices(slices), m_horizontalRule(h), m_verticalRule(v) {}
 
-    bool operator==(const BorderImage& o) const
-    {
-        return m_image == o.m_image && m_slices == o.m_slices && m_horizontalRule == o.m_horizontalRule &&
-               m_verticalRule == o.m_verticalRule;
-    }
+    bool operator==(const BorderImage& o) const;
 
     bool hasImage() const { return m_image != 0; }
-    CachedImage* image() const { return m_image; }
+    StyleImage* image() const { return m_image.get(); }
     
     EBorderImageRule horizontalRule() const { return static_cast<EBorderImageRule>(m_horizontalRule); }
     EBorderImageRule verticalRule() const { return static_cast<EBorderImageRule>(m_verticalRule); }
     
-    CachedImage* m_image;
+    RefPtr<StyleImage> m_image;
     LengthBox m_slices;
     unsigned m_horizontalRule : 2; // EBorderImageRule
     unsigned m_verticalRule : 2; // EBorderImageRule
@@ -467,7 +559,7 @@ public:
     BackgroundLayer();
     ~BackgroundLayer();
 
-    CachedImage* backgroundImage() const { return m_image; }
+    StyleImage* backgroundImage() const { return m_image.get(); }
     Length backgroundXPosition() const { return m_xPosition; }
     Length backgroundYPosition() const { return m_yPosition; }
     bool backgroundAttachment() const { return m_bgAttachment; }
@@ -490,7 +582,7 @@ public:
     bool isBackgroundCompositeSet() const { return m_compositeSet; }
     bool isBackgroundSizeSet() const { return m_backgroundSizeSet; }
     
-    void setBackgroundImage(CachedImage* i) { m_image = i; m_imageSet = true; }
+    void setBackgroundImage(StyleImage* i) { m_image = i; m_imageSet = true; }
     void setBackgroundXPosition(const Length& l) { m_xPosition = l; m_xPosSet = true; }
     void setBackgroundYPosition(const Length& l) { m_yPosition = l; m_yPosSet = true; }
     void setBackgroundAttachment(bool b) { m_bgAttachment = b; m_attachmentSet = true; }
@@ -520,7 +612,15 @@ public:
         return !(*this == o);
     }
 
-    bool containsImage(CachedImage* c) const { if (c == m_image) return true; if (m_next) return m_next->containsImage(c); return false; }
+    bool containsImage(StyleImage* s) const {
+        if (!s)
+            return false;
+        if (m_image && *s == *m_image)
+            return true;
+        if (m_next)
+            return m_next->containsImage(s);
+        return false;
+    }
     
     bool hasImage() const {
         if (m_image)
@@ -536,7 +636,7 @@ public:
     void fillUnsetProperties();
     void cullEmptyLayers();
 
-    CachedImage* m_image;
+    RefPtr<StyleImage> m_image;
 
     Length m_xPosition;
     Length m_yPosition;
@@ -830,7 +930,7 @@ public:
     }
     
     bool isEmpty() const { return m_operations.isEmpty(); }
-    unsigned size() const { return m_operations.size(); }
+    size_t size() const { return m_operations.size(); }
     const RefPtr<TransformOperation>& operator[](size_t i) const { return m_operations.at(i); }
 
     void append(const RefPtr<TransformOperation>& op) { return m_operations.append(op); }
@@ -1050,7 +1150,7 @@ struct ContentData : Noncopyable {
 
     ContentType m_type;
     union {
-        CachedResource* m_object;
+        StyleImage* m_image;
         StringImpl* m_text;
         CounterContent* m_counter;
     } m_content;
@@ -1279,7 +1379,7 @@ public:
     // make a difference currently because of padding
     Length line_height;
 
-    CachedImage *style_image;
+    RefPtr<StyleImage> list_style_image;
     RefPtr<CursorList> cursorData;
 
     Font font;
@@ -1759,7 +1859,7 @@ public:
     }
 
     const Color & backgroundColor() const { return background->m_color; }
-    CachedImage *backgroundImage() const { return background->m_background.m_image; }
+    StyleImage* backgroundImage() const { return background->m_background.m_image.get(); }
     EBackgroundRepeat backgroundRepeat() const { return static_cast<EBackgroundRepeat>(background->m_background.m_bgRepeat); }
     CompositeOperator backgroundComposite() const { return static_cast<CompositeOperator>(background->m_background.m_bgComposite); }
     bool backgroundAttachment() const { return background->m_background.m_bgAttachment; }
@@ -1782,7 +1882,7 @@ public:
     short counterReset() const { return visual->counterReset; }
 
     EListStyleType listStyleType() const { return static_cast<EListStyleType>(inherited_flags._list_style_type); }
-    CachedImage *listStyleImage() const { return inherited->style_image; }
+    StyleImage* listStyleImage() const { return inherited->list_style_image.get(); }
     EListStylePosition listStylePosition() const { return static_cast<EListStylePosition>(inherited_flags._list_style_position); }
 
     Length marginTop() const { return surround->margin.top; }
@@ -2015,7 +2115,7 @@ public:
     void setCounterReset(short v) {  SET_VAR(visual,counterReset,v) }
 
     void setListStyleType(EListStyleType v) { inherited_flags._list_style_type = v; }
-    void setListStyleImage(CachedImage *v) {  SET_VAR(inherited,style_image,v)}
+    void setListStyleImage(StyleImage* v) { if (inherited->list_style_image != v) inherited.access()->list_style_image = v; }
     void setListStylePosition(EListStylePosition v) { inherited_flags._list_style_position = v; }
 
     void resetMargin() { SET_VAR(surround, margin, LengthBox(Fixed)) }
@@ -2134,7 +2234,7 @@ public:
     bool contentDataEquivalent(const RenderStyle* otherStyle) const;
     void clearContent();
     void setContent(StringImpl*, bool add = false);
-    void setContent(CachedResource*, bool add = false);
+    void setContent(StyleImage*, bool add = false);
     void setContent(CounterContent*, bool add = false);
 
     const CounterDirectiveMap* counterDirectives() const;
@@ -2147,7 +2247,7 @@ public:
     // (2) Repaint - The object just needs to be repainted.
     // (3) RepaintLayer - The layer and its descendant layers needs to be repainted.
     // (4) Layout - A layout is required.
-    enum Diff { Equal, Repaint, RepaintLayer, Layout };
+    enum Diff { Equal, Repaint, RepaintLayer, LayoutPositionedMovementOnly, Layout };
     Diff diff( const RenderStyle *other ) const;
 
     bool isDisplayReplacedType() {
@@ -2228,8 +2328,8 @@ public:
     static short initialVerticalBorderSpacing() { return 0; }
     static ECursor initialCursor() { return CURSOR_AUTO; }
     static Color initialColor() { return Color::black; }
-    static CachedImage* initialBackgroundImage() { return 0; }
-    static CachedImage* initialListStyleImage() { return 0; }
+    static StyleImage* initialBackgroundImage() { return 0; }
+    static StyleImage* initialListStyleImage() { return 0; }
     static unsigned short initialBorderWidth() { return 3; }
     static int initialLetterWordSpacing() { return 0; }
     static Length initialSize() { return Length(); }

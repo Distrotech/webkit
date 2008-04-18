@@ -86,7 +86,7 @@ JSValue* functionProtoFuncApply(ExecState* exec, JSObject* thisObj, const List& 
 
     JSObject* applyThis;
     if (thisArg->isUndefinedOrNull())
-        applyThis = exec->dynamicGlobalObject();
+        applyThis = exec->globalThisValue();
     else
         applyThis = thisArg->toObject(exec);
 
@@ -116,7 +116,7 @@ JSValue* functionProtoFuncCall(ExecState* exec, JSObject* thisObj, const List& a
 
     JSObject* callThis;
     if (thisArg->isUndefinedOrNull())
-        callThis = exec->dynamicGlobalObject();
+        callThis = exec->globalThisValue();
     else
         callThis = thisArg->toObject(exec);
 
@@ -136,9 +136,9 @@ FunctionObjectImp::FunctionObjectImp(ExecState* exec, FunctionPrototype* functio
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly | DontDelete | DontEnum);
 }
 
-ConstructType FunctionObjectImp::getConstructData(ConstructData&)
+bool FunctionObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.3.2 The Function Constructor
@@ -212,6 +212,8 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
         return throwError(exec, SyntaxError, "Syntax error in parameter list");
     }
   
+    List consArgs;
+
     JSObject* objCons = exec->lexicalGlobalObject()->objectConstructor();
     JSObject* prototype = objCons->construct(exec, exec->emptyList());
     prototype->putDirect(exec->propertyNames().constructor, fimp, DontEnum);

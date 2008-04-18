@@ -1,3 +1,104 @@
+2008-04-17  Alp Toker  <alp@atoker.com>
+
+        Rubber-stamped by Holger Freyther.
+
+        Reduce hard-coded page-cache count to 3 based on research done for the
+        Mac port on value / page.
+
+        We will need to make this more dynamic or configurable at some point
+        but for now it's best to keep closer to the behaviour before page
+        caching was enabled.
+
+        Issue spotted by Mark Rowe.
+
+        * webkit/webkitprivate.cpp:
+        (webkit_init):
+
+2008-04-17  Daniele Metilli  <daniele.metilli@gmail.com>
+
+        Reviewed by Eric.
+
+        Fixed a typo in the copyright header.
+
+        * webkit/webkitprivate.h:
+
+2008-04-14  Holger Freyther  <zecke@selfish.org>
+
+        Reviewed by Alp Toker.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18411
+        Enable Page caching and create FrameViews on the fly
+
+        Create the FrameView on the fly and cache pages
+
+        - Keep a copy of the GtkAdjustment to be able to reuse it for the
+          FrameViews
+        - Do not initially create a FrameView and update the WebKit code to
+          cope with not having a view.
+        - Cache seven pages by default.
+
+        * WebCoreSupport/FrameLoaderClientGtk.cpp:
+        (WebKit::FrameLoaderClient::createFrame):
+        (WebKit::FrameLoaderClient::canCachePage):
+        (WebKit::FrameLoaderClient::savePlatformDataToCachedPage):
+        (WebKit::FrameLoaderClient::transitionToCommittedFromCachedPage):
+        (WebKit::FrameLoaderClient::transitionToCommittedForNewPage):
+        * webkit/webkitprivate.cpp:
+        (webkit_init):
+        * webkit/webkitprivate.h:
+        * webkit/webkitwebframe.cpp:
+        * webkit/webkitwebview.cpp:
+
+2008-04-10  Mario Bensi  <mbensi@pleyo.com>
+
+        Reviewed by Alp Toker.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18400
+        Database example doesn't work on Gtk port
+
+        Fix quota in ChromeClient
+
+        * WebCoreSupport/ChromeClientGtk.cpp:
+        (WebKit::ChromeClient::exceededDatabaseQuota):
+
+2008-04-08  Adam Roben  <aroben@apple.com>
+
+        Move callOnMainThread to WTF
+
+        Reviewed by Alexey Proskuryakov.
+
+        * webkit/webkitprivate.cpp: Updated #include.
+        (webkit_init): Changed to call KJS::initializeThreading.
+
+2008-04-06  Luca Bruno  <lethalman88@gmail.com>
+
+        Reviewed by Alp Toker.
+
+        Fix webkit_web_view_get_transparent() return value.
+
+        * webkit/webkitwebview.cpp:
+
+2008-03-31  Jasper Bryant-Greene  <jasper@unix.geek.nz>
+
+        Reviewed by Darin.
+
+        Resolves http://bugs.webkit.org/show_bug.cgi?id=18010
+        "WebKitNetworkRequestPrivate is defined in two places unnecessarily"
+
+        Removed unnecessary definition of WebKitNetworkRequestPrivate in
+        webkitprivate.h
+
+        * webkit/webkitprivate.h:
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Remove newly obsolete FrameLoaderClient methods
+
+        * WebCoreSupport/FrameLoaderClientGtk.cpp:
+        * WebCoreSupport/FrameLoaderClientGtk.h:
+
 2008-03-20  Alp Toker  <alp@atoker.com>
 
         GTK+ build fix. Back out r31183. This patch also introduced API style

@@ -230,9 +230,9 @@ JSValue* RegExpImp::exec(ExecState* exec, const List& args)
         :  jsNull();
 }
 
-CallType RegExpImp::getCallData(CallData&)
+bool RegExpImp::implementsCall() const
 {
-    return CallTypeNative;
+    return true;
 }
 
 JSValue* RegExpImp::callAsFunction(ExecState* exec, JSObject*, const List& args)
@@ -425,9 +425,9 @@ void RegExpObjectImp::putValueProperty(ExecState *exec, int token, JSValue *valu
   }
 }
   
-ConstructType RegExpObjectImp::getConstructData(ConstructData&)
+bool RegExpObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+  return true;
 }
 
 // ECMA 15.10.4

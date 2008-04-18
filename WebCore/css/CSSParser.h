@@ -175,6 +175,10 @@ namespace WebCore {
         bool parseShadow(int propId, bool important);
         bool parseBorderImage(int propId, bool important);
         
+        // Image generators
+        bool parseCanvas(RefPtr<CSSValue>&);
+        bool parseGradient(RefPtr<CSSValue>&);
+
         PassRefPtr<CSSValue> parseTransform();
         bool parseTransformOrigin(int propId, int& propId1, int& propId2, RefPtr<CSSValue>&, RefPtr<CSSValue>&);
         
@@ -289,6 +293,23 @@ namespace WebCore {
     int cssPropertyID(const ParseString&);
     int cssPropertyID(const String&);
     int cssValueKeywordID(const ParseString&);
+
+    class ShorthandScope {
+    public:
+        ShorthandScope(CSSParser* parser, int propId) : m_parser(parser)
+        {
+            if (!(m_parser->m_inParseShorthand++))
+                m_parser->m_currentShorthand = propId;
+        }
+        ~ShorthandScope()
+        {
+            if (!(--m_parser->m_inParseShorthand))
+                m_parser->m_currentShorthand = 0;
+        }
+
+    private:
+        CSSParser* m_parser;
+    };
 
 } // namespace WebCore
 

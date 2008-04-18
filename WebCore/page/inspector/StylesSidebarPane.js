@@ -36,6 +36,9 @@ WebInspector.StylesSidebarPane.prototype = {
     {
         var refresh = false;
 
+        if (forceUpdate)
+            delete this.node;
+
         if (!forceUpdate && (!node || node === this.node))
             refresh = true;
 
@@ -96,8 +99,10 @@ WebInspector.StylesSidebarPane.prototype = {
             var matchedStyleRules = node.ownerDocument.defaultView.getMatchedCSSRules(node, "", !Preferences.showUserAgentStyles);
             if (matchedStyleRules) {
                 // Add rules in reverse order to match the cascade order.
-                for (var i = (matchedStyleRules.length - 1); i >= 0; --i)
-                    styleRules.push(matchedStyleRules[i]);
+                for (var i = (matchedStyleRules.length - 1); i >= 0; --i) {
+                    var rule = matchedStyleRules[i];
+                    styleRules.push({ style: rule.style, selectorText: rule.selectorText });
+                }
             }
         }
 
@@ -153,7 +158,7 @@ WebInspector.StylesSidebarPane.prototype = {
                     continue;
 
                 var style = styleRules[i].style;
-                var uniqueProperties = style.getUniqueProperties();
+                var uniqueProperties = getUniqueStyleProperties(style);
                 for (var j = 0; j < uniqueProperties.length; ++j) {
                     var name = uniqueProperties[j];
                     if (style.getPropertyPriority(name).length) {
@@ -251,7 +256,7 @@ WebInspector.StylePropertiesSection = function(styleRule, subtitle, computedStyl
         if (!subtitle) {
             if (this.styleRule.parentStyleSheet && this.styleRule.parentStyleSheet.href) {
                 var url = this.styleRule.parentStyleSheet.href;
-                subtitle = WebInspector.linkifyURL(url, url.trimURL(WebInspector.mainResource.domain).escapeHTML());
+                subtitle = WebInspector.linkifyURL(url, url.trimURL(WebInspector.mainResource ? WebInspector.mainResource.domain : "").escapeHTML());
                 this.subtitleElement.addStyleClass("file");
             } else if (this.styleRule.parentStyleSheet && !this.styleRule.parentStyleSheet.ownerNode)
                 subtitle = WebInspector.UIString("user agent stylesheet");
@@ -295,7 +300,7 @@ WebInspector.StylePropertiesSection.prototype = {
 
         // Find out if any of the individual longhand properties of the shorthand
         // are used, if none are then the shorthand is overloaded too.
-        var longhandProperties = this.styleRule.style.getLonghandProperties(property);
+        var longhandProperties = getLonghandProperties(this.styleRule.style, property);
         for (var j = 0; j < longhandProperties.length; ++j) {
             var individualProperty = longhandProperties[j];
             if (individualProperty in this.usedProperties)
@@ -326,7 +331,7 @@ WebInspector.StylePropertiesSection.prototype = {
             return;
 
         var foundShorthands = {};
-        var uniqueProperties = style.getUniqueProperties();
+        var uniqueProperties = getUniqueStyleProperties(style);
         uniqueProperties.sort();
 
         for (var i = 0; i < uniqueProperties.length; ++i) {
@@ -418,8 +423,8 @@ WebInspector.StylePropertyTreeElement.prototype = {
             "rgb(0, 255, 255)": "cyan"
         };
 
-        var priority = (this.shorthand ? this.style.getShorthandPriority(this.name) : this.style.getPropertyPriority(this.name));
-        var value = (this.shorthand ? this.style.getShorthandValue(this.name) : this.style.getPropertyValue(this.name));
+        var priority = (this.shorthand ? getShorthandPriority(this.style, this.name) : this.style.getPropertyPriority(this.name));
+        var value = (this.shorthand ? getShorthandValue(this.style, this.name) : this.style.getPropertyValue(this.name));
         var htmlValue = value;
 
         if (priority && !priority.length)
@@ -493,7 +498,7 @@ WebInspector.StylePropertyTreeElement.prototype = {
         if (!this.listItemElement)
             return;
 
-        var value = (this.shorthand ? this.style.getShorthandValue(this.name) : this.style.getPropertyValue(this.name));
+        var value = (this.shorthand ? getShorthandValue(this.style, this.name) : this.style.getPropertyValue(this.name));
         if (this.style.isPropertyImplicit(this.name) || value === "initial")
             this.listItemElement.addStyleClass("implicit");
         else
@@ -516,7 +521,7 @@ WebInspector.StylePropertyTreeElement.prototype = {
         if (this.children.length || !this.shorthand)
             return;
 
-        var longhandProperties = this.style.getLonghandProperties(this.name);
+        var longhandProperties = getLonghandProperties(this.style, this.name);
         for (var i = 0; i < longhandProperties.length; ++i) {
             var name = longhandProperties[i];
 
@@ -589,7 +594,7 @@ WebInspector.StylePropertyTreeElement.prototype = {
             // original property from the real style declaration. If this represents
             // a shorthand remove all the longhand properties.
             if (this.shorthand) {
-                var longhandProperties = this.style.getLonghandProperties(this.name);
+                var longhandProperties = getLonghandProperties(this.style, this.name);
                 for (var i = 0; i < longhandProperties.length; ++i)
                     this.style.removeProperty(longhandProperties[i]);
             } else
@@ -614,7 +619,7 @@ WebInspector.StylePropertyTreeElement.prototype = {
         // Iterate of the properties on the test element's style declaration and
         // add them to the real style declaration. We take care to move shorthands.
         var foundShorthands = {};
-        var uniqueProperties = userInputStyle.getUniqueProperties();
+        var uniqueProperties = getUniqueStyleProperties(userInputStyle);
         for (var i = 0; i < uniqueProperties.length; ++i) {
             var name = uniqueProperties[i];
             var shorthand = userInputStyle.getPropertyShorthand(name);
@@ -623,8 +628,8 @@ WebInspector.StylePropertyTreeElement.prototype = {
                 continue;
 
             if (shorthand) {
-                var value = userInputStyle.getShorthandValue(shorthand);
-                var priority = userInputStyle.getShorthandPriority(shorthand);
+                var value = getShorthandValue(userInputStyle, shorthand);
+                var priority = getShorthandPriority(userInputStyle, shorthand);
                 foundShorthands[shorthand] = true;
             } else {
                 var value = userInputStyle.getPropertyValue(name);

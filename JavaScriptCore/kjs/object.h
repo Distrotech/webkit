@@ -80,8 +80,7 @@ namespace KJS {
     virtual JSValue* toPrimitive(ExecState*, JSType preferred = UnspecifiedType) const;
     virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
     virtual bool toBoolean(ExecState *exec) const;
-      virtual double toNumber(ExecState *exec) const;
-      virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
+    virtual double toNumber(ExecState *exec) const;
     virtual UString toString(ExecState *exec) const;
     virtual JSObject *toObject(ExecState *exec) const;
       
@@ -246,6 +245,9 @@ namespace KJS {
     virtual void put(ExecState*, const Identifier& propertyName, JSValue* value);
     virtual void put(ExecState*, unsigned propertyName, JSValue* value);
 
+    virtual void putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes);
+    virtual void putWithAttributes(ExecState*, unsigned propertyName, JSValue* value, unsigned attributes);
+
     /**
      * Checks if a property is enumerable, that is if it doesn't have the DontEnum
      * flag set
@@ -304,6 +306,16 @@ namespace KJS {
     virtual JSValue *defaultValue(ExecState *exec, JSType hint) const;
 
     /**
+     * Whether or not the object implements the construct() method. If this
+     * returns false you should not call the construct() method on this
+     * object (typically, an assertion will fail to indicate this).
+     *
+     * @return true if this object implements the construct() method, otherwise
+     * false
+     */
+    virtual bool implementsConstruct() const;
+
+    /**
      * Creates a new object based on this object. Typically this means the
      * following:
      * 1. A new object is created
@@ -320,8 +332,8 @@ namespace KJS {
      * will be set. This can be tested for with ExecState::hadException().
      * Under some circumstances, the exception object may also be returned.
      *
-     * Note: This function should not be called if getConstructData() returns
-     * ConstructTypeNone, in which case it will result in an assertion failure.
+     * Note: This function should not be called if implementsConstruct() returns
+     * false, in which case it will result in an assertion failure.
      *
      * @param exec The current execution state
      * @param args The arguments to be passed to call() once the new object has
@@ -333,6 +345,16 @@ namespace KJS {
      */
     virtual JSObject* construct(ExecState* exec, const List& args);
     virtual JSObject* construct(ExecState* exec, const List& args, const Identifier& functionName, const UString& sourceURL, int lineNumber);
+
+    /**
+     * Whether or not the object implements the call() method. If this returns
+     * false you should not call the call() method on this object (typically,
+     * an assertion will fail to indicate this).
+     *
+     * @return true if this object implements the call() method, otherwise
+     * false
+     */
+    virtual bool implementsCall() const;
 
     /**
      * Calls this object as if it is a function.
@@ -351,9 +373,7 @@ namespace KJS {
      * @param args List of arguments to be passed to the function
      * @return The return value from the function
      */
-    bool implementsCall();
     JSValue *call(ExecState *exec, JSObject *thisObj, const List &args);
-
     virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
 
     /**
@@ -383,10 +403,12 @@ namespace KJS {
     virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
     virtual bool toBoolean(ExecState *exec) const;
     virtual double toNumber(ExecState *exec) const;
-    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     virtual UString toString(ExecState *exec) const;
     virtual JSObject *toObject(ExecState *exec) const;
-    
+
+    virtual JSObject* toThisObject(ExecState*) const;
+    virtual JSGlobalObject* toGlobalObject(ExecState*) const;
+
     virtual bool getPropertyAttributes(const Identifier& propertyName, unsigned& attributes) const;
     
     // WebCore uses this to make document.all and style.filter undetectable
@@ -408,8 +430,10 @@ namespace KJS {
 
     void fillGetterPropertySlot(PropertySlot& slot, JSValue **location);
 
-    void defineGetter(ExecState *exec, const Identifier& propertyName, JSObject *getterFunc);
-    void defineSetter(ExecState *exec, const Identifier& propertyName, JSObject *setterFunc);
+    virtual void defineGetter(ExecState*, const Identifier& propertyName, JSObject* getterFunction);
+    virtual void defineSetter(ExecState*, const Identifier& propertyName, JSObject* setterFunction);
+    virtual JSValue* lookupGetter(ExecState*, const Identifier& propertyName);
+    virtual JSValue* lookupSetter(ExecState*, const Identifier& propertyName);
 
     void saveProperties(SavedProperties &p) const { _prop.save(p); }
     void restoreProperties(const SavedProperties &p) { _prop.restore(p); }
@@ -546,6 +570,19 @@ ALWAYS_INLINE bool JSObject::getOwnPropertySlot(ExecState* exec, const Identifie
     }
 
     return false;
+}
+
+inline void ScopeChain::release()
+{
+    // This function is only called by deref(),
+    // Deref ensures these conditions are true.
+    ASSERT(_node && _node->refCount == 0);
+    ScopeChainNode *n = _node;
+    do {
+        ScopeChainNode *next = n->next;
+        delete n;
+        n = next;
+    } while (n && --n->refCount == 0);
 }
 
 inline JSValue* JSObject::toPrimitive(ExecState* exec, JSType preferredType) const

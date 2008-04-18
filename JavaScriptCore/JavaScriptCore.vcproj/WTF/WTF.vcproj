@@ -57,6 +57,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="user32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(WebKitConfigSuffix).lib"
 			/>
 			<Tool
@@ -119,6 +120,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="user32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(WebKitConfigSuffix).lib"
 			/>
 			<Tool
@@ -180,6 +182,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="user32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(WebKitConfigSuffix).lib"
 			/>
 			<Tool
@@ -203,6 +206,14 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="win"
+			>
+			<File
+				RelativePath="..\..\wtf\win\MainThreadWin.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\wtf\AlwaysInline.h"
 			>
@@ -296,6 +307,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\wtf\MainThread.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\wtf\MainThread.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\wtf\MathExtras.h"
 			>
 		</File>
@@ -373,6 +392,10 @@
 		</File>
 		<File
 			RelativePath="..\..\wtf\ThreadingWin.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\wtf\ThreadSpecific.h"
 			>
 		</File>
 		<File

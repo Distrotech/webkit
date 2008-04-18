@@ -43,8 +43,6 @@ namespace KJS  {
     class JSVariableObject;
     class ProgramNode;
     class ScopeNode;
-
-    struct Instruction;
     
     enum CodeType { GlobalCode, EvalCode, FunctionCode };
 
@@ -58,9 +56,7 @@ namespace KJS  {
         
         // Global object that was in scope when the current body of code was defined.
         JSGlobalObject* lexicalGlobalObject() const;
-        void setExceptionSource(Instruction* source) { m_exceptionSource = source; }
-        Instruction* exceptionSource() { return m_exceptionSource; }
-        void clearExceptionSource() { m_exceptionSource = 0; }
+                
         void setException(JSValue* exception) { m_exception = exception; }
         void clearException() { m_exception = 0; }
         JSValue* exception() const { return m_exception; }
@@ -68,19 +64,20 @@ namespace KJS  {
         bool hadException() const { return !!m_exception; }
         JSValue* takeException() { JSValue* exception = m_exception; m_exception = 0; return exception; }
         
-        ScopeChain& scopeChain() { return m_scopeChain; }
+        const ScopeChain& scopeChain() const { return m_scopeChain; }
         void pushScope(JSObject* s) { m_scopeChain.push(s); }
         void popScope() { m_scopeChain.pop(); }
         void replaceScopeChainTop(JSObject* o) { m_scopeChain.replaceTop(o); }
         
-        JSVariableObject* variableObject() const { ASSERT_NOT_REACHED(); return m_variableObject; }
+        JSVariableObject* variableObject() const { return m_variableObject; }
         void setVariableObject(JSVariableObject* v) { m_variableObject = v; }
         
         JSObject* thisValue() const { return m_thisValue; }
+        JSObject* globalThisValue() const { return m_globalThisValue; }
         
         ExecState* callingExecState() { return m_callingExec; }
         
-        ActivationImp* activationObject() { ASSERT_NOT_REACHED(); return m_activation; }
+        ActivationImp* activationObject() { return m_activation; }
         void setActivationObject(ActivationImp* a) { m_activation = a; }
         CodeType codeType() { return m_codeType; }
         ScopeNode* scopeNode() { return m_scopeNode; }
@@ -102,8 +99,8 @@ namespace KJS  {
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
         const List& emptyList() const { return *m_emptyList; }
 
-        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *(LocalStorage*)0; }
-        void setLocalStorage(LocalStorage*) { ASSERT_NOT_REACHED(); }
+        LocalStorage& localStorage() { return *m_localStorage; }
+        void setLocalStorage(LocalStorage* s) { m_localStorage = s; }
 
         // These are only valid right after calling execute().
         ComplType completionType() const { return m_completionType; }
@@ -168,10 +165,10 @@ namespace KJS  {
         }
 
     protected:
-        ExecState(JSGlobalObject*);
+        ExecState(JSGlobalObject*, JSObject* thisObject);
         ExecState(JSGlobalObject*, JSObject* thisObject, ProgramNode*);
         ExecState(JSGlobalObject*, JSObject* thisObject, EvalNode*, ExecState* callingExecState, const ScopeChain&, JSVariableObject*);
-        ExecState(JSGlobalObject*, JSObject* thisObject, FunctionBodyNode*, ExecState* callingExecState, FunctionImp*, const List& args);
+        ExecState(JSGlobalObject*, JSObject* thisObject, JSObject* globalThisValue, FunctionBodyNode*, ExecState* callingExecState, FunctionImp*, const List& args);
         ~ExecState();
 
         // ExecStates are always stack-allocated, and the garbage collector
@@ -179,7 +176,6 @@ namespace KJS  {
 
         JSGlobalObject* m_globalObject;
         JSValue* m_exception;
-        Instruction* m_exceptionSource;
         CommonIdentifiers* m_propertyNames;
         const List* m_emptyList;
 
@@ -190,11 +186,14 @@ namespace KJS  {
         FunctionImp* m_function;
         const List* m_arguments;
         ActivationImp* m_activation;
+        LocalStorage* m_localStorage;
 
         ScopeChain m_scopeChain;
         ScopeChainNode m_inlineScopeChainNode;
         JSVariableObject* m_variableObject;
+
         JSObject* m_thisValue;
+        JSObject* m_globalThisValue;
         
         LabelStack m_labelStack;
         int m_iterationDepth;
@@ -207,7 +206,7 @@ namespace KJS  {
 
     class GlobalExecState : public ExecState {
     public:
-        GlobalExecState(JSGlobalObject*);
+        GlobalExecState(JSGlobalObject*, JSObject* thisObject);
         ~GlobalExecState();
     };
 
@@ -225,7 +224,7 @@ namespace KJS  {
 
     class FunctionExecState : public ExecState {
     public:
-        FunctionExecState(JSGlobalObject*, JSObject* thisObject, FunctionBodyNode*,
+        FunctionExecState(JSGlobalObject*, JSObject* thisObject, JSObject* globalThisValue, FunctionBodyNode*,
             ExecState* callingExecState, FunctionImp*, const List& args);
         ~FunctionExecState();
     };

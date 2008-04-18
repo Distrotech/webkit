@@ -56,7 +56,7 @@ class JSXSLTProcessorConstructor : public DOMObject {
 public:
     JSXSLTProcessorConstructor(KJS::ExecState*);
 
-    virtual KJS::ConstructType getConstructData(KJS::ConstructData&);
+    virtual bool implementsConstruct() const;
     virtual KJS::JSObject* construct(KJS::ExecState*, const KJS::List&);
 
     virtual const KJS::ClassInfo* classInfo() const { return &s_info; }

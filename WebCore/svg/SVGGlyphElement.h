@@ -53,6 +53,8 @@ namespace WebCore {
             : isValid(false)
             , orientation(Both)
             , arabicForm(None)
+            , priority(0)
+            , nameLength(0)
             , horizontalAdvanceX(0.0f)
             , verticalOriginX(0.0f)
             , verticalOriginY(0.0f)
@@ -85,6 +87,8 @@ namespace WebCore {
 
         Orientation orientation : 2;
         ArabicForm arabicForm : 3;
+        int priority;
+        size_t nameLength;
         String glyphName;
 
         float horizontalAdvanceX;

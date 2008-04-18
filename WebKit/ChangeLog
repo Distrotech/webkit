@@ -1,3 +1,38 @@
+2008-04-07  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Tim
+        
+        - made the JavaScript text input panel not block Quit (part of 4133196)
+
+        * English.lproj/WebJavaScriptTextInputPanel.nib/classes.nib:
+        * English.lproj/WebJavaScriptTextInputPanel.nib/info.nib:
+        * English.lproj/WebJavaScriptTextInputPanel.nib/keyedobjects.nib:
+        Made the panel be a NonBlockingPanel
+
+2008-04-04  Ada Chan  <adachan@apple.com>
+
+        Updated the format string for window title for a standalone image to take integers.
+
+        Reviewed by Dan.
+
+        * English.lproj/Localizable.strings:
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Darin Adler
+
+        Remove WebArchiver.h/mm
+
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4516169> - Support WebArchives on Windows
+
+        * WebKit.xcodeproj/project.pbxproj:
+
 2008-03-24  Brady Eidson  <beidson@apple.com>
 
         Reviewed by Darin's rubberstamp

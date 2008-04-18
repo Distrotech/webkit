@@ -1,8 +1,6 @@
 /*
     Copyright (C) 2004, 2005, 2007, 2008 Nikolas Zimmermann <zimmermann@kde.org>
-                  2004, 2005, 2006, 2007 Rob Buis <buis@kde.org>
-
-    This file is part of the KDE project
+                  2004, 2005, 2006, 2007, 2008 Rob Buis <buis@kde.org>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -60,7 +58,7 @@ SVGTextContentElement::~SVGTextContentElement()
 ANIMATED_PROPERTY_DEFINITIONS(SVGTextContentElement, SVGLength, Length, length, TextLength, textLength, SVGNames::textLengthAttr, m_textLength)
 ANIMATED_PROPERTY_DEFINITIONS(SVGTextContentElement, int, Enumeration, enumeration, LengthAdjust, lengthAdjust, SVGNames::lengthAdjustAttr, m_lengthAdjust)
 
-static inline float cummulatedCharacterRangeLength(const Vector<SVGChar>::iterator& start, const Vector<SVGChar>::iterator& end, SVGInlineTextBox* textBox,
+static inline float cumulativeCharacterRangeLength(const Vector<SVGChar>::iterator& start, const Vector<SVGChar>::iterator& end, SVGInlineTextBox* textBox,
                                                    int startOffset, long startPosition, long length, bool isVerticalText, long& atCharacter)
 {
     if (!length)
@@ -79,10 +77,13 @@ static inline float cummulatedCharacterRangeLength(const Vector<SVGChar>::iterat
             if (textBox->m_reversed)
                 newOffset = textBox->start() + textBox->end() - newOffset;
 
+            // FIXME: does this handle multichar glyphs ok? not sure
+            int charsConsumed = 0;
+            String glyphName;
             if (isVerticalText)
-                textLength += textBox->calculateGlyphHeight(style, newOffset);
+                textLength += textBox->calculateGlyphHeight(style, newOffset, 0);
             else
-                textLength += textBox->calculateGlyphWidth(style, newOffset);
+                textLength += textBox->calculateGlyphWidth(style, newOffset, 0, charsConsumed, glyphName);
         }
 
         if (!usesFullRange) {
@@ -139,7 +140,7 @@ struct SVGInlineTextBoxQueryWalker {
         }
         case TextLength:
         {
-            float textLength = cummulatedCharacterRangeLength(start, end, textBox, startOffset, -1, -1, isVerticalText, m_atCharacter);
+            float textLength = cumulativeCharacterRangeLength(start, end, textBox, startOffset, -1, -1, isVerticalText, m_atCharacter);
 
             if (isVerticalText)
                 m_queryFloatResult += textLength;
@@ -154,7 +155,7 @@ struct SVGInlineTextBoxQueryWalker {
             long startPosition = m_queryStartPosition;
             long length = m_queryLength;
 
-            float textLength = cummulatedCharacterRangeLength(start, end, textBox, startOffset, startPosition, length, isVerticalText, m_atCharacter);
+            float textLength = cumulativeCharacterRangeLength(start, end, textBox, startOffset, startPosition, length, isVerticalText, m_atCharacter);
 
             if (isVerticalText)
                 m_queryFloatResult += textLength;
@@ -193,10 +194,12 @@ struct SVGInlineTextBoxQueryWalker {
                     if (textBox->m_reversed)
                         newOffset = textBox->start() + textBox->end() - newOffset;
 
+                    int charsConsumed;
+                    String glyphName;
                     if (isVerticalText)
-                        m_queryPointResult.move(it->x, it->y + textBox->calculateGlyphHeight(style, newOffset));
+                        m_queryPointResult.move(it->x, it->y + textBox->calculateGlyphHeight(style, newOffset, end - it));
                     else
-                        m_queryPointResult.move(it->x + textBox->calculateGlyphWidth(style, newOffset), it->y);
+                        m_queryPointResult.move(it->x + textBox->calculateGlyphWidth(style, newOffset, end - it, charsConsumed, glyphName), it->y);
 
                     m_stopProcessing = true;
                     return;
@@ -502,6 +505,16 @@ void SVGTextContentElement::parseMappedAttribute(MappedAttribute* attr)
 
         SVGStyledElement::parseMappedAttribute(attr);
     }
+}
+
+bool SVGTextContentElement::isKnownAttribute(const QualifiedName& attrName)
+{
+    return (attrName.matches(SVGNames::lengthAdjustAttr) ||
+            attrName.matches(SVGNames::textLengthAttr) ||
+            SVGTests::isKnownAttribute(attrName) ||
+            SVGLangSpace::isKnownAttribute(attrName) ||
+            SVGExternalResourcesRequired::isKnownAttribute(attrName) ||
+            SVGStyledElement::isKnownAttribute(attrName));
 }
 
 }

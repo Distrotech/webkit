@@ -33,15 +33,18 @@
 
 #include "Frame.h"
 #include "FrameLoaderClientQt.h"
+#include "FrameView.h"
 #include "ChromeClientQt.h"
 #include "ContextMenu.h"
 #include "ContextMenuClientQt.h"
+#include "DocumentLoader.h"
 #include "DragClientQt.h"
 #include "DragController.h"
 #include "DragData.h"
 #include "EditorClientQt.h"
 #include "Settings.h"
 #include "Page.h"
+#include "Pasteboard.h"
 #include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "KURL.h"
@@ -74,6 +77,7 @@
 #include <QUndoStack>
 #include <QUrl>
 #include <QPainter>
+#include <QClipboard>
 #if QT_VERSION >= 0x040400
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -82,7 +86,7 @@
 #endif
 
 using namespace WebCore;
-
+        
 static inline DragOperation dropActionToDragOp(Qt::DropActions actions)
 {
     unsigned result = 0;
@@ -111,6 +115,7 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     : q(qq)
     , view(0)
     , modified(false)
+    , viewportSize(QSize(0,0))
 {
     chromeClient = new ChromeClientQt(q);
     contextMenuClient = new ContextMenuClientQt();
@@ -127,6 +132,7 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     mainFrame = 0;
 #if QT_VERSION < 0x040400
     networkInterface = 0;
+    pluginFactory = 0;
 #else
     networkManager = 0;
     pluginFactory = 0;
@@ -174,7 +180,6 @@ void QWebPagePrivate::createMainFrame()
         frameData.marginWidth = 0;
         frameData.marginHeight = 0;
         mainFrame = new QWebFrame(q, &frameData);
-        mainFrame->d->frameView->setFrameGeometry(IntRect(IntPoint(0,0), q->viewportSize()));
 
         emit q->frameCreated(mainFrame);
     }
@@ -336,22 +341,56 @@ void QWebPagePrivate::updateEditorActions()
 
 void QWebPagePrivate::mouseMoveEvent(QMouseEvent *ev)
 {
-    QWebFramePrivate::core(mainFrame)->eventHandler()->mouseMoved(PlatformMouseEvent(ev, 0));
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
+    frame->eventHandler()->mouseMoved(PlatformMouseEvent(ev, 0));
 }
 
 void QWebPagePrivate::mousePressEvent(QMouseEvent *ev)
 {
-    QWebFramePrivate::core(mainFrame)->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 1));
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
+    frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 1));
 }
 
 void QWebPagePrivate::mouseDoubleClickEvent(QMouseEvent *ev)
 {
-    QWebFramePrivate::core(mainFrame)->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 2));
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
+    frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 2));
 }
 
 void QWebPagePrivate::mouseReleaseEvent(QMouseEvent *ev)
 {
-    QWebFramePrivate::core(mainFrame)->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
+    frame->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+
+#ifndef QT_NO_CLIPBOARD
+    if (QApplication::clipboard()->supportsSelection()) {
+        bool oldSelectionMode = Pasteboard::generalPasteboard()->isSelectionMode();
+        Pasteboard::generalPasteboard()->setSelectionMode(true);
+        WebCore::Frame* focusFrame = page->focusController()->focusedOrMainFrame();
+        if (ev->button() == Qt::LeftButton) {
+            if(focusFrame && (focusFrame->editor()->canCopy() || focusFrame->editor()->canDHTMLCopy())) {
+                focusFrame->editor()->copy();
+            }
+        } else if (ev->button() == Qt::MidButton) {
+            if(focusFrame && (focusFrame->editor()->canPaste() || focusFrame->editor()->canDHTMLPaste())) {
+                focusFrame->editor()->paste();
+            }
+        }
+        Pasteboard::generalPasteboard()->setSelectionMode(oldSelectionMode);
+    }
+#endif
 }
 
 void QWebPagePrivate::contextMenuEvent(QContextMenuEvent *ev)
@@ -381,8 +420,12 @@ void QWebPagePrivate::contextMenuEvent(QContextMenuEvent *ev)
 
 void QWebPagePrivate::wheelEvent(QWheelEvent *ev)
 {
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
     WebCore::PlatformWheelEvent pev(ev);
-    bool accepted = QWebFramePrivate::core(mainFrame)->eventHandler()->handleWheelEvent(pev);
+    bool accepted = frame->eventHandler()->handleWheelEvent(pev);
     ev->setAccepted(accepted);
 }
 
@@ -613,6 +656,80 @@ void QWebPagePrivate::dropEvent(QDropEvent *ev)
     Qt::DropAction action = dragOpToDropAction(page->dragController()->performDrag(&dragData));
     ev->accept();
 #endif
+}
+
+void QWebPagePrivate::inputMethodEvent(QInputMethodEvent *ev)
+{
+    WebCore::Frame *frame = page->focusController()->focusedOrMainFrame();
+    WebCore::Editor *editor = frame->editor();
+
+    if (!editor->canEdit()) {
+        ev->ignore();
+        return;
+    }
+
+    if (!ev->preeditString().isEmpty()) {        
+        QString preedit = ev->preeditString();
+        // ### FIXME: use the provided QTextCharFormat (use color at least)
+        Vector<CompositionUnderline> underlines;
+        underlines.append(CompositionUnderline(0, preedit.length(), Color(0,0,0), false));
+        editor->setComposition(preedit, underlines, preedit.length(), 0);
+    } else if (!ev->commitString().isEmpty()) {
+        editor->confirmComposition(ev->commitString());
+    }
+    ev->accept();
+}
+
+/*!
+  This method is used by the input method to query a set of properties of the page
+  to be able to support complex input method operations as support for surrounding
+  text and reconversions.
+
+  \a property specifies which property is queried.
+
+  \sa inputMethodEvent(), QInputMethodEvent, QInputContext.
+*/
+QVariant QWebPage::inputMethodQuery(Qt::InputMethodQuery property) const
+{
+    switch(property) {
+    case Qt::ImMicroFocus: {
+        Frame *frame = d->page->focusController()->focusedFrame();
+        if (frame) {
+            return QVariant(frame->selectionController()->caretRect());
+        }
+        return QVariant();
+    }
+    case Qt::ImFont: {
+        QWebView *webView = qobject_cast<QWebView *>(d->view);
+        if (webView)
+            return QVariant(webView->font());
+        return QVariant();
+    }
+    case Qt::ImCursorPosition: {
+        Frame *frame = d->page->focusController()->focusedFrame();
+        if (frame) {
+            Selection selection = frame->selectionController()->selection();
+            if (selection.isCaret()) {
+                return QVariant(selection.start().offset());
+            }
+        }
+        return QVariant();
+    }
+    case Qt::ImSurroundingText: {
+        Frame *frame = d->page->focusController()->focusedFrame();
+        if (frame) {
+            Document *document = frame->document();
+            if (document->focusedNode()) {
+                return QVariant(document->focusedNode()->nodeValue());
+            }
+        }
+        return QVariant();
+    }
+    case Qt::ImCurrentSelection:
+        return QVariant(selectedText());
+    default:
+        return QVariant();
+    }
 }
 
 /*!
@@ -859,6 +976,8 @@ static void openNewWindow(const QUrl& url, WebCore::Frame* frame)
 void QWebPage::triggerAction(WebAction action, bool checked)
 {
     WebCore::Frame *frame = d->page->focusController()->focusedOrMainFrame();
+    if (!frame)
+        return;
     WebCore::Editor *editor = frame->editor();
     const char *command = 0;
 
@@ -874,14 +993,18 @@ void QWebPage::triggerAction(WebAction action, bool checked)
                                                       /*formValues*/
                                                       WTF::HashMap<String, String>());
                 break;
-            } else {
             }
             // fall through
         case OpenLinkInNewWindow:
             openNewWindow(d->currentContext.linkUrl(), frame);
             break;
-        case OpenFrameInNewWindow:
+        case OpenFrameInNewWindow: {
+            KURL url = frame->loader()->documentLoader()->unreachableURL();
+            if (url.isEmpty())
+                url = frame->loader()->documentLoader()->url();
+            openNewWindow(url, frame);
             break;
+        }
         case CopyLinkToClipboard:
             editor->copyURL(d->currentContext.linkUrl(), d->currentContext.text());
             break;
@@ -893,6 +1016,7 @@ void QWebPage::triggerAction(WebAction action, bool checked)
             frame->loader()->client()->startDownload(WebCore::ResourceRequest(d->currentContext.linkUrl(), frame->loader()->outgoingReferrer()));
             break;
         case CopyImageToClipboard:
+            QApplication::clipboard()->setPixmap(d->currentContext.image());
             break;
         case GoBack:
             d->page->goBack();
@@ -1020,6 +1144,7 @@ void QWebPage::triggerAction(WebAction action, bool checked)
             break;
         case ToggleUnderline:
             editor->toggleUnderline();
+            break;
 
         case InspectElement:
             d->page->inspectorController()->inspect(d->currentContext.d->innerNonSharedNode.get());
@@ -1034,10 +1159,10 @@ void QWebPage::triggerAction(WebAction action, bool checked)
 
 QSize QWebPage::viewportSize() const
 {
-    QWebFrame *frame = mainFrame();
-    if (frame->d->frame && frame->d->frameView)
-        return frame->d->frameView->frameGeometry().size();
-    return QSize(0, 0);
+    if (d->mainFrame && d->mainFrame->d->frame->view())
+        return d->mainFrame->d->frame->view()->frameGeometry().size();
+
+    return d->viewportSize;
 }
 
 /*!
@@ -1048,11 +1173,14 @@ QSize QWebPage::viewportSize() const
 */
 void QWebPage::setViewportSize(const QSize &size) const
 {
+    d->viewportSize = size;
+
     QWebFrame *frame = mainFrame();
-    if (frame->d->frame && frame->d->frameView) {
-        frame->d->frameView->setFrameGeometry(QRect(QPoint(0, 0), size));
+    if (frame->d->frame && frame->d->frame->view()) {
+        WebCore::FrameView* view = frame->d->frame->view();
+        view->setFrameGeometry(QRect(QPoint(0, 0), size));
         frame->d->frame->forceLayout();
-        frame->d->frame->view()->adjustViewSize();
+        view->adjustViewSize();
     }
 }
 
@@ -1319,6 +1447,8 @@ bool QWebPage::event(QEvent *ev)
         d->dropEvent(static_cast<QDropEvent*>(ev));
         break;
 #endif
+    case QEvent::InputMethod:
+        d->inputMethodEvent(static_cast<QInputMethodEvent*>(ev));
     default:
         return QObject::event(ev);
     }
@@ -1484,7 +1614,7 @@ QWebPageContext::QWebPageContext(const WebCore::HitTestResult &hitTest)
     }
     WebCore::Frame *frame = hitTest.targetFrame();
     if (frame)
-        d->targetFrame = frame->view()->qwebframe();
+        d->targetFrame = QWebFramePrivate::kit(frame);
 }
 
 QWebPageContext::QWebPageContext()
@@ -1544,7 +1674,7 @@ QUrl QWebPageContext::imageUrl() const
 {
     if (!d)
         return QUrl();
-    return d->linkUrl;
+    return d->imageUrl;
 }
 
 QPixmap QWebPageContext::image() const
@@ -1604,6 +1734,29 @@ QWebFrame *QWebPageContext::targetFrame() const
 */
 
 /*!
+    \fn void QWebPage::updateRequest(const QRect& dirtyRect)
+
+    This signal is emitted whenever this QWebPage should be updated and no view was set.
+    \a dirtyRect contains the area that needs to be updated. To paint the QWebPage get
+    the mainFrame() and call the render(QPainter*, const QRegion&) method with the
+    \a dirtyRect as the second parameter.
+    
+    \sa mainFrame()
+    \sa QWebFrame::render(QPainter*, const QRegion&)
+    \sa view()
+*/
+
+/*!
+    \fn void QWebPage::scrollRequest(int dy, int dy, const QRect& rectToScroll)
+
+    This signal is emitted whenever the content given by \a rectToScroll needs
+    to be scrolled dx and dy downwards and no view was set.
+
+    \sa view()
+    
+*/
+
+/*!
     \fn void QWebPage::handleUnsupportedContent(QNetworkReply *reply)
 
     This signals is emitted when webkit cannot handle a link the user navigated to.
@@ -1614,7 +1767,16 @@ QWebFrame *QWebPageContext::targetFrame() const
 /*!
     \fn void QWebPage::download(const QNetworkRequest &request)
 
-    This signals is emitted when the user decides to download a link.
+    This signal is emitted when the user decides to download a link.
+*/
+
+/*!
+    \fn void QWebPage::microFocusChanged()
+
+    This signal is emitted when for example the position of the cursor in an editable form
+    element changes. It is used inform input methods about the new on-screen position where
+    the user is able to enter text. This signal is usually connected to QWidget's updateMicroFocus()
+    slot.
 */
 
 #include "moc_qwebpage.cpp"

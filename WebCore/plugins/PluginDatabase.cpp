@@ -40,7 +40,7 @@ PluginDatabase* PluginDatabase::installedPlugins()
     
     if (!plugins) {
         plugins = new PluginDatabase;
-        plugins->setPluginPaths(PluginDatabase::defaultPluginPaths());
+        plugins->setPluginDirectories(PluginDatabase::defaultPluginDirectories());
         plugins->refresh();
     }
 
@@ -57,53 +57,66 @@ bool PluginDatabase::isMIMETypeRegistered(const String& mimeType)
     return (refresh() && m_registeredMIMETypes.contains(mimeType));
 }
 
-void PluginDatabase::addExtraPluginPath(const String& path)
+void PluginDatabase::addExtraPluginDirectory(const String& directory)
 {
-    m_pluginPaths.append(path);
+    m_pluginDirectories.append(directory);
     refresh();
 }
 
 bool PluginDatabase::refresh()
 {   
-    PluginSet newPlugins;
-
     bool pluginSetChanged = false;
 
-    // Create a new set of plugins
-    newPlugins = getPluginsInPaths();
-
     if (!m_plugins.isEmpty()) {
-        m_registeredMIMETypes.clear();
-
-        PluginSet pluginsToUnload = m_plugins;
-
-        PluginSet::const_iterator end = newPlugins.end();
-        for (PluginSet::const_iterator it = newPlugins.begin(); it != end; ++it)
-            pluginsToUnload.remove(*it);
-
-        end = m_plugins.end();
-        for (PluginSet::const_iterator it = m_plugins.begin(); it != end; ++it)
-            newPlugins.remove(*it);
+        PluginSet pluginsToUnload;
+        getDeletedPlugins(pluginsToUnload);
 
         // Unload plugins
-        end = pluginsToUnload.end();
+        PluginSet::const_iterator end = pluginsToUnload.end();
         for (PluginSet::const_iterator it = pluginsToUnload.begin(); it != end; ++it)
-            m_plugins.remove(*it);
+            remove(it->get());
 
-        // Add new plugins
-        end = newPlugins.end();
-        for (PluginSet::const_iterator it = newPlugins.begin(); it != end; ++it)
-            m_plugins.add(*it);
-
-        pluginSetChanged = !pluginsToUnload.isEmpty() || !newPlugins.isEmpty();
-    } else {
-        m_plugins = newPlugins;
-        PluginSet::const_iterator end = newPlugins.end();
-        for (PluginSet::const_iterator it = newPlugins.begin(); it != end; ++it)
-            m_plugins.add(*it);
-
-        pluginSetChanged = !newPlugins.isEmpty();
+        pluginSetChanged = !pluginsToUnload.isEmpty();
     }
+
+    HashSet<String> paths;
+    getPluginPathsInDirectories(paths);
+
+    HashMap<String, time_t> pathsWithTimes;
+
+    // We should only skip unchanged files if we didn't remove any plugins above. If we did remove
+    // any plugins, we need to look at every plugin file so that, e.g., if the user has two versions
+    // of RealPlayer installed and just removed the newer one, we'll pick up the older one.
+    bool shouldSkipUnchangedFiles = !pluginSetChanged;
+
+    HashSet<String>::const_iterator pathsEnd = paths.end();
+    for (HashSet<String>::const_iterator it = paths.begin(); it != pathsEnd; ++it) {
+        time_t lastModified;
+        if (!getFileModificationTime(*it, lastModified))
+            continue;
+
+        pathsWithTimes.add(*it, lastModified);
+
+        // If the path's timestamp hasn't changed since the last time we ran refresh(), we don't have to do anything.
+        if (shouldSkipUnchangedFiles && m_pluginPathsWithTimes.get(*it) == lastModified)
+            continue;
+
+        if (RefPtr<PluginPackage> oldPackage = m_pluginsByPath.get(*it)) {
+            ASSERT(!shouldSkipUnchangedFiles || oldPackage->lastModified() != lastModified);
+            remove(oldPackage.get());
+        }
+
+        if (add(PluginPackage::createPackage(*it, lastModified)))
+            pluginSetChanged = true;
+    }
+
+    // Cache all the paths we found with their timestamps for next time.
+    pathsWithTimes.swap(m_pluginPathsWithTimes);
+
+    if (!pluginSetChanged)
+        return false;
+
+    m_registeredMIMETypes.clear();
 
     // Register plug-in MIME types
     PluginSet::const_iterator end = m_plugins.end();
@@ -115,7 +128,7 @@ bool PluginDatabase::refresh()
         }
     }
 
-    return pluginSetChanged;
+    return true;
 }
 
 Vector<PluginPackage*> PluginDatabase::plugins() const
@@ -220,6 +233,32 @@ PluginPackage* PluginDatabase::findPlugin(const KURL& url, String& mimeType)
     // corresponding to the extension.
 
     return plugin;
+}
+
+void PluginDatabase::getDeletedPlugins(PluginSet& plugins) const
+{
+    PluginSet::const_iterator end = m_plugins.end();
+    for (PluginSet::const_iterator it = m_plugins.begin(); it != end; ++it) {
+        if (!fileExists((*it)->path()))
+            plugins.add(*it);
+    }
+}
+
+bool PluginDatabase::add(PassRefPtr<PluginPackage> prpPackage)
+{
+    RefPtr<PluginPackage> package = prpPackage;
+
+    if (!m_plugins.add(package).second)
+        return false;
+
+    m_pluginsByPath.add(package->path(), package);
+    return true;
+}
+
+void PluginDatabase::remove(PluginPackage* package)
+{
+    m_plugins.remove(package);
+    m_pluginsByPath.remove(package->path());
 }
 
 }

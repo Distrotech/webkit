@@ -641,8 +641,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE setAllowSiteSpecificHacks(
         /* [in] */ BOOL allows);
 
-    virtual HRESULT STDMETHODCALLTYPE addAdditionalPluginPath( 
-        /* [in] */ BSTR path);    
+    virtual HRESULT STDMETHODCALLTYPE addAdditionalPluginDirectory( 
+        /* [in] */ BSTR directory);    
 
     virtual HRESULT STDMETHODCALLTYPE loadBackForwardListFromOtherView( 
         /* [in] */ IWebView *otherView);
@@ -737,6 +737,8 @@ public:
     static WebCacheModel maxCacheModelInAnyInstance();
 
     void updateActiveStateSoon() const;
+    void deleteBackingStoreSoon();
+    void cancelDeleteBackingStoreSoon();
 
     HWND topLevelParent() const { return m_topLevelParent; }
 
@@ -751,6 +753,7 @@ private:
     HRESULT zoomOut(bool isTextOnly);
     bool canResetZoom(bool isTextOnly);
     HRESULT resetZoom(bool isTextOnly);
+    bool active();
 
 protected:
     HIMC getIMMContext();
@@ -773,7 +776,6 @@ protected:
     virtual void windowReceivedMessage(HWND, UINT message, WPARAM, LPARAM);
 
     ULONG m_refCount;
-    WebCore::String m_groupName;
     HWND m_hostWindow;
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
@@ -818,6 +820,7 @@ protected:
     unsigned m_inIMEComposition;
     HWND m_toolTipHwnd;
     WebCore::String m_toolTip;
+    bool m_deleteBackingStoreTimerActive;
 
     static bool s_allowSiteSpecificHacks;
 

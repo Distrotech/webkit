@@ -43,6 +43,13 @@
 
 namespace WebCore {
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    class ApplicationCache;
+    class ApplicationCacheGroup;
+#endif
+    class Archive;
+    class ArchiveResource;
+    class ArchiveResourceCollection;
     class CachedPage;
     class Frame;
     class FrameLoader;
@@ -53,6 +60,7 @@ namespace WebCore {
     class SchedulePair;
     class SharedBuffer;
     class SubstituteData;
+    class SubstituteResource;
 
     typedef HashSet<RefPtr<ResourceLoader> > ResourceLoaderSet;
     typedef Vector<ResourceResponse> ResponseVector;
@@ -84,10 +92,10 @@ namespace WebCore {
         const KURL& url() const;
         const KURL& unreachableURL() const;
 
-        KURL originalURL() const;
-        KURL requestURL() const;
-        KURL responseURL() const;
-        String responseMIMEType() const;
+        const KURL& originalURL() const;
+        const KURL& requestURL() const;
+        const KURL& responseURL() const;
+        const String& responseMIMEType() const;
         
         void replaceRequestURLForAnchorScroll(const KURL&);
         bool isStopping() const { return m_isStopping; }
@@ -117,6 +125,29 @@ namespace WebCore {
         void unschedule(SchedulePair*);
 #endif
 
+        void addAllArchiveResources(Archive*);
+        void addArchiveResource(PassRefPtr<ArchiveResource>);
+        
+        // Return an ArchiveResource for the URL, either creating from live data or
+        // pulling from the ArchiveResourceCollection
+        PassRefPtr<ArchiveResource> subresource(const KURL&) const;
+        // Return the ArchiveResource for the URL only when loading an Archive
+        ArchiveResource* archiveResourceForURL(const KURL&) const;
+        
+        PassRefPtr<Archive> popArchiveForSubframe(const String& frameName);
+        void clearArchiveResources();
+        void setParsedArchiveData(PassRefPtr<SharedBuffer>);
+        SharedBuffer* parsedArchiveData() const;
+        
+        PassRefPtr<ArchiveResource> mainResource() const;
+        void getSubresources(Vector<PassRefPtr<ArchiveResource> >&) const;
+        
+        bool scheduleArchiveLoad(ResourceLoader*, const ResourceRequest&, const KURL&);
+#ifndef NDEBUG
+        bool isSubstituteLoadPending(ResourceLoader*) const;
+#endif
+        void cancelPendingSubstituteLoad(ResourceLoader*);   
+        
         void addResponse(const ResourceResponse&);
         const ResponseVector& responses() const { return m_responses; }
 
@@ -157,6 +188,16 @@ namespace WebCore {
         void subresourceLoaderFinishedLoadingOnePart(ResourceLoader*);
         
         bool deferMainResourceDataLoad() const { return m_deferMainResourceDataLoad; }
+        
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        void setCandidateApplicationCacheGroup(ApplicationCacheGroup* group);
+        ApplicationCacheGroup* candidateApplicationCacheGroup() const { return m_candidateApplicationCacheGroup; }
+        
+        void setApplicationCache(PassRefPtr<ApplicationCache> applicationCache);
+        ApplicationCache* applicationCache() const { return m_applicationCache.get(); }
+        ApplicationCache* topLevelApplicationCache() const;
+#endif
+        
     protected:
         bool m_deferMainResourceDataLoad;
 
@@ -168,6 +209,9 @@ namespace WebCore {
         void commitLoad(const char*, int);
         bool doesProgressiveLoad(const String& MIMEType) const;
 
+        void deliverSubstituteResourcesAfterDelay();
+        void substituteResourceDeliveryTimerFired(Timer<DocumentLoader>*);
+                
         Frame* m_frame;
 
         RefPtr<MainResourceLoader> m_mainResourceLoader;
@@ -225,6 +269,22 @@ namespace WebCore {
         // page cache.
         ResponseVector m_responses;
         bool m_stopRecordingResponses;
+        
+        typedef HashMap<RefPtr<ResourceLoader>, RefPtr<SubstituteResource> > SubstituteResourceMap;
+        SubstituteResourceMap m_pendingSubstituteResources;
+        Timer<DocumentLoader> m_substituteResourceDeliveryTimer;
+                
+        OwnPtr<ArchiveResourceCollection> m_archiveResourceCollection;
+        RefPtr<SharedBuffer> m_parsedArchiveData;
+        
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)  
+        // The application cache that the document loader is associated with (if any).
+        RefPtr<ApplicationCache> m_applicationCache;
+        
+        // Before an application cache has finished loading, this will be the candidate application
+        // group that the document loader is associated with.
+        ApplicationCacheGroup* m_candidateApplicationCacheGroup;
+#endif
     };
 
 }

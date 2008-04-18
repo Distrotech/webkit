@@ -55,7 +55,7 @@ public:
     void addCell(RenderTableCell*, RenderObject* row);
 
     void setCellWidths();
-    void calcRowHeight();
+    int calcRowHeight();
     int layoutRows(int height);
 
     RenderTable* table() const { return static_cast<RenderTable*>(parent()); }
@@ -101,7 +101,7 @@ public:
     int outerBorderRight() const { return m_outerBorderRight; }
 
     virtual void paint(PaintInfo&, int tx, int ty);
-    virtual void imageChanged(CachedImage*);
+    virtual void imageChanged(WrappedImagePtr);
 
     int numRows() const { return m_gridRows; }
     int numColumns() const;

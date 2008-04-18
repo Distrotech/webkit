@@ -43,12 +43,14 @@ namespace WebCore {
     class PluginPackage : public RefCounted<PluginPackage> {
     public:
         ~PluginPackage();
-        static PluginPackage* createPackage(const String& path, const PlatformFileTime& lastModified);
+        static PassRefPtr<PluginPackage> createPackage(const String& path, const time_t& lastModified);
         
-        String name() const { return m_name; }
-        String description() const { return m_description; }
-        String fileName() const { return m_fileName; }
-        String parentDirectory() const { return m_parentDirectory; }
+        const String& name() const { return m_name; }
+        const String& description() const { return m_description; }
+        const String& path() const { return m_path; }
+        const String& fileName() const { return m_fileName; }
+        const String& parentDirectory() const { return m_parentDirectory; }
+        time_t lastModified() const { return m_lastModified; }
 
         const MIMEToDescriptionsMap& mimeToDescriptions() const { return m_mimeToDescriptions; }
         const MIMEToExtensionsMap& mimeToExtensions() const { return m_mimeToExtensions; }
@@ -67,7 +69,7 @@ namespace WebCore {
         const PlatformModuleVersion& version() const { return m_moduleVersion; }
 
     private:
-        PluginPackage(const String& path, const PlatformFileTime& lastModified);
+        PluginPackage(const String& path, const time_t& lastModified);
         bool fetchInfo();
         bool isPluginBlacklisted();
         void determineQuirks(const String& mimeType);
@@ -87,7 +89,7 @@ namespace WebCore {
         MIMEToExtensionsMap m_mimeToExtensions;
 
         PlatformModule m_module;
-        PlatformFileTime m_lastModified;
+        time_t m_lastModified;
 
         NPP_ShutdownProcPtr m_NPP_Shutdown;
         NPPluginFuncs m_pluginFuncs;

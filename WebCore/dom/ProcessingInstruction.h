@@ -70,15 +70,19 @@ public:
     bool isXSL() const { return m_isXSL; }
 #endif
 
+    virtual void getSubresourceAttributeStrings(Vector<String>&) const;
+
 private:
     void parseStyleSheet(const String& sheet);
 
     String m_target;
     String m_data;
     String m_localHref;
+    String m_title;
     CachedResource* m_cachedSheet;
     RefPtr<StyleSheet> m_sheet;
     bool m_loading;
+    bool m_alternate;
 #if ENABLE(XSLT)
     bool m_isXSL;
 #endif

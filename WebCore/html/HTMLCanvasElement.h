@@ -35,8 +35,10 @@
 typedef struct CGContext* CGContextRef;
 typedef struct CGImage* CGImageRef;
 #elif PLATFORM(QT)
+QT_BEGIN_NAMESPACE
 class QPixmap;
 class QPainter;
+QT_END_NAMESPACE
 #elif PLATFORM(CAIRO)
 typedef struct _cairo_surface cairo_surface_t;
 #endif
@@ -49,10 +51,19 @@ class FloatPoint;
 class FloatRect;
 class FloatSize;
 class GraphicsContext;
+class HTMLCanvasElement;
 class ImageBuffer;
 class IntPoint;
 class InttRect;
 class IntSize;
+
+class CanvasObserver {
+public:
+    virtual ~CanvasObserver() {};
+
+    virtual void canvasChanged(HTMLCanvasElement* element, const FloatRect& changedRect) = 0;
+    virtual void canvasResized(HTMLCanvasElement* element) = 0;
+};
 
 class HTMLCanvasElement : public HTMLElement {
 public:
@@ -75,6 +86,17 @@ public:
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
     IntSize size() const { return m_size; }
+    void setSize(const IntSize& size)
+    { 
+        if (size == m_size)
+            return;
+        m_ignoreReset = true; 
+        setWidth(size.width());
+        setHeight(size.height());
+        m_ignoreReset = false;
+        reset();
+    }
+
     void willDraw(const FloatRect&);
 
     void paint(GraphicsContext*, const IntRect&);
@@ -99,6 +121,8 @@ public:
 
     static const float MaxCanvasArea;
 
+    void setObserver(CanvasObserver* o) { m_observer = o; }
+
 private:
     void createImageBuffer() const;
     void reset();
@@ -106,9 +130,11 @@ private:
     bool m_rendererIsCanvas;
 
     RefPtr<CanvasRenderingContext2D> m_2DContext;
-    IntSize m_size;
+    IntSize m_size;    
+    CanvasObserver* m_observer;
 
     bool m_originClean;
+    bool m_ignoreReset;
 
     // m_createdImageBuffer means we tried to malloc the buffer.  We didn't necessarily get it.
     mutable bool m_createdImageBuffer;

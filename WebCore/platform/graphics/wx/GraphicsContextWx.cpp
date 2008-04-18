@@ -227,11 +227,6 @@ void GraphicsContext::drawEllipse(const IntRect& rect)
     m_data->context->DrawEllipse(rect.x(), rect.y(), rect.width(), rect.height());
 }
 
-void GraphicsContext::drawImage(WebCore::ImageBuffer*, WebCore::FloatRect const&, WebCore::FloatRect const&)
-{
-    notImplemented();
-}
-
 void GraphicsContext::strokeArc(const IntRect& rect, int startAngle, int angleSpan)
 {
     if (paintingDisabled())
@@ -293,7 +288,7 @@ void GraphicsContext::drawFocusRing(const Color& color)
     notImplemented();
 }
 
-void GraphicsContext::clip(const IntRect& r)
+void GraphicsContext::clip(const FloatRect& r)
 {
     wxWindowDC* windc = dynamic_cast<wxWindowDC*>(m_data->context);
     wxPoint pos(0, 0);
@@ -475,13 +470,6 @@ void GraphicsContext::concatCTM(const AffineTransform& transform)
 }
 
 void GraphicsContext::setUseAntialiasing(bool enable)
-{
-    if (paintingDisabled())
-        return;
-    notImplemented();
-}
-
-void GraphicsContext::paintBuffer(ImageBuffer* buffer, const IntRect& r)
 {
     if (paintingDisabled())
         return;

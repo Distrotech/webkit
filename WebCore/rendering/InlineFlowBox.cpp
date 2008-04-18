@@ -658,7 +658,7 @@ void InlineFlowBox::paintBackgrounds(const RenderObject::PaintInfo& paintInfo, c
 void InlineFlowBox::paintBackground(const RenderObject::PaintInfo& paintInfo, const Color& c, const BackgroundLayer* bgLayer,
                                     int my, int mh, int tx, int ty, int w, int h)
 {
-    CachedImage* bg = bgLayer->backgroundImage();
+    StyleImage* bg = bgLayer->backgroundImage();
     bool hasBackgroundImage = bg && bg->canRender(object()->style()->effectiveZoom());
     if ((!hasBackgroundImage && !object()->style()->hasBorderRadius()) || (!prevLineBox() && !nextLineBox()) || !parent())
         object()->paintBackgroundExtended(paintInfo, c, bgLayer, my, mh, tx, ty, w, h, this);
@@ -732,7 +732,7 @@ void InlineFlowBox::paintBoxDecorations(RenderObject::PaintInfo& paintInfo, int 
         // :first-line cannot be used to put borders on a line. Always paint borders with our
         // non-first-line style.
         if (parent() && object()->style()->hasBorder()) {
-            CachedImage* borderImage = object()->style()->borderImage().image();
+            StyleImage* borderImage = object()->style()->borderImage().image();
             bool hasBorderImage = borderImage && borderImage->canRender(styleToUse->effectiveZoom());
             if (hasBorderImage && !borderImage->isLoaded())
                 return; // Don't paint anything while we wait for the image to load.

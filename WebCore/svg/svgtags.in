@@ -1,6 +1,8 @@
 a
+#if ENABLE_SVG_FONTS
 altGlyph
-#if 0 
+#endif
+#if 0
 altGlyphDef
 altGlyphItem
 #endif
@@ -9,6 +11,7 @@ animate
 animateColor
 animateMotion
 animateTransform
+set
 #endif
 circle
 clipPath
@@ -70,6 +73,8 @@ glyph
 #endif
 #if 0
 glyphRef
+#endif
+#ifdef ENABLE_SVG_FONTS
 hkern
 #endif
 image
@@ -89,7 +94,6 @@ polyline
 radialGradient
 rect
 script
-set
 stop
 style
 svg

@@ -53,8 +53,8 @@
 #import <WebKit/DOMRange.h>
 #import <WebKit/WebBackForwardList.h>
 #import <WebKit/WebCoreStatistics.h>
-#import <WebKit/WebDatabaseManagerPrivate.h>
 #import <WebKit/WebDataSourcePrivate.h>
+#import <WebKit/WebDatabaseManagerPrivate.h>
 #import <WebKit/WebDocumentPrivate.h>
 #import <WebKit/WebEditingDelegate.h>
 #import <WebKit/WebFrameView.h>
@@ -64,6 +64,7 @@
 #import <WebKit/WebPreferences.h>
 #import <WebKit/WebPreferencesPrivate.h>
 #import <WebKit/WebResourceLoadDelegate.h>
+#import <WebKit/WebTypesInternal.h>
 #import <WebKit/WebViewPrivate.h>
 #import <getopt.h>
 #import <mach-o/getsect.h>
@@ -608,6 +609,14 @@ static void convertWebResourceResponseToDictionary(NSMutableDictionary *property
     [responseDictionary release];
 }
 
+static NSInteger compareResourceURLs(id resource1, id resource2, void *context)
+{
+    NSString *url1 = [resource1 objectForKey:@"WebResourceURL"];
+    NSString *url2 = [resource2 objectForKey:@"WebResourceURL"];
+ 
+    return [url1 compare:url2];
+}
+
 static NSString *serializeWebArchiveToXML(WebArchive *webArchive)
 {
     NSString *errorString;
@@ -642,6 +651,10 @@ static NSString *serializeWebArchiveToXML(WebArchive *webArchive)
             convertWebResourceResponseToDictionary(subresourcePropertyList);
             convertWebResourceDataToString(subresourcePropertyList);
         }
+        
+        // Sort the subresources so they're always in a predictable order for the dump
+        if (NSArray *sortedSubresources = [subresources sortedArrayUsingFunction:compareResourceURLs context:nil])
+            [resourcePropertyList setObject:sortedSubresources forKey:@"WebSubresources"];
     }
 
     NSData *xmlData = [NSPropertyListSerialization dataFromPropertyList:propertyList
@@ -811,7 +824,8 @@ static void resetWebViewToConsistentStateBeforeTesting()
     WebView *webView = [mainFrame webView];
     [(EditingDelegate *)[webView editingDelegate] setAcceptsEditing:YES];
     [webView makeTextStandardSize:nil];
-    [webView setTabKeyCyclesThroughElements: YES];
+    [webView resetPageZoom:nil];
+    [webView setTabKeyCyclesThroughElements:YES];
     [webView setPolicyDelegate:nil];
     [webView _setDashboardBehavior:WebDashboardBehaviorUseBackwardCompatibilityMode to:NO];
 

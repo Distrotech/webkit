@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 /*
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
- *  Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ *  Copyright (C) 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -24,11 +24,11 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
-#include "RegisterFileStack.h"
-#include <wtf/HashSet.h>
+#include "Activation.h"
 
 namespace KJS {
 
+    class ActivationImp;
     class ArrayObjectImp;
     class ArrayPrototype;
     class BooleanObjectImp;
@@ -49,7 +49,6 @@ namespace KJS {
     class NumberPrototype;
     class ObjectObjectImp;
     class ObjectPrototype;
-    class ProgramCodeBlock;
     class PrototypeReflexiveFunction;
     class RangeError;
     class RangeErrorPrototype;
@@ -68,6 +67,7 @@ namespace KJS {
     class TypeErrorPrototype;
     class UriError;
     class UriErrorPrototype;
+    struct ActivationStackNode;
 
     typedef Vector<ExecState*, 16> ExecStateStack;
 
@@ -76,9 +76,9 @@ namespace KJS {
         using JSVariableObject::JSVariableObjectData;
 
         struct JSGlobalObjectData : public JSVariableObjectData {
-            JSGlobalObjectData(JSGlobalObject* globalObject)
-                : JSVariableObjectData(&symbolTable, registerFileStack.basePointer(), 0)
-                , globalExec(globalObject)
+            JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
+                : JSVariableObjectData(&inlineSymbolTable)
+                , globalExec(globalObject, thisValue)
             {
             }
 
@@ -131,25 +131,26 @@ namespace KJS {
             NativeErrorPrototype* typeErrorPrototype;
             NativeErrorPrototype* URIErrorPrototype;
             
-            SymbolTable symbolTable;
+            SymbolTable inlineSymbolTable;
 
             ExecStateStack activeExecStates;
 
-            HashSet<ProgramCodeBlock*> codeBlocks;
-            
-            RegisterFileStack registerFileStack;
+            ActivationStackNode* activations;
+            size_t activationCount;
+
+            OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
         };
 
     public:
         JSGlobalObject()
-            : JSVariableObject(new JSGlobalObjectData(this))
+            : JSVariableObject(new JSGlobalObjectData(this, this))
         {
             init();
         }
 
     protected:
-        JSGlobalObject(JSValue* proto)
-            : JSVariableObject(proto, new JSGlobalObjectData(this))
+        JSGlobalObject(JSValue* proto, JSObject* globalThisValue)
+            : JSVariableObject(proto, new JSGlobalObjectData(this, globalThisValue))
         {
             init();
         }
@@ -159,7 +160,7 @@ namespace KJS {
 
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         virtual void put(ExecState*, const Identifier&, JSValue*);
-        virtual void initializeVariable(ExecState*, const Identifier&, JSValue*, unsigned attributes);
+        virtual void putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes);
 
         // Linked list of all global objects.
         static JSGlobalObject* head() { return s_head; }
@@ -208,9 +209,6 @@ namespace KJS {
         NativeErrorPrototype* typeErrorPrototype() const { return d()->typeErrorPrototype; }
         NativeErrorPrototype* URIErrorPrototype() const { return d()->URIErrorPrototype; }
 
-        void saveLocalStorage(SavedProperties&) const;
-        void restoreLocalStorage(const SavedProperties&);
-
         void saveBuiltins(SavedBuiltins&) const;
         void restoreBuiltins(const SavedBuiltins&);
 
@@ -229,6 +227,7 @@ namespace KJS {
         virtual void mark();
 
         virtual bool isGlobalObject() const { return true; }
+        virtual JSGlobalObject* toGlobalObject(ExecState*) const;
 
         virtual ExecState* globalExec();
 
@@ -236,13 +235,15 @@ namespace KJS {
 
         virtual bool allowsAccessFrom(const JSGlobalObject*) const { return true; }
 
+        ActivationImp* pushActivation(ExecState*);
+        void popActivation();
+        void tearOffActivation(ExecState*, bool markAsRelic = false);
+
         virtual bool isDynamicScope() const;
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
-        
-        HashSet<ProgramCodeBlock*>& codeBlocks() { return d()->codeBlocks; }
 
-        RegisterFileStack& registerFileStack() { return d()->registerFileStack; }
+        HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
     private:
         void init();
@@ -251,6 +252,9 @@ namespace KJS {
 
         bool checkTimeout();
         void resetTimeoutCheck();
+
+        void deleteActivationStack();
+        void checkActivationCount();
 
         static JSGlobalObject* s_head;
     };
@@ -263,6 +267,37 @@ namespace KJS {
             return false;
 
         return checkTimeout();
+    }
+
+    inline ActivationImp* JSGlobalObject::pushActivation(ExecState* exec)
+    {
+        if (d()->activationCount == activationStackNodeSize) {
+            ActivationStackNode* newNode = new ActivationStackNode;
+            newNode->prev = d()->activations;
+            d()->activations = newNode;
+            d()->activationCount = 0;
+        }
+        
+        StackActivation* stackEntry = &d()->activations->data[d()->activationCount++];
+        stackEntry->activationStorage.init(exec);
+        return &stackEntry->activationStorage;
+    }
+
+    inline void JSGlobalObject::checkActivationCount()
+    {
+        if (!d()->activationCount) {
+            ActivationStackNode* prev = d()->activations->prev;
+            ASSERT(prev);
+            delete d()->activations;
+            d()->activations = prev;
+            d()->activationCount = activationStackNodeSize;
+        }
+    }
+
+    inline void JSGlobalObject::popActivation()
+    {
+        checkActivationCount();
+        d()->activations->data[--d()->activationCount].activationDataStorage.localStorage.shrink(0);    
     }
 
 } // namespace KJS

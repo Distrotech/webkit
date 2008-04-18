@@ -31,18 +31,20 @@
 #endif
 #include "qwebkitglobal.h"
 
+QT_BEGIN_NAMESPACE
 class QRect;
 class QPoint;
 class QPainter;
 class QPixmap;
 class QMouseEvent;
 class QWheelEvent;
-class QWebNetworkRequest;
 class QNetworkRequest;
+class QRegion;
+QT_END_NAMESPACE
 
+class QWebNetworkRequest;
 class QWebFramePrivate;
 class QWebPage;
-class QRegion;
 
 namespace WebCore {
     class WidgetPrivate;
@@ -56,6 +58,7 @@ class QWEBKIT_EXPORT QWebFrame : public QObject
     Q_OBJECT
     Q_PROPERTY(Qt::ScrollBarPolicy verticalScrollBarPolicy READ verticalScrollBarPolicy WRITE setVerticalScrollBarPolicy)
     Q_PROPERTY(Qt::ScrollBarPolicy horizontalScrollBarPolicy READ horizontalScrollBarPolicy WRITE setHorizontalScrollBarPolicy)
+    Q_PROPERTY(int textZoomFactor READ textZoomFactor WRITE setTextZoomFactor)
 private:
     QWebFrame(QWebPage *parent, QWebFrameData *frameData);
     QWebFrame(QWebFrame *parent, QWebFrameData *frameData);
@@ -84,7 +87,7 @@ public:
     QString title() const;
     QUrl url() const;
     QPixmap icon() const;
-    
+
     QString name() const;
 
     QWebFrame *parentFrame() const;
@@ -95,8 +98,16 @@ public:
     Qt::ScrollBarPolicy horizontalScrollBarPolicy() const;
     void setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy);
 
+    void setScrollBarValue(Qt::Orientation orientation, int value);
+    int scrollBarValue(Qt::Orientation orientation) const;
+    int scrollBarMinimum(Qt::Orientation orientation) const;
+    int scrollBarMaximum(Qt::Orientation orientation) const;
+
     void render(QPainter *painter, const QRegion &clip);
     void layout();
+
+    void setTextZoomFactor(int percent);
+    int textZoomFactor() const;
 
     QPoint pos() const;
     QRect geometry() const;

@@ -22,7 +22,9 @@
 #include "XMLHttpRequest.h"
 
 #include "CString.h"
+#include "Console.h"
 #include "DOMImplementation.h"
+#include "DOMWindow.h"
 #include "Event.h"
 #include "EventException.h"
 #include "EventListener.h"
@@ -30,6 +32,7 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "HTTPParsers.h"
+#include "InspectorController.h"
 #include "Page.h"
 #include "Settings.h"
 #include "SubresourceLoader.h"
@@ -134,17 +137,17 @@ static bool isValidHeaderValue(const String& name)
     return !name.contains('\r') && !name.contains('\n');
 }
     
-XMLHttpRequestState XMLHttpRequest::getReadyState() const
+XMLHttpRequestState XMLHttpRequest::readyState() const
 {
     return m_state;
 }
 
-const KJS::UString& XMLHttpRequest::getResponseText(ExceptionCode& ec) const
+const KJS::UString& XMLHttpRequest::responseText(ExceptionCode& ec) const
 {
     return m_responseText;
 }
 
-Document* XMLHttpRequest::getResponseXML(ExceptionCode& ec) const
+Document* XMLHttpRequest::responseXML(ExceptionCode& ec) const
 {
     if (m_state != Loaded)
         return 0;
@@ -245,6 +248,7 @@ XMLHttpRequest::XMLHttpRequest(Document* d)
     : m_doc(d)
     , m_async(true)
     , m_state(Uninitialized)
+    , m_identifier(-1)
     , m_responseText("")
     , m_createdDocument(false)
     , m_aborted(false)
@@ -418,10 +422,10 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         // FIXME: must use xmlEncoding for documents.
         String charset = "UTF-8";
       
-        TextEncoding m_encoding(charset);
-        if (!m_encoding.isValid()) // FIXME: report an error?
-            m_encoding = UTF8Encoding();
-        request.setHTTPBody(FormData::create(m_encoding.encode(body.characters(), body.length(), EntitiesForUnencodables)));
+        TextEncoding encoding(charset);
+        if (!encoding.isValid()) // FIXME: report an error?
+            encoding = UTF8Encoding();
+        request.setHTTPBody(FormData::create(encoding.encode(body.characters(), body.length(), EntitiesForUnencodables)));
     }
 
     if (m_requestHeaders.size() > 0)
@@ -435,8 +439,8 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         {
             // avoid deadlock in case the loader wants to use JS on a background thread
             KJS::JSLock::DropAllLocks dropLocks;
-            if (m_doc->frame()) 
-                m_doc->frame()->loader()->loadResourceSynchronously(request, error, response, data);
+            if (m_doc->frame())
+                m_identifier = m_doc->frame()->loader()->loadResourceSynchronously(request, error, response, data);
         }
 
         m_loader = 0;
@@ -526,7 +530,7 @@ void XMLHttpRequest::dropProtection()
     deref();
 }
 
-void XMLHttpRequest::overrideMIMEType(const String& override)
+void XMLHttpRequest::overrideMimeType(const String& override)
 {
     m_mimeTypeOverride = override;
 }
@@ -549,8 +553,8 @@ void XMLHttpRequest::setRequestHeader(const String& name, const String& value, E
         
     // A privileged script (e.g. a Dashboard widget) can set any headers.
     if (!m_doc->isAllowedToLoadLocalResources() && !isSafeRequestHeader(name)) {
-        if (m_doc && m_doc->frame() && m_doc->frame()->page())
-            m_doc->frame()->page()->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, "Refused to set unsafe header " + name, 1, String());
+        if (m_doc && m_doc->frame())
+            m_doc->frame()->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, "Refused to set unsafe header " + name, 1, String());
         return;
     }
 
@@ -623,7 +627,7 @@ bool XMLHttpRequest::responseIsXML() const
     return DOMImplementation::isXMLMIMEType(responseMIMEType());
 }
 
-int XMLHttpRequest::getStatus(ExceptionCode& ec) const
+int XMLHttpRequest::status(ExceptionCode& ec) const
 {
     if (m_response.httpStatusCode())
         return m_response.httpStatusCode();
@@ -637,7 +641,7 @@ int XMLHttpRequest::getStatus(ExceptionCode& ec) const
     return 0;
 }
 
-String XMLHttpRequest::getStatusText(ExceptionCode& ec) const
+String XMLHttpRequest::statusText(ExceptionCode& ec) const
 {
     // FIXME: <http://bugs.webkit.org/show_bug.cgi?id=3547> XMLHttpRequest.statusText returns always "OK".
     if (m_response.httpStatusCode())
@@ -694,6 +698,11 @@ void XMLHttpRequest::didFinishLoading(SubresourceLoader* loader)
             m_responseText += m_decoder->flush();
     }
 
+    if (Frame* frame = m_doc->frame()) {
+        if (Page* page = frame->page())
+            page->inspectorController()->resourceRetrievedByXMLHttpRequest(m_loader ? m_loader->identifier() : m_identifier, m_responseText);
+    }
+
     bool hadLoader = m_loader;
     m_loader = 0;
 
@@ -713,9 +722,9 @@ void XMLHttpRequest::willSendRequest(SubresourceLoader*, ResourceRequest& reques
 void XMLHttpRequest::didReceiveResponse(SubresourceLoader*, const ResourceResponse& response)
 {
     m_response = response;
-    m_encoding = extractCharsetFromMediaType(m_mimeTypeOverride);
-    if (m_encoding.isEmpty())
-        m_encoding = response.textEncodingName();
+    m_responseEncoding = extractCharsetFromMediaType(m_mimeTypeOverride);
+    if (m_responseEncoding.isEmpty())
+        m_responseEncoding = response.textEncodingName();
 
 }
 
@@ -730,8 +739,8 @@ void XMLHttpRequest::didReceiveData(SubresourceLoader*, const char* data, int le
         changeState(Sent);
   
     if (!m_decoder) {
-        if (!m_encoding.isEmpty())
-            m_decoder = new TextResourceDecoder("text/plain", m_encoding);
+        if (!m_responseEncoding.isEmpty())
+            m_decoder = new TextResourceDecoder("text/plain", m_responseEncoding);
         // allow TextResourceDecoder to look inside the m_response if it's XML or HTML
         else if (responseIsXML())
             m_decoder = new TextResourceDecoder("application/xml");

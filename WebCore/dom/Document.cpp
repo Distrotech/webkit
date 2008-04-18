@@ -32,7 +32,6 @@
 #include "CSSStyleSheet.h"
 #include "CSSValueKeywords.h"
 #include "CString.h"
-#include "ClassNodeList.h"
 #include "Comment.h"
 #include "CookieJar.h"
 #include "DOMImplementation.h"
@@ -56,6 +55,7 @@
 #include "FrameTree.h"
 #include "FrameView.h"
 #include "HTMLBodyElement.h"
+#include "HTMLCanvasElement.h"
 #include "HTMLDocument.h"
 #include "HTMLElementFactory.h"
 #include "HTMLFrameOwnerElement.h"
@@ -81,8 +81,6 @@
 #include "NodeFilter.h"
 #include "NodeIterator.h"
 #include "NodeWithIndex.h"
-#include "NodeWithIndexAfter.h"
-#include "NodeWithIndexBefore.h"
 #include "OverflowEvent.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
@@ -141,7 +139,6 @@
 #include "SVGElementFactory.h"
 #include "SVGZoomEvent.h"
 #include "SVGStyleElement.h"
-#include "TimeScheduler.h"
 #endif
 
 using namespace std;
@@ -513,7 +510,7 @@ Element* Document::documentElement() const
     return m_documentElement.get();
 }
 
-PassRefPtr<Element> Document::createElement(const String &name, ExceptionCode& ec)
+PassRefPtr<Element> Document::createElement(const AtomicString& name, ExceptionCode& ec)
 {
     if (!isValidName(name)) {
         ec = INVALID_CHARACTER_ERR;
@@ -2467,13 +2464,11 @@ void Document::detachNodeIterator(NodeIterator *ni)
     m_nodeIterators.remove(ni);
 }
 
-void Document::nodeChildrenChanged(ContainerNode* container, Node* beforeChange, Node* afterChange, int childCountDelta)
+void Document::nodeChildrenChanged(ContainerNode* container)
 {
-    NodeWithIndexAfter beforeChangeWithIndex(beforeChange);
-    NodeWithIndexBefore afterChangeWithIndex(container, afterChange);
     HashSet<Range*>::const_iterator end = m_ranges.end();
     for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->nodeChildrenChanged(beforeChangeWithIndex, afterChangeWithIndex, childCountDelta);
+        (*it)->nodeChildrenChanged(container);
 }
 
 void Document::nodeWillBeRemoved(Node* n)
@@ -2482,10 +2477,9 @@ void Document::nodeWillBeRemoved(Node* n)
     for (HashSet<NodeIterator*>::const_iterator it = m_nodeIterators.begin(); it != nodeIteratorsEnd; ++it)
         (*it)->nodeWillBeRemoved(n);
 
-    NodeWithIndex nodeWithIndex(n);
     HashSet<Range*>::const_iterator rangesEnd = m_ranges.end();
     for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != rangesEnd; ++it)
-        (*it)->nodeWillBeRemoved(nodeWithIndex);
+        (*it)->nodeWillBeRemoved(n);
 
     if (Frame* frame = this->frame()) {
         frame->selectionController()->nodeWillBeRemoved(n);
@@ -2533,11 +2527,11 @@ void Document::textNodeSplit(Text* oldNode)
     // FIXME: This should update markers for spelling and grammar checking.
 }
 
-DOMWindow* Document::defaultView() const
+// FIXME: eventually, this should return a DOMWindow stored in the document.
+DOMWindow* Document::domWindow() const
 {
     if (!frame())
         return 0;
-    
     return frame()->domWindow();
 }
 
@@ -2789,28 +2783,47 @@ String Document::lastModified() const
     return loader->response().httpHeaderField("Last-Modified");
 }
 
-bool Document::isValidName(const String &name)
+static bool isValidNameNonASCII(const UChar* characters, unsigned length)
 {
-    const UChar* s = name.characters();
-    unsigned length = name.length();
-
-    if (length == 0)
-        return false;
-
     unsigned i = 0;
 
     UChar32 c;
-    U16_NEXT(s, i, length, c)
+    U16_NEXT(characters, i, length, c)
     if (!isValidNameStart(c))
         return false;
 
     while (i < length) {
-        U16_NEXT(s, i, length, c)
+        U16_NEXT(characters, i, length, c)
         if (!isValidNamePart(c))
             return false;
     }
 
     return true;
+}
+
+static inline bool isValidNameASCII(const UChar* characters, unsigned length)
+{
+    UChar c = characters[0];
+    if (!(isASCIIAlpha(c) || c == ':' || c == '_'))
+        return false;
+
+    for (unsigned i = 1; i < length; ++i) {
+        c = characters[i];
+        if (!(isASCIIAlphanumeric(c) || c == ':' || c == '_' || c == '-' || c == '.'))
+            return false;
+    }
+
+    return true;
+}
+
+bool Document::isValidName(const String& name)
+{
+    unsigned length = name.length();
+    if (!length)
+        return false;
+
+    const UChar* characters = name.characters();
+    return isValidNameASCII(characters, length) || isValidNameNonASCII(characters, length);
 }
 
 bool Document::parseQualifiedName(const String& qualifiedName, String& prefix, String& localName, ExceptionCode& ec)
@@ -2926,12 +2939,12 @@ KURL Document::completeURL(const String& url) const
     // FIXME: Should we change the KURL constructor to have this behavior?
     if (url.isNull())
         return KURL();
-    KURL base = m_baseURL;
-    if (base.isEmpty())
-        base = m_url;
+    const KURL* base = &m_baseURL;
+    if (base->isEmpty())
+        base = &m_url;
     if (!m_decoder)
-        return KURL(base, url);
-    return KURL(base, url, m_decoder->encoding());
+        return KURL(*base, url);
+    return KURL(*base, url, m_decoder->encoding());
 }
 
 bool Document::inPageCache()
@@ -4099,7 +4112,7 @@ DatabaseThread* Document::databaseThread()
     if (!m_databaseThread && !m_hasOpenDatabases) {
         // Create the database thread on first request - but not if at least one database was already opened,
         // because in that case we already had a database thread and terminated it and should not create another.
-        m_databaseThread = new DatabaseThread(this);
+        m_databaseThread = DatabaseThread::create(this);
         if (!m_databaseThread->start())
             m_databaseThread = 0;
     }
@@ -4135,6 +4148,25 @@ void Document::detachRange(Range* range)
 {
     ASSERT(m_ranges.contains(range));
     m_ranges.remove(range);
+}
+
+CanvasRenderingContext2D* Document::getCSSCanvasContext(const String& type, const String& name, int width, int height)
+{
+    HTMLCanvasElement* result = getCSSCanvasElement(name);
+    if (!result)
+        return 0;
+    result->setSize(IntSize(width, height));
+    return result->getContext(type);
+}
+
+HTMLCanvasElement* Document::getCSSCanvasElement(const String& name)
+{
+    RefPtr<HTMLCanvasElement> result = m_cssCanvasElements.get(name).get();
+    if (!result) {
+        result = new HTMLCanvasElement(this);
+        m_cssCanvasElements.set(name, result);
+    }
+    return result.get();
 }
 
 } // namespace WebCore

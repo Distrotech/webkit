@@ -1,8 +1,561 @@
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by mrowe.
+
+        * WebView/WebFrame.mm: Remove temporary build fix.
+
+2008-04-17  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Dan Bernstein.
+
+        Fix <rdar://problem/5863552> REGRESSION (r30741): Attachments don't appear in the iChat message window after sending
+
+        The order of arguments to -[NSDictionary initWithObjects:andKeys:] had been transposed accidentally during refactoring.
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::createPlugin): Pass the arguments in the correct order.
+
+2008-04-17  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Dan Bernstein.
+
+        Fix the Mac build.
+
+        * WebView/WebFrame.mm: Define HAVE_ACCESSIBILITY before including AccessibilityObject.h and AXObjectCache.h to get things building
+        for now.  This comes from config.h in WebCore but we don't have an equivalent in WebKit so we'll need to work out the correct place
+        for this to live going forward.
+
+2008-04-15  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by Anders.
+
+        <rdar://problem/5412759> CrashTracer: [USER] 22 crashes in Safari at com.apple.quicktime.webplugin: NPN_SetValue + 15403
+        
+        In certain situations, code in WebBasePluginPackage would load a plug-in only for the explicit reason of asking it to create a
+        preference file, but wouldn't actually unload the bundle. This created problems for the QuickTime WebKit plug-in by unloading
+        a bundle out from underneath itself.
+
+        * Plugins/WebBasePluginPackage.h: Added unload method.
+        * Plugins/WebBasePluginPackage.m:
+        (-[WebBasePluginPackage unload]): Added new method. Currently, only Netscape plug-ins support unload.
+        (-[WebBasePluginPackage pListForPath:createFile:]): Added a call to unload.
+        * Plugins/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage unload]): Added.
+
+2008-04-15  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add ENABLE_OFFLINE_WEB_APPLICATIONS to FEATURE_DEFINES.
+
+        * Configurations/WebKit.xcconfig:
+
+2008-04-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by John Sullivan
+
+        Do a more complete job adding the "WebArchiveDebugMode" pref
+
+        * WebView/WebPreferences.m: Add both getter *and* setter
+        (-[WebPreferences webArchiveDebugModeEnabled]):
+        (-[WebPreferences setWebArchiveDebugModeEnabled:]):
+        * WebView/WebPreferencesPrivate.h:
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChangedNotification:]): Call the renamed getter
+
+2008-04-14  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        Add a hidden pref to debug WebArchive loading.  With this pref on, when loading a WebArchive,
+        if the resource isn't in the ArchiveResourceCollection, the loader will not fall back to the 
+        network and will instead fail the load as "cancelled."
+
+        * WebView/WebPreferenceKeysPrivate.h:
+
+        * WebView/WebPreferences.m:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences _webArchiveDebugModeEnabled]):
+        * WebView/WebPreferencesPrivate.h:
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChangedNotification:]):
+
+2008-04-11  David Hyatt  <hyatt@apple.com>
+
+        Rename CachedResource ref/deref methods to addClient/removeClient.
+
+        Reviewed by olliej
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLViewPrivate dealloc]):
+        (-[WebHTMLViewPrivate finalize]):
+        (-[WebHTMLViewPrivate clear]):
+        (-[WebHTMLView setPromisedDragTIFFDataSource:WebCore::]):
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        Add "ENABLE_DOM_STORAGE" to keep in sync with the rest of the project
+
+        * Configurations/WebKit.xcconfig:
+
+2008-04-04  Adam Roben  <aroben@apple.com>
+
+        Use WebCore's ICU headers instead of our own copy
+
+        Rubberstamped by Tim Hatcher.
+
+        * Configurations/WebKit.xcconfig: Pick up ICU headers from WebCore's
+        PrivateHeaders.
+
+2008-04-04  Adam Roben  <aroben@apple.com>
+
+        Fix <rdar://problem/5804776> Would like to use WebCore's
+        ForwardingHeaders in WebKit without manually creating copies
+
+        Patch by Tim Hatcher, typed by me.
+
+        * Configurations/WebKit.xcconfig: Use the copy of ForwardingHeaders in
+        WebCore's PrivateHeaders instead of our own copy.
+
+2008-04-04  Ada Chan  <adachan@apple.com>
+
+        Now we pass width and height directly as integers to format
+        the window title for a standalone image.
+
+        Reviewed by Dan.
+
+        * WebCoreSupport/WebViewFactory.mm:
+        (-[WebViewFactory imageTitleForFilename:width:height:]):
+
+2008-04-03  Nicholas Shanks  <webkit@nickshanks.com>
+
+        Updated by Dan Bernstein. Reviewed by Dave Hyatt.
+
+        - WebKit part of fixing http://bugs.webkit.org/show_bug.cgi?id=6484
+          font-weight does not properly support graded weights
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _styleFromFontAttributes:]):
+        (-[WebHTMLView _originalFontB]):
+        (-[WebHTMLView _addToStyle:fontA:fontB:]):
+
+2008-04-02  Mark Rowe  <mrowe@apple.com>
 
         Reviewed by Oliver Hunt.
+
+        Ensure that debug symbols are generated for x86_64 and ppc64 builds.
+
+        * Configurations/Base.xcconfig:
+
+2008-03-31  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Darin.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _accessibilityTree]):
+        The syntax for fetching an object from the AXObjectCache changed slightly
+
+2008-03-31  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Jon Honeycutt
         
-        Build fix.
+        Move a WebArchive loading check into WebCore
+
+        * WebView/WebHTMLRepresentation.mm:
+        (-[WebHTMLRepresentation receivedData:withDataSource:]): Don't check "isDisplayingWebArchive" as WebCore is now
+          responsible for checking that state
+
+2008-03-31  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin and Mitz's rubber stamp
+
+        Remove dataForArchivedSelection(WebCore::Frame*) from the EditorClient - only usage is now directly in WebCore
+
+        * WebCoreSupport/WebEditorClient.mm:
+        * WebCoreSupport/WebEditorClient.h:
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Darin Adler
+
+        Remove WebArchiver.h/mm
+
+        * WebView/WebArchiver.h: Removed.
+        * WebView/WebArchiver.mm: Removed.
+
+        * DOM/WebDOMOperations.mm:
+        * WebCoreSupport/WebDragClient.mm:
+        * WebCoreSupport/WebEditorClient.mm:
+        * WebView/WebDataSource.mm:
+        * WebView/WebHTMLView.mm:
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin Adler
+
+        Now that WebCore can create archives from a frame selection directly, we don't need it in WebArchiver anymore
+
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::dataForArchivedSelection):
+
+        * WebView/WebArchiver.h: Nuke archiveSelectionInFrame, as there are no remaining users
+        * WebView/WebArchiver.mm: Ditto
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _writeSelectionWithPasteboardTypes:toPasteboard:cachedAttributedString:]):
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin Adler
+
+        More Kit->Core WebArchive changes.
+
+        Create an archive from the current selection in a frame
+
+        * WebView/WebArchiver.mm: Remove one more *undeclared* method, the last method will drop off
+          easily in a followup
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        WebArchive saga continues - Can now make archives from ranges in WebCore
+
+        * DOM/WebDOMOperations.mm:
+        (-[DOMRange webArchive]):
+        (-[DOMRange markupString]):
+
+        * WebView/WebArchiver.h: Remove newly obsolete [WebArchiver archiveRange:]
+        * WebView/WebArchiver.mm:
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        More Kit->Core webarchive code movement
+
+        * DOM/WebDOMOperations.mm:
+        (-[DOMNode markupString]): Call createFullMarkup() instead
+
+        * WebView/WebFrame.mm: Remove obsolete _markupStringFromNode
+        * WebView/WebFrameInternal.h: Ditto
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Fold [WebArchiver archiveFrame:] into WebDataSource - the last remaining caller
+
+        * WebView/WebArchiver.h:
+        * WebView/WebArchiver.mm:
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource webArchive]):
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Remove unused [WebArchiver archiveNode:], made obsolete in r31400
+
+        * WebView/WebArchiver.h:
+        * WebView/WebArchiver.mm:
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        "Yet another transitional step" to empty out WebKit-based code for archiving.
+
+        With this patch, the key operation of "Creating a WebArchive rooted at a single Node" takes place
+        entirely within WebCore, and opens the door to saving WebArchives on Windows.
+
+        * DOM/WebDOMOperations.mm:
+        * WebView/WebArchiver.mm:
+        (+[WebArchiver _archiveWithMarkupString:fromFrame:nodes:]):
+
+2008-03-27  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Move [WebDataSource mainResource] and [WebDataSource subresources] down into WebCore
+        as the push to core-ify WebArchives continues.
+
+        This patch also introduces a behavior change.  WebCore allows ArchiveResources with null or empty data.  
+        WebKit has had the inexplicable distinction of allowing empty Data in a WebResource, but not null.  
+        Since WebResource is API, I decided to leave it be to avoid a behavior change.  But internally created resources 
+        (as in "while archiving a page") are accepting of null or empty data.
+
+        This actually fixes a bug where not all subframes are archived, and resulted in a layout test change. 
+
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource mainResource]): Call DocumentLoader implementation
+        (-[WebDataSource subresources]): Ditto
+        * WebView/WebFrame.mm: Remove [WebFrame _getAllResourceDatas:andResponses:] as its only caller is obsolete
+        * WebView/WebFrameInternal.h:
+
+2008-03-27  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam
+
+        Change the "init from WebCore resource" version of WebResource to take PassRefPtr
+        (more efficient)
+
+        * WebView/WebResource.mm:
+        (-[WebResource _initWithCoreResource:]):
+        * WebView/WebResourceInternal.h:
+
+2008-03-26  Brady Eidson  <beidson@apple.com>
+
+        Build fix - accidentally checked in this change which was work in progress
+
+        * DOM/WebDOMOperations.mm:
+
+2008-03-26  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        When we create a WebArchive, we walk every node from some starting point, asking each node
+        along the way "What are your subresource URLs?"
+
+        That logic is currently in DOMNode in WebKitMac - this patch moves that ability down into
+        WebCore::Node
+
+        * DOM/WebDOMOperations.mm:
+        (-[DOMNode _subresourceURLs]): One generic DOMNode method can now handle all DOMNodes by
+          calling into individual WebCore::Node implementations
+        * DOM/WebDOMOperationsPrivate.h:
+
+2008-03-26  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mark Rowe
+
+        Part of the continued push to move WebArchive-related code down to WebCore, this
+        moves [WebDataSource subresourceForURL:] down to DocumentLoader->subresource()
+
+        * WebView/WebDataSource.mm:
+        (-[WebDataSource subresourceForURL:]): Call through to the DocumentLoader 
+
+        * WebView/WebFrame.mm: Remove [WebFrame _getData:andResponse:forURL:], as its only use
+          has now been ported down to WebCore
+        * WebView/WebFrameInternal.h:
+
+2008-03-26  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Brady Eidson.
+
+        Update FEATURE_DEFINES to be consistent with the other locations in which it is defined.
+
+        * Configurations/WebKit.xcconfig:
+
+2008-03-26  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by David Hyatt.
+
+        Make the Ahem font antialias correctly on Acid3 on Tiger.
+
+        * WebCoreSupport/WebSystemInterface.m:
+        (InitWebCoreSystemInterface):
+
+2008-03-26  Mark Rowe  <mrowe@apple.com>
+
+        Fix the Mac build.
+
+        * MigrateHeaders.make: Copy the newly generated header into the right place.
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Beth Dakin
+
+        Remove entirely unused internal method
+
+        * WebView/WebArchiver.h:
+        * WebView/WebArchiver.mm:
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        <rdar://problem/5819308> - View Source is empty when view webarchives
+
+        * WebCore.base.exp:
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::setParsedArchiveData):
+        (WebCore::DocumentLoader::parsedArchiveData):
+        * loader/DocumentLoader.h:
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::finishedLoadingDocument): Set the archive's MainResource data as the parsedArchiveData
+          in the DocumentLoader
+
+2008-03-25  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - fix http://bugs.webkit.org/show_bug.cgi?id=17933
+          Reopen All Windows From Last Session causes crash
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView layoutToMinimumPageWidth:maximumPageWidth:adjustingViewSize:]): Added null
+        check.
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Jon Honeycutt's rubberstamp
+
+        Fix a leak with the new WebArchive setup
+
+        * WebView/WebArchive.mm:
+        (-[WebArchivePrivate setCoreArchive:]): Deref() the old WebArchive
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Removed the concept of "pending archive resources" and the "archive resources delivery timer"
+        from WebFrameLoaderClient, as those concepts have been pushed into WebCore
+
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::WebFrameLoaderClient):
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Remove newly obsolete FrameLoaderClient methods
+
+        * WebCoreSupport/WebFrameLoaderClient.h:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Release build fix
+
+        * WebView/WebArchive.mm:
+        (-[WebArchive subresources]):
+        (-[WebArchive subframeArchives]):
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        <rdar://problem/4516169> - Support WebArchives on Windows
+        And paves the way for many future WebArchive bug fixes and enhancements
+
+        This change moves most of the real workhorse code about WebArchives into WebCore.  It maintains 
+        1-to-1 relationships between a few objects in WebCore and WebKit.  Such as:
+         * WebArchive <-> LegacyWebArchive
+         * WebResource <-> ArchiveResource
+         * WebUnarchivingState <-> ArchiveResourceCollection
+ 
+        The other biggest changes involve many FrameLoaderClient methods that existed soley for WebArchives 
+        and now exist in WebCore
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::clearUnarchivingState): Emptied - to be removed in a followup patch
+        (WebFrameLoaderClient::finalSetupForReplace):
+        (WebFrameLoaderClient::setDefersLoading):
+        (WebFrameLoaderClient::willUseArchive):
+        (WebFrameLoaderClient::isArchiveLoadPending):
+        (WebFrameLoaderClient::cancelPendingArchiveLoad):
+        (WebFrameLoaderClient::clearArchivedResources):
+        (WebFrameLoaderClient::createFrame):
+
+        * WebView/WebArchive.mm:
+        (+[WebArchivePrivate initialize]):
+        (-[WebArchivePrivate init]):
+        (-[WebArchivePrivate initWithCoreArchive:]):
+        (-[WebArchivePrivate coreArchive]):
+        (-[WebArchivePrivate setCoreArchive:]):
+        (-[WebArchivePrivate dealloc]):
+        (-[WebArchivePrivate finalize]):
+        (-[WebArchive init]):
+        (-[WebArchive initWithMainResource:subresources:subframeArchives:]):
+        (-[WebArchive initWithData:]):
+        (-[WebArchive initWithCoder:]):
+        (-[WebArchive encodeWithCoder:]):
+        (-[WebArchive mainResource]):
+        (-[WebArchive subresources]):
+        (-[WebArchive subframeArchives]):
+        (-[WebArchive data]):
+        (-[WebArchive _initWithCoreLegacyWebArchive:WebCore::]):
+        (-[WebArchive WebCore::]):
+        * WebView/WebArchiveInternal.h: Added.
+
+        * WebView/WebDataSource.mm:
+        (-[WebDataSourcePrivate dealloc]):
+        (-[WebDataSource _addSubframeArchives:]):
+        (-[WebDataSource _documentFragmentWithArchive:]):
+        (-[WebDataSource subresourceForURL:]):
+        (-[WebDataSource addSubresource:]):
+        * WebView/WebDataSourceInternal.h:
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame loadArchive:]):
+        * WebView/WebFrameInternal.h:
+
+        * WebView/WebHTMLRepresentation.mm:
+        (-[WebHTMLRepresentation finishedLoadingWithDataSource:]):
+
+        * WebView/WebResource.mm:
+        (+[WebResourcePrivate initialize]):
+        (-[WebResourcePrivate init]):
+        (-[WebResourcePrivate initWithCoreResource:]):
+        (-[WebResourcePrivate dealloc]):
+        (-[WebResourcePrivate finalize]):
+        (-[WebResource initWithCoder:]):
+        (-[WebResource encodeWithCoder:]):
+        (-[WebResource data]):
+        (-[WebResource URL]):
+        (-[WebResource MIMEType]):
+        (-[WebResource textEncodingName]):
+        (-[WebResource frameName]):
+        (-[WebResource _initWithCoreResource:WebCore::]):
+        (-[WebResource WebCore::]):
+        (-[WebResource _ignoreWhenUnarchiving]):
+        (-[WebResource _initWithData:URL:MIMEType:textEncodingName:frameName:response:copyData:]):
+        (-[WebResource _fileWrapperRepresentation]):
+        (-[WebResource _response]):
+        (-[WebResource _stringValue]):
+        * WebView/WebResourceInternal.h: Added.
+        * WebView/WebResourcePrivate.h:
+
+        * WebView/WebUnarchivingState.h: Removed.
+        * WebView/WebUnarchivingState.m: Removed.
+
+2008-03-24  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        Bug 18030: REGRESSION(r31236): Space bar fails to scroll down page
+        <http://bugs.webkit.org/show_bug.cgi?id=18030>
+
+        Rollout keyDown changes from r31236 -- fix for keyDown behaviour is
+        tracked by Bug 18057: keyDown incorrectly propagates up the frame tree
+        <http://bugs.webkit.org/show_bug.cgi?id=18057>
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView keyDown:]):
+
+2008-03-24  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej, landed by Brady
+
+        Bug 3580: iFrames Appear to be Cached
+        <http://bugs.webkit.org/show_bug.cgi?id=3580>
+
+        Bug 15486: REGRESSION: Reload causes WebKit to *forget* fragment URLs
+        <http://bugs.webkit.org/show_bug.cgi?id=15486>
+
+        Bug 15554: Reload causes <object> to use old data
+        <http://bugs.webkit.org/show_bug.cgi?id=15554>
+
+        If a page is reloaded, a child frame's URL can not be taken from a history item.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _loadURL:referrer:intoChild:]):
 
 2008-03-24  Darin Adler  <darin@apple.com>
 

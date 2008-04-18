@@ -25,9 +25,9 @@
 
 #include "ExecState.h"
 #include "JSGlobalObject.h"
-#include "Machine.h"
 #include "Parser.h"
 #include "debugger.h"
+#include <profiler/Profiler.h>
 #include <stdio.h>
 
 #if !PLATFORM(WIN_OS)
@@ -58,25 +58,78 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     return evaluate(exec, sourceURL, startingLineNumber, code.data(), code.size(), thisV);
 }
 
-Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisValue)
+Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisV)
 {
     JSLock lock;
+    
+    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
+
+    if (globalObject->recursion() >= 20)
+        return Completion(Throw, Error::create(exec, GeneralError, "Recursion too deep"));
     
     // parse the source code
     int sourceId;
     int errLine;
     UString errMsg;
-    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, code, codeLength, &sourceId, &errLine, &errMsg);
+
+#if JAVASCRIPT_PROFILING
+    Profiler::profiler()->willExecute(exec, sourceURL, startingLineNumber);
+#endif
+
+    RefPtr<ProgramNode> progNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, code, codeLength, &sourceId, &errLine, &errMsg);
+    
+    // notify debugger that source has been parsed
+    if (globalObject->debugger()) {
+        bool cont = globalObject->debugger()->sourceParsed(exec, sourceId, sourceURL, UString(code, codeLength), startingLineNumber, errLine, errMsg);
+        if (!cont)
+            return Completion(Break);
+    }
     
     // no program node means a syntax error occurred
-    if (!programNode)
+    if (!progNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL));
+    
+    exec->clearException();
+    
+    globalObject->incRecursion();
+    
+    JSObject* thisObj = globalObject;
+    
+    // "this" must be an object... use same rules as Function.prototype.apply()
+    if (thisV && !thisV->isUndefinedOrNull())
+        thisObj = thisV->toObject(exec);
+    
+    Completion res;
+    if (exec->hadException())
+        // the thisV->toObject() conversion above might have thrown an exception - if so, propagate it
+        res = Completion(Throw, exec->exception());
+    else {
+        // execute the code
+        InterpreterExecState newExec(globalObject, thisObj, progNode.get());
+        JSValue* value = progNode->execute(&newExec);
+        res = Completion(newExec.completionType(), value);
+    }
 
-    JSObject* thisObj = (!thisValue || thisValue->isUndefinedOrNull()) ? exec->dynamicGlobalObject() : thisValue->toObject(exec);
+#if JAVASCRIPT_PROFILING
+        Profiler::profiler()->didExecute(exec, sourceURL, startingLineNumber);
+#endif
 
-    JSValue* exception = 0;
-    JSValue* result = machine().execute(programNode.get(), exec, thisObj, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain(), &exception);
-    return exception ? Completion(Throw, exception) : Completion(Normal, result);
+    globalObject->decRecursion();
+    
+    if (shouldPrintExceptions() && res.complType() == Throw) {
+        JSLock lock;
+        ExecState* exec = globalObject->globalExec();
+        CString f = sourceURL.UTF8String();
+        CString message = res.value()->toObject(exec)->toString(exec).UTF8String();
+        int line = res.value()->toObject(exec)->get(exec, "line")->toUInt32(exec);
+#if PLATFORM(WIN_OS)
+        printf("%s line %d: %s\n", f.c_str(), line, message.c_str());
+#else
+        printf("[%d] %s line %d: %s\n", getpid(), f.c_str(), line, message.c_str());
+#endif
+    }
+
+    return res;
 }
 
 static bool printExceptions = false;

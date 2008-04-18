@@ -22,13 +22,13 @@
 
 #include "config.h"
 
-#include "CodeGenerator.h"
 #include "JSGlobalObject.h"
 #include "JSLock.h"
 #include "Parser.h"
 #include "array_object.h"
 #include "collector.h"
 #include "function.h"
+#include "InitializeThreading.h"
 #include "interpreter.h"
 #include "nodes.h"
 #include "object.h"
@@ -273,13 +273,10 @@ static bool prettyPrintScript(const UString& fileName, const Vector<char>& scrip
     return true;
 }
 
-static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint, bool dump)
+static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint)
 {
     GlobalObject* globalObject = new GlobalObject(arguments);
     Vector<char> script;
-
-    if (dump)
-        CodeGenerator::setDumpsGeneratedCode(true);
 
     bool success = true;
 
@@ -294,12 +291,6 @@ static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& ar
         else {
             Completion completion = Interpreter::evaluate(globalObject->globalExec(), fileName, 0, script.data());
             success = success && completion.complType() != Throw;
-            #ifndef NDEBUG
-            if (success)
-                printf("End: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
-            else
-                printf("Exception: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
-            #endif
         }
     }
     return success;
@@ -311,7 +302,7 @@ static void printUsageStatement()
     exit(-1);
 }
 
-static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint, bool& dump)
+static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint)
 {
     if (argc < 3)
         printUsageStatement();
@@ -329,10 +320,6 @@ static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Ve
             prettyPrint = true;
             continue;
         }
-        if (strcmp(arg, "-d") == 0) {
-            dump = true;
-            continue;
-        }
         if (strcmp(arg, "--") == 0) {
             ++i;
             break;
@@ -346,15 +333,16 @@ static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Ve
 
 int kjsmain(int argc, char** argv)
 {
+    initializeThreading();
+
     JSLock lock;
 
     bool prettyPrint = false;
-    bool dump = false;
     Vector<UString> fileNames;
     Vector<UString> arguments;
-    parseArguments(argc, argv, fileNames, arguments, prettyPrint, dump);
+    parseArguments(argc, argv, fileNames, arguments, prettyPrint);
 
-    bool success = runWithScripts(fileNames, arguments, prettyPrint, dump);
+    bool success = runWithScripts(fileNames, arguments, prettyPrint);
 
 #ifndef NDEBUG
     Collector::collect();

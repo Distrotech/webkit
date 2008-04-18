@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2007 Trolltech ASA
+    Copyright (C) 2007-2008 Trolltech ASA
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -36,7 +36,9 @@ namespace WebCore
 
 class QWebPage;
 class QWebSettingsPrivate;
+QT_BEGIN_NAMESPACE
 class QUrl;
+QT_END_NAMESPACE
 
 class QWEBKIT_EXPORT QWebSettings
 {
@@ -92,9 +94,14 @@ public:
 
     static void setIconDatabaseEnabled(bool enabled, const QString &location = QString());
     static bool iconDatabaseEnabled();
+    static void clearIconDatabase();
+    static QPixmap iconForUrl(const QUrl &url);
 
     static void setWebGraphic(WebGraphic type, const QPixmap &graphic);
     static QPixmap webGraphic(WebGraphic type);
+
+    static void setPageCacheCapacity(int numberOfPages);
+    static void setObjectCacheCapacities(int cacheMinDeadCapacity, int cacheMaxDead, int totalCapacity);
 
 private:
     friend class QWebPagePrivate;

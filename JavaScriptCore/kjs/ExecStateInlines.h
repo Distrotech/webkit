@@ -30,7 +30,7 @@
 
 namespace KJS  {
 
-    inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, 
+    inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, JSObject* globalThisValue,
                                 FunctionBodyNode* functionBodyNode, ExecState* callingExec,
                                 FunctionImp* func, const List& args)
         : m_globalObject(globalObject)
@@ -44,24 +44,35 @@ namespace KJS  {
         , m_scopeChain(func->scope())
         , m_inlineScopeChainNode(0, 0)
         , m_thisValue(thisObject)
+        , m_globalThisValue(globalThisValue)
         , m_iterationDepth(0)
         , m_switchDepth(0) 
         , m_codeType(FunctionCode)
     {
         ASSERT(m_scopeNode);
         
-        m_activation = 0;
-        m_variableObject = 0;
+        ActivationImp* activation = globalObject->pushActivation(this);
+        m_activation = activation;
+        m_localStorage = &activation->localStorage();
+        m_variableObject = activation;
+        if (functionBodyNode->usesEval() || functionBodyNode->needsClosure())
+            m_scopeChain.push(activation);
+        else {
+            m_inlineScopeChainNode.object = activation;
+            // The ScopeChain will ref this node itself, so we don't need to worry about
+            // anything trying to delete our scopenode
+            m_scopeChain.push(&m_inlineScopeChainNode);
+        }
     }
 
     inline ExecState::~ExecState()
     {
     }
 
-    inline FunctionExecState::FunctionExecState(JSGlobalObject* globalObject, JSObject* thisObject, 
+    inline FunctionExecState::FunctionExecState(JSGlobalObject* globalObject, JSObject* thisObject, JSObject* globalThisValue,
                                                 FunctionBodyNode* functionBodyNode, ExecState* callingExec,
                                                 FunctionImp* func, const List& args)
-        : ExecState(globalObject, thisObject, functionBodyNode, callingExec, func, args)
+        : ExecState(globalObject, thisObject, globalThisValue, functionBodyNode, callingExec, func, args)
     {
         m_globalObject->activeExecStates().append(this);
     }
@@ -70,6 +81,14 @@ namespace KJS  {
     {
         ASSERT(m_globalObject->activeExecStates().last() == this);
         m_globalObject->activeExecStates().removeLast();
+        
+        if (m_activation->needsPop())
+            m_globalObject->popActivation();
+        
+        if (m_inlineScopeChainNode.next) {
+            m_scopeChain.popInlineScopeNode();
+            m_inlineScopeChainNode.next = 0;
+        }
     }
 
 } // namespace KJS

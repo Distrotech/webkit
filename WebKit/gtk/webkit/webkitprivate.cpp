@@ -24,10 +24,11 @@
 #include "FrameLoader.h"
 #include "FrameLoaderClientGtk.h"
 #include "Logging.h"
-#include "MainThread.h"
 #include "NotImplemented.h"
+#include "PageCache.h"
 #include "Pasteboard.h"
 #include "PasteboardHelperGtk.h"
+#include <kjs/InitializeThreading.h>
 
 #if ENABLE(DATABASE)
 #include "DatabaseTracker.h"
@@ -90,8 +91,13 @@ void webkit_init()
         return;
     isInitialized = true;
 
-    WebCore::initializeThreadingAndMainThread();
+    KJS::initializeThreading();
     WebCore::InitializeLoggingChannelsIfNecessary();
+
+    // Page cache capacity (in pages). Comment from Mac port:
+    // (Research indicates that value / page drops substantially after 3 pages.)
+    // FIXME: Expose this with an API and/or calculate based on available resources
+    WebCore::pageCache()->setCapacity(3);
 
 #if ENABLE(DATABASE)
     // FIXME: It should be possible for client applications to override this default location

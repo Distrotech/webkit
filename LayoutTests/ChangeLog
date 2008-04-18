@@ -1,3 +1,1027 @@
+2008-04-17  Antti Koivisto  <antti@apple.com>
+
+        Update SVG animation test results.
+
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-30-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-40-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-41-t-expected.txt:
+
+2008-04-17  Antti Koivisto  <antti@apple.com>
+
+        Re-enable animation tests on windows.
+
+        * platform/win/Skipped:
+
+2008-04-17  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Anders Carlsson.
+
+        Update test result for additon of XMLHttpRequest constants.
+
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-17  Anders Carlsson  <andersca@apple.com>
+
+        Add applicationCache object.
+        
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-17  Adam Roben  <aroben@apple.com>
+
+        Add some crashing tests to the Skipped file
+
+        * platform/win/Skipped:
+
+2008-04-17  Dean Jackson  <dino@apple.com>
+
+        Reviewed by Hyatt.
+
+        Test for <rdar://problem/5849968> translate method should have Y=0 when only X is present
+
+        * fast/css/transform-default-parameter.html: Added.
+        * platform/mac/fast/css/transform-default-parameter-expected.checksum: Added.
+        * platform/mac/fast/css/transform-default-parameter-expected.png: Added.
+        * platform/mac/fast/css/transform-default-parameter-expected.txt: Added.
+
+2008-04-16  Darin Adler  <darin@apple.com>
+
+        Earlier version reviewed by Mitz.
+
+        - test for <rdar://problem/5858617> REGRESSION (r21452-Safari 3.1):
+          Safari does not find words containing ß (German letter sharp-s)
+
+        * fast/text/find-case-folding-expected.txt: Added.
+        * fast/text/find-case-folding.html: Added.
+
+2008-04-16  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Alexey.
+        
+        Test for <rdar://problem/5863728>
+        REGRESSION: Garbage character shown in temperatures in the Weather widget (encoding issue with degree symbol)
+
+        * fast/encoding/resources/utf-8.css: Added.
+        * fast/encoding/resources/utf-8.js: Added.
+        * fast/encoding/preload-encoding-expected.txt: Added.
+        * fast/encoding/preload-encoding.html: Added.
+
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Adam.
+
+        http://bugs.webkit.org/show_bug.cgi?id=18259
+        XML+XSLT pages in iframe contains document.location of a parent window
+
+        * fast/xsl/resources/subframe-location-frame.xml: Added.
+        * fast/xsl/resources/subframe-location-frame.xsl: Added.
+        * fast/xsl/subframe-location-expected.txt: Added.
+        * fast/xsl/subframe-location.html: Added.
+
+2008-04-15  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/5665299> REGRESSION (r27369): Paste text into a contenteditable div creates a contenteditable div for each line (16661)
+
+        * editing/pasteboard/5665299-expected.txt: Added.
+        * editing/pasteboard/5665299.html: Added.
+
+2008-04-15  Anatoli Papirovski  <apapirovski@mac.com>
+
+        Reviewed by hyatt
+
+        Added test case for background-origin calculation on root elements
+        (background-repeat and background-size), r10794 [CSS1 + CSS3]
+
+        * fast/backgrounds/background-origin-root-element.html: Added.
+        * platform/mac/fast/backgrounds/background-origin-root-element-expected.checksum: Added.
+        * platform/mac/fast/backgrounds/background-origin-root-element-expected.png: Added.
+        * platform/mac/fast/backgrounds/background-origin-root-element-expected.txt: Added.
+
+2008-04-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        Hook up event dispatching for window.localStorage changes.
+        Now a meaningful LayoutTest suite can be landed for window.localStorage.
+
+        * storage/domstorage/localstorage/enumerate-storage-expected.txt: Added.
+        * storage/domstorage/localstorage/enumerate-storage.html: Added.
+        * storage/domstorage/localstorage/iframe-events-expected.txt: Added.
+        * storage/domstorage/localstorage/iframe-events.html: Added.
+        * storage/domstorage/localstorage/index-get-and-set-expected.txt: Added.
+        * storage/domstorage/localstorage/index-get-and-set.html: Added.
+        * storage/domstorage/localstorage/onstorage-attribute-markup-expected.txt: Added.
+        * storage/domstorage/localstorage/onstorage-attribute-markup.html: Added.
+        * storage/domstorage/localstorage/onstorage-attribute-setattribute-expected.txt: Added.
+        * storage/domstorage/localstorage/onstorage-attribute-setattribute.html: Added.
+        * storage/domstorage/localstorage/resources: Added.
+        * storage/domstorage/localstorage/resources/clearLocalStorage.js: Added.
+        * storage/domstorage/localstorage/resources/iframe-events-second.html: Added.
+        * storage/domstorage/localstorage/resources/window-open-second.html: Added.
+        * storage/domstorage/localstorage/simple-events-expected.txt: Added.
+        * storage/domstorage/localstorage/simple-events.html: Added.
+        * storage/domstorage/localstorage/simple-usage-expected.txt: Added.
+        * storage/domstorage/localstorage/simple-usage.html: Added.
+        * storage/domstorage/localstorage/window-open-expected.txt: Added.
+        * storage/domstorage/localstorage/window-open.html: Added.
+
+2008-04-14  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        As underpinnings for LocalStorage are laid, it is exposed to the dom - update the relevant layout tests.
+
+        * fast/dom/Window/window-properties-expected.txt:
+        * storage/domstorage/window-attributes-exist-expected.txt:
+
+2008-04-14  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Ap.
+
+        Layout test for http://bugs.webkit.org/show_bug.cgi?id=17403:
+        WebKit Creates Invalid Xhtml Links with Ajax
+
+        * fast/parser/ampersand-escaped-parseXMLFragment-expected.txt: Added.
+        * fast/parser/ampersand-escaped-parseXMLFragment.xhtml: Added.
+
+2008-04-14  Rob Buis  <buis@kde.org>
+
+        Reviewed by Eric.
+
+        Testcase for:
+        http://bugs.webkit.org/show_bug.cgi?id=18230
+        tspan in link not working
+
+        * platform/mac/svg/custom/text-linking-expected.txt: Added.
+        * svg/custom/text-linking.svg: Added.
+
+2008-04-11  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - revert incorrect expected results from r31324
+
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-02-t-expected.txt:
+
+2008-04-10  Alexey Proskuryakov  <ap@webkit.org>
+
+        https://bugs.webkit.org/show_bug.cgi?id=18402
+        REGRESSION: visited element handling is incorrect in nested join/toString calls
+
+        * fast/js/array-tostring-and-join-expected.txt: Added.
+        * fast/js/array-tostring-and-join.html: Added.
+        * fast/js/resources/array-tostring-and-join.js: Added.
+
+2008-04-11  Rob Buis  <buis@kde.org>
+
+        Reviewed by Eric.
+
+        Testcase for:
+        http://bugs.webkit.org/show_bug.cgi?id=18340
+        Elements with display="none" in a <clipPath> still contribute to clipping path
+
+        * platform/mac/svg/custom/clip-path-display-none-child-expected.checksum: Added.
+        * platform/mac/svg/custom/clip-path-display-none-child-expected.png: Added.
+        * platform/mac/svg/custom/clip-path-display-none-child-expected.txt: Added.
+        * svg/custom/clip-path-display-none-child.svg: Added.
+
+2008-04-10  Antti Koivisto  <antti@apple.com>
+
+        Update SVG animation test results.
+
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-02-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-02-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-03-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-03-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-04-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-04-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-05-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-05-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-09-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-09-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-10-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-10-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-11-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-11-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-12-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-12-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-30-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-30-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-31-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-31-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-33-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-33-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-34-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-34-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-39-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-39-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-40-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-40-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-41-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-41-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-46-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-46-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-60-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-60-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-62-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-62-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-63-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-63-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-64-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-64-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-65-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-65-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-66-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-66-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-67-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-67-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-68-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-68-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-69-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-69-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-70-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-70-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-77-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-77-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-78-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-78-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-81-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-81-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-82-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-82-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-85-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-85-t-expected.png:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-02-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-03-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-04-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-05-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-09-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-10-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-11-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-12-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-30-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-31-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-33-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-34-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-39-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-40-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-41-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-46-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-60-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-62-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-63-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-64-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-65-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-66-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-67-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-68-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-69-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-70-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-77-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-78-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-81-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-82-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-85-t-expected.txt:
+
+2008-04-10  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Dan Bernstein.
+
+        Added test for <rdar://5815856> CrashTracer: [USER] 8384 crashes in WebCore::Widget::getView const + 6
+
+        * fast/events/mouseout-dead-subframe-expected.txt: Added.
+        * fast/events/mouseout-dead-subframe.html: Added.
+
+2008-04-10  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mitz Pettel
+
+        DOM Storage layout test cleanup
+
+        * storage/domstorage/sessionstorage/iframe-events.html: Check for the layoutTestController in a manner that
+          won't confuse Firefox
+        * storage/domstorage/sessionstorage/resources/clearSessionStorage.js: Don't mutate while iterating!  Clea
+          the sessionStorage properly
+
+2008-04-09  Brady Eidson  <beidson@apple.com>
+
+        Forgot to check in this updated result with my Storage-enumeration change
+        earlier today
+
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mitz Pettel
+
+        Add the "onstorage" attribute for the body element to provide easy setup of StorageEvent handling.
+
+        * storage/domstorage/sessionstorage/onstorage-attribute-markup-expected.txt: Added.
+        * storage/domstorage/sessionstorage/onstorage-attribute-markup.html: Added.
+        * storage/domstorage/sessionstorage/onstorage-attribute-setattribute-expected.txt: Added.
+        * storage/domstorage/sessionstorage/onstorage-attribute-setattribute.html: Added.
+
+2008-04-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        When enumerating a Storage object, the Storage built-ins should not be included, but the 
+        prototype chain SHOULD be included.
+
+        Updated the layout test to test this.
+        * storage/domstorage/sessionstorage/enumerate-storage-expected.txt:
+        * storage/domstorage/sessionstorage/enumerate-storage.html:
+
+2008-04-09  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        - fix more Windows layout test regressions from the font-weight patch 
+
+        The patch silently introduced the ability to select some fonts 
+        by their full name on Windows. Firefox and IE allow the same.
+        This made these tests use different, Windows-only fonts on
+        Windows. The patch removes references to these fonts from the 
+        tests.
+
+        * tables/mozilla/bugs/bug4093.html:
+        * tables/mozilla/bugs/bug43854-1.html:
+        * tables/mozilla/bugs/bug8381.html:
+        * tables/mozilla/core/bloomberg.html:
+
+2008-04-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Per the HTML5 spec, enumerating a Storage object should walk the keys in the storage area, 
+        and should not return the built-in properties.
+
+        This test adds some keys to sessionStorage, enumerates the sessionStorage object, and logs 
+        the sorted result.  It should *not* contain the built in properties of the Storage object
+
+        * storage/domstorage/sessionstorage/enumerate-storage-expected.txt: Added.
+        * storage/domstorage/sessionstorage/enumerate-storage.html: Added.
+
+2008-04-08  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Adam
+
+        * platform/win/Skipped: SessionStorage tests pass fine on Windows, as long as the feature is enabled!
+
+2008-04-08  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Antti Koivisto.
+
+        - test for http://bugs.webkit.org/show_bug.cgi?id=18172
+          REGRESSION (r31114-31132): Page renders structured almost horizontally (at flickr.com)
+
+        * fast/block/float/br-with-clear-2.html: Added.
+        * platform/mac/fast/block/float/br-with-clear-2-expected.checksum: Added.
+        * platform/mac/fast/block/float/br-with-clear-2-expected.png: Added.
+        * platform/mac/fast/block/float/br-with-clear-2-expected.txt: Added.
+
+2008-04-08  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Mitzpettel
+
+        Fixed http://bugs.webkit.org/show_bug.cgi?id=18302
+        -WebArchive subresources dump in random order, intermittent failures
+
+        Now that a DRT fix has set the order, these 3 tests needed new results
+
+        * webarchive/test-css-import-expected.txt:
+        * webarchive/test-duplicate-resources-expected.txt:
+        * webarchive/test-frameset-expected.txt:
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Geoff Garen
+
+        Forgot to update these results after I added the Prototype
+
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        I can't fathom why the new storage tests could be hanging, but alas they are on Windows
+        Disable until I can figure out why
+
+        * platform/win/Skipped:
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        Begrudgingly reviewed by Sam Weinig
+
+        Initial suite of layout tests for HTML5 key/value SessionStorage (<rdar://problem/5797684>)
+
+        * fast/dom/Window/window-properties-expected.txt:
+        * storage/domstorage: Added.
+        * storage/domstorage/localstorage: Added.
+        * storage/domstorage/sessionstorage: Added.
+        * storage/domstorage/sessionstorage/iframe-events-expected.txt: Added.
+        * storage/domstorage/sessionstorage/iframe-events.html: Added.
+        * storage/domstorage/sessionstorage/index-get-and-set-expected.txt: Added.
+        * storage/domstorage/sessionstorage/index-get-and-set.html: Added.
+        * storage/domstorage/sessionstorage/resources: Added.
+        * storage/domstorage/sessionstorage/resources/clearSessionStorage.js: Added.
+        * storage/domstorage/sessionstorage/resources/iframe-events-second.html: Added.
+        * storage/domstorage/sessionstorage/resources/window-open-second.html: Added.
+        * storage/domstorage/sessionstorage/simple-events-expected.txt: Added.
+        * storage/domstorage/sessionstorage/simple-events.html: Added.
+        * storage/domstorage/sessionstorage/simple-usage-expected.txt: Added.
+        * storage/domstorage/sessionstorage/simple-usage.html: Added.
+        * storage/domstorage/sessionstorage/window-open-expected.txt: Added.
+        * storage/domstorage/sessionstorage/window-open.html: Added.
+        * storage/domstorage/window-attributes-exist-expected.txt: Added.
+        * storage/domstorage/window-attributes-exist.html: Added.
+
+2008-04-07  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Dan Bernstein.
+
+        <rdar://problem/5574946> Inline frame ISO-8859-1 even though parent character set is UTF-8
+
+        * fast/loader/inherit-charset-to-empty-frame-expected.txt: Added.
+        * fast/loader/inherit-charset-to-empty-frame.html: Added.
+
+2008-04-05  Rob Buis  <buis@kde.org>
+
+        Reviewed by Eric.
+
+        Testcases for:
+        http://bugs.webkit.org/show_bug.cgi?id=17129
+        Incorrect style resolution in CSS styled SVG, with multiple style sheets
+
+        * fast/css/xml-stylesheet-alternate-processing-expected.txt: Added.
+        * fast/css/xml-stylesheet-alternate-processing.xhtml: Added.
+        * fast/css/xml-stylesheet-title-processing-expected.txt: Added.
+        * fast/css/xml-stylesheet-title-processing.xhtml: Added.
+
+2008-04-05  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - repaint test for <rdar://problem/5843719> Excessive repainting of cells in tables with non-auto height
+
+        * fast/repaint/table-two-pass-layout-overpaint.html: Added.
+        * platform/mac/fast/repaint/table-two-pass-layout-overpaint-expected.checksum: Added.
+        * platform/mac/fast/repaint/table-two-pass-layout-overpaint-expected.png: Added.
+        * platform/mac/fast/repaint/table-two-pass-layout-overpaint-expected.txt: Added.
+
+2008-04-03  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by NOBODY (Rollout).
+
+        Rollout layout test changes for r31566
+
+2008-04-03  Brady Eidson  <beidson@apple.com>
+
+        Fix a tab into 4-spaces instead
+
+        * webarchive/test-css-import-expected.txt:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Add a Qt specific result for bad-scheme-subframe-expected.txt
+        * To match the mac-port we would have to return IgnoreNavigationRequest for
+        schemes/URLs not supported by the QNetworkAccessManager in QWebPage::navigationRequested
+        but we can't do that because QNetworkAccessManager does not expose a list of supported
+        schemes and operations. So in contrast to the mac we will try to load the frame and fail.
+        
+
+        * platform/qt/http/tests/loading/bad-scheme-subframe-expected.txt: Added.
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Fix http/tests/loading/simple-subframe.html by adding a test result. The result is
+        quite similar to the one of the mac port.
+        
+
+        * platform/qt/http/tests/loading/simple-subframe-expected.txt: Added.
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Remove dumpFrameLoadCallbacks from simple-subframe.html because it is
+        located in a directory with the name "loading". And this will autoamtically
+        enable dumping.
+        * Remove this method from the LayoutTestController as it is unused now and this
+        avoids adding it to the DRT of the Qt port.
+        
+
+        * http/tests/loading/simple-subframe.html:
+
+2008-04-02  Brady Eidson  <beidson@apple.com>
+
+        Written by David Kilzer, tweaked by Brady, Reviewed by Mitz Pettel
+
+        - test for http://bugs.webkit.org/show_bug.cgi?id=11839
+          Webarchive fails to save CSS files in @import statements
+
+        The idea is to <link> to a CSS file which @imports another CSS file,
+        and also @import a CSS file inside a <style> element, which also @imports another CSS file
+
+        Then make sure all 4 of the css files are in the resulting webarchive
+
+        * webarchive/resources/test-css-import-recurse.css: Added.
+        * webarchive/resources/test-css-import.css: Added.
+        * webarchive/resources/test-css-link-recurse.css: Added.
+        * webarchive/resources/test-css-link.css: Added.
+        * webarchive/test-css-import-expected.txt: Added.
+        * webarchive/test-css-import.html: Added.
+
+2008-04-02  Nikolas Zimmermann  <zimmermann@kde.org>
+
+        Reviewed by Oliver.
+
+        Fix all existing tests in svg/dynamic-updates to actually reflect repainting changes, by
+        removing the timing dependency. Instead model them like frame-getSVGDocument.html by
+        not including the <script src="js-test-post.js"> element within the TEMPLATE.html but
+        by dynamically injecting it, if the test actually finished.
+
+        * platform/mac-leopard/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.png:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/text-text-06-t-expected.checksum:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/text-text-06-t-expected.png:
+        * platform/mac-leopard/svg/custom/marker-getPropertyValue-expected.checksum: Added.
+        * platform/mac-leopard/svg/custom/marker-getPropertyValue-expected.png: Added.
+        * platform/mac-leopard/svg/custom/svg-xml-dom-sync-expected.checksum: Added.
+        * platform/mac-leopard/svg/custom/svg-xml-dom-sync-expected.png: Added.
+        * platform/mac-leopard/svg/custom/text-xy-updates-expected.checksum: Added.
+        * platform/mac-leopard/svg/custom/text-xy-updates-expected.png: Added.
+        * platform/mac-leopard/svg/dom/altGlyph-dom-expected.checksum: Added.
+        * platform/mac-leopard/svg/dom/altGlyph-dom-expected.png: Added.
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-cx-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-cx-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-cy-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-cy-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-r-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-dom-r-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-cx-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-cx-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-cy-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-cy-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-r-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGCircleElement-svgdom-r-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-cx-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-cx-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-cy-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-cy-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-rx-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-rx-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-ry-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-dom-ry-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-cx-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-cx-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-cy-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-cy-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-rx-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-rx-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-ry-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGEllipseElement-svgdom-ry-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-dom-height-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-dom-height-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-dom-width-attr-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-dom-width-attr-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-svgdom-height-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-svgdom-height-prop-expected.png:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-svgdom-width-prop-expected.checksum:
+        * platform/mac-leopard/svg/dynamic-updates/SVGForeignObjectElement-svgdom-width-prop-expected.png:
+        * platform/mac-leopard/svg/text/kerning-expected.checksum: Added.
+        * platform/mac-leopard/svg/text/kerning-expected.png: Added.
+        * platform/mac-leopard/svg/text/multichar-glyph-expected.checksum: Added.
+        * platform/mac-leopard/svg/text/multichar-glyph-expected.png: Added.
+        * platform/mac-leopard/svg/text/text-text-06-t-expected.checksum:
+        * platform/mac-leopard/svg/text/text-text-06-t-expected.png:
+        * svg/custom/resources/svg-xml-dom-sync.js: Added.
+        * svg/custom/svg-xml-dom-sync-expected.txt: Added.
+        * svg/custom/svg-xml-dom-sync.html: Added.
+        * svg/dynamic-updates/SVGAElement-dom-href-attr.html:
+        * svg/dynamic-updates/SVGAElement-dom-target-attr.html:
+        * svg/dynamic-updates/SVGAElement-svgdom-href-prop.html:
+        * svg/dynamic-updates/SVGAElement-svgdom-target-prop.html:
+        * svg/dynamic-updates/SVGCircleElement-dom-cx-attr-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-dom-cx-attr.html:
+        * svg/dynamic-updates/SVGCircleElement-dom-cy-attr-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-dom-cy-attr.html:
+        * svg/dynamic-updates/SVGCircleElement-dom-r-attr-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-dom-r-attr.html:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-cx-prop-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-cx-prop.html:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-cy-prop-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-cy-prop.html:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-r-prop-expected.txt:
+        * svg/dynamic-updates/SVGCircleElement-svgdom-r-prop.html:
+        * svg/dynamic-updates/SVGClipPathElement-dom-clipPathUnits-attr.html:
+        * svg/dynamic-updates/SVGClipPathElement-svgdom-clipPathUnits-prop.html:
+        * svg/dynamic-updates/SVGEllipseElement-dom-cx-attr-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-dom-cx-attr.html:
+        * svg/dynamic-updates/SVGEllipseElement-dom-cy-attr-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-dom-cy-attr.html:
+        * svg/dynamic-updates/SVGEllipseElement-dom-rx-attr-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-dom-rx-attr.html:
+        * svg/dynamic-updates/SVGEllipseElement-dom-ry-attr-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-dom-ry-attr.html:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-cx-prop-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-cx-prop.html:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-cy-prop-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-cy-prop.html:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-rx-prop-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-rx-prop.html:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-ry-prop-expected.txt:
+        * svg/dynamic-updates/SVGEllipseElement-svgdom-ry-prop.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-height-attr-expected.txt:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-height-attr.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-width-attr-expected.txt:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-width-attr.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-x-attr.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-dom-y-attr.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-height-prop-expected.txt:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-height-prop.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-width-prop-expected.txt:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-width-prop.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-x-prop.html:
+        * svg/dynamic-updates/SVGForeignObjectElement-svgdom-y-prop.html:
+        * svg/dynamic-updates/resources/SVGAElement-dom-href-attr.js:
+        * svg/dynamic-updates/resources/SVGAElement-dom-target-attr.js:
+        * svg/dynamic-updates/resources/SVGAElement-svgdom-href-prop.js:
+        * svg/dynamic-updates/resources/SVGAElement-svgdom-target-prop.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-dom-cx-attr.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-dom-cy-attr.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-dom-r-attr.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-svgdom-cx-prop.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-svgdom-cy-prop.js:
+        * svg/dynamic-updates/resources/SVGCircleElement-svgdom-r-prop.js:
+        * svg/dynamic-updates/resources/SVGClipPathElement-dom-clipPathUnits-attr.js:
+        * svg/dynamic-updates/resources/SVGClipPathElement-svgdom-clipPathUnits-prop.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-dom-cx-attr.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-dom-cy-attr.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-dom-rx-attr.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-dom-ry-attr.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-svgdom-cx-prop.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-svgdom-cy-prop.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-svgdom-rx-prop.js:
+        * svg/dynamic-updates/resources/SVGEllipseElement-svgdom-ry-prop.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-dom-height-attr.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-dom-width-attr.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-dom-x-attr.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-dom-y-attr.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-svgdom-height-prop.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-svgdom-width-prop.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-svgdom-x-prop.js:
+        * svg/dynamic-updates/resources/SVGForeignObjectElement-svgdom-y-prop.js:
+        * svg/dynamic-updates/resources/SVGTestCase.js:
+        * svg/dynamic-updates/resources/TEMPLATE.html:
+
+2008-03-25  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by darin.
+        
+        Add test for /^bar/ optimization.
+        http://bugs.webkit.org/show_bug.cgi?id=18086
+
+        * fast/js/ascii-regexp-subject-expected.txt: Copied from LayoutTests/fast/xpath/4XPath/Borrowed/kd_20010423-expected.txt.
+        * fast/js/ascii-regexp-subject.html: Copied from LayoutTests/fast/js/typeof-syntax.html.
+        * fast/js/resources/ascii-regexp-subject.js: Added.
+
+2008-03-31  Rob Buis  <buis@kde.org>
+
+        Reviewed by Darin.
+
+        Testcase for:
+        http://bugs.webkit.org/show_bug.cgi?id=15595
+        marker property doesn't show up correctly as "shorthand" in inspector
+
+        * svg/custom/marker-getPropertyValue-expected.txt: Added.
+        * svg/custom/marker-getPropertyValue.svg: Added.
+
+2008-03-30  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        - repaint test for http://bugs.webkit.org/show_bug.cgi?id=18115
+          REGRESSION (r31250): Incomplete repaint of GoogleReader sidebar while reading unread posts
+
+        * fast/repaint/lines-with-layout-delta.html: Added.
+        * platform/mac/fast/repaint/lines-with-layout-delta-expected.checksum: Added.
+        * platform/mac/fast/repaint/lines-with-layout-delta-expected.png: Added.
+        * platform/mac/fast/repaint/lines-with-layout-delta-expected.txt: Added.
+
+2008-03-30  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+
+        - test for an assertion failure in CSSParser.cpp's
+          equalIgnoringCase() when parsing certain transforms.
+
+        * fast/css/transform-function-lowercase-assert-expected.txt: Added.
+        * fast/css/transform-function-lowercase-assert.html: Added.
+
+2008-03-30  Rob Buis  <buis@kde.org>
+
+        Reviewed by Oliver.
+
+        Testcase for:
+        http://bugs.webkit.org/show_bug.cgi?id=17633
+        SVG: modifying x & y attribute of text element from JS fails
+
+        * platform/mac/svg/custom/text-xy-updates-expected.txt: Added.
+        * svg/custom/text-xy-updates.svg: Added.
+
+2008-03-30  Rob Buis  <buis@kde.org>
+
+        Reviewed by Adam Roben.
+
+        Fix wrong id.
+
+        * svg/custom/tref-update.svg:
+
+2008-03-29  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Brady Eidson.
+
+        Test for crash when canceling a resource load while port blocked failure
+        timer is going
+
+        * fast/loader/cancel-load-during-port-block-timer-expected.txt: Added.
+        * fast/loader/cancel-load-during-port-block-timer.html: Added.
+
+2008-03-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 17924: Crash in KJS::ConstDeclNode::evaluate with |with| and |const|
+        <http://bugs.webkit.org/show_bug.cgi?id=17924>
+
+        Add test cases for const inside with
+
+        * fast/js/const-expected.txt:
+        * fast/js/resources/const.js:
+
+2008-03-28  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - pixel test for a percentage background position regression from r31389
+
+        * fast/backgrounds/background-position-1.html: Added.
+        * platform/mac/fast/backgrounds/background-position-1-expected.checksum: Added.
+        * platform/mac/fast/backgrounds/background-position-1-expected.png: Added.
+        * platform/mac/fast/backgrounds/background-position-1-expected.txt: Added.
+
+2008-03-28  Stephanie Lewis  <slewis@apple.com>
+
+        Update Windows Skipped list.  Bugs filed.
+
+        * platform/win/Skipped:
+
+2008-03-28  Darin Adler  <darin@apple.com>
+
+        Reviewed by Sam.
+
+        * fast/encoding/invalid-xml-expected.txt: Update to reflect a true success.
+        * fast/encoding/resources/invalid-xml.js: Eliminate race condition by not ending
+        the test until the js-test-post.js script has loaded.
+
+2008-03-28  Alexey Proskuryakov  <ap@webkit.org>
+
+        Rubber-stamped by Brady.
+
+        Enable server-side includes via AddHandler, hopefully making Apache 1.3 happy.
+
+        * http/tests/misc/.htaccess:
+        * http/tests/misc/resources/acid3/.htaccess:
+
+2008-03-28  Alexey Proskuryakov  <ap@webkit.org>
+
+        Not reviewed.
+
+        Enable mod_include for acid3.html - the previous check-in only had it in resources
+        subdirectory.
+
+        * http/tests/misc/.htaccess: Added.
+
+2008-03-28  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by mjs.
+
+        Add Acid3 test as an http test
+        http://bugs.webkit.org/show_bug.cgi?id=18176
+
+        * http/tests/misc/acid3-expected.checksum: Added.
+        * http/tests/misc/acid3-expected.png: Added.
+        * http/tests/misc/acid3-expected.txt: Added.
+        * http/tests/misc/acid3.html: Added.
+        * http/tests/misc/resources/acid3/.htaccess: Added.
+        * http/tests/misc/resources/acid3/empty.css: Added.
+        * http/tests/misc/resources/acid3/empty.html: Added.
+        * http/tests/misc/resources/acid3/empty.png: Added.
+        * http/tests/misc/resources/acid3/empty.txt: Added.
+        * http/tests/misc/resources/acid3/empty.xml: Added.
+        * http/tests/misc/resources/acid3/font.svg: Added.
+        * http/tests/misc/resources/acid3/font.ttf: Added.
+        * http/tests/misc/resources/acid3/instructions.inc: Added.
+        * http/tests/misc/resources/acid3/reference.html: Added.
+        * http/tests/misc/resources/acid3/reference.png: Added.
+        * http/tests/misc/resources/acid3/support-a.png.404: Added.
+        * http/tests/misc/resources/acid3/support-b.png: Added.
+        * http/tests/misc/resources/acid3/support-c.png: Added.
+        * http/tests/misc/resources/acid3/svg.xml: Added.
+        * http/tests/misc/resources/acid3/xhtml.1: Added.
+        * http/tests/misc/resources/acid3/xhtml.2: Added.
+        * http/tests/misc/resources/acid3/xhtml.3: Added.
+
+2008-03-27  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Adam Roben.
+
+        Tests for <rdar://problem/5826236> Regular expressions with large nested repetition counts can have their
+        compiled length calculated incorrectly.
+
+        * fast/js/regexp-overflow-expected.txt:
+        * fast/js/resources/regexp-overflow.js:
+
+2008-03-27  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Updated results, as we now more consistently archive empty frames/empty resources
+
+        * webarchive/archive-empty-frame-source-expected.txt:
+
+2008-03-26  Sam Weinig  <sam@webkit.org>
+
+        Rubber-stamped by Adam Roben.
+
+        Update test result.
+
+        * fast/dom/Window/window-special-properties-expected.txt:
+
+2008-03-26  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Hyatt and Adam.
+        
+        - new test case and test fixes for SVG text kerning
+
+        * svg/text/kerning.svg: Added.
+        * platform/mac/svg/text/kerning-expected.txt: Added.
+
+        * platform/mac/svg/W3C-SVG-1.1/fonts-kern-01-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/masking-mask-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/render-groups-03-t-expected.txt:
+        * platform/mac/svg/custom/scrolling-embedded-svg-file-image-repaint-problem-expected.txt:
+
+2008-03-26  Stephanie Lewis  <slewis@apple.com>
+
+        Not Reviewed.
+
+        Move storage tests to Skipped list since they hang 80% of the time.  See <rdar://problem/5787763>.
+
+        * platform/win/Skipped:
+
+2008-03-26  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - test updates for "SVG multichar glyph matching matches longest instead of first (affects Acid3 test 79)"
+        http://bugs.webkit.org/show_bug.cgi?id=18118
+
+        These test cases were already checking for this exact bug and now
+        render correctly.
+        
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-02-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt:
+
+o2008-03-26  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by darin.
+
+        Fix, makes us pass Test 70
+        XML documents should be strict about encoding checks
+        http://bugs.webkit.org/show_bug.cgi?id=17079
+
+        * fast/encoding/invalid-xml-expected.txt: Added.
+        * fast/encoding/invalid-xml.html: Copied from LayoutTests/fast/dom/resources/TEMPLATE.html.
+        * fast/encoding/resources/invalid-xml-shift-jis.xml: Added.
+        * fast/encoding/resources/invalid-xml-utf16.xml: Added.
+        * fast/encoding/resources/invalid-xml-utf8.xml: Added.
+        * fast/encoding/resources/invalid-xml-x-mac-thai.xml: Added.
+        * fast/encoding/resources/invalid-xml.js: Added.
+
+2008-03-26  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - tests for http://bugs.webkit.org/show_bug.cgi?id=17994
+          REGRESSION (523-525+) View not updated when changing CSS size via JavaScript
+        - and http://bugs.webkit.org/show_bug.cgi?id=18063
+          REGRESSION (r31250): Small bug that just cropped up in WebKit r31275
+
+        * fast/repaint/subtree-root-clip-2.html: Added.
+        * fast/repaint/subtree-root-clip-3.html: Added.
+        * fast/repaint/subtree-root-clip.html: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-2-expected.checksum: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-2-expected.png: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-2-expected.txt: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-3-expected.checksum: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-3-expected.png: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-3-expected.txt: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-expected.checksum: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-expected.png: Added.
+        * platform/mac/fast/repaint/subtree-root-clip-expected.txt: Added.
+
+2008-03-24  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Eric.
+
+        - test case and new results for "SVGTextElement.getStartPositionOfChar does not correctly account for multichar glyphs"
+        http://bugs.webkit.org/show_bug.cgi?id=18046
+
+        * svg/text/multichar-glyph.svg: Added. New test case for both rendering and getStartPositionOfChar
+        access of multichar glyphs.
+        * platform/mac/svg/text/multichar-glyph-expected.txt: Added.
+
+        The following test results changed, all appear to be improvements.
+        
+        * platform/mac/svg/W3C-SVG-1.1/fonts-glyph-04-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/text-altglyph-01-b-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/text-text-06-t-expected.txt:
+        * platform/mac/svg/text/text-altglyph-01-b-expected.txt:
+        * platform/mac/svg/text/text-text-06-t-expected.txt:
+
+2008-03-25  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Oliver.
+
+        Test for <rdar://problem/5811826> CSSValueList::item() does not 
+        range-check index
+
+        * fast/css/resources/bikes.bmp: Added.
+        * fast/css/value-list-out-of-bounds-crash.html: Added.
+        * platform/mac/fast/css/value-list-out-of-bounds-crash-expected.checksum: Added.
+        * platform/mac/fast/css/value-list-out-of-bounds-crash-expected.png: Added.
+        * platform/mac/fast/css/value-list-out-of-bounds-crash-expected.txt: Added.
+
+2008-03-25  Darin Adler  <darin@apple.com>
+
+        Reviewed by Anders.
+
+        - test for http://bugs.webkit.org/show_bug.cgi?id=17252
+          Acid3 test removing Nodes during NodeIterator walk fails (affects Acid3 test 2)
+
+        * traversal/acid3-test-2-expected.txt: Added.
+        * traversal/acid3-test-2.html: Added.
+        * traversal/resources/acid3-test-2.js: Added.
+        * traversal/resources/exception-forwarding.js: Removed bogus extra line of code.
+
+2008-03-24  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        Disable this test until we can fix 
+        Bug 18057: keyDown incorrectly propagates up the frame tree
+
+        * fast/events/key-events-in-frame.html: Removed.
+        * fast/events/key-events-in-frame.html-disabled: Added.
+
+2008-03-24  Brady Eidson  <beidson@apple.com>
+
+        Made new layout test files executable, as needed for the tests to not fail!        
+
+        * http/tests/navigation/resources/reload-subframe-content.pl: Added.
+        * http/tests/navigation/resources/reload-subframe.pl: Added.
+
+2008-03-24  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej, landed by Brady
+
+        Tests for the following bugs:
+
+        Bug 3580: iFrames Appear to be Cached
+        <http://bugs.webkit.org/show_bug.cgi?id=3580>
+
+        Bug 15486: REGRESSION: Reload causes WebKit to *forget* fragment URLs
+        <http://bugs.webkit.org/show_bug.cgi?id=15486>
+
+        Bug 15554: Reload causes <object> to use old data
+        <http://bugs.webkit.org/show_bug.cgi?id=15554>
+
+        * http/tests/navigation/reload-subframe-frame-expected.txt: Added.
+        * http/tests/navigation/reload-subframe-frame.html: Added.
+        * http/tests/navigation/reload-subframe-iframe-expected.txt: Added.
+        * http/tests/navigation/reload-subframe-iframe.html: Added.
+        * http/tests/navigation/reload-subframe-object-expected.txt: Added.
+        * http/tests/navigation/reload-subframe-object.html: Added.
+        * http/tests/navigation/resources/reload-subframe-content.pl: Added.
+        * http/tests/navigation/resources/reload-subframe.pl: Added.
+
 2008-03-24  Dan Bernstein  <mitz@apple.com>
 
         Reviewed by Sam Weinig.

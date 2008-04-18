@@ -237,13 +237,13 @@ bool JSCallbackObject<Base>::deleteProperty(ExecState* exec, unsigned propertyNa
 }
 
 template <class Base>
-ConstructType JSCallbackObject<Base>::getConstructData(ConstructData&)
+bool JSCallbackObject<Base>::implementsConstruct() const
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsConstructor)
-            return ConstructTypeNative;
+            return true;
     
-    return ConstructTypeNone;
+    return false;
 }
 
 template <class Base>
@@ -263,7 +263,7 @@ JSObject* JSCallbackObject<Base>::construct(ExecState* exec, const List& args)
         }
     }
     
-    ASSERT(0); // getConstructData should prevent us from reaching here
+    ASSERT(0); // implementsConstruct should prevent us from reaching here
     return 0;
 }
 
@@ -293,14 +293,15 @@ bool JSCallbackObject<Base>::hasInstance(ExecState *exec, JSValue *value)
     return 0;
 }
 
+
 template <class Base>
-CallType JSCallbackObject<Base>::getCallData(CallData&)
+bool JSCallbackObject<Base>::implementsCall() const
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsFunction)
-            return CallTypeNative;
+            return true;
     
-    return CallTypeNone;
+    return false;
 }
 
 template <class Base>
@@ -321,7 +322,7 @@ JSValue* JSCallbackObject<Base>::callAsFunction(ExecState* exec, JSObject* thisO
         }
     }
     
-    ASSERT_NOT_REACHED(); // getCallData should prevent us from reaching here
+    ASSERT_NOT_REACHED(); // implementsCall should prevent us from reaching here
     return 0;
 }
 
@@ -380,34 +381,6 @@ double JSCallbackObject<Base>::toNumber(ExecState* exec) const
 }
 
 template <class Base>
-double JSCallbackObject<Base>::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    if (normalExitPC == exceptionExitPC) {
-        resultPC = normalExitPC;
-        return NaN;
-    }
-
-    JSContextRef ctx = toRef(exec);
-    JSObjectRef thisRef = toRef(this);
-    
-    for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
-        if (JSObjectConvertToTypeCallback convertToType = jsClass->convertToType) {
-            JSLock::DropAllLocks dropAllLocks;
-            if (JSValueRef value = convertToType(ctx, thisRef, kJSTypeNumber, toRef(exec->exceptionSlot()))) {
-                resultPC = normalExitPC;
-                return toJS(value)->getNumber();
-            }
-            if (exec->hadException()) {
-                exec->setExceptionSource(normalExitPC);
-                resultPC = exceptionExitPC;
-                return NaN;
-            }
-        }
-    
-    return Base::toNumber(exec, normalExitPC, exceptionExitPC, resultPC);
-}
-
-template <class Base>
 UString JSCallbackObject<Base>::toString(ExecState* exec) const
 {
     JSContextRef ctx = toRef(exec);
@@ -415,8 +388,12 @@ UString JSCallbackObject<Base>::toString(ExecState* exec) const
     
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (JSObjectConvertToTypeCallback convertToType = jsClass->convertToType) {
-            JSLock::DropAllLocks dropAllLocks;
-            if (JSValueRef value = convertToType(ctx, thisRef, kJSTypeString, toRef(exec->exceptionSlot())))
+            JSValueRef value;
+            {
+                JSLock::DropAllLocks dropAllLocks;
+                value = convertToType(ctx, thisRef, kJSTypeString, toRef(exec->exceptionSlot()));
+            }
+            if (value)
                 return toJS(value)->getString();
         }
             

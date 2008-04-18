@@ -1,3 +1,493 @@
+2008-04-15  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        fix potential crash when loading image(s)
+
+        Crash may occur. If compiled with 4.3, the variable is not initialized.
+        This fix solves https://bugs.webkit.org/show_bug.cgi?id=17174
+
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::QWebPagePrivate):
+
+2008-04-15  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Update the micro focus for input methods as soon as the composition mode changes
+        or the caret/selection changes.
+        
+
+        * Api/qwebpage.cpp:
+        * Api/qwebpage.h:
+        * Api/qwebview.cpp:
+        (QWebView::setPage):
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::respondToChangedSelection):
+        (WebCore::EditorClientQt::setInputMethodState):
+
+2008-04-15  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Don't use QDir, QString or any locale sensitive function before constructing Q(Core)Application,
+        it yields undefined behaviour or wrong default codec initialization.
+        
+
+        * QtLauncher/main.cpp:
+        (WebPage::createWindow):
+
+2008-04-15  Olivier Goffart  <ogoffart@trolltech.com>
+
+        Reviewed by Simon.
+
+        Fixes: copy to clipboard when selecting, and paste when clicking with the middle button
+
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::mouseReleaseEvent): If the clipboard supports
+        selections then we support copy & paste into the selection.
+
+2008-04-15  Michael Brasser  <michael.brasser@trolltech.com>
+
+        Reviewed by Simon.
+
+        Add basic input method support.
+        
+
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::dropEvent):
+        (QWebPagePrivate::inputMethodEvent):
+        (QWebPage::inputMethodQuery):
+        (QWebPage::event):
+        * Api/qwebpage.h:
+        * Api/qwebpage_p.h:
+        * Api/qwebview.cpp:
+        (QWebView::QWebView):
+        (QWebView::inputMethodQuery):
+        (QWebView::inputMethodEvent):
+        * Api/qwebview.h:
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::setInputMethodState):
+
+2008-04-15  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Added (QWebFrame|QWebView)::textZoomFactor.
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::setTextZoomFactor):
+        (QWebFrame::textZoomFactor):
+        * Api/qwebframe.h:
+        * Api/qwebview.cpp:
+        (QWebView::setTextZoomFactor):
+        (QWebView::textZoomFactor):
+        * Api/qwebview.h:
+
+2008-04-15  Michael Brasser  <michael.brasser@trolltech.com>
+
+        Reviewed by Simon.
+
+        Added simple scrolling API to QWebFrame.
+        
+        The intent is that it works similar to QAbstractScrollArea.
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::setScrollBarValue):
+        (QWebFrame::scrollBarValue):
+        (QWebFrame::scrollBarMaximum):
+        (QWebFrame::scrollBarMinimum):
+        * Api/qwebframe.h:
+
+2008-04-15  Olivier Goffart  <ogoffart@trolltech.com>
+
+        Reviewed by Holger.
+
+        Fixes: implement the OpenFrameInNewWindow action.
+        
+
+        * Api/qwebpage.cpp:
+        (QWebPage::triggerAction):
+
+2008-04-15  Andre Poenitz  <andre.poenitz@trolltech.com>
+
+        Reviewed by Simon.
+
+        Fix compilation with Qt namespaces
+
+        Qt can be configured to have all of its classes inside a specified namespaces.
+        This is for example used in plugin/component environments like Eclipse.
+
+        This change makes it possible to let the Qt port compile against a namespaced
+        Qt by the use of macros Qt provides to properly forward declare Qt classes in
+        the namespace.
+
+        * Api/qwebframe.h:
+        * Api/qwebpage.h:
+        * Api/qwebpage_p.h:
+        * Api/qwebpluginfactory.h:
+        * Api/qwebsettings.h:
+        * Api/qwebview.h:
+
+2008-04-05  Olivier Goffart  <ogoffart@trolltech.com>
+
+        Reviewed by Holger.
+
+        Fixes: Right clicking an image and choosing "copy image" doesnt put anything in the clipboard.
+        
+
+        * Api/qwebpage.cpp:
+        (QWebPage::triggerAction):
+
+2008-04-05  Olivier Goffart  <ogoffart@trolltech.com>
+
+        Reviewed by Simon.
+
+        Fixes: Right click, and "Open image" open the link instead of the image.
+        
+
+        * Api/qwebpage.cpp:
+
+2008-04-05  Benjamin Meyer  <bmeyer@trolltech.com>
+
+        Reviewed by Simon.
+
+        Added doc stub for QWebSettings so class docs are generated
+        
+
+        * Api/qwebsettings.cpp:
+        (QWebSettings::QWebSettings):
+
+2008-04-05  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Propose the addition of updateRequest and scrollRequest to the QWebPage.
+        
+        * The question is if these signals belong to QWebPage or  QWebFrame.
+        -It is more easy to have them in QWebPage because ScrollView is invoking
+        the ChromeClient with the right coordinates
+        -On the other hand someone wants to render frames separately. But this is partly
+        doomed as you can have overlapping frames and what you paint would not relate to
+        what you normally see on webpages.
+        
+
+        * Api/qwebpage.cpp:
+        * Api/qwebpage.h:
+        * WebCoreSupport/ChromeClientQt.cpp:
+        (WebCore::ChromeClientQt::scrollBackingStore):
+        (WebCore::ChromeClientQt::mouseDidMoveOverElement):
+
+2008-04-03  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        Roll out r31599 and r31605 again after discussion with Mark Rowe.
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::icon):
+        * Api/qwebsettings.cpp:
+        (QWebSettings::iconForUrl):
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Change IconDatabase::iconForPageURL to return more information. E.g. if
+        an image has been found, or if the loading of an image has been scheduled.
+        * Update FrameLoader to use another method to trigger reading from disk
+        * Update the QWebFrame and QWebSettings
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::icon):
+        * Api/qwebsettings.cpp:
+        (QWebSettings::iconForUrl):
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Safari is using the IconDatabase the following way (assumption). Before they
+        call iconDatabase()->open they "retain" all URLs they are interested in, these
+        could come from the history.
+        * When opening the iconDatabase() a thread will be started that is going to import
+        the URLs, all none manually retained URLs are scheduled for removal. The removal
+        is going to happen when the next icon gets stored in the database.
+        * We do not have any IconDatabase code, we can not retain the URLs before opening the
+        database. To disable the automatic pruning of the icons we will ask the IconDatabase
+        to delay this operation. This means our IconDatabase, when used, will grow, so we should
+        try to have a IconDatabase class in 4.4.
+        * The only way to counter the growth is a call to QWebSettings::clearIconDatabase
+        
+
+        * Api/qwebsettings.cpp:
+        (QWebSettings::clearIconDatabase):
+        * Api/qwebsettings.h:
+
+2008-04-03  Benjamin Meyer  <bmeyer@trolltech.com>
+
+        Reviewed by Simon.
+
+        Add a way to get the site icon for a url
+        static QPixmap iconForUrl(const QUrl &url);
+        
+
+        * Api/qwebsettings.cpp:
+        (QWebSettings::iconForUrl):
+        * Api/qwebsettings.h:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Update the Copyright info in QWebSettings
+        
+
+        * Api/qwebsettings.cpp:
+        * Api/qwebsettings.h:
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * The isEmpty check is not needed anymore with the earlier backport
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::icon):
+
+2008-04-03  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * For the http tests we need the output of the FrameLoaderClient. The QtWebKit API
+        is not exporting enough to create the output in DRT itself. Settle with the approach
+        Lars has taken for the Editing support and add branches to our FrameLoaderClient code.
+        * run-webkit-tests http/tests(/loading) can now be executed.
+        * For tests in loading/ directories we are going to throw away the dirty
+        QWebPage to start with something clean.
+        
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (qt_dump_frame_loader):
+        (drtDescriptionSuitableForTestResult):
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveServerRedirectForProvisionalLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidCancelClientRedirect):
+        (WebCore::FrameLoaderClientQt::dispatchWillPerformClientRedirect):
+        (WebCore::FrameLoaderClientQt::dispatchDidChangeLocationWithinPage):
+        (WebCore::FrameLoaderClientQt::dispatchWillClose):
+        (WebCore::FrameLoaderClientQt::dispatchDidStartProvisionalLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveTitle):
+        (WebCore::FrameLoaderClientQt::dispatchDidCommitLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidFinishDocumentLoad):
+        (WebCore::FrameLoaderClientQt::dispatchDidFinishLoad):
+        (WebCore::FrameLoaderClientQt::registerForIconNotification):
+        (WebCore::FrameLoaderClientQt::setMainDocumentError):
+        (WebCore::FrameLoaderClientQt::dispatchDecidePolicyForNavigationAction):
+
+2008-04-02  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Export the PageCache and Cache capacity call one to one. This is only there
+        to allow the QtLauncher to play with caching.
+        * TODO: make API decisions and consider following the windows Api to set a WebCacheModel
+        and determine certain values automatically.
+        
+
+        * Api/qwebsettings.cpp:
+        (QWebSettings::setPageCacheCapacity):
+        (QWebSettings::setObjectCacheCapacities):
+        * Api/qwebsettings.h:
+        * QtLauncher/main.cpp:
+
+2008-04-02  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        Prepapre everything for enabling the PageCache for the Qt Platform:
+        * Claim that we can cache pages
+        * Create the FrameView FrameLoaderClientQt::transitionToCommittedForNewPage using
+        the initial size of the viewport and stop creating it in the QWebFramePrivate::init
+        
+        Differences to the Windows port:
+        * attachToWindow/detachFromWindow is not called and is not (yet) part
+        of Widget/ScrollView of the Qt platform. We might need that for plugin
+        support in the future.
+        * We store the margin's and scrolling flag inside QWebFrame and use it when
+        creating the FrameView.
+        
+        What is missing:
+        * API to call pageCache()->setCapacity(XYZ);
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFramePrivate::init):
+        * Api/qwebframe_p.h:
+        (QWebFramePrivate::QWebFramePrivate):
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::createMainFrame):
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::transitionToCommittedForNewPage):
+        (WebCore::FrameLoaderClientQt::blockedError):
+
+2008-04-02  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * For the PageCache support we do not want to create a FrameView in the constructor
+        of QWebFrame. In QWegPage::viewportSize() we currently call mainFrame() and that will
+        create a QWebFrame if no mainFrame is present and this gets called when we try to
+        create a FrameView...
+        * Keep a copy of the initial viewportSize around and use it if we do not have a Frame
+        or FrameView.
+        
+
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::QWebPagePrivate):
+        (QWebPage::triggerAction):
+        * Api/qwebpage_p.h:
+
+2008-04-02  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Always return true in FrameLoaderClientQt::shouldGoToHistoryItem, like the windows port
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::):
+
+2008-04-02  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Attempt to make the m_webFrame null pointer checking consistent. Always check for
+        m_webFrame. It should get set by the QWebFrame with the FramerLoaderClientQt::setFrame
+        call and should stay valid until the destruction of the QWebFrame.
+        * Currently the same checking is not needed for m_frame as it will only set to 0 in
+        FrameLoaderClientQt::frameLoaderDestroyed and should be not 0 because of the setFrame
+        initialisation.
+        
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveTitle):
+        (WebCore::FrameLoaderClientQt::setMainDocumentError):
+        (WebCore::FrameLoaderClientQt::dispatchDidReceiveContentLength):
+        (WebCore::FrameLoaderClientQt::objectContentType):
+        (WebCore::FrameLoaderClientQt::createPlugin):
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Get the RefCounting of WebCore::Frame right and make sure that both QWebFrame
+        and WebCore::Frame get destroyed if we leave site with subframes and on the
+        end of the application.
+        * Use adoptRef in FrameLoaderClientQt::createFrame to get the refs right for subframes. We
+        do not want to add an extra reference. Without this we are leaking subframes.
+        * Assume that the lifetime of a Frame and FrameLoader are the same, when the Frame is gone
+        we want to destroy the QWebFrame (e.g. on a page with subframes). Add delete m_webFrame
+        in the frameLoaderDestroyed method to do that.
+        * If we happen to delete the QWebFrame before the FrameLoaderClientQt we set m_webFrame to
+        zero in the FrameLoaderClientQt to avoid bad things.
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFrame::~QWebFrame):
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::shouldGoToHistoryItem):
+        (WebCore::FrameLoaderClientQt::objectContentType):
+        * WebCoreSupport/FrameLoaderClientQt.h:
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Do not save a RefPtr to the frame. The FrameLoaderClient, Frame and
+        QWebFrame should have the same lifetime everything else is a leak
+        or issue.
+
+        * Api/qwebframe.cpp:
+        (QWebFramePrivate::init):
+        * Api/qwebframe_p.h:
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Do not store the QWebFrame associated with a ScrollView/FrameView
+        in the WebCore::Widget.
+        * Instead of asking the Widget for the QWebFrame use the QWebFramePrivate::core
+        and QWebFramePrivate::kit function to convert from and to QWebFrame.
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFramePrivate::init):
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::createMainFrame):
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Do not store the FrameView in the QWebFrame and cope with the situation when
+        a WebCore::Frame has no WebCore::FrameView.
+        
+
+        * Api/qwebframe.cpp:
+        (QWebFramePrivate::init):
+        (QWebFramePrivate::horizontalScrollBar):
+        (QWebFramePrivate::verticalScrollBar):
+        (QWebFrame::innerText):
+        (QWebFrame::renderTreeDump):
+        (QWebFrame::setVerticalScrollBarPolicy):
+        (QWebFrame::setHorizontalScrollBarPolicy):
+        (QWebFrame::render):
+        (QWebFrame::layout):
+        (QWebFrame::pos):
+        * Api/qwebframe_p.h:
+        (QWebFramePrivate::QWebFramePrivate):
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::updateEditorActions):
+        (QWebPagePrivate::mouseMoveEvent):
+        (QWebPagePrivate::mousePressEvent):
+        (QWebPagePrivate::mouseDoubleClickEvent):
+        (QWebPagePrivate::contextMenuEvent):
+        (QWebPagePrivate::wheelEvent):
+        (QWebPage::triggerAction):
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Change the order of the methods to match with the FrameLoaderClient.h to ease
+        removing methods in the future.
+
+        * WebCoreSupport/FrameLoaderClientQt.h:
+
+2008-04-01  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        * Remove virtuals in the FrameLoaderClientQt that don't exist in the base class.
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::detachedFromParent4):
+        * WebCoreSupport/FrameLoaderClientQt.h:
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Remove newly obsolete FrameLoaderClient methods
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        * WebCoreSupport/FrameLoaderClientQt.h:
+
 2008-03-22  Mark Rowe  <mrowe@apple.com>
 
         Qt build fix.

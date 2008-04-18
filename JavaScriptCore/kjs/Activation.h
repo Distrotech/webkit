@@ -39,6 +39,7 @@ namespace KJS {
         friend struct StackActivation;
     private:
         struct ActivationData : public JSVariableObjectData {
+            ActivationData() : isOnStack(true), leftRelic(false) { }
             ActivationData(const ActivationData&);
 
             ExecState* exec;
@@ -50,6 +51,7 @@ namespace KJS {
         };
 
     public:
+        ActivationImp() { }
         ActivationImp(const ActivationData&, bool);
 
         virtual ~ActivationImp();
@@ -58,11 +60,13 @@ namespace KJS {
 
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         virtual void put(ExecState*, const Identifier&, JSValue*);
-        virtual void initializeVariable(ExecState*, const Identifier&, JSValue*, unsigned attributes);
+        virtual void putWithAttributes(ExecState*, const Identifier&, JSValue*, unsigned attributes);
         virtual bool deleteProperty(ExecState*, const Identifier& propertyName);
 
         virtual const ClassInfo* classInfo() const { return &info; }
         static const ClassInfo info;
+
+        virtual JSObject* toThisObject(ExecState*) const;
 
         virtual void mark();
         void markChildren();
@@ -87,6 +91,21 @@ namespace KJS {
         d()->symbolTable = &exec->function()->body->symbolTable();
         d()->argumentsObject = 0;
     }
+
+    const size_t activationStackNodeSize = 32;
+
+    struct StackActivation {
+        StackActivation() { activationStorage.JSVariableObject::d = &activationDataStorage; }
+        StackActivation(const StackActivation&);
+      
+        ActivationImp activationStorage;
+        ActivationImp::ActivationData activationDataStorage;
+    };
+
+    struct ActivationStackNode {
+        ActivationStackNode* prev;
+        StackActivation data[activationStackNodeSize];
+    };
 
 } // namespace
 

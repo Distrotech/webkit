@@ -29,6 +29,17 @@
 #include <wtf/Assertions.h>
 #include <wtf/UnusedParam.h>
 
+#if COMPILER(MSVC)
+
+#include <wtf/MathExtras.h>
+
+static double nan(const char*)
+{
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+#endif
+
 static JSGlobalContextRef context = 0;
 
 static void assertEqualsAsBoolean(JSValueRef value, bool expectedValue)
@@ -53,7 +64,7 @@ static void assertEqualsAsUTF8String(JSValueRef value, const char* expectedValue
     JSStringRef valueAsString = JSValueToStringCopy(context, value, NULL);
 
     size_t jsSize = JSStringGetMaximumUTF8CStringSize(valueAsString);
-    char jsBuffer[jsSize];
+    char* jsBuffer = (char*)malloc(jsSize);
     JSStringGetUTF8CString(valueAsString, jsBuffer, jsSize);
     
     unsigned i;
@@ -64,6 +75,7 @@ static void assertEqualsAsUTF8String(JSValueRef value, const char* expectedValue
     if (jsSize < strlen(jsBuffer) + 1)
         fprintf(stderr, "assertEqualsAsUTF8String failed: jsSize was too small\n");
 
+    free(jsBuffer);
     JSStringRelease(valueAsString);
 }
 
@@ -78,7 +90,7 @@ static void assertEqualsAsCharactersPtr(JSValueRef value, const char* expectedVa
                                                                     expectedValue,
                                                                     kCFStringEncodingUTF8);    
     CFIndex cfLength = CFStringGetLength(expectedValueAsCFString);
-    UniChar cfBuffer[cfLength];
+    UniChar* cfBuffer = (UniChar*)malloc(cfLength * sizeof(UniChar));
     CFStringGetCharacters(expectedValueAsCFString, CFRangeMake(0, cfLength), cfBuffer);
     CFRelease(expectedValueAsCFString);
 
@@ -88,6 +100,7 @@ static void assertEqualsAsCharactersPtr(JSValueRef value, const char* expectedVa
     if (jsLength != (size_t)cfLength)
         fprintf(stderr, "assertEqualsAsCharactersPtr failed: jsLength(%ld) != cfLength(%ld)\n", jsLength, cfLength);
     
+    free(cfBuffer);
     JSStringRelease(valueAsString);
 }
 
@@ -225,6 +238,13 @@ static JSValueRef MyObject_convertToType(JSContextRef context, JSObjectRef objec
     switch (type) {
     case kJSTypeNumber:
         return JSValueMakeNumber(context, 1);
+    case kJSTypeString:
+        {
+            JSStringRef string = JSStringCreateWithUTF8CString("MyObjectAsString");
+            JSValueRef result = JSValueMakeString(context, string);
+            JSStringRelease(string);
+            return result;
+        }
     default:
         break;
     }
@@ -443,9 +463,10 @@ static JSValueRef print_callAsFunction(JSContextRef context, JSObjectRef functio
     if (argumentCount > 0) {
         JSStringRef string = JSValueToStringCopy(context, arguments[0], NULL);
         size_t sizeUTF8 = JSStringGetMaximumUTF8CStringSize(string);
-        char stringUTF8[sizeUTF8];
+        char* stringUTF8 = (char*)malloc(sizeUTF8);
         JSStringGetUTF8CString(string, stringUTF8, sizeUTF8);
         printf("%s\n", stringUTF8);
+        free(stringUTF8);
         JSStringRelease(string);
     }
     
@@ -599,14 +620,15 @@ int main(int argc, char* argv[])
     JSValueRef jsCFEmptyString = JSValueMakeString(context, jsCFEmptyIString);
 
     CFIndex cfStringLength = CFStringGetLength(cfString);
-    UniChar buffer[cfStringLength];
+    UniChar* buffer = (UniChar*)malloc(cfStringLength * sizeof(UniChar));
     CFStringGetCharacters(cfString, 
                           CFRangeMake(0, cfStringLength), 
                           buffer);
-    JSStringRef jsCFIStringWithCharacters = JSStringCreateWithCharacters(buffer, cfStringLength);
+    JSStringRef jsCFIStringWithCharacters = JSStringCreateWithCharacters((JSChar*)buffer, cfStringLength);
     JSValueRef jsCFStringWithCharacters = JSValueMakeString(context, jsCFIStringWithCharacters);
     
-    JSStringRef jsCFEmptyIStringWithCharacters = JSStringCreateWithCharacters(buffer, CFStringGetLength(cfEmptyString));
+    JSStringRef jsCFEmptyIStringWithCharacters = JSStringCreateWithCharacters((JSChar*)buffer, CFStringGetLength(cfEmptyString));
+    free(buffer);
     JSValueRef jsCFEmptyStringWithCharacters = JSValueMakeString(context, jsCFEmptyIStringWithCharacters);
 
     ASSERT(JSValueGetType(context, jsUndefined) == kJSTypeUndefined);
@@ -869,12 +891,34 @@ int main(int argc, char* argv[])
     ASSERT(JSValueIsEqual(context, v, globalObject, NULL));
     v = JSObjectCallAsFunction(context, function, o, 0, NULL, NULL);
     ASSERT(JSValueIsEqual(context, v, o, NULL));
-    
+
+    functionBody = JSStringCreateWithUTF8CString("return eval(\"this\");");
+    function = JSObjectMakeFunction(context, NULL, 0, NULL, functionBody, NULL, 1, NULL);
+    JSStringRelease(functionBody);
+    v = JSObjectCallAsFunction(context, function, NULL, 0, NULL, NULL);
+    ASSERT(JSValueIsEqual(context, v, globalObject, NULL));
+    v = JSObjectCallAsFunction(context, function, o, 0, NULL, NULL);
+    ASSERT(JSValueIsEqual(context, v, o, NULL));
+
+    JSStringRef script = JSStringCreateWithUTF8CString("this;");
+    v = JSEvaluateScript(context, script, NULL, NULL, 0, NULL);
+    ASSERT(JSValueIsEqual(context, v, globalObject, NULL));
+    v = JSEvaluateScript(context, script, o, NULL, 0, NULL);
+    ASSERT(JSValueIsEqual(context, v, o, NULL));
+    JSStringRelease(script);
+
+    script = JSStringCreateWithUTF8CString("eval(this);");
+    v = JSEvaluateScript(context, script, NULL, NULL, 0, NULL);
+    ASSERT(JSValueIsEqual(context, v, globalObject, NULL));
+    v = JSEvaluateScript(context, script, o, NULL, 0, NULL);
+    ASSERT(JSValueIsEqual(context, v, o, NULL));
+    JSStringRelease(script);
+
     char* scriptUTF8 = createStringWithContentsOfFile(scriptPath);
     if (!scriptUTF8)
         printf("FAIL: Test script could not be loaded.\n");
     else {
-        JSStringRef script = JSStringCreateWithUTF8CString(scriptUTF8);
+        script = JSStringCreateWithUTF8CString(scriptUTF8);
         result = JSEvaluateScript(context, script, NULL, NULL, 1, &exception);
         if (JSValueIsUndefined(context, result))
             printf("PASS: Test script executed successfully.\n");

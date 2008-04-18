@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 2004-2005 Allan Sandfeld Jensen (kde@carewolf.com)
- *           (C) 2006 Nicholas Shanks (webkit@nickshanks.com)
+ * Copyright (C) 2006, 2007 Nicholas Shanks (webkit@nickshanks.com)
  * Copyright (C) 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Alexey Proskuryakov <ap@webkit.org>
  * Copyright (C) 2007, 2008 Eric Seidel <eric@webkit.org>
@@ -147,7 +147,7 @@ if (value->isValueList()) { \
             currChild = new LayerType(); \
             prevChild->setNext(currChild); \
         } \
-        map##Prop(currChild, valueList->item(i)); \
+        map##Prop(currChild, valueList->itemWithoutBoundsCheck(i)); \
         prevChild = currChild; \
         currChild = currChild->next(); \
     } \
@@ -313,6 +313,7 @@ CSSStyleSelector::~CSSStyleSelector()
     ::delete m_rootDefaultStyle;
     delete m_authorStyle;
     delete m_userStyle;
+    deleteAllValues(m_viewportDependentMediaQueryResults);
 }
 
 static CSSStyleSheet* parseUASheet(const char* characters, unsigned size)
@@ -362,9 +363,10 @@ void CSSStyleSelector::matchRules(CSSRuleSet* rules, int& firstRuleIndex, int& l
     if (m_element->hasID())
         matchRulesForList(rules->getIDRules(m_element->getIDAttribute().impl()), firstRuleIndex, lastRuleIndex);
     if (m_element->hasClass()) {
-        const ClassNames& classNames = *m_element->getClassNames();
-        size_t classNamesSize = classNames.size();
-        for (size_t i = 0; i < classNamesSize; ++i)
+        ASSERT(m_styledElement);
+        const ClassNames& classNames = m_styledElement->classNames();
+        size_t size = classNames.size();
+        for (size_t i = 0; i < size; ++i)
             matchRulesForList(rules->getClassRules(classNames[i].impl()), firstRuleIndex, lastRuleIndex);
     }
     matchRulesForList(rules->getTagRules(m_element->localName().impl()), firstRuleIndex, lastRuleIndex);
@@ -1194,6 +1196,7 @@ void CSSStyleSelector::updateFont()
 {
     checkForTextSizeAdjust();
     checkForGenericFamilyChange(m_style, m_parentStyle);
+    checkForZoomChange(m_style, m_parentStyle);
     m_style->font().update(m_fontSelector);
     m_fontDirty = false;
 }
@@ -1429,24 +1432,22 @@ bool CSSStyleSelector::checkOneSelector(CSSSelector* sel, Element* e, bool isAnc
         return false;
 
     if (sel->hasTag()) {
-        const AtomicString& localName = e->localName();
-        const AtomicString& ns = e->namespaceURI();
         const AtomicString& selLocalName = sel->m_tag.localName();
+        if (selLocalName != starAtom && selLocalName != e->localName())
+            return false;
         const AtomicString& selNS = sel->m_tag.namespaceURI();
-    
-        if ((selLocalName != starAtom && localName != selLocalName) ||
-            (selNS != starAtom && ns != selNS))
+        if (selNS != starAtom && selNS != e->namespaceURI())
             return false;
     }
 
     if (sel->hasAttribute()) {
-        if (sel->m_match == CSSSelector::Class) {
-            if (!e->hasClass())
-                return false;
-            return e->getClassNames()->contains(sel->m_value);
-        } else if (sel->m_match == CSSSelector::Id)
+        if (sel->m_match == CSSSelector::Class)
+            return e->hasClass() && static_cast<StyledElement*>(e)->classNames().contains(sel->m_value);
+
+        if (sel->m_match == CSSSelector::Id)
             return e->hasID() && e->getIDAttribute() == sel->m_value;
-        else if (m_style && (e != m_element || !m_styledElement || (!m_styledElement->isMappedAttribute(sel->m_attr) && sel->m_attr != typeAttr && sel->m_attr != readonlyAttr))) {
+
+        if (m_style && (e != m_element || !m_styledElement || (!m_styledElement->isMappedAttribute(sel->m_attr) && sel->m_attr != typeAttr && sel->m_attr != readonlyAttr))) {
             m_style->setAffectedByAttributeSelectors(); // Special-case the "type" and "readonly" attributes so input form controls can share style.
             m_selectorAttrs.add(sel->m_attr.localName().impl());
         }
@@ -2218,7 +2219,7 @@ static void applyCounterList(RenderStyle* style, CSSValueList* list, bool isRese
 
     int length = list ? list->length() : 0;
     for (int i = 0; i < length; ++i) {
-        Pair* pair = static_cast<CSSPrimitiveValue*>(list->item(i))->getPairValue();
+        Pair* pair = static_cast<CSSPrimitiveValue*>(list->itemWithoutBoundsCheck(i))->getPairValue();
         AtomicString identifier = static_cast<CSSPrimitiveValue*>(pair->first())->getStringValue();
         // FIXME: What about overflow?
         int value = static_cast<CSSPrimitiveValue*>(pair->second())->getIntValue();
@@ -2428,38 +2429,52 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         if (isInherit)
             fontDescription.setWeight(m_parentStyle->fontDescription().weight());
         else if (isInitial)
-            fontDescription.setWeight(cNormalWeight);
+            fontDescription.setWeight(FontWeightNormal);
         else {
             if (!primitiveValue)
                 return;
             if (primitiveValue->getIdent()) {
                 switch (primitiveValue->getIdent()) {
-                    // FIXME: We aren't genuinely supporting specific weight values.
-                    case CSSValueBold:
                     case CSSValueBolder:
-                    case CSSValue600:
+                        fontDescription.setWeight(fontDescription.bolderWeight());
+                        break;
+                    case CSSValueLighter:
+                        fontDescription.setWeight(fontDescription.lighterWeight());
+                        break;
+                    case CSSValueBold:
                     case CSSValue700:
-                    case CSSValue800:
-                    case CSSValue900:
-                        fontDescription.setWeight(cBoldWeight);
+                        fontDescription.setWeight(FontWeightBold);
                         break;
                     case CSSValueNormal:
-                    case CSSValueLighter:
-                    case CSSValue100:
-                    case CSSValue200:
-                    case CSSValue300:
                     case CSSValue400:
+                        fontDescription.setWeight(FontWeightNormal);
+                        break;
+                    case CSSValue900:
+                        fontDescription.setWeight(FontWeight900);
+                        break;
+                    case CSSValue800:
+                        fontDescription.setWeight(FontWeight800);
+                        break;
+                    case CSSValue600:
+                        fontDescription.setWeight(FontWeight600);
+                        break;
                     case CSSValue500:
-                        fontDescription.setWeight(cNormalWeight);
+                        fontDescription.setWeight(FontWeight500);
+                        break;
+                    case CSSValue300:
+                        fontDescription.setWeight(FontWeight300);
+                        break;
+                    case CSSValue200:
+                        fontDescription.setWeight(FontWeight200);
+                        break;
+                    case CSSValue100:
+                        fontDescription.setWeight(FontWeight100);
                         break;
                     default:
                         return;
                 }
-            }
-            else
-            {
-                // ### fix parsing of 100-900 values in parser, apply them here
-            }
+            } else
+                ASSERT_NOT_REACHED();
         }
         if (m_style->setFontDescription(fontDescription))
             m_fontDirty = true;
@@ -2639,7 +2654,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             int len = list->length();
             m_style->setCursor(CURSOR_AUTO);
             for (int i = 0; i < len; i++) {
-                CSSValue* item = list->item(i);
+                CSSValue* item = list->itemWithoutBoundsCheck(i);
                 if (!item->isPrimitiveValue())
                     continue;
                 primitiveValue = static_cast<CSSPrimitiveValue*>(item);
@@ -2648,7 +2663,11 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                     CSSCursorImageValue* image = static_cast<CSSCursorImageValue*>(primitiveValue);
                     if (image->updateIfSVGCursorIsUsed(m_element)) // Elements with SVG cursors are not allowed to share style.
                         m_style->setUnique();
-                    m_style->addCursor(image->image(m_element->document()->docLoader()), image->hotspot());
+                    // FIXME: Temporary clumsiness to pass off a CachedImage to an API that will eventually convert to using
+                    // StyleImage.
+                    RefPtr<StyleCachedImage> styleCachedImage(image->cachedImage(m_element->document()->docLoader()));
+                    if (styleCachedImage)
+                        m_style->addCursor(styleCachedImage->cachedImage(), image->hotspot());
                 } else if (type == CSSPrimitiveValue::CSS_IDENT)
                     m_style->setCursor(*primitiveValue);
             }
@@ -2738,9 +2757,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     case CSSPropertyListStyleImage:
     {
         HANDLE_INHERIT_AND_INITIAL(listStyleImage, ListStyleImage)
-        if (!primitiveValue)
-            return;
-        m_style->setListStyleImage(static_cast<CSSImageValue*>(primitiveValue)->image(m_element->document()->docLoader()));
+        m_style->setListStyleImage(styleImage(value));
         return;
     }
 
@@ -3358,7 +3375,12 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
 
         bool didSet = false;
         for (int i = 0; i < len; i++) {
-            CSSValue* item = list->item(i);
+            CSSValue* item = list->itemWithoutBoundsCheck(i);
+            if (item->isImageGeneratorValue()) {
+                m_style->setContent(static_cast<CSSImageGeneratorValue*>(item)->generatedImage(), didSet);
+                didSet = true;
+            }
+            
             if (!item->isPrimitiveValue())
                 continue;
             
@@ -3382,8 +3404,8 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                     break;
                 }
                 case CSSPrimitiveValue::CSS_URI: {
-                    CSSImageValue *image = static_cast<CSSImageValue*>(val);
-                    m_style->setContent(image->image(m_element->document()->docLoader()), didSet);
+                    CSSImageValue* image = static_cast<CSSImageValue*>(val);
+                    m_style->setContent(image->cachedImage(m_element->document()->docLoader()), didSet);
                     didSet = true;
                     break;
                 }
@@ -3445,7 +3467,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         fontDescription.setGenericFamily(FontDescription::NoFamily);
 
         for (int i = 0; i < len; i++) {
-            CSSValue *item = list->item(i);
+            CSSValue *item = list->itemWithoutBoundsCheck(i);
             if (!item->isPrimitiveValue()) continue;
             CSSPrimitiveValue *val = static_cast<CSSPrimitiveValue*>(item);
             AtomicString face;
@@ -3514,7 +3536,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             int len = list->length();
             for (int i = 0; i < len; i++)
             {
-                CSSValue *item = list->item(i);
+                CSSValue *item = list->itemWithoutBoundsCheck(i);
                 if (!item->isPrimitiveValue()) continue;
                 primitiveValue = static_cast<CSSPrimitiveValue*>(item);
                 switch (primitiveValue->getIdent()) {
@@ -3554,10 +3576,15 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         else if (primitiveValue->getIdent() == CSSValueReset) {
             m_style->setEffectiveZoom(RenderStyle::initialZoom());
             m_style->setZoom(RenderStyle::initialZoom());
-        } else if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
-            m_style->setZoom(primitiveValue->getFloatValue() / 100.0f);
-        else if (type == CSSPrimitiveValue::CSS_NUMBER)
-            m_style->setZoom(primitiveValue->getFloatValue());
+        } else if (type == CSSPrimitiveValue::CSS_PERCENTAGE) {
+            if (primitiveValue->getFloatValue())
+                m_style->setZoom(primitiveValue->getFloatValue() / 100.0f);
+        } else if (type == CSSPrimitiveValue::CSS_NUMBER) {
+            if (primitiveValue->getFloatValue())
+                m_style->setZoom(primitiveValue->getFloatValue());
+        }
+        
+        m_fontDirty = true;
         return;
     }
 // shorthand properties
@@ -3778,7 +3805,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         CSSValueList* list = static_cast<CSSValueList*>(value);
         bool firstBinding = true;
         for (unsigned int i = 0; i < list->length(); i++) {
-            CSSValue *item = list->item(i);
+            CSSValue *item = list->itemWithoutBoundsCheck(i);
             CSSPrimitiveValue *val = static_cast<CSSPrimitiveValue*>(item);
             if (val->primitiveType() == CSSPrimitiveValue::CSS_URI) {
                 if (firstBinding) {
@@ -3803,8 +3830,8 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             CSSBorderImageValue* borderImage = static_cast<CSSBorderImageValue*>(value);
             
             // Set the image (this kicks off the load).
-            image.m_image = borderImage->m_image->image(m_element->document()->docLoader());
-            
+            image.m_image = styleImage(borderImage->imageValue());
+
             // Set up a length box to represent our image slices.
             LengthBox& l = image.m_slices;
             Rect* r = borderImage->m_imageSliceRect.get();
@@ -3947,7 +3974,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         CSSValueList *list = static_cast<CSSValueList*>(value);
         int len = list->length();
         for (int i = 0; i < len; i++) {
-            ShadowValue* item = static_cast<ShadowValue*>(list->item(i));
+            ShadowValue* item = static_cast<ShadowValue*>(list->itemWithoutBoundsCheck(i));
             int x = item->x->computeLengthInt(m_style, zoomFactor);
             int y = item->y->computeLengthInt(m_style, zoomFactor);
             int blur = item->blur ? item->blur->computeLengthInt(m_style, zoomFactor) : 0;
@@ -4354,10 +4381,10 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             CSSValueList* list = static_cast<CSSValueList*>(value);
             unsigned size = list->length();
             for (unsigned i = 0; i < size; i++) {
-                CSSTransformValue* val = static_cast<CSSTransformValue*>(list->item(i));
+                CSSTransformValue* val = static_cast<CSSTransformValue*>(list->itemWithoutBoundsCheck(i));
                 CSSValueList* values = val->values();
                 
-                CSSPrimitiveValue* firstValue = static_cast<CSSPrimitiveValue*>(values->item(0));
+                CSSPrimitiveValue* firstValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(0));
                  
                 switch (val->type()) {
                     case CSSTransformValue::ScaleTransformOperation:
@@ -4371,7 +4398,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                             sx = firstValue->getDoubleValue();
                             if (val->type() == CSSTransformValue::ScaleTransformOperation) {
                                 if (values->length() > 1) {
-                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->item(1));
+                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(1));
                                     sy = secondValue->getDoubleValue();
                                 } else 
                                     sy = sx;
@@ -4394,10 +4421,9 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                             tx = convertToLength(firstValue, m_style, &ok);
                             if (val->type() == CSSTransformValue::TranslateTransformOperation) {
                                 if (values->length() > 1) {
-                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->item(1));
+                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(1));
                                     ty = convertToLength(secondValue, m_style, &ok);
-                                } else
-                                    ty = tx;
+                                }
                             }
                         }
                         
@@ -4431,7 +4457,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                             angleX = angle;
                             if (val->type() == CSSTransformValue::SkewTransformOperation) {
                                 if (values->length() > 1) {
-                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->item(1));
+                                    CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(1));
                                     angleY = secondValue->getDoubleValue();
                                     if (secondValue->primitiveType() == CSSPrimitiveValue::CSS_RAD)
                                         angleY = rad2deg(angle);
@@ -4447,11 +4473,11 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
                         break;
                     }
                     case CSSTransformValue::MatrixTransformOperation: {
-                        CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->item(1));
-                        CSSPrimitiveValue* thirdValue = static_cast<CSSPrimitiveValue*>(values->item(2));
-                        CSSPrimitiveValue* fourthValue = static_cast<CSSPrimitiveValue*>(values->item(3));
-                        CSSPrimitiveValue* fifthValue = static_cast<CSSPrimitiveValue*>(values->item(4));
-                        CSSPrimitiveValue* sixthValue = static_cast<CSSPrimitiveValue*>(values->item(5));
+                        CSSPrimitiveValue* secondValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(1));
+                        CSSPrimitiveValue* thirdValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(2));
+                        CSSPrimitiveValue* fourthValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(3));
+                        CSSPrimitiveValue* fifthValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(4));
+                        CSSPrimitiveValue* sixthValue = static_cast<CSSPrimitiveValue*>(values->itemWithoutBoundsCheck(5));
                         MatrixTransformOperation* matrix = new MatrixTransformOperation(firstValue->getDoubleValue(),
                                                                                         secondValue->getDoubleValue(),
                                                                                         thirdValue->getDoubleValue(),
@@ -4627,18 +4653,23 @@ void CSSStyleSelector::mapBackgroundOrigin(BackgroundLayer* layer, CSSValue* val
     layer->setBackgroundOrigin(*primitiveValue);
 }
 
+StyleImage* CSSStyleSelector::styleImage(CSSValue* value)
+{
+    if (value->isImageValue())
+        return static_cast<CSSImageValue*>(value)->cachedImage(m_element->document()->docLoader());
+    if (value->isImageGeneratorValue())
+        return static_cast<CSSImageGeneratorValue*>(value)->generatedImage();
+    return 0;
+}
+
 void CSSStyleSelector::mapBackgroundImage(BackgroundLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
         layer->setBackgroundImage(RenderStyle::initialBackgroundImage());
         return;
     }
-    
-    if (!value->isPrimitiveValue())
-        return;
 
-    CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    layer->setBackgroundImage(static_cast<CSSImageValue*>(primitiveValue)->image(m_element->document()->docLoader()));
+    layer->setBackgroundImage(styleImage(value));
 }
 
 void CSSStyleSelector::mapBackgroundRepeat(BackgroundLayer* layer, CSSValue* value)
@@ -4846,6 +4877,17 @@ void CSSStyleSelector::checkForTextSizeAdjust()
     FontDescription newFontDescription(m_style->fontDescription());
     newFontDescription.setComputedSize(newFontDescription.specifiedSize());
     m_style->setFontDescription(newFontDescription);
+}
+
+void CSSStyleSelector::checkForZoomChange(RenderStyle* style, RenderStyle* parentStyle)
+{
+    if (style->effectiveZoom() == parentStyle->effectiveZoom())
+        return;
+    
+    const FontDescription& childFont = style->fontDescription();
+    FontDescription newFontDescription(childFont);
+    setFontSize(newFontDescription, childFont.specifiedSize());
+    style->setFontDescription(newFontDescription);
 }
 
 void CSSStyleSelector::checkForGenericFamilyChange(RenderStyle* style, RenderStyle* parentStyle)

@@ -92,9 +92,9 @@ JSValue* JSHTMLCollection::callAsFunction(ExecState* exec, JSObject*, const List
     return jsUndefined();
 }
 
-CallType JSHTMLCollection::getCallData(CallData&)
+bool JSHTMLCollection::implementsCall() const
 {
-    return CallTypeNative;
+    return true;
 }
 
 bool JSHTMLCollection::canGetItemsForName(ExecState* exec, HTMLCollection* thisObj, const Identifier& propertyName)

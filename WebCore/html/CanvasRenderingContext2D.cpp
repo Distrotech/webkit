@@ -505,11 +505,11 @@ void CanvasRenderingContext2D::fill()
         willDraw(m_path.boundingRect());
 
 #if PLATFORM(CG)
-    if (state().m_fillStyle->gradient()) {
+    if (state().m_fillStyle->canvasGradient()) {
         // Shading works on the entire clip region, so convert the current path to a clip.
         c->save();
         CGContextClip(c->platformContext());
-        CGContextDrawShading(c->platformContext(), state().m_fillStyle->gradient()->platformShading());        
+        CGContextDrawShading(c->platformContext(), state().m_fillStyle->canvasGradient()->gradient().platformGradient());        
         c->restore();
     } else {
         if (state().m_fillStyle->pattern())
@@ -519,8 +519,8 @@ void CanvasRenderingContext2D::fill()
 #elif PLATFORM(QT)
     QPainterPath* path = m_path.platformPath();
     QPainter* p = static_cast<QPainter*>(c->platformContext());
-    if (state().m_fillStyle->gradient()) {
-        p->fillPath(*path, QBrush(*(state().m_fillStyle->gradient()->platformShading())));
+    if (state().m_fillStyle->canvasGradient()) {
+        p->fillPath(*path, QBrush(*(state().m_fillStyle->canvasGradient()->gradient().platformGradient())));
     } else {
         if (state().m_fillStyle->pattern())
             applyFillPattern();
@@ -530,8 +530,8 @@ void CanvasRenderingContext2D::fill()
     cairo_t* cr = c->platformContext();
     cairo_save(cr);
 
-    if (state().m_fillStyle->gradient()) {
-        cairo_set_source(cr, state().m_fillStyle->gradient()->platformShading());
+    if (state().m_fillStyle->canvasGradient()) {
+        cairo_set_source(cr, state().m_fillStyle->canvasGradient()->gradient().platformGradient());
         cairo_fill(cr);
     } else {
         if (state().m_fillStyle->pattern())
@@ -563,12 +563,12 @@ void CanvasRenderingContext2D::stroke()
     
     // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
-    if (state().m_strokeStyle->gradient()) {
+    if (state().m_strokeStyle->canvasGradient()) {
         // Shading works on the entire clip region, so convert the current path to a clip.
         c->save();
         CGContextReplacePathWithStrokedPath(c->platformContext());
         CGContextClip(c->platformContext());
-        CGContextDrawShading(c->platformContext(), state().m_strokeStyle->gradient()->platformShading());        
+        CGContextDrawShading(c->platformContext(), state().m_strokeStyle->canvasGradient()->gradient().platformGradient());        
         c->restore();
     } else {
         if (state().m_strokeStyle->pattern())
@@ -578,9 +578,9 @@ void CanvasRenderingContext2D::stroke()
 #elif PLATFORM(QT)
     QPainterPath* path = m_path.platformPath();
     QPainter* p = static_cast<QPainter*>(c->platformContext());
-    if (state().m_strokeStyle->gradient()) {
+    if (state().m_strokeStyle->canvasGradient()) {
         p->save();
-        p->setBrush(*(state().m_strokeStyle->gradient()->platformShading()));
+        p->setBrush(*(state().m_strokeStyle->canvasGradient()->gradient().platformGradient()));
         p->strokePath(*path, p->pen());
         p->restore();
     } else {
@@ -591,8 +591,8 @@ void CanvasRenderingContext2D::stroke()
 #elif PLATFORM(CAIRO)
     cairo_t* cr = c->platformContext();
     cairo_save(cr);
-    if (state().m_strokeStyle->gradient()) {
-        cairo_set_source(cr, state().m_strokeStyle->gradient()->platformShading());
+    if (state().m_strokeStyle->canvasGradient()) {
+        cairo_set_source(cr, state().m_strokeStyle->canvasGradient()->gradient().platformGradient());
         c->addPath(m_path);
         cairo_stroke(cr);
     } else {
@@ -624,7 +624,7 @@ bool CanvasRenderingContext2D::isPointInPath(const float x, const float y)
     FloatPoint point(x, y);
     // We have to invert the current transform to ensure we correctly handle the
     // transforms applied to the current path.
-    AffineTransform ctm = c->getCTM();
+    AffineTransform ctm = state().m_transform;
     if (!ctm.isInvertible())
         return false;
     FloatPoint transformedPoint = ctm.inverse().mapPoint(point);
@@ -664,11 +664,11 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
 
     // FIXME: Do this through platform-independent GraphicsContext API.
 #if PLATFORM(CG)
-    if (state().m_fillStyle->gradient()) {
+    if (state().m_fillStyle->canvasGradient()) {
         // Shading works on the entire clip region, so convert the rect to a clip.
         c->save();
         CGContextClipToRect(c->platformContext(), rect);
-        CGContextDrawShading(c->platformContext(), state().m_fillStyle->gradient()->platformShading());        
+        CGContextDrawShading(c->platformContext(), state().m_fillStyle->canvasGradient()->gradient().platformGradient());        
         c->restore();
     } else {
         if (state().m_fillStyle->pattern())
@@ -677,8 +677,8 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
     }
 #elif PLATFORM(QT)
     QPainter* p = static_cast<QPainter*>(c->platformContext());
-    if (state().m_fillStyle->gradient()) {
-        p->fillRect(rect, QBrush(*(state().m_fillStyle->gradient()->platformShading())));
+    if (state().m_fillStyle->canvasGradient()) {
+        p->fillRect(rect, QBrush(*(state().m_fillStyle->canvasGradient()->gradient().platformGradient())));
     } else {
         if (state().m_fillStyle->pattern())
             applyFillPattern();
@@ -687,8 +687,8 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
 #elif PLATFORM(CAIRO)
     cairo_t* cr = c->platformContext();
     cairo_save(cr);
-    if (state().m_fillStyle->gradient()) {
-        cairo_set_source(cr, state().m_fillStyle->gradient()->platformShading());
+    if (state().m_fillStyle->canvasGradient()) {
+        cairo_set_source(cr, state().m_fillStyle->canvasGradient()->gradient().platformGradient());
     } else {
         if (state().m_fillStyle->pattern())
             applyFillPattern();
@@ -997,7 +997,7 @@ void CanvasRenderingContext2D::drawImage(HTMLCanvasElement* canvas, const FloatR
         m_canvas->setOriginTainted();
 
     willDraw(destRect);
-    c->drawImage(buffer, sourceRect, destRect);
+    c->drawImage(buffer->image(), sourceRect, destRect);
 }
 
 // FIXME: Why isn't this just another overload of drawImage? Why have a different name?

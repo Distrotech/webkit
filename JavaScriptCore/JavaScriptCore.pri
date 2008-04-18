@@ -2,8 +2,8 @@
 VPATH += $$PWD
 
 INCLUDEPATH += tmp
-INCLUDEPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode $$PWD/VM
-DEPENDPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode $$PWD/VM
+INCLUDEPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode
+DEPENDPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode
 DEFINES -= KJS_IDENTIFIER_HIDE_GLOBALS 
 qt-port:DEFINES += BUILDING_QT__
 gtk-port:DEFINES += BUILDING_GTK__
@@ -35,6 +35,7 @@ KJSBISON += \
 SOURCES += \
     wtf/Assertions.cpp \
     wtf/HashTable.cpp \
+    wtf/MainThread.cpp \
     wtf/unicode/CollatorDefault.cpp \
     wtf/unicode/icu/CollatorICU.cpp \
     wtf/unicode/UTF8.cpp \
@@ -47,22 +48,9 @@ SOURCES += \
     API/JSObjectRef.cpp \
     API/JSStringRef.cpp \
     API/JSValueRef.cpp \
+    kjs/InitializeThreading.cpp \
     kjs/JSGlobalObject.cpp \
-    kjs/JSVariableObject.cpp \
-    kjs/JSActivation.cpp \
-    kjs/JSNotAnObject.cpp \
-    VM/CodeBlock.cpp \
-    VM/CodeGenerator.cpp \
-    VM/ExceptionHelpers.cpp \
-    VM/Instruction.cpp \
-    VM/JSPropertyNameIterator.cpp \
-    VM/LabelID.cpp \
-    VM/Machine.cpp \
-    VM/Opcode.cpp \
-    VM/Register.cpp \
-    VM/RegisterFile.cpp \
-    VM/RegisterFileStack.cpp \
-    VM/RegisterID.cpp
+    kjs/JSVariableObject.cpp
 
 # AllInOneFile.cpp helps gcc analize and optimize code
 # Other compilers may be able to do this at link time
@@ -110,6 +98,8 @@ SOURCES += \
     kjs/string_object.cpp \
     kjs/ustring.cpp \
     kjs/value.cpp \
+    profiler/FunctionCallProfile.cpp \
+    profiler/Profiler.cpp \
     wtf/FastMalloc.cpp
 
 !qt-port:SOURCES += \
@@ -117,10 +107,12 @@ SOURCES += \
 }
 
 gtk-port:SOURCES += \
-    wtf/ThreadingGtk.cpp
+    wtf/ThreadingGtk.cpp \
+    wtf/gtk/MainThreadGtk.cpp
 
 !gtk-port:SOURCES += \
-    wtf/ThreadingNone.cpp
+    wtf/ThreadingNone.cpp \
+    wtf/qt/MainThreadQt.cpp
 
 !CONFIG(QTDIR_build) {
     defineTest(addExtraCompiler) {

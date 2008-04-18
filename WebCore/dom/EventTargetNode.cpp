@@ -43,10 +43,17 @@
 #include "RegisteredEventListener.h"
 #include "TextEvent.h"
 #include "WheelEvent.h"
+#include <wtf/HashSet.h>
+
+#if ENABLE(DOM_STORAGE)
+#include "StorageEvent.h"
+#endif
 
 namespace WebCore {
 
 using namespace EventNames;
+    
+static HashSet<EventTargetNode*>* gNodesDispatchingSimulatedClicks = 0; 
 
 EventTargetNode::EventTargetNode(Document *doc)
     : Node(doc)
@@ -204,9 +211,6 @@ void EventTargetNode::dispatchSimulatedMouseEvent(const AtomicString& eventType,
     PassRefPtr<Event> underlyingEvent)
 {
     ASSERT(!eventDispatchForbidden());
-    
-    if (m_dispatchingSimulatedEvent)
-        return;
 
     bool ctrlKey = false;
     bool altKey = false;
@@ -218,21 +222,21 @@ void EventTargetNode::dispatchSimulatedMouseEvent(const AtomicString& eventType,
         shiftKey = keyStateEvent->shiftKey();
         metaKey = keyStateEvent->metaKey();
     }
-    
-    m_dispatchingSimulatedEvent = true;
 
     // Like Gecko, we just pass 0 for everything when we make a fake mouse event.
     // Internet Explorer instead gives the current mouse position and state.
     dispatchMouseEvent(eventType, 0, 0, 0, 0, 0, 0,
         ctrlKey, altKey, shiftKey, metaKey, true, 0, underlyingEvent);
-    
-    m_dispatchingSimulatedEvent = false;
 }
 
 void EventTargetNode::dispatchSimulatedClick(PassRefPtr<Event> event, bool sendMouseEvents, bool showPressedLook)
 {
-    if (m_dispatchingSimulatedEvent)
+    if (!gNodesDispatchingSimulatedClicks)
+        gNodesDispatchingSimulatedClicks = new HashSet<EventTargetNode*>;
+    else if (gNodesDispatchingSimulatedClicks->contains(this))
         return;
+    
+    gNodesDispatchingSimulatedClicks->add(this);
     
     // send mousedown and mouseup before the click, if requested
     if (sendMouseEvents)
@@ -244,6 +248,8 @@ void EventTargetNode::dispatchSimulatedClick(PassRefPtr<Event> event, bool sendM
 
     // always send click
     dispatchSimulatedMouseEvent(clickEvent, event);
+    
+    gNodesDispatchingSimulatedClicks->remove(this);
 }
 
 bool EventTargetNode::dispatchMouseEvent(const AtomicString& eventType, int button, int detail,
@@ -350,6 +356,16 @@ bool EventTargetNode::dispatchProgressEvent(const AtomicString &eventType, bool 
     ExceptionCode ec = 0;
     return dispatchEvent(new ProgressEvent(eventType, lengthComputableArg, loadedArg, totalArg), ec, true);
 }
+
+void EventTargetNode::dispatchStorageEvent(const AtomicString &eventType, const String& key, const String& oldValue, const String& newValue, Frame* source)
+{
+#if ENABLE(DOM_STORAGE)
+    ASSERT(!eventDispatchForbidden());
+    ExceptionCode ec = 0;
+    dispatchEvent(new StorageEvent(eventType, key, oldValue, newValue, source->document()->documentURI(), source->domWindow()), ec, true); 
+#endif
+}
+
 
 void EventTargetNode::removeHTMLEventListener(const AtomicString &eventType)
 {

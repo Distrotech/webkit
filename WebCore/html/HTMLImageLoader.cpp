@@ -51,7 +51,7 @@ HTMLImageLoader::HTMLImageLoader(Element* elt)
 HTMLImageLoader::~HTMLImageLoader()
 {
     if (m_image)
-        m_image->deref(this);
+        m_image->removeClient(this);
     m_element->document()->removeImage(this);
 }
 
@@ -63,9 +63,9 @@ void HTMLImageLoader::setImage(CachedImage *newImage)
         m_firedLoad = true;
         m_imageComplete = true;
         if (newImage)
-            newImage->ref(this);
+            newImage->addClient(this);
         if (oldImage)
-            oldImage->deref(this);
+            oldImage->removeClient(this);
     }
 
     if (RenderObject* renderer = element()->renderer())
@@ -96,7 +96,7 @@ void HTMLImageLoader::updateFromElement()
     if (!attr.isNull()) {
         if (m_loadManually) {
             doc->docLoader()->setAutoLoadImages(false);
-            newImage = new CachedImage(doc->docLoader(), parseURL(attr), false /* not for cache */);
+            newImage = new CachedImage(parseURL(attr));
             newImage->setLoading(true);
             newImage->setDocLoader(doc->docLoader());
             doc->docLoader()->m_docResources.set(newImage->url(), newImage);
@@ -112,9 +112,9 @@ void HTMLImageLoader::updateFromElement()
 #endif
         setLoadingImage(newImage);
         if (newImage)
-            newImage->ref(this);
+            newImage->addClient(this);
         if (oldImage)
-            oldImage->deref(this);
+            oldImage->removeClient(this);
     }
 
     if (RenderObject* renderer = elem->renderer())

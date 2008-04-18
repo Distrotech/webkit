@@ -148,7 +148,7 @@ void SimpleFontData::platformInit()
     m_shapesArabic = false;
 
     m_syntheticBoldOffset = m_font.m_syntheticBold ? 1.0f : 0.f;
-    
+
     bool failedSetup = false;
     if (!initFontData(this)) {
         // Ack! Something very bad happened, like a corrupt font.

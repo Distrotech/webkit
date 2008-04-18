@@ -73,12 +73,6 @@ double StringImp::toNumber(ExecState *) const
   return val.toDouble();
 }
 
-double StringImp::toNumber(ExecState *, Instruction* normalExitPC, Instruction*, Instruction*& resultPC) const
-{
-    resultPC = normalExitPC;
-    return val.toDouble();
-}
-
 UString StringImp::toString(ExecState *) const
 {
   return val;
@@ -111,12 +105,6 @@ bool NumberImp::toBoolean(ExecState *) const
 double NumberImp::toNumber(ExecState *) const
 {
   return val;
-}
-
-double NumberImp::toNumber(ExecState *, Instruction* normalExitPC, Instruction*, Instruction*& resultPC) const
-{
-    resultPC = normalExitPC;
-    return val;
 }
 
 UString NumberImp::toString(ExecState *) const
@@ -192,17 +180,6 @@ double GetterSetterImp::toNumber(ExecState *) const
     return 0.0;
 }
 
-double GetterSetterImp::toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    ASSERT_NOT_REACHED();
-    resultPC = normalExitPC;
-    if (normalExitPC != exceptionExitPC) {
-        exec->setExceptionSource(normalExitPC);
-        resultPC = exceptionExitPC;
-    }
-    return NaN;
-}
-
 UString GetterSetterImp::toString(ExecState *) const
 {
     ASSERT(false);
@@ -255,9 +232,9 @@ InternalFunctionImp::InternalFunctionImp(FunctionPrototype* funcProto, const Ide
 {
 }
 
-CallType InternalFunctionImp::getCallData(CallData&)
+bool InternalFunctionImp::implementsCall() const
 {
-    return CallTypeNative;
+  return true;
 }
 
 bool InternalFunctionImp::implementsHasInstance() const

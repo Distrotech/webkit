@@ -32,6 +32,9 @@
 #include "CSSStyleSelector.h"
 #include "Chrome.h"
 #include "Console.h"
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+#include "DOMApplicationCache.h"
+#endif
 #include "DOMSelection.h"
 #include "Document.h"
 #include "Element.h"
@@ -42,17 +45,29 @@
 #include "FrameView.h"
 #include "HTMLFrameOwnerElement.h"
 #include "History.h"
-#include "MessageEvent.h"
+#include "LocalStorage.h"
+#include "Location.h"
 #include "Navigator.h"
 #include "Page.h"
+#include "PageGroup.h"
 #include "PlatformScreen.h"
 #include "PlatformString.h"
 #include "Screen.h"
 #include <algorithm>
 #include <wtf/MathExtras.h>
 
+#if ENABLE(CROSS_DOCUMENT_MESSAGING)
+#include "MessageEvent.h"
+#endif
+
 #if ENABLE(DATABASE)
 #include "Database.h"
+#endif
+
+#if ENABLE(DOM_STORAGE)
+#include "SessionStorage.h"
+#include "Storage.h"
+#include "StorageArea.h"
 #endif
 
 using std::min;
@@ -160,6 +175,26 @@ void DOMWindow::clear()
     if (m_navigator)
         m_navigator->disconnectFrame();
     m_navigator = 0;
+
+    if (m_location)
+        m_location->disconnectFrame();
+    m_location = 0;
+    
+#if ENABLE(DOM_STORAGE)
+    if (m_sessionStorage)
+        m_sessionStorage->disconnectFrame();
+    m_sessionStorage = 0;
+
+    if (m_localStorage)
+        m_localStorage->disconnectFrame();
+    m_localStorage = 0;
+#endif
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    if (m_applicationCache)
+        m_applicationCache->disconnectFrame();
+    m_applicationCache = 0;
+#endif
 }
 
 Screen* DOMWindow::screen() const
@@ -225,12 +260,63 @@ Console* DOMWindow::console() const
     return m_console.get();
 }
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+DOMApplicationCache* DOMWindow::applicationCache() const
+{
+    if (!m_applicationCache)
+        m_applicationCache = DOMApplicationCache::create(m_frame);
+    return m_applicationCache.get();
+}
+#endif
+
 Navigator* DOMWindow::navigator() const
 {
     if (!m_navigator)
         m_navigator = Navigator::create(m_frame);
     return m_navigator.get();
 }
+
+Location* DOMWindow::location() const
+{
+    if (!m_location)
+        m_location = Location::create(m_frame);
+    return m_location.get();
+}
+
+#if ENABLE(DOM_STORAGE)
+Storage* DOMWindow::sessionStorage() const
+{
+    if (m_sessionStorage)
+        return m_sessionStorage.get();
+        
+    Page* page = m_frame->page();
+    if (!page)
+        return 0;
+
+    Document* document = m_frame->document();
+    if (!document)
+        return 0;
+
+    RefPtr<StorageArea> storageArea = page->sessionStorage()->storageArea(document->securityOrigin());
+    m_sessionStorage = Storage::create(m_frame, storageArea.release());
+    return m_sessionStorage.get();
+}
+
+Storage* DOMWindow::localStorage() const
+{
+    Document* document = this->document();
+    if (!document)
+        return 0;
+        
+    Page* page = document->page();
+    if (!page)
+        return 0;
+    
+    RefPtr<StorageArea> storageArea = page->group().localStorage()->storageArea(document->securityOrigin());
+    m_localStorage = Storage::create(m_frame, storageArea.release());
+    return m_localStorage.get();
+}
+#endif
 
 #if ENABLE(CROSS_DOCUMENT_MESSAGING)
 void DOMWindow::postMessage(const String& message, const String& domain, const String& uri, DOMWindow* source) const
@@ -403,8 +489,8 @@ int DOMWindow::innerHeight() const
     FrameView* view = m_frame->view();
     if (!view)
         return 0;
-
-    return view->height();
+    
+    return view->height() / m_frame->pageZoomFactor();
 }
 
 int DOMWindow::innerWidth() const
@@ -416,7 +502,7 @@ int DOMWindow::innerWidth() const
     if (!view)
         return 0;
 
-    return view->width();
+    return view->width() / m_frame->pageZoomFactor();
 }
 
 int DOMWindow::screenX() const
@@ -457,7 +543,7 @@ int DOMWindow::scrollX() const
     if (doc)
         doc->updateLayoutIgnorePendingStylesheets();
 
-    return view->contentsX();
+    return view->contentsX() / m_frame->pageZoomFactor();
 }
 
 int DOMWindow::scrollY() const
@@ -474,7 +560,7 @@ int DOMWindow::scrollY() const
     if (doc)
         doc->updateLayoutIgnorePendingStylesheets();
 
-    return view->contentsY();
+    return view->contentsY() / m_frame->pageZoomFactor();
 }
 
 bool DOMWindow::closed() const
@@ -673,7 +759,7 @@ void DOMWindow::scrollTo(int x, int y) const
     if (!view)
         return;
 
-    view->setContentsPos(x, y);
+    view->setContentsPos(x * m_frame->pageZoomFactor(), y * m_frame->pageZoomFactor());
 }
 
 void DOMWindow::moveBy(float x, float y) const

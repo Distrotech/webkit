@@ -66,8 +66,6 @@ namespace KJS {
 
     enum HeapType { PrimaryHeap, NumberHeap };
 
-    static void markStackObjectsConservatively(void* start, void* end);
-
   private:
     template <Collector::HeapType heapType> static void* heapAllocate(size_t s);
     template <Collector::HeapType heapType> static size_t sweep(bool);
@@ -81,8 +79,10 @@ namespace KJS {
     static void markProtectedObjects();
     static void markMainThreadOnlyObjects();
     static void markCurrentThreadConservatively();
+    static void markCurrentThreadConservativelyInternal();
     static void markOtherThreadConservatively(Thread*);
     static void markStackObjectsConservatively();
+    static void markStackObjectsConservatively(void* start, void* end);
 
     static size_t mainThreadOnlyObjectCount;
     static bool memoryFull;

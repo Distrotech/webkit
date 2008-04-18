@@ -27,6 +27,10 @@
 #include "ustring.h"
 #include <wtf/Vector.h>
 
+namespace WTF {
+    template<typename T> class ThreadSpecific;
+}
+
 namespace KJS {
 
   class Identifier;
@@ -35,7 +39,7 @@ namespace KJS {
   class Lexer : Noncopyable {
   public:
     void setCode(int startingLineNumber, const UChar *c, unsigned int len);
-    int lex();
+    int lex(void* lvalp, void* llocp);
 
     int lineNo() const { return yylineno; }
 
@@ -88,6 +92,7 @@ namespace KJS {
 
   private:
     friend Lexer& lexer();
+    friend class WTF::ThreadSpecific<Lexer>;
     Lexer();
 
     int yylineno;

@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
+ Copyright (C) 2008 Apple Inc. All Rights Reserved.
  
  This file is part of the WebKit project
  
@@ -21,7 +22,7 @@
 
 #ifndef SVGAnimateMotionElement_h
 #define SVGAnimateMotionElement_h
-#if ENABLE(SVG) && ENABLE(SVG_ANIMATION)
+#if ENABLE(SVG_ANIMATION)
 
 #include "SVGAnimationElement.h"
 #include "AffineTransform.h"
@@ -33,12 +34,9 @@ namespace WebCore {
     public:
         SVGAnimateMotionElement(const QualifiedName&, Document*);
         virtual ~SVGAnimateMotionElement();
-        
+
         virtual bool hasValidTarget() const;
-        
-        virtual bool updateAnimationBaseValueFromElement();
-        virtual void applyAnimatedValueToElement();
-        
+
         virtual void parseMappedAttribute(MappedAttribute*);
                 
         Path animationPath();
@@ -46,11 +44,13 @@ namespace WebCore {
     protected:
         virtual const SVGElement* contextElement() const { return this; }
         
-        virtual bool updateAnimatedValue(EAnimationMode, float timePercentage, unsigned valueIndex, float percentagePast);
-        virtual bool calculateFromAndToValues(EAnimationMode, unsigned valueIndex);
+        virtual void resetToBaseValue(const String&);
+        virtual bool calculateFromAndToValues(const String& fromString, const String& toString);
+        virtual bool calculateFromAndByValues(const String& fromString, const String& byString);
+        virtual void calculateAnimatedValue(float percentage, unsigned repeat, SVGSMILElement* resultElement);
+        virtual void applyResultsToTarget();
         
     private:
-        FloatPoint m_basePoint;
         FloatSize m_animatedTranslation;
         float m_animatedAngle;
         
@@ -60,9 +60,8 @@ namespace WebCore {
         FloatPoint m_toPoint;
         float m_toAngle;
         
-        FloatSize m_pointDiff;
-        float m_angleDiff;
-        
+        unsigned m_baseIndexInTransformList;
+                
         Path m_path;
         Vector<float> m_keyPoints;
         enum RotateMode {
@@ -76,7 +75,7 @@ namespace WebCore {
     
 } // namespace WebCore
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG_ANIMATION)
 #endif // SVGAnimateMotionElement_h
 
 // vim:ts=4:noet

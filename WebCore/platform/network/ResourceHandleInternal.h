@@ -27,8 +27,10 @@
 #ifndef ResourceHandleInternal_h
 #define ResourceHandleInternal_h
 
+#include "ResourceHandle.h"
 #include "ResourceRequest.h"
 #include "AuthenticationChallenge.h"
+#include "Timer.h"
 
 #if USE(CFNETWORK)
 #include <CFNetwork/CFURLConnectionPriv.h>
@@ -37,7 +39,6 @@
 #if USE(WININET)
 #include <winsock2.h>
 #include <windows.h>
-#include "Timer.h"
 #endif
 
 #if USE(CURL)
@@ -108,6 +109,7 @@ namespace WebCore {
 #endif
 #if USE(SOUP)
             , m_msg(0)
+            , m_cancelled(false)
 #endif
 #if PLATFORM(QT)
             , m_job(0)
@@ -119,6 +121,7 @@ namespace WebCore {
 #elif USE(CFNETWORK)
             , m_currentCFChallenge(0)
 #endif
+            , m_failureTimer(loader, &ResourceHandle::fireFailure)
         {
         }
         
@@ -171,8 +174,8 @@ namespace WebCore {
 #endif
 #if USE(SOUP)
         SoupMessage* m_msg;
-        SoupSession* session;
         ResourceResponse m_response;
+        bool m_cancelled;
 #endif
 #if PLATFORM(QT)
 #if QT_VERSION < 0x040400
@@ -189,6 +192,9 @@ namespace WebCore {
         CFURLAuthChallengeRef m_currentCFChallenge;
 #endif
         AuthenticationChallenge m_currentWebChallenge;
+
+        ResourceHandle::FailureType m_failureType;
+        Timer<ResourceHandle> m_failureTimer;
     };
 
 } // namespace WebCore

@@ -31,6 +31,7 @@
 
 #include "ProgIDMacros.h"
 
+// Items may only be added to the end of this macro. No items may be removed from it.
 #define FOR_EACH_COCLASS(macro) \
     macro(CFDictionaryPropertyBag) \
     macro(WebCache) \
@@ -53,7 +54,11 @@
     macro(WebURLRequest) \
     macro(WebURLResponse) \
     macro(WebView) \
+    macro(WebArchive) \
+    macro(WebCoreStatistics) \
     // end of macro
+
+// Everything below this point is deprecated. Please do not use.
 
 #define WEBKITCLASS_MEMBER(cls) cls##Class,
 enum WebKitClass {

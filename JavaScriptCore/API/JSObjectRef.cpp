@@ -179,18 +179,11 @@ void JSObjectSetProperty(JSContextRef ctx, JSObjectRef object, JSStringRef prope
     Identifier name(toJS(propertyName));
     JSValue* jsValue = toJS(value);
 
-    // If non-0 attributes were passed, we may need to use a lower-level call than
-    // the normal JSObject::put. If there is no existing property, then use either
-    // initializeVariable or putDirect instead, since those have the power to set attributes.
-    if (attributes && !jsObject->hasProperty(exec, name)) {
-        if (jsObject->isGlobalObject())
-            static_cast<JSGlobalObject*>(jsObject)->initializeVariable(exec, name, jsValue, attributes);
-        else
-            jsObject->putDirect(name, jsValue, attributes);
-        return;
-    }
+    if (attributes && !jsObject->hasProperty(exec, name))
+        jsObject->putWithAttributes(exec, name, jsValue, attributes);
+    else
+        jsObject->put(exec, name, jsValue);
 
-    jsObject->put(exec, name, jsValue);
     if (exec->hadException()) {
         if (exception)
             *exception = toRef(exec->exception());
@@ -286,8 +279,8 @@ JSValueRef JSObjectCallAsFunction(JSContextRef ctx, JSObjectRef object, JSObject
     JSObject* jsThisObject = toJS(thisObject);
 
     if (!jsThisObject)
-        jsThisObject = exec->dynamicGlobalObject();
-    
+        jsThisObject = exec->globalThisValue();
+
     List argList;
     for (size_t i = 0; i < argumentCount; i++)
         argList.append(toJS(arguments[i]));
@@ -305,8 +298,7 @@ JSValueRef JSObjectCallAsFunction(JSContextRef ctx, JSObjectRef object, JSObject
 bool JSObjectIsConstructor(JSContextRef, JSObjectRef object)
 {
     JSObject* jsObject = toJS(object);
-    ConstructData constructData;
-    return jsObject->getConstructData(constructData) != ConstructTypeNone;
+    return jsObject->implementsConstruct();
 }
 
 JSObjectRef JSObjectCallAsConstructor(JSContextRef ctx, JSObjectRef object, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)

@@ -49,9 +49,8 @@ namespace KJS {
         JSValue* test(ExecState*, const List& args);
         JSValue* exec(ExecState*, const List& args);
 
-        virtual CallType getCallData(CallData&);
+        virtual bool implementsCall() const;
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
-
         bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         JSValue* getValueProperty(ExecState*, int token) const;
         void put(ExecState*, const Identifier&, JSValue*);
@@ -76,20 +75,15 @@ namespace KJS {
 
         RegExpObjectImp(ExecState*, FunctionPrototype*, RegExpPrototype*);
 
-        JSObject* createRegExpImp(ExecState*, PassRefPtr<RegExp>);
-
-        virtual ConstructType getConstructData(ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual JSObject* construct(ExecState*, const List&);
-
+        JSObject* createRegExpImp(ExecState*, PassRefPtr<RegExp>);
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
-
         virtual void put(ExecState*, const Identifier&, JSValue*);
         void putValueProperty(ExecState*, int token, JSValue*);
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         JSValue* getValueProperty(ExecState*, int token) const;
-
         virtual const ClassInfo* classInfo() const { return &info; }
-        static const ClassInfo info;
 
         void performMatch(RegExp*, const UString&, int startOffset, int& position, int& length, int** ovector = 0);
         JSObject* arrayOfMatches(ExecState*) const;
@@ -102,6 +96,8 @@ namespace KJS {
         JSValue* getRightContext() const;
 
         OwnPtr<RegExpObjectImpPrivate> d;
+
+        static const ClassInfo info;
     };
 
 } // namespace

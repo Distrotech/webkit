@@ -869,14 +869,26 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
 
         BidiIterator end = start.position();
 
-        if (!fullLayout && end.atEnd() && lastRootBox() && lastRootBox()->lastChild()->object()->isBR() && lastRootBox()->object()->lastChild()->style()->clear() != CNONE)
-            newLine(lastRootBox()->object()->lastChild()->style()->clear());
+        if (!fullLayout && lastRootBox() && lastRootBox()->endsWithBreak()) {
+            // If the last line before the start line ends with a line break that clear floats,
+            // adjust the height accordingly.
+            // A line break can be either the first or the last object on a line, depending on its direction.
+            RenderObject* lastObject = lastRootBox()->lastLeafChild()->object();
+            if (!lastObject->isBR())
+                lastObject = lastRootBox()->firstLeafChild()->object();
+            if (lastObject->isBR()) {
+                EClear clear = lastObject->style()->clear();
+                if (clear != CNONE)
+                    newLine(clear);
+            }
+        }
 
         bool endLineMatched = false;
+        bool checkForEndLineMatch = endLine;
 
         while (!end.atEnd()) {
             // FIXME: Is this check necessary before the first iteration or can it be moved to the end?
-            if (endLine && (endLineMatched = matchedEndLine(start, cleanLineStart, cleanLineBidiStatus, endLine, endLineYPos, repaintBottom, repaintTop)))
+            if (checkForEndLineMatch && (endLineMatched = matchedEndLine(start, cleanLineStart, cleanLineBidiStatus, endLine, endLineYPos, repaintBottom, repaintTop)))
                 break;
 
             betweenMidpoints = false;
@@ -951,7 +963,7 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                     ASSERT(f->m_renderer == floats[floatIndex].object);
                     // If a float's geometry has changed, give up on syncing with clean lines.
                     if (floats[floatIndex].rect != IntRect(f->m_left, f->m_top, f->m_width, f->m_bottom - f->m_top))
-                        endLine = 0;
+                        checkForEndLineMatch = false;
                     floatIndex++;
                 }
                 lastFloat = m_floatingObjects->last();

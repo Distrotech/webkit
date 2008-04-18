@@ -574,11 +574,6 @@ bool ContainerNode::appendChild(PassRefPtr<Node> newChild, ExceptionCode& ec)
     return true;
 }
 
-bool ContainerNode::hasChildNodes() const
-{
-    return m_firstChild;
-}
-
 ContainerNode* ContainerNode::addChild(PassRefPtr<Node> newChild)
 {
     // This function is only used during parsing.
@@ -699,7 +694,7 @@ void ContainerNode::childrenChanged(bool changedByParser, Node* beforeChange, No
 {
     Node::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
     if (!changedByParser && childCountDelta)
-        document()->nodeChildrenChanged(this, beforeChange, afterChange, childCountDelta);
+        document()->nodeChildrenChanged(this);
     if (document()->hasNodeListCaches())
         notifyNodeListsChildrenChanged();
 }

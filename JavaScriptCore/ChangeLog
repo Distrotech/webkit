@@ -1,2556 +1,1112 @@
-2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
 
-        Reviewed by Oliver Hunt.
-        
-        Fixed ASSERT seen during run-sunspider of a debug build.
+        Reviewed by mrowe.
 
-        * VM/CodeGenerator.h: Made the default codegen buffers bigger. SunSpider
-        runs all tests in one global environment, so you end up with more than
-        128 locals. This is just a stop-gap until we code up a real
-        solution to arbitrary symbol and label limits.
+        * wtf/Platform.h: Add HAVE_ACCESSIBILITY to Platform.h.
 
-2008-04-17  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Fixed a bug in exception unwinding, where we wouldn't deref the scope
-        chain in global scope, so we would leak ScopeChainNodes when exceptions
-        were thrown inside "with" and "catch" scopes.
-        
-        Also did some cleanup of the unwinding code along the way.
-        
-        Scope chain reference counting is still wrong in a few ways. I thought
-        I would fix this portion of it first.
-        
-        run-sunspider shows no change.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::unwindCallFrame):
-        (KJS::Machine::throwException):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-
-2008-04-17  Oliver Hunt  <oliver@apple.com>
+2008-04-17  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Maciej.
 
-        Add more exception checking to toNumber conversions
+        Thread static data destructors are not guaranteed to be called in any particular order;
+        turn ThreadSpecific into a phoenix-style singleton to avoid accessing freed memory when
+        deleted objects are interdependent (e.g. CommonIdentifiers and internal identifier tables).
 
-        This corrects op_pre_dec, op_negate, op_mod and op_sub.
+        No change on SunSpider.
 
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
+        * wtf/ThreadSpecific.h:
+        (WTF::ThreadSpecific::Data::Data):
+        (WTF::::get):
+        (WTF::::set):
+        (WTF::::destroy):
 
-2008-04-17  Geoffrey Garen  <ggaren@apple.com> and Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Oliver Hunt.
-        
-        Behold: eval.
-        
-        Introduced a new opcode: op_call_eval. In the normal case, it performs
-        an eval. In the case where eval has been overridden in some way, it
-        performs a function call.
-
-        * VM/CodeGenerator.h: Added a feature so the code generator knows not
-        to optimized locals in eval code.
-        
-2008-04-17  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Added some ASSERTs to document codegen failures in
-        run-javascriptcore-tests.
-        
-        For all tests, program-level codegen now either succeeds, or fails with
-        an ASSERT.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::addVar):
-        (KJS::CodeGenerator::CodeGenerator):
-        (KJS::CodeGenerator::newTemporary):
-        (KJS::CodeGenerator::newLabel):
-
-2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+2008-04-15  Srinivas Rao. M Hamse  <msrinirao@gmail.com>
 
         Reviewed by Maciej Stachowiak.
-        
-        Fixed another case of a dst register being an unreferenced temporary
-        (caused an ASSERT when running the full sunspider suite).
 
-        * kjs/nodes.cpp:
-        (KJS::CaseBlockNode::emitCodeForBlock):
+        - gcc 3.x build fix
 
-2008-04-16  Maciej Stachowiak  <mjs@apple.com>
+        * kjs/nodes.h: CallerType definition made public for gcc 3.x compilation
 
-        Reviewed by Geoff.
-        
-        - add documentation (and meaningful parameter names) for arithmetic and bitwise binary ops
+2008-04-16  Brady Eidson  <beidson@apple.com>
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitMul):
-        (KJS::CodeGenerator::emitDiv):
-        (KJS::CodeGenerator::emitMod):
-        (KJS::CodeGenerator::emitSub):
-        (KJS::CodeGenerator::emitLeftShift):
-        (KJS::CodeGenerator::emitRightShift):
-        (KJS::CodeGenerator::emitUnsignedRightShift):
-        (KJS::CodeGenerator::emitBitAnd):
-        (KJS::CodeGenerator::emitBitXOr):
-        (KJS::CodeGenerator::emitBitOr):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::MultNode::emitCode):
-        (KJS::DivNode::emitCode):
-        (KJS::ModNode::emitCode):
-        (KJS::SubNode::emitCode):
-        (KJS::LeftShiftNode::emitCode):
-        (KJS::RightShiftNode::emitCode):
-        (KJS::UnsignedRightShiftNode::emitCode):
-        (KJS::BitAndNode::emitCode):
-        (KJS::BitXOrNode::emitCode):
-        (KJS::BitOrNode::emitCode):
-        (KJS::emitReadModifyAssignment):
-        (KJS::ReadModifyResolveNode::emitCode):
+        Reviewed by Sam Weinig
 
-2008-04-16  Oliver Hunt  <oliver@apple.com>
+        Change ThreadSafeShared to act like RefCounted by starting out with a single ref by default
 
-        Reviewed by Geoff.
+        * wtf/Threading.h:
+        (WTF::ThreadSafeShared::ThreadSafeShared):
 
-        Exception checks for toNumber in op_pre_inc
-
-        This is somewhat more convoluted than the simple hadException checks
-        we currently use.  Instead we use special toNumber conversions that
-        select between the exception and ordinary vPC.  This allows us to 
-        remove any branches in the common case (incrementing a number).
-
-        * API/JSCallbackObject.h:
-        * API/JSCallbackObjectFunctions.h:
-        (KJS::::toNumber):
-        * ChangeLog:
-        * JavaScriptCore.exp:
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/JSPropertyNameIterator.cpp:
-        (KJS::JSPropertyNameIterator::toNumber):
-        * VM/JSPropertyNameIterator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/ExecState.cpp:
-        (KJS::ExecState::ExecState):
-        * kjs/ExecState.h:
-        * kjs/JSNotAnObject.cpp:
-        (KJS::JSNotAnObject::toNumber):
-        * kjs/JSNotAnObject.h:
-        * kjs/internal.cpp:
-        (KJS::StringImp::toNumber):
-        (KJS::NumberImp::toNumber):
-        (KJS::GetterSetterImp::toNumber):
-        * kjs/internal.h:
-        * kjs/object.cpp:
-        (KJS::JSObject::toNumber):
-        * kjs/object.h:
-        * kjs/value.h:
-        (KJS::JSValue::toNumber):
-
-2008-04-16  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - ensure that activations are kept in a register to protect them from GC
-        
-        Also renamed OptionalCalleeScopeChain constant to OptionalCalleeActivation, since
-        that is what is now kept there, and there is no more need to keep the scope chain in
-        the register file.
-
-        * VM/Machine.cpp:
-        (KJS::initializeCallFrame):
-        (KJS::scopeChainForCall):
-        * VM/Machine.h:
-        (KJS::Machine::):
-
-2008-04-16  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Made "this" work in program code / global scope.
-        
-        The machine can initialize "this" prior to execution because it knows
-        that, for program code, "this" is always stored in lr1. 
-
-        * VM/Machine.cpp:
-        (KJS::Machine::execute):
-        * VM/Machine.h:
-        (KJS::Machine::):
-        * kjs/interpreter.cpp:
-        (KJS::Interpreter::evaluate):
-
-2008-04-16  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Fixed a codegen bug when returning from inside a dynamic scope (a with
-        or catch block): we need to pop any dynamic scope(s) that have been
-        added so op_ret can find the activation object at the top of the scope
-        chain.
-
-        * kjs/nodes.cpp:
-        (KJS::ReturnNode::emitCode): If we're returning from inside a dynamic
-        scope, emit a jmp_scopes to take care of popping any dynamic scope(s)
-        and then branching to the return instruction.
-
-2008-04-16  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - document the add and get_prop_id opcodes
-        
-        In addition to adding documentation in comments, I changed
-        references to register IDs or indices relating to these opcodes to
-        have meaningful names instead of r0 r1 r2.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitAdd):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * kjs/nodes.cpp:
-        (KJS::DotAccessorNode::emitCode):
-        (KJS::FunctionCallDotNode::emitCode):
-        (KJS::PostIncDotNode::emitCode):
-        (KJS::PostDecDotNode::emitCode):
-        (KJS::PreIncDotNode::emitCode):
-        (KJS::PreDecDotNode::emitCode):
-        (KJS::AddNode::emitCode):
-        (KJS::ReadModifyDotNode::emitCode):
-
-2008-04-15  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt and Maciej Stachowiak.
-        
-        Fixed a codegen bug in with and switch, and added an ASSERT to
-        make sure it doesn't happen again.
-        
-        emitCode() assumes that dst, if non-zero, is either referenced or
-        non-temporary (i.e., it assumes that newTemporary() will return a
-        register not equal to dst). Certain callers to emitCode() weren't
-        guaranteeing that to be so, so temporary register values were being
-        overwritten.
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::emitNode): ASSERT that dst is referenced or non-temporary.
-
-        * kjs/nodes.cpp:
-        (KJS::CommaNode::emitCode): Reference the dst we pass.
-
-        (KJS::WithNode::emitCode): No need to pass an explicit dst register.
-        
-        (KJS::CaseBlockNode::emitCodeForBlock): No need to pass an explicit dst register.
-        (KJS::SwitchNode::emitCode): No need to pass an explicit dst register.
-
-        * kjs/nodes.h: Made dst the last parameter to emitCodeForBlock, to match
-        emitCode.
-
-2008-04-15  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Maciej.
-
-        Bug 18526: Throw exceptions when resolve fails for op_resolve_base_and_func.
-        <https://bugs.webkit.org/show_bug.cgi?id=18526>
-
-        Very simple fix, sunspider shows a 0.7% progression, ubench shows a 0.4% regression.
-
-        * VM/Machine.cpp:
-        (KJS::resolveBaseAndFunc):
-        (KJS::Machine::privateExecute):
-
-2008-04-15  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fix incorrect result on 3d-raytrace test
-        
-        Oliver found and tracked down this bug, I just typed in the fix.
-
-        * VM/Machine.cpp:
-        (KJS::slideRegisterWindowForCall): When setting omitted parameters to undefined,
-        account for the space for local variables.
-
-2008-04-15  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fix codegen handling of dst registers
-        
-        1.006x speedup (not sure why).
-        
-        Most emitCode functions take an optional "dst" parameter that says
-        where the output of the instruction should be written. I made some
-        functions for convenient handling of the dst register:
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::tempDestination): Takes the dst register. Returns it if
-        it is not null and is a temporary, otherwise allocates a new temporary. This is
-        intended for cases where an intermediate value might be written into the dst
-
-        (KJS::CodeGenerator::finalDestination): Takes the dst register and an optional
-        register that was used as a temp destination. Picks the right thing for the final
-        output. Intended to be used as the output register for the instruction that generates
-        the final value of a particular node.
-        
-        (KJS::CodeGenerator::moveToDestinationIfNeeded): Takes dst and a
-        RegisterID; moves from the register to dst if dst is defined and
-        different from the register. This is intended for cases where the
-        result of a node is already in a specific register (likely a
-        local), and so no code needs to be generated unless a specific
-        destination has been requested, in which case a move is needed.
-        
-        I also applied these methods throughout emitCode functions. In
-        some cases this was just cleanup, in other cases I fixed actual
-        codegen bugs. Below I have given specific comments for the cases
-        where I believe I fixed a codegen bug, or improved quality of codegen.
-        
-        * kjs/nodes.cpp:
-        (KJS::NullNode::emitCode):
-        (KJS::FalseNode::emitCode):
-        (KJS::TrueNode::emitCode):
-        (KJS::NumberNode::emitCode):
-        (KJS::StringNode::emitCode):
-        (KJS::RegExpNode::emitCode):
-        (KJS::ThisNode::emitCode): Now avoids emitting a mov when dst is
-        the same as the this register (the unlikely case of "this = this");
-        (KJS::ResolveNode::emitCode): Now avoids emitting a mov when dst
-        is the same as the local regiester, in the local var case (the
-        unlikely case of "x = x");
-        (KJS::ArrayNode::emitCode): Fixed a codegen bug where array
-        literal element expressions may have observed an intermediate
-        value of constructing the array.
-        (KJS::ObjectLiteralNode::emitCode): 
-        (KJS::PropertyListNode::emitCode): Fixed a codegen bug where object literal
-        property definition expressions may have obesrved an intermediate value of
-        constructing the object.
-        (KJS::BracketAccessorNode::emitCode):
-        (KJS::DotAccessorNode::emitCode):
-        (KJS::NewExprNode::emitCode):
-        (KJS::FunctionCallValueNode::emitCode):
-        (KJS::FunctionCallBracketNode::emitCode):
-        (KJS::FunctionCallDotNode::emitCode):
-        (KJS::PostIncResolveNode::emitCode):
-        (KJS::PostDecResolveNode::emitCode):
-        (KJS::PostIncBracketNode::emitCode):
-        (KJS::PostDecBracketNode::emitCode):
-        (KJS::PostIncDotNode::emitCode):
-        (KJS::PostDecDotNode::emitCode):
-        (KJS::DeleteResolveNode::emitCode):
-        (KJS::DeleteBracketNode::emitCode):
-        (KJS::DeleteDotNode::emitCode):
-        (KJS::DeleteValueNode::emitCode):
-        (KJS::VoidNode::emitCode):
-        (KJS::TypeOfResolveNode::emitCode):
-        (KJS::TypeOfValueNode::emitCode):
-        (KJS::PreIncResolveNode::emitCode): Fixed a codegen bug where the final
-        value would not be output to the dst register in the local var case.
-        (KJS::PreDecResolveNode::emitCode): Fixed a codegen bug where the final
-        value would not be output to the dst register in the local var case.
-        (KJS::PreIncBracketNode::emitCode):
-        (KJS::PreDecBracketNode::emitCode):
-        (KJS::PreIncDotNode::emitCode):
-        (KJS::PreDecDotNode::emitCode):
-        (KJS::UnaryPlusNode::emitCode):
-        (KJS::NegateNode::emitCode):
-        (KJS::BitwiseNotNode::emitCode):
-        (KJS::LogicalNotNode::emitCode):
-        (KJS::MultNode::emitCode):
-        (KJS::DivNode::emitCode):
-        (KJS::ModNode::emitCode):
-        (KJS::AddNode::emitCode):
-        (KJS::SubNode::emitCode):
-        (KJS::LeftShiftNode::emitCode):
-        (KJS::RightShiftNode::emitCode):
-        (KJS::UnsignedRightShiftNode::emitCode):
-        (KJS::LessNode::emitCode):
-        (KJS::GreaterNode::emitCode):
-        (KJS::LessEqNode::emitCode):
-        (KJS::GreaterEqNode::emitCode):
-        (KJS::InstanceOfNode::emitCode):
-        (KJS::InNode::emitCode):
-        (KJS::EqualNode::emitCode):
-        (KJS::NotEqualNode::emitCode):
-        (KJS::StrictEqualNode::emitCode):
-        (KJS::NotStrictEqualNode::emitCode):
-        (KJS::BitAndNode::emitCode):
-        (KJS::BitXOrNode::emitCode):
-        (KJS::BitOrNode::emitCode):
-        (KJS::LogicalAndNode::emitCode):
-        (KJS::LogicalOrNode::emitCode):
-        (KJS::ConditionalNode::emitCode):
-        (KJS::emitReadModifyAssignment): Allow an out argument separate from the operands,
-        needed for fixes below.
-        (KJS::ReadModifyResolveNode::emitCode): Fixed a codegen bug where the right side of
-        the expression may observe an intermediate value.
-        (KJS::AssignResolveNode::emitCode): Fixed a codegen bug where the right side of the
-        expression may observe an intermediate value.
-        (KJS::ReadModifyDotNode::emitCode): Fixed a codegen bug where the right side of the
-        expression may observe an intermediate value.
-        (KJS::ReadModifyBracketNode::emitCode): Fixed a codegen bug where the right side of the
-        expression may observe an intermediate value.
-        (KJS::CommaNode::emitCode): Avoid writing temporary value to dst register.
-        (KJS::ReturnNode::emitCode): Void return should return undefined, not null.
-        (KJS::FuncExprNode::emitCode):
-
-2008-04-15  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-
-        - fix huge performance regression (from trunk) in string-unpack-code
-        
-        This restores string-unpack-code performance to parity with
-        trunk (2.27x speedup relative to previous SquirrelFish)
-        
-        * VM/Machine.cpp:
-        (KJS::Machine::execute): Shrink register file after call to avoid
-        growing repeatedly.
-
-2008-04-15  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Fixed dumpCallFrame to match our new convention of passing around a
-        ScopeChainNode* instead of a ScopeChain*.
-
-        * JavaScriptCore.exp:
-        * VM/Machine.cpp:
-        (KJS::Machine::dumpCallFrame):
-        * VM/Machine.h:
-
-2008-04-15  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Maciej.
-
-        Bug 18436: Need to throw exception on read/modify/write or similar resolve for nonexistent property
-        <https://bugs.webkit.org/show_bug.cgi?id=18436>
-
-        Add op_resolve_base_and_property for read/modify/write operations,
-        this adds a "superinstruction" to resolve the base and value of a
-        property simultaneously.  Just using resolveBase and resolve results 
-        in an 5% regression in ubench, 30% in loop-empty-resolve (which is 
-        expected).  1.3% progression in sunspider, 2.1% in ubench, with a 
-        21% gain in loop-empty-resolve.  The only outlier is function-missing-args
-        which gets a 3% regression that I could never resolve.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitResolveBaseAndProperty):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::resolveBaseAndProperty):
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::PostIncResolveNode::emitCode):
-        (KJS::PostDecResolveNode::emitCode):
-        (KJS::PreIncResolveNode::emitCode):
-        (KJS::PreDecResolveNode::emitCode):
-        (KJS::ReadModifyResolveNode::emitCode):
-
-2008-04-15  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fixed "SquirrelFish crashes due to bad scope chain on some SunSpider tests"
-        https://bugs.webkit.org/show_bug.cgi?id=18508
-
-        3d-raytrace and string-unpack-code now run.
-        
-        The basic approach is to pass around ScopeChainNode* instead of
-        ScopeChain*, which in addition to not becoming suddenly an invalid
-        pointer also saves an indirection.
-        
-        This is an 0.4% speedup on SunSpider --squirrelfish (1.8% on --ubench)
-        
-        * VM/Machine.cpp:
-        (KJS::resolve):
-        (KJS::resolveBase):
-        (KJS::resolveBaseAndFunc):
-        (KJS::initializeCallFrame):
-        (KJS::scopeChainForCall):
-        (KJS::Machine::unwindCallFrame):
-        (KJS::Machine::throwException):
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        * VM/Register.h:
-        (KJS::Register::):
-        * kjs/nodes.cpp:
-        (KJS::EvalNode::generateCode):
-        (KJS::FunctionBodyNode::generateCode):
-        (KJS::ProgramNode::generateCode):
-        (KJS::ProgramNode::processDeclarations):
-        (KJS::EvalNode::processDeclarations):
-        (KJS::FuncDeclNode::makeFunction):
-        (KJS::FuncExprNode::makeFunction):
-        * kjs/nodes.h:
-        (KJS::ProgramNode::):
-        (KJS::EvalNode::):
-        (KJS::FunctionBodyNode::):
-        * kjs/object.h:
-        * kjs/scope_chain.h:
-        (KJS::ScopeChainNode::ScopeChainNode):
-        (KJS::ScopeChainNode::deref):
-        (KJS::ScopeChainIterator::ScopeChainIterator):
-        (KJS::ScopeChainIterator::operator*):
-        (KJS::ScopeChainIterator::operator->):
-        (KJS::ScopeChain::ScopeChain):
-        (KJS::ScopeChain::node):
-        (KJS::ScopeChain::deref):
-        (KJS::ScopeChain::ref):
-        (KJS::ScopeChainNode::ref):
-        (KJS::ScopeChainNode::release):
-        (KJS::ScopeChainNode::begin):
-        (KJS::ScopeChainNode::end):
-
-2008-04-14  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Fixed crash when accessing registers in a torn-off activation object.
-
-        * kjs/JSActivation.cpp:
-        (KJS::JSActivation::copyRegisters): Update our registerOffset after
-        copying our registers, since our offset should now be relative to
-        our private register array, not the shared register file.
-
-2008-04-14  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fix a codegen flaw that makes some tests run way too fast or way too slow
-        
-        The basic problem was that FunctionCallResolveNode results in
-        codegen which can incorrectly write an intermediate value into the
-        dst register even when that is a local. I added convenience
-        functions to CodeGenerator for getting this right, but for now I
-        only fixed FunctionCallResolve.
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::tempDestination):
-        (KJS::CodeGenerator::):
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallResolveNode::emitCode):
-
-2008-04-14  Gabor Loki  <loki@inf.u-szeged.hu>
-
-        Reviewed and slightly tweaked by Geoffrey Garen.
-
-        Bug 18489: Squirrelfish doesn't build on linux
-        <https://bugs.webkit.org/show_bug.cgi?id=18489>
-
-        * JavaScriptCore.pri: Add VM into include path and its files into
-        source set
-        * VM/JSPropertyNameIterator.cpp: Fix include name
-        * VM/Machine.cpp: Add UNLIKELY macro for GCC
-        * VM/Machine.h: Add missing includes
-        * VM/RegisterFile.cpp: Add missing include
-        * kjs/testkjs.pro: Add VM into include path
-
-2008-04-14  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Restored OwnPtr in some places where I had removed it previously. We
-        can have an OwnPtr to an undefined class in a header as long as the
-        class's destructor isn't in the header.
-        
-2008-04-14  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Fixed access to "this" inside dynamic scopes.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::registerForLocal): Always return a register for
-        "this", even if we're not optimizing access to other locals. Because
-        "this" is a keyword, it's always in a register and always accessible.
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::shouldOptimizeLocals): Factored out a function
-        for determining whether we should optimize access to locals, since
-        eval will need to make this test a little more complicated.
-
-2008-04-14  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Adam.
-        
-        - fix crash when running SunSpider full harness
-        
-        When growing the register file's buffer to make space for new globals,
-        make sure to copy accounting for the fact that the new space is logically
-        at the beginning of the buffer in this case, instead of at the end as when
-        growing for a new call frame.
-
-        * VM/RegisterFile.cpp:
-        (KJS::RegisterFile::newBuffer):
-        (KJS::RegisterFile::growBuffer):
-        (KJS::RegisterFile::addGlobalSlots):
-        * VM/RegisterFile.h:
-
-2008-04-11  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Mark constant pools for global and eval code (collectively known as
-        "program code"). (Constant pools for function code are already marked by
-        their functions.)
-        
-        The global object is responsible for marking program code constant
-        pools. Code blocks add themselves to the mark set at creation time, and
-        remove themselves from the mark set at destruction time.
-        
-        sunspider --squirrelfish reports a 1% speedup, perhaps because
-        generateCode() is now non-virtual.
-
-        * kjs/nodes.cpp: I had to use manual init and delete in this file
-        because putting an OwnPtr into the header would have created a circular
-        header dependency.
-
-2008-04-10  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Maciej.
-
-        Bug 18231: Improve support for function call nodes in SquirrelFish
-        <https://bugs.webkit.org/show_bug.cgi?id=18231>
-
-        Use correct value of 'this' for function calls.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitResolveBaseAndFunc):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::resolveBaseAndFunc):
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallResolveNode::emitCode):
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        This time for sure.
-
-        * kjs/interpreter.cpp:
-        (KJS::Interpreter::evaluate):
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Fixed Interpreter::execute to honor the new model for returning non-NULL
-        values when an exception is thrown.
-
-        * kjs/interpreter.cpp:
-        (KJS::Interpreter::evaluate):
-
-2008-04-10  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Geoff.
-
-        Fix SquirrelFish interpreter to pass internal exceptions back to 
-        native code correctly.
-
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-04-10  Sam Weinig  <sam@webkit.org>
+2008-04-16  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.
 
-        Replace the use of getCallData in op_construct with the new
-        getConstructData function that replaces implementsConstruct.
+        - To keep the behavior of the WebKit and JavaScriptCore API's the same,
+          we need to hide the fact that the global object and the window object
+          are no longer the same thing, and the the global object now changes on
+          navigations.  To do this, only the wrapper should ever be exposed.  This
+          fixes the two remaining spots where the internal global object is exposed,
+          the windowScriptObject returned from [WebFrame windowObject] and the object
+          return by calling JSContextGetGlobalObject on [WebFrame globalContext].
 
-        * API/JSCallbackConstructor.cpp:
-        (KJS::JSCallbackConstructor::getConstructData):
-        * API/JSCallbackConstructor.h:
-        * API/JSCallbackObject.h:
-        * API/JSCallbackObjectFunctions.h:
-        (KJS::::getConstructData):
-        (KJS::::construct):
+        * API/JSContextRef.cpp:
+        (JSContextGetGlobalObject):
+        This is a bit of a hack, this returns the "this" representation of the globalObject
+        which will be the WrapperWindow for WebCore and the globalObject for non-WebCore.
+
         * API/JSObjectRef.cpp:
-        (JSObjectIsConstructor):
-        * JavaScriptCore.exp:
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * kjs/CallData.h:
-        * kjs/ConstructData.h: Copied from JavaScriptCore/kjs/CallData.h.
-        (KJS::):
-        * kjs/array_object.cpp:
-        (KJS::ArrayObjectImp::getConstructData):
-        * kjs/array_object.h:
-        * kjs/bool_object.cpp:
-        (KJS::BooleanObjectImp::getConstructData):
-        * kjs/bool_object.h:
-        * kjs/date_object.cpp:
-        (KJS::DateObjectImp::getConstructData):
-        * kjs/date_object.h:
-        * kjs/error_object.cpp:
-        (KJS::ErrorObjectImp::getConstructData):
-        (KJS::NativeErrorImp::getConstructData):
-        * kjs/error_object.h:
-        * kjs/function.cpp:
-        (KJS::FunctionImp::getCallData):
-        (KJS::FunctionImp::getConstructData):
-        (KJS::FunctionImp::construct):
-        * kjs/function.h:
-        * kjs/function_object.cpp:
-        (KJS::FunctionObjectImp::getConstructData):
-        * kjs/function_object.h:
-        * kjs/nodes.cpp:
-        (KJS::NewExprNode::inlineEvaluate):
-        * kjs/number_object.cpp:
-        (KJS::NumberObjectImp::getConstructData):
-        * kjs/number_object.h:
-        * kjs/object.cpp:
-        * kjs/object.h:
-        * kjs/object_object.cpp:
-        (KJS::ObjectObjectImp::getConstructData):
-        * kjs/object_object.h:
-        * kjs/regexp_object.cpp:
-        (KJS::RegExpObjectImp::getConstructData):
-        * kjs/regexp_object.h:
-        * kjs/string_object.cpp:
-        (KJS::StringObjectImp::getConstructData):
-        * kjs/string_object.h:
-        * kjs/value.cpp:
-        (KJS::JSCell::getConstructData):
-        * kjs/value.h:
-        (KJS::JSValue::getConstructData):
+        (JSObjectSetProperty):
+        Call the new putWithAttributes method instead of relying on lower-level calls.
+        This is needed so that the window wrapper can forward the calls.
 
-2008-04-10  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Geoff.
-
-        Bug 18420: SquirrelFish: need to throw Reference and Type errors 
-        when attempting invalid operations on JSValues
-
-        Add validation and exception checks to SquirrelFish so that the
-        correct exceptions are thrown for undefined variables, type errors
-        and toObject failure.  Also handle exceptions thrown by native
-        function calls.
-
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/ExceptionHelpers.cpp: Added.
-        (KJS::substitute):
-        (KJS::createError):
-        (KJS::createUndefinedVariableError):
-        * VM/ExceptionHelpers.h: Added.
-          Helper functions
-        * VM/Machine.cpp:
-        (KJS::resolve):
-           Modified to signal failure
-        (KJS::isNotObject):
-           Wrapper for JSValue::isObject and exception creation (these need
-           to be merged, lest GCC go off the deep end)
-        (KJS::Machine::privateExecute):
-           Adding the many exception and validity checks.
-
-        * kjs/JSNotAnObject.cpp: Added.
-          Stub object used to reduce the need for multiple exception checks
-          when toObject fails.
-        (KJS::JSNotAnObject::toPrimitive):
-        (KJS::JSNotAnObject::getPrimitiveNumber):
-        (KJS::JSNotAnObject::toBoolean):
-        (KJS::JSNotAnObject::toNumber):
-        (KJS::JSNotAnObject::toString):
-        (KJS::JSNotAnObject::toObject):
-        (KJS::JSNotAnObject::mark):
-        (KJS::JSNotAnObject::getOwnPropertySlot):
-        (KJS::JSNotAnObject::put):
-        (KJS::JSNotAnObject::deleteProperty):
-        (KJS::JSNotAnObject::defaultValue):
-        (KJS::JSNotAnObject::construct):
-        (KJS::JSNotAnObject::callAsFunction):
-        (KJS::JSNotAnObject::getPropertyNames):
-        * kjs/JSNotAnObject.h: Added.
-        (KJS::JSNotAnObject::JSNotAnObject):
-        * kjs/JSImmediate.cpp:
-        (KJS::JSImmediate::toObject):
-          modified to create an JSNotAnObject rather than throwing an exception
-          directly.
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Pass a function body node its function's scope chain, rather than the
-        current execution context's scope chain, when compiling it.
-        
-        This doesn't matter yet, but it will once we start using the scope
-        chain during compilation.
-
-        sunspider --squirrelfish notes a tiny speedup.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Fix two bugs when throwing exceptions from re-entrant JS calls:
-        
-        (1) Don't shrink the register file to 0, since our caller may still
-        be using it.
-        
-        (2) In case of exception, return jsNull() instead of 0 because,
-        surprisingly, some JavaScriptCore clients rely on a function's return
-        value being safe to operate on even if the function threw an exception.
-        
-        Also:
-        
-        - Changed FunctionImp::callAsFunction to honor the new semantics of
-        exceptions not returning 0.
-        
-        - Renamed "handlerPC" to "handlerVPC" to match other uses of "VPC".
-        
-        - Renamed "exceptionData" to "exceptionValue", because "data" seemed to
-        imply something more than just a JSValue.
-        
-        - Merged prepareException into throwException, since throwException was
-        its only caller, and it seemed weird that throwException didn't take
-        an exception as an argument.
-
-        sunspider --squirrelfish does not seem to complain on my machine, but it
-        complains a little (.6%) on Oliver's.
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Fixed op_construct for CallTypeNative to reacquire "r" before setting
-        its return value, since registerBase can theoretically change during the
-        execution of arbitrary code. (Not sure if any native constructors
-        actually make this possible.)
-
-        sunspider --squirrelfish does not seem to complain.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt and Sam Weinig.
-        
-        Re-entrant execution of function code (global code -> built-in function
-        -> JS function):
-        
-        Miraculously, sunspider --squirrelfish does not seem to complain.
-
-        A re-entrant function call is the same as a normal function call with
-        one exception: the re-entrant call leaves everything except for
-        CallerCodeBlock in the call frame header uninitialized, since the call
-        doesn't need to return to JS code. (It sets CallerCodeBlock to 0, to
-        indicate that the call shouldn't return to JS code.)
-        
-        Also fixed a few issues along the way:
-        
-        - Fixed two bugs in the read-write List implementation that caused
-        m_size and m_buffer to go stale.
-        
-        - Changed native call code to update "r" *before* setting the return
-        value, since the call may in turn call JS code, which changes the value
-        of "r".
-        
-        - Migrated initialization of "r" outside of Machine::privateExecute,
-        because global code and function code initialize "r" differently.
-        
-        - Migrated a codegen warning from Machine::privateExecute to the wiki.
-        
-        - Removed unnecessary "r" parameter from slideRegisterWindowForCall
-
-        * VM/Machine.cpp:
-        (KJS::slideRegisterWindowForCall):
-        (KJS::scopeChainForCall):
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        * kjs/function.cpp:
-        (KJS::FunctionImp::callAsFunction):
-        * kjs/list.cpp:
-        (KJS::List::getSlice):
-        * kjs/list.h:
-        (KJS::List::clear):
-
-2008-04-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fix problem with code generation for return with no argument
-        
-        3d-cube now runs
-
-        * kjs/nodes.cpp:
-        (KJS::ReturnNode::emitCode):
-
-2008-04-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - Implement support for JS constructors
-        
-        access-binary-trees and access-nbody now run.
-        
-        Inexplicably a 1% speedup.
-
-        * VM/Machine.cpp:
-        (KJS::initializeCallFrame):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        (KJS::Machine::):
-
-2008-04-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-
-        - More code cleanup in preparation for JS constructors
-
-        Factor the remaining interesting parts of JS function calls into
-        slideRegisterWindowForCall and scopeChainForCall.
-        
-        * VM/Machine.cpp:
-        (KJS::slideRegisterWindowForCall):
-        (KJS::scopeChainForCall):
-        (KJS::Machine::privateExecute):
-
-2008-04-10  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - Code cleanup in preparation for JS constructors
-
-        - Renamed returnInfo to callFrame. 
-        - Made an enum which defines what goes where in the call frame.
-        - Factored out initializeCallFrame function from op_call
-        
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitCall):
-        (KJS::CodeGenerator::emitConstruct):
-        * VM/Machine.cpp:
-        (KJS::Machine::dumpRegisters):
-        (KJS::initializeCallFrame):
-        (KJS::Machine::unwindCallFrame):
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        (KJS::Machine::):
-
-2008-04-10  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Fixed two bugs in register allocation for function calls:
-        
-        (1) op_call used to allocate codeBlock->numVars too many registers for
-        each call frame, due to duplicated math. Fixing this revealed...
-        
-        (2) By unconditionally calling resize(), op_call used to truncate the
-        register file when calling a function whose registers fit wholly within
-        the register file already allocated by its caller.
-        
-        sunspider --squirrelfish reports no regression.
-        
-        I also threw in a little extra formatting to dumpCallFrame, because it
-        helped me debug these issues.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::dumpRegisters):
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/RegisterFile.h:
-        (KJS::RegisterFile::shrink):
-        (KJS::RegisterFile::grow):
-        * VM/RegisterFileStack.cpp:
-        (KJS::RegisterFileStack::popRegisterFile):
-
-2008-04-09  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-
-        Next step toward re-entrant execution of function code (global code ->
-        built-in function -> JS function):
-        
-        Made op_ret return from Machine::privateExecute if its calling codeBlock
-        is NULL.
-        
-        I'm checking this in by itself to demonstrate that a more clever
-        mechanism is not necessary for performance.
-        
-        sunspider --squirrelfish reports no regression.
-
-        * ChangeLog:
-        * VM/Machine.cpp:
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-
-2008-04-09  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-
-        Next step toward re-entrant execution of function code (global code ->
-        built-in function -> JS function):
-        
-        Made Machine::execute return a value.
-        
-        Sketched out some code for Machine::execute for functions -- still
-        doesn't work yet, though.
-
-        sunspider --squirrelfish reports no regression.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        * kjs/interpreter.cpp:
-        (KJS::Interpreter::evaluate):
-        * kjs/testkjs.cpp:
-        (runWithScripts):
-
-2008-04-09  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        First step toward re-entrant execution of function code (global code ->
-        built-in function -> JS function):
-        
-        Tiny bit of refactoring in the Machine class.
-
-        sunspider --squirrelfish reports no regression.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::dumpRegisters):
-        (KJS::Machine::unwindCallFrame):
-        (KJS::Machine::execute):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        (KJS::Machine::isGlobalCallFrame):
-        * kjs/interpreter.cpp:
-        (KJS::Interpreter::evaluate):
-
-2008-04-08  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Support for re-entrant execution of global code (global code -> built-in
-        function -> global code).
-        
-        Keep a stack of register files instead of just one. Globals propogate
-        between register files as the register files enter and exit the stack.
-        
-        An activation still uses its own register file's base as its
-        registerBase, but the global object uses the register file *stack*'s
-        registerBase, which updates dynamically to match the register file at
-        the top of the stack.
-        
-        sunspider --squirrelfish reports no regression.
-
-2008-04-08  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - initial preparatory work for JS constructors
-        
-        1) Allocate registers for the returnInfo block and "this" value when generating code for
-        op_construct. These are not used yet, but the JS branch of op_construct will use them.
-        
-        2) Adjust argc and argv appropriately for native constructor calls.
-        
-        3) Assign return value in a more straightforward way in op_ret since this is actually
-        a bit faster (and makes up for the allocation of extra registers above).
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitConstruct):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-04-07  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Fixed crashing SunSpider tests.
-        
-        Let's just pretend this never happened, bokay?
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::CodeGenerator):
-        * VM/CodeGenerator.h:
-        * VM/RegisterFile.cpp:
-        (KJS::RegisterFile::addGlobals):
-
-2008-04-07  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Restored dumping of generated code as a command-line switch:
-        run-testkjs -d will do it.
-
-2008-04-07  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Next step toward supporting re-entrant evaluation: Moved register file
-        maintenance code into a proper "RegisterFile" class.
-        
-        There's a subtle change to the register file's internal layout: for
-        global code / the global object, registerOffset is always 0 now. In
-        other words, all register counting starts at 0, not 0 + (number of
-        global variables). The helps simplify accounting when the number of
-        global variables changes.
-
-2008-04-07  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Geoff.
-
-        Bug 18338: Support exceptions in SquirrelFish <http://bugs.webkit.org/show_bug.cgi?id=18338>
-        
-        Initial support for exceptions in SquirrelFish, only supports finalisers in the
-        simple cases (eg. exceptions and non-goto/return across finaliser boundaries).
-        This doesn't add the required exception checks to existing code, it merely adds
-        support for throw, catch, and the required stack unwinding.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        (KJS::CodeBlock::getHandlerForVPC):
-        * VM/CodeBlock.h:
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitCatch):
-        (KJS::CodeGenerator::emitThrow):
-        * VM/CodeGenerator.h:
-        * VM/JSPropertyNameIterator.cpp:
-        (KJS::JSPropertyNameIterator::create):
-        * VM/Machine.cpp:
-        (KJS::prepareException):
-        (KJS::Machine::unwindCallFrame):
-        (KJS::Machine::throwException):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::ThrowNode::emitCode):
-        (KJS::TryNode::emitCode):
-        * kjs/nodes.h:
-        * kjs/scope_chain.cpp:
-        (KJS::ScopeChain::depth):
-        * kjs/scope_chain.h:
-
-2008-04-06  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        First step toward supporting re-entrant evaluation: Switch register
-        clients from using "registers", a pointer to a register vector, to
-        "registerBase", an indirect pointer to the logical first entry in the
-        register file. (The logical first entry is the first entry that is not
-        a global variable).
-        
-        With a vector, offsets into the register file remain good when the
-        underlying buffer reallocates, but they go bad when the logical
-        first entry moves. (The logical first entry moves when new global
-        variables get added to the beginning of the register file.) With an
-        indirect pointer to the logical first entry, offsets will remain good
-        regardless.
-
-        1.4% speedup on sunspider --squirrelfish. I suspect this is due to
-        reduced allocation when creating closures, and reduced indirection
-        through the register vector.
-
-        * wtf/Vector.h: Added an accessor for an indirect pointer to the vector's
-        buffer, which we currently use (incorrectly) for registerBase. This is
-        temporary scaffolding to allow us to change client code without
-        changing behavior.
-
-2008-04-06  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver Hunt.
-
-        Implement codegen for ReadModifyDotNode.
-
-        * kjs/nodes.cpp:
-        (KJS::ReadModifyDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-06  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver Hunt.
-
-        Fix codegen for PostIncDotNode and implement codegen for PostIncBracketNode,
-        PostDecBracketNode and PostDecDotNode.
-
-        * kjs/nodes.cpp:
-        (KJS::PostIncBracketNode::emitCode):
-        (KJS::PostDecBracketNode::emitCode):
-        (KJS::PostIncDotNode::emitCode):
-        (KJS::PostDecDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-06  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Geoffrey Garen.
-
-        Implement codegen for PreDecResolveNode, PreIncBracketNode, PreDecBracketNode,
-        PreIncDotNode and PreDecDotNode.  This required adding one new op code, op_pre_dec.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitPreDec):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::PreDecResolveNode::emitCode):
-        (KJS::PreIncBracketNode::emitCode):
-        (KJS::PreDecBracketNode::emitCode):
-        (KJS::PreIncDotNode::emitCode):
-        (KJS::PreDecDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-06  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Improved register dumping, plus a liberal smattering of "const". Here's
-        what the new format looks like:
-
-        (gdb) call (void)dumpCallFrame(codeBlock, scopeChain, registers->begin(), r)
-        4 instructions; 48 bytes at 0x509210; 3 locals (2 parameters); 1 temporaries
-
-        [   0] load             lr1, undefined(@k0)
-        [   3] load             lr1, 2(@k1)
-        [   6] add              tr0, lr2, lr1
-        [  10] ret              tr0
-
-        Constants:
-          k0 = undefined
-          k1 = 2
-
-        Register frame: 
-
-        ----------------------------------------
-             use      |   address  |    value   
-        ----------------------------------------
-        [return info] |   0x80ac08 |   0x5081c0 
-        [return info] |   0x80ac0c |   0x508e90 
-        [return info] |   0x80ac10 |   0x504acc 
-        [return info] |   0x80ac14 |        0x2 
-        [return info] |   0x80ac18 |        0x0 
-        [return info] |   0x80ac1c |        0x7 
-        [return info] |   0x80ac20 |        0x0 
-        ----------------------------------------
-        [param]       |   0x80ac24 |        0x1 
-        [param]       |   0x80ac28 |        0x7 
-        [var]         |   0x80ac2c |        0xb 
-        [temp]        |   0x80ac30 |        0xf 
-
-2008-04-06  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-
-        Support for evaluating multiple scripts in the same global environment.
-        (Still don't support re-entrant evaluation yet.)
-
-        The main changes here are:
-
-        (1) Obey the ECMA 10.1.3 rules regarding how to resolve collisions when
-        a given symbol is declared more than once. (This patch fixes the same
-        issue for function code, too.)
-        
-        (2) In the case of var and/or function collisions, reuse the existing
-        storage slot. For global code, this is required for previously
-        generated instructions to continue to work. For function code, it's
-        more of a "nice to have": it makes register layout in the case of
-        collisions easier to understand, and has the added benefit of saving
-        memory.
-        
-        (3) Allocate slots in the CodeGenerator's m_locals vector in parallel
-        to register indexes in the symbol table. This ensures that, given an
-        index in the symbol table, we can find the corresponding RegisterID
-        without hashing, which speeds up codegen. 
-        
-        I moved responsibility for emitting var and function initialization
-        instructions into the CodeGenerator, because bookkeeping in cases where
-        var, function, and/or parameter names collide requires a lot of
-        internal knowledge about the CodeGenerator.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::addVar): Removed responsibility for checking whether
-        a var declaration overwrites "arguments", because the check is
-        inappropriate for global code, which may not have a pre-existing
-        "arguments" symbol in scope. Also changed this function to return a
-        boolean indicating whether addVar actually created a new RegisterID,
-        or just reused an old one.
-        
-        (KJS::CodeGenerator::CodeGenerator): Split out the constructors for
-        function code and global code, since they're quite different now.
-        
-        (KJS::CodeGenerator::registerForLocal): This function does its job
-        without any hashing now.
-        
-        * VM/Machine.cpp: Move old globals and update "r" before executing a
-        new script. That way, old globals stay at a constant offset from "r",
-        and previously optimized code still works.
-        
-        * VM/RegisterID.h: Added the ability to allocate a RegisterID before
-        initializing its index field. We use this for parameters now.
-
-        * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::symbolTableGet): Changed the ungettable getter
-        ASSERT to account for the fact that symbol indexes are all negative.
-
-2008-04-05  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Geoffrey Garen.
-
-        Implement codegen for InNode.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitIn):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::InNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-05  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver Hunt.
-
-        - Implement codegen for DeleteResolveNode, DeleteBracketNode, DeleteDotNode and DeleteValueNode.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitGetPropId):
-        (KJS::CodeGenerator::emitPutPropId):
-        (KJS::CodeGenerator::emitDeletePropId):
-        (KJS::CodeGenerator::emitDeletePropVal):
-        (KJS::CodeGenerator::emitPutPropIndex):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::DeleteResolveNode::emitCode):
-        (KJS::DeleteBracketNode::emitCode):
-        (KJS::DeleteDotNode::emitCode):
-        (KJS::DeleteValueNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-04  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver Hunt.
-
-        - Implement codegen for Switch statements.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::pushJumpContext):
-        (KJS::CodeGenerator::popJumpContext):
-        (KJS::CodeGenerator::jumpContextForLabel):
-        * VM/CodeGenerator.h:
-        Rename LoopContext to JumpContext now that it used of Switch statements in addition
-        to loops.
-
-        * kjs/nodes.cpp:
-        (KJS::DoWhileNode::emitCode):
-        (KJS::WhileNode::emitCode):
-        (KJS::ForNode::emitCode):
-        (KJS::ForInNode::emitCode):
-        (KJS::ContinueNode::emitCode):
-        (KJS::BreakNode::emitCode):
-        (KJS::CaseBlockNode::emitCodeForBlock):
-        (KJS::SwitchNode::emitCode):
-        * kjs/nodes.h:
-        (KJS::CaseClauseNode::expr):
-        (KJS::CaseClauseNode::children):
-        (KJS::CaseBlockNode::):
-
-2008-04-03  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Sam.
-        
-        - fix crash in codegen from new nodes
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitConstruct):
-        * kjs/nodes.h:
-
-2008-04-03  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-
-        * kjs/nodes.cpp:
-        (KJS::ReadModifyResolveNode::emitCode):
-        (KJS::ReadModifyBracketNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-02  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - take a shot at marking constant pools for global and eval code
-        
-        Geoff says this won't really work in all cases but is an ok stopgap.
-
-        * kjs/JSGlobalObject.cpp:
-        (KJS::JSGlobalObject::mark):
-
-2008-04-02  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - fix 2x perf regression in 3d-morph
-        
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): If we subbed in null for the global object,
-        don't toObject it, since that will throw an exception (very slowly).
-
-2008-04-02  Maciej Stachowiak  <mjs@apple.com>
-
-        Rubber stamped by Geoff
-        
-        - fix Release build
-
-        * kjs/nodes.cpp:
-        (KJS::getNonLocalSymbol):
-
-2008-04-02  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Removed the last vestiges of LocalStorage from JSVariableObject and
-        JSGlobalObject.
-
-        * kjs/JSGlobalObject.cpp:
-        (KJS::JSGlobalObject::saveLocalStorage): Save and restore from/to
-        registers. Use stub isReadOnly and isDontEnum methods for now, until
-        we really implement attributes in the symbol table.
-        (KJS::JSGlobalObject::restoreLocalStorage):
-        (KJS::JSGlobalObject::reset):
-
-        * kjs/JSVariableObject.cpp:
-        (KJS::JSVariableObject::getPropertyNames): Use stub isDontEnum method
-        for now, as above.
-        (KJS::JSVariableObject::getPropertyAttributes): ditto
-
-        * kjs/JSVariableObject.h: Removed LocalStorage from JSVariableObjectData.
-        Removed mark method, because subclasses implement different strategies for
-        marking registers.
-        (KJS::JSVariableObject::isReadOnly): Stub method
-        (KJS::JSVariableObject::isDontEnum): ditto
-
-        Changed the code below to ASSERT_NOT_REACHED() and return 0, since it
-        can no longer retrieve LocalStorage from the ExecState. (Eventually,
-        we'll just remove this code and all its friends, but that's a task for
-        later.)
-        
-        * kjs/ExecState.cpp:
-        (KJS::ExecState::ExecState):
-        * kjs/function.cpp:
-        (KJS::ActivationImp::markChildren):
-        * kjs/function.h:
-        * kjs/nodes.cpp:
-        (KJS::getNonLocalSymbol):
-        (KJS::ScopeNode::optimizeVariableAccess):
-        (KJS::ProgramNode::processDeclarations):
-
-2008-04-01  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Got globals?
-        
-        To get things working, I had to roll out
-        http://trac.webkit.org/projects/webkit/changeset/31226 for the time
-        being.
-
-        * VM/CodeBlock.h: Removed obsolete function.
-        
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): For the sake of re-entrancy, we track
-        and restore the global object's old rOffset value. (No way to test this
-        yet, but I think it will work.)
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - mark the constant pool (at least for function code blocks)
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::mark):
-        * VM/CodeBlock.h:
-        * kjs/function.cpp:
-        (KJS::FunctionImp::mark):
-        * kjs/nodes.cpp:
-        (KJS::ScopeNode::mark):
-        * kjs/nodes.h:
-        (KJS::FuncExprNode::body):
-        (KJS::FuncDeclNode::body):
-
-2008-04-01  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Beth Dakin.
-        
-        Cleaned up a few loose ends.
-
-        * JavaScriptCore.exp: Export dumpRegisters, so it's visible to gdb even
-        if we don't explicitly call it in the source text.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): No need to call dumpRegisters anymore,
-        since that was just a hack for gdb's sake.
-
-        * kjs/JSActivation.h: Removed obsolete comment.
-
-        * VM/CodeGenerator.cpp: Added ASSERTs to verify that the localCount
-        we're given matches the number of locals actually allocated.
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::CodeGenerator): Changed "localCount" to include
-        the parameter count, since we're using the word "local" to mean
-        parameter, var, function, or "this". Renamed "m_nextLocal" to
-        "m_nextVar", since "m_nextLocal" doesn't contrast well with
-        "m_nextParameter".
-        
-        Also moved tracking of implicit "this" parameter from here...
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionBodyNode::generateCode): ... to here
-        (KJS::ProgramNode::generateCode): ... and here
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump): Added missing "\n".
-
-2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Oliver.
-
-        Bug 18274: ResolveNode::emitCode() doesn't make a new temporary when dst
-                   is 0, leading to incorrect codegen
-        <http://bugs.webkit.org/show_bug.cgi?id=18274>
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallBracketNode::emitCode):
-        (KJS::FunctionCallDotNode::emitCode):
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - fix bug in for..in codegen (gotta use ident, not m_ident)
-
-        * kjs/nodes.cpp:
-        (KJS::ForInNode::emitCode):
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - Add suport for regexp literals
-
-        * VM/CodeBlock.cpp:
-        (KJS::regexpToSourceString):
-        (KJS::regexpName):
-        (KJS::CodeBlock::dump):
-        * VM/CodeBlock.h:
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::addRegExp):
-        (KJS::CodeGenerator::emitNewRegExp):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::RegExpNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-01  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Geoff
-
-        Add support for for..in nodes
-        
-        Added two new opcodes to get_pnames and next_pname to handle iterating
-        over the set of properties on an object.  This iterator is explicitly
-        invalidated and the property name array is released on standard exit
-        from the loop, otherwise we rely on GC to do the clean up for us.
-
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitNextPropertyName):
-        (KJS::CodeGenerator::emitGetPropertyNames):
-        * VM/CodeGenerator.h:
-        * VM/JSPropertyNameIterator.cpp: Added.
-        (KJS::JSPropertyNameIterator::JSPropertyNameIterator):
-        (KJS::JSPropertyNameIterator::type):
-        (KJS::JSPropertyNameIterator::toPrimitive):
-        (KJS::JSPropertyNameIterator::getPrimitiveNumber):
-        (KJS::JSPropertyNameIterator::toBoolean):
-        (KJS::JSPropertyNameIterator::toNumber):
-        (KJS::JSPropertyNameIterator::toString):
-        (KJS::JSPropertyNameIterator::toObject):
-        (KJS::JSPropertyNameIterator::mark):
-        (KJS::JSPropertyNameIterator::next):
-        (KJS::JSPropertyNameIterator::invalidate):
-        (KJS::JSPropertyNameIterator::~JSPropertyNameIterator):
-        (KJS::JSPropertyNameIterator::create):
-        * VM/JSPropertyNameIterator.h: Added.
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * VM/Register.h:
-        (KJS::Register::):
-        * kjs/PropertyNameArray.h:
-        * kjs/nodes.cpp:
-        (KJS::ForInNode::emitCode):
-        * kjs/nodes.h:
-        * kjs/value.h:
-
-2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Maciej.
-
-        Change CodeGenerator::emitCall() so it increments the reference count of
-        registers passed to it, and change its callers so they don't needlessly
-        increment the reference count of the registers they are passing.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitCall):
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallResolveNode::emitCode):
-        (KJS::FunctionCallDotNode::emitCode):
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        - generate call for PostIncDotNode
-
-        * kjs/nodes.cpp:
-        (KJS::PostIncDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Build fix.
-        
-        - fix build (not sure how this ever worked?)
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallBracketNode::emitCode):
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - generate code for FunctionCallBracketNode
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallBracketNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - Fix two crashing SunSpider tests
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): set up 'this' properly for native calls.
-        * kjs/list.h:
-        (KJS::List::List): Fix intialization of buffer and size from
-        vector, the initialization order was wrong.
-
-2008-04-01  Geoffrey Garen  <ggaren@apple.com>
-
-        Build fix: marked ASSERT-only variables as UNUSED_PARAMs.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::symbolTableInitializeVariable):
-
-2008-04-01  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Next step toward global code: Moved get, put, and initializeVariable
-        functionality up into JSVariableObject, and changed JSActivation to
-        rely on it. 
-
-        * kjs/JSActivation.cpp:
-        (KJS::JSActivation::JSActivation):
-        (KJS::JSActivation::getOwnPropertySlot):
-        (KJS::JSActivation::put):
-        (KJS::JSActivation::initializeVariable):
-        * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::valueAt):
-        (KJS::JSVariableObject::isReadOnly):
-        (KJS::JSVariableObject::symbolTableGet):
-        (KJS::JSVariableObject::symbolTablePut):
-        (KJS::JSVariableObject::symbolTableInitializeVariable):
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Sam.
-        
-        - fix HashTable assertion on some SunSpider tests
-        
-        Don't use -1 as the deleted value for JSValue*-keyed hashtables,
-        since it is a valid value (it's the immediate for -1).
-
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::JSValueHashTraits::emptyValue):
-        (KJS::CodeGenerator::JSValueHashTraits::deletedValue):
-        * kjs/JSImmediate.h:
-        (KJS::JSImmediate::impossibleValue):
-
-2008-04-01  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Maciej Stachowiak.
-
-        Add support for calling Native constructors like new Array(). 
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitConstruct):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::NewExprNode::emitCode):
-        * kjs/nodes.h:
-
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Sam.
-        
-        - add some missing toOpbject calls to avoid crashing when calling methods on primitives
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-04-01  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Changed Machine::dumpRegisters to take a pointer instead of a reference,
-        so gdb understands how to call it.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::dumpRegisters):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-
-2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Maciej.
-
-        Fix CodeGenerator::addConstant() so it uses the functionExpressions
-        counter for function expressions, not the functions counter.
-
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::addConstant):
-
-2008-03-31  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Geoffrey Garen.
-
-        Add emitCode support for TypeOfResolveNode and TypeOfValueNode.
-        Added new opcode op_type_of to handle them.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitNot):
-        (KJS::CodeGenerator::emitInstanceOf):
-        (KJS::CodeGenerator::emitTypeOf):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::jsTypeStringForValue):
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::TypeOfResolveNode::emitCode):
-        (KJS::TypeOfValueNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-31  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver Hunt.
-
-        Fix non-computed goto version of isOpcode. op_end is a valid opcode.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::isOpcode):
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Added op_post_dec.
-
-2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Geoffrey Garen.
-
-        Add support for FunctionCallDotNode.
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Beth Dakin.
-
-        Next step toward global code: Removed more obsolete API, moved
-        saveLocalStorage and restoreLocalStorage to JSGlobalObject subclass,
-        since it's only intended for use there.
-        
-        * ChangeLog:
         * JavaScriptCore.exp:
         * kjs/Activation.h:
         * kjs/JSGlobalObject.cpp:
-        (KJS::JSGlobalObject::saveLocalStorage):
-        (KJS::JSGlobalObject::restoreLocalStorage):
+        (KJS::JSGlobalObject::putWithAttributes):
         * kjs/JSGlobalObject.h:
-        * kjs/JSVariableObject.cpp:
         * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
+        (KJS::JSVariableObject::symbolTablePutWithAttributes):
         * kjs/function.cpp:
-        (KJS::ActivationImp::ActivationImp):
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Beth Dakin.
-
-        Next step toward global code: subclass JSActivation + JSActivationData
-        from JSVariableObject + JSVariableObjectData.
-        
-        JSActivation now relies on JSVariableObject for access to registers and
-        symbol table, and for some delete functionality, but not for anything
-        else yet.
-
-        (KJS::JSActivation::mark): Cleaned up the style here a little bit.
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Beth Dakin.
-        
-        Next step toward global code: store "rOffset" in JSVariableObjectData.
-
-        * kjs/JSGlobalObject.h:
-        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData):
-        * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Next steps toward global code:
-        
-        * Moved access to the register file into JSVariableObject.
-        
-        * Added more ASSERTs to indicate obsolete APIs there are just hanging
-        around to stave off build failures.
-
-        * kjs/JSGlobalObject.h:
-        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData):
-        * kjs/JSVariableObject.h:
-        (KJS::JSVariableObject::registers):
-        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
-        (KJS::JSVariableObject::JSVariableObject):
-
-2008-03-31  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Oliver. Tweaked somewhat by Maciej.
-        
-        - implement codegen for ReadModifyResolveNode
-
+        (KJS::ActivationImp::putWithAttributes):
         * kjs/nodes.cpp:
-        (KJS::emitReadModifyAssignment):
-        (KJS::ReadModifyResolveNode::emitCode):
-        * kjs/nodes.h:
+        (KJS::ConstDeclNode::handleSlowCase):
+        (KJS::ConstDeclNode::evaluateSingle):
+        (KJS::EvalNode::processDeclarations):
+        * kjs/object.cpp:
+        (KJS::JSObject::putWithAttributes):
+        * kjs/object.h:
+        Rename initializeVariable to putWithAttributes and move it down to JSObject so it
+        can be used for JSObjectSetProperty.
 
-2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+2008-04-16  Kevin McCullough  <kmccullough@apple.com>
 
-        Reviewed by Geoff.
+        Reviewed by Sam and Geoff.
 
-        Fix the build -- r31492 removed activation tear-off, but r31493 used it.
+        -<rdar://problem/5770054> JavaScript profiler (10928)
+        Inital profiler prototype
 
-        * kjs/nodes.cpp:
-        (KJS::FuncExprNode::makeFunction):
+        * GNUmakefile.am: Added new files to project
+        * JavaScriptCore.pri: Ditto
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Ditto
+        * JavaScriptCore.xcodeproj/project.pbxproj: Ditto
+        * JavaScriptCoreSources.bkl: Ditto
+        * kjs/config.h: Put compiling flag in here.
+        * kjs/function.cpp: Instrument calling the function eval().
+        (KJS::eval):
+        * kjs/interpreter.cpp: Instrument evaluating global scopes.
+        (KJS::Interpreter::evaluate):
+        * kjs/object.cpp: Instrument JS function calls.
+        (KJS::JSObject::call):
+        * profiler: Added.
+        * profiler/FunctionCallProfile.cpp: Added.
+        (KJS::FunctionCallProfile::FunctionCallProfile):
+        (KJS::FunctionCallProfile::~FunctionCallProfile):
+        (KJS::FunctionCallProfile::willExecute): Call right before the JS function or executing context is executed to start the profiler's timer.
+        (KJS::FunctionCallProfile::didExecute): Call right after the JS function or executing context is executed to stop the profiler's timer.
+        (KJS::FunctionCallProfile::addChild): Add a child to the current FunctionCallProfile if it isn't already a child of the current FunctionalCallProfile.
+        (KJS::FunctionCallProfile::findChild): Return the child that matches the given name if there is one.
+        (KJS::FunctionCallProfile::printDataSampleStyle): Print the current profiled information in a format that matches sample's output.
+        * profiler/FunctionCallProfile.h: Added.
+        (KJS::FunctionCallProfile::FunctionCallProfile):
+        (KJS::FunctionCallProfile::~FunctionCallProfile):
+        (KJS::FunctionCallProfile::functionName):
+        (KJS::FunctionCallProfile::microSecs):
+        * profiler/Profiler.cpp: Added.
+        (KJS::Profiler::profiler):
+        (KJS::Profiler::sharedProfiler): Return global singleton (may change due to multi-threading concerns)
+        (KJS::Profiler::startProfiling): Don't start collecting profiling information until the user starts the profiler. Also don't clear old prfiled data until the profiler is restarted.
+        (KJS::Profiler::stopProfiling): Stop collecting profile information.
+        (KJS::Profiler::willExecute): Same as above. 
+        (KJS::Profiler::didExecute): Same as above.
+        (KJS::Profiler::insertStackNamesInTree): Follow the stack of the given names and if a sub-stack is not in the current tree, add it.
+        (KJS::Profiler::getStackNames): Get the names from the different passed in parameters and order them as a stack.
+        (KJS::Profiler::getFunctionName): Get the function name from the given parameter.
+        (KJS::Profiler::printDataSampleStyle): Print the current profiled information in a format that matches sample's output.
+        (KJS::Profiler::debugLog):
+        * profiler/Profiler.h: Added.
+        (KJS::Profiler::Profiler):
 
-2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+2008-04-16  Sam Weinig  <sam@webkit.org>
 
-        Reviewed by Maciej.
+        Reviewed by Darin Adler.
 
-        Add support for FuncExprNode to SquirrelFish.
+        - Remove kjs_ prefix from strtod, dtoa, and freedtoa and put it
+          in the KJS namespace.
+        - Make strtod, dtoa, and freedtoa c++ functions instead of extern "C".
+        - Remove mode switching from dtoa.  ~2% improvement on test 26. 
+        - Removes all unnecessary #defines from dtoa code.
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeBlock.h:
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::addConstant):
-        (KJS::CodeGenerator::emitNewFunctionExpression):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::FuncExprNode::emitCode):
-        (KJS::FuncExprNode::makeFunction):
-        * kjs/nodes.h:
+        * JavaScriptCore.exp:
+        * kjs/dtoa.cpp:
+        (KJS::ulp):
+        (KJS::b2d):
+        (KJS::d2b):
+        (KJS::ratio):
+        (KJS::):
+        (KJS::strtod):
+        (KJS::freedtoa):
+        (KJS::dtoa):
+        * kjs/dtoa.h:
+        * kjs/function.cpp:
+        (KJS::parseInt):
+        * kjs/lexer.cpp:
+        (KJS::Lexer::lex):
+        * kjs/number_object.cpp:
+        (KJS::integer_part_noexp):
+        (KJS::numberProtoFuncToExponential):
+        * kjs/ustring.cpp:
+        (KJS::UString::from):
+        (KJS::UString::toDouble):
 
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        First step toward global code: removed some obsolete JSGlobalObject
-        APIs, changing clients to ASSERT_NOT_REACHED.
-        
-        Activation tear-off and scope chain pushing is obsolete because we
-        statically detect whether an activation + scope node is required.
-        
-        The variableObject() and activationObject() accessors are obsolete
-        because they haven't been maintained, and they're mostly used by
-        node evaluation code, anyway.
-        
-        The localStorage() accessor is obsolete because everything is in
-        registers now, and it's mostly used by node evaluation code, anyway.
-
-2008-03-31  Maciej Stachowiak  <mjs@apple.com>
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Darin.
-        
-        - implement codegen for bracket accessor and bracket assign
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitGetPropVal):
-        (KJS::CodeGenerator::emitPutPropVal):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::BracketAccessorNode::emitCode):
-        (KJS::AssignBracketNode::emitCode):
-        * kjs/nodes.h:
+        Get rid of static execForCompareByStringForQSort in array_instance.cpp.
 
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+        No change on SunSpider, CelticKane or iBench JavaScript.
 
-        Not reviewed.
-        
-        Removed FIXME that I just fixed.
-        
-        Added ASSERT to cover an error previously only covered by a FIXME.
+        * kjs/array_instance.cpp:
+        (KJS::ArraySortComparator::ArraySortComparator):
+        (KJS::ArraySortComparator::operator()):
+        (KJS::ArrayInstance::sort):
+        Switch slow case to std::sort, so that ExecState can be passed in a comparator.
 
-        * kjs/JSActivation.cpp:
-        (KJS::JSActivation::getOwnPropertySlot):
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
 
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+        Reviewed by Adam Roben.
 
-        Not reviewed.
+        MSVC build fix.
 
-        Fixed indentation inside op_call. (I had left this code badly indented
-        to make the behavior-changing diff clearer.)
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Fixed up logging of jump instructions to follow the following style:
-        
-        jump    offset(->absoluteTarget)
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-
-2008-03-31  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Sam Weinig.
-        
-        Changed the SymbolTable API to use int instead of size_t. It has been
-        using int internally for a while now (since squirrelfish symbols can
-        have negative indices).
-
-2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Maciej.
-
-        Add support for FunctionCallValueNode.
-
-        * kjs/nodes.cpp:
-        (KJS::FunctionCallValueNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-31  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        1) Implemented array literals
-        
-        2) Renamed op_object_get and op_object_put to op_get_prop_id and
-        op_put_prop_id in preparation for new variants.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitNewArray):
-        (KJS::CodeGenerator::emitGetPropId):
-        (KJS::CodeGenerator::emitPutPropId):
-        (KJS::CodeGenerator::emitPutPropIndex):
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::CodeGenerator):
-        (KJS::CodeGenerator::propertyNames):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::ArrayNode::emitCode):
-        (KJS::PropertyListNode::emitCode):
-        (KJS::DotAccessorNode::emitCode):
-        (KJS::PostIncResolveNode::emitCode):
-        (KJS::PreIncResolveNode::emitCode):
-        (KJS::AssignResolveNode::emitCode):
-        (KJS::AssignDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Implemented native function calls. (Re-entering from native code back
-        to JS doesn't work yet, though.)
-
-        0.2% speedup overall, due to some inlining tweaks. 3.6% regression on
-        function-empty.js, since we're making a new virtual call and taking a
-        new branch inside every op_call.
-        
-        I adjusted the JavaScriptCore calling convention to minimize overhead,
-        like so:
-        
-        The machine calls a single virtual function, "getCallData", to get all
-        the data it needs for a function call. Native code still uses the old
-        "isObject()" check followed by an "implementsCall()" check, which
-        aliases to "getCallData". (We can optimize native code to use getCallData
-        at our leisure.)
-        
-        To supply a list of arguments, the machine calls a new List constructor
-        that just takes a pointer and a length, without copying. Native code
-        still appends to the list one argument at a time. (We can optimize
-        native code to use the new List constructor at our leisure.)
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): Changed resize() call to grow() call,
-        to encourage the compiler to inline the Vector code.
-
-        * kjs/CallData.h: Added.
-        (KJS::): CallData is a union because eventually native calls will stuff
-        a function pointer into it, to eliminate the callAsFunction virtual call.
-
-        * kjs/function.cpp:
-        (KJS::FunctionImp::callAsFunction): Changed this to an ASSERT since
-        it's not implemented yet.
-        
-        * kjs/list.h: Made the List class two-faced, to support the old way and
-        the new way during this transition phase: lists can be made read-only
-        with just a pointer and a legnth, or you can append to them one item
-        at a time.
-
-        * kjs/value.h:
-        (KJS::jsUndefined): Marked this function ALWAYS_INLINE for the benefit
-        of a certain compiler that doesn't know what's best for it.
-
-2008-03-30  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-
-        Dump code that codegen can't handle yet, so it's easier to prioritize missing nodes.
-        
-        * kjs/nodes.h:
-        (KJS::Node::emitCode):
-
-2008-03-30  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-
-        Improve dumping of bytecode and fix coding style accordingly.
-        
-        Registers are printed as lr1 for locals, tr1 for temp registers. Identifiers print as
-        foobar(@id0) and constants print as "foo"(@k1) or 312.4(@k2) or the like. Constant and
-        identifier tables are dumped for reference.
-        
-        * VM/CodeBlock.cpp:
-        (KJS::escapeQuotes):
-        (KJS::valueToSourceString):
-        (KJS::registerName):
-        (KJS::constantName):
-        (KJS::idName):
-        (KJS::printUnaryOp):
-        (KJS::printBinaryOp):
-        (KJS::CodeBlock::dump):
-        * VM/Machine.cpp:
-        (KJS::resolve):
-        (KJS::resolveBase):
-        (KJS::Machine::privateExecute):
-
-2008-03-30  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Oliver.
-        
-        Implement StringNode and VoidNode (both pretty trivial).
-
-        * kjs/nodes.cpp:
-        (KJS::StringNode::emitCode):
-        (KJS::VoidNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-30  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Sam.
-
-        Implement CommaNode.
-        
-        * kjs/nodes.cpp:
-        (KJS::CommaNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-30  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Maciej.
-
-        Adds support for dot notation and object literals.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitNewObject):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::ObjectLiteralNode::emitCode):
-        (KJS::PropertyListNode::emitCode):
-        (KJS::DotAccessorNode::emitCode):
-        (KJS::AssignDotNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-29  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Maciej Stachowiak.
-        
-        Mark the register file. 
-        
-        It's a conservative mark for now, but once registers are typed, we can
-        do an exact mark.
-        
-        1.4% regression regardless of whether we actually do the marking.
-        GCC is is worth every penny.
-
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): Most of the changes here are just for
-        the fact that "registers" is a pointer now.
-
-        * kjs/JSGlobalObject.cpp: The global object owns the register file now.
-
-2008-03-28  Oliver Hunt  <oliver@apple.com>
-
-        Reviewed by Maciej.
-
-        Bug 18204: SquirrelFish: continue/break do not correctly handle scope popping
-        <http://bugs.webkit.org/show_bug.cgi?id=18204>
-
-        We now track the scope depth as part of a loop context, and add an
-        extra instruction op_jump_scopes that is used to perform a jump across
-        dynamic scope boundaries.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitJumpScopes):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::ContinueNode::emitCode):
-        (KJS::BreakNode::emitCode):
-
-2008-03-28  Sam Weinig  <sam@webkit.org>
-
-        Reviewed by Geoffrey Garen.
-
-        Add emitCode support for ConditionalNode.
-
-        * kjs/nodes.cpp:
-        (KJS::ConditionalNode::emitCode):
-        * kjs/nodes.h:
-
-2008-03-28  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-        
-        Responding to feedback, added some comments, fixed up a few names, and
-        clarified that "locals" always means all local variables, functions,
-        and parameters.
-
-2008-03-28  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-
-        Added support for "this".
-        
-        Supply an implicit "this" value as the first argument to every function.
-        Alias the "this" keyword to that argument.
-        
-        1% regression overall, 2.5% regression on empty function calls. Seems
-        like a reasonable cost for now, since we're doing more work.
-        (Eventually, we might decide to create a version of op_call specialized
-        for a known null "this" value.)
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitCall):
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::CodeGenerator):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
         * kjs/CommonIdentifiers.cpp:
-        (KJS::CommonIdentifiers::CommonIdentifiers):
         * kjs/CommonIdentifiers.h:
-        * kjs/nodes.cpp:
-        (KJS::ThisNode::emitCode):
-        (KJS::FunctionCallResolveNode::emitCode):
-        * kjs/nodes.h:
+        * kjs/Parser.cpp:
+        * kjs/Parser.h:
+        * kjs/identifier.cpp:
+        * kjs/lexer.h:
+        * wtf/ThreadSpecific.h:
 
-2008-03-28  Oliver Hunt  <oliver@apple.com>
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
+
+        Build fix.
+
+        * kjs/date_object.cpp:
+        * kjs/date_object.h:
+        Don't include DateMath.h from date_object.h, as the latter is used from WebCore, while
+        where the former is not available.
+
+2008-04-16  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Unreviewed build fix for MSVC. It does not want to have
+        WTF in the KJS namespace.
+
+        * kjs/CommonIdentifiers.h:
+
+2008-04-16  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Unreviewed build fix for gcc.
+
+        ::msToGregorianDateTime  is not known to it.
+
+        * kjs/date_object.cpp:
+        (KJS::DateInstance::msToGregorianDateTime):
+
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
+        Initialize threadMapMutex safely (as already done in ThreadingWin).
+
+        * wtf/ThreadingGtk.cpp:
+        (WTF::threadMapMutex):
+        (WTF::initializeThreading):
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::threadMapMutex):
+        (WTF::initializeThreading):
+
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        Cache Gregorian date/time structure on DateInstance objects for 1.027x SunSpider speedup
+        (1.65x on date-format-xparb, 1.13x on date-format-tofte).
+
+        * kjs/DateMath.h:
+        (KJS::GregorianDateTime::copyFrom): Added. It presumably makes sense to keep GregorianDateTime
+        Noncopyable, so it's not just operator=.
+
+        * kjs/date_object.h: Added a per-object cache.
+
+        * kjs/date_object.cpp:
+        (KJS::DateInstance::DateInstance):
+        (KJS::DateInstance::msToGregorianDateTime):
+        (KJS::dateProtoFuncToString):
+        (KJS::dateProtoFuncToUTCString):
+        (KJS::dateProtoFuncToDateString):
+        (KJS::dateProtoFuncToTimeString):
+        (KJS::dateProtoFuncToLocaleString):
+        (KJS::dateProtoFuncToLocaleDateString):
+        (KJS::dateProtoFuncToLocaleTimeString):
+        (KJS::dateProtoFuncGetFullYear):
+        (KJS::dateProtoFuncGetUTCFullYear):
+        (KJS::dateProtoFuncToGMTString):
+        (KJS::dateProtoFuncGetMonth):
+        (KJS::dateProtoFuncGetUTCMonth):
+        (KJS::dateProtoFuncGetDate):
+        (KJS::dateProtoFuncGetUTCDate):
+        (KJS::dateProtoFuncGetDay):
+        (KJS::dateProtoFuncGetUTCDay):
+        (KJS::dateProtoFuncGetHours):
+        (KJS::dateProtoFuncGetUTCHours):
+        (KJS::dateProtoFuncGetMinutes):
+        (KJS::dateProtoFuncGetUTCMinutes):
+        (KJS::dateProtoFuncGetSeconds):
+        (KJS::dateProtoFuncGetUTCSeconds):
+        (KJS::dateProtoFuncGetTimezoneOffset):
+        (KJS::setNewValueFromTimeArgs):
+        (KJS::setNewValueFromDateArgs):
+        (KJS::dateProtoFuncSetYear):
+        (KJS::dateProtoFuncGetYear):
+        Use the cache when converting.
+
+2008-04-16  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Implement an abstraction for thread-specific storage, use it to get rid of some static objects.
+
+        SunSpider results were not conclusive, possibly up to 0.2% slowdown.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * JavaScriptCore.vcproj/WTF/WTF.vcproj:
+        Added ThreadSpecific.h
+
+        * wtf/ThreadSpecific.h: Added.
+        (WTF::::ThreadSpecific):
+        (WTF::::~ThreadSpecific):
+        (WTF::::get):
+        (WTF::::set):
+        (WTF::::destroy):
+        (WTF::T):
+        (WTF::::operator):
+        Only implemented for platforms that use pthreads.
+
+        * kjs/CommonIdentifiers.cpp:
+        (KJS::CommonIdentifiers::shared):
+        * kjs/CommonIdentifiers.h:
+        * kjs/InitializeThreading.cpp:
+        (KJS::initializeThreading):
+        * kjs/Parser.cpp:
+        (KJS::parser):
+        * kjs/Parser.h:
+        * kjs/identifier.cpp:
+        (KJS::identifierTable):
+        (KJS::literalIdentifierTable):
+        (KJS::Identifier::initializeIdentifierThreading):
+        * kjs/identifier.h:
+        * kjs/lexer.cpp:
+        (KJS::lexer):
+        * kjs/lexer.h:
+        Make static instances per-thread.
+
+2008-04-15  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add ENABLE_OFFLINE_WEB_APPLICATIONS to FEATURE_DEFINES.
+        
+        * Configurations/JavaScriptCore.xcconfig:
+
+2008-04-15  Andre Poenitz  <andre.poenitz@trolltech.com>
+
+        Reviewed by Simon.
+
+        Fix compilation with Qt namespaces
+
+        Qt can be configured to have all of its classes inside a specified namespaces.
+        This is for example used in plugin/component environments like Eclipse.
+
+        This change makes it possible to let the Qt port compile against a namespaced
+        Qt by the use of macros Qt provides to properly forward declare Qt classes in
+        the namespace.
+
+        * wtf/unicode/qt4/UnicodeQt4.h:
+
+2008-04-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Don't leak the prototype class.
+        
+        * API/JSClassRef.cpp:
+        (OpaqueJSClass::create):
+
+2008-04-14  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build.
+
+        * wtf/ThreadingWin.cpp:
+
+2008-04-14  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Adam Roben.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18488
+        FastMalloc doesn't release thread-specific data on Windows
+
+        * wtf/ThreadingWin.cpp:
+        (WTF::threadMapMutex): (WTF::initializeThreading): Call threadMapMutex once to initialize the static safely.
+        (WTF::ThreadFunctionInvocation::ThreadFunctionInvocation): Added a structure to wrap thread entry point and arguments.
+        (WTF::wtfThreadEntryPoint): Make sure to end all WTF threads with pthread_exit(), to give pthreads-win32 a chance to call
+        destructors of thread-specific data.
+        (WTF::createThread): Use _beginthreadex instead of CreateThread, because MSDN says so. Also removed a call to CreateEvent,
+        for which I could see no reason at all.
+
+2008-04-14  Alexey Proskuryakov  <ap@webkit.org>
+
+        Touched a file to make JavaScriptCore.vcproj rebuild.
+
+        * wtf/MathExtras.h:
+
+2008-04-14  Adam Roben  <aroben@apple.com>
+
+        Windows build fix
+
+        Rubberstamped by Alexey Proskuryakov.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Disable
+        the "potentially uninitialized variable" warning for grammar.cpp, as
+        it seems to be incorrect. yylval gets initialized by the lexer, but
+        MSVC doesn't seem to understand this.
+
+2008-04-11  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Maciej.
+        
+        Add default hash for pairs of hashable types.
+
+        * wtf/HashFunctions.h:
+        (WTF::PairHash::hash):
+        (WTF::PairHash::equal):
+        (WTF::):
+
+2008-04-11  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Geoff.
 
-        Bug 18192: Squirrelfish needs support for break and continue
-        <http://bugs.webkit.org/show_bug.cgi?id=18192>
+        Make DateMath.cpp thread safe.
 
-        Added a loop context stack to the code generator to provide the
-        correct jump labels for continue and goto.  Added logic to the
-        currently implemented loop constructs to manage entry and exit
-        from the loop contexts.  Finally, implemented codegen for break
-        and continue (and a pass through for LabelNode)
+        No measurable change on SunSpider (should be a very small speedup).
 
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::pushLoopContext):
-        (KJS::CodeGenerator::popLoopContext):
-        (KJS::CodeGenerator::loopContextForIdentifier):
-        (KJS::CodeGenerator::labelForContinue):
-        (KJS::CodeGenerator::labelForBreak):
-        * VM/CodeGenerator.h:
-        * kjs/nodes.cpp:
-        (KJS::DoWhileNode::emitCode):
-        (KJS::WhileNode::emitCode):
-        (KJS::ForNode::emitCode):
-        (KJS::ContinueNode::emitCode):
-        (KJS::BreakNode::emitCode):
-        (KJS::LabelNode::emitCode):
-        * kjs/nodes.h:
+        * kjs/DateMath.cpp:
+        (KJS::mimimumYearForDST): (KJS::equivalentYearForDST): Got rid of double caching of the
+        same precomputed value.
+        (KJS::calculateUTCOffset): (KJS::getUTCOffset): Factored actual UTC offset calculation code
+        out of getUTCOffset(), and notification setup into initDateMath().
 
-2008-03-27  Sam Weinig  <sam@webkit.org>
+        (KJS::initDateMath): Added.
 
-        Reviewed by Geoffrey Garen.
+        * kjs/DateMath.h:
+        * kjs/InitializeThreading.cpp:
+        (KJS::initializeThreading):
+        Added initDateMath().
 
-        Add emitCode support for UnaryPlusNode, NegateNode, BitwiseNotNode and LogicalNotNode.
+2008-04-11  Alexey Proskuryakov  <ap@webkit.org>
 
-        * VM/CodeBlock.cpp:
-        (KJS::printUnaryOp):
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitToJSNumber):
-        (KJS::CodeGenerator::emitNegate):
-        (KJS::CodeGenerator::emitBitNot):
-        (KJS::CodeGenerator::emitNot):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::UnaryPlusNode::emitCode):
-        (KJS::NegateNode::emitCode):
-        (KJS::BitwiseNotNode::emitCode):
-        (KJS::LogicalNotNode::emitCode):
-        * kjs/nodes.h:
+        Windows build fix.
 
-2008-03-27  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+        * kjs/grammar.y:
+
+2008-04-11  Alexey Proskuryakov  <ap@webkit.org>
+
+        Tiger build fix. Forward declaring a union didn't work for whatever reason, make the
+        parameters void*.
+
+        * kjs/grammar.y:
+        * kjs/lexer.cpp:
+        (kjsyylex):
+        (KJS::Lexer::lex):
+        * kjs/lexer.h:
+
+2008-04-11  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Geoff.
+
+        Generate a pure (re-entrant) parser with Bison.
+
+        No change on SunSpider.
+
+        * kjs/Parser.cpp:
+        (KJS::Parser::parse):
+        * kjs/grammar.y:
+        * kjs/lexer.cpp:
+        (kjsyylex):
+        (KJS::Lexer::lex):
+        * kjs/lexer.h:
+        Pass state as function arguments, instead of global data. Don't call lexer() as often as
+        before, as this function is about to become slower due to thread-specific storage.
+
+        * kjs/function.cpp:
+        (KJS::isStrWhiteSpace): Don't call isSeparatorSpace() for 8-bit characters, as these are
+        already taken care of. This is a small speedup, compensating for a small slowdown caused
+        by switching Bison mode.
+
+2008-04-10  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Geoff.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18402
+        REGRESSION: visited element handling is incorrect in nested join/toString calls
+
+        No change on SunSpider total, possibly a tiny improvement (about 0.1%).
+
+        Test: fast/js/array-tostring-and-join.html
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::visitedElements): Store visited elements HashSet here, making it
+        common to toString/toLocalizedString/join again.
+
+        * kjs/array_object.cpp:
+        (KJS::arrayProtoFuncToString):
+        (KJS::arrayProtoFuncToLocaleString):
+        (KJS::arrayProtoFuncJoin):
+        Got rid of static variables. Replaced UString with Vector to avoid O(n^2) behavior and
+        regain performance.
+
+        * wtf/Vector.h:
+        (WTF::::resize):
+        (WTF::::grow):
+        (WTF::::reserveCapacity):
+        (WTF::::append):
+        (WTF::::insert):
+        Added null checks, so that Vector methods don't crash when out of memory. The caller should
+        check that data pointer is not null before proceeding.
+
+2008-04-10  Mark Rowe  <mrowe@apple.com>
 
         Reviewed by Maciej Stachowiak.
 
-        Add support for LogicalAndNode and LogicalOrNode.
+        Fix https://bugs.webkit.org/show_bug.cgi?id=18367 and the many dupes.
+        Bug 18367: Crash during celtic kane js speed 2007 test
 
-        * kjs/nodes.cpp:
-        (KJS::LogicalAndNode::emitCode):
-        (KJS::LogicalOrNode::emitCode):
-        * kjs/nodes.h:
+        GCC 4.2 on x86_64 Linux decided to reorder the local variables in markCurrentThreadConservatively's
+        stack frame.  This lead to the range of addresses the collector treated as stack to exclude the
+        contents of volatile registers that markCurrentThreadConservatively forces onto the stack.  This was
+        leading to objects being prematurely collected if the only reference to them was via a register at
+        the time a collection occurred.
 
-2008-03-27  Sam Weinig  <sam@webkit.org>
+        The fix for this is to move the calculation of the top of the stack into a NEVER_INLINE function
+        that is called from markCurrentThreadConservatively.  This forces the dummy variable we use for
+        determining the top of stack to be in a different stack frame which prevents the compiler from
+        reordering it relative to the registers that markCurrentThreadConservatively forces onto the stack.
 
-        Clean up code and debug output.
+        * kjs/collector.cpp:
+        (KJS::Collector::markCurrentThreadConservativelyInternal):
+        (KJS::Collector::markCurrentThreadConservatively):
+        * kjs/collector.h:
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
+2008-04-10  Adam Roben  <aroben@apple.com>
 
-2008-03-27  Geoffrey Garen  <ggaren@apple.com>
+        VC++ Express build fix
 
-        Moved an ASSERT to a more logical place.
+        * JavaScriptCore.vcproj/WTF/WTF.vcproj: Link against user32.lib so
+        that anyone who links against WTF.lib will get user32.lib
+        automatically.
 
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
+2008-04-09  Adam Roben  <aroben@apple.com>
 
-2008-03-27  Sam Weinig  <sam@webkit.org>
+        VC++ Express build fix
 
-        Reviewed by Oliver Hunt.
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj: Link against
+        user32.lib.
 
-        Add emitCode support for InstanceOfNode.
+2008-04-09  Adam Roben  <aroben@apple.com>
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitInstanceOf):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::InstanceOfNode::emitCode):
-        * kjs/nodes.h:
+        Build fix
 
-2008-03-27  Oliver Hunt  <oliver@apple.com>
+        * JavaScriptCore.exp: Export isMainThread.
 
-        Reviewed by Maciej.
+2008-04-09  Adam Roben  <aroben@apple.com>
 
-        Bug 18142: squirrelfish needs to support dynamic scoping/with
-        <http://bugs.webkit.org/show_bug.cgi?id=18142>
+        Build fix
 
-        Add support for dynamic scoping and add code to handle 'with'
-        statements.
+        * wtf/AlwaysInline.h: Make sure to #include Platform.h before using
+        the macros it defines.
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeBlock.h:
-        (KJS::CodeBlock::CodeBlock):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::getRegister):
-        (KJS::CodeGenerator::emitPushScope):
-        (KJS::CodeGenerator::emitPopScope):
-        * VM/CodeGenerator.h:
-        (KJS::CodeGenerator::CodeGenerator):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
-        * kjs/nodes.cpp:
-        (KJS::WithNode::emitCode):
-        * kjs/nodes.h:
+2008-04-08  Mark Rowe  <mrowe@apple.com>
 
-2008-03-27  Sam Weinig  <sam@webkit.org>
+        Export WTF::initializeThreading() from JavaScriptCore.
+
+        * JavaScriptCore.exp:
+
+2008-04-04  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.
 
-        Add emitCode support for NullNode, FalseNode, TrueNode, IfNode, IfElseNode, DoWhileNode and WhileNode
+        First step in implementing the "split window"
 
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump): Dump op_jfalse opcode.
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitJumpIfFalse): Identical to emitJumpIfTrue except it emits the op_jfalse opcode.
-        (KJS::CodeGenerator::emitLoad): Add and emitLoad override for booleans.
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute): Adds execution of op_jfalse. It is identical to op_jtrue, except the
-        the condition is reversed.
-        * VM/Opcode.h: Add op_jfalse.
-        * kjs/nodes.cpp:
-        (KJS::NullNode::emitCode): Added.
-        (KJS::FalseNode::emitCode): Added.
-        (KJS::TrueNode::emitCode): Added.
-        (KJS::IfNode::emitCode): Added.
-        (KJS::IfElseNode::emitCode): Added.
-        (KJS::DoWhileNode::emitCode): Added.
-        (KJS::WhileNode::emitCode): Added.
-        * kjs/nodes.h:
+        - Add a GlobalThisValue to ExecState which should be used 
+          in places that used to implement the "use the global object
+          as this if null" rule.
+        - Factor out lookupGetter/lookupSetter into virtual methods 
+          on JSObject so that they can be forwarded.
+        - Make defineGetter/defineSetter virtual methods for the same
+          reason.
+        - Have PrototypeReflexiveFunction store the globalObject used
+          to create it so that it can be used to get the correct thisObject
+          for eval.
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
-
-        Nixed an unused List.
-        
-        The calm before my stormy war against the List class.
-
+        * API/JSObjectRef.cpp:
+        (JSObjectCallAsFunction):
+        * JavaScriptCore.exp:
+        * kjs/Activation.h:
+        * kjs/ExecState.cpp:
+        (KJS::ExecState::ExecState):
+        (KJS::GlobalExecState::GlobalExecState):
+        * kjs/ExecState.h:
+        (KJS::ExecState::globalThisValue):
+        * kjs/ExecStateInlines.h:
+        (KJS::ExecState::ExecState):
+        (KJS::FunctionExecState::FunctionExecState):
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::reset):
+        (KJS::JSGlobalObject::toGlobalObject):
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData):
+        (KJS::JSGlobalObject::JSGlobalObject):
+        * kjs/array_instance.cpp:
+        (KJS::CompareWithCompareFunctionArguments::CompareWithCompareFunctionArguments):
+        (KJS::compareWithCompareFunctionForQSort):
+        * kjs/array_object.cpp:
+        (KJS::arrayProtoFuncSort):
+        (KJS::arrayProtoFuncFilter):
+        (KJS::arrayProtoFuncMap):
+        (KJS::arrayProtoFuncEvery):
+        (KJS::arrayProtoFuncForEach):
+        (KJS::arrayProtoFuncSome):
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+        (KJS::ActivationImp::toThisObject):
+        (KJS::globalFuncEval):
+        (KJS::PrototypeReflexiveFunction::PrototypeReflexiveFunction):
+        (KJS::PrototypeReflexiveFunction::mark):
+        * kjs/function.h:
+        (KJS::PrototypeReflexiveFunction::cachedGlobalObject):
         * kjs/function_object.cpp:
-        (KJS::FunctionObjectImp::construct):
-
-2008-03-26  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
-
-        Reviewed by Geoffrey Garen.
-
-        Adds support for EqualNode, NotEqualNode, StrictEqualNode, NotStrictEqualNode,
-        LessEqNode, GreaterNode, GreaterEqNode, MultNode, DivNode, ModNode, SubNode,
-        LeftShiftNode, RightShiftNode, UnsignedRightShiftNode, BitAndNode, BitXOrNode,
-        and BitOrNode.
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::dump):
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::emitEqual):
-        (KJS::CodeGenerator::emitNotEqual):
-        (KJS::CodeGenerator::emitStrictEqual):
-        (KJS::CodeGenerator::emitNotStrictEqual):
-        (KJS::CodeGenerator::emitLessEq):
-        (KJS::CodeGenerator::emitMult):
-        (KJS::CodeGenerator::emitDiv):
-        (KJS::CodeGenerator::emitMod):
-        (KJS::CodeGenerator::emitSub):
-        (KJS::CodeGenerator::emitLeftShift):
-        (KJS::CodeGenerator::emitRightShift):
-        (KJS::CodeGenerator::emitUnsignedRightShift):
-        (KJS::CodeGenerator::emitBitAnd):
-        (KJS::CodeGenerator::emitBitXOr):
-        (KJS::CodeGenerator::emitBitOr):
-        * VM/CodeGenerator.h:
-        * VM/Machine.cpp:
-        (KJS::jsLessEq):
-        (KJS::Machine::privateExecute):
-        * VM/Opcode.h:
+        (KJS::functionProtoFuncApply):
+        (KJS::functionProtoFuncCall):
         * kjs/nodes.cpp:
-        (KJS::MultNode::emitCode):
-        (KJS::DivNode::emitCode):
-        (KJS::ModNode::emitCode):
-        (KJS::SubNode::emitCode):
-        (KJS::LeftShiftNode::emitCode):
-        (KJS::RightShiftNode::emitCode):
-        (KJS::UnsignedRightShiftNode::emitCode):
-        (KJS::GreaterNode::emitCode):
-        (KJS::LessEqNode::emitCode):
-        (KJS::GreaterEqNode::emitCode):
-        (KJS::EqualNode::emitCode):
-        (KJS::NotEqualNode::emitCode):
-        (KJS::StrictEqualNode::emitCode):
-        (KJS::NotStrictEqualNode::emitCode):
-        (KJS::BitAndNode::emitCode):
-        (KJS::BitXOrNode::emitCode):
-        (KJS::BitOrNode::emitCode):
-        * kjs/nodes.h:
+        (KJS::ExpressionNode::resolveAndCall):
+        (KJS::FunctionCallValueNode::evaluate):
+        (KJS::LocalVarFunctionCallNode::inlineEvaluate):
+        (KJS::ScopedVarFunctionCallNode::inlineEvaluate):
+        (KJS::FunctionCallBracketNode::evaluate):
+        (KJS::FunctionCallDotNode::inlineEvaluate):
+        * kjs/object.cpp:
+        (KJS::JSObject::call):
+        (KJS::JSObject::put):
+        (KJS::tryGetAndCallProperty):
+        (KJS::JSObject::lookupGetter):
+        (KJS::JSObject::lookupSetter):
+        (KJS::JSObject::toThisObject):
+        (KJS::JSObject::toGlobalObject):
+        (KJS::JSObject::fillGetterPropertySlot):
+        * kjs/object.h:
+        * kjs/object_object.cpp:
+        (KJS::objectProtoFuncLookupGetter):
+        (KJS::objectProtoFuncLookupSetter):
+        * kjs/string_object.cpp:
+        (KJS::replace):
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+2008-04-08  Brady Eidson  <beidson@apple.com>
+
+        Encourage Windows to rebuild - AGAIN...
+
+        * kjs/DateMath.cpp:
+
+2008-04-08  Adam Roben  <aroben@apple.com>
+
+        Mac build fix
+
+        * JavaScriptCore.exp: Add callOnMainThread, and sorted the list.
+
+2008-04-08  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by Adam Roben
+        
+        Touch some files to *strongly* encourage Windows to rebuilt with DOM_STORAGE enabled
+
+        * kjs/DateMath.cpp:
+
+2008-04-08  Adam Roben  <aroben@apple.com>
+
+        Move callOnMainThread to WTF
+
+        Reviewed by Alexey Proskuryakov.
+
+        * GNUmakefile.am:
+        * JavaScriptCore.pri:
+        * JavaScriptCore.vcproj/WTF/WTF.vcproj:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * JavaScriptCoreSources.bkl:
+        Added new files.
+
+        * wtf/MainThread.cpp:
+        * wtf/MainThread.h:
+        * wtf/gtk/MainThreadGtk.cpp:
+        * wtf/mac/MainThreadMac.mm:
+        * wtf/qt/MainThreadQt.cpp:
+        * wtf/win/MainThreadWin.cpp:
+        * wtf/wx/MainThreadWx.cpp:
+        Moved here from WebCore/platform. Replaced all instances of "WebCore"
+        with "WTF".
+
+        * kjs/bool_object.cpp: Touched to force JavaScriptCore.vcproj to
+        build.
+        to the WTF namespace.
+        * wtf/ThreadingWin.cpp:
+        (WTF::initializeThreading): Call initializeMainThread.
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        Add "ENABLE_DOM_STORAGE" to keep in sync with the rest of the project
+
+        * Configurations/JavaScriptCore.xcconfig:
+
+2008-04-07  Adam Roben  <aroben@apple.com>
+
+        Windows build fix
+
+        * wtf/ThreadingWin.cpp: Back out some changes I didn't mean to land.
+
+2008-04-07  Adam Roben  <aroben@apple.com>
+
+        Add WTF::isMainThread
+
+        Reviewed by Alexey Proskuryakov.
+
+        * wtf/Threading.h: Declare the new function.
+        * wtf/ThreadingGtk.cpp:
+        (WTF::initializeThreading): Initialize the main thread identifier.
+        (WTF::isMainThread): Added.
+        * wtf/ThreadingNone.cpp: Ditto ThreadingGtk.cpp.
+        (WTF::initializeThreading):
+        (WTF::isMainThread):
+        * wtf/ThreadingPthreads.cpp: Ditto.
+        (WTF::initializeThreading):
+        (WTF::isMainThread):
+        * wtf/ThreadingWin.cpp: Ditto.
+        (WTF::initializeThreading):
+        (WTF::isMainThread):
+
+2008-04-06  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Make UString thread-safe.
+
+        No change on SunSpider total, although individual tests have changed a lot, up to 3%.
+
+        * kjs/InitializeThreading.cpp: (KJS::initializeThreading): Call UString::null() to initialize
+        a static.
+        
+        * kjs/identifier.cpp:
+        (KJS::CStringTranslator::translate):
+        (KJS::UCharBufferTranslator::translate):
+        Use "true" for a boolean value instead of 1, because it's C++.
+
+        * kjs/ustring.h:
+        (KJS::CString::adopt): Added a method to create from a char* buffer without copying.
+        (KJS::UString::Rep::ref): Removed an assertion for JSLock::lockCount, as it's no longer
+        necessary to hold JSLock when working with strings.
+        (KJS::UString::Rep::deref): Ditto.
+        (KJS::UString::Rep::isStatic): Added a field to quickly determine that this is an empty
+        or null static string.
+
+        * kjs/ustring.cpp:
+        (KJS::): Removed normalStatBufferSize and statBufferSize, as there is no reason to have such
+        an advanced implementation of a debug-only ascii() method. Removed a long-obsolete comment
+        about UChar.
+        (KJS::UString::Rep::createCopying): Removed an assertion for JSLock::lockCount.
+        (KJS::UString::Rep::create): Ditto.
+        (KJS::UString::Rep::destroy): Ditto. Do not do anything for static null and empty strings,
+        as refcounting is not reliable for those. Reordered branches for a noticeable speed gain -
+        apparently this functiton is hot enough for SunSpider to see an effect from this!
+        (KJS::UString::null): Moved a star, added a comment.
+        (KJS::UString::cstring): Reimplemented to not call ascii(), which is not thread-safe.
+        (KJS::UString::ascii): Simplified statBuffer handling logic.
+        (KJS::UString::toDouble): Use cstring() instead of ascii().
+
+2008-04-02  Mark Rowe  <mrowe@apple.com>
 
         Reviewed by Oliver Hunt.
-        
-        Only print debug dumps in debug builds.
 
-        * VM/CodeGenerator.cpp:
-        (KJS::CodeGenerator::generate):
-        * VM/Machine.cpp:
-        (KJS::Machine::privateExecute):
+        Ensure that debug symbols are generated for x86_64 and ppc64 builds.
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+        * Configurations/Base.xcconfig:
+
+2008-04-01  Christian Dywan  <christian@imendio.com>
+
+        Build fix for GCC 4.3.
+
+        * wtf/unicode/icu/CollatorICU.cpp: include string.h
+
+2008-04-01  Alexey Proskuryakov  <ap@webkit.org>
+
+        Rubber-stamped by Darin.
+
+        Turn off using 64-bit arithmetic on 32-bit hardware, as dtoa own code is faster than
+        compiler-provided emulation.
+
+        1% speedup on Acid3 test 26.
+
+        * kjs/dtoa.cpp:
+
+2008-04-01  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Make MathExtras.h thread safe.
+
+        * kjs/math_object.cpp:
+        (KJS::mathProtoFuncRandom): If threading is enabled, rely on initializeThreading to call
+        wtf_random_init().
+
+        * wtf/Threading.h:
+        * wtf/ThreadingGtk.cpp:
+        (WTF::initializeThreading):
+        * wtf/ThreadingNone.cpp:
+        (WTF::initializeThreading):
+        * wtf/ThreadingPthreads.cpp:
+        (WTF::initializeThreading):
+        * wtf/ThreadingWin.cpp:
+        (WTF::initializeThreading):
+        Call wtf_random_init(); made the function non-inline to avoid having to include too many
+        headers in Threading.h.
+
+2008-03-31  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by darin.
+
+        Make matching of regexps using ^ much faster
+        http://bugs.webkit.org/show_bug.cgi?id=18086
+
+        * pcre/pcre_compile.cpp:
+        (compileBranch):
+        (branchNeedsLineStart):
+        * pcre/pcre_exec.cpp:
+        (match):
+        (jsRegExpExecute):
+        * pcre/pcre_internal.h:
+
+2008-03-29  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Oliver Hunt.
-        
-        Moved a few files around in the XCode project.
 
+        <rdar://problem/5829556> REGRESSION: Leak in KJS::initializeThreading()
+
+        * kjs/InitializeThreading.cpp: (KJS::initializeThreading): There is no guarantee that
+        initializeThreading() is called only once; check that the mutex hasn't been already allocated.
+
+2008-03-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 17924: Crash in KJS::ConstDeclNode::evaluate with |with| and |const|
+        <http://bugs.webkit.org/show_bug.cgi?id=17924>
+        <rdar://problem/5806933>
+
+        It turns out this is trivially avoidable if we just match firefox's
+        semantics and ensure that an assignment in a const declaration always
+        writes to the variable object.
+
+        * kjs/nodes.cpp:
+        (KJS::ConstDeclNode::handleSlowCase):
+
+2008-03-28  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Sam Weinig.
+
+        Fix a dtoa thread safety issue.
+
+        WebCore can call kjs_strtod without holding JS lock, but we didn't have thread safety
+        compiled in for dtoa.
+
+        This is a 0.5% regression on SunSpider, which Sam Weinig has volunteered to cover with
+        his recent improvement.
+
+        * kjs/dtoa.cpp:
+        (Bigint::Balloc):
+        (Bigint::Bfree):
+        Changed to use fastMalloc/fastDelete - they are much faster than the dtoa custom version was
+        in the presence of locking (but somewhat slower in single-threaded case).
+        (Bigint::pow5mult): Got rid of the dreaded double-checked locking anti-pattern (had to
+        restructure the code to avoid significant performance implications).
+        (Bigint::lshift): Rewrote to avoid an allocation, if possible.
+
+        (Bigint::rv_alloc):
+        (Bigint::kjs_freedtoa):
+        (Bigint::kjs_dtoa):
+        Check for USE(MULTIPLE_THREADS), not dtoa legacy MULTIPLE_THREADS.
+
+        * kjs/InitializeThreading.cpp: Added.
+        (KJS::initializeThreading):
+        * kjs/InitializeThreading.h: Added.
+        Initialize threading at KJS level, if enabled.
+
+        * kjs/dtoa.h: Expose dtoa mutex for KJS::initializeThreading.
+
+        * kjs/testkjs.cpp: (kjsmain): Call initializeThreading.
+
+        * JavaScriptCore.exp: Export KJS::initializeThreading.
+
+        * GNUmakefile.am:
+        * JavaScriptCore.exp:
+        * JavaScriptCore.pri:
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        * JavaScriptCoreSources.bkl:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        Added InitializeThreading.{h,cpp}.
+
+        * wtf/Threading.h: Removed a using directive for WTF::initializeThreading - it is only
+        to be called from KJS::initializeThreading, and having it in the global namespace is useless.
+
+2008-03-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Export Unicode/UTF8.h and convertUTF16ToUTF8() for more flexible conversion in WebCore
+
+        * JavaScriptCore.exp:
         * JavaScriptCore.xcodeproj/project.pbxproj:
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+2008-03-27  Darin Adler  <darin@apple.com>
 
-        Reviewed by Oliver Hunt.
-        
-        Made closures work.
-        
-        An activation object aliases to the register file until its associated
-        function returns, at which point it copies the registers for locals and
-        parameters into an independent storage buffer.
+        Reviewed by Mark Rowe.
 
-2008-03-24  Geoffrey Garen  <ggaren@apple.com>
+        <rdar://problem/5826236> Regular expressions with large nested repetition counts can have their
+        compiled length calculated incorrectly.
 
-        Reviewed by Oliver Hunt.
-        
-        Fixed recent 25% regression on simple for loop test. GCC seems to be
-        very finicky about the code that gets inlined into
-        Machine::privateExecute.
+        * pcre/pcre_compile.cpp:
+        (multiplyWithOverflowCheck):
+        (calculateCompiledPatternLength): Check for overflow when dealing with nested repetition counts
+        and bail with an error rather than returning incorrect results.
 
-        Everything in this patch is simply the result of experiment.
-        
-        The resolve and resolve_base opcodes do not seem to have gotten slower
-        from this change.
+2008-03-26  Mark Rowe  <mrowe@apple.com>
 
-        * VM/Machine.cpp:
-        (KJS::resolve):
-        (KJS::resolveBase):
-        (KJS::Machine::privateExecute):
-        * kjs/nodes.h:
+        Rubber-stamped by Brady Eidson.
 
-2008-03-24  Oliver Hunt  <oliver@apple.com>
+        Update FEATURE_DEFINES to be consistent with the other locations in which it is defined.
+
+        * Configurations/JavaScriptCore.xcconfig:
+
+2008-03-26  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18060: Assertion failure (JSLock not held) beneath
+        JSCallbackObject<Base>::toString
+
+        <http://bugs.webkit.org/show_bug.cgi?id=18060>
 
         Reviewed by Geoff Garen.
 
-        Bug 18059: squirrelfish needs to compile on platforms without computed goto
-        <http://bugs.webkit.org/show_bug.cgi?id=18059>
+        Bug fix:
 
-        "Standard" macro style support for conditionalising the use of computed goto.
+        * API/JSCallbackObjectFunctions.h:
+        (KJS::JSCallbackObject<Base>::toString): Make the DropAllLocks
+        instance only be in scope while calling convertToType.
 
-        * JavaScriptCore.xcodeproj/project.pbxproj:
-        * VM/Machine.cpp:
-        (KJS::Machine::isOpcode):
-        (KJS::Machine::privateExecute):
-        * VM/Machine.h:
-        (KJS::Machine::getOpcode):
-        (KJS::Machine::getOpcodeID):
-        * VM/Opcode.h:
-        * wtf/Platform.h:
+        Test:
 
-2008-03-24  Geoffrey Garen  <ggaren@apple.com>
+        * API/testapi.c:
+        (MyObject_convertToType): Implement type conversion to string.
+        * API/testapi.js: Add a test for type conversion to string.
 
-        Moved my notes from nodes.h to the wiki.
+2008-03-26  Adam Roben  <aroben@apple.com>
 
-        * kjs/nodes.h:
+        Windows build fix
 
-2008-03-24  Geoffrey Garen  <ggaren@apple.com>
+        * kjs/array_instance.cpp: Touched this.
+        * wtf/HashFunctions.h:
+        (WTF::intHash): Added 8- and 16-bit versions of intHash.
 
-        Reviewed by NOBODY.
-        
-        SquirrelFish lives.
-        
-        Initial check-in of the code I've been carrying around. Lots of stuff
-        doesn't work. Plus a bunch of empty files.
+2008-03-26  Adam Roben  <aroben@apple.com>
+
+        Force JSC headers to be copied by touching a file
+
+        * kjs/array_instance.cpp:
+        (KJS::ArrayInstance::getPropertyNames):
+
+2008-03-26  Adam Roben  <aroben@apple.com>
+
+        Windows build fix after r31324
+
+        Written with Darin.
+
+        Added HashTable plumbing to support using wchar_t as a key type.
+
+        * wtf/HashFunctions.h:
+        * wtf/HashTraits.h:
+        (WTF::):
+
+2008-03-26  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+
+        - JSC part of fix for "SVG multichar glyph matching matches longest instead of first (affects Acid3 test 79)"
+        http://bugs.webkit.org/show_bug.cgi?id=18118
+
+        * wtf/HashFunctions.h:
+        (WTF::):
+        * wtf/HashTraits.h:
+        (WTF::):
+
+2008-03-26  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Cache C string identifiers by address, not value, assuming that C strings can only
+        be literals.
+
+        1% speedup on Acid3 test 26.
+
+        * kjs/identifier.cpp:
+        (KJS::literalIdentifierTable):
+        (KJS::Identifier::add):
+        Added a new table to cache UString::Reps created from C strings by address. Elements are
+        never removed from this cache, as only predefined identifiers can get there.
+
+        * kjs/identifier.h:
+        (KJS::Identifier::Identifier): Added a warning.
+
+2008-03-26  Alexey Proskuryakov  <ap@webkit.org>
+
+        Rubber-stamped by Maciej.
+
+        An assertion was failing in function-toString-object-literals.html when parsing 1e-500.
+        The condition existed before, and got uncovered by turning compiled-out dtoa checks into
+        ASSERTs.
+
+        The assertion was verifying that the caller wasn't constructing a Bigint from 0.
+        This might have had some reason behind it originally, but I couldn't find any,
+        and this doesn't look like a reasonable requirement.
+
+        * kjs/dtoa.cpp: (d2b): Removed the assertion (two copies in different code paths).
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18077: Integrate testapi.c into the Windows build
+
+        <http://bugs.webkit.org/show_bug.cgi?id=18077>
+
+        Reviewed by Steve Falkenburg.
+
+        * JavaScriptCore.vcproj/testapi/testapi.vcproj: Added.
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Make testapi.c compile under MSVC
+
+        Currently you must compile testapi.c as C++ code since MSVC does not
+        support many C features that GCC does.
+
+        Reviewed by Steve Falkenburg.
+
+        * API/testapi.c:
+        (nan): Added an implementation of this for MSVC.
+        (assertEqualsAsUTF8String): Use malloc instead of dynamically-sized
+        stack arrays.
+        (assertEqualsAsCharactersPtr): Ditto.
+        (print_callAsFunction): Ditto.
+        (main): Ditto, and explicitly cast from UniChar* to JSChar*.
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Stop using JavaScriptCore's custom stdbool.h and stdint.h on Windows
+
+        We can't remove the os-win32 directory yet because other ports (at
+        least wx) are still relying on it.
+
+        Reviewed by Steve Falkenburg.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+          - Made all the include paths match the one for the Debug
+            configuration (these got out of sync in r30797)
+          - Removed os-win32 from the include path
+          - Removed os-win32 from the directories we copy to $WebKitOutputDir.
+          - Removed stdint.h from the project
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCoreGenerated.make:
+        Delete the files that we may have previously copied from the os-win32
+        directory.
+
+2008-03-25  Alexey Proskuryakov  <ap@webkit.org>
+
+        Windows build fix.
+
+        * kjs/dtoa.cpp: Include stdint.h.
+
+2008-03-25  Alexey Proskuryakov  <ap@webkit.org>
+
+        Rubber-stamped by Darin.
+
+        Cleanup dtoa.cpp style.
+
+        * kjs/dtoa.cpp:
+        (Bigint::Balloc):
+        (Bigint::Bfree):
+        (Bigint::multadd):
+        (Bigint::s2b):
+        (Bigint::hi0bits):
+        (Bigint::lo0bits):
+        (Bigint::i2b):
+        (Bigint::mult):
+        (Bigint::pow5mult):
+        (Bigint::lshift):
+        (Bigint::cmp):
+        (Bigint::diff):
+        (Bigint::ulp):
+        (Bigint::b2d):
+        (Bigint::d2b):
+        (Bigint::ratio):
+        (Bigint::):
+        (Bigint::match):
+        (Bigint::hexnan):
+        (Bigint::kjs_strtod):
+        (Bigint::quorem):
+        (Bigint::rv_alloc):
+        (Bigint::nrv_alloc):
+        (Bigint::kjs_freedtoa):
+        (Bigint::kjs_dtoa):
+        * kjs/dtoa.h:
+
+2008-03-24  Darin Adler  <darin@apple.com>
+
+        Reviewed by Sam.
+
+        - convert a JavaScript immediate number to a string more efficiently
+
+        2% speedup of Acid3 test 26
+
+        * kjs/JSImmediate.cpp:
+        (KJS::JSImmediate::toString): Take advantage of the fact that all immediate
+        numbers are integers, and use the faster UString function for formatting integers
+        instead of the slower one that works for floating point. I think this is a leftover
+        from when immediate numbers were floating point.
+
+2008-03-23  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin Adler.
+
+        Fix http://bugs.webkit.org/show_bug.cgi?id=18048
+        The "thisObject" parameter to JSEvaluateScript is not used properly
+
+        Making passing a thisObject to JSEvaluateScript actually set the thisObject of the created
+        ExecState.
+
+        * API/testapi.c:
+        (main): Add tests for setting the thisObject when calling JSEvaluateScript.
+
+        * kjs/ExecState.cpp:
+        (KJS::ExecState::ExecState): Assign the thisObject to m_thisValue and remove the comment. 
 
 2008-03-22  Jesse Ruderman  <jruderman@gmail.com>
 

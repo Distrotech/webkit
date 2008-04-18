@@ -183,7 +183,7 @@ HRESULT PreferencesChangedOrRemovedObserver::notifyPreferencesChanged(WebCacheMo
 {
     HRESULT hr = S_OK;
 
-    if (WebView::didSetCacheModel() || cacheModel > WebView::cacheModel())
+    if (!WebView::didSetCacheModel() || cacheModel > WebView::cacheModel())
         WebView::setCacheModel(cacheModel);
     else if (cacheModel < WebView::cacheModel()) {
         WebCacheModel sharedPreferencesCacheModel;
@@ -219,6 +219,8 @@ const int WM_VISTA_MOUSEHWHEEL = 0x020E;
 
 static const int maxToolTipWidth = 250;
 
+static const int delayBeforeDeletingBackingStoreMsec = 5000;
+
 static ATOM registerWebView();
 static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -236,6 +238,7 @@ static WebCacheModel s_cacheModel = WebCacheModelDocumentViewer;
 
 enum {
     UpdateActiveStateTimer = 1,
+    DeleteBackingStoreTimer = 2,
 };
 
 // WebView ----------------------------------------------------------------
@@ -265,6 +268,7 @@ WebView::WebView()
 , m_toolTipHwnd(0)
 , m_closeWindowTimer(this, &WebView::closeWindowTimerFired)
 , m_topLevelParent(0)
+, m_deleteBackingStoreTimerActive(false)
 {
     KJS::Collector::registerAsMainThread();
 
@@ -294,6 +298,10 @@ WebView::~WebView()
     // this point, we should just destroy it ourselves.
     if (::IsWindow(m_viewWindow))
         ::DestroyWindow(m_viewWindow);
+
+    // the tooltip window needs to be explicitly destroyed since it isn't a WS_CHILD
+    if (::IsWindow(m_toolTipHwnd))
+        ::DestroyWindow(m_toolTipHwnd);
 
     ASSERT(!m_page);
     ASSERT(!m_preferences);
@@ -584,7 +592,9 @@ void WebView::close()
         m_mouseOutTracker.set(0);
     }
 
-    m_page->setGroupName(String());
+    if (m_page)
+        m_page->setGroupName(String());
+    
     setHostWindow(0);
 
     setDownloadDelegate(0);
@@ -621,6 +631,10 @@ void WebView::close()
 
 void WebView::deleteBackingStore()
 {
+    if (m_deleteBackingStoreTimerActive) {
+        KillTimer(m_viewWindow, DeleteBackingStoreTimer);
+        m_deleteBackingStoreTimerActive = false;
+    }
     m_backingStoreBitmap.clear();
     m_backingStoreDirtyRegion.clear();
 
@@ -882,6 +896,11 @@ void WebView::paint(HDC dc, LPARAM options)
         EndPaint(m_viewWindow, &ps);
 
     m_paintCount--;
+
+    if (active())
+        cancelDeleteBackingStoreSoon();
+    else
+        deleteBackingStoreSoon();
 }
 
 void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, const IntRect& dirtyRect)
@@ -1816,6 +1835,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
                     KillTimer(hWnd, UpdateActiveStateTimer);
                     webView->updateActiveState();
                     break;
+                case DeleteBackingStoreTimer:
+                    webView->deleteBackingStore();
+                    break;
             }
             break;
         case WM_SETCURSOR:
@@ -2057,8 +2079,6 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     sharedPreferences->willAddToWebView();
     m_preferences = sharedPreferences;
 
-    m_groupName = String(groupName, SysStringLen(groupName));
-
     WebKitSetWebDatabasesPathIfNecessary();
 
     m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this), new WebInspectorClient(this));
@@ -2081,7 +2101,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
 
     m_page->mainFrame()->tree()->setName(String(frameName, SysStringLen(frameName)));
     m_page->mainFrame()->init();
-    m_page->setGroupName(m_groupName);
+    setGroupName(groupName);
 
     addToAllWebViewsSet();
 
@@ -2648,11 +2668,13 @@ HRESULT STDMETHODCALLTYPE WebView::preferencesIdentifier(
     return E_NOTIMPL;
 }
 
-void WebView::windowReceivedMessage(HWND, UINT message, WPARAM, LPARAM)
+void WebView::windowReceivedMessage(HWND, UINT message, WPARAM wParam, LPARAM)
 {
     switch (message) {
     case WM_NCACTIVATE:
         updateActiveStateSoon();
+        if (!wParam)
+            deleteBackingStoreSoon();
         break;
     }
 }
@@ -2660,6 +2682,20 @@ void WebView::windowReceivedMessage(HWND, UINT message, WPARAM, LPARAM)
 void WebView::updateActiveStateSoon() const
 {
     SetTimer(m_viewWindow, UpdateActiveStateTimer, 0, 0);
+}
+
+void WebView::deleteBackingStoreSoon()
+{
+    m_deleteBackingStoreTimerActive = true;
+    SetTimer(m_viewWindow, DeleteBackingStoreTimer, delayBeforeDeletingBackingStoreMsec, 0);
+}
+
+void WebView::cancelDeleteBackingStoreSoon()
+{
+    if (!m_deleteBackingStoreTimerActive)
+        return;
+    m_deleteBackingStoreTimerActive = false;
+    KillTimer(m_viewWindow, DeleteBackingStoreTimer);
 }
 
 HRESULT STDMETHODCALLTYPE WebView::setHostWindow( 
@@ -2712,10 +2748,15 @@ HRESULT STDMETHODCALLTYPE WebView::searchFor(
     return S_OK;
 }
 
-void WebView::updateActiveState()
+bool WebView::active()
 {
     HWND activeWindow = GetActiveWindow();
-    m_page->focusController()->setActive(activeWindow && m_topLevelParent == findTopLevelParent(activeWindow));
+    return (activeWindow && m_topLevelParent == findTopLevelParent(activeWindow));
+}
+
+void WebView::updateActiveState()
+{
+    m_page->focusController()->setActive(active());
 }
 
 HRESULT STDMETHODCALLTYPE WebView::updateFocusedAndActiveState()
@@ -2833,15 +2874,21 @@ HRESULT STDMETHODCALLTYPE WebView::registerViewClass(
 HRESULT STDMETHODCALLTYPE WebView::setGroupName( 
         /* [in] */ BSTR groupName)
 {
-    m_groupName = String(groupName, SysStringLen(groupName));
+    if (!m_page)
+        return S_OK;
+    m_page->setGroupName(String(groupName, SysStringLen(groupName)));
     return S_OK;
 }
     
 HRESULT STDMETHODCALLTYPE WebView::groupName( 
         /* [retval][out] */ BSTR* groupName)
 {
-    *groupName = SysAllocStringLen(m_groupName.characters(), m_groupName.length());
-    if (!*groupName && m_groupName.length())
+    *groupName = 0;
+    if (!m_page)
+        return S_OK;
+    String groupNameString = m_page->groupName();
+    *groupName = SysAllocStringLen(groupNameString.characters(), groupNameString.length());
+    if (!*groupName && groupNameString.length())
         return E_OUTOFMEMORY;
     return S_OK;
 }
@@ -4274,10 +4321,10 @@ HRESULT STDMETHODCALLTYPE WebView::setAllowSiteSpecificHacks(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE WebView::addAdditionalPluginPath( 
-        /* [in] */ BSTR path)
+HRESULT STDMETHODCALLTYPE WebView::addAdditionalPluginDirectory( 
+        /* [in] */ BSTR directory)
 {
-    PluginDatabase::installedPlugins()->addExtraPluginPath(String(path, SysStringLen(path)));
+    PluginDatabase::installedPlugins()->addExtraPluginDirectory(String(directory, SysStringLen(directory)));
     return S_OK;
 }
 
@@ -4712,9 +4759,9 @@ HRESULT STDMETHODCALLTYPE WebView::paintDocumentRectToContext(
     gc.save();
     LONG width = rect.right - rect.left;
     LONG height = rect.bottom - rect.top;
-    RECT dirtyRect = {0};
-    dirtyRect.right = width;
-    dirtyRect.bottom = height;
+    FloatRect dirtyRect;
+    dirtyRect.setWidth(width);
+    dirtyRect.setHeight(height);
     gc.clip(dirtyRect);
     gc.translate(-rect.left, -rect.top);
     frame->paint(&gc, rect);

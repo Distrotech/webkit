@@ -435,7 +435,7 @@ void GraphicsContext::fillRoundedRect(const IntRect& rect, const IntSize& topLef
 }
 
 
-void GraphicsContext::clip(const IntRect& rect)
+void GraphicsContext::clip(const FloatRect& rect)
 {
     if (paintingDisabled())
         return;
@@ -482,12 +482,16 @@ void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness
     CGContextEOClip(context);
 }
 
-void GraphicsContext::clipToImageBuffer(const IntRect& rect, const ImageBuffer* imageBuffer)
+void GraphicsContext::clipToImageBuffer(const FloatRect& rect, const ImageBuffer* imageBuffer)
 {
     if (paintingDisabled())
         return;
     
-    CGContextClipToMask(platformContext(), rect, imageBuffer->cgImage());
+    CGContextTranslateCTM(platformContext(), rect.x(), rect.y() + rect.height());
+    CGContextScaleCTM(platformContext(), 1, -1);
+    CGContextClipToMask(platformContext(), FloatRect(FloatPoint(), rect.size()), imageBuffer->cgImage());
+    CGContextScaleCTM(platformContext(), 1, -1);
+    CGContextTranslateCTM(platformContext(), -rect.x(), -rect.y() - rect.height());
 }
 
 void GraphicsContext::beginTransparencyLayer(float opacity)
@@ -934,49 +938,6 @@ void GraphicsContext::setCompositeOperation(CompositeOperator mode)
     CGContextSetBlendMode(platformContext(), target);
 }
 #endif
-
-void GraphicsContext::paintBuffer(ImageBuffer* buffer, const IntRect& r)
-{
-    CGContextRef context = buffer->context()->platformContext();
-    if (!context)
-        return;
-    CGContextFlush(context);
-    if (CGImageRef image = CGBitmapContextCreateImage(context)) {
-        CGContextDrawImage(platformContext(), roundToDevicePixels(r), image);
-        CGImageRelease(image);
-    }
-}
-
-void GraphicsContext::drawImage(ImageBuffer* buffer, const FloatRect& srcRect, const FloatRect& destRect)
-{
-    CGContextRef context = buffer->context()->platformContext();
-    CGContextFlush(context);
-    RetainPtr<CGImageRef> image(AdoptCF, CGBitmapContextCreateImage(context));
-    float iw = CGImageGetWidth(image.get());
-    float ih = CGImageGetHeight(image.get());
-    if (srcRect.x() == 0 && srcRect.y() == 0 && iw == srcRect.width() && ih == srcRect.height()) {
-        // Fast path, yay!
-        CGContextDrawImage(platformContext(), destRect, image.get());
-    } else {
-        // Slow path, boo!
-        // FIXME: We can do this without creating a separate image
-        
-        size_t csw = static_cast<size_t>(ceilf(srcRect.width()));
-        size_t csh = static_cast<size_t>(ceilf(srcRect.height()));
-        
-        RetainPtr<CGColorSpaceRef> colorSpace(AdoptCF, CGColorSpaceCreateDeviceRGB());
-        size_t bytesPerRow = csw * 4;
-        OwnArrayPtr<char> buffer(new char[csh * bytesPerRow]);
-        RetainPtr<CGContextRef> clippedSourceContext(AdoptCF, CGBitmapContextCreate(buffer.get(), csw, csh,
-                                                                8, bytesPerRow, colorSpace.get(), kCGImageAlphaPremultipliedLast));
-        CGContextTranslateCTM(clippedSourceContext.get(), -srcRect.x(), -srcRect.y());
-        CGContextDrawImage(clippedSourceContext.get(), CGRectMake(0, 0, iw, ih), image.get());
-        
-        RetainPtr<CGImageRef> clippedSourceImage(AdoptCF, CGBitmapContextCreateImage(clippedSourceContext.get()));
-        
-        CGContextDrawImage(platformContext(), destRect, clippedSourceImage.get());
-    }
-}
 
 }
 

@@ -1,6 +1,7 @@
 /*
     Copyright (C) 2007 Eric Seidel <eric@webkit.org>
               (C) 2007 Rob Buis <buis@kde.org>
+    Copyright (C) 2008 Apple Inc. All Rights Reserved.
 
     This file is part of the WebKit project
 
@@ -36,10 +37,10 @@ using namespace SVGNames;
 
 SVGAnimateMotionElement::SVGAnimateMotionElement(const QualifiedName& tagName, Document* doc)
     : SVGAnimationElement(tagName, doc)
+    , m_baseIndexInTransformList(0)
     , m_rotateMode(AngleMode)
     , m_angle(0)
 {
-    m_calcMode = CALCMODE_PACED;
 }
 
 SVGAnimateMotionElement::~SVGAnimateMotionElement()
@@ -69,7 +70,10 @@ bool SVGAnimateMotionElement::hasValidTarget() const
         || targetElement()->hasTagName(clipPathTag)
         || targetElement()->hasTagName(maskTag)
         || targetElement()->hasTagName(aTag)
-        || targetElement()->hasTagName(foreignObjectTag))
+#if ENABLE(SVG_FOREIGN_OBJECT)
+        || targetElement()->hasTagName(foreignObjectTag)
+#endif
+        )
         return true;
     return false;
 }
@@ -86,8 +90,7 @@ void SVGAnimateMotionElement::parseMappedAttribute(MappedAttribute* attr)
             m_angle = attr->value().toFloat();
         }
     } else if (attr->name() == SVGNames::keyPointsAttr) {
-        m_keyPoints.clear();
-        parseKeyNumbers(m_keyPoints, attr->value());
+        // FIXME: Implement key points.
     } else if (attr->name() == SVGNames::dAttr) {
         m_path = Path();
         pathFromSVGData(m_path, attr->value());
@@ -111,21 +114,6 @@ Path SVGAnimateMotionElement::animationPath()
     return Path();
 }
 
-bool SVGAnimateMotionElement::updateAnimatedValue(EAnimationMode animationMode, float timePercentage, unsigned valueIndex, float percentagePast)
-{
-    if (animationMode == TO_ANIMATION) {
-        // to-animations have a special equation: value = (to - base) * (time/duration) + base
-        m_animatedTranslation.setWidth((m_toPoint.x() - m_basePoint.x()) * timePercentage + m_basePoint.x());
-        m_animatedTranslation.setHeight((m_toPoint.y() - m_basePoint.y()) * timePercentage + m_basePoint.y());
-        m_animatedAngle = 0.0f;
-    } else {
-        m_animatedTranslation.setWidth(m_pointDiff.width() * percentagePast + m_fromPoint.x());
-        m_animatedTranslation.setHeight(m_pointDiff.height() * percentagePast + m_fromPoint.y());
-        m_animatedAngle = m_angleDiff * percentagePast + m_fromAngle;
-    }
-    return true;
-}
-
 static bool parsePoint(const String& s, FloatPoint& point)
 {
     if (s.isEmpty())
@@ -146,81 +134,70 @@ static bool parsePoint(const String& s, FloatPoint& point)
     
     point = FloatPoint(x, y);
     
-    // disallow anying except spaces at the end
+    // disallow anything except spaces at the end
     return !skipOptionalSpaces(cur, end);
 }
-
-bool SVGAnimateMotionElement::calculateFromAndToValues(EAnimationMode animationMode, unsigned valueIndex)
-{
-    m_fromAngle = 0.0f;
-    m_toAngle = 0.0f;
-    switch (animationMode) {
-    case FROM_TO_ANIMATION:
-        parsePoint(m_from, m_fromPoint);
-        // fall through
-    case TO_ANIMATION:
-        parsePoint(m_to, m_toPoint);
-        break;
-    case FROM_BY_ANIMATION:
-        parsePoint(m_from, m_fromPoint);
-        parsePoint(m_to, m_toPoint);
-        break;
-    case BY_ANIMATION:
-    {
-        parsePoint(m_from, m_fromPoint);
-        FloatPoint byPoint;
-        parsePoint(m_by, byPoint);
-        m_toPoint = FloatPoint(m_fromPoint.x() + byPoint.x(), m_fromPoint.y() + byPoint.y());
-        break;
-    }
-    case VALUES_ANIMATION:
-        parsePoint(m_values[valueIndex], m_fromPoint);
-        if ((valueIndex + 1) < m_values.size())
-            parsePoint(m_values[valueIndex + 1], m_toPoint);
-        else
-            m_toPoint = m_fromPoint;
-        break;
-    case NO_ANIMATION:
-        ASSERT_NOT_REACHED();
-    }
     
-    m_pointDiff = m_toPoint - m_fromPoint;
-    m_angleDiff = 0.0f;
-    return (m_pointDiff.width() != 0 || m_pointDiff.height() != 0);
+void SVGAnimateMotionElement::resetToBaseValue(const String&)
+{
+    if (!hasValidTarget())
+        return;
+    SVGStyledTransformableElement* transformableElement = static_cast<SVGStyledTransformableElement*>(targetElement());
+    // FIXME: This should modify supplemental transform, not the transform attribute!
+    ExceptionCode ec;
+    transformableElement->transform()->clear(ec);
 }
 
-bool SVGAnimateMotionElement::updateAnimationBaseValueFromElement()
+bool SVGAnimateMotionElement::calculateFromAndToValues(const String& fromString, const String& toString)
 {
-    if (!targetElement()->isStyledTransformable())
-        return false;
+    parsePoint(fromString, m_fromPoint);
+    parsePoint(toString, m_toPoint);
+    return true;
+}
     
-    m_basePoint = static_cast<SVGStyledTransformableElement*>(targetElement())->getBBox().location();
+bool SVGAnimateMotionElement::calculateFromAndByValues(const String& fromString, const String& byString)
+{
+    parsePoint(fromString, m_fromPoint);
+    FloatPoint byPoint;
+    parsePoint(byString, byPoint);
+    m_toPoint = FloatPoint(m_fromPoint.x() + byPoint.x(), m_fromPoint.y() + byPoint.y());
     return true;
 }
 
-void SVGAnimateMotionElement::applyAnimatedValueToElement()
+void SVGAnimateMotionElement::calculateAnimatedValue(float percentage, unsigned repeat, SVGSMILElement* resultElement)
 {
-    if (!targetElement()->isStyledTransformable())
+    if (!resultElement->targetElement()->isStyledTransformable())
         return;
     
-    SVGStyledTransformableElement* transformableElement = static_cast<SVGStyledTransformableElement*>(targetElement());
+    // FIXME: This should modify supplemental transform, not the transform attribute!
+    SVGStyledTransformableElement* transformableElement = static_cast<SVGStyledTransformableElement*>(resultElement->targetElement());
     RefPtr<SVGTransformList> transformList = transformableElement->transform();
     if (!transformList)
         return;
     
     ExceptionCode ec;
-    if (!isAdditive())
+    if (!isAdditive()) {
+        ASSERT(this == resultElement);
         transformList->clear(ec);
-    
-    AffineTransform transform;
-    transform.rotate(m_animatedAngle);
-    transform.translate(m_animatedTranslation.width(), m_animatedTranslation.height());
-    if (!transform.isIdentity()) {
-        transformList->appendItem(SVGTransform(transform), ec);
-        transformableElement->setTransform(transformList.get());
-        if (transformableElement->renderer())
-            transformableElement->renderer()->setNeedsLayout(true); // should be part of setTransform
     }
+    
+    FloatSize diff = m_toPoint - m_fromPoint;
+    AffineTransform transform;
+    // FIXME: Animate angles
+    transform.translate(diff.width() * percentage + m_fromPoint.x(), diff.height() * percentage + m_fromPoint.y());
+    
+    // FIXME: Accumulate.
+
+    if (!transform.isIdentity())
+        transformList->appendItem(SVGTransform(transform), ec);
+
+    if (transformableElement->renderer())
+        transformableElement->renderer()->setNeedsLayout(true); // should be part of setTransform
+}
+    
+void SVGAnimateMotionElement::applyResultsToTarget()
+{
+    
 }
 
 }

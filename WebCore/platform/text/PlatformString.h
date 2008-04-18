@@ -32,7 +32,9 @@ typedef const struct __CFString * CFStringRef;
 #endif
 
 #if PLATFORM(QT)
+QT_BEGIN_NAMESPACE
 class QString;
+QT_END_NAMESPACE
 #endif
 
 #if PLATFORM(WX)
@@ -43,6 +45,7 @@ class wxString;
 namespace WebCore {
 
 class CString;
+class SharedBuffer;
 struct StringHash;
 
 class String {
@@ -298,6 +301,8 @@ inline void append(Vector<UChar>& vector, const String& string)
 {
     vector.append(string.characters(), string.length());
 }
+
+PassRefPtr<SharedBuffer> utf8Buffer(const String&);
 
 } // namespace WebCore
 

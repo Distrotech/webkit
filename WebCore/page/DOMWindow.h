@@ -37,6 +37,9 @@ namespace WebCore {
     class CSSRuleList;
     class CSSStyleDeclaration;
     class Console;
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    class DOMApplicationCache;
+#endif
     class DOMSelection;
     class Database;
     class Document;
@@ -44,8 +47,14 @@ namespace WebCore {
     class FloatRect;
     class Frame;
     class History;
+    class Location;
     class Navigator;
     class Screen;
+
+#if ENABLE(DOM_STORAGE)
+    class SessionStorage;
+    class Storage;
+#endif
 
     typedef int ExceptionCode;
 
@@ -72,6 +81,7 @@ namespace WebCore {
         BarInfo* toolbar() const;
         Navigator* navigator() const;
         Navigator* clientInformation() const { return navigator(); }
+        Location* location() const;
 
         DOMSelection* getSelection();
 
@@ -143,8 +153,17 @@ namespace WebCore {
         PassRefPtr<Database> openDatabase(const String& name, const String& version, const String& displayName, unsigned long estimatedSize, ExceptionCode&);
 #endif
 
+#if ENABLE(DOM_STORAGE)
+        // HTML 5 key/value storage
+        Storage* sessionStorage() const;
+        Storage* localStorage() const;
+#endif
+
         Console* console() const;
-        
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        DOMApplicationCache* applicationCache() const;
+#endif
 #if ENABLE(CROSS_DOCUMENT_MESSAGING)
         void postMessage(const String& message, const String& domain, const String& uri, DOMWindow* source) const;
 #endif
@@ -159,6 +178,8 @@ namespace WebCore {
         void resizeBy(float x, float y) const;
         void resizeTo(float width, float height) const;
 
+        // These methods are used for GC marking. See JSDOMWindow::mark() in
+        // JSDOMWindowCustom.cpp.
         Screen* optionalScreen() const { return m_screen.get(); }
         DOMSelection* optionalSelection() const { return m_selection.get(); }
         History* optionalHistory() const { return m_history.get(); }
@@ -170,7 +191,15 @@ namespace WebCore {
         BarInfo* optionalToolbar() const { return m_toolbar.get(); }
         Console* optionalConsole() const { return m_console.get(); }
         Navigator* optionalNavigator() const { return m_navigator.get(); }
-
+        Location* optionalLocation() const { return m_location.get(); }
+#if ENABLE(DOM_STORAGE)
+        Storage* optionalSessionStorage() const { return m_sessionStorage.get(); }
+        Storage* optionalLocalStorage() const { return m_sessionStorage.get(); }
+#endif
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        DOMApplicationCache* optionalApplicationCache() const { return m_applicationCache.get(); }
+#endif
+        
     private:
         DOMWindow(Frame*);
         
@@ -186,6 +215,14 @@ namespace WebCore {
         mutable RefPtr<BarInfo> m_toolbar;
         mutable RefPtr<Console> m_console;
         mutable RefPtr<Navigator> m_navigator;
+        mutable RefPtr<Location> m_location;
+#if ENABLE(DOM_STORAGE)
+        mutable RefPtr<Storage> m_sessionStorage;
+        mutable RefPtr<Storage> m_localStorage;
+#endif
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        mutable RefPtr<DOMApplicationCache> m_applicationCache;
+#endif
     };
 
 } // namespace WebCore

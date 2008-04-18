@@ -1,4 +1,5 @@
 require 'cgi'
+require 'diff'
 require 'pp'
 require 'set'
 
@@ -40,6 +41,8 @@ private
 
     START_OF_EXTENT_STRING = "%c" % 0
     END_OF_EXTENT_STRING = "%c" % 1
+
+    SMALLEST_EQUAL_OPERATION = 3
 
     OPENSOURCE_TRAC_URL = "http://trac.webkit.org/projects/webkit/"
 
@@ -239,8 +242,24 @@ EOF
             for change in changes
                 next unless change.first.length == change.last.length
                 for i in (0...change.first.length)
-                    change.first[i].setChangeExtentFromLine(change.last[i])
-                    change.last[i].changeExtent = change.first[i].changeExtent
+                    raw_operations = HTMLDiff::DiffBuilder.new(change.first[i].text, change.last[i].text).operations
+                    operations = []
+                    back = 0
+                    raw_operations.each_with_index do |operation, j|
+                        if operation.action == :equal and j < raw_operations.length - 1
+                           length = operation.end_in_new - operation.start_in_new
+                           if length < SMALLEST_EQUAL_OPERATION
+                               back = length
+                               next
+                           end
+                        end
+                        operation.start_in_old -= back
+                        operation.start_in_new -= back
+                        back = 0
+                        operations << operation
+                    end
+                    change.first[i].operations = operations
+                    change.last[i].operations = operations
                 end
             end
         end
@@ -297,28 +316,25 @@ EOF
     end
 
     class CodeLine < Line
-        attr :changeExtent, true
-
-        def setChangeExtentFromLine(line)
-            limit = [@text.length, line.text.length].min
-            start = 0
-            while (start < limit && @text[start] == line.text[start])
-                start += 1
-            end
-            limit -= start
-            eend = -1
-            while (-eend <= limit && @text[eend] == line.text[eend])
-                eend -= 1
-            end
-
-            @changeExtent = start..eend
-        end
+        attr :operations, true
 
         def text_as_html
-            html = @text
-            html = html.insert(@changeExtent.begin, START_OF_EXTENT_STRING).insert(@changeExtent.end, END_OF_EXTENT_STRING) unless @changeExtent.nil?
-            html = CGI.escapeHTML(html)
-            html.gsub(START_OF_EXTENT_STRING, @fromLineNumber.nil? ? "<ins>" : "<del>").gsub(END_OF_EXTENT_STRING, @fromLineNumber.nil? ? "</ins>" : "</del>")
+            html = []
+            tag = @fromLineNumber.nil? ? "ins" : "del"
+            if @operations.nil? or @operations.empty?
+                return CGI.escapeHTML(@text)
+            end
+            @operations.each do |operation|
+                start = @fromLineNumber.nil? ? operation.start_in_new : operation.start_in_old
+                eend = @fromLineNumber.nil? ? operation.end_in_new : operation.end_in_old
+                escaped_text = CGI.escapeHTML(@text[start...eend])
+                if eend - start === 0 or operation.action === :equal
+                    html << escaped_text
+                else
+                    html << "<#{tag}>#{escaped_text}</#{tag}>"
+                end
+            end
+            html.join
         end
     end
 

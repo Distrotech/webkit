@@ -49,6 +49,7 @@ namespace KJS {
 
 struct GregorianDateTime;
 
+void initDateMath();
 void msToGregorianDateTime(double, bool outputIsUTC, GregorianDateTime&);
 double gregorianDateTimeToMS(const GregorianDateTime&, double, bool inputIsUTC);
 double getUTCOffset();
@@ -91,7 +92,7 @@ struct GregorianDateTime : Noncopyable {
     {
         delete [] timeZone;
     }
-    
+
     GregorianDateTime(const tm& inTm)
         : second(inTm.tm_sec)
         , minute(inTm.tm_min)
@@ -136,6 +137,26 @@ struct GregorianDateTime : Noncopyable {
 #endif
 
         return ret;
+    }
+
+    void copyFrom(const GregorianDateTime& rhs)
+    {
+        second = rhs.second;
+        minute = rhs.minute;
+        hour = rhs.hour;
+        weekDay = rhs.weekDay;
+        monthDay = rhs.monthDay;
+        yearDay = rhs.yearDay;
+        month = rhs.month;
+        year = rhs.year;
+        isDST = rhs.isDST;
+        utcOffset = rhs.utcOffset;
+        if (rhs.timeZone) {
+            int inZoneSize = strlen(rhs.timeZone) + 1;
+            timeZone = new char[inZoneSize];
+            strncpy(timeZone, rhs.timeZone, inZoneSize);
+        } else
+            timeZone = 0;
     }
 
     int second;

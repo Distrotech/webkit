@@ -70,6 +70,3 @@
 #include "value.cpp"
 #include "wtf/FastMalloc.cpp"
 #include "wtf/TCSystemAlloc.cpp"
-#include "VM/Machine.cpp"
-#include "VM/CodeGenerator.cpp"
-#include "VM/RegisterFile.cpp"

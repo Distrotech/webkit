@@ -152,6 +152,13 @@ String CSSMutableStyleDeclaration::getPropertyValue(int propertyID) const
                                         CSSPropertyListStyleImage };
             return getShorthandValue(properties, 3);
         }
+#if ENABLE(SVG)
+        case CSSPropertyMarker: {
+            RefPtr<CSSValue> value = getPropertyCSSValue(CSSPropertyMarkerStart);
+            if (value)
+                return value->cssText();
+        }
+#endif
     }
     return String();
 }
@@ -178,33 +185,31 @@ String CSSMutableStyleDeclaration::get4Values( const int* properties ) const
 String CSSMutableStyleDeclaration::getLayeredShorthandValue(const int* properties, unsigned number) const
 {
     String res;
-    unsigned i;
-    unsigned j;
 
     // Begin by collecting the properties into an array.
     Vector< RefPtr<CSSValue> > values(number);
-    unsigned numLayers = 0;
+    size_t numLayers = 0;
     
-    for (i = 0; i < number; ++i) {
+    for (size_t i = 0; i < number; ++i) {
         values[i] = getPropertyCSSValue(properties[i]);
         if (values[i]) {
             if (values[i]->isValueList()) {
                 CSSValueList* valueList = static_cast<CSSValueList*>(values[i].get());
                 numLayers = max(valueList->length(), numLayers);
             } else
-                numLayers = max(1U, numLayers);
+                numLayers = max<size_t>(1U, numLayers);
         }
     }
     
     // Now stitch the properties together.  Implicit initial values are flagged as such and
     // can safely be omitted.
-    for (i = 0; i < numLayers; i++) {
+    for (size_t i = 0; i < numLayers; i++) {
         String layerRes;
-        for (j = 0; j < number; j++) {
+        for (size_t j = 0; j < number; j++) {
             RefPtr<CSSValue> value;
             if (values[j]) {
                 if (values[j]->isValueList())
-                    value = static_cast<CSSValueList*>(values[j].get())->item(i);
+                    value = static_cast<CSSValueList*>(values[j].get())->itemWithoutBoundsCheck(i);
                 else {
                     value = values[j];
                     

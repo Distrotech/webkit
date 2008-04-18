@@ -26,6 +26,7 @@
 #define KJS_FUNCTION_H
 
 #include "JSVariableObject.h"
+#include "LocalStorage.h"
 #include "SymbolTable.h"
 #include "nodes.h"
 #include "object.h"
@@ -42,8 +43,7 @@ namespace KJS {
     InternalFunctionImp();
     InternalFunctionImp(FunctionPrototype*, const Identifier&);
 
-    virtual CallType getCallData(CallData&);
-
+    virtual bool implementsCall() const;
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObjec, const List& args) = 0;
     virtual bool implementsHasInstance() const;
 
@@ -64,10 +64,9 @@ namespace KJS {
     virtual void put(ExecState*, const Identifier& propertyName, JSValue*);
     virtual bool deleteProperty(ExecState*, const Identifier& propertyName);
 
-    virtual ConstructType getConstructData(ConstructData&);
+    virtual bool implementsConstruct() const { return true; }
     virtual JSObject* construct(ExecState*, const List& args);
-
-    virtual CallType getCallData(CallData&);
+    
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
 
     // Note: unlike body->paramName, this returns Identifier::null for parameters 
@@ -80,7 +79,7 @@ namespace KJS {
     RefPtr<FunctionBodyNode> body;
 
     void setScope(const ScopeChain& s) { _scope = s; }
-    ScopeChain& scope() { return _scope; }
+    const ScopeChain& scope() const { return _scope; }
 
     virtual void mark();
 
@@ -143,12 +142,16 @@ namespace KJS {
   public:
     typedef JSValue* (*JSMemberFunction)(ExecState*, PrototypeReflexiveFunction*, JSObject* thisObj, const List&);
 
-    PrototypeReflexiveFunction(ExecState*, FunctionPrototype*, int len, const Identifier&, JSMemberFunction);
+    PrototypeReflexiveFunction(ExecState*, FunctionPrototype*, int len, const Identifier&, JSMemberFunction, JSGlobalObject* expectedThisObject);
 
+    virtual void mark();
     virtual JSValue* callAsFunction(ExecState* exec, JSObject* thisObj, const List&);
+
+    JSGlobalObject* cachedGlobalObject() const { return m_cachedGlobalObject; }
 
   private:
     const JSMemberFunction m_function;
+    JSGlobalObject* m_cachedGlobalObject;
   };
 
     // Global Functions
@@ -166,6 +169,8 @@ namespace KJS {
 #ifndef NDEBUG
     JSValue* globalFuncKJSPrint(ExecState*, JSObject*, const List&);
 #endif
+
+    JSValue* eval(ExecState*, const ScopeChain&, JSVariableObject*, JSGlobalObject*, JSObject* thisObj, const List& args);
 
     static const double mantissaOverflowLowerBound = 9007199254740992.0;
     double parseIntOverflow(const char*, int length, int radix);

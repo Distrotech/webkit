@@ -51,8 +51,10 @@ typedef GtkWidget* PlatformWidget;
 #endif
 
 #if PLATFORM(QT)
+#include <qglobal.h>
+QT_BEGIN_NAMESPACE
 class QWidget;
-class QWebFrame;
+QT_END_NAMESPACE
 typedef QWidget* PlatformWidget;
 #endif
 
@@ -174,8 +176,6 @@ protected:
         void setNativeWidget(QWidget *widget);
         QWidget* nativeWidget() const;
 
-        QWebFrame* qwebframe() const;
-        void setQWebFrame(QWebFrame *webFrame);
         virtual void setParent(ScrollView*);
         ScrollView* parent() const;
         virtual void geometryChanged() const;

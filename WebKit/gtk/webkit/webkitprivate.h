@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007, 2008 Holger Hans Peter Freyther
- * Copyrifht (C) 2008 Jan Michael C. Alonzo
+ * Copyright (C) 2008 Jan Michael C. Alonzo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,7 +30,6 @@
 #include <webkit/webkitwebview.h>
 #include <webkit/webkitwebframe.h>
 #include <webkit/webkitwebsettings.h>
-#include <webkit/webkitnetworkrequest.h>
 #include <webkit/webkitwebbackforwardlist.h>
 
 #include "BackForwardList.h"
@@ -86,6 +85,9 @@ extern "C" {
         GtkTargetList* paste_target_list;
 
         gboolean transparent;
+
+        GtkAdjustment* horizontalAdjustment;
+        GtkAdjustment* verticalAdjustment;
     };
 
     #define WEBKIT_WEB_FRAME_GET_PRIVATE(obj)    (G_TYPE_INSTANCE_GET_PRIVATE((obj), WEBKIT_TYPE_WEB_FRAME, WebKitWebFramePrivate))
@@ -97,12 +99,6 @@ extern "C" {
 
         gchar* name;
         gchar* title;
-        gchar* uri;
-    };
-
-    #define WEBKIT_NETWORK_REQUEST_GET_PRIVATE(obj)    (G_TYPE_INSTANCE_GET_PRIVATE((obj), WEBKIT_TYPE_NETWORK_REQUEST, WebKitNetworkRequestPrivate))
-    typedef struct _WebKitNetworkRequestPrivate WebKitNetworkRequestPrivate;
-    struct _WebKitNetworkRequestPrivate {
         gchar* uri;
     };
 

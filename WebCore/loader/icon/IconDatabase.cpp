@@ -37,11 +37,12 @@
 #include "IntSize.h"
 #include "KURL.h"
 #include "Logging.h"
-#include "MainThread.h"
 #include "PageURLRecord.h"
 #include "SQLiteStatement.h"
 #include "SQLiteTransaction.h"
 #include "SystemTime.h"
+#include <kjs/InitializeThreading.h>
+#include <wtf/MainThread.h>
 
 #if PLATFORM(WIN_OS)
 #include <windows.h>
@@ -102,7 +103,7 @@ static IconDatabaseClient* defaultClient()
 IconDatabase* iconDatabase()
 {
     if (!sharedIconDatabase) {
-        initializeThreadingAndMainThread();
+        KJS::initializeThreading();
         sharedIconDatabase = new IconDatabase;
     }
     return sharedIconDatabase;
@@ -216,7 +217,7 @@ void IconDatabase::removeAllIcons()
     wakeSyncThread();
 }
 
-Image* IconDatabase::iconForPageURL(const String& pageURLOriginal, const IntSize& size, bool cache)
+Image* IconDatabase::iconForPageURL(const String& pageURLOriginal, const IntSize& size)
 {   
     ASSERT_NOT_SYNC_THREAD();
 

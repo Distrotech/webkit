@@ -37,6 +37,7 @@
 #include "HistoryItem.h"
 #include "InspectorController.h"
 #include "JavaScriptDebugServer.h"
+#include "LocalStorage.h"
 #include "Logging.h"
 #include "Navigator.h"
 #include "PageGroup.h"
@@ -52,6 +53,11 @@
 #include <kjs/collector.h>
 #include <kjs/JSLock.h>
 #include <wtf/HashMap.h>
+
+#if ENABLE(DOM_STORAGE)
+#include "SessionStorage.h"
+#include "StorageArea.h"
+#endif
 
 namespace WebCore {
 
@@ -473,5 +479,21 @@ void Page::setDebugger(KJS::Debugger* debugger)
     for (Frame* frame = m_mainFrame.get(); frame; frame = frame->tree()->traverseNext())
         frame->scriptProxy()->attachDebugger(m_debugger);
 }
+
+#if ENABLE(DOM_STORAGE)
+SessionStorage* Page::sessionStorage(bool optionalCreate)
+{
+    if (!m_sessionStorage && optionalCreate)
+        m_sessionStorage = SessionStorage::create(this);
+
+    return m_sessionStorage.get();
+}
+
+void Page::setSessionStorage(PassRefPtr<SessionStorage> newStorage)
+{
+    ASSERT(newStorage->page() == this);
+    m_sessionStorage = newStorage;
+}
+#endif
 
 } // namespace WebCore

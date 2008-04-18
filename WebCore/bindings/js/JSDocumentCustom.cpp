@@ -27,6 +27,7 @@
 #include "JSDOMWindow.h"
 #include "JSHTMLDocument.h"
 #include "JSLocation.h"
+#include "Location.h"
 #include "kjs_proxy.h"
 
 #if ENABLE(SVG)
@@ -50,9 +51,7 @@ JSValue* JSDocument::location(ExecState* exec) const
     if (!frame)
         return jsNull();
 
-    JSDOMWindow* window = toJSDOMWindow(frame);
-    ASSERT(window);
-    return window->location();
+    return toJS(exec, frame->domWindow()->location());
 }
 
 void JSDocument::setLocation(ExecState* exec, JSValue* value)
@@ -94,7 +93,7 @@ JSValue* toJS(ExecState* exec, Document* doc)
     // Make sure the document is kept around by the window object, and works right with the
     // back/forward cache.
     if (doc->frame())
-        toJSDOMWindow(doc->frame())->putDirect("document", ret, DontDelete|ReadOnly);
+        toJSDOMWindowWrapper(doc->frame())->window()->putDirect("document", ret, DontDelete|ReadOnly);
     else {
         size_t nodeCount = 0;
         for (Node* n = doc; n; n = n->traverseNextNode())

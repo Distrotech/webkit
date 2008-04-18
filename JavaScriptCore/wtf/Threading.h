@@ -105,6 +105,7 @@ typedef void* (*ThreadFunction)(void* argument);
 // Returns 0 if thread creation failed
 ThreadIdentifier createThread(ThreadFunction, void*);
 ThreadIdentifier currentThread();
+bool isMainThread();
 int waitForThreadCompletion(ThreadIdentifier, void**);
 void detachThread(ThreadIdentifier);
 
@@ -189,8 +190,8 @@ inline int atomicDecrement(int volatile* addend) { return __gnu_cxx::__exchange_
 
 template<class T> class ThreadSafeShared : Noncopyable {
 public:
-    ThreadSafeShared()
-        : m_refCount(0)
+    ThreadSafeShared(int initialRefCount = 1)
+        : m_refCount(initialRefCount)
     {
     }
 
@@ -242,14 +243,6 @@ void initializeThreading();
 
 extern Mutex* atomicallyInitializedStaticMutex;
 
-#if !PLATFORM(GTK)
-inline void initializeThreading()
-{
-    if (!atomicallyInitializedStaticMutex)
-        atomicallyInitializedStaticMutex = new Mutex;
-}
-#endif
-
 } // namespace WTF
 
 using WTF::Mutex;
@@ -260,8 +253,8 @@ using WTF::ThreadSafeShared;
 
 using WTF::createThread;
 using WTF::currentThread;
+using WTF::isMainThread;
 using WTF::detachThread;
-using WTF::initializeThreading;
 using WTF::waitForThreadCompletion;
 
 #endif // Threading_h

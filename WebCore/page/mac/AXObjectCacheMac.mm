@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2008 Apple Computer, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,65 +26,31 @@
 #import "config.h"
 #import "AXObjectCache.h"
 
-#import "Document.h"
-#import "FoundationExtras.h"
+#import "AccessibilityObject.h"
+#import "AccessibilityObjectWrapper.h"
 #import "RenderObject.h"
-#import "WebCoreAXObject.h"
 #import "WebCoreViewFactory.h"
+
+#import <wtf/PassRefPtr.h>
 
 // The simple Cocoa calls in this file don't throw exceptions.
 
 namespace WebCore {
 
-struct TextMarkerData  {
-    AXID axID;
-    Node* node;
-    int offset;
-    EAffinity affinity;
-};
-
-bool AXObjectCache::gAccessibilityEnabled = false;
-
-AXObjectCache::~AXObjectCache()
+void AXObjectCache::detachWrapper(AccessibilityObject* obj)
 {
-    HashMap<RenderObject*, WebCoreAXObject*>::iterator end = m_objects.end();
-    for (HashMap<RenderObject*, WebCoreAXObject*>::iterator it = m_objects.begin(); it != end; ++it) {
-        WebCoreAXObject* obj = (*it).second;
-        [obj detach];
-        HardRelease(obj);
-    }
+    [obj->wrapper() detach];
 }
 
-WebCoreAXObject* AXObjectCache::get(RenderObject* renderer)
+void AXObjectCache::attachWrapper(AccessibilityObject* obj)
 {
-    WebCoreAXObject* obj = m_objects.get(renderer);
-    if (obj)
-        return obj;
-
-    obj = [[WebCoreAXObject alloc] initWithRenderer:renderer];
-    HardRetainWithNSRelease(obj);
-    m_objects.set(renderer, obj);
-    return obj;
+    obj->setWrapper([[AccessibilityObjectWrapper alloc] initWithAccessibilityObject:obj]);
 }
 
-void AXObjectCache::remove(RenderObject* renderer)
-{
-    WebCoreAXObject* obj = m_objects.take(renderer);
-    if (!obj) {
-        ASSERT(!renderer->hasAXObject());
-        return;
-    }
-
-    [obj detach];
-    HardRelease(obj);
-
-    ASSERT(m_objects.size() >= m_idsInUse.size());
-}
-
-AXID AXObjectCache::getAXID(WebCoreAXObject* obj)
+AXID AXObjectCache::getAXID(AccessibilityObject* obj)
 {
     // check for already-assigned ID
-    AXID objID = [obj axObjectID];
+    AXID objID = obj->axObjectID();
     if (objID) {
         ASSERT(m_idsInUse.contains(objID));
         return objID;
@@ -98,73 +64,20 @@ AXID AXObjectCache::getAXID(WebCoreAXObject* obj)
     while (objID == 0 || objID == AXIDHashTraits::deletedValue() || m_idsInUse.contains(objID));
     m_idsInUse.add(objID);
     lastUsedID = objID;
-    [obj setAXObjectID:objID];
+    obj->setAXObjectID(objID);
 
     return objID;
 }
 
-void AXObjectCache::removeAXID(WebCoreAXObject* obj)
+void AXObjectCache::removeAXID(AccessibilityObject* obj)
 {
-    AXID objID = [obj axObjectID];
+    AXID objID = obj->axObjectID();
     if (objID == 0)
         return;
     ASSERT(objID != AXIDHashTraits::deletedValue());
     ASSERT(m_idsInUse.contains(objID));
-    [obj setAXObjectID:0];
+    obj->setAXObjectID(0);
     m_idsInUse.remove(objID);
-}
-
-WebCoreTextMarker* AXObjectCache::textMarkerForVisiblePosition(const VisiblePosition& visiblePos)
-{
-    Position deepPos = visiblePos.deepEquivalent();
-    Node* domNode = deepPos.node();
-    ASSERT(domNode);
-    if (!domNode)
-        return nil;
-    
-    // locate the renderer, which must exist for a visible dom node
-    RenderObject* renderer = domNode->renderer();
-    ASSERT(renderer);
-    
-    // find or create an accessibility object for this renderer
-    WebCoreAXObject* obj = get(renderer);
-    
-    // create a text marker, adding an ID for the WebCoreAXObject if needed
-    TextMarkerData textMarkerData;
-    textMarkerData.axID = getAXID(obj);
-    textMarkerData.node = domNode;
-    textMarkerData.offset = deepPos.offset();
-    textMarkerData.affinity = visiblePos.affinity();
-    return [[WebCoreViewFactory sharedFactory] textMarkerWithBytes:&textMarkerData length:sizeof(textMarkerData)]; 
-}
-
-VisiblePosition AXObjectCache::visiblePositionForTextMarker(WebCoreTextMarker* textMarker)
-{
-    TextMarkerData textMarkerData;
-    
-    if (![[WebCoreViewFactory sharedFactory] getBytes:&textMarkerData fromTextMarker:textMarker length:sizeof(textMarkerData)])
-        return VisiblePosition();
-
-    // return empty position if the text marker is no longer valid
-    if (!m_idsInUse.contains(textMarkerData.axID))
-        return VisiblePosition();
-
-    // generate a VisiblePosition from the data we stored earlier
-    VisiblePosition visiblePos = VisiblePosition(textMarkerData.node, textMarkerData.offset, textMarkerData.affinity);
-
-    // make sure the node and offset still match (catches stale markers). affinity is not critical for this.
-    Position deepPos = visiblePos.deepEquivalent();
-    if (deepPos.node() != textMarkerData.node || deepPos.offset() != textMarkerData.offset)
-        return VisiblePosition();
-    
-    return visiblePos;
-}
-
-void AXObjectCache::childrenChanged(RenderObject* renderer)
-{
-    WebCoreAXObject* obj = m_objects.get(renderer);
-    if (obj)
-        [obj childrenChanged];
 }
 
 void AXObjectCache::postNotification(RenderObject* renderer, const String& message)
@@ -174,18 +87,27 @@ void AXObjectCache::postNotification(RenderObject* renderer, const String& messa
     
     // notifications for text input objects are sent to that object
     // all others are sent to the top WebArea
-    WebCoreAXObject* obj = [get(renderer) observableObject];
-    if (obj)
-        NSAccessibilityPostNotification(obj, message);
-    else
-        NSAccessibilityPostNotification(get(renderer->document()->renderer()), message);
+    RefPtr<AccessibilityObject> obj = get(renderer)->observableObject();
+    if (!obj)
+        obj = get(renderer->document()->renderer());
+        
+    if (!obj)
+        return;
+
+    NSAccessibilityPostNotification(obj->wrapper(), message);
 }
 
 void AXObjectCache::postNotificationToElement(RenderObject* renderer, const String& message)
 {
     // send the notification to the specified element itself, not one of its ancestors
-    if (renderer)
-        NSAccessibilityPostNotification(get(renderer), message);
+    if (!renderer)
+        return;
+
+    RefPtr<AccessibilityObject> obj = get(renderer);
+    if (!obj)
+        return;
+
+    NSAccessibilityPostNotification(obj->wrapper(), message);
 }
 
 void AXObjectCache::handleFocusedUIElementChanged()

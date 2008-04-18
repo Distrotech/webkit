@@ -1056,7 +1056,7 @@ PassRefPtr<DocumentFragment> createFragmentFromText(Range* context, const String
 
     // Break string into paragraphs. Extra line breaks turn into empty paragraphs.
     Node* block = enclosingBlock(context->firstNode());
-    bool useClonesOfEnclosingBlock = !block->hasTagName(bodyTag);
+    bool useClonesOfEnclosingBlock = block && !block->hasTagName(bodyTag) && !block->hasTagName(htmlTag) && block != editableRootForPosition(context->startPosition());
     
     Vector<String> list;
     string.split('\n', true, list); // true gets us empty strings in the list
@@ -1105,6 +1105,44 @@ PassRefPtr<DocumentFragment> createFragmentFromNodes(Document *document, const V
         document->frame()->editor()->deleteButtonController()->enable();
 
     return fragment.release();
+}
+
+String createFullMarkup(const Node* node)
+{
+    if (!node)
+        return String();
+        
+    Document* document = node->document();
+    if (!document)
+        return String();
+        
+    Frame* frame = document->frame();
+    if (!frame)
+        return String();
+
+    // FIXME: This is never "for interchange". Is that right?    
+    return frame->documentTypeString() + createMarkup(node, IncludeNode, 0);
+}
+
+String createFullMarkup(const Range* range)
+{
+    if (!range)
+        return String();
+
+    Node* node = range->startContainer();
+    if (!node)
+        return String();
+        
+    Document* document = node->document();
+    if (!document)
+        return String();
+        
+    Frame* frame = document->frame();
+    if (!frame)
+        return String();
+
+    // FIXME: This is always "for interchange". Is that right? See the previous method.
+    return frame->documentTypeString() + createMarkup(range, 0, AnnotateForInterchange);        
 }
 
 }

@@ -30,7 +30,8 @@
 #include "config.h"
 #include "Threading.h"
 
-#include "HashMap.h"
+#include <wtf/HashMap.h>
+#include <wtf/MathExtras.h>
 
 #include <glib.h>
 
@@ -38,20 +39,25 @@ namespace WTF {
 
 Mutex* atomicallyInitializedStaticMutex;
 
+static ThreadIdentifier mainThreadIdentifier;
+
+static Mutex& threadMapMutex()
+{
+    static Mutex mutex;
+    return mutex;
+}
+
 void initializeThreading()
 {
     if (!g_thread_supported()) {
         g_thread_init(NULL);
         ASSERT(!atomicallyInitializedStaticMutex);
         atomicallyInitializedStaticMutex = new Mutex;
+        threadMapMutex();
+        wtf_random_init();
+        mainThreadIdentifier = currentThread();
     }
     ASSERT(g_thread_supported());
-}
-
-static Mutex& threadMapMutex()
-{
-    static Mutex mutex;
-    return mutex;
 }
 
 static HashMap<ThreadIdentifier, GThread*>& threadMap()
@@ -134,6 +140,11 @@ ThreadIdentifier currentThread()
     if (ThreadIdentifier id = identifierByGthreadHandle(currentThread))
         return id;
     return establishIdentifierForThread(currentThread);
+}
+
+bool isMainThread()
+{
+    return currentThread() == mainThreadIdentifier;
 }
 
 Mutex::Mutex()

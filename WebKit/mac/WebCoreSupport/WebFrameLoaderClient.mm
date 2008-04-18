@@ -142,7 +142,6 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 WebFrameLoaderClient::WebFrameLoaderClient(WebFrame *webFrame)
     : m_webFrame(webFrame)
     , m_policyFunction(0)
-    , m_archivedResourcesDeliveryTimer(this, &WebFrameLoaderClient::deliverArchivedResources)
 {
 }
 
@@ -652,11 +651,6 @@ void WebFrameLoaderClient::setMainDocumentError(DocumentLoader* loader, const Re
     [dataSource(loader) _setMainDocumentError:error];
 }
 
-void WebFrameLoaderClient::clearUnarchivingState(DocumentLoader* loader)
-{
-    [dataSource(loader) _clearUnarchivingState];
-}
-
 void WebFrameLoaderClient::willChangeEstimatedProgress()
 {
     [getWebView(m_webFrame.get()) _willChangeValueForKey:_WebEstimatedProgressKey];
@@ -719,11 +713,6 @@ void WebFrameLoaderClient::finishedLoading(DocumentLoader* loader)
     [dataSource(loader) _finishedLoading];
 }
 
-void WebFrameLoaderClient::finalSetupForReplace(DocumentLoader* loader)
-{
-    [dataSource(loader) _clearUnarchivingState];
-}
-
 void WebFrameLoaderClient::updateGlobalHistory(const KURL& url)
 {
     NSURL *cocoaURL = url;
@@ -775,48 +764,6 @@ bool WebFrameLoaderClient::shouldFallBack(const ResourceError& error)
     // FIXME: WebKitErrorPlugInWillHandleLoad is a workaround for the cancel we do to prevent
     // loading plugin content twice.  See <rdar://problem/4258008>
     return error.errorCode() != NSURLErrorCancelled && error.errorCode() != WebKitErrorPlugInWillHandleLoad;
-}
-
-void WebFrameLoaderClient::setDefersLoading(bool defers)
-{
-    if (!defers)
-        deliverArchivedResourcesAfterDelay();
-}
-
-bool WebFrameLoaderClient::willUseArchive(ResourceLoader* loader, const ResourceRequest& request, const KURL& originalURL) const
-{
-    if (request.url() != originalURL)
-        return false;
-
-    WebResource *resource = [dataSource(core(m_webFrame.get())->loader()->activeDocumentLoader()) _archivedSubresourceForURL:originalURL];
-    if (!resource)
-        return false;
-
-    m_pendingArchivedResources.set(loader, resource);
-    // Deliver the resource after a delay because callers don't expect to receive callbacks while calling this method.
-    deliverArchivedResourcesAfterDelay();
-
-    return true;
-}
-
-bool WebFrameLoaderClient::isArchiveLoadPending(ResourceLoader* loader) const
-{
-    return m_pendingArchivedResources.contains(loader);
-}
-
-void WebFrameLoaderClient::cancelPendingArchiveLoad(ResourceLoader* loader)
-{
-    if (m_pendingArchivedResources.isEmpty())
-        return;
-    m_pendingArchivedResources.remove(loader);
-    if (m_pendingArchivedResources.isEmpty())
-        m_archivedResourcesDeliveryTimer.stop();
-}
-
-void WebFrameLoaderClient::clearArchivedResources()
-{
-    m_pendingArchivedResources.clear();
-    m_archivedResourcesDeliveryTimer.stop();
 }
 
 bool WebFrameLoaderClient::canHandleRequest(const ResourceRequest& request) const
@@ -946,38 +893,6 @@ void WebFrameLoaderClient::setTitle(const String& title, const KURL& URL)
         return;
     NSString *titleNSString = title;
     [[[WebHistory optionalSharedHistory] itemForURL:nsURL] setTitle:titleNSString];
-}
-
-void WebFrameLoaderClient::deliverArchivedResourcesAfterDelay() const
-{
-    if (m_pendingArchivedResources.isEmpty())
-        return;
-    if (core(m_webFrame.get())->page()->defersLoading())
-        return;
-    if (!m_archivedResourcesDeliveryTimer.isActive())
-        m_archivedResourcesDeliveryTimer.startOneShot(0);
-}
-
-void WebFrameLoaderClient::deliverArchivedResources(Timer<WebFrameLoaderClient>*)
-{
-    if (m_pendingArchivedResources.isEmpty())
-        return;
-    if (core(m_webFrame.get())->page()->defersLoading())
-        return;
-
-    const ResourceMap copy = m_pendingArchivedResources;
-    m_pendingArchivedResources.clear();
-
-    ResourceMap::const_iterator end = copy.end();
-    for (ResourceMap::const_iterator it = copy.begin(); it != end; ++it) {
-        RefPtr<ResourceLoader> loader = it->first;
-        WebResource *resource = it->second.get();
-        NSData *data = [[resource data] retain];
-        loader->didReceiveResponse([resource _response]);
-        loader->didReceiveData((const char*)[data bytes], [data length], [data length], true);
-        [data release];
-        loader->didFinishLoading();
-    }
 }
 
 void WebFrameLoaderClient::savePlatformDataToCachedPage(CachedPage* cachedPage)
@@ -1147,7 +1062,7 @@ PassRefPtr<Frame> WebFrameLoaderClient::createFrame(const KURL& url, const Strin
     if ([newFrame _dataSource])
         [[newFrame _dataSource] _documentLoader]->setOverrideEncoding([[m_webFrame.get() _dataSource] _documentLoader]->overrideEncoding());  
 
-    [m_webFrame.get() _loadURL:url referrer:referrer intoChild:newFrame];
+    core(m_webFrame.get())->loader()->loadURLIntoChildFrame(url, referrer, newCoreFrame.get());
 
     // The frame's onload handler may have removed it from the document.
     if (!newCoreFrame->tree()->parent())
@@ -1297,7 +1212,7 @@ Widget* WebFrameLoaderClient::createPlugin(const IntSize& size, Element* element
     NSURL *URL = url;
 
     if ([[webView UIDelegate] respondsToSelector:selector]) {
-        NSMutableDictionary *attributes = [[NSMutableDictionary alloc] initWithObjects:kit(paramNames) forKeys:kit(paramValues)];
+        NSMutableDictionary *attributes = [[NSMutableDictionary alloc] initWithObjects:kit(paramValues) forKeys:kit(paramNames)];
         NSDictionary *arguments = [[NSDictionary alloc] initWithObjectsAndKeys:
             attributes, WebPlugInAttributesKey,
             [NSNumber numberWithInt:loadManually ? WebPlugInModeFull : WebPlugInModeEmbed], WebPlugInModeKey,

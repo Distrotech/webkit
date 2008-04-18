@@ -32,7 +32,6 @@
 #import "DOMNodeInternal.h"
 #import "DOMRangeInternal.h"
 #import "WebArchive.h"
-#import "WebArchiver.h"
 #import "WebBaseNetscapePluginViewInternal.h"
 #import "WebClipView.h"
 #import "WebDOMOperationsPrivate.h"
@@ -96,6 +95,7 @@
 #import <WebCore/HTMLNames.h>
 #import <WebCore/Image.h>
 #import <WebCore/KeyboardEvent.h>
+#import <WebCore/LegacyWebArchive.h>
 #import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/Page.h>
 #import <WebCore/PlatformKeyboardEvent.h>
@@ -253,8 +253,8 @@ extern NSString *NSTextInputReplacementRangeAttributeName;
 #define WebSmartPastePboardType @"NeXT smart paste pasteboard type"
 
 #define STANDARD_WEIGHT 5
-#define MIN_BOLD_WEIGHT 9
-#define STANDARD_BOLD_WEIGHT 10
+#define MIN_BOLD_WEIGHT 7
+#define STANDARD_BOLD_WEIGHT 9
 
 // Fake URL scheme.
 #define WebDataProtocolScheme @"webkit-fake-url"
@@ -477,7 +477,7 @@ static NSCellStateValue kit(TriState state)
     [dataSource release];
     [highlighters release];
     if (promisedDragTIFFDataSource)
-        promisedDragTIFFDataSource->deref(promisedDataClient());
+        promisedDragTIFFDataSource->removeClient(promisedDataClient());
 
     [super dealloc];
 }
@@ -487,7 +487,7 @@ static NSCellStateValue kit(TriState state)
     ASSERT_MAIN_THREAD();
 
     if (promisedDragTIFFDataSource)
-        promisedDragTIFFDataSource->deref(promisedDataClient());
+        promisedDragTIFFDataSource->removeClient(promisedDataClient());
 
     [super finalize];
 }
@@ -502,7 +502,7 @@ static NSCellStateValue kit(TriState state)
     [dataSource release];
     [highlighters release];
     if (promisedDragTIFFDataSource)
-        promisedDragTIFFDataSource->deref(promisedDataClient());
+        promisedDragTIFFDataSource->removeClient(promisedDataClient());
 
     mouseDownEvent = nil;
     keyDownEvent = nil;
@@ -790,8 +790,10 @@ static NSURL* uniqueURLWithRelativePart(NSString *relativePart)
 {
     // Put HTML on the pasteboard.
     if ([types containsObject:WebArchivePboardType]) {
-        WebArchive *archive = [WebArchiver archiveSelectionInFrame:[self _frame]];
-        [pasteboard setData:[archive data] forType:WebArchivePboardType];
+        if (RefPtr<LegacyWebArchive> coreArchive = LegacyWebArchive::createFromSelection(core([self _frame]))) {
+            if (RetainPtr<CFDataRef> data = coreArchive ? coreArchive->rawDataRepresentation() : 0)
+                [pasteboard setData:(NSData *)data.get() forType:WebArchivePboardType];
+        }
     }
     
     // Put the attributed string on the pasteboard (RTF/RTFD format).
@@ -2702,6 +2704,11 @@ static void _updateFocusedAndActiveStateTimerCallback(CFRunLoopTimerRef timer, v
     LOG(View, "%@ doing layout", self);
 
     Frame* coreFrame = core([self _frame]);
+    if (!coreFrame) {
+        _private->needsLayout = NO;
+        return;
+    }
+
     if (minPageWidth > 0.0)
         coreFrame->forceLayoutWithPageWidthRange(minPageWidth, maxPageWidth, adjustViewSize);
     else {
@@ -3533,8 +3540,7 @@ noPromisedData:
 
     BOOL completionPopupWasOpen = _private->compController && [_private->compController popupWindowIsOpen];
     Frame* coreFrame = core([self _frame]);
-    if (!eventWasSentToWebCore && coreFrame) {
-        coreFrame->eventHandler()->keyEvent(event);
+    if (!eventWasSentToWebCore && coreFrame && coreFrame->eventHandler()->keyEvent(event)) {
         // WebCore processed a key event, bail on any preexisting complete: UI
         if (completionPopupWasOpen)
             [_private->compController endRevertingChange:YES moveLeft:NO];
@@ -3707,7 +3713,7 @@ noPromisedData:
     [style setBackgroundColor:[self _colorAsString:color]];
 
     NSFont *font = [dictionary objectForKey:NSFontAttributeName];
-    if (font == nil) {
+    if (!font) {
         [style setFontFamily:@"Helvetica"];
         [style setFontSize:@"12px"];
         [style setFontWeight:@"normal"];
@@ -3718,11 +3724,12 @@ noPromisedData:
         // with characters like single quote or backslash in their names.
         [style setFontFamily:[NSString stringWithFormat:@"'%@'", [font familyName]]];
         [style setFontSize:[NSString stringWithFormat:@"%0.fpx", [font pointSize]]];
+        // FIXME: Map to the entire range of CSS weight values.
         if ([fm weightOfFont:font] >= MIN_BOLD_WEIGHT)
             [style setFontWeight:@"bold"];
         else
             [style setFontWeight:@"normal"];
-        if (([fm traitsOfFont:font] & NSItalicFontMask) != 0)
+        if ([fm traitsOfFont:font] & NSItalicFontMask)
             [style setFontStyle:@"italic"];
         else
             [style setFontStyle:@"normal"];
@@ -3857,7 +3864,7 @@ noPromisedData:
 
 - (NSFont *)_originalFontB
 {
-    return [[NSFontManager sharedFontManager] fontWithFamily:@"Times" traits:(NSBoldFontMask | NSItalicFontMask) weight:STANDARD_BOLD_WEIGHT size:12.0f];
+    return [[NSFontManager sharedFontManager] fontWithFamily:@"Times" traits:NSFontItalicTrait weight:STANDARD_BOLD_WEIGHT size:12.0f];
 }
 
 - (void)_addToStyle:(DOMCSSStyleDeclaration *)style fontA:(NSFont *)a fontB:(NSFont *)b
@@ -3883,8 +3890,6 @@ noPromisedData:
     int aWeight = [fm weightOfFont:a];
     int bWeight = [fm weightOfFont:b];
 
-    BOOL aIsBold = aWeight >= MIN_BOLD_WEIGHT;
-
     BOOL aIsItalic = ([fm traitsOfFont:a] & NSItalicFontMask) != 0;
     BOOL bIsItalic = ([fm traitsOfFont:b] & NSItalicFontMask) != 0;
 
@@ -3896,18 +3901,13 @@ noPromisedData:
         // the Postscript name.
         
         // Find the font the same way the rendering code would later if it encountered this CSS.
-        NSFontTraitMask traits = 0;
-        if (aIsBold)
-            traits |= NSBoldFontMask;
-        if (aIsItalic)
-            traits |= NSItalicFontMask;
-        NSFont *foundFont = WebCoreFindFont(aFamilyName, traits, aPointSize);
+        NSFontTraitMask traits = aIsItalic ? NSFontItalicTrait : 0;
+        NSFont *foundFont = WebCoreFindFont(aFamilyName, traits, aWeight, aPointSize);
 
         // If we don't find a font with the same Postscript name, then we'll have to use the
         // Postscript name to make the CSS specific enough.
-        if (![[foundFont fontName] isEqualToString:[a fontName]]) {
+        if (![[foundFont fontName] isEqualToString:[a fontName]])
             familyNameForCSS = [a fontName];
-        }
 
         // FIXME: Need more sophisticated escaping code if we want to handle family names
         // with characters like single quote or backslash in their names.
@@ -3923,7 +3923,7 @@ noPromisedData:
         [style _setFontSizeDelta:@"1px"];
 
     if (aWeight == bWeight)
-        [style setFontWeight:aIsBold ? @"bold" : @"normal"];
+        [style setFontWeight:aWeight > MIN_BOLD_WEIGHT ? @"bold" : @"normal"];
 
     if (aIsItalic == bIsItalic)
         [style setFontStyle:aIsItalic ? @"italic" :  @"normal"];
@@ -4775,10 +4775,10 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
 - (void)setPromisedDragTIFFDataSource:(WebCore::CachedImage*)source
 {
     if (source)
-        source->ref(promisedDataClient());
+        source->addClient(promisedDataClient());
     
     if (_private->promisedDragTIFFDataSource)
-        _private->promisedDragTIFFDataSource->deref(promisedDataClient());
+        _private->promisedDragTIFFDataSource->removeClient(promisedDataClient());
     _private->promisedDragTIFFDataSource = source;
 }
 

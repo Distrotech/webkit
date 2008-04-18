@@ -176,6 +176,8 @@ void HTMLImageElement::attach()
 
     if (renderer() && renderer()->isImage()) {
         RenderImage* imageObj = static_cast<RenderImage*>(renderer());
+        if (imageObj->hasImage())
+            return;
         imageObj->setCachedImage(m_imageLoader.image());
         
         // If we have no image at all because we have no src attribute, set
@@ -424,6 +426,12 @@ int HTMLImageElement::y() const
 bool HTMLImageElement::complete() const
 {
     return m_imageLoader.imageComplete();
+}
+
+void HTMLImageElement::getSubresourceAttributeStrings(Vector<String>& urls) const
+{
+    urls.append(src().string());
+    urls.append(useMap());
 }
 
 }

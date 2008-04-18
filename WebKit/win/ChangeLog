@@ -1,3 +1,414 @@
+2008-04-16  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Add a base AccessibilityObject wrapper class. Currently just stubs all
+        of the IAccessible methods.
+
+        * AccessibleBase.cpp: Added. Implements IAccessible, and inherits from
+        WebCore::AccessibilityObjectWrapper.
+        (AccessibleBase::AccessibleBase): Set the object's wrapper to this
+        instance. 
+        (AccessibleBase::~AccessibleBase):
+        (AccessibleBase::createInstance): Create an instance of a wrapper for
+        this AccessibilityObject.
+        (AccessibleBase::QueryInterface):
+        (AccessibleBase::Release):
+        (AccessibleBase::get_accParent):
+        (AccessibleBase::get_accChildCount):
+        (AccessibleBase::get_accChild):
+        (AccessibleBase::get_accName):
+        (AccessibleBase::get_accValue):
+        (AccessibleBase::get_accDescription):
+        (AccessibleBase::get_accRole):
+        (AccessibleBase::get_accState):
+        (AccessibleBase::get_accHelp):
+        (AccessibleBase::get_accKeyboardShortcut):
+        (AccessibleBase::accSelect):
+        (AccessibleBase::get_accFocus):
+        (AccessibleBase::get_accSelection):
+        (AccessibleBase::get_accDefaultAction):
+        (AccessibleBase::accLocation):
+        (AccessibleBase::accNavigate):
+        (AccessibleBase::accHitTest):
+        * AccessibleBase.h: Added.
+        (AccessibleBase::AddRef):
+        (AccessibleBase::put_accName):
+        (AccessibleBase::put_accValue):
+        (AccessibleBase::get_accHelpTopic):
+        (AccessibleBase::GetTypeInfoCount):
+        (AccessibleBase::GetTypeInfo):
+        (AccessibleBase::GetIDsOfNames):
+        (AccessibleBase::Invoke):
+        (AccessibleBase::detach): Detach this wrapper from its object.
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-04-15  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add ENABLE_OFFLINE_WEB_APPLICATIONS to FEATURE_DEFINES.
+
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-04-12  Matt Lilek  <webkit@mattlilek.com>
+
+        Not reviewed, build fix.
+
+        * WebView.cpp:
+        (WebView::paintDocumentRectToContext):
+
+2008-04-11  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix caching typo.
+        
+        Made this code match the Mac.
+        
+        Reviewed by Mark Rowe.
+
+        * WebView.cpp:
+        (PreferencesChangedOrRemovedObserver::notifyPreferencesChanged):
+
+2008-04-11  Adam Roben  <aroben@apple.com>
+
+        * ForEachCoClass.h: Added a deprecation notice.
+
+2008-04-11  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18376: r31733 and 27 don't work w/Safari 3.1
+        
+        <https://bugs.webkit.org/show_bug.cgi?id=18376>
+
+        Rubberstamped by Steve.
+
+        * ForEachCoClass.h: Move post-3.1 classes to the end of the
+        FOR_EACH_COCLASS macro so that pre-3.1 classes will be in the place
+        Safari expects them to be. We will soon be deprecating
+        setUseOpenSourceWebKit/progIDForClass because it is clearly very
+        fragile.
+
+2008-04-10  Ada Chan  <adachan@apple.com>
+
+        Added WebCoreStatistics that provides stats on Javascript objects
+        and IconDatabase.
+        
+        Changed WebCache::statistics() to additionally return xsl stylesheets data
+        and data on live sizes and decoded sizes.
+
+        Reviewed by Steve.
+
+        * ForEachCoClass.h:
+        * Interfaces/IWebCoreStatistics.idl: Added.
+        * Interfaces/WebKit.idl:
+        * WebCache.cpp:
+        (WebCache::statistics):
+        * WebCoreStatistics.cpp: Added.
+        (WebCoreStatistics::WebCoreStatistics):
+        (WebCoreStatistics::~WebCoreStatistics):
+        (WebCoreStatistics::createInstance):
+        (WebCoreStatistics::QueryInterface):
+        (WebCoreStatistics::AddRef):
+        (WebCoreStatistics::Release):
+        (WebCoreStatistics::javaScriptObjectsCount):
+        (WebCoreStatistics::javaScriptGlobalObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedGlobalObjectsCount):
+        (WebCoreStatistics::iconPageURLMappingCount):
+        (WebCoreStatistics::iconRetainedPageURLCount):
+        (WebCoreStatistics::iconRecordCount):
+        (WebCoreStatistics::iconsWithDataCount):
+        * WebCoreStatistics.h: Added.
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKitClassFactory.cpp:
+
+2008-04-09  Steve Falkenburg  <sfalken@apple.com>
+
+        Delete backing store (after a delay) when a WebView's top-level parent becomes inactive.
+
+        Reviewed by Brady Eidson.
+
+        * WebView.cpp:
+        (WebView::windowReceivedMessage):
+
+2008-04-08  Adam Roben  <aroben@apple.com>
+
+        Export callOnMainThread from WebKit.dll
+
+        Rubberstamped by Anders.
+
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit_debug.def:
+
+2008-04-08  Adam Roben  <aroben@apple.com>
+
+        Move callOnMainThread to WTF
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebIconDatabase.cpp: Updated #include
+
+2008-04-08  Steve Falkenburg  <sfalken@apple.com>
+
+        Add missing increment/decrement COM class counts to detect leaks.
+        
+        Reviewed by Adam Roben.
+
+        * CFDictionaryPropertyBag.cpp:
+        (CFDictionaryPropertyBag::CFDictionaryPropertyBag):
+        (CFDictionaryPropertyBag::~CFDictionaryPropertyBag):
+        * CFDictionaryPropertyBag.h:
+        * HTTPHeaderPropertyBag.cpp:
+        (HTTPHeaderPropertyBag::HTTPHeaderPropertyBag):
+        (HTTPHeaderPropertyBag::~HTTPHeaderPropertyBag):
+        * HTTPHeaderPropertyBag.h:
+        * WebActionPropertyBag.cpp:
+        (WebActionPropertyBag::WebActionPropertyBag):
+        (WebActionPropertyBag::~WebActionPropertyBag):
+        * WebDocumentLoader.cpp:
+        (WebDocumentLoader::WebDocumentLoader):
+        (WebDocumentLoader::~WebDocumentLoader):
+        * WebDropSource.cpp:
+        (WebDropSource::WebDropSource):
+        (WebDropSource::~WebDropSource):
+        * WebDropSource.h:
+        * WebElementPropertyBag.cpp:
+        (WebElementPropertyBag::WebElementPropertyBag):
+        (WebElementPropertyBag::~WebElementPropertyBag):
+        * WebTextRenderer.cpp:
+        (WebTextRenderer::WebTextRenderer):
+        (WebTextRenderer::~WebTextRenderer):
+
+2008-04-07  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by John Honeycutt
+
+        ENABLE_DOM_STORAGE for Windows
+
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-04-04  Adam Roben  <aroben@apple.com>
+
+        Export some more WTF functions from WebKit.dll
+
+        Reviewed by Alexey Proskuryakov.
+
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit_debug.def:
+
+2008-04-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Only delete the backing store of background windows.
+
+        Reviewed by Ada Chan.
+
+        * WebView.cpp:
+        (WebView::WebView):
+        (WebView::deleteBackingStore):
+        (WebView::paint): Added active check.
+        (WebView::deleteBackingStoreSoon):
+        (WebView::cancelDeleteBackingStoreSoon): Added.
+        (WebView::active): Added.
+        (WebView::updateActiveState): Moved active check code from here to active().
+        * WebView.h:
+
+2008-04-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix tooltip window leak.
+        
+        Explicitly call DestroyWindow on the tooltip.
+        Destroying its parent won't destroy the tooltip, since it not a WS_CHILD style window.
+
+        Reviewed by Ada Chan.
+
+        * WebView.cpp:
+        (WebView::~WebView):
+
+2008-04-04  Steve Falkenburg  <sfalken@apple.com>
+
+        Delete backing store after we go 5 seconds without a paint.
+                
+        Timer will be reset if a paint occurs, so this won't negatively impact performance.
+        
+        Reviewed by Ada Chan.
+
+        * WebView.cpp:
+        (WebView::paint): Call deleteBackingStoreSoon after paint.
+        (WebViewWndProc): Add DeleteBackingStoreTimer.
+        (WebView::deleteBackingStoreSoon): Added.
+        * WebView.h: Add deleteBackingStoreSoon.
+
+2008-04-04  Ada Chan  <adachan@apple.com>
+
+        <rdar://problem/5830598> Image file opened in the browser window shows "Localized String Not Found' in window's title bar instead file name
+        Save WebCoreLocalizedStrings.cpp with UTF8 encoding.
+        Changed the format string to take in integers.
+
+        Reviewed by Dan.
+
+        * English.lproj/Localizable.strings: Updated.
+        * WebCoreLocalizedStrings.cpp:
+        (WebCore::imageTitle):
+
+2008-04-03  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - WebKit part of fixing http://bugs.webkit.org/show_bug.cgi?id=6484
+          font-weight does not properly support graded weights
+
+        * DOMCoreClasses.cpp:
+        (DOMElement::font): Updated for the change to FontDescription.
+        * WebCoreSupport/WebDragClient.cpp:
+        (dragLabelFont): Ditto.
+        * WebKitGraphics.cpp:
+        (makeFont): Ditto.
+        * WebKitGraphics.h: Added a FIXME.
+
+2008-04-03  Steve Falkenburg  <sfalken@apple.com>
+
+        <rdar://problem/5835382> Calling window.open immediately after window.close can sometimes result in no window being created
+        
+        Group name tracking needs to happen using code in WebCore::Page, since it is more involved than
+        just setting a string.
+        
+        Reviewed by Adam Roben.
+
+        * WebView.cpp:
+        (WebView::close): Add null check (found via code inspection).
+        (WebView::initWithFrame): Store the group name directly in Page.
+        (WebView::setGroupName): Store the group name directly in Page.
+        (WebView::groupName): Retrieve the group name directly from Page.
+        * WebView.h: Removed m_groupName
+
+2008-04-03  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        Roll out r31599 and r31605 again after discussion with Mark Rowe.
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconForURL):
+
+2008-04-03  Simon Hausmann  <hausmann@webkit.org>
+
+        Attempted build fix
+
+        * WebIconDatabase.cpp:
+        (WebIconDatabase::iconForURL): Adjust to changed iconForPageURL
+        signature
+
+2008-04-03  Ada Chan  <adachan@apple.com>
+
+        Allow WebArchive to be created via COM.
+        Replaced IID_DOMNode with __uuidof(DOMNode).
+
+        Reviewed by Adam and Steve.
+
+        * DOMCoreClasses.cpp:
+        (DOMNode::QueryInterface):
+        (DOMNode::isSameNode):
+        * DOMCoreClasses.h:
+        * ForEachCoClass.h:
+        * Interfaces/WebKit.idl:
+        * WebArchive.cpp:
+        (WebArchive::createInstance):
+        * WebArchive.h:
+        * WebKitClassFactory.cpp:
+
+2008-04-01  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Jon Honeycutt and Cake
+
+        Hookup WebArchive API enough to be able to save the archive of a DOMNode
+        
+        * DOMCoreClasses.h: Add a GUID for DOMNode
+
+        * Interfaces/IWebArchive.idl: Add initWithNode()
+
+        * WebArchive.cpp:
+        (WebArchive::initWithNode):
+        (WebArchive::data): Actually return LegacyWebArchive-style data
+        * WebArchive.h:
+
+2008-04-01  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Add empty implementations of WebArchive for future work
+        
+        * WebArchive.cpp: Added.
+        (WebArchive::createInstance):
+        (WebArchive::WebArchive):
+        (WebArchive::~WebArchive):
+        (WebArchive::QueryInterface):
+        (WebArchive::AddRef):
+        (WebArchive::Release):
+        (WebArchive::initWithMainResource):
+        (WebArchive::initWithData):
+        (WebArchive::mainResource):
+        (WebArchive::subResources):
+        (WebArchive::subframeArchives):
+        (WebArchive::data):
+        * WebArchive.h: Added.
+        
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-03-29  Adam Roben  <aroben@apple.com>
+
+        Rename IWebViewPrivate::addAdditionalPluginPath to
+        addAdditionalPluginDirectory
+
+        Reviewed by Mitz Pettel.
+
+        * Interfaces/IWebViewPrivate.idl:
+        * Interfaces/WebKit.idl: Touched to make sure the Interfaces project
+        rebuilds.
+        * WebView.cpp:
+        (WebView::addAdditionalPluginDirectory):
+        * WebView.h:
+
+2008-03-26  Brent Fulgham  <bfulgham@gmail.com>
+
+        Reviewed by Adam Roben.
+
+        Add necessary files and build commands to vcproj files to
+        build a Curl-based Windows WebKit.  For details, see
+        http://bugs.webkit.org/show_bug.cgi?id=17985
+
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Attempted build fix
+
+        * WebKit.vcproj/WebKit.sln: Make testapi build after most other
+        projects.
+
+2008-03-25  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18077: Integrate testapi.c into the Windows build
+
+        <http://bugs.webkit.org/show_bug.cgi?id=18077>
+
+        Reviewed by Steve Falkenburg.
+
+        * WebKit.vcproj/WebKit.sln: Added testapi.vcproj to the solution.
+
+2008-03-25  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Remove newly obsolete FrameLoaderClient methods
+
+        * WebFrame.cpp:
+        * WebFrame.h:
+
+2008-03-25  Darin Adler  <darin@apple.com>
+
+        Suggested by Adam.
+
+        * Interfaces/WebKit.idl: Touch this file to make the Interface project rebuild.
+
 2008-03-21  Ada Chan  <adachan@apple.com>
 
         <rdar://problem/5810324> visitCount not updated in History.plist

@@ -50,6 +50,7 @@ QWebView::QWebView(QWidget *parent)
     pal.setBrush(QPalette::Background, Qt::white);
 
     setAttribute(Qt::WA_OpaquePaintEvent);
+    setAttribute(Qt::WA_InputMethodEnabled);
 
     setPalette(pal);
     setAcceptDrops(true);
@@ -122,6 +123,9 @@ void QWebView::setPage(QWebPage *page)
                 this, SIGNAL(loadProgressChanged(int)));
         connect(d->page, SIGNAL(statusBarTextChanged(const QString &)),
                 this, SIGNAL(statusBarTextChanged(const QString &)));
+
+        connect(d->page, SIGNAL(microFocusChanged()),
+                this, SLOT(updateMicroFocus()));
     }
     update();
 }
@@ -307,6 +311,22 @@ void QWebView::setTextInteractionFlags(Qt::TextInteractionFlags flags)
 QSize QWebView::sizeHint() const
 {
     return QSize(800, 600); // ####...
+}
+
+/*!
+  \property QWebView::textZoomFactor
+
+  This property defines the zoom factor for all text in percent.
+*/
+
+void QWebView::setTextZoomFactor(int percent)
+{
+    page()->mainFrame()->setTextZoomFactor(percent);
+}
+
+int QWebView::textZoomFactor() const
+{
+    return page()->mainFrame()->textZoomFactor();
 }
 
 /*!
@@ -537,6 +557,22 @@ bool QWebView::focusNextPrevChild(bool next)
         return true;
     return QWidget::focusNextPrevChild(next);
 }
+
+/*!\reimp
+*/
+QVariant QWebView::inputMethodQuery(Qt::InputMethodQuery property) const
+{
+    return d->page->inputMethodQuery(property);
+}
+
+/*!\reimp
+*/
+void QWebView::inputMethodEvent(QInputMethodEvent *e)
+{
+    if (d->page)
+       d->page->event(e);
+}
+
 
 /*!
   \fn void QWebView::titleChanged(const QString &title)

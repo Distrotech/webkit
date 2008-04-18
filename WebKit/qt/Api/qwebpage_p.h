@@ -46,8 +46,10 @@ namespace WebCore
     class Page;
 }
 
+QT_BEGIN_NAMESPACE
 class QUndoStack;
 class QMenu;
+QT_END_NAMESPACE
 
 class QWebPageContextPrivate
 {
@@ -118,6 +120,7 @@ public:
     void dragMoveEvent(QDragMoveEvent *);
     void dropEvent(QDropEvent *);
 
+    void inputMethodEvent(QInputMethodEvent*);
 
     WebCore::ChromeClientQt *chromeClient;
     WebCore::ContextMenuClientQt *contextMenuClient;
@@ -149,6 +152,7 @@ public:
     QNetworkAccessManager *networkManager;
 #endif
 
+    QSize viewportSize;
     QWebHistory history;
     QWebPageContext currentContext;
     QWebSettings *settings;

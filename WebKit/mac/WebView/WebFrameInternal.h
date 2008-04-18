@@ -129,8 +129,6 @@ WebView *getWebView(WebFrame *webFrame);
 - (WebFrame *)_findFrameWithSelection;
 - (void)_clearSelectionInOtherFrames;
 
-- (void)_loadURL:(NSURL *)URL referrer:(NSString *)referrer intoChild:(WebFrame *)childFrame;
-
 - (void)_attachScriptDebugger;
 - (void)_detachScriptDebugger;
 
@@ -150,7 +148,6 @@ WebView *getWebView(WebFrame *webFrame);
 - (NSString *)_selectedString;
 - (NSString *)_stringForRange:(DOMRange *)range;
 
-- (NSString *)_markupStringFromNode:(DOMNode *)node nodes:(NSArray **)nodes;
 - (NSString *)_markupStringFromRange:(DOMRange *)range nodes:(NSArray **)nodes;
 
 - (NSRect)_caretRectAtNode:(DOMNode *)node offset:(int)offset affinity:(NSSelectionAffinity)affinity;
@@ -182,9 +179,6 @@ WebView *getWebView(WebFrame *webFrame);
 
 - (void)_dragSourceMovedTo:(NSPoint)windowLoc;
 - (void)_dragSourceEndedAt:(NSPoint)windowLoc operation:(NSDragOperation)operation;
-
-- (BOOL)_getData:(NSData **)data andResponse:(NSURLResponse **)response forURL:(NSString *)URL;
-- (void)_getAllResourceDatas:(NSArray **)datas andResponses:(NSArray **)responses;
 
 - (BOOL)_canProvideDocumentSource;
 - (BOOL)_canSaveAsWebArchive;

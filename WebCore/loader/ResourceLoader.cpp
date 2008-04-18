@@ -106,7 +106,7 @@ bool ResourceLoader::load(const ResourceRequest& r)
 {
     ASSERT(!m_handle);
     ASSERT(m_deferredRequest.isNull());
-    ASSERT(!frameLoader()->isArchiveLoadPending(this));
+    ASSERT(!m_documentLoader->isSubstituteLoadPending(this));
     
     ResourceRequest clientRequest(r);
     willSendRequest(clientRequest, ResourceResponse());
@@ -115,7 +115,7 @@ bool ResourceLoader::load(const ResourceRequest& r)
         return false;
     }
     
-    if (frameLoader()->willUseArchive(this, clientRequest, r.url()))
+    if (m_documentLoader->scheduleArchiveLoad(this, clientRequest, r.url()))
         return true;
     
     if (m_defersLoading) {
@@ -289,11 +289,6 @@ void ResourceLoader::didFail(const ResourceError& error)
     releaseResources();
 }
 
-void ResourceLoader::wasBlocked()
-{
-    didFail(blockedError());
-}
-
 void ResourceLoader::didCancel(const ResourceError& error)
 {
     ASSERT(!m_cancelled);
@@ -309,7 +304,7 @@ void ResourceLoader::didCancel(const ResourceError& error)
     if (m_handle)
         m_handle->clearAuthentication();
 
-    frameLoader()->cancelPendingArchiveLoad(this);
+    m_documentLoader->cancelPendingSubstituteLoad(this);
     if (m_handle) {
         m_handle->cancel();
         m_handle = 0;
@@ -350,6 +345,11 @@ ResourceError ResourceLoader::blockedError()
     return frameLoader()->blockedError(m_request);
 }
 
+ResourceError ResourceLoader::cannotShowURLError()
+{
+    return frameLoader()->cannotShowURLError(m_request);
+}
+
 void ResourceLoader::willSendRequest(ResourceHandle*, ResourceRequest& request, const ResourceResponse& redirectResponse)
 {
     willSendRequest(request, redirectResponse);
@@ -377,7 +377,12 @@ void ResourceLoader::didFail(ResourceHandle*, const ResourceError& error)
 
 void ResourceLoader::wasBlocked(ResourceHandle*)
 {
-    wasBlocked();
+    didFail(blockedError());
+}
+
+void ResourceLoader::cannotShowURL(ResourceHandle*)
+{
+    didFail(cannotShowURLError());
 }
 
 void ResourceLoader::didReceiveAuthenticationChallenge(const AuthenticationChallenge& challenge)

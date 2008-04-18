@@ -28,6 +28,7 @@
 #include "ImageBuffer.h"
 
 #include "Base64.h"
+#include "BitmapImage.h"
 #include "CString.h"
 #include "GraphicsContext.h"
 #include "ImageData.h"
@@ -68,8 +69,9 @@ auto_ptr<ImageBuffer> ImageBuffer::create(const IntSize& size, bool grayScale)
     }
 
     auto_ptr<GraphicsContext> context(new GraphicsContext(cgContext));
+    context->scale(FloatSize(1, -1));
+    context->translate(0, -size.height());
     CGContextRelease(cgContext);
-
     return auto_ptr<ImageBuffer>(new ImageBuffer(imageBuffer, size, context));
 }
 
@@ -78,7 +80,6 @@ ImageBuffer::ImageBuffer(void* imageData, const IntSize& size, auto_ptr<Graphics
     : m_data(imageData)
     , m_size(size)
     , m_context(context.release())
-    , m_cgImage(0)
 {
     ASSERT((reinterpret_cast<size_t>(imageData) & 2) == 0);
 }
@@ -86,7 +87,6 @@ ImageBuffer::ImageBuffer(void* imageData, const IntSize& size, auto_ptr<Graphics
 ImageBuffer::~ImageBuffer()
 {
     fastFree(m_data);
-    CGImageRelease(m_cgImage);
 }
 
 GraphicsContext* ImageBuffer::context() const
@@ -94,16 +94,17 @@ GraphicsContext* ImageBuffer::context() const
     return m_context.get();
 }
 
-CGImageRef ImageBuffer::cgImage() const
+Image* ImageBuffer::image() const
 {
-    // It's assumed that if cgImage() is called, the actual rendering to the
-    // contained GraphicsContext must be done, as we create the CGImageRef here.
-    if (!m_cgImage) {
+    if (!m_image) {
+        // It's assumed that if image() is called, the actual rendering to the
+        // GraphicsContext must be done.
         ASSERT(context());
-        m_cgImage = CGBitmapContextCreateImage(context()->platformContext());
+        CGImageRef cgImage = CGBitmapContextCreateImage(context()->platformContext());
+        // BitmapImage will release the passed in CGImage on destruction
+        m_image.set(new BitmapImage(cgImage));
     }
-
-    return m_cgImage;
+    return m_image.get();
 }
 
 PassRefPtr<ImageData> ImageBuffer::getImageData(const IntRect& rect) const
@@ -142,8 +143,7 @@ PassRefPtr<ImageData> ImageBuffer::getImageData(const IntRect& rect) const
     unsigned srcBytesPerRow = 4 * m_size.width();
     unsigned destBytesPerRow = 4 * rect.width();
 
-    // m_size.height() - originy to handle the accursed flipped y axis in CG backing store
-    unsigned char* srcRows = reinterpret_cast<unsigned char*>(m_data) + (m_size.height() - originy - 1) * srcBytesPerRow + originx * 4;
+    unsigned char* srcRows = reinterpret_cast<unsigned char*>(m_data) + originy * srcBytesPerRow + originx * 4;
     unsigned char* destRows = data + desty * destBytesPerRow + destx * 4;
     for (int y = 0; y < numRows; ++y) {
         for (int x = 0; x < numColumns; x++) {
@@ -158,7 +158,7 @@ PassRefPtr<ImageData> ImageBuffer::getImageData(const IntRect& rect) const
             }
             destRows += 4;
         }
-        srcRows -= srcBytesPerRow;
+        srcRows += srcBytesPerRow;
     }
     return result;
 }
@@ -195,9 +195,7 @@ void ImageBuffer::putImageData(ImageData* source, const IntRect& sourceRect, con
     unsigned destBytesPerRow = 4 * m_size.width();
 
     unsigned char* srcRows = source->data()->data().data() + originy * srcBytesPerRow + originx * 4;
-
-    // -desty to handle the accursed flipped y axis
-    unsigned char* destRows = reinterpret_cast<unsigned char*>(m_data) + (m_size.height() - desty - 1) * destBytesPerRow + destx * 4;
+    unsigned char* destRows = reinterpret_cast<unsigned char*>(m_data) + desty * destBytesPerRow + destx * 4;
     for (int y = 0; y < numRows; ++y) {
         for (int x = 0; x < numColumns; x++) {
             unsigned char alpha = srcRows[x * 4 + 3];
@@ -210,18 +208,19 @@ void ImageBuffer::putImageData(ImageData* source, const IntRect& sourceRect, con
                 reinterpret_cast<uint32_t*>(destRows + x * 4)[0] = reinterpret_cast<uint32_t*>(srcRows + x * 4)[0];
             }
         }
-        destRows -= destBytesPerRow;
+        destRows += destBytesPerRow;
         srcRows += srcBytesPerRow;
     }
 }
 
-static CFStringRef utiFromMIMEType(const String& mimeType)
+static RetainPtr<CFStringRef> utiFromMIMEType(const String& mimeType)
 {
 #if PLATFORM(MAC)
-    return UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType.createCFString(), 0);
+    RetainPtr<CFStringRef> mimeTypeCFString(AdoptCF, mimeType.createCFString());
+    return RetainPtr<CFStringRef>(AdoptCF, UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeTypeCFString.get(), 0));
 #else
-    // FIXME: Add Windows support for all the supported UTI's when a way to convert from MIMEType to UTI reliably is found.
-    // For now, only support PNG, the minimum that the spec requires.
+    // FIXME: Add Windows support for all the supported UTIs when a way to convert from MIMEType to UTI reliably is found.
+    // For now, only support PNG, the minimum that HTML5 requires.
     ASSERT(equalIgnoringCase(mimeType, "image/png"));
     static const CFStringRef kUTTypePNG = CFSTR("public.png");
     return kUTTypePNG;
@@ -234,38 +233,27 @@ String ImageBuffer::toDataURL(const String& mimeType) const
 
     RetainPtr<CGImageRef> image(AdoptCF, CGBitmapContextCreateImage(context()->platformContext()));
     if (!image)
-        return String("data:,");
+        return "data:,";
 
     size_t width = CGImageGetWidth(image.get());
     size_t height = CGImageGetHeight(image.get());
 
     OwnArrayPtr<uint32_t> imageData(new uint32_t[width * height]);
-
-    RetainPtr<CGContextRef> bitmapContext(AdoptCF, CGBitmapContextCreate(imageData.get(), width, height,
-        CGImageGetBitsPerComponent(image.get()), CGImageGetBytesPerRow(image.get()),
-        CGImageGetColorSpace(image.get()), kCGImageAlphaPremultipliedFirst));
-    if (!bitmapContext)
-        return String("data:,");
-
-    CGContextSaveGState(bitmapContext.get());
-    CGContextTranslateCTM(bitmapContext.get(), 0, height);
-    CGContextScaleCTM(bitmapContext.get(), 1.0f, -1.0f);
-    CGContextClearRect(bitmapContext.get(), CGRectMake(0.0f, 0.0f, width, height));
-    CGContextDrawImage(bitmapContext.get(), CGRectMake(0.0f, 0.0f, width, height), image.get());
-    CGContextRestoreGState(bitmapContext.get());
-
-    RetainPtr<CGImageRef> transformedImage(AdoptCF, CGBitmapContextCreateImage(bitmapContext.get()));
+    if (!imageData)
+        return "data:,";
+    
+    RetainPtr<CGImageRef> transformedImage(AdoptCF, CGBitmapContextCreateImage(context()->platformContext()));
     if (!transformedImage)
-        return String("data:,");
+        return "data:,";
 
     RetainPtr<CFMutableDataRef> transformedImageData(AdoptCF, CFDataCreateMutable(kCFAllocatorDefault, 0));
     if (!transformedImageData)
-        return String("data:,");
+        return "data:,";
 
-    RetainPtr<CFStringRef> imageUTI(AdoptCF, utiFromMIMEType(mimeType));
-    RetainPtr<CGImageDestinationRef> imageDestination(AdoptCF, CGImageDestinationCreateWithData(transformedImageData.get(), imageUTI.get(), 1, 0));
+    RetainPtr<CGImageDestinationRef> imageDestination(AdoptCF, CGImageDestinationCreateWithData(transformedImageData.get(),
+        utiFromMIMEType(mimeType).get(), 1, 0));
     if (!imageDestination)
-        return String("data:,");
+        return "data:,";
 
     CGImageDestinationAddImage(imageDestination.get(), transformedImage.get(), 0);
     CGImageDestinationFinalize(imageDestination.get());

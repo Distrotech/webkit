@@ -26,7 +26,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-Object.type = function(obj)
+Object.type = function(obj, win)
 {
     if (obj === null)
         return "null";
@@ -35,28 +35,33 @@ Object.type = function(obj)
     if (type !== "object" && type !== "function")
         return type;
 
-    if (obj instanceof String)
+    win = win || window;
+
+    if (obj instanceof win.String)
         return "string";
-    if (obj instanceof Array)
+    if (obj instanceof win.Array)
         return "array";
-    if (obj instanceof Boolean)
+    if (obj instanceof win.Boolean)
         return "boolean";
-    if (obj instanceof Number)
+    if (obj instanceof win.Number)
         return "number";
-    if (obj instanceof Date)
+    if (obj instanceof win.Date)
         return "date";
-    if (obj instanceof RegExp)
+    if (obj instanceof win.RegExp)
         return "regexp";
-    if (obj instanceof Error)
+    if (obj instanceof win.Error)
         return "error";
     return type;
 }
 
 Object.describe = function(obj, abbreviated)
 {
-    switch (Object.type(obj)) {
+    var type1 = Object.type(obj);
+    var type2 = Object.prototype.toString.call(obj).replace(/^\[object (.*)\]$/i, "$1");
+
+    switch (type1) {
     case "object":
-        return Object.prototype.toString.call(obj).replace(/^\[object (.*)\]$/i, "$1");
+        return type2;
     case "array":
         return "[" + obj.toString() + "]";
     case "string":
@@ -163,14 +168,25 @@ Element.prototype.removeChildren = function()
         this.removeChild(this.firstChild);        
 }
 
-Element.prototype.__defineGetter__("totalOffsetLeft", function() {
+Element.prototype.isInsertionCaretInside = function()
+{
+    var selection = window.getSelection();
+    if (!selection.rangeCount || !selection.isCollapsed)
+        return false;
+    var selectionRange = selection.getRangeAt(0);
+    return selectionRange.startContainer === this || selectionRange.startContainer.isDescendant(this);
+}
+
+Element.prototype.__defineGetter__("totalOffsetLeft", function()
+{
     var total = 0;
     for (var element = this; element; element = element.offsetParent)
         total += element.offsetLeft;
     return total;
 });
 
-Element.prototype.__defineGetter__("totalOffsetTop", function() {
+Element.prototype.__defineGetter__("totalOffsetTop", function()
+{
     var total = 0;
     for (var element = this; element; element = element.offsetParent)
         total += element.offsetTop;
@@ -192,7 +208,6 @@ Node.prototype.previousSiblingSkippingWhitespace = previousSiblingSkippingWhites
 Node.prototype.traverseNextNode = traverseNextNode;
 Node.prototype.traversePreviousNode = traversePreviousNode;
 Node.prototype.onlyTextChild = onlyTextChild;
-Node.prototype.titleInfo = nodeTitleInfo;
 
 String.prototype.hasSubstring = function(string, caseInsensitive)
 {
@@ -262,21 +277,21 @@ String.prototype.trimURL = function(baseURLDomain)
     return result;
 }
 
-CSSStyleDeclaration.prototype.getShorthandValue = function(shorthandProperty)
+function getShorthandValue(style, shorthandProperty)
 {
-    var value = this.getPropertyValue(shorthandProperty);
+    var value = style.getPropertyValue(shorthandProperty);
     if (!value) {
         // Some shorthands (like border) return a null value, so compute a shorthand value.
         // FIXME: remove this when http://bugs.webkit.org/show_bug.cgi?id=15823 is fixed.
 
         var foundProperties = {};
-        for (var i = 0; i < this.length; ++i) {
-            var individualProperty = this[i];
-            if (individualProperty in foundProperties || this.getPropertyShorthand(individualProperty) !== shorthandProperty)
+        for (var i = 0; i < style.length; ++i) {
+            var individualProperty = style[i];
+            if (individualProperty in foundProperties || style.getPropertyShorthand(individualProperty) !== shorthandProperty)
                 continue;
 
-            var individualValue = this.getPropertyValue(individualProperty);
-            if (this.isPropertyImplicit(individualProperty) || individualValue === "initial")
+            var individualValue = style.getPropertyValue(individualProperty);
+            if (style.isPropertyImplicit(individualProperty) || individualValue === "initial")
                 continue;
 
             foundProperties[individualProperty] = true;
@@ -291,29 +306,29 @@ CSSStyleDeclaration.prototype.getShorthandValue = function(shorthandProperty)
     return value;
 }
 
-CSSStyleDeclaration.prototype.getShorthandPriority = function(shorthandProperty)
+function getShorthandPriority(style, shorthandProperty)
 {
-    var priority = this.getPropertyPriority(shorthandProperty);
+    var priority = style.getPropertyPriority(shorthandProperty);
     if (!priority) {
-        for (var i = 0; i < this.length; ++i) {
-            var individualProperty = this[i];
-            if (this.getPropertyShorthand(individualProperty) !== shorthandProperty)
+        for (var i = 0; i < style.length; ++i) {
+            var individualProperty = style[i];
+            if (style.getPropertyShorthand(individualProperty) !== shorthandProperty)
                 continue;
-            priority = this.getPropertyPriority(individualProperty);
+            priority = style.getPropertyPriority(individualProperty);
             break;
         }
     }
     return priority;
 }
 
-CSSStyleDeclaration.prototype.getLonghandProperties = function(shorthandProperty)
+function getLonghandProperties(style, shorthandProperty)
 {
     var properties = [];
     var foundProperties = {};
 
-    for (var i = 0; i < this.length; ++i) {
-        var individualProperty = this[i];
-        if (individualProperty in foundProperties || this.getPropertyShorthand(individualProperty) !== shorthandProperty)
+    for (var i = 0; i < style.length; ++i) {
+        var individualProperty = style[i];
+        if (individualProperty in foundProperties || style.getPropertyShorthand(individualProperty) !== shorthandProperty)
             continue;
         foundProperties[individualProperty] = true;
         properties.push(individualProperty);
@@ -322,13 +337,13 @@ CSSStyleDeclaration.prototype.getLonghandProperties = function(shorthandProperty
     return properties;
 }
 
-CSSStyleDeclaration.prototype.getUniqueProperties = function()
+function getUniqueStyleProperties(style)
 {
     var properties = [];
     var foundProperties = {};
 
-    for (var i = 0; i < this.length; ++i) {
-        var property = this[i];
+    for (var i = 0; i < style.length; ++i) {
+        var property = style[i];
         if (property in foundProperties)
             continue;
         foundProperties[property] = true;
@@ -659,7 +674,7 @@ function nodeTitleInfo(hasChildren, linkify)
             break;
 
         case Node.DOCUMENT_TYPE_NODE:
-            info.title = "<span class=\"webkit-html-tag\">&lt;!DOCTYPE " + this.nodeName;
+            info.title = "<span class=\"webkit-html-doctype\">&lt;!DOCTYPE " + this.nodeName;
             if (this.publicId) {
                 info.title += " PUBLIC \"" + this.publicId + "\"";
                 if (this.systemId)
@@ -677,38 +692,44 @@ function nodeTitleInfo(hasChildren, linkify)
     return info;
 }
 
-Number.secondsToString = function(seconds)
+Number.secondsToString = function(seconds, formatterFunction)
 {
+    if (!formatterFunction)
+        formatterFunction = String.sprintf;
+
     var ms = seconds * 1000;
     if (ms < 1000)
-        return Math.round(ms) + "ms";
+        return formatterFunction("%.0fms", ms);
 
     if (seconds < 60)
-        return (Math.round(seconds * 100) / 100) + "s";
+        return formatterFunction("%.2fs", seconds);
 
     var minutes = seconds / 60;
     if (minutes < 60)
-        return (Math.round(minutes * 10) / 10) + "min";
+        return formatterFunction("%.1fmin", minutes);
 
     var hours = minutes / 60;
     if (hours < 24)
-        return (Math.round(hours * 10) / 10) + "hrs";
+        return formatterFunction("%.1fhrs", hours);
 
     var days = hours / 24;
-    return (Math.round(days * 10) / 10) + " days";
+    return formatterFunction("%.1f days", days);
 }
 
-Number.bytesToString = function(bytes)
+Number.bytesToString = function(bytes, formatterFunction)
 {
+    if (!formatterFunction)
+        formatterFunction = String.sprintf;
+
     if (bytes < 1024)
-        return bytes + "B";
+        return formatterFunction("%.0fB", bytes);
 
     var kilobytes = bytes / 1024;
     if (kilobytes < 1024)
-        return (Math.round(kilobytes * 100) / 100) + "KB";
+        return formatterFunction("%.2fKB", kilobytes);
 
     var megabytes = kilobytes / 1024;
-    return (Math.round(megabytes * 1000) / 1000) + "MB";
+    return formatterFunction("%.3fMB", megabytes);
 }
 
 Number.constrain = function(num, min, max)
@@ -731,21 +752,28 @@ String.sprintf = function(format)
     return String.vsprintf(format, Array.prototype.slice.call(arguments, 1));
 }
 
-String.vsprintf = function(format, substitutions)
+String.tokenizeFormatString = function(format)
 {
-    if (!format || !substitutions || !substitutions.length)
-        return format;
-
-    var result = "";
+    var tokens = [];
     var substitutionIndex = 0;
+
+    function addStringToken(str)
+    {
+        tokens.push({ type: "string", value: str });
+    }
+
+    function addSpecifierToken(specifier, precision, substitutionIndex)
+    {
+        tokens.push({ type: "specifier", specifier: specifier, precision: precision, substitutionIndex: substitutionIndex });
+    }
 
     var index = 0;
     for (var precentIndex = format.indexOf("%", index); precentIndex !== -1; precentIndex = format.indexOf("%", index)) {
-        result += format.substring(index, precentIndex);
+        addStringToken(format.substring(index, precentIndex));
         index = precentIndex + 1;
 
         if (format[index] === "%") {
-            result += "%";
+            addStringToken("%");
             ++index;
             continue;
         }
@@ -775,40 +803,106 @@ String.vsprintf = function(format, substitutions)
                 ++index;
         }
 
-        if (substitutionIndex >= substitutions.length) {
-            // If there are not enough substitutions for the current substitutionIndex
-            // just output the format specifier literally and move on.
-            console.error("String.vsprintf(\"" + format + "\", \"" + substitutions.join("\", \"") + "\"): not enough substitution arguments. Had " + substitutions.length + " but needed " + (substitutionIndex + 1) + ", so substitution was skipped.");
-            index = precentIndex + 1;
-            result += "%";
-            continue;
-        }
-
-        switch (format[index]) {
-        case "d":
-            var substitution = parseInt(substitutions[substitutionIndex]);
-            result += (!isNaN(substitution) ? substitution : 0);
-            break;
-        case "f":
-            var substitution = parseFloat(substitutions[substitutionIndex]);
-            if (substitution && precision > -1)
-                substitution = substitution.toFixed(precision);
-            result += (!isNaN(substitution) ? substitution : (precision > -1 ? Number(0).toFixed(precision) : 0));
-            break;
-        default:
-            // Encountered an unsupported format character, treat as a string.
-            console.warn("String.vsprintf(\"" + format + "\", \"" + substitutions.join("\", \"") + "\"): unsupported format character \u201C" + format[index] + "\u201D. Treating as a string.");
-            // Fall through to treat this like a string.
-        case "s":
-            result += substitutions[substitutionIndex];
-            break;
-        }
+        addSpecifierToken(format[index], precision, substitutionIndex);
 
         ++substitutionIndex;
         ++index;
     }
 
-    result += format.substring(index);
+    addStringToken(format.substring(index));
 
-    return result;
+    return tokens;
+}
+
+String.standardFormatters = {
+    d: function(substitution)
+    {
+        substitution = parseInt(substitution);
+        return !isNaN(substitution) ? substitution : 0;
+    },
+
+    f: function(substitution, token)
+    {
+        substitution = parseFloat(substitution);
+        if (substitution && token.precision > -1)
+            substitution = substitution.toFixed(token.precision);
+        return !isNaN(substitution) ? substitution : (token.precision > -1 ? Number(0).toFixed(token.precision) : 0);
+    },
+
+    s: function(substitution)
+    {
+        return substitution;
+    },
+};
+
+String.vsprintf = function(format, substitutions)
+{
+    return String.format(format, substitutions, String.standardFormatters, "", function(a, b) { return a + b; }).formattedResult;
+}
+
+String.format = function(format, substitutions, formatters, initialValue, append)
+{
+    if (!format || !substitutions || !substitutions.length)
+        return { formattedResult: append(initialValue, format), unusedSubstitutions: substitutions };
+
+    function prettyFunctionName()
+    {
+        return "String.format(\"" + format + "\", \"" + substitutions.join("\", \"") + "\")";
+    }
+
+    function warn(msg)
+    {
+        console.warn(prettyFunctionName() + ": " + msg);
+    }
+
+    function error(msg)
+    {
+        console.error(prettyFunctionName() + ": " + msg);
+    }
+
+    var result = initialValue;
+    var tokens = String.tokenizeFormatString(format);
+    var usedSubstitutionIndexes = {};
+
+    for (var i = 0; i < tokens.length; ++i) {
+        var token = tokens[i];
+
+        if (token.type === "string") {
+            result = append(result, token.value);
+            continue;
+        }
+
+        if (token.type !== "specifier") {
+            error("Unknown token type \"" + token.type + "\" found.");
+            continue;
+        }
+
+        if (token.substitutionIndex >= substitutions.length) {
+            // If there are not enough substitutions for the current substitutionIndex
+            // just output the format specifier literally and move on.
+            error("not enough substitution arguments. Had " + substitutions.length + " but needed " + (token.substitutionIndex + 1) + ", so substitution was skipped.");
+            result = append(result, "%" + (token.precision > -1 ? token.precision : "") + token.specifier);
+            continue;
+        }
+
+        usedSubstitutionIndexes[token.substitutionIndex] = true;
+
+        if (!(token.specifier in formatters)) {
+            // Encountered an unsupported format character, treat as a string.
+            warn("unsupported format character \u201C" + token.specifier + "\u201D. Treating as a string.");
+            result = append(result, substitutions[token.substitutionIndex]);
+            continue;
+        }
+
+        result = append(result, formatters[token.specifier](substitutions[token.substitutionIndex], token));
+    }
+
+    var unusedSubstitutions = [];
+    for (var i = 0; i < substitutions.length; ++i) {
+        if (i in usedSubstitutionIndexes)
+            continue;
+        unusedSubstitutions.push(substitutions[i]);
+    }
+
+    return { formattedResult: result, unusedSubstitutions: unusedSubstitutions };
 }

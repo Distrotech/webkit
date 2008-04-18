@@ -61,7 +61,6 @@ using namespace HTMLNames;
 @interface WebHTMLRepresentationPrivate : NSObject {
 @public
     WebDataSource *dataSource;
-    NSData *parsedArchiveData;
     
     BOOL hasSentResponseToPlugin;
     id <WebPluginManualLoader> manualLoader;
@@ -70,13 +69,6 @@ using namespace HTMLNames;
 @end
 
 @implementation WebHTMLRepresentationPrivate
-
-- (void)dealloc
-{
-    [parsedArchiveData release];
-    [super dealloc];
-}
-
 @end
 
 @implementation WebHTMLRepresentation
@@ -166,7 +158,7 @@ static NSArray *concatenateArrays(NSArray *first, NSArray *second)
 - (void)receivedData:(NSData *)data withDataSource:(WebDataSource *)dataSource
 {
     WebFrame *frame = [dataSource webFrame];
-    if (frame && ![self _isDisplayingWebArchive]) {
+    if (frame) {
         if (!_private->pluginView)
             [frame _receivedData:data textEncodingName:[[_private->dataSource response] textEncodingName]];
 
@@ -188,31 +180,6 @@ static NSArray *concatenateArrays(NSArray *first, NSArray *second)
     }
 }
 
-- (void)_loadDataSourceAsWebArchive
-{
-    WebArchive *archive = [[WebArchive alloc] initWithData:[_private->dataSource data]];
-    WebResource *mainResource = [archive mainResource];
-    if (!mainResource) {
-        [archive release];
-        return;
-    }
-    
-    NSData *data = [mainResource data];
-    [data retain];
-    [_private->parsedArchiveData release];
-    _private->parsedArchiveData = data;
-    
-    [_private->dataSource _addToUnarchiveState:archive];
-    [archive release];
-    
-    WebFrame *webFrame = [_private->dataSource webFrame];
-    
-    if (!webFrame)
-        return;
-    
-    core(webFrame)->loader()->continueLoadWithData(SharedBuffer::wrapNSData(data).get(), [mainResource MIMEType], [mainResource textEncodingName], [mainResource URL]);
-}
-
 - (void)finishedLoadingWithDataSource:(WebDataSource *)dataSource
 {
     WebFrame *frame = [dataSource webFrame];
@@ -223,9 +190,7 @@ static NSArray *concatenateArrays(NSArray *first, NSArray *second)
     }
 
     if (frame) {
-        if ([self _isDisplayingWebArchive])
-            [self _loadDataSourceAsWebArchive];
-        else {
+        if (![self _isDisplayingWebArchive]) {
             // Telling the frame we received some data and passing nil as the data is our
             // way to get work done that is normally done when the first bit of data is
             // received, even for the case of a document with no data (like about:blank).
@@ -250,8 +215,13 @@ static NSArray *concatenateArrays(NSArray *first, NSArray *second)
 
 - (NSString *)documentSource
 {
-    if ([self _isDisplayingWebArchive])
-        return [[[NSString alloc] initWithData:_private->parsedArchiveData encoding:NSUTF8StringEncoding] autorelease]; 
+    if ([self _isDisplayingWebArchive]) {            
+        SharedBuffer *parsedArchiveData = [_private->dataSource _documentLoader]->parsedArchiveData();
+        NSData *nsData = parsedArchiveData ? parsedArchiveData->createNSData() : nil;
+        NSString *result = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+        [nsData release];
+        return [result autorelease];
+    }
 
     Frame* coreFrame = core([_private->dataSource webFrame]);
     if (!coreFrame)

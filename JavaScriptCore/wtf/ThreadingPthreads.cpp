@@ -30,6 +30,7 @@
 #include "Threading.h"
 
 #include <wtf/HashMap.h>
+#include <wtf/MathExtras.h>
 
 #include <errno.h>
 #include <sys/time.h>
@@ -38,10 +39,22 @@ namespace WTF {
 
 Mutex* atomicallyInitializedStaticMutex;
 
+static ThreadIdentifier mainThreadIdentifier;
+
 static Mutex& threadMapMutex()
 {
     static Mutex mutex;
     return mutex;
+}
+
+void initializeThreading()
+{
+    if (!atomicallyInitializedStaticMutex) {
+        atomicallyInitializedStaticMutex = new Mutex;
+        threadMapMutex();
+        wtf_random_init();
+        mainThreadIdentifier = currentThread();
+    }
 }
 
 static HashMap<ThreadIdentifier, pthread_t>& threadMap()
@@ -133,6 +146,11 @@ ThreadIdentifier currentThread()
     if (ThreadIdentifier id = identifierByPthreadHandle(currentThread))
         return id;
     return establishIdentifierForPthreadHandle(currentThread);
+}
+
+bool isMainThread()
+{
+    return currentThread() == mainThreadIdentifier;
 }
 
 Mutex::Mutex()

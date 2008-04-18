@@ -1,10 +1,10 @@
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+2008-04-02  Mark Rowe  <mrowe@apple.com>
 
         Reviewed by Oliver Hunt.
-        
-        Build fix.
 
-        * ForwardingHeaders/wtf/UnusedParam.h: Copied from ForwardingHeaders/wtf/OwnPtr.h.
+        Ensure that debug symbols are generated for x86_64 and ppc64 builds.
+
+        * Configurations/Base.xcconfig:
 
 2008-03-20  Maciej Stachowiak  <mjs@apple.com>
 

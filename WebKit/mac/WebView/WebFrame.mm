@@ -35,6 +35,7 @@
 #import "DOMHTMLElementInternal.h"
 #import "DOMNodeInternal.h"
 #import "DOMRangeInternal.h"
+#import "WebArchiveInternal.h"
 #import "WebChromeClient.h"
 #import "WebDataSourceInternal.h"
 #import "WebDocumentLoaderMac.h"
@@ -46,6 +47,7 @@
 #import "WebScriptDebugger.h"
 #import "WebViewInternal.h"
 #import <JavaScriptCore/APICast.h>
+#import <WebCore/AccessibilityObject.h>
 #import <WebCore/AXObjectCache.h>
 #import <WebCore/ColorMac.h>
 #import <WebCore/DOMImplementation.h>
@@ -59,6 +61,7 @@
 #import <WebCore/HTMLFrameOwnerElement.h>
 #import <WebCore/HistoryItem.h>
 #import <WebCore/HitTestResult.h>
+#import <WebCore/LegacyWebArchive.h>
 #import <WebCore/Page.h>
 #import <WebCore/PluginData.h>
 #import <WebCore/RenderView.h>
@@ -293,54 +296,6 @@ WebView *getWebView(WebFrame *webFrame)
     return [self _createFrameWithPage:ownerElement->document()->frame()->page() frameName:name frameView:frameView ownerElement:ownerElement];
 }
 
-/*
-    In the case of saving state about a page with frames, we store a tree of items that mirrors the frame tree.  
-    The item that was the target of the user's navigation is designated as the "targetItem".  
-    When this method is called with doClip=YES we're able to create the whole tree except for the target's children, 
-    which will be loaded in the future.  That part of the tree will be filled out as the child loads are committed.
-*/
-
-- (void)_loadURL:(NSURL *)URL referrer:(NSString *)referrer intoChild:(WebFrame *)childFrame
-{
-    ASSERT(childFrame);
-    HistoryItem* parentItem = _private->coreFrame->loader()->currentHistoryItem();
-    FrameLoadType loadType = _private->coreFrame->loader()->loadType();
-    FrameLoadType childLoadType = FrameLoadTypeRedirectWithLockedHistory;
-
-    // If we're moving in the backforward list, we might want to replace the content
-    // of this child frame with whatever was there at that point.
-    // Reload will maintain the frame contents, LoadSame will not.
-    if (parentItem && parentItem->children().size() &&
-        (isBackForwardLoadType(loadType)
-         || loadType == FrameLoadTypeReload
-         || loadType == FrameLoadTypeReloadAllowingStaleData))
-    {
-        HistoryItem* childItem = parentItem->childItemWithName([childFrame name]);
-        if (childItem) {
-            // Use the original URL to ensure we get all the side-effects, such as
-            // onLoad handlers, of any redirects that happened. An example of where
-            // this is needed is Radar 3213556.
-            URL = [NSURL _web_URLWithDataAsString:childItem->originalURLString()];
-            // These behaviors implied by these loadTypes should apply to the child frames
-            childLoadType = loadType;
-
-            if (isBackForwardLoadType(loadType)) {
-                // For back/forward, remember this item so we can traverse any child items as child frames load
-                childFrame->_private->coreFrame->loader()->setProvisionalHistoryItem(childItem);
-            } else {
-                // For reload, just reinstall the current item, since a new child frame was created but we won't be creating a new BF item
-                childFrame->_private->coreFrame->loader()->setCurrentHistoryItem(childItem);
-            }
-        }
-    }
-
-    WebArchive *archive = [[self _dataSource] _popSubframeArchiveWithName:[childFrame name]];
-    if (archive)
-        [childFrame loadArchive:archive];
-    else
-        childFrame->_private->coreFrame->loader()->load([URL absoluteURL], referrer, childLoadType, String(), 0, 0);
-}
-
 - (void)_attachScriptDebugger
 {
     if (_private->scriptDebugger)
@@ -544,17 +499,6 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     return nodes;
 }
 
-- (NSString *)_markupStringFromNode:(DOMNode *)node nodes:(NSArray **)nodes
-{
-    // FIXME: This is never "for interchange". Is that right? See the next method.
-    Vector<Node*> nodeList;
-    NSString *markupString = createMarkup([node _node], IncludeNode, nodes ? &nodeList : 0);
-    if (nodes)
-        *nodes = [self _nodesFromList:&nodeList];
-
-    return [self _stringWithDocumentTypeStringAndMarkupString:markupString];
-}
-
 - (NSString *)_markupStringFromRange:(DOMRange *)range nodes:(NSArray **)nodes
 {
     // FIXME: This is always "for interchange". Is that right? See the previous method.
@@ -705,7 +649,7 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     RenderView* root = static_cast<RenderView *>(_private->coreFrame->document()->renderer());
     if (!root)
         return nil;
-    return _private->coreFrame->document()->axObjectCache()->get(root);
+    return _private->coreFrame->document()->axObjectCache()->get(root)->wrapper();
 }
 
 - (DOMRange *)_rangeByAlteringCurrentSelection:(SelectionController::EAlteration)alteration direction:(SelectionController::EDirection)direction granularity:(TextGranularity)granularity
@@ -1016,58 +960,6 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     _private->coreFrame->eventHandler()->dragSourceEndedAt(event, (DragOperation)operation);
 }
 
-- (BOOL)_getData:(NSData **)data andResponse:(NSURLResponse **)response forURL:(NSString *)url
-{
-    Document* doc = _private->coreFrame->document();
-    if (!doc)
-        return NO;
-
-    CachedResource* resource = doc->docLoader()->cachedResource(url);
-    if (!resource)
-        return NO;
-
-    SharedBuffer* buffer = resource->data();
-    if (buffer)
-        *data = [buffer->createNSData() autorelease];
-    else
-        *data = nil;
-
-    *response = resource->response().nsURLResponse();
-    return YES;
-}
-
-- (void)_getAllResourceDatas:(NSArray **)datas andResponses:(NSArray **)responses
-{
-    Document* doc = _private->coreFrame->document();
-    if (!doc) {
-        NSArray* emptyArray = [NSArray array];
-        *datas = emptyArray;
-        *responses = emptyArray;
-        return;
-    }
-
-    const HashMap<String, CachedResource*>& allResources = doc->docLoader()->allCachedResources();
-
-    NSMutableArray *d = [[NSMutableArray alloc] initWithCapacity:allResources.size()];
-    NSMutableArray *r = [[NSMutableArray alloc] initWithCapacity:allResources.size()];
-
-    HashMap<String, CachedResource*>::const_iterator end = allResources.end();
-    for (HashMap<String, CachedResource*>::const_iterator it = allResources.begin(); it != end; ++it) {
-        SharedBuffer* buffer = it->second->data();
-        NSData *data;
-        if (buffer)
-            data = buffer->createNSData();
-        else
-            data = [[NSData alloc] init];
-        [d addObject:data];
-        [data release];
-        [r addObject:it->second->response().nsURLResponse()];
-    }
-
-    *datas = [d autorelease];
-    *responses = [r autorelease];
-}
-
 - (BOOL)_canProvideDocumentSource
 {
     String mimeType = _private->coreFrame->loader()->responseMIMEType();
@@ -1312,20 +1204,8 @@ static NSURL *createUniqueWebDataURL()
 
 - (void)loadArchive:(WebArchive *)archive
 {
-    WebResource *mainResource = [archive mainResource];
-    if (mainResource) {
-        SubstituteData substituteData(WebCore::SharedBuffer::wrapNSData([mainResource data]), [mainResource MIMEType], [mainResource textEncodingName], KURL());
-        ResourceRequest request([mainResource URL]);
-
-        // hack because Mail checks for this property to detect data / archive loads
-        [NSURLProtocol setProperty:@"" forKey:@"WebDataRequest" inRequest:(NSMutableURLRequest *)request.nsURLRequest()];
-
-        RefPtr<DocumentLoader> documentLoader = _private->coreFrame->loader()->client()->createDocumentLoader(request, substituteData);
-
-        [dataSource(documentLoader.get()) _addToUnarchiveState:archive];
-
-        _private->coreFrame->loader()->load(documentLoader.get());
-    }
+    if (LegacyWebArchive* coreArchive = [archive _coreLegacyWebArchive])
+        _private->coreFrame->loader()->loadArchive(coreArchive);
 }
 
 - (void)stopLoading

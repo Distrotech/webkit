@@ -34,7 +34,6 @@ namespace WebCore {
 class Attr;
 class Attribute;
 class CSSStyleDeclaration;
-class ClassNames;
 class ElementRareData;
 class IntSize;
 
@@ -43,12 +42,10 @@ public:
     Element(const QualifiedName&, Document*);
     ~Element();
 
-    // Used to quickly determine whether or not an element has a given CSS class.
-    virtual const ClassNames* getClassNames() const;
     const AtomicString& getIDAttribute() const;
     bool hasAttribute(const QualifiedName&) const;
     const AtomicString& getAttribute(const QualifiedName&) const;
-    void setAttribute(const QualifiedName&, StringImpl* value, ExceptionCode&);
+    void setAttribute(const QualifiedName&, const AtomicString& value, ExceptionCode&);
     void removeAttribute(const QualifiedName&, ExceptionCode&);
 
     bool hasAttributes() const;
@@ -59,8 +56,8 @@ public:
     const AtomicString& getAttribute(const String& name) const;
     const AtomicString& getAttributeNS(const String& namespaceURI, const String& localName) const;
 
-    void setAttribute(const String& name, const String& value, ExceptionCode&);
-    void setAttributeNS(const String& namespaceURI, const String& qualifiedName, const String& value, ExceptionCode&);
+    void setAttribute(const AtomicString& name, const AtomicString& value, ExceptionCode&);
+    void setAttributeNS(const AtomicString& namespaceURI, const AtomicString& qualifiedName, const AtomicString& value, ExceptionCode&);
 
     void scrollIntoView (bool alignToTop = true);
     void scrollIntoViewIfNeeded(bool centerIfNeeded = true);
@@ -123,11 +120,12 @@ public:
     void normalizeAttributes();
 
     virtual bool isInputTypeHidden() const { return false; }
+    virtual bool isPasswordField() const { return false; }
 
     String nodeNamePreservingCase() const;
 
     // convenience methods which ignore exceptions
-    void setAttribute(const QualifiedName&, const String& value);
+    void setAttribute(const QualifiedName&, const AtomicString& value);
     void setBooleanAttribute(const QualifiedName& name, bool);
 
     virtual NamedAttrMap* attributes() const;
@@ -137,7 +135,7 @@ public:
     virtual void attributeChanged(Attribute*, bool preserveDecls = false) {}
 
     // not part of the DOM
-    void setAttributeMap(NamedAttrMap*);
+    void setAttributeMap(PassRefPtr<NamedAttrMap>);
 
     virtual void copyNonAttributeProperties(const Element* source) {}
 
@@ -151,7 +149,7 @@ public:
 
     virtual bool childTypeAllowed(NodeType);
 
-    virtual Attribute* createAttribute(const QualifiedName& name, StringImpl* value);
+    virtual Attribute* createAttribute(const QualifiedName& name, const AtomicString& value);
     
     void dispatchAttrRemovalEvent(Attribute*);
     void dispatchAttrAdditionEvent(Attribute*);
@@ -202,7 +200,7 @@ private:
 
     virtual void createAttributeMap() const;
 
-    virtual void updateStyleAttributeIfNeeded() const {}
+    virtual void updateStyleAttribute() const {}
     
     void updateFocusAppearanceSoonAfterAttach();
     void cancelFocusAppearanceUpdate();

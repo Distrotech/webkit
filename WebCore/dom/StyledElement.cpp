@@ -1,11 +1,9 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Peter Kelly (pmk@post.com)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2008 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,7 +27,6 @@
 #include "CSSStyleSelector.h"
 #include "CSSStyleSheet.h"
 #include "CSSValueKeywords.h"
-#include "ClassNames.h"
 #include "Document.h"
 #include "HTMLNames.h"
 
@@ -93,15 +90,14 @@ void StyledElement::invalidateStyleAttribute()
     m_isStyleAttributeValid = false;
 }
 
-void StyledElement::updateStyleAttributeIfNeeded() const
+void StyledElement::updateStyleAttribute() const
 {
-    if (!m_isStyleAttributeValid) {
-        m_isStyleAttributeValid = true;
-        m_synchronizingStyleAttribute = true;
-        if (m_inlineStyleDecl)
-            const_cast<StyledElement*>(this)->setAttribute(styleAttr, m_inlineStyleDecl->cssText());
-        m_synchronizingStyleAttribute = false;
-    }
+    ASSERT(!m_isStyleAttributeValid);
+    m_isStyleAttributeValid = true;
+    m_synchronizingStyleAttribute = true;
+    if (m_inlineStyleDecl)
+        const_cast<StyledElement*>(this)->setAttribute(styleAttr, m_inlineStyleDecl->cssText());
+    m_synchronizingStyleAttribute = false;
 }
 
 StyledElement::StyledElement(const QualifiedName& name, Document *doc)
@@ -114,7 +110,7 @@ StyledElement::~StyledElement()
     destroyInlineStyleDecl();
 }
 
-Attribute* StyledElement::createAttribute(const QualifiedName& name, StringImpl* value)
+Attribute* StyledElement::createAttribute(const QualifiedName& name, const AtomicString& value)
 {
     return new MappedAttribute(name, value);
 }
@@ -210,20 +206,21 @@ void StyledElement::parseMappedAttribute(MappedAttribute *attr)
         setChanged();
     } else if (attr->name() == classAttr) {
         // class
-        bool hasClass = false;
-        if (!attr->isEmpty()) {
-            const AtomicString& value = attr->value();
-            unsigned len = value.length();
-            for (unsigned i = 0; i < len; ++i) {
-                if (!isClassWhitespace(value[i])) {
-                    hasClass = true;
-                    break;
-                }
-            }
+        const AtomicString& value = attr->value();
+        const UChar* characters = value.characters();
+        unsigned length = value.length();
+        unsigned i;
+        for (i = 0; i < length; ++i) {
+            if (!isClassWhitespace(characters[i]))
+                break;
         }
-        setHasClass(hasClass);
-        if (namedAttrMap)
-            mappedAttributes()->parseClassAttribute(attr->value());
+        setHasClass(i < length);
+        if (namedAttrMap) {
+            if (i < length)
+                mappedAttributes()->setClass(value);
+            else
+                mappedAttributes()->clearClass();
+        }
         setChanged();
     } else if (attr->name() == styleAttr) {
         if (attr->isNull())
@@ -237,7 +234,7 @@ void StyledElement::parseMappedAttribute(MappedAttribute *attr)
 
 void StyledElement::createAttributeMap() const
 {
-    namedAttrMap = new NamedMappedAttrMap(const_cast<StyledElement*>(this));
+    namedAttrMap = NamedMappedAttrMap::create(const_cast<StyledElement*>(this));
 }
 
 CSSMutableStyleDeclaration* StyledElement::getInlineStyleDecl()
@@ -250,11 +247,6 @@ CSSMutableStyleDeclaration* StyledElement::getInlineStyleDecl()
 CSSStyleDeclaration* StyledElement::style()
 {
     return getInlineStyleDecl();
-}
-
-const ClassNames* StyledElement::getClassNames() const
-{
-    return namedAttrMap ? mappedAttributes()->getClassNames() : 0;
 }
 
 static inline int toHex(UChar c) {

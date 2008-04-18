@@ -27,6 +27,9 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameTree.h"
+#include "JSDOMWindowWrapper.h"
+#include "Settings.h"
+#include "kjs_proxy.h"
 #include <kjs/object.h>
 
 using namespace KJS;
@@ -45,7 +48,7 @@ static void markDOMObjectWrapper(void* object)
 
 void JSDOMWindow::mark()
 {
-    JSDOMWindowBase::mark();
+    Base::mark();
     markDOMObjectWrapper(impl()->optionalConsole());
     markDOMObjectWrapper(impl()->optionalHistory());
     markDOMObjectWrapper(impl()->optionalLocationbar());
@@ -57,6 +60,14 @@ void JSDOMWindow::mark()
     markDOMObjectWrapper(impl()->optionalSelection());
     markDOMObjectWrapper(impl()->optionalStatusbar());
     markDOMObjectWrapper(impl()->optionalToolbar());
+    markDOMObjectWrapper(impl()->optionalLocation());
+#if ENABLE(DOM_STORAGE)
+    markDOMObjectWrapper(impl()->optionalSessionStorage());
+    markDOMObjectWrapper(impl()->optionalLocalStorage());
+#endif
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    markDOMObjectWrapper(impl()->optionalApplicationCache());
+#endif
 }
 
 bool JSDOMWindow::customGetOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -164,23 +175,58 @@ bool JSDOMWindow::customGetPropertyNames(ExecState* exec, PropertyNameArray&)
     return false;
 }
 
+void JSDOMWindow::setLocation(ExecState* exec, JSValue* value)
+{
+    Frame* activeFrame = toJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
+    if (!activeFrame)
+        return;
+
+    // To avoid breaking old widgets, make "var location =" in a top-level frame create
+    // a property named "location" instead of performing a navigation (<rdar://problem/5688039>).
+    if (Settings* settings = activeFrame->settings()) {
+        if (settings->usesDashboardBackwardCompatibilityMode() && !activeFrame->tree()->parent()) {
+            if (allowsAccessFrom(exec))
+                putDirect("location", value);
+            return;
+        }
+    }
+
+    if (!activeFrame->loader()->shouldAllowNavigation(impl()->frame()))
+        return;
+    String dstUrl = activeFrame->loader()->completeURL(value->toString(exec)).string();
+    if (!protocolIs(dstUrl, "javascript") || allowsAccessFrom(exec)) {
+        bool userGesture = activeFrame->scriptProxy()->processingUserGesture();
+        // We want a new history item if this JS was called via a user gesture
+        impl()->frame()->loader()->scheduleLocationChange(dstUrl, activeFrame->loader()->outgoingReferrer(), false, userGesture);
+    }
+}
+
 #if ENABLE(CROSS_DOCUMENT_MESSAGING)
 JSValue* JSDOMWindow::postMessage(ExecState* exec, const List& args)
 {
     DOMWindow* window = impl();
-    
+
     DOMWindow* source = toJSDOMWindow(exec->dynamicGlobalObject())->impl();
     String domain = source->frame()->loader()->url().host();
     String uri = source->frame()->loader()->url().string();
     String message = args[0]->toString(exec);
-    
+
     if (exec->hadException())
         return jsUndefined();
-    
+
     window->postMessage(message, domain, uri, source);
-    
+
     return jsUndefined();
 }
 #endif
+
+DOMWindow* toDOMWindow(JSValue* val)
+{
+    if (val->isObject(&JSDOMWindow::s_info))
+        return static_cast<JSDOMWindow*>(val)->impl();
+    if (val->isObject(&JSDOMWindowWrapper::s_info))
+        return static_cast<JSDOMWindowWrapper*>(val)->impl();
+    return 0;
+}
 
 } // namespace WebCore

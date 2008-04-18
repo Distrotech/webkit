@@ -29,4 +29,49 @@
 #include "config.h"
 #include "ArchiveResource.h"
 
-// FIXME:  Code will go here!
+#include "SharedBuffer.h"
+
+namespace WebCore {
+
+PassRefPtr<ArchiveResource> ArchiveResource::create(PassRefPtr<SharedBuffer> data, const KURL& url, const ResourceResponse& response)
+{
+    return adoptRef(new ArchiveResource(data, url, response));
+}
+
+PassRefPtr<ArchiveResource> ArchiveResource::create(PassRefPtr<SharedBuffer> data, const KURL& url, const String& mimeType, const String& textEncoding, const String& frameName)
+{
+    return adoptRef(new ArchiveResource(data, url, mimeType, textEncoding, frameName));
+}
+
+PassRefPtr<ArchiveResource> ArchiveResource::create(PassRefPtr<SharedBuffer> data, const KURL& url, const String& mimeType, const String& textEncoding, const String& frameName, const ResourceResponse& resourceResponse)
+{
+    return adoptRef(new ArchiveResource(data, url, mimeType, textEncoding, frameName, resourceResponse));
+}
+
+ArchiveResource::ArchiveResource(PassRefPtr<SharedBuffer> data, const KURL& url, const ResourceResponse& response)
+    : SubstituteResource(url, response, data)
+    , m_mimeType(response.mimeType())
+    , m_textEncoding(response.textEncodingName())
+    , m_shouldIgnoreWhenUnarchiving(false)
+{
+}
+
+ArchiveResource::ArchiveResource(PassRefPtr<SharedBuffer> data, const KURL& url, const String& mimeType, const String& textEncoding, const String& frameName)
+    : SubstituteResource(url, ResourceResponse(url, mimeType, data ? data->size() : 0, textEncoding, String()), data)
+    , m_mimeType(mimeType)
+    , m_textEncoding(textEncoding)
+    , m_frameName(frameName)
+    , m_shouldIgnoreWhenUnarchiving(false)
+{
+}
+
+ArchiveResource::ArchiveResource(PassRefPtr<SharedBuffer> data, const KURL& url, const String& mimeType, const String& textEncoding, const String& frameName, const ResourceResponse& response)
+    : SubstituteResource(url, response.isNull() ? ResourceResponse(url, mimeType, data ? data->size() : 0, textEncoding, String()) : response, data)
+    , m_mimeType(mimeType)
+    , m_textEncoding(textEncoding)
+    , m_frameName(frameName)
+    , m_shouldIgnoreWhenUnarchiving(false)
+{
+}
+
+}

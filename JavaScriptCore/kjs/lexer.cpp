@@ -32,6 +32,9 @@
 #include <limits.h>
 #include <string.h>
 #include <wtf/Assertions.h>
+#if USE(MULTIPLE_THREADS)
+#include <wtf/ThreadSpecific.h>
+#endif
 #include <wtf/unicode/Unicode.h>
 
 using namespace WTF;
@@ -47,12 +50,10 @@ using namespace KJS;
 #include "lookup.h"
 #include "lexer.lut.h"
 
-extern YYLTYPE kjsyylloc; // global bison variable holding token info
-
 // a bridge for yacc from the C world to C++
-int kjsyylex()
+int kjsyylex(void* lvalp, void* llocp, void* lexer)
 {
-  return lexer().lex();
+  return static_cast<Lexer*>(lexer)->lex(lvalp, llocp);
 }
 
 namespace KJS {
@@ -64,13 +65,13 @@ static const size_t initialStringTableCapacity = 64;
 
 Lexer& lexer()
 {
-    ASSERT(JSLock::currentThreadIsHoldingLock());
-
-    // FIXME: We'd like to avoid calling new here, but we don't currently 
-    // support tearing down the Lexer at app quit time, since that would involve
-    // tearing down its UString data members without holding the JSLock.
-    static Lexer* staticLexer = new Lexer;
+#if USE(MULTIPLE_THREADS)
+    static ThreadSpecific<Lexer> staticLexer;
     return *staticLexer;
+#else
+    static Lexer staticLexer;
+    return staticLexer;
+#endif
 }
 
 Lexer::Lexer()
@@ -143,8 +144,10 @@ void Lexer::setDone(State s)
   done = true;
 }
 
-int Lexer::lex()
+int Lexer::lex(void* p1, void* p2)
 {
+  YYSTYPE* lvalp = static_cast<YYSTYPE*>(p1);
+  YYLTYPE* llocp = static_cast<YYLTYPE*>(p2);
   int token = 0;
   state = Start;
   unsigned short stringType = 0; // either single or double quotes
@@ -476,7 +479,7 @@ int Lexer::lex()
 
   double dval = 0;
   if (state == Number) {
-    dval = kjs_strtod(m_buffer8.data(), 0L);
+    dval = strtod(m_buffer8.data(), 0L);
   } else if (state == Hex) { // scan hex numbers
     const char* p = m_buffer8.data() + 2;
     while (char c = *p++) {
@@ -528,8 +531,8 @@ int Lexer::lex()
 
   restrKeyword = false;
   delimited = false;
-  kjsyylloc.first_line = yylineno; // ???
-  kjsyylloc.last_line = yylineno;
+  llocp->first_line = yylineno; // ???
+  llocp->last_line = yylineno;
 
   switch (state) {
   case Eof:
@@ -543,15 +546,15 @@ int Lexer::lex()
     // Apply anonymous-function hack below (eat the identifier).
     if (eatNextIdentifier) {
       eatNextIdentifier = false;
-      token = lex();
+      token = lex(lvalp, llocp);
       break;
     }
-    kjsyylval.ident = makeIdentifier(m_buffer16);
+    lvalp->ident = makeIdentifier(m_buffer16);
     token = IDENT;
     break;
   case IdentifierOrKeyword:
-    kjsyylval.ident = makeIdentifier(m_buffer16);
-    if ((token = mainTable.value(*kjsyylval.ident)) < 0) {
+    lvalp->ident = makeIdentifier(m_buffer16);
+    if ((token = mainTable.value(*lvalp->ident)) < 0) {
       // Lookup for keyword failed, means this is an identifier.
       token = IDENT;
       break;
@@ -562,11 +565,11 @@ int Lexer::lex()
       restrKeyword = true;
     break;
   case String:
-    kjsyylval.string = makeUString(m_buffer16);
+    lvalp->string = makeUString(m_buffer16);
     token = STRING;
     break;
   case Number:
-    kjsyylval.doubleValue = dval;
+    lvalp->doubleValue = dval;
     token = NUMBER;
     break;
   case Bad:

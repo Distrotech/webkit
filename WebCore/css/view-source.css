@@ -106,11 +106,12 @@ td {
 }
 
 .webkit-html-comment {
-    /* Keep this in sync with inspector.css (.comment) */
+    /* Keep this in sync with inspector.css (.webkit-html-comment) */
     color: rgb(35, 110, 37);
 }
 
 .webkit-html-doctype {
+    /* Keep this in sync with inspector.css (.webkit-html-doctype) */
     color: rgb(192, 192, 192);
 }
 
@@ -122,6 +123,7 @@ td {
     -webkit-box-shadow: black 0px 2px 5px;
     -webkit-border-radius: 9px;
     -webkit-border-fit: lines;
+    min-height: 13px;
     font-size: 9px;
     font-family: Lucida Grande;
     font-weight: bold;

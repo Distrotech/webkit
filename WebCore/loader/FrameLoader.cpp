@@ -30,11 +30,14 @@
 #include "config.h"
 #include "FrameLoader.h"
 
+#include "Archive.h"
+#include "ArchiveFactory.h"
 #include "CString.h"
 #include "Cache.h"
 #include "CachedPage.h"
 #include "Chrome.h"
 #include "DOMImplementation.h"
+#include "DOMWindow.h"
 #include "DocLoader.h"
 #include "Document.h"
 #include "DocumentLoader.h"
@@ -301,7 +304,6 @@ void FrameLoader::setDefersLoading(bool defers)
         m_provisionalDocumentLoader->setDefersLoading(defers);
     if (m_policyDocumentLoader)
         m_policyDocumentLoader->setDefersLoading(defers);
-    m_client->setDefersLoading(defers);
 }
 
 Frame* FrameLoader::createWindow(FrameLoader* frameLoaderForFrameLookup, const FrameLoadRequest& request, const WindowFeatures& features, bool& created)
@@ -323,10 +325,12 @@ Frame* FrameLoader::createWindow(FrameLoader* frameLoaderForFrameLookup, const F
     // FIXME: Setting the referrer should be the caller's responsibility.
     FrameLoadRequest requestWithReferrer = request;
     requestWithReferrer.resourceRequest().setHTTPReferrer(m_outgoingReferrer);
-    
-    Page* page = m_frame->page();
-    if (page)
-        page = page->chrome()->createWindow(m_frame, requestWithReferrer, features);
+
+    Page* oldPage = m_frame->page();
+    if (!oldPage)
+        return 0;
+        
+    Page* page = oldPage->chrome()->createWindow(m_frame, requestWithReferrer, features);
     if (!page)
         return 0;
 
@@ -448,7 +452,7 @@ Frame* FrameLoader::loadSubframe(HTMLFrameOwnerElement* ownerElement, const KURL
     }
 
     if (!canLoad(url, referrer)) {
-        FrameLoader::reportLocalLoadFailed(m_frame->page(), url.string());
+        FrameLoader::reportLocalLoadFailed(m_frame, url.string());
         return 0;
     }
 
@@ -976,7 +980,7 @@ void FrameLoader::write(const char* str, int len, bool flush)
     if (!m_decoder) {
         Settings* settings = m_frame->settings();
         m_decoder = new TextResourceDecoder(m_responseMIMEType, settings ? settings->defaultTextEncodingName() : String());
-        if (m_encoding.isNull()) {
+        if (m_encoding.isEmpty()) {
             Frame* parentFrame = m_frame->tree()->parent();
             SecurityOrigin::Reason reason;
             if (parentFrame && parentFrame->document()->securityOrigin()->canAccess(m_frame->document()->securityOrigin(), reason))
@@ -1488,6 +1492,75 @@ void FrameLoader::redirectionTimerFired(Timer<FrameLoader>*)
     ASSERT_NOT_REACHED();
 }
 
+/*
+    In the case of saving state about a page with frames, we store a tree of items that mirrors the frame tree.  
+    The item that was the target of the user's navigation is designated as the "targetItem".  
+    When this method is called with doClip=YES we're able to create the whole tree except for the target's children, 
+    which will be loaded in the future.  That part of the tree will be filled out as the child loads are committed.
+*/
+void FrameLoader::loadURLIntoChildFrame(const KURL& url, const String& referer, Frame* childFrame)
+{
+    ASSERT(childFrame);
+    HistoryItem* parentItem = currentHistoryItem();
+    FrameLoadType loadType = this->loadType();
+    FrameLoadType childLoadType = FrameLoadTypeRedirectWithLockedHistory;
+
+    KURL workingURL = url;
+    
+    // If we're moving in the backforward list, we might want to replace the content
+    // of this child frame with whatever was there at that point.
+    // Reload will maintain the frame contents, LoadSame will not.
+    if (parentItem && parentItem->children().size() &&
+        (isBackForwardLoadType(loadType) || loadType == FrameLoadTypeReloadAllowingStaleData))
+    {
+        HistoryItem* childItem = parentItem->childItemWithName(childFrame->tree()->name());
+        if (childItem) {
+            // Use the original URL to ensure we get all the side-effects, such as
+            // onLoad handlers, of any redirects that happened. An example of where
+            // this is needed is Radar 3213556.
+            workingURL = KURL(childItem->originalURLString());
+            // These behaviors implied by these loadTypes should apply to the child frames
+            childLoadType = loadType;
+
+            if (isBackForwardLoadType(loadType)) {
+                // For back/forward, remember this item so we can traverse any child items as child frames load
+                childFrame->loader()->setProvisionalHistoryItem(childItem);
+            } else {
+                // For reload, just reinstall the current item, since a new child frame was created but we won't be creating a new BF item
+                childFrame->loader()->setCurrentHistoryItem(childItem);
+            }
+        }
+    }
+
+    RefPtr<Archive> subframeArchive = activeDocumentLoader()->popArchiveForSubframe(childFrame->tree()->name());
+    
+    if (subframeArchive)
+        childFrame->loader()->loadArchive(subframeArchive.release());
+    else
+        childFrame->loader()->load(workingURL, referer, childLoadType, String(), 0, 0);
+}
+
+void FrameLoader::loadArchive(PassRefPtr<Archive> prpArchive)
+{
+    RefPtr<Archive> archive = prpArchive;
+    
+    ArchiveResource* mainResource = archive->mainResource();
+    ASSERT(mainResource);
+    if (!mainResource)
+        return;
+        
+    SubstituteData substituteData(mainResource->data(), mainResource->mimeType(), mainResource->textEncoding(), KURL());
+    
+    ResourceRequest request(mainResource->url());
+#if PLATFORM(MAC)
+    request.applyWebArchiveHackForMail();
+#endif
+
+    RefPtr<DocumentLoader> documentLoader = m_client->createDocumentLoader(request, substituteData);
+    documentLoader->addAllArchiveResources(archive.get());
+    load(documentLoader.get());
+}
+
 String FrameLoader::encoding() const
 {
     if (m_encodingWasChosenByUser && !m_encoding.isEmpty())
@@ -1629,7 +1702,7 @@ bool FrameLoader::loadPlugin(RenderPart* renderer, const KURL& url, const String
             pluginElement = static_cast<Element*>(renderer->node());
 
         if (!canLoad(url, frame()->document())) {
-            FrameLoader::reportLocalLoadFailed(m_frame->page(), url.string());
+            FrameLoader::reportLocalLoadFailed(m_frame, url.string());
             return false;
         }
 
@@ -1933,11 +2006,6 @@ void FrameLoader::setupForReplaceByMIMEType(const String& newMIMEType)
     activeDocumentLoader()->setupForReplaceByMIMEType(newMIMEType);
 }
 
-void FrameLoader::finalSetupForReplace(DocumentLoader* loader)
-{
-    m_client->clearUnarchivingState(loader);
-}
-
 void FrameLoader::load(const KURL& url, Event* event)
 {
     load(ResourceRequest(url), false, true, event, 0, HashMap<String, String>());
@@ -1958,7 +2026,7 @@ void FrameLoader::load(const FrameLoadRequest& request, bool lockHistory, bool u
     ASSERT(frame()->document());
     if (url.protocolIs("file")) {
         if (!canLoad(url, frame()->document()) && !canLoad(url, referrer)) {
-            FrameLoader::reportLocalLoadFailed(m_frame->page(), url.string());
+            FrameLoader::reportLocalLoadFailed(m_frame, url.string());
             return;
         }
     }
@@ -2173,11 +2241,13 @@ bool FrameLoader::canLoad(const CachedResource& resource, const Document* doc)
     return doc && doc->isAllowedToLoadLocalResources();
 }
 
-void FrameLoader::reportLocalLoadFailed(const Page* page, const String& url)
+void FrameLoader::reportLocalLoadFailed(Frame* frame, const String& url)
 {
     ASSERT(!url.isEmpty());
-    if (page)
-        page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, "Not allowed to load local resource: " + url, 0, String());
+    if (!frame)
+        return;
+
+    frame->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, "Not allowed to load local resource: " + url, 0, String());
 }
 
 bool FrameLoader::shouldHideReferrer(const KURL& url, const String& referrer)
@@ -2204,11 +2274,6 @@ const ResourceRequest& FrameLoader::initialRequest() const
 void FrameLoader::receivedData(const char* data, int length)
 {
     activeDocumentLoader()->receivedData(data, length);
-}
-
-bool FrameLoader::willUseArchive(ResourceLoader* loader, const ResourceRequest& request, const KURL& originalURL) const
-{
-    return m_client->willUseArchive(loader, request, originalURL);
 }
 
 void FrameLoader::handleUnimplementablePolicy(const ResourceError& error)
@@ -2375,8 +2440,7 @@ bool FrameLoader::shouldAllowNavigation(Frame* targetFrame) const
             printf("%s", message.utf8().data());
 
         // FIXME: should we print to the console of the activeFrame as well?
-        if (Page* page = targetFrame->page())
-            page->chrome()->addMessageToConsole(JSMessageSource, ErrorMessageLevel, message, 1, String());
+        targetFrame->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, message, 1, String());
     }
     
     return false;
@@ -2401,10 +2465,11 @@ void FrameLoader::stopAllLoaders()
     stopLoadingSubframes();
     if (m_provisionalDocumentLoader)
         m_provisionalDocumentLoader->stopLoading();
-    if (m_documentLoader)
+    if (m_documentLoader) {
         m_documentLoader->stopLoading();
+        m_documentLoader->clearArchiveResources();
+    }
     setProvisionalDocumentLoader(0);
-    m_client->clearArchivedResources();
 
     m_inStopAllLoaders = false;    
 }
@@ -2417,11 +2482,6 @@ void FrameLoader::stopForUserCancel(bool deferCheckLoadComplete)
         scheduleCheckLoadComplete();
     else if (m_frame->page())
         checkLoadComplete();
-}
-
-void FrameLoader::cancelPendingArchiveLoad(ResourceLoader* loader)
-{
-    m_client->cancelPendingArchiveLoad(loader);
 }
 
 DocumentLoader* FrameLoader::activeDocumentLoader() const
@@ -2811,11 +2871,6 @@ void FrameLoader::finishedLoading()
     checkLoadComplete();
 }
 
-bool FrameLoader::isArchiveLoadPending(ResourceLoader* loader) const
-{
-    return m_client->isArchiveLoadPending(loader);
-}
-
 bool FrameLoader::isHostedByObjectElement() const
 {
     HTMLFrameOwnerElement* owner = m_frame->ownerElement();
@@ -2857,9 +2912,36 @@ void FrameLoader::didReceiveServerRedirectForProvisionalLoadForFrame()
 void FrameLoader::finishedLoadingDocument(DocumentLoader* loader)
 {
 #if PLATFORM(WIN)
-    if (!m_creatingInitialEmptyDocument)
+    if (m_creatingInitialEmptyDocument)
+        return;
 #endif
+    
+    // If loading a webarchive, run through webarchive machinery
+    const String& responseMIMEType = loader->responseMIMEType();
+
+    // FIXME: Mac's FrameLoaderClient::finishedLoading() method does work that is required even with Archive loads
+    // so we still need to call it.  Other platforms should only call finishLoading for non-archive loads
+    // That work should be factored out so this #ifdef can be removed
+#if PLATFORM(MAC)
+    m_client->finishedLoading(loader);
+    if (!ArchiveFactory::isArchiveMimeType(responseMIMEType))
+        return;
+#else
+    if (!ArchiveFactory::isArchiveMimeType(responseMIMEType)) {
         m_client->finishedLoading(loader);
+        return;
+    }
+#endif
+        
+    RefPtr<Archive> archive(ArchiveFactory::create(loader->mainResourceData().get(), responseMIMEType));
+    if (!archive)
+        return;
+
+    loader->addAllArchiveResources(archive.get());
+    
+    ArchiveResource* mainResource = archive->mainResource();
+    loader->setParsedArchiveData(mainResource->data());
+    continueLoadWithData(mainResource->data(), mainResource->mimeType(), mainResource->textEncoding(), mainResource->url());
 }
 
 bool FrameLoader::isReplacing() const
@@ -3235,6 +3317,8 @@ void FrameLoader::addExtraFieldsToRequest(ResourceRequest& request, bool mainRes
 
 void FrameLoader::committedLoad(DocumentLoader* loader, const char* data, int length)
 {
+    if (ArchiveFactory::isArchiveMimeType(loader->response().mimeType()))
+        return;
     m_client->committedLoad(loader, data, length);
 }
 
@@ -3282,7 +3366,7 @@ void FrameLoader::loadEmptyDocumentSynchronously()
     load(request);
 }
 
-void FrameLoader::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& data)
+unsigned long FrameLoader::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& data)
 {
     // Since this is a subresource, we can load any URL (we ignore the return value).
     // But we still want to know whether we should hide the referrer or not, so we call the canLoad method.
@@ -3316,6 +3400,7 @@ void FrameLoader::loadResourceSynchronously(const ResourceRequest& request, Reso
     }
     
     sendRemainingDelegateMessages(identifier, response, data.size(), error);
+    return identifier;
 }
 
 void FrameLoader::assignIdentifierToInitialRequest(unsigned long identifier, const ResourceRequest& clientRequest)
@@ -4483,6 +4568,11 @@ ResourceError FrameLoader::blockedError(const ResourceRequest& request) const
     return m_client->blockedError(request);
 }
 
+ResourceError FrameLoader::cannotShowURLError(const ResourceRequest& request) const
+{
+    return m_client->cannotShowURLError(request);
+}
+
 ResourceError FrameLoader::fileDoesNotExistError(const ResourceResponse& response) const
 {
     return m_client->fileDoesNotExistError(response);    
@@ -4610,7 +4700,7 @@ String FrameLoader::referrer() const
 
 void FrameLoader::dispatchWindowObjectAvailable()
 {
-    if (!m_frame->scriptProxy()->isEnabled() || !m_frame->scriptProxy()->haveGlobalObject())
+    if (!m_frame->scriptProxy()->isEnabled() || !m_frame->scriptProxy()->haveWindowWrapper())
         return;
 
     m_client->windowObjectCleared();

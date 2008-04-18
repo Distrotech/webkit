@@ -258,6 +258,7 @@ public:
 
     virtual bool isRenderBlock() const { return false; }
     virtual bool isRenderInline() const { return false; }
+    virtual bool isRenderImage() const { return false; }
     virtual bool isInlineFlow() const { return false; }
     virtual bool isBlockFlow() const { return false; }
     virtual bool isInlineBlockOrInlineTable() const { return false; }
@@ -335,11 +336,12 @@ public:
     bool hasHorizontalBordersPaddingOrMargin() const { return hasHorizontalBordersOrPadding() || marginLeft() != 0 || marginRight() != 0; }
     bool hasHorizontalBordersOrPadding() const { return borderLeft() != 0 || borderRight() != 0 || paddingLeft() != 0 || paddingRight() != 0; }
                                                               
-    bool needsLayout() const { return m_needsLayout || m_normalChildNeedsLayout || m_posChildNeedsLayout; }
+    bool needsLayout() const { return m_needsLayout || m_normalChildNeedsLayout || m_posChildNeedsLayout || m_needsPositionedMovementLayout; }
     bool selfNeedsLayout() const { return m_needsLayout; }
+    bool needsPositionedMovementLayoutOnly() const { return m_needsPositionedMovementLayout && !m_needsLayout && !m_normalChildNeedsLayout && !m_posChildNeedsLayout; }
     bool posChildNeedsLayout() const { return m_posChildNeedsLayout; }
     bool normalChildNeedsLayout() const { return m_normalChildNeedsLayout; }
-
+    
     bool prefWidthsDirty() const { return m_prefWidthsDirty; }
 
     bool isSelectionBorder() const;
@@ -391,7 +393,7 @@ public:
     void markContainingBlocksForLayout(bool scheduleRelayout = true, RenderObject* newRoot = 0);
     void setNeedsLayout(bool b, bool markParents = true);
     void setChildNeedsLayout(bool b, bool markParents = true);
-
+    void setNeedsPositionedMovementLayout();
     void setPrefWidthsDirty(bool, bool markParents = true);
     void invalidateContainerPrefWidths();
     
@@ -495,6 +497,10 @@ public:
     /* This function performs a layout only if one is needed. */
     void layoutIfNeeded() { if (needsLayout()) layout(); }
 
+    // Called when a positioned object moves but doesn't change size.  A simplified layout is done
+    // that just updates the object's position.
+    virtual void layoutDoingPositionedMovementOnly() {};
+    
     // used for element state updates that cannot be fixed with a
     // repaint and do not need a relayout
     virtual void updateFromElement() { }
@@ -577,10 +583,11 @@ public:
     // This function is used to deal with the extra top space that can occur in table cells (called borderTopExtra).
     // The children of the cell do not factor this space in, so we have to add it in.  Any code that wants to
     // accurately deal with the contents of a cell must call this function instad of absolutePosition.
-    void absolutePositionForContent(int& xPos, int& yPos, bool fixed = false) const
+    bool absolutePositionForContent(int& xPos, int& yPos, bool fixed = false) const
     {
-        absolutePosition(xPos, yPos, fixed);
+        bool result = absolutePosition(xPos, yPos, fixed);
         yPos += borderTopExtra();
+        return result;
     }
 
     // width and height are without margins but include paddings and borders
@@ -850,7 +857,8 @@ public:
     virtual int previousOffset(int current) const;
     virtual int nextOffset(int current) const;
 
-    virtual void imageChanged(CachedImage*) { }
+    virtual void imageChanged(CachedImage* image);
+    virtual void imageChanged(WrappedImagePtr data) { };
     virtual bool willRenderImage(CachedImage*);
 
     virtual void selectionStartEnd(int& spos, int& epos) const;
@@ -905,6 +913,7 @@ private:
     mutable short m_verticalPosition : 15;
 
     bool m_needsLayout               : 1;
+    bool m_needsPositionedMovementLayout :1;
     bool m_normalChildNeedsLayout    : 1;
     bool m_posChildNeedsLayout       : 1;
     bool m_prefWidthsDirty           : 1;

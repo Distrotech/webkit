@@ -27,10 +27,15 @@
 #ifndef ImageBuffer_h
 #define ImageBuffer_h
 
+#include "Image.h"
 #include "IntSize.h"
 #include <wtf/OwnPtr.h>
 #include <wtf/PassRefPtr.h>
 #include <memory>
+
+#if !PLATFORM(CG)
+#include "NotImplemented.h"
+#endif
 
 #if PLATFORM(CG)
 typedef struct CGImage* CGImageRef;
@@ -38,7 +43,9 @@ typedef struct CGImage* CGImageRef;
 
 #if PLATFORM(QT)
 #include <QPixmap>
+QT_BEGIN_NAMESPACE
 class QPainter;
+QT_END_NAMESPACE
 #endif
 
 #if PLATFORM(CAIRO)
@@ -63,27 +70,36 @@ namespace WebCore {
         GraphicsContext* context() const;
 
 #if PLATFORM(CG)
-        CGImageRef cgImage() const;
+        Image* image() const;
+        CGImageRef cgImage() const { return image()->getCGImageRef(); }
 #elif PLATFORM(QT)
         QPixmap* pixmap() const;
 #elif PLATFORM(CAIRO)
         cairo_surface_t* surface() const;
 #endif
-        
+
+#if !PLATFORM(CG)
+        Image* image() const { notImplemented(); return 0; }
+#endif
+
+        void clearImage() { m_image.clear(); }
+
         PassRefPtr<ImageData> getImageData(const IntRect& rect) const;
         void putImageData(ImageData* source, const IntRect& sourceRect, const IntPoint& destPoint);
 
         String toDataURL(const String& mimeType) const;
+
+        
 
     private:
         void* m_data;
         IntSize m_size;
 
         OwnPtr<GraphicsContext> m_context;
-
+        mutable OwnPtr<Image> m_image;
+    
 #if PLATFORM(CG)
         ImageBuffer(void* imageData, const IntSize&, std::auto_ptr<GraphicsContext>);
-        mutable CGImageRef m_cgImage;
 #elif PLATFORM(QT)
         ImageBuffer(const QPixmap &px);
         mutable QPixmap m_pixmap;
