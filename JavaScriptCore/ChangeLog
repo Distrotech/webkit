@@ -2,6 +2,15 @@
 
         Reviewed by Oliver.
         
+        - fix bug in for..in codegen (gotta use ident, not m_ident)
+
+        * kjs/nodes.cpp:
+        (KJS::ForInNode::emitCode):
+
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
         - Add suport for regexp literals
 
         * VM/CodeBlock.cpp:
