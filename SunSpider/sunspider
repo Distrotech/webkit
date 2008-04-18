@@ -37,6 +37,7 @@ my $runShark = 0;
 my $runShark20 = 0;
 my $runSharkCache = 0;
 my $squirrelfish = 0;
+my $ubench = 0;
 my $jsShellPath;
 my $setBaseline = 0;
 my $testsPattern;
@@ -53,7 +54,8 @@ Usage: $programName --shell=[path] [options]
   --shark           Sample execution time with the Mac OS X "Shark" performance testing tool (implies --runs=1)
   --shark20         Like --shark, but with a 20 microsecond sampling interval
   --shark-cache     Like --shark, but performs a L2 cache-miss sample instead of time sample
-  --squirrelfish    Pared down test used for squirrelfish bring-up (implies --tests squirrelfish --runs 1)
+  --squirrelfish    Pared down test used for squirrelfish bring-up
+  --ubench          Use microbenchmark suite instead of regular tests (to check for core execution regressions)
 EOF
 
 GetOptions('runs=i' => \$testRuns,
@@ -63,6 +65,7 @@ GetOptions('runs=i' => \$testRuns,
            'shark20' => \$runShark20,
            'shark-cache' => \$runSharkCache,
            'squirrelfish' => \$squirrelfish,
+           'ubench' => \$ubench,
            'tests=s' => \$testsPattern,
            'help' => \$showHelp);
 
@@ -110,7 +113,11 @@ my %uniqueCategories = ();
 
 sub loadTestsList()
 {
-    open TESTLIST, "<", ($squirrelfish ? "tests/LIST-SQUIRRELFISH" : "tests/LIST") or die "Can't find ./tests/LIST";
+    my $testlist = "LIST";
+    $testlist = "LIST-SQUIRRELFISH" if ($squirrelfish);
+    $testlist = "LIST-UBENCH" if ($ubench);
+
+    open TESTLIST, "<", "tests/${testlist}" or die "Can't find ./tests/LIST";
     while (<TESTLIST>) {
         chomp;
         next unless !$testsPattern || /$testsPattern/;
@@ -141,29 +148,9 @@ sub writePrefixFile()
 
 sub runTestsOnce($)
 {
-    my $output = "\n";
-    if ($squirrelfish) {
-        my $total = 0;
-        my @results = ();
-        for my $test (@tests) {
-            my $start = [gettimeofday];
-            `"$jsShellPath" -f $test`;
-            my $elapsed = tv_interval($start, [gettimeofday]);
-
-            $total += $elapsed;
-
-            $test =~ /[0-9a-zA-z\-\.]*$/;
-            push @results, "$&: $elapsed";
-        }
-        
-        my $average = $total / @results;
-        
-        $output = "\n" . join("\n", sort(@results)) . "\n\naverage: $average\ntotal: $total\n\n";
-        return $output;
-    }
-    
     my ($useShark) = @_;
     my $shellArgs = "-f $prefixFile -f resources/sunspider-standalone-driver.js 2> /dev/null";
+    my $output;
     if ($useShark) {
         my $intervalArg = $useShark == 20 ? "-I 20u" : "";
         my $cacheArg = $runSharkCache ? "-c $sharkCacheProfileIndex" : "";
@@ -252,8 +239,6 @@ while ($count++ < $testRuns) {
     print ",\n" unless ($count == $testRuns);
 }
 print "]\n";
-
-exit if $squirrelfish;
 
 resumeUpdate() if isDarwin(); # workaround for <rdar://problem/5811127>
 
