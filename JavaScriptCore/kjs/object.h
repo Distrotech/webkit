@@ -347,16 +347,6 @@ namespace KJS {
     virtual JSObject* construct(ExecState* exec, const List& args, const Identifier& functionName, const UString& sourceURL, int lineNumber);
 
     /**
-     * Whether or not the object implements the call() method. If this returns
-     * false you should not call the call() method on this object (typically,
-     * an assertion will fail to indicate this).
-     *
-     * @return true if this object implements the call() method, otherwise
-     * false
-     */
-    virtual bool implementsCall() const;
-
-    /**
      * Calls this object as if it is a function.
      *
      * Note: This function should not be called if implementsCall() returns
@@ -373,7 +363,9 @@ namespace KJS {
      * @param args List of arguments to be passed to the function
      * @return The return value from the function
      */
+    bool implementsCall();
     JSValue *call(ExecState *exec, JSObject *thisObj, const List &args);
+
     virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
 
     /**

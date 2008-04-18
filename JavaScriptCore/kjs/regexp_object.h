@@ -49,7 +49,8 @@ namespace KJS {
         JSValue* test(ExecState*, const List& args);
         JSValue* exec(ExecState*, const List& args);
 
-        virtual bool implementsCall() const;
+        virtual CallType getCallData(CallData&);
+
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
         bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         JSValue* getValueProperty(ExecState*, int token) const;

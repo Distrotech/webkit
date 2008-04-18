@@ -23,6 +23,7 @@
 #ifndef KJS_VALUE_H
 #define KJS_VALUE_H
 
+#include "CallData.h"
 #include "JSImmediate.h"
 #include "collector.h"
 #include "ustring.h"
@@ -74,11 +75,13 @@ public:
     JSObject *getObject(); // NULL if not an object
     const JSObject *getObject() const; // NULL if not an object
 
+    CallType getCallData(CallData&);
+
     // Extracting integer values.
     bool getUInt32(uint32_t&) const;
     bool getTruncatedInt32(int32_t&) const;
     bool getTruncatedUInt32(uint32_t&) const;
-
+    
     // Basic conversions.
     JSValue* toPrimitive(ExecState* exec, JSType preferredType = UnspecifiedType) const;
     bool getPrimitiveNumber(ExecState* exec, double& number, JSValue*& value);
@@ -148,6 +151,8 @@ public:
     UString getString() const; // null string if not a string
     JSObject *getObject(); // NULL if not an object
     const JSObject *getObject() const; // NULL if not an object
+    
+    virtual CallType getCallData(CallData&);
 
     // Extracting integer values.
     virtual bool getUInt32(uint32_t&) const;
@@ -181,7 +186,7 @@ JSCell *jsOwnedString(const UString&);
 extern const double NaN;
 extern const double Inf;
 
-inline JSValue *jsUndefined()
+ALWAYS_INLINE JSValue *jsUndefined()
 {
     return JSImmediate::undefinedImmediate();
 }
@@ -385,6 +390,11 @@ inline JSObject *JSValue::getObject()
 inline const JSObject *JSValue::getObject() const
 {
     return JSImmediate::isImmediate(this) ? 0 : asCell()->getObject();
+}
+
+inline CallType JSValue::getCallData(CallData& callData)
+{
+    return JSImmediate::isImmediate(this) ? CallTypeNone : asCell()->getCallData(callData);
 }
 
 ALWAYS_INLINE bool JSValue::getUInt32(uint32_t& v) const

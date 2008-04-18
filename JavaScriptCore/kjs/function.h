@@ -43,7 +43,8 @@ namespace KJS {
     InternalFunctionImp();
     InternalFunctionImp(FunctionPrototype*, const Identifier&);
 
-    virtual bool implementsCall() const;
+    virtual CallType getCallData(CallData&);
+
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObjec, const List& args) = 0;
     virtual bool implementsHasInstance() const;
 
@@ -67,6 +68,8 @@ namespace KJS {
     virtual bool implementsConstruct() const { return true; }
     virtual JSObject* construct(ExecState*, const List& args);
     
+    virtual CallType getCallData(CallData&);
+
     virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
 
     // Note: unlike body->paramName, this returns Identifier::null for parameters 
