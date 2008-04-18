@@ -1,3 +1,32 @@
+2008-03-28  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18192: Squirrelfish needs support for break and continue
+        <http://bugs.webkit.org/show_bug.cgi?id=18192>
+
+        Added a loop context stack to the code generator to provide the
+        correct jump labels for continue and goto.  Added logic to the
+        currently implemented loop constructs to manage entry and exit
+        from the loop contexts.  Finally, implemented codegen for break
+        and continue (and a pass through for LabelNode)
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::pushLoopContext):
+        (KJS::CodeGenerator::popLoopContext):
+        (KJS::CodeGenerator::loopContextForIdentifier):
+        (KJS::CodeGenerator::labelForContinue):
+        (KJS::CodeGenerator::labelForBreak):
+        * VM/CodeGenerator.h:
+        * kjs/nodes.cpp:
+        (KJS::DoWhileNode::emitCode):
+        (KJS::WhileNode::emitCode):
+        (KJS::ForNode::emitCode):
+        (KJS::ContinueNode::emitCode):
+        (KJS::BreakNode::emitCode):
+        (KJS::LabelNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-27  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.

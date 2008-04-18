@@ -140,6 +140,11 @@ namespace KJS {
         PassRefPtr<LabelID> emitJump(LabelID*);
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
+        
+        void pushLoopContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
+        void popLoopContext();
+        LabelID* labelForContinue(const Identifier&);
+        LabelID* labelForBreak(const Identifier&);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
@@ -166,7 +171,16 @@ namespace KJS {
         int m_scopeDepth;
         
         HashMap<int, int, DefaultHash<int>::Hash, LocalsHashTraits> m_localsMap; // Maps register index to index in m_locals.
-        
+
+        // LoopContexts are used to track entry and exit points for javascript loops
+        struct LoopContext {
+            LabelStack* labels;
+            LabelID* continueTarget;
+            LabelID* breakTarget;
+        };
+        Vector<LoopContext> m_loopContextStack;
+        LoopContext* loopContextForIdentifier(const Identifier&);
+
         int m_nextLocal;
         int m_nextParameter;
 
