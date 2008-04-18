@@ -588,7 +588,7 @@ void CodeGenerator::emitPopScope()
 
 void CodeGenerator::pushLoopContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
 {
-    LoopContext scope = { labels, continueTarget, breakTarget };
+    LoopContext scope = { labels, continueTarget, breakTarget, m_scopeDepth};
     m_loopContextStack.append(scope);
 }
 
@@ -598,7 +598,7 @@ void CodeGenerator::popLoopContext()
     m_loopContextStack.removeLast();
 }
 
-CodeGenerator::LoopContext* CodeGenerator::loopContextForIdentifier(const Identifier& label)
+LoopContext* CodeGenerator::loopContextForLabel(const Identifier& label)
 {
     ASSERT(m_loopContextStack.size());
     if (label.isEmpty())
@@ -611,16 +611,18 @@ CodeGenerator::LoopContext* CodeGenerator::loopContextForIdentifier(const Identi
     return 0;
 }
 
-LabelID* CodeGenerator::labelForContinue(const Identifier& label)
+PassRefPtr<LabelID> CodeGenerator::emitJumpScopes(LabelID* target, int targetScopeDepth)
 {
-    LoopContext* scope = loopContextForIdentifier(label);
-    return scope ? scope->continueTarget : 0;
-}
-
-LabelID* CodeGenerator::labelForBreak(const Identifier& label)
-{
-    LoopContext* scope = loopContextForIdentifier(label);
-    return scope ? scope->breakTarget : 0;
+    int scopeDelta = m_scopeDepth - targetScopeDepth;
+    ASSERT(scopeDelta >= 0);
+    
+    if (!scopeDelta)
+        return emitJump(target);
+    
+    instructions().append(machine().getOpcode(op_jmp_scopes));
+    instructions().append(scopeDelta);
+    instructions().append(target->offsetFrom(instructions().size()));
+    return target;
 }
 
 } // namespace KJS

@@ -253,6 +253,12 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] pop_scope\n", location);
             break;
         }
+        case op_jmp_scopes: {
+            int scopeDelta = (++it)->u.operand;
+            int offset = (++it)->u.operand;
+            printf("[%4d] jmp_scopes\t^%d, %d\t\t; %d\n", location, scopeDelta, offset, (it - begin) + offset);
+            break;
+        }
         case op_end: {
             int r0 = (++it)->u.operand;
             printf("[%4d] end\t\tr[%d]\n", location, r0);
