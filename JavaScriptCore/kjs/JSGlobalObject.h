@@ -161,6 +161,9 @@ namespace KJS {
     public:
         virtual ~JSGlobalObject();
 
+        void saveLocalStorage(SavedProperties&) const;
+        void restoreLocalStorage(const SavedProperties&);
+
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         virtual void put(ExecState*, const Identifier&, JSValue*);
         virtual void putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes);

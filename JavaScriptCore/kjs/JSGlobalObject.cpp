@@ -129,6 +129,43 @@ void JSGlobalObject::init()
     reset(prototype());
 }
 
+void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
+{
+    ASSERT(static_cast<size_t>(symbolTable().size()) == localStorage().size());
+
+    unsigned count = symbolTable().size();
+
+    p.properties.clear();
+    p.count = count;
+
+    if (!count)
+        return;
+
+    p.properties.set(new SavedProperty[count]);
+
+    SymbolTable::const_iterator end = symbolTable().end();
+    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++it) {
+        size_t i = it->second;
+        const LocalStorageEntry& entry = localStorage()[i];
+        p.properties[i].init(it->first.get(), entry.value, entry.attributes);
+    }
+}
+
+void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
+{
+    unsigned count = p.count;
+    symbolTable().clear();
+    localStorage().resize(count);
+    SavedProperty* property = p.properties.get();
+    for (size_t i = 0; i < count; ++i, ++property) {
+        ASSERT(!symbolTable().contains(property->name()));
+        LocalStorageEntry& entry = localStorage()[i];
+        symbolTable().set(property->name(), i);
+        entry.value = property->value();
+        entry.attributes = property->attributes();
+    }
+}
+
 bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     if (symbolTableGet(propertyName, slot))

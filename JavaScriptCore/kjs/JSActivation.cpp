@@ -102,7 +102,7 @@ void JSActivation::put(ExecState*, const Identifier& propertyName, JSValue* valu
 }
 
 // FIXME: Make this function honor ReadOnly (const) and DontEnum
-void JSActivation::initializeVariable(ExecState* exec, const Identifier& propertyName, JSValue* value, unsigned)
+void JSActivation::putWithAttributes(ExecState* exec, const Identifier& propertyName, JSValue* value, unsigned)
 {
     put(exec, propertyName, value);
 }
