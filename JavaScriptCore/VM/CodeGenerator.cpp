@@ -786,8 +786,14 @@ RegisterID* CodeGenerator::emitEnd(RegisterID* r0)
 
 RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, ArgumentsNode* argumentsNode)
 {
+    // Reserve space for return info.
+    Vector<RefPtr<RegisterID>, Machine::returnInfoSize> returnInfo;
+    for (int i = 0; i < Machine::returnInfoSize; ++i)
+        returnInfo.append(newTemporary());
+
     // Generate code for arguments.
     Vector<RefPtr<RegisterID>, 16> argv;
+    argv.append(newTemporary()); // reserve space for "this"
     for (ArgumentListNode* n = argumentsNode ? argumentsNode->m_listNode.get() : 0; n; n = n->m_next.get()) {
         argv.append(newTemporary());
         emitNode(argv.last().get(), n);
@@ -800,7 +806,6 @@ RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, Argumen
     instructions().append(argv.size()); // argc
     return r0;
 }
-
 
 RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
 {
