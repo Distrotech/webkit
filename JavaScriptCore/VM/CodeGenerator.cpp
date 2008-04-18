@@ -264,6 +264,14 @@ RegisterID* CodeGenerator::emitMove(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitNot(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_not));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
     instructions().append(machine().getOpcode(op_equal));
@@ -464,20 +472,20 @@ RegisterID* CodeGenerator::emitBitNot(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
-RegisterID* CodeGenerator::emitNot(RegisterID* r0, RegisterID* r1)
-{
-    instructions().append(machine().getOpcode(op_not));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
-}
-
 RegisterID* CodeGenerator::emitInstanceOf(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
     instructions().append(machine().getOpcode(op_instance_of));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitTypeOf(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_type_of));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
     return r0;
 }
 
