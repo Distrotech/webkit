@@ -24,7 +24,7 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
-#include "RegisterFile.h"
+#include "RegisterFileStack.h"
 #include <wtf/HashSet.h>
 #include <wtf/OwnPtr.h>
 
@@ -78,7 +78,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
-                : JSVariableObjectData(&symbolTable, registerFile.basePointer(), 0)
+                : JSVariableObjectData(&symbolTable, registerFileStack.basePointer(), 0)
                 , globalExec(globalObject, thisValue)
             {
             }
@@ -141,7 +141,7 @@ namespace KJS {
 
             OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
 
-            RegisterFile registerFile;
+            RegisterFileStack registerFileStack;
         };
 
     public:
@@ -247,7 +247,7 @@ namespace KJS {
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
-        RegisterFile& registerFile() { return d()->registerFile; }
+        RegisterFileStack& registerFileStack() { return d()->registerFileStack; }
 
     private:
         void init();
