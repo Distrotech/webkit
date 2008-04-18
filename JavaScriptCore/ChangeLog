@@ -1,3 +1,15 @@
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - Fix two crashing SunSpider tests
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): set up 'this' properly for native calls.
+        * kjs/list.h:
+        (KJS::List::List): Fix intialization of buffer and size from
+        vector, the initialization order was wrong.
+
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix: marked ASSERT-only variables as UNUSED_PARAMs.
