@@ -1,3 +1,23 @@
+2008-03-31  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Darin.
+        
+        - implement codegen for bracket accessor and bracket assign
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitGetPropVal):
+        (KJS::CodeGenerator::emitPutPropVal):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::BracketAccessorNode::emitCode):
+        (KJS::AssignBracketNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Not reviewed.

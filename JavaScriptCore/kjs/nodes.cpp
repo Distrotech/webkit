@@ -989,6 +989,14 @@ JSValue* PropertyNode::evaluate(ExecState*)
 
 // ------------------------------ BracketAccessorNode --------------------------------
 
+RegisterID* BracketAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RegisterID* r1 = generator.emitNode(m_subscript.get());
+
+    return generator.emitGetPropVal(dst ? dst : generator.newTemporary(), r0.get(), r1);
+}
+
 void BracketAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
@@ -4035,7 +4043,7 @@ found:
 
 RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());;
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
     RegisterID* r1 = generator.emitNode(dst, m_right.get());
     return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
@@ -4096,6 +4104,14 @@ JSValue* AssignErrorNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ AssignBracketNode -----------------------------------
+
+RegisterID* AssignBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RegisterID* r2 = generator.emitNode(dst, m_right.get());
+    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
+}
 
 void AssignBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
