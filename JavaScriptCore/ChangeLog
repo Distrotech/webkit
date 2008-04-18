@@ -1,3 +1,16 @@
+2008-04-17  Geoffrey Garen  <ggaren@apple.com> and Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver Hunt.
+        
+        Behold: eval.
+        
+        Introduced a new opcode: op_call_eval. In the normal case, it performs
+        an eval. In the case where eval has been overridden in some way, it
+        performs a function call.
+
+        * VM/CodeGenerator.h: Added a feature so the code generator knows not
+        to optimized locals in eval code.
+        
 2008-04-17  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
