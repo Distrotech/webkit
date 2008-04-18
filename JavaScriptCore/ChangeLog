@@ -1,3 +1,28 @@
+2008-04-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - document the add and get_prop_id opcodes
+        
+        In addition to adding documentation in comments, I changed
+        references to register IDs or indices relating to these opcodes to
+        have meaningful names instead of r0 r1 r2.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitAdd):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.cpp:
+        (KJS::DotAccessorNode::emitCode):
+        (KJS::FunctionCallDotNode::emitCode):
+        (KJS::PostIncDotNode::emitCode):
+        (KJS::PostDecDotNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+        (KJS::AddNode::emitCode):
+        (KJS::ReadModifyDotNode::emitCode):
+
 2008-04-15  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt and Maciej Stachowiak.
