@@ -580,66 +580,65 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         CallType callType = v->getCallData(callData);
         
         if (callType == CallTypeJS) {
+            int rOffset = r - registers->data();
+            Register* returnInfo = r + argv - returnInfoSize;
 
-        int rOffset = r - registers->data();
-        Register* returnInfo = r + argv - returnInfoSize;
+            returnInfo[0].u.codeBlock = codeBlock; // codeBlock after return
+            returnInfo[1].u.vPC = ++vPC; // vPC after return
+            returnInfo[2].u.scopeChain = scopeChain; // scope chain after return
+            returnInfo[3].u.i = rOffset; // r value after return
+            returnInfo[4].u.i = r0; // return value slot
+            returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
+            // returnInfo[6] gets optionally set later
 
-        returnInfo[0].u.codeBlock = codeBlock; // codeBlock after return
-        returnInfo[1].u.vPC = ++vPC; // vPC after return
-        returnInfo[2].u.scopeChain = scopeChain; // scope chain after return
-        returnInfo[3].u.i = rOffset; // r value after return
-        returnInfo[4].u.i = r0; // return value slot
-        returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
-        // returnInfo[6] gets optionally set later
+            r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
-        r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
+            // WARNING: If code generation wants to optimize resolves to parent scopes,
+            // it needs to be aware that, for functions that require activations,
+            // the scope chain is off by one, since the activation hasn't been pushed yet.
+            CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-        // WARNING: If code generation wants to optimize resolves to parent scopes,
-        // it needs to be aware that, for functions that require activations,
-        // the scope chain is off by one, since the activation hasn't been pushed yet.
-        CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
+            int offset = rOffset + argv + argc + newCodeBlock->numVars;
+            if (argc == newCodeBlock->numParameters) { // correct number of arguments
+                size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+                if (registers->size() < size)
+                    registers->grow(size);
+                r = registers->data() + offset;
+            } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
+                int omittedArgCount = newCodeBlock->numParameters - argc;
+                size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+                if (registers->size() < size)
+                    registers->grow(size);
+                r = registers->data() + omittedArgCount + offset;
+                
+                Register* end = r;
+                for (Register* it = r - omittedArgCount; it != end; ++it)
+                    (*it).u.jsValue = jsUndefined();
+            } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
+                size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+                if (registers->size() < size)
+                    registers->grow(size);
+                r = registers->data() + returnInfoSize + newCodeBlock->numParameters + offset;
 
-        int offset = rOffset + argv + argc + newCodeBlock->numVars;
-        if (argc == newCodeBlock->numParameters) { // correct number of arguments
-            size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-            if (registers->size() < size)
-                registers->grow(size);
-            r = registers->data() + offset;
-        } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
-            int omittedArgCount = newCodeBlock->numParameters - argc;
-            size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-            if (registers->size() < size)
-                registers->grow(size);
-            r = registers->data() + omittedArgCount + offset;
+                int shift = returnInfoSize + argc;
+                Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
+                Register* end = it + returnInfoSize + newCodeBlock->numParameters;
+                for ( ; it != end; ++it)
+                    *(it + shift) = *it;
+            }
+
+            if (newCodeBlock->needsActivation) {
+                COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
+                scopeChain = new (&returnInfo[6]) ScopeChain(*callData.js.scopeChain);
+                scopeChain->push(new JSActivation(callData.js.functionBody, registers, r - registers->data()));
+            } else
+                scopeChain = callData.js.scopeChain;
             
-            Register* end = r;
-            for (Register* it = r - omittedArgCount; it != end; ++it)
-                (*it).u.jsValue = jsUndefined();
-        } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-            size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
-            if (registers->size() < size)
-                registers->grow(size);
-            r = registers->data() + returnInfoSize + newCodeBlock->numParameters + offset;
+            k = newCodeBlock->jsValues.data();
+            vPC = newCodeBlock->instructions.begin();
+            codeBlock = newCodeBlock;
 
-            int shift = returnInfoSize + argc;
-            Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
-            Register* end = it + returnInfoSize + newCodeBlock->numParameters;
-            for ( ; it != end; ++it)
-                *(it + shift) = *it;
-        }
-
-        if (newCodeBlock->needsActivation) {
-            COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
-            scopeChain = new (&returnInfo[6]) ScopeChain(*callData.js.scopeChain);
-            scopeChain->push(new JSActivation(callData.js.functionBody, registers, r - registers->data()));
-        } else
-            scopeChain = callData.js.scopeChain;
-        
-        k = newCodeBlock->jsValues.data();
-        vPC = newCodeBlock->instructions.begin();
-        codeBlock = newCodeBlock;
-
-        NEXT_OPCODE;
+            NEXT_OPCODE;
         }
         
         if (callType == CallTypeNative) {
