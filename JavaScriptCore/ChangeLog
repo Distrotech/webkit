@@ -1,3 +1,29 @@
+2008-04-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        First step toward supporting re-entrant evaluation: Switch register
+        clients from using "registers", a pointer to a register vector, to
+        "registerBase", an indirect pointer to the logical first entry in the
+        register file. (The logical first entry is the first entry that is not
+        a global variable).
+        
+        With a vector, offsets into the register file remain good when the
+        underlying buffer reallocates, but they go bad when the logical
+        first entry moves. (The logical first entry moves when new global
+        variables get added to the beginning of the register file.) With an
+        indirect pointer to the logical first entry, offsets will remain good
+        regardless.
+
+        1.4% speedup on sunspider --squirrelfish. I suspect this is due to
+        reduced allocation when creating closures, and reduced indirection
+        through the register vector.
+
+        * wtf/Vector.h: Added an accessor for an indirect pointer to the vector's
+        buffer, which we currently use (incorrectly) for registerBase. This is
+        temporary scaffolding to allow us to change client code without
+        changing behavior.
+
 2008-04-06  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Oliver Hunt.

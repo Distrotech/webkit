@@ -35,32 +35,33 @@ namespace KJS {
 
 const ClassInfo JSActivation::info = { "JSActivation", 0, 0 };
 
-JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Vector<Register>* registers, int rOffset)
-    : Base(new JSActivationData(functionBody, registers, rOffset))
+JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Register** registerBase, int registerOffset)
+    : Base(new JSActivationData(functionBody, registerBase, registerOffset))
 {
 }
 
 JSActivation::~JSActivation()
 {
-    if(d()->didCopyRegisters)
-        delete d()->registers;
+    delete d()->registerArray;
     delete d();
 }
 
 void JSActivation::copyRegisters()
 {
-    size_t numRegisters = symbolTable().size();
-    Vector<Register>* registers = new Vector<Register>(numRegisters);
-    
-    Register* end = d()->registers->begin() + d()->rOffset; 
+    int numRegisters = symbolTable().size();
+    if (!numRegisters)
+        return;
+
+    Register* registerArray = static_cast<Register*>(fastMalloc(numRegisters * sizeof(Register)));
+
+    Register* end = registers() + registerOffset();
     Register* src = end - numRegisters;
-    Register* dst = registers->data();
+    Register* dst = registerArray;
     while (src != end)
         *dst++ = *src++;
-        
-    d()->registers = registers;
-    d()->rOffset = registers->size();
-    d()->didCopyRegisters = true;
+
+    d()->registerArray = registerArray;
+    d()->registerBase = &d()->registerArray;
 }
 
 bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName, PropertySlot& slot)
@@ -122,12 +123,12 @@ void JSActivation::mark()
     
     // No need to mark our values if they're still in the regsiter file, since
     // the register file gets marked independently.
-    if(!d()->didCopyRegisters)
+    if(!d()->registerArray)
         return;
-    
-    Vector<Register>::iterator end = d()->registers->end();
-    for (Vector<Register>::iterator it = d()->registers->begin(); it != end; ++it) {
-        JSValue* v = it->u.jsValue;
+
+    Register* end = d()->registerArray + symbolTable().size();
+    for (Register* it = d()->registerArray; it != end; ++it) {
+        JSValue* v = (*it).u.jsValue;
         if (!v->marked())
             v->mark();
     }
