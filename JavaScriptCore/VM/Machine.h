@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,44 +25,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef Machine_h
+#define Machine_h
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
-
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include <wtf/HashMap.h>
+#include "Opcode.h"
 
 namespace KJS {
 
-    struct IdentifierRepHash {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static bool equal(const RefPtr<UString::Rep>& a, const RefPtr<UString::Rep>& b) { return a == b; }
-        static const bool safeToCompareToEmptyOrDeleted = true;
-    };
+    class CodeBlock;
+    class ExecState;
+    class Register;
 
-    struct IdentifierRepHashTraits : HashTraits<RefPtr<UString::Rep> > {
-        static const RefPtr<UString::Rep>& deletedValue()
-        {
-            return *reinterpret_cast<RefPtr<UString::Rep>*>(&nullRepPtr);
-        }
+    class Machine {
+    public:
+        static const int returnInfoSize = 6;
 
+        Machine();
+        
+        Opcode getOpcode(OpcodeID id) { return m_opcodeTable[id]; }
+        OpcodeID getOpcodeID(Opcode opcode) { ASSERT(isOpcode(opcode)); return m_opcodeIDTable.get(opcode); }
+        bool isOpcode(Opcode opcode);
+        
+        void execute(ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, scopeChain, codeBlock); }
+        
     private:
-        static UString::Rep* nullRepPtr;
+        typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
+        
+        void privateExecute(ExecutionFlag, ExecState* = 0, ScopeChain* = 0, CodeBlock* = 0);
+        void dumpRegisters(const Vector<Register>&, Register*);
+        
+        Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
+        HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
     };
-
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
-
-    struct SymbolTableIndexHashTraits {
-        typedef size_t TraitType;
-        typedef SymbolTableIndexHashTraits StorageTraits;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-        static const bool emptyValueIsZero = false;
-        static const bool needsDestruction = false;
-        static const bool needsRef = false;
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, IdentifierRepHashTraits, SymbolTableIndexHashTraits> SymbolTable;
+    
+    Machine& machine();
 
 } // namespace KJS
 
-#endif // SymbolTable_h
+#endif // Machine_h

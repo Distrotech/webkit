@@ -79,7 +79,7 @@ namespace KJS {
     RefPtr<FunctionBodyNode> body;
 
     void setScope(const ScopeChain& s) { _scope = s; }
-    const ScopeChain& scope() const { return _scope; }
+    ScopeChain& scope() { return _scope; }
 
     virtual void mark();
 

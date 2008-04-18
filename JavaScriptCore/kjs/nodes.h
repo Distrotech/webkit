@@ -23,12 +23,88 @@
  *
  */
 
+/*
+
+Before landing:
+
+Function call should store offset of R, not R, since vector may reallocate. This probably solves most problems related to new evaluations in same global object, since they all occur beneath function calls
+    -- arguments object also holds a pointer into the register file -- probably needs to be indirect index, instead
+    -- activation objects also hold pointers into the register file -- ditto
+    -- lists, if we decide not to make them copy
+
+Current function needs to be in the register file -- gets marked automatically, marks the CodeBlock's constant pool
+
+Must mark register file -- probably use zero fill plus type tagging to get it right
+
+Pointers to registers and labels become invalid if the register or label vector resizes.
+
+GC mark for constant pools
+
+GC mark for possibly uninitialized register file
+
+Add relevant files to AllInOneFile.cpp.
+
+remove irrelevent files
+
+What things should go in dedicated local variables? CodeBlock::jsValues? CodeBlock::identifiers?
+
+Before switching:
+
+global code should only emit "overwrite var with undefined" if the var doesn't exist already.
+
+Global code needs to deal with new vars being added. Stupid solution: always allocate a new vector, add new, then copy old. Better solution: provide pre-capacity to the existing vector. Alternative solution: just renumber the vars -- does any code depend on the old numbers? 
+
+const -- has to go in the symbol table.
+
+VarStatementNode should just be nixed in favor of AssignmentNode.
+
+Remove ::execute, ::evaluate, ::optimizeVariableAccess
+
+
+Future optimizations:
+
+The introduction of op_new_func, op_call, and op_ret regressed the simple for loop tests by about 25%. Seems to have to do with the fact that these opcodes call arbitrary external functions.
+
+Use RefPtr to indicate use of register -- moves to un-refed registers should be stripped or consolidated to other instructions.
+    - i++ => ++i
+    - less, jtrue => jless
+
+emit actual instructions for var and function initialization -- often, there will be 0; often, the var initialization will be dead code. any read of variable before init can statically become "load undefined".
+
+    a single run of SunSpider performs 1,191,803 var initializations
+
+    -1 means "never happend"
+    
+    var buckets: [846461] [40445] [350197] [9412] [7531] [50] [9] [178] [35000] [3] [1022] [3] [4499] [-1] [1353] [-1] [-1] [1851] [-1] [0] [-1] [0] [-1] [0] [-1] [0] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] 
+
+    fun buckets: [1297008] [7] [3] [2] [1] [0] [-1] [0] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [0] [-1] [1] [-1] [-1] [0] [-1] [0] [-1] [-1] [-1] [-1] [-1] [999] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] [-1] ]
+
+for resolve-evaluate-put, we can have a { DontCare, Clean, Dirty } switch -- get slot and if DontCare, set clean, evaluate, set slot if clean
+
+instead of branching to see if you've emitted code, just start out with a stub that does that emitting when invoked.
+
+single, shared constant pool
+
+At least for loops with fewer iterations it would probably be a win to duplicate the loop condition at the start and end of the loop
+
+Perhaps we should have a distinguished "condition code" register for expressions in a boolean context. For relational and logical operators we can output directly to the condition code register, for other opcodes you get an extra instruction. Jump instructions can read implicitly from the condition code. That avoids the less writing to r0, it just puts a bool in the condition code register.
+
+Can't you just make all opcodes have variants that use constant table operands directly?
+
+A named function expression can just enter its name into the symbol table instead of adding an object to the scope chain.
+
+Shrink instructions -- usually, don't need a whole word to store int values. Perhaps use tagging of opcodes to encode the first operand. Special work-around instructions when whole words are needed
+
+*/
+
 #ifndef NODES_H_
 #define NODES_H_
 
 #include "internal.h"
 #include "regexp.h"
+#include "RegisterID.h"
 #include "SymbolTable.h"
+#include "UnusedParam.h"
 #include <wtf/ListRefPtr.h>
 #include <wtf/MathExtras.h>
 #include <wtf/OwnPtr.h>
@@ -43,6 +119,8 @@
 namespace KJS {
 
     class ArgumentsNode;
+    class CodeBlock;
+    class CodeGenerator;
     class ConstDeclNode;
     class FuncDeclNode;
     class Node;
@@ -137,14 +215,40 @@ namespace KJS {
         {
         }
 
+        /*
+            Return value: The register holding the production's value.
+                     dst: An optional parameter specifying the most efficient
+                          destination at which to store the production's value.
+                          The callee must honor dst.
+
+            dst provides for a crude form of copy propagation. For example,
+
+            x = 1
+
+            becomes
+            
+            load r[x], 1
+            
+            instead of 
+
+            load r0, 1
+            mov r[x], r0
+            
+            because the assignment node, "x =", passes r[x] as dst to the number
+            node, "1".
+        */
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* dst = 0) KJS_FAST_CALL { ASSERT_NOT_REACHED(); UNUSED_PARAM(dst); return 0; } // FIXME: Make this pure virtual.
+
         UString toString() const KJS_FAST_CALL;
         int lineNo() const KJS_FAST_CALL { return m_line; }
+
+        virtual bool isReturnNode() const KJS_FAST_CALL { return false; }
 
         // Serialization.
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL = 0;
         virtual Precedence precedence() const = 0;
         virtual bool needsParensIfLeftmost() const { return false; }
-
+        
         // Used for iterative, depth-first traversal of the node tree. Does not cross function call boundaries.
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL { }
 
@@ -219,7 +323,9 @@ namespace KJS {
         void setLoc(int line0, int line1) KJS_FAST_CALL;
         int firstLine() const KJS_FAST_CALL { return lineNo(); }
         int lastLine() const KJS_FAST_CALL { return m_lastLine; }
+
         virtual JSValue* execute(ExecState *exec) KJS_FAST_CALL = 0;
+
         virtual void pushLabel(const Identifier& ident) KJS_FAST_CALL { m_labelStack.push(ident); }
         virtual Precedence precedence() const { ASSERT_NOT_REACHED(); return PrecExpression; }
         virtual bool isEmptyStatement() const KJS_FAST_CALL { return false; }
@@ -283,6 +389,8 @@ namespace KJS {
             , m_double(v)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual double evaluateToNumber(ExecState*) KJS_FAST_CALL;
@@ -377,6 +485,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
@@ -665,6 +774,7 @@ namespace KJS {
             listNode->m_next = this;
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual Precedence precedence() const { ASSERT_NOT_REACHED(); return PrecExpression; }
@@ -672,8 +782,6 @@ namespace KJS {
         void evaluateList(ExecState*, List&) KJS_FAST_CALL;
         PassRefPtr<ArgumentListNode> releaseNext() KJS_FAST_CALL { return m_next.release(); }
 
-    private:
-        friend class ArgumentsNode;
         ListRefPtr<ArgumentListNode> m_next;
         RefPtr<ExpressionNode> m_expr;
     };
@@ -695,7 +803,6 @@ namespace KJS {
 
         void evaluateList(ExecState* exec, List& list) KJS_FAST_CALL { if (m_listNode) m_listNode->evaluateList(exec, list); }
 
-    private:
         RefPtr<ArgumentListNode> m_listNode;
     };
 
@@ -776,6 +883,8 @@ namespace KJS {
             , m_args(PlacementNewAdopt)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
@@ -929,6 +1038,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -1275,6 +1385,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
@@ -1604,6 +1715,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual double evaluateToNumber(ExecState*) KJS_FAST_CALL;
@@ -1777,6 +1889,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual bool evaluateToBoolean(ExecState*) KJS_FAST_CALL;
@@ -2224,6 +2337,8 @@ namespace KJS {
             , m_right(PlacementNewAdopt)
         {
         }
+        
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
@@ -2442,6 +2557,7 @@ namespace KJS {
     public:
         BlockNode(SourceElements* children) KJS_FAST_CALL;
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2456,6 +2572,8 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual bool isEmptyStatement() const KJS_FAST_CALL { return true; }
@@ -2468,6 +2586,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2482,6 +2601,8 @@ namespace KJS {
             : m_expr(expr)
         {
         }
+        
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
@@ -2576,6 +2697,7 @@ namespace KJS {
             m_expr3->optimizeForUnnecessaryResult();
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2649,9 +2771,11 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
+        virtual bool isReturnNode() const KJS_FAST_CALL { return true; }
 
     private:
         RefPtr<ExpressionNode> m_value;
@@ -2758,6 +2882,13 @@ namespace KJS {
     public:
         ScopeNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
+        CodeBlock& code(ExecState* exec) KJS_FAST_CALL
+        {
+            if (!m_code)
+                generateCode(exec);
+            return *m_code;
+        }
+
         int sourceId() const KJS_FAST_CALL { return m_sourceId; }
         const UString& sourceURL() const KJS_FAST_CALL { return m_sourceURL; }
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2767,9 +2898,12 @@ namespace KJS {
         
     protected:
         void optimizeVariableAccess(ExecState*) KJS_FAST_CALL;
+        virtual void generateCode(ExecState*) KJS_FAST_CALL { ASSERT_NOT_REACHED(); }
 
         VarStack m_varStack;
         FunctionStack m_functionStack;
+        OwnPtr<CodeBlock> m_code;
+
     private:
         UString m_sourceURL;
         int m_sourceId;
@@ -2785,6 +2919,9 @@ namespace KJS {
 
     private:
         ProgramNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
+
+        virtual void generateCode(ExecState*) KJS_FAST_CALL;
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         void initializeSymbolTable(ExecState*) KJS_FAST_CALL;
         ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
@@ -2808,24 +2945,23 @@ namespace KJS {
     class FunctionBodyNode : public ScopeNode {
     public:
         static FunctionBodyNode* create(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
-
-        virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
-
-        SymbolTable& symbolTable() KJS_FAST_CALL { return m_symbolTable; }
-
+        
         Vector<Identifier>& parameters() KJS_FAST_CALL { return m_parameters; }
         UString paramString() const KJS_FAST_CALL;
 
+        SymbolTable& symbolTable() KJS_FAST_CALL { return m_symbolTable; }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+        
     protected:
         FunctionBodyNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
     private:
-        void initializeSymbolTable(ExecState*) KJS_FAST_CALL;
-        ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
-
-        bool m_initialized;
-        Vector<Identifier> m_parameters;
+        virtual void generateCode(ExecState*) KJS_FAST_CALL;
+        
         SymbolTable m_symbolTable;
+
+        Vector<Identifier> m_parameters;
     };
 
     class FuncExprNode : public ExpressionNode {
@@ -2869,6 +3005,8 @@ namespace KJS {
         {
             addParams();
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
