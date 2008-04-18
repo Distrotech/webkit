@@ -283,7 +283,7 @@ NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue)
     return exceptionValue;
 }
 
-ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv)
+ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
 {
     callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
     callFrame[Machine::ReturnVPC].u.vPC = vPC + 1;
@@ -291,6 +291,7 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     callFrame[Machine::CallerRegisterOffset].u.i = registerOffset;
     callFrame[Machine::ReturnValueRegister].u.i = returnValueRegister;
     callFrame[Machine::ArgumentStartRegister].u.i = argv; // original argument vector (for the sake of the "arguments" object)
+    callFrame[Machine::CalledAsConstructor].u.i = calledAsConstructor;
     // callFrame[Machine::OptionalCalleeScopeChain] gets optionally set later
 }
 
@@ -947,7 +948,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
-            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv);
+            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
 
             // WARNING: If code generation wants to optimize resolves to parent scopes,
             // it needs to be aware that, for functions that require activations,
@@ -1000,6 +1001,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             scopeChain->~ScopeChain();
         }
 
+        if (callFrame[CalledAsConstructor].u.i && !returnValue->isObject()) {
+            JSValue* thisObject = callFrame[CallFrameHeaderSize].u.jsValue;
+            returnValue = thisObject;
+        }
+         
         codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
         if (!codeBlock)
             return returnValue;
@@ -1021,12 +1027,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         JSValue* v = r[r1].u.jsValue;
 
-        // FIXME: We only support constructing native objects right now.
         // FIXME: We should not use CallType for ConstuctType. 
         CallData callData;
         CallType callType = v->getCallData(callData);
-        ASSERT(callType == CallTypeNative);
-        UNUSED_PARAM(callType);
 
         // FIXME: We need to throw a TypeError here if v is not an Object.
         ASSERT(v->isObject());
@@ -1036,8 +1039,55 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         // FIXME: We need to throw a TypeError here if v doesn't implementConstuct.
         ASSERT(constructor->implementsConstruct());
 
-        List args(&r[argv + 1].u.jsValue, argc - 1);
-        r[r0].u.jsValue = constructor->construct(exec, args);
+        if (callType == CallTypeJS) {
+            int registerOffset = r - (*registerBase);
+            Register* callFrame = r + argv - CallFrameHeaderSize;
+
+            JSObject* prototype;
+            JSValue* p = constructor->get(exec, exec->propertyNames().prototype);
+            if (p->isObject())
+                prototype = static_cast<JSObject*>(p);
+            else
+                prototype = exec->lexicalGlobalObject()->objectPrototype();
+            JSObject* newObject = new JSObject(prototype);
+            r[argv].u.jsValue = newObject; // "this" value
+
+            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1);
+
+            // WARNING: If code generation wants to optimize resolves to parent scopes,
+            // it needs to be aware that, for functions that require activations,
+            // the scope chain is off by one, since the activation hasn't been pushed yet.
+            CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
+
+            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, r);
+            scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
+            k = newCodeBlock->jsValues.data();
+            vPC = newCodeBlock->instructions.begin();
+            codeBlock = newCodeBlock;
+
+            NEXT_OPCODE;
+        }
+
+        if (callType == CallTypeNative) {
+            // FIXME: technically it seems like we should save registerOffset here
+            // and restore r below, as for native call, but it seems to cause a 
+            // significant perf regression
+            int registerOffset = r - (*registerBase);
+
+            List args(&r[argv + 1].u.jsValue, argc - 1);
+            r[r0].u.jsValue = constructor->construct(exec, args);
+        
+            // FIXME: technically it seems like we should restore r here and save
+            // registerOffset above, as for native call, but it seems to cause a
+            // significant perf regression
+            r = (*registerBase) + registerOffset;
+
+            ++vPC;
+            NEXT_OPCODE;
+        }
+
+        // FIXME: throw exception
+        ASSERT(callType == CallTypeNone);
 
         ++vPC;
         NEXT_OPCODE;
