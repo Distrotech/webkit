@@ -1,3 +1,22 @@
+2008-03-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed recent 25% regression on simple for loop test. GCC seems to be
+        very finicky about the code that gets inlined into
+        Machine::privateExecute.
+
+        Everything in this patch is simply the result of experiment.
+        
+        The resolve and resolve_base opcodes do not seem to have gotten slower
+        from this change.
+
+        * VM/Machine.cpp:
+        (KJS::resolve):
+        (KJS::resolveBase):
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.h:
+
 2008-03-24  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff Garen.
