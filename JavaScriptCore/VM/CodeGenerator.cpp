@@ -112,9 +112,29 @@ namespace KJS {
 
 */
 
+#ifndef NDEBUG
+bool CodeGenerator::s_dumpsGeneratedCode = false;
+#endif
+
+void CodeGenerator::setDumpsGeneratedCode(bool dumpsGeneratedCode)
+{
+#ifndef NDEBUG
+    s_dumpsGeneratedCode = dumpsGeneratedCode;
+#else
+    UNUSED_PARAM(dumpsGeneratedCode);
+#endif
+}
+
 void CodeGenerator::generate()
 {
     m_scopeNode->emitCode(*this);
+#ifndef NDEBUG
+    if (s_dumpsGeneratedCode) {
+        JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
+        InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+        m_codeBlock->dump(&tmpExec);
+    }
+#endif
 }
 
 bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)

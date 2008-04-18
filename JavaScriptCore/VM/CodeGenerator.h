@@ -31,6 +31,7 @@
 #define CodeGenerator_h
 
 #include "CodeBlock.h"
+#include "HashTraits.h"
 #include "Instruction.h"
 #include "LabelID.h"
 #include "RegisterID.h"
@@ -39,18 +40,11 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
 
-
 namespace KJS {
 
     class Identifier;
     class ScopeChain;
     class ScopeNode;
-
-    struct LocalsHashTraits : GenericHashTraits<int> {
-        static int emptyValue() { return std::numeric_limits<int>::max(); }
-        static int deletedValue() { return std::numeric_limits<int>::min(); }
-        static const bool emptyValueIsZero = false;
-    };
 
     // JumpContexts are used to track entry and exit points for javascript loops and switch statements
     struct JumpContext {
@@ -64,6 +58,9 @@ namespace KJS {
     public:
         typedef DeclarationStacks::VarStack VarStack;
         typedef DeclarationStacks::FunctionStack FunctionStack;
+        
+        static void setDumpsGeneratedCode(bool dumpsGeneratedCode);
+        
         CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&);
         CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier> parameters);
 
@@ -245,6 +242,10 @@ namespace KJS {
         JSValueMap m_jsValueMap;
 
         CommonIdentifiers* m_propertyNames;
+
+#ifndef NDEBUG        
+        static bool s_dumpsGeneratedCode;
+#endif
     };
 
 }
