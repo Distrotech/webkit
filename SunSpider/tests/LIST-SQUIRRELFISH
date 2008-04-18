@@ -1,5 +1,6 @@
 3d-cube
 3d-morph
+3d-raytrace
 access-binary-trees
 access-fannkuch
 access-nbody
@@ -18,4 +19,5 @@ math-spectral-norm
 regexp-dna
 string-base64
 string-fasta
+string-unpack-code
 string-validate-input
