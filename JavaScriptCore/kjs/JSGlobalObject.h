@@ -23,8 +23,9 @@
 #ifndef KJS_GlobalObject_h
 #define KJS_GlobalObject_h
 
-#include "JSVariableObject.h"
 #include "Activation.h"
+#include "JSVariableObject.h"
+#include "Register.h"
 
 namespace KJS {
 
@@ -139,6 +140,8 @@ namespace KJS {
             size_t activationCount;
 
             OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
+
+            Vector<Register> registers;
         };
 
     public:
@@ -242,6 +245,8 @@ namespace KJS {
         virtual bool isDynamicScope() const;
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
+        
+        Vector<Register>& registers() { return d()->registers; }
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
