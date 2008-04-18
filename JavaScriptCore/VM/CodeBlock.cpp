@@ -423,4 +423,17 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
     }
 }
 
+void CodeBlock::mark()
+{
+    for (size_t i = 0; i < jsValues.size(); ++i)
+        if (!jsValues[i]->marked())
+            jsValues[i]->mark();
+
+    for (size_t i = 0; i < functions.size(); ++i)
+        functions[i]->body()->mark();
+
+    for (size_t i = 0; i < functionExpressions.size(); ++i)
+        functionExpressions[i]->body()->mark();
+}
+
 } // namespace KJS
