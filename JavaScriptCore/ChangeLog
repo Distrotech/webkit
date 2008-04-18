@@ -1,3 +1,14 @@
+2008-03-31  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver. Tweaked somewhat by Maciej.
+        
+        - implement codegen for ReadModifyResolveNode
+
+        * kjs/nodes.cpp:
+        (KJS::emitReadModifyAssignment):
+        (KJS::ReadModifyResolveNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Geoff.
