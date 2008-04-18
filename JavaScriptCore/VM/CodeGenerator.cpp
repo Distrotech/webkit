@@ -37,7 +37,7 @@ using namespace std;
 namespace KJS {
 
 /*
-    The register layout of a stack frame looks like this:
+    The layout of a register frame looks like this:
     
     For 
     

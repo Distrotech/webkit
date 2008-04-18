@@ -54,7 +54,7 @@ void JSActivation::copyRegisters()
 
     Register* registerArray = static_cast<Register*>(fastMalloc(numRegisters * sizeof(Register)));
 
-    Register* end = registers() + registerOffset();
+    Register* end = registers();
     Register* src = end - numRegisters;
     Register* dst = registerArray;
     while (src != end)

@@ -157,8 +157,8 @@ void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
 {
     unsigned count = p.count;
     symbolTable().clear();
-    registerVector().resize(count);
-    setRegisterOffset(count);
+    registerFile().clear();
+    registerFile().addGlobals(count);
     SavedProperty* property = p.properties.get();
     for (int i = -count; i < 0; ++i, ++property) {
         ASSERT(!symbolTable().contains(property->name()));
@@ -211,7 +211,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    registerVector().clear();
+    registerFile().clear();
     symbolTable().clear();
 
     // Prototypes
@@ -514,8 +514,8 @@ void JSGlobalObject::mark()
             scopeNode->mark();
     }
 
-    Collector::markStackObjectsConservatively(registerVector().begin(), registerVector().end());
-        
+    registerFile().mark();
+
     markIfNeeded(d()->globalExec.exception());
 
     markIfNeeded(d()->objectConstructor);

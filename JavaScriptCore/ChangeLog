@@ -1,3 +1,16 @@
+2008-04-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Next step toward supporting re-entrant evaluation: Moved register file
+        maintenance code into a proper "RegisterFile" class.
+        
+        There's a subtle change to the register file's internal layout: for
+        global code / the global object, registerOffset is always 0 now. In
+        other words, all register counting starts at 0, not 0 + (number of
+        global variables). The helps simplify accounting when the number of
+        global variables changes.
+
 2008-04-07  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

@@ -42,14 +42,6 @@ namespace KJS {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
 
-        Register** registerBase() const { return d->registerBase; }
-        Register* registers() const { return *registerBase(); }
-
-        void setRegisterOffset(int registerOffset) { d->registerOffset = registerOffset; }
-        int registerOffset() const { return d->registerOffset; }
-
-        JSValue*& valueAt(int index) const { return registers()[registerOffset() + index].u.jsValue; }
-
         // FIXME: Implement these checks for real by storing property attributes in the symbol table.
         bool isReadOnly(int) const { return false; }
         bool isDontEnum(int) const { return false; }
@@ -98,6 +90,10 @@ namespace KJS {
         {
         }
 
+        Register** registerBase() const { return d->registerBase; }
+        Register* registers() const { return *registerBase() + d->registerOffset; }
+        JSValue*& valueAt(int index) const { return registers()[index].u.jsValue; }
+
         bool symbolTableGet(const Identifier&, PropertySlot&);
         bool symbolTablePut(const Identifier&, JSValue*);
         bool symbolTablePutWithAttributes(const Identifier&, JSValue*, unsigned attributes);
@@ -109,19 +105,6 @@ namespace KJS {
     {
         int index = symbolTable().get(propertyName.ustring().rep());
         if (index != missingSymbolMarker()) {
-#ifndef NDEBUG
-            // During initialization, the variable object needs to advertise that it has certain
-            // properties, even if they're not ready for access yet. This check verifies that
-            // no one tries to access such a property.
-            
-            // In a release build, we optimize this check away and just return an invalid pointer.
-            // There's no harm in an invalid pointer, since no one dereferences it.
-            int offset = registerOffset() + index;
-            if (offset < 0) {
-                slot.setUngettable(this);
-                return true;
-            }
-#endif
             slot.setValueSlot(this, &valueAt(index));
             return true;
         }

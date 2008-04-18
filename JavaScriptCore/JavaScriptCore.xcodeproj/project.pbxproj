@@ -95,8 +95,9 @@
 		14BD5A300A3E91F600BAF59C /* JSContextRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14BD5A290A3E91F600BAF59C /* JSContextRef.cpp */; };
 		14BD5A310A3E91F600BAF59C /* JSContextRef.h in Headers */ = {isa = PBXBuildFile; fileRef = 14BD5A2A0A3E91F600BAF59C /* JSContextRef.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		14BD5A320A3E91F600BAF59C /* JSValueRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14BD5A2B0A3E91F600BAF59C /* JSValueRef.cpp */; };
+		14D792660DAA03FB001A9F05 /* RegisterFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 14D792640DAA03FB001A9F05 /* RegisterFile.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */; };
 		14DA81900D99FD2000B0A4FB /* JSActivation.h in Headers */ = {isa = PBXBuildFile; fileRef = 14DA818E0D99FD2000B0A4FB /* JSActivation.h */; };
-		14DA81910D99FD2000B0A4FB /* JSActivation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */; };
 		14DE0D690D02431400AACCA2 /* JSGlobalObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DE0D680D02431400AACCA2 /* JSGlobalObject.cpp */; };
 		14F252570D08DD8D004ECFFF /* JSVariableObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 14F252560D08DD8D004ECFFF /* JSVariableObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		14F252610D08DF2F004ECFFF /* JSVariableObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14F252600D08DF2F004ECFFF /* JSVariableObject.cpp */; };
@@ -426,6 +427,8 @@
 		14BD5A2A0A3E91F600BAF59C /* JSContextRef.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JSContextRef.h; sourceTree = "<group>"; };
 		14BD5A2B0A3E91F600BAF59C /* JSValueRef.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JSValueRef.cpp; sourceTree = "<group>"; };
 		14BD5A2D0A3E91F600BAF59C /* testapi.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = testapi.c; sourceTree = "<group>"; };
+		14D792640DAA03FB001A9F05 /* RegisterFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RegisterFile.h; path = VM/RegisterFile.h; sourceTree = "<group>"; };
+		14D792650DAA03FB001A9F05 /* RegisterFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegisterFile.cpp; path = VM/RegisterFile.cpp; sourceTree = "<group>"; };
 		14D857740A4696C80032146C /* testapi.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = testapi.js; sourceTree = "<group>"; };
 		14DA818E0D99FD2000B0A4FB /* JSActivation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSActivation.h; sourceTree = "<group>"; };
 		14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSActivation.cpp; sourceTree = "<group>"; };
@@ -816,6 +819,8 @@
 				149B15E40D81F986009CB8C7 /* Opcode.h */,
 				149B25000D8AF6D1009CB8C7 /* Register.cpp */,
 				149B24FF0D8AF6D1009CB8C7 /* Register.h */,
+				14D792650DAA03FB001A9F05 /* RegisterFile.cpp */,
+				14D792640DAA03FB001A9F05 /* RegisterFile.h */,
 			);
 			name = VM;
 			sourceTree = "<group>";
@@ -1233,6 +1238,7 @@
 				149B25010D8AF6D1009CB8C7 /* Register.h in Headers */,
 				14DA81900D99FD2000B0A4FB /* JSActivation.h in Headers */,
 				145C50800D9DF63B0088F6B9 /* CallData.h in Headers */,
+				14D792660DAA03FB001A9F05 /* RegisterFile.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1498,8 +1504,8 @@
 				149B1AA40D86ED7C009CB8C7 /* Instruction.cpp in Sources */,
 				149B20DA0D8A0891009CB8C7 /* LabelID.cpp in Sources */,
 				149B25020D8AF6D1009CB8C7 /* Register.cpp in Sources */,
-				14DA81910D99FD2000B0A4FB /* JSActivation.cpp in Sources */,
 				A727FF6B0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */,
+				14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
