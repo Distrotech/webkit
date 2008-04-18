@@ -5568,17 +5568,17 @@ ScopeNode::ScopeNode(SourceElements* children, VarStack* varStack, FunctionStack
         m_functionStack = *funcStack;
 }
 
-void ScopeNode::mark()
-{
-    if (m_code)
-        m_code->mark();
-}
-
 // ------------------------------ ProgramNode -----------------------------
 
 ProgramNode::ProgramNode(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
     : ScopeNode(children, varStack, funcStack, usesEval, needsClosure)
+    , m_code(0)
 {
+}
+
+ProgramNode::~ProgramNode()
+{
+    delete m_code;
 }
 
 ProgramNode* ProgramNode::create(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
@@ -5590,7 +5590,23 @@ ProgramNode* ProgramNode::create(SourceElements* children, VarStack* varStack, F
 
 EvalNode::EvalNode(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
     : ScopeNode(children, varStack, funcStack, usesEval, needsClosure)
+    , m_code(0)
 {
+}
+
+EvalNode::~EvalNode()
+{
+    delete m_code;
+}
+
+void EvalNode::generateCode(ScopeChain& scopeChain)
+{
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
+    ASSERT(globalObject->isGlobalObject());
+    
+    m_code = new ProgramCodeBlock(usesEval(), needsClosure(), globalObject);
+    
+    ASSERT_NOT_REACHED();
 }
 
 EvalNode* EvalNode::create(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
@@ -5602,7 +5618,19 @@ EvalNode* EvalNode::create(SourceElements* children, VarStack* varStack, Functio
 
 FunctionBodyNode::FunctionBodyNode(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
     : ScopeNode(children, varStack, funcStack, usesEval, needsClosure)
+    , m_code(0)
 {
+}
+
+FunctionBodyNode::~FunctionBodyNode()
+{
+    delete m_code;
+}
+
+void FunctionBodyNode::mark()
+{
+    if (m_code)
+        m_code->mark();
 }
 
 FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
@@ -5614,9 +5642,9 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
 
 void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 {
-    m_code.set(new CodeBlock(usesEval(), needsClosure()));
+    m_code = new CodeBlock(usesEval(), needsClosure());
 
-    CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
+    CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code, m_varStack, m_functionStack, m_parameters);
     generator.generate();
 
     m_children.shrinkCapacity(0);
@@ -5643,12 +5671,12 @@ RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
 
 void ProgramNode::generateCode(ScopeChain& scopeChain)
 {
-    m_code.set(new CodeBlock(usesEval(), needsClosure()));
-    
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
-    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack);
+    m_code = new ProgramCodeBlock(usesEval(), needsClosure(), globalObject);
+    
+    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code, m_varStack, m_functionStack);
     generator.generate();
 
     m_children.shrinkCapacity(0);
