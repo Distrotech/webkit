@@ -127,8 +127,10 @@ void CodeGenerator::addVar(const Identifier& ident)
 {
     if (ident == argumentsIdentifier())
         return;
+        
+    ASSERT(m_nextVar >= m_nextParameter);
 
-    int index = m_nextLocal--;
+    int index = m_nextVar--;
     symbolTable().add(ident.ustring().rep(), index);
 
     m_localsMap.add(index, m_locals.size());
@@ -139,7 +141,9 @@ void CodeGenerator::addVar(const Identifier& ident)
 
 void CodeGenerator::addFunction(const Identifier& ident)
 {
-    int index = m_nextLocal--;
+    ASSERT(m_nextVar >= m_nextParameter);
+
+    int index = m_nextVar--;
     symbolTable().set(ident.ustring().rep(), index);
 
     m_localsMap.set(index, m_locals.size());
@@ -150,6 +154,8 @@ void CodeGenerator::addFunction(const Identifier& ident)
 
 void CodeGenerator::addParameter(const Identifier& ident)
 {
+    ASSERT(m_nextVar >= m_nextParameter);
+
     int index = m_nextParameter++;
     symbolTable().set(ident.ustring().rep(), index);
 
