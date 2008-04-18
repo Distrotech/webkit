@@ -85,8 +85,25 @@ namespace KJS {
         // the next instruction to overwrite it anyway.
         RegisterID* newTemporaryOr(RegisterID* suggestion) { return suggestion->isTemporary() ? suggestion : newTemporary(); }
 
+        // Functions for handling of dst register
+
+        // Returns  a place to write intermediate values of an operation
+        // which reuses dst if it is safe to do so.
+
         RegisterID* tempDestination(RegisterID* dst) { return (dst && dst->isTemporary()) ? dst : newTemporary(); }
-        RegisterID* finalDestination(RegisterID* originalDst, RegisterID* tempDst = 0) { return originalDst ? originalDst : (tempDst ? tempDst : newTemporary()); }
+
+        // Returns the place to write the final output of an operation.
+        RegisterID* finalDestination(RegisterID* originalDst, RegisterID* tempDst = 0) 
+        { 
+            if (originalDst)
+                return originalDst;
+            if (tempDst && tempDst->isTemporary())
+                return tempDst;
+            return newTemporary(); 
+        }
+
+        // moves src to dst if dst is not null and is different from src, otherwise just returns src
+        RegisterID* moveToDestinationIfNeeded(RegisterID* dst, RegisterID* src) { return (dst && dst != src) ? emitMove(dst, src) : src; }
 
 
         PassRefPtr<LabelID> newLabel();
