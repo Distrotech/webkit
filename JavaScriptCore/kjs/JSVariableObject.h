@@ -30,6 +30,7 @@
 #define JSVariableObject_h
 
 #include "LocalStorage.h"
+#include "Register.h"
 #include "SymbolTable.h"
 #include "object.h"
 
@@ -43,6 +44,10 @@ namespace KJS {
         LocalStorage& localStorage() const { return d->localStorage; }
 
         Vector<Register>& registers() { return *d->registers; }
+        JSValue*& valueAt(int index) { return registers()[d->rOffset + index].u.jsValue; }
+
+        // FIXME: Implement this check for real by storing property attributes in the symbol table.
+        bool isReadOnly(int) { return false; }
         
         void saveLocalStorage(SavedProperties&) const;
         void restoreLocalStorage(const SavedProperties&);
@@ -110,12 +115,13 @@ namespace KJS {
             
             // In a release build, we optimize this check away and just return an invalid pointer.
             // There's no harm in an invalid pointer, since no one dereferences it.
-            if (index < 0 || static_cast<unsigned>(index) >= d->localStorage.size()) {
+            int offset = d->rOffset + index;
+            if (offset < 0 || static_cast<unsigned>(offset) >= registers().size()) {
                 slot.setUngettable(this);
                 return true;
             }
 #endif
-            slot.setValueSlot(this, &d->localStorage[index].value);
+            slot.setValueSlot(this, &valueAt(index));
             return true;
         }
         return false;
@@ -126,10 +132,9 @@ namespace KJS {
         int index = symbolTable().get(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
-        LocalStorageEntry& entry = d->localStorage[index];
-        if (entry.attributes & ReadOnly)
+        if (isReadOnly(index))
             return true;
-        entry.value = value;
+        valueAt(index) = value;
         return true;
     }
 
@@ -138,9 +143,9 @@ namespace KJS {
         int index = symbolTable().get(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
-        LocalStorageEntry& entry = d->localStorage[index];
-        entry.value = value;
-        entry.attributes = attributes;
+        // FIXME: Implement attribute support by storing attributes in the symbol table.
+        ASSERT(!attributes);
+        valueAt(index) = value;
         return true;
     }
     
