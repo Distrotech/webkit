@@ -221,7 +221,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     registers.reserveCapacity(512);
 
     registers.resize(codeBlock->numRegisters());
-    Register* r = registers.data() + codeBlock->numLocals;
+    Register* r = registers.data() + codeBlock->numVars;
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
 
@@ -576,24 +576,24 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         // the scope chain is off by one, since the activation hasn't been pushed yet.
         CodeBlock* newCodeBlock = &functionBody->code(*scopeChain);
 
-        int offset = rOffset + argv + argc + newCodeBlock->numLocals;
+        int offset = rOffset + argv + argc + newCodeBlock->numVars;
         if (argc == newCodeBlock->numParameters) { // correct number of arguments
-            registers.resize(offset + newCodeBlock->numLocals + newCodeBlock->numTemporaries);
+            registers.resize(offset + newCodeBlock->numVars + newCodeBlock->numTemporaries);
             r = registers.data() + offset;
         } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
             int omittedArgCount = newCodeBlock->numParameters - argc;
-            registers.resize(offset + omittedArgCount + newCodeBlock->numLocals + newCodeBlock->numTemporaries);
+            registers.resize(offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries);
             r = registers.data() + omittedArgCount + offset;
             
             Register* end = r;
             for (Register* it = r - omittedArgCount; it != end; ++it)
                 (*it).u.jsValue = jsUndefined();
         } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-            registers.resize(offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numLocals + newCodeBlock->numTemporaries);
+            registers.resize(offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries);
             r = registers.data() + returnInfoSize + newCodeBlock->numParameters + offset;
 
             int shift = returnInfoSize + argc;
-            Register* it = r - newCodeBlock->numLocals - newCodeBlock->numParameters - returnInfoSize - shift;
+            Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
             Register* end = it + returnInfoSize + newCodeBlock->numParameters;
             for ( ; it != end; ++it)
                 *(it + shift) = *it;
@@ -617,7 +617,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
 
         CodeBlock* oldCodeBlock = codeBlock;
 
-        Register* returnInfo = r - oldCodeBlock->numLocals - oldCodeBlock->numParameters - returnInfoSize;
+        Register* returnInfo = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - returnInfoSize;
         Register* returnValue = &r[r1];
         
         if (oldCodeBlock->needsActivation) {

@@ -125,7 +125,7 @@ void CodeGenerator::generate()
 
 void CodeGenerator::addVar(const Identifier& ident)
 {
-    if (ident == *m_argumentsIdentifier)
+    if (ident == argumentsIdentifier())
         return;
 
     int index = m_nextLocal--;
@@ -134,7 +134,7 @@ void CodeGenerator::addVar(const Identifier& ident)
     m_localsMap.add(index, m_locals.size());
     m_locals.append(index);
 
-    ++m_codeBlock->numLocals;
+    ++m_codeBlock->numVars;
 }
 
 void CodeGenerator::addFunction(const Identifier& ident)
@@ -145,7 +145,7 @@ void CodeGenerator::addFunction(const Identifier& ident)
     m_localsMap.set(index, m_locals.size());
     m_locals.append(index);
 
-    ++m_codeBlock->numLocals;
+    ++m_codeBlock->numVars;
 }
 
 void CodeGenerator::addParameter(const Identifier& ident)
@@ -159,7 +159,7 @@ void CodeGenerator::addParameter(const Identifier& ident)
     ++m_codeBlock->numParameters;
 }
 
-RegisterID* CodeGenerator::getRegister(const Identifier& ident)
+RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
 {
     if (m_scopeDepth)
         return 0;

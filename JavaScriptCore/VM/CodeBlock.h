@@ -43,7 +43,7 @@ namespace KJS {
     struct CodeBlock {
         CodeBlock(bool usesEval_, bool needsClosure_)
             : numTemporaries(0)
-            , numLocals(0)
+            , numVars(0)
             , numParameters(0)
             , needsActivation(usesEval_ || needsClosure_)
             , usesEval(usesEval_)
@@ -52,12 +52,12 @@ namespace KJS {
         }
         
         void dump(ExecState*);
-        unsigned numRegisters() { return numTemporaries + numLocals; }
+        unsigned numRegisters() { return numTemporaries + numVars; }
         
         Vector<Instruction> instructions;
         
         int numTemporaries;
-        int numLocals;
+        int numVars;
         int numParameters;
         
         bool needsActivation;
