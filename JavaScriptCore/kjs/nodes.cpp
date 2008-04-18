@@ -1750,6 +1750,21 @@ void PostIncLocalVarNode::optimizeForUnnecessaryResult()
 }
 
 // Decrement
+RegisterID* PostDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    // FIXME: I think we can detect the absense of dependent expressions here, 
+    // and emit a PreDec instead of a PostDec. A post-pass to eliminate dead
+    // code would work, too.
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
+        return generator.emitPostDec(dst ? dst : generator.newTemporary(), r0);
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitPostDec(dst ? dst : generator.newTemporary(), r1.get());
+    generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    return r2;
+}
+
 void PostDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
