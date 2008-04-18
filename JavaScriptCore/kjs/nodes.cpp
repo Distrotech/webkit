@@ -866,6 +866,14 @@ JSValue* ArrayNode::evaluate(ExecState* exec)
 
 // ------------------------------ ObjectLiteralNode ----------------------------
 
+RegisterID* ObjectLiteralNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (m_list)
+        return m_list->emitCode(generator, dst);
+    else
+        return generator.emitNewObject(dst ? dst : generator.newTemporary());
+}
+
 void ObjectLiteralNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_list)
@@ -882,6 +890,29 @@ JSValue* ObjectLiteralNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ PropertyListNode -----------------------------
+
+RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = dst ? dst : generator.newTemporary();
+    
+    generator.emitNewObject(r0.get());
+    
+    for (PropertyListNode* p = this; p; p = p->m_next.get()) {
+        RegisterID* r1 = p->m_node->m_assign->emitCode(generator);
+        
+        switch (p->m_node->m_type) {
+            case PropertyNode::Constant: {
+                generator.emitObjectPut(r0.get(), p->m_node->name(), r1);
+                break;
+            }
+            // FIXME: No support for getters and setters yet, as it caused a performance regression
+            default:
+                ASSERT_NOT_REACHED();
+        }
+    }
+    
+    return r0.get();
+}
 
 void PropertyListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -987,6 +1018,12 @@ uint32_t BracketAccessorNode::evaluateToUInt32(ExecState* exec)
 }
 
 // ------------------------------ DotAccessorNode --------------------------------
+
+RegisterID* DotAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_base.get());
+    return generator.emitObjectGet(dst ? dst : generator.newTemporary(), r0, m_ident);
+}
 
 void DotAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -3959,6 +3996,13 @@ found:
 }
 
 // ------------------------------ ReadModifyDotNode -----------------------------------
+
+RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());;
+    RegisterID* r1 = generator.emitNode(dst, m_right.get());
+    return generator.emitObjectPut(r0.get(), m_ident, r1);
+}
 
 void AssignDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
