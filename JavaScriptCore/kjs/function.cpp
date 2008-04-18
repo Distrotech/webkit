@@ -28,7 +28,9 @@
 
 #include "Activation.h"
 #include "ExecState.h"
+#include "ExecStateInlines.h"
 #include "JSGlobalObject.h"
+#include "Machine.h"
 #include "Parser.h"
 #include "PropertyNameArray.h"
 #include "debugger.h"
@@ -39,7 +41,6 @@
 #include "nodes.h"
 #include "operations.h"
 #include "scope_chain_mark.h"
-#include "ExecStateInlines.h"
 #include <errno.h>
 #include <profiler/Profiler.h>
 #include <stdio.h>
@@ -73,10 +74,13 @@ void FunctionImp::mark()
     _scope.mark();
 }
 
-JSValue* FunctionImp::callAsFunction(ExecState*, JSObject*, const List&)
+JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
-    ASSERT_NOT_REACHED();
-    return 0;
+    JSValue* exception;
+    JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
+    if (!result)
+        exec->setException(exception);
+    return result;
 }
 
 JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier& propertyName, const PropertySlot& slot)

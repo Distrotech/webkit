@@ -30,11 +30,11 @@
 #ifndef CodeBlock_h
 #define CodeBlock_h
 
+#include "Instruction.h"
+#include "nodes.h"
+#include "ustring.h"
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
-#include "nodes.h"
-#include "Instruction.h"
-#include "UString.h"
 
 namespace KJS {
 
