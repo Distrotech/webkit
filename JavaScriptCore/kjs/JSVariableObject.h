@@ -35,10 +35,14 @@
 
 namespace KJS {
 
+    class Register;
+
     class JSVariableObject : public JSObject {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
         LocalStorage& localStorage() const { return d->localStorage; }
+
+        Vector<Register>& registers() { return *d->registers; }
         
         void saveLocalStorage(SavedProperties&) const;
         void restoreLocalStorage(const SavedProperties&);
@@ -60,17 +64,27 @@ namespace KJS {
         // without increasing their own size (since there's a hard limit on the
         // size of a JSCell).
         struct JSVariableObjectData {
-            JSVariableObjectData() { }
-            JSVariableObjectData(SymbolTable* s)
-                : symbolTable(s) // Subclass owns this pointer.
+            JSVariableObjectData()
+            {
+                ASSERT_NOT_REACHED();
+            }
+            
+            JSVariableObjectData(SymbolTable* symbolTable_, Vector<Register>* registers_)
+                : symbolTable(symbolTable_)
+                , registers(registers_)
             {
             }
 
             LocalStorage localStorage; // Storage for variables in the symbol table.
             SymbolTable* symbolTable; // Maps name -> index in localStorage.
+
+            Vector<Register>* registers; // The register file.
         };
 
-        JSVariableObject() { }
+        JSVariableObject()
+        {
+            ASSERT_NOT_REACHED();
+        }
 
         JSVariableObject(JSVariableObjectData* data)
             : d(data) // Subclass owns this pointer.
