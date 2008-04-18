@@ -1,3 +1,43 @@
+2008-04-16  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Exception checks for toNumber in op_pre_inc
+
+        This is somewhat more convoluted than the simple hadException checks
+        we currently use.  Instead we use special toNumber conversions that
+        select between the exception and ordinary vPC.  This allows us to 
+        remove any branches in the common case (incrementing a number).
+
+        * API/JSCallbackObject.h:
+        * API/JSCallbackObjectFunctions.h:
+        (KJS::::toNumber):
+        * ChangeLog:
+        * JavaScriptCore.exp:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/JSPropertyNameIterator.cpp:
+        (KJS::JSPropertyNameIterator::toNumber):
+        * VM/JSPropertyNameIterator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/ExecState.cpp:
+        (KJS::ExecState::ExecState):
+        * kjs/ExecState.h:
+        * kjs/JSNotAnObject.cpp:
+        (KJS::JSNotAnObject::toNumber):
+        * kjs/JSNotAnObject.h:
+        * kjs/internal.cpp:
+        (KJS::StringImp::toNumber):
+        (KJS::NumberImp::toNumber):
+        (KJS::GetterSetterImp::toNumber):
+        * kjs/internal.h:
+        * kjs/object.cpp:
+        (KJS::JSObject::toNumber):
+        * kjs/object.h:
+        * kjs/value.h:
+        (KJS::JSValue::toNumber):
+
 2008-04-16  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.

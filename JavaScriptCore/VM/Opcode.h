@@ -107,6 +107,7 @@ namespace KJS {
         \
         macro(op_catch) \
         macro(op_throw) \
+        macro(op_builtin_throw) \
         \
         macro(op_end) // end must be the last opcode in the list
         

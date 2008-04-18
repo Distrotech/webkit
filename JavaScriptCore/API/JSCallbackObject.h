@@ -65,6 +65,7 @@ public:
     virtual void getPropertyNames(ExecState*, PropertyNameArray&);
 
     virtual double toNumber(ExecState*) const;
+    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     virtual UString toString(ExecState*) const;
 
     void setPrivate(void* data);
