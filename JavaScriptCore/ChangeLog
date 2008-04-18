@@ -1,5 +1,35 @@
 2008-04-10  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Oliver Hunt.
+        
+        Fix two bugs when throwing exceptions from re-entrant JS calls:
+        
+        (1) Don't shrink the register file to 0, since our caller may still
+        be using it.
+        
+        (2) In case of exception, return jsNull() instead of 0 because,
+        surprisingly, some JavaScriptCore clients rely on a function's return
+        value being safe to operate on even if the function threw an exception.
+        
+        Also:
+        
+        - Changed FunctionImp::callAsFunction to honor the new semantics of
+        exceptions not returning 0.
+        
+        - Renamed "handlerPC" to "handlerVPC" to match other uses of "VPC".
+        
+        - Renamed "exceptionData" to "exceptionValue", because "data" seemed to
+        imply something more than just a JSValue.
+        
+        - Merged prepareException into throwException, since throwException was
+        its only caller, and it seemed weird that throwException didn't take
+        an exception as an argument.
+
+        sunspider --squirrelfish does not seem to complain on my machine, but it
+        complains a little (.6%) on Oliver's.
+
+2008-04-10  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Maciej Stachowiak.
         
         Fixed op_construct for CallTypeNative to reacquire "r" before setting
