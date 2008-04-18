@@ -136,9 +136,9 @@ FunctionObjectImp::FunctionObjectImp(ExecState* exec, FunctionPrototype* functio
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly | DontDelete | DontEnum);
 }
 
-bool FunctionObjectImp::implementsConstruct() const
+ConstructType FunctionObjectImp::getConstructData(ConstructData&)
 {
-    return true;
+    return ConstructTypeNative;
 }
 
 // ECMA 15.3.2 The Function Constructor

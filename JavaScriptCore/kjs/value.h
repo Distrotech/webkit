@@ -24,6 +24,7 @@
 #define KJS_VALUE_H
 
 #include "CallData.h"
+#include "ConstructData.h"
 #include "JSImmediate.h"
 #include "collector.h"
 #include "ustring.h"
@@ -76,6 +77,7 @@ public:
     const JSObject *getObject() const; // NULL if not an object
 
     CallType getCallData(CallData&);
+    ConstructType getConstructData(ConstructData&);
 
     // Extracting integer values.
     bool getUInt32(uint32_t&) const;
@@ -154,6 +156,7 @@ public:
     const JSObject *getObject() const; // NULL if not an object
     
     virtual CallType getCallData(CallData&);
+    virtual ConstructType getConstructData(ConstructData&);
 
     // Extracting integer values.
     virtual bool getUInt32(uint32_t&) const;
@@ -396,6 +399,11 @@ inline const JSObject *JSValue::getObject() const
 inline CallType JSValue::getCallData(CallData& callData)
 {
     return JSImmediate::isImmediate(this) ? CallTypeNone : asCell()->getCallData(callData);
+}
+
+inline ConstructType JSValue::getConstructData(ConstructData& constructData)
+{
+    return JSImmediate::isImmediate(this) ? ConstructTypeNone : asCell()->getConstructData(constructData);
 }
 
 ALWAYS_INLINE bool JSValue::getUInt32(uint32_t& v) const

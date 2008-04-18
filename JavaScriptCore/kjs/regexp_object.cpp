@@ -425,9 +425,9 @@ void RegExpObjectImp::putValueProperty(ExecState *exec, int token, JSValue *valu
   }
 }
   
-bool RegExpObjectImp::implementsConstruct() const
+ConstructType RegExpObjectImp::getConstructData(ConstructData&)
 {
-  return true;
+    return ConstructTypeNative;
 }
 
 // ECMA 15.10.4

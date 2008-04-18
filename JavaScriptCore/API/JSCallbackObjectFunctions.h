@@ -237,13 +237,13 @@ bool JSCallbackObject<Base>::deleteProperty(ExecState* exec, unsigned propertyNa
 }
 
 template <class Base>
-bool JSCallbackObject<Base>::implementsConstruct() const
+ConstructType JSCallbackObject<Base>::getConstructData(ConstructData&)
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsConstructor)
-            return true;
+            return ConstructTypeNative;
     
-    return false;
+    return ConstructTypeNone;
 }
 
 template <class Base>
@@ -263,7 +263,7 @@ JSObject* JSCallbackObject<Base>::construct(ExecState* exec, const List& args)
         }
     }
     
-    ASSERT(0); // implementsConstruct should prevent us from reaching here
+    ASSERT(0); // getConstructData should prevent us from reaching here
     return 0;
 }
 
@@ -292,7 +292,6 @@ bool JSCallbackObject<Base>::hasInstance(ExecState *exec, JSValue *value)
     ASSERT_NOT_REACHED(); // implementsHasInstance should prevent us from reaching here
     return 0;
 }
-
 
 template <class Base>
 CallType JSCallbackObject<Base>::getCallData(CallData&)

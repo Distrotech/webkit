@@ -1176,11 +1176,11 @@ JSValue* NewExprNode::inlineEvaluate(ExecState* exec)
     if (!v->isObject())
         return throwError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with new.", v, m_expr.get());
 
-    JSObject* constr = static_cast<JSObject*>(v);
-    if (!constr->implementsConstruct())
+    ConstructData constructData;
+    if (v->getConstructData(constructData) == ConstructTypeNone)
         return throwError(exec, TypeError, "Value %s (result of expression %s) is not a constructor. Cannot be used with new.", v, m_expr.get());
 
-    return constr->construct(exec, argList);
+    return static_cast<JSObject*>(v)->construct(exec, argList);
 }
 
 JSValue* NewExprNode::evaluate(ExecState* exec)

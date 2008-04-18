@@ -479,11 +479,6 @@ JSValue* JSObject::lookupSetter(ExecState*, const Identifier& propertyName)
     }
 }
 
-bool JSObject::implementsConstruct() const
-{
-  return false;
-}
-
 JSObject* JSObject::construct(ExecState*, const List& /*args*/)
 {
   ASSERT(false);

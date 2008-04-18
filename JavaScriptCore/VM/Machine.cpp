@@ -1076,17 +1076,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         JSValue* v = r[r1].u.jsValue;
 
-        // FIXME: We should not use CallType for ConstuctType. 
-        CallData callData;
-        CallType callType = v->getCallData(callData);
+        ConstructData constructData;
+        ConstructType constructType = v->getConstructData(constructData);
 
-        ASSERT(callType == CallTypeNone || v->isObject());
+        // Removing this line of code causes a measurable regression on squirrelfish.
         JSObject* constructor = static_cast<JSObject*>(v);
 
-        // FIXME: We need to throw a TypeError here if v doesn't implementConstuct.
-        ASSERT(constructor->implementsConstruct());
-
-        if (callType == CallTypeJS) {
+        if (constructType == ConstructTypeJS) {
             int registerOffset = r - (*registerBase);
             Register* callFrame = r + argv - CallFrameHeaderSize;
 
@@ -1101,8 +1097,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1);
             
-            ScopeChain* callDataScopeChain = callData.js.scopeChain;
-            FunctionBodyNode* functionBodyNode = callData.js.functionBody;
+            ScopeChain* callDataScopeChain = constructData.js.scopeChain;
+            FunctionBodyNode* functionBodyNode = constructData.js.functionBody;
 
             codeBlock = &functionBodyNode->code(*callDataScopeChain);
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
@@ -1113,7 +1109,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
-        if (callType == CallTypeNative) {
+        if (constructType == ConstructTypeNative) {
             int registerOffset = r - (*registerBase);
 
             List args(&r[argv + 1].u.jsValue, argc - 1);
@@ -1126,13 +1122,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
-        ASSERT(callType == CallTypeNone);
-        
         if (isNotObject(exec, vPC, codeBlock, v, exceptionValue))
             goto internal_throw;
 
         // throw type error for non-contructor object
-        ASSERT(!constructor->implementsConstruct()); // if we get here then v must be an Object that is not a constructor
+        ASSERT(constructType == ConstructTypeNone);
+
         ++vPC;
         NEXT_OPCODE;
     }
