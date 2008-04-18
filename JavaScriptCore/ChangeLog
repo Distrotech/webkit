@@ -1,3 +1,10 @@
+2008-03-27  Geoffrey Garen  <ggaren@apple.com>
+
+        Moved an ASSERT to a more logical place.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-03-27  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Oliver Hunt.
