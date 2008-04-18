@@ -87,7 +87,7 @@ namespace KJS {
 
         JSValue* privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, Register* = 0, ScopeChainNode* = 0, CodeBlock* = 0, JSValue** exception = 0);
 
-        void dumpCallFrame(const CodeBlock*, const ScopeChain*, RegisterFile*, const Register*);
+        void dumpCallFrame(const CodeBlock*, ScopeChainNode*, RegisterFile*, const Register*);
         void dumpRegisters(const CodeBlock*, RegisterFile*, const Register*);
         
         bool isGlobalCallFrame(Register** registerBase, const Register* r) { return (*registerBase) == r; }
