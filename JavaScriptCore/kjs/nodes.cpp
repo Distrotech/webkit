@@ -5497,6 +5497,39 @@ JSValue* FuncDeclNode::execute(ExecState* exec)
 
 // ------------------------------ FuncExprNode ---------------------------------
 
+RegisterID* FuncExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitNewFunctionExpression(dst ? dst : generator.newTemporary(), this);
+}
+
+FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
+{
+    exec->dynamicGlobalObject()->tearOffActivation(exec);
+
+    bool named = !m_ident.isNull();
+    JSObject* functionScopeObject = 0;
+
+    if (named) {
+        // named FunctionExpressions can recursively call themselves,
+        // but they won't register with the current scope chain and should
+        // be contained as single property in an anonymous object.
+        functionScopeObject = new JSObject;
+        exec->pushScope(functionScopeObject);
+    }
+
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
+    JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
+    proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
+    func->putDirect(exec->propertyNames().prototype, proto, DontDelete);
+
+    if (named) {
+        functionScopeObject->putDirect(m_ident, func, ReadOnly | (exec->codeType() == EvalCode ? 0 : DontDelete));
+        exec->popScope();
+    }
+
+    return func;
+}
+
 // ECMA 13
 void FuncExprNode::addParams()
 {
