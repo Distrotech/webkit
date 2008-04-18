@@ -5237,12 +5237,11 @@ JSValue* ReturnNode::execute(ExecState* exec)
 
 RegisterID* WithNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    dst = m_expr->emitCode(generator, dst);
-    ASSERT(dst);
-    generator.emitPushScope(dst);
-    dst = m_statement->emitCode(generator, dst);
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    generator.emitPushScope(r0);
+    RegisterID* r1 = generator.emitNode(dst, m_statement.get());
     generator.emitPopScope();
-    return dst;
+    return r1;
 }
 
 void WithNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5293,21 +5292,21 @@ void ClauseListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
 
 // ------------------------------ CaseBlockNode --------------------------------
 
-RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID* dst, RegisterID* input)
+RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID* switchExpression, RegisterID* dst)
 {
     Vector<RefPtr<LabelID>, 8> labelVector;
 
     // Setup jumps
     for (ClauseListNode* list = m_list1.get(); list; list = list->getNext()) {
-        RegisterID* r0 = generator.emitNode(generator.newTemporary(), list->getClause()->expr());
-        generator.emitStrictEqual(r0, r0, input);
+        RegisterID* r0 = generator.emitNode(list->getClause()->expr());
+        generator.emitStrictEqual(r0, r0, switchExpression);
         labelVector.append(generator.newLabel());
         generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
     }
 
     for (ClauseListNode* list = m_list2.get(); list; list = list->getNext()) {
-        RegisterID* r0 = generator.emitNode(generator.newTemporary(), list->getClause()->expr());
-        generator.emitStrictEqual(r0, r0, input);
+        RegisterID* r0 = generator.emitNode(list->getClause()->expr());
+        generator.emitStrictEqual(r0, r0, switchExpression);
         labelVector.append(generator.newLabel());
         generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
     }
@@ -5413,10 +5412,9 @@ RegisterID* SwitchNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<LabelID> breakTarget = generator.newLabel();
 
-    RefPtr<RegisterID> r0 = generator.emitNode(generator.newTemporary(), m_expr.get());
-
+    RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
     generator.pushJumpContext(&m_labelStack, 0, breakTarget.get());
-    RegisterID* r1 = m_block->emitCodeForBlock(generator, dst, r0.get());
+    RegisterID* r1 = m_block->emitCodeForBlock(generator, r0.get(), dst);
     generator.popJumpContext();
 
     generator.emitLabel(breakTarget.get());
