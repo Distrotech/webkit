@@ -1,0 +1,5 @@
+EVENT(load)
+EVENT(timeupdate)
+EVENT(ended)
+END OF TEST
+
