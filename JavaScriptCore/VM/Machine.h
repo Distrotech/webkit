@@ -43,7 +43,14 @@ namespace KJS {
     
     class Machine {
     public:
-        static const int returnInfoSize = 7;
+        enum { CallerCodeBlock = 0, 
+               ReturnVPC, 
+               CallerScopeChain, 
+               CallerRegisterOffset, 
+               ReturnValueRegister,
+               ArgumentStartRegister,
+               OptionalCalleeScopeChain,
+               CallFrameHeaderSize};
 
         Machine();
         
