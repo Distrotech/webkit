@@ -2344,6 +2344,12 @@ JSValue* PrefixErrorNode::evaluate(ExecState* exec)
 
 // ------------------------------ UnaryPlusNode --------------------------------
 
+RegisterID* UnaryPlusNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    return generator.emitToJSNumber(dst ? dst : generator.newTemporary(), r0);
+}
+
 void UnaryPlusNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
@@ -2379,6 +2385,12 @@ uint32_t UnaryPlusNode::evaluateToUInt32(ExecState* exec)
 
 // ------------------------------ NegateNode -----------------------------------
 
+RegisterID* NegateNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    return generator.emitNegate(dst ? dst : generator.newTemporary(), r0);
+}
+
 void NegateNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
@@ -2398,6 +2410,12 @@ double NegateNode::evaluateToNumber(ExecState* exec)
 }
 
 // ------------------------------ BitwiseNotNode -------------------------------
+
+RegisterID* BitwiseNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    return generator.emitBitNot(dst ? dst : generator.newTemporary(), r0);
+}
 
 void BitwiseNotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -2436,6 +2454,12 @@ uint32_t BitwiseNotNode::evaluateToUInt32(ExecState* exec)
 }
 
 // ------------------------------ LogicalNotNode -------------------------------
+
+RegisterID* LogicalNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.emitNode(m_expr.get());
+    return generator.emitNot(dst ? dst : generator.newTemporary(), r0);
+}
 
 void LogicalNotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {

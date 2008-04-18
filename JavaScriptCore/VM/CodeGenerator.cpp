@@ -325,6 +325,22 @@ RegisterID* CodeGenerator::emitPostInc(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitToJSNumber(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_to_jsnumber));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitNegate(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_negate));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitAdd(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
     instructions().append(machine().getOpcode(op_add));
@@ -421,6 +437,22 @@ RegisterID* CodeGenerator::emitBitOr(RegisterID* r0, RegisterID* r1, RegisterID*
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitBitNot(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_bitnot));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    return r0;
+}
+
+RegisterID* CodeGenerator::emitNot(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_not));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
     return r0;
 }
 
