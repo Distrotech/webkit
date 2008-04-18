@@ -30,7 +30,6 @@
 #include "config.h"
 #include "JSGlobalObject.h"
 
-#include "Activation.h"
 #include "SavedBuiltins.h"
 #include "array_object.h"
 #include "bool_object.h"
@@ -92,15 +91,6 @@ static inline unsigned getCurrentTime()
 
 JSGlobalObject* JSGlobalObject::s_head = 0;
 
-void JSGlobalObject::deleteActivationStack()
-{
-    ActivationStackNode* prevNode = 0;
-    for (ActivationStackNode* currentNode = d()->activations; currentNode; currentNode = prevNode) {
-        prevNode = currentNode->prev;
-        delete currentNode;
-    }
-}
-
 JSGlobalObject::~JSGlobalObject()
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
@@ -113,8 +103,6 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
-    
-    deleteActivationStack();
     
     delete d();
 }
@@ -138,11 +126,6 @@ void JSGlobalObject::init()
     d()->recursion = 0;
     d()->debugger = 0;
     
-    ActivationStackNode* newStackNode = new ActivationStackNode;
-    newStackNode->prev = 0;    
-    d()->activations = newStackNode;
-    d()->activationCount = 0;
-
     reset(prototype());
 }
 
@@ -544,28 +527,6 @@ JSGlobalObject* JSGlobalObject::toGlobalObject(ExecState*) const
 ExecState* JSGlobalObject::globalExec()
 {
     return &d()->globalExec;
-}
-
-void JSGlobalObject::tearOffActivation(ExecState* exec, bool leaveRelic)
-{
-    ActivationImp* oldActivation = exec->activationObject();
-    if (!oldActivation || !oldActivation->isOnStack())
-        return;
-
-    ASSERT(exec->codeType() == FunctionCode);
-    ActivationImp* newActivation = new ActivationImp(*oldActivation->d(), leaveRelic);
-    
-    if (!leaveRelic) {
-        checkActivationCount();
-        d()->activationCount--;
-    }
-    
-    oldActivation->d()->localStorage.shrink(0);
-    
-    exec->setActivationObject(newActivation);
-    exec->setVariableObject(newActivation);
-    exec->setLocalStorage(&newActivation->localStorage());
-    exec->replaceScopeChainTop(newActivation);
 }
 
 bool JSGlobalObject::isDynamicScope() const

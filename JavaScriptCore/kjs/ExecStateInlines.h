@@ -51,18 +51,9 @@ namespace KJS  {
     {
         ASSERT(m_scopeNode);
         
-        ActivationImp* activation = globalObject->pushActivation(this);
-        m_activation = activation;
-        m_localStorage = &activation->localStorage();
-        m_variableObject = activation;
-        if (functionBodyNode->usesEval() || functionBodyNode->needsClosure())
-            m_scopeChain.push(activation);
-        else {
-            m_inlineScopeChainNode.object = activation;
-            // The ScopeChain will ref this node itself, so we don't need to worry about
-            // anything trying to delete our scopenode
-            m_scopeChain.push(&m_inlineScopeChainNode);
-        }
+        m_activation = 0;
+        m_localStorage = 0;
+        m_variableObject = 0;
     }
 
     inline ExecState::~ExecState()
@@ -81,14 +72,6 @@ namespace KJS  {
     {
         ASSERT(m_globalObject->activeExecStates().last() == this);
         m_globalObject->activeExecStates().removeLast();
-        
-        if (m_activation->needsPop())
-            m_globalObject->popActivation();
-        
-        if (m_inlineScopeChainNode.next) {
-            m_scopeChain.popInlineScopeNode();
-            m_inlineScopeChainNode.next = 0;
-        }
     }
 
 } // namespace KJS

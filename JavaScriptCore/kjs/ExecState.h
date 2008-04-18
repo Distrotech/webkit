@@ -69,7 +69,7 @@ namespace KJS  {
         void popScope() { m_scopeChain.pop(); }
         void replaceScopeChainTop(JSObject* o) { m_scopeChain.replaceTop(o); }
         
-        JSVariableObject* variableObject() const { return m_variableObject; }
+        JSVariableObject* variableObject() const { ASSERT_NOT_REACHED(); return m_variableObject; }
         void setVariableObject(JSVariableObject* v) { m_variableObject = v; }
         
         JSObject* thisValue() const { return m_thisValue; }
@@ -77,7 +77,7 @@ namespace KJS  {
         
         ExecState* callingExecState() { return m_callingExec; }
         
-        ActivationImp* activationObject() { return m_activation; }
+        ActivationImp* activationObject() { ASSERT_NOT_REACHED(); return m_activation; }
         void setActivationObject(ActivationImp* a) { m_activation = a; }
         CodeType codeType() { return m_codeType; }
         ScopeNode* scopeNode() { return m_scopeNode; }
@@ -99,7 +99,7 @@ namespace KJS  {
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
         const List& emptyList() const { return *m_emptyList; }
 
-        LocalStorage& localStorage() { return *m_localStorage; }
+        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *m_localStorage; }
         void setLocalStorage(LocalStorage* s) { m_localStorage = s; }
 
         // These are only valid right after calling execute().

@@ -23,13 +23,14 @@
 #ifndef KJS_GlobalObject_h
 #define KJS_GlobalObject_h
 
-#include "Activation.h"
 #include "JSVariableObject.h"
 #include "Register.h"
+#include <wtf/HashSet.h>
+#include <wtf/OwnPtr.h>
 
 namespace KJS {
 
-    class ActivationImp;
+    class ActivationStackNode;
     class ArrayObjectImp;
     class ArrayPrototype;
     class BooleanObjectImp;
@@ -68,7 +69,6 @@ namespace KJS {
     class TypeErrorPrototype;
     class UriError;
     class UriErrorPrototype;
-    struct ActivationStackNode;
 
     typedef Vector<ExecState*, 16> ExecStateStack;
 
@@ -238,10 +238,6 @@ namespace KJS {
 
         virtual bool allowsAccessFrom(const JSGlobalObject*) const { return true; }
 
-        ActivationImp* pushActivation(ExecState*);
-        void popActivation();
-        void tearOffActivation(ExecState*, bool markAsRelic = false);
-
         virtual bool isDynamicScope() const;
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
@@ -258,9 +254,6 @@ namespace KJS {
         bool checkTimeout();
         void resetTimeoutCheck();
 
-        void deleteActivationStack();
-        void checkActivationCount();
-
         static JSGlobalObject* s_head;
     };
 
@@ -272,37 +265,6 @@ namespace KJS {
             return false;
 
         return checkTimeout();
-    }
-
-    inline ActivationImp* JSGlobalObject::pushActivation(ExecState* exec)
-    {
-        if (d()->activationCount == activationStackNodeSize) {
-            ActivationStackNode* newNode = new ActivationStackNode;
-            newNode->prev = d()->activations;
-            d()->activations = newNode;
-            d()->activationCount = 0;
-        }
-        
-        StackActivation* stackEntry = &d()->activations->data[d()->activationCount++];
-        stackEntry->activationStorage.init(exec);
-        return &stackEntry->activationStorage;
-    }
-
-    inline void JSGlobalObject::checkActivationCount()
-    {
-        if (!d()->activationCount) {
-            ActivationStackNode* prev = d()->activations->prev;
-            ASSERT(prev);
-            delete d()->activations;
-            d()->activations = prev;
-            d()->activationCount = activationStackNodeSize;
-        }
-    }
-
-    inline void JSGlobalObject::popActivation()
-    {
-        checkActivationCount();
-        d()->activations->data[--d()->activationCount].activationDataStorage.localStorage.shrink(0);    
     }
 
 } // namespace KJS
