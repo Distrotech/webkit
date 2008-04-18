@@ -99,8 +99,8 @@ namespace KJS  {
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
         const List& emptyList() const { return *m_emptyList; }
 
-        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *m_localStorage; }
-        void setLocalStorage(LocalStorage* s) { m_localStorage = s; }
+        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *(LocalStorage*)0; }
+        void setLocalStorage(LocalStorage*) { ASSERT_NOT_REACHED(); }
 
         // These are only valid right after calling execute().
         ComplType completionType() const { return m_completionType; }
@@ -186,7 +186,6 @@ namespace KJS  {
         FunctionImp* m_function;
         const List* m_arguments;
         ActivationImp* m_activation;
-        LocalStorage* m_localStorage;
 
         ScopeChain m_scopeChain;
         ScopeChainNode m_inlineScopeChainNode;

@@ -131,8 +131,6 @@ void JSGlobalObject::init()
 
 void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
 {
-    ASSERT(static_cast<size_t>(symbolTable().size()) == localStorage().size());
-
     unsigned count = symbolTable().size();
 
     p.properties.clear();
@@ -144,10 +142,14 @@ void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
     p.properties.set(new SavedProperty[count]);
 
     SymbolTable::const_iterator end = symbolTable().end();
-    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++it) {
-        size_t i = it->second;
-        const LocalStorageEntry& entry = localStorage()[i];
-        p.properties[i].init(it->first.get(), entry.value, entry.attributes);
+    size_t i = 0;
+    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it) {
+        unsigned attributes = 0;
+        if (isReadOnly(it->second))
+            attributes |= ReadOnly;
+        if (isDontEnum(it->second))
+            attributes |= DontEnum;
+        p.properties[i].init(it->first.get(), valueAt(it->second), attributes);
     }
 }
 
@@ -155,14 +157,15 @@ void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
 {
     unsigned count = p.count;
     symbolTable().clear();
-    localStorage().resize(count);
+    registers().resize(count);
+    setROffset(count);
     SavedProperty* property = p.properties.get();
-    for (size_t i = 0; i < count; ++i, ++property) {
+    for (int i = -count; i < 0; ++i, ++property) {
         ASSERT(!symbolTable().contains(property->name()));
-        LocalStorageEntry& entry = localStorage()[i];
         symbolTable().set(property->name(), i);
-        entry.value = property->value();
-        entry.attributes = property->attributes();
+        valueAt(i) = property->value();
+        // FIXME: Fetch attributes from the SavedProperty and store them in the symbol table.
+        ASSERT(property->attributes() & ReadOnly == 0 && property->attributes() & DontEnum == 0);
     }
 }
 
@@ -208,7 +211,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    localStorage().clear();
+    registers().clear();
     symbolTable().clear();
 
     // Prototypes
