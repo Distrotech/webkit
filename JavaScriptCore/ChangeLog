@@ -1,5 +1,15 @@
 2008-04-03  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Sam.
+        
+        - fix crash in codegen from new nodes
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitConstruct):
+        * kjs/nodes.h:
+
+2008-04-03  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
 
         * kjs/nodes.cpp:
