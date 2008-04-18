@@ -1,3 +1,29 @@
+2008-03-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        Add emitCode support for NullNode, FalseNode, TrueNode, IfNode, IfElseNode, DoWhileNode and WhileNode
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump): Dump op_jfalse opcode.
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitJumpIfFalse): Identical to emitJumpIfTrue except it emits the op_jfalse opcode.
+        (KJS::CodeGenerator::emitLoad): Add and emitLoad override for booleans.
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Adds execution of op_jfalse. It is identical to op_jtrue, except the
+        the condition is reversed.
+        * VM/Opcode.h: Add op_jfalse.
+        * kjs/nodes.cpp:
+        (KJS::NullNode::emitCode): Added.
+        (KJS::FalseNode::emitCode): Added.
+        (KJS::TrueNode::emitCode): Added.
+        (KJS::IfNode::emitCode): Added.
+        (KJS::IfElseNode::emitCode): Added.
+        (KJS::DoWhileNode::emitCode): Added.
+        (KJS::WhileNode::emitCode): Added.
+        * kjs/nodes.h:
+
 2008-03-26  Geoffrey Garen  <ggaren@apple.com>
 
         Nixed an unused List.

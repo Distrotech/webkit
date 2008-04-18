@@ -476,6 +476,17 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_jfalse) {
+        int r0 = (++vPC)->u.operand;
+        int offset = (++vPC)->u.operand;
+        if (!r[r0].u.jsValue->toBoolean(exec)) {
+            vPC += offset;
+            NEXT_OPCODE;
+        }
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_new_func) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
