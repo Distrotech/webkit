@@ -1,3 +1,18 @@
+2008-04-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        A little more love for --squirrelfish mode:
+        
+        Fixed a misplaced sort. Results properly sort now.
+        
+        Added a test list just for squirrelfish, and updated it to include
+        all currently passing SunSpider tests.
+        
+        Fixed the pruning regexp to match 3d-morph.js.
+
+        * sunspider:
+
 2008-03-26  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
