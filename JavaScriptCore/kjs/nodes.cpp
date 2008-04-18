@@ -2319,6 +2319,17 @@ JSValue* PreIncResolveNode::evaluate(ExecState* exec)
     return throwUndefinedVariableError(exec, m_ident);
 }
 
+RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* r0 = generator.registerForLocal(m_ident))
+        return generator.emitPreDec(r0);
+
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    generator.emitPreDec(r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
+}
+
 void PreDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
@@ -2411,6 +2422,15 @@ void PrefixBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, c
     nodeStack.append(m_base.get());
 }
 
+RegisterID* PreIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RegisterID* r2 = generator.emitGetPropVal(dst ? dst : generator.newTemporary(), r0.get(), r1.get());
+    generator.emitPreInc(r2);
+    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
+}
+
 JSValue* PreIncBracketNode::evaluate(ExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
@@ -2441,6 +2461,15 @@ JSValue* PreIncBracketNode::evaluate(ExecState* exec)
     base->put(exec, propertyName, n2);
 
     return n2;
+}
+
+RegisterID* PreDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RegisterID* r2 = generator.emitGetPropVal(dst ? dst : generator.newTemporary(), r0.get(), r1.get());
+    generator.emitPreDec(r2);
+    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
 }
 
 JSValue* PreDecBracketNode::evaluate(ExecState* exec)
@@ -2482,6 +2511,14 @@ void PrefixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const
     nodeStack.append(m_base.get());
 }
 
+RegisterID* PreIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    generator.emitPreInc(r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
+}
+
 JSValue* PreIncDotNode::evaluate(ExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
@@ -2497,6 +2534,14 @@ JSValue* PreIncDotNode::evaluate(ExecState* exec)
     base->put(exec, m_ident, n2);
 
     return n2;
+}
+
+RegisterID* PreDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    generator.emitPreDec(r1);
+    return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
 JSValue* PreDecDotNode::evaluate(ExecState* exec)

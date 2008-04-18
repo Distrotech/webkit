@@ -408,6 +408,13 @@ RegisterID* CodeGenerator::emitPreInc(RegisterID* r0)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitPreDec(RegisterID* r0)
+{
+    instructions().append(machine().getOpcode(op_pre_dec));
+    instructions().append(r0->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitPostInc(RegisterID* r0, RegisterID* r1)
 {
     instructions().append(machine().getOpcode(op_post_inc));

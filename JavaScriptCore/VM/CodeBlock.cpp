@@ -231,6 +231,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] pre_inc\t\t%s\n", location, registerName(r0).c_str());
             break;
         }
+        case op_pre_dec: {
+            int r0 = (++it)->u.operand;
+            printf("[%4d] pre_dec\t\t%s\n", location, registerName(r0).c_str());
+            break;
+        }
         case op_post_inc: {
             printUnaryOp(location, it, "post_inc");
             break;

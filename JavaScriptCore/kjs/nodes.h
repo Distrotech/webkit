@@ -1362,8 +1362,8 @@ namespace KJS {
         }
 
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
-        virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
 
+        virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual Precedence precedence() const { return PrecUnary; }
@@ -1405,8 +1405,9 @@ namespace KJS {
         {
         }
 
-        virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
+        virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual Precedence precedence() const { return PrecUnary; }
@@ -1459,6 +1460,8 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
     };
@@ -1469,6 +1472,8 @@ namespace KJS {
             : PrefixBracketNode(base, subscript)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -1497,6 +1502,8 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
     };
@@ -1507,6 +1514,8 @@ namespace KJS {
             : PrefixDotNode(base, ident)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
