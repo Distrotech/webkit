@@ -1,5 +1,11 @@
 2008-03-24  Geoffrey Garen  <ggaren@apple.com>
 
+        Moved my notes from nodes.h to the wiki.
+
+        * kjs/nodes.h:
+
+2008-03-24  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by NOBODY.
         
         SquirrelFish lives.
