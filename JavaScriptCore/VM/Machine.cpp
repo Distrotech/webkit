@@ -793,6 +793,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         CallData callData;
         CallType callType = v->getCallData(callData);
         ASSERT(callType == CallTypeNative);
+        UNUSED_PARAM(callType);
 
         // FIXME: We need to throw a TypeError here if v is not an Object.
         ASSERT(v->isObject());
