@@ -1,3 +1,21 @@
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fix a codegen flaw that makes some tests run way too fast or way too slow
+        
+        The basic problem was that FunctionCallResolveNode results in
+        codegen which can incorrectly write an intermediate value into the
+        dst register even when that is a local. I added convenience
+        functions to CodeGenerator for getting this right, but for now I
+        only fixed FunctionCallResolve.
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::tempDestination):
+        (KJS::CodeGenerator::):
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallResolveNode::emitCode):
+
 2008-04-14  Gabor Loki  <loki@inf.u-szeged.hu>
 
         Reviewed and slightly tweaked by Geoffrey Garen.
