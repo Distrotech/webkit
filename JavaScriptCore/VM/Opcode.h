@@ -73,6 +73,9 @@ namespace KJS {
         macro(op_call) \
         macro(op_ret) \
         \
+        macro(op_push_scope) \
+        macro(op_pop_scope) \
+        \
         macro(op_end) // end must be the last opcode in the list
         
     #define OPCODE_ID_ENUM(opcode) opcode,

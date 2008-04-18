@@ -548,7 +548,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
                 *(it + shift) = *it;
         }
 
-        if (newCodeBlock->usesEval | newCodeBlock->needsClosure) { // FIXME: Do this for functions that use "with" and "catch", too
+        if (newCodeBlock->needsActivation) {
             scopeChain = new (&returnInfo[6]) ScopeChain(function->scope());
             scopeChain->push(new JSActivation(functionBody, &registers, r - registers.data()));
         } else
@@ -568,7 +568,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         Register* returnInfo = r - oldCodeBlock->numLocals - oldCodeBlock->numParameters - returnInfoSize;
         Register* returnValue = &r[r1];
         
-        if (oldCodeBlock->usesEval | oldCodeBlock->needsClosure) {
+        if (oldCodeBlock->needsActivation) {
             ASSERT(scopeChain->top()->isActivationObject());
             static_cast<JSActivation*>(scopeChain->top())->copyRegisters();
             scopeChain->~ScopeChain();
@@ -582,6 +582,20 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r0 = returnInfo[4].u.i;
         r[r0] = *returnValue;
         
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_push_scope) {
+        int r0 = (++vPC)->u.operand;
+        JSValue* v = r[r0].u.jsValue;
+        JSObject* o = v->toObject(exec);
+        ASSERT(!exec->hadException()); // FIXME: handle once we support exceptions.
+        scopeChain->push(o);
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_pop_scope) {
+        scopeChain->pop();
+        ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {
