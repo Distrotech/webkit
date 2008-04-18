@@ -2,6 +2,14 @@
 
         Reviewed by Sam Weinig.
         
+        Restored OwnPtr in some places where I had removed it previously. We
+        can have an OwnPtr to an undefined class in a header as long as the
+        class's destructor isn't in the header.
+        
+2008-04-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
         Fixed access to "this" inside dynamic scopes.
 
         * VM/CodeGenerator.cpp:
