@@ -1701,8 +1701,8 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPostInc(dst ? dst : generator.newTemporary(), r0);
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    RefPtr<RegisterID> r1 = generator.newTemporary();
+    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
     RegisterID* r2 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r1.get());
     generator.emitPutPropId(r0.get(), m_ident, r1.get());
     return r2;
@@ -1781,8 +1781,8 @@ RegisterID* PostDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPostDec(dst ? dst : generator.newTemporary(), r0);
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    RefPtr<RegisterID> r1 = generator.newTemporary();
+    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
     RegisterID* r2 = generator.emitPostDec(dst ? dst : generator.newTemporary(), r1.get());
     generator.emitPutPropId(r0.get(), m_ident, r1.get());
     return r2;
@@ -2291,11 +2291,11 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
 {
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPreInc(r0);
-
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
-    generator.emitPreInc(r1);
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    
+    RefPtr<RegisterID> r1 = dst ? dst : generator.newTemporary();
+    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
+    generator.emitPreInc(r1.get());
+    return generator.emitPutPropId(r0.get(), m_ident, r1.get());
 }
 
 void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2355,10 +2355,10 @@ RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitPreDec(r0);
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
-    generator.emitPreDec(r1);
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    RefPtr<RegisterID> r1 = dst ? dst : generator.newTemporary();
+    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
+    generator.emitPreDec(r1.get());
+    return generator.emitPutPropId(r0.get(), m_ident, r1.get());
 }
 
 void PreDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -4088,9 +4088,9 @@ RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID
         return dst ? generator.emitMove(dst, r2) : r2;
     }
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
     // FIXME: should not write temp value to dst if dst is a local!
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RefPtr<RegisterID> r1 = dst ? dst : generator.newTemporary();
+    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
     RegisterID* r2 = generator.emitNode(m_right.get());
     RegisterID* r3 = emitReadModifyAssignment(generator, r1.get(), r2, m_operator);
     return generator.emitPutPropId(r0.get(), m_ident, r3);

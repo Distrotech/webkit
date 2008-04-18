@@ -280,6 +280,36 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
+static bool NEVER_INLINE resolveBaseAndProperty(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
+{
+    int r0 = (vPC + 1)->u.operand;
+    int r1 = (vPC + 2)->u.operand;
+    int id0 = (vPC + 3)->u.operand;
+    
+    ScopeChainIterator iter = scopeChain->begin();
+    ScopeChainIterator end = scopeChain->end();
+    
+    // FIXME: add scopeDepthIsZero optimization
+    
+    ASSERT(iter != end);
+    
+    PropertySlot slot;
+    Identifier& ident = codeBlock->identifiers[id0];
+    JSObject* base;
+    do {
+        base = *iter;
+        if (base->getPropertySlot(exec, ident, slot)) {            
+            r[r0].u.jsValue = base;
+            r[r1].u.jsValue = slot.getValue(exec, base, ident);
+            return true;
+        }
+        ++iter;
+    } while (iter != end);
+    
+    exceptionValue = createUndefinedVariableError(exec, ident);
+    return false;
+}
+
 static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
 {
     int r0 = (vPC + 1)->u.operand;
@@ -868,6 +898,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         resolveBase(exec, vPC, r, scopeChain, codeBlock);
         vPC += 3;
 
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_resolve_base_and_property) {
+        if (UNLIKELY(!resolveBaseAndProperty(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
+            goto internal_throw;
+
+        vPC += 4;
+        
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base_and_func) {
