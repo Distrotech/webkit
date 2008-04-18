@@ -246,13 +246,20 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         return;
     }
 
+    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
+
     registers->reserveCapacity(512);
 
-    registers->resize(codeBlock->numRegisters());
-    Register* r = registers->data() + codeBlock->numVars;
+    int oldROffset = globalObject->rOffset();
+    int newROffset = registers->size() + codeBlock->numVars;
+
+    registers->resize(newROffset + codeBlock->numTemporaries);
+    Register* r = registers->data() + newROffset;
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
 
+    globalObject->setROffset(newROffset);
+  
 #if HAVE(COMPUTED_GOTO)
     #define NEXT_OPCODE goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
@@ -868,6 +875,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 #else
         UNUSED_PARAM(r0);
 #endif
+        globalObject->setROffset(oldROffset);
         return;
     }
     }

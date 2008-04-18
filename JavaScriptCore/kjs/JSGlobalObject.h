@@ -161,9 +161,6 @@ namespace KJS {
     public:
         virtual ~JSGlobalObject();
 
-        void saveLocalStorage(SavedProperties&) const;
-        void restoreLocalStorage(const SavedProperties&);
-
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
         virtual void put(ExecState*, const Identifier&, JSValue*);
         virtual void putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes);
@@ -215,6 +212,9 @@ namespace KJS {
         NativeErrorPrototype* typeErrorPrototype() const { return d()->typeErrorPrototype; }
         NativeErrorPrototype* URIErrorPrototype() const { return d()->URIErrorPrototype; }
 
+        void saveLocalStorage(SavedProperties&) const;
+        void restoreLocalStorage(const SavedProperties&);
+
         void saveBuiltins(SavedBuiltins&) const;
         void restoreBuiltins(const SavedBuiltins&);
 
@@ -245,9 +245,12 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
 
+        HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
+
         Vector<Register>& registers() { return d()->registers; }
 
-        HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
+        void setROffset(int rOffset) { d()->rOffset = rOffset; }
+        int rOffset() { return d()->rOffset; }
 
     private:
         void init();
