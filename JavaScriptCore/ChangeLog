@@ -1,3 +1,77 @@
+2008-04-19  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18619: Support continue, break, and return in try .. finally blocks
+        <https://bugs.webkit.org/show_bug.cgi?id=18619>
+
+        This patch replaces the current partial finally support (which uses code
+        duplication to achieve what it does) with a subroutine based approach.
+        This has a number of advantages over code duplication:
+          * Reduced code size
+          * Simplified exception handling as the finaliser code only exists in 
+            one place, so no "magic" is needed to get the correct handler for a 
+            finaliser.
+          * When we support instruction to line number mapping we won't need to
+            worry about the dramatic code movement caused by duplication
+
+        On the downside it is necessary to add two new opcodes, op_jsr and op_sret
+        to enter and exit the finaliser subroutines, happily SunSpider reports
+        a performance progression (gcc amazes me) and ubench reports a wash.
+
+        While jsr and sret provide a mechanism that allows us to enter and exit
+        any arbitrary finaliser we need to, it was still necessary to increase
+        the amount of information tracked when entering and exiting both finaliser
+        scopes and dynamic scopes ("with").  This means "scopeDepth" is now
+        the combination of "finaliserDepth" and "dynamicScopeDepth".  We also
+        now use a scopeContextStack to ensure that we pop scopes and execute
+        finalisers in the correct order.  This increases the cost of "with" nodes
+        during codegen, but it should not be significant enough to effect real
+        world performance and greatly simplifies codegen for return, break and
+        continue when interacting with finalisers.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+          Pretty printing of jsr/sret opcodes
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::emitPushScope):
+        (KJS::CodeGenerator::emitPopScope):
+          Dynamic scopes need to be tracked on the scopeContextStack now
+
+        (KJS::CodeGenerator::pushFinallyContext):
+        (KJS::CodeGenerator::popFinallyContext):
+          Handle entry and exit from code regions with finalisers.  This is
+          needed solely to support return, continue and break inside finaliser
+          regions.
+
+        (KJS::CodeGenerator::emitComplexJumpScopes):
+          Helper function for emitJumpScopes to handle the complex codegen
+          needed to handle return, continue and break inside a finaliser region
+
+        (KJS::CodeGenerator::emitJumpScopes):
+          Updated to be aware of finalisers, if a cross-scope jump occurs inside
+          a finaliser we hand off codegen to emitComplexJumpScopes, otherwise
+          we can handle the normal (trivial) case with a single instruction.
+
+        (KJS::CodeGenerator::emitJumpSubroutine):
+        (KJS::CodeGenerator::emitSubroutineReturn):
+          Trivial opcode emitter functions.
+
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::scopeDepth):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+          Implement op_jsr and op_sret.
+
+        * VM/Opcode.h:
+          Ad op_jsr and op_sret
+
+        * kjs/nodes.cpp:
+        (KJS::TryNode::emitCode):
+          Fix codegen for new finaliser model.
+
 2008-04-17  Mark Rowe  <mrowe@apple.com>
 
         Rubber-stamped by Oliver Hunt.

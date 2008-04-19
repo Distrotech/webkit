@@ -5510,15 +5510,20 @@ RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<LabelID> tryStartLabel = generator.newLabel();
     RefPtr<LabelID> tryEndLabel = generator.newLabel();
-    RefPtr<LabelID> handlerEndLabel = generator.newLabel();
-    
+    RefPtr<LabelID> finallyStart;
+    RefPtr<RegisterID> finallyReturnAddr;
+    if (m_finallyBlock) {
+        finallyStart = generator.newLabel();
+        finallyReturnAddr = generator.newTemporary();
+        generator.pushFinallyContext(finallyStart.get(), finallyReturnAddr.get());
+    }
     generator.emitLabel(tryStartLabel.get());
     generator.emitNode(dst, m_tryBlock.get());
     generator.emitLabel(tryEndLabel.get());
-    
-    generator.emitJump(handlerEndLabel.get());
 
     if (m_catchBlock) {
+        RefPtr<LabelID> handlerEndLabel = generator.newLabel();
+        generator.emitJump(handlerEndLabel.get());
         RefPtr<RegisterID> exceptionRegister = generator.emitCatch(generator.newTemporary(), tryStartLabel.get(), tryEndLabel.get());
         RegisterID* newScope = generator.emitNewObject(generator.newTemporary());
         generator.emitPutPropId(newScope, m_exceptionIdent, exceptionRegister.get());
@@ -5526,19 +5531,26 @@ RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitPushScope(newScope);
         m_catchBlock->emitCode(generator, dst);
         generator.emitPopScope();
-        if (!m_finallyBlock)
-            generator.emitLabel(handlerEndLabel.get());
-    } 
+        generator.emitLabel(handlerEndLabel.get());
+    }
 
     if (m_finallyBlock) {
-        RefPtr<LabelID> finallyStartLabel = generator.newLabel();
-        generator.emitLabel(finallyStartLabel.get());
-        generator.emitJump(handlerEndLabel.get());
-        RefPtr<RegisterID> tempExceptionRegister = generator.emitCatch(generator.newTemporary(), tryStartLabel.get(), finallyStartLabel.get());
-        m_finallyBlock->emitCode(generator, dst);
+        generator.popFinallyContext();
+        RefPtr<LabelID> finallyEndLabel = generator.newLabel();
+        generator.emitJumpSubroutine(finallyReturnAddr.get(), finallyStart.get());
+        generator.emitJump(finallyEndLabel.get());
+
+        // Finally block for exception path
+        RefPtr<RegisterID> tempExceptionRegister = generator.emitCatch(generator.newTemporary(), tryStartLabel.get(), generator.emitLabel(generator.newLabel().get()).get());
+        generator.emitJumpSubroutine(finallyReturnAddr.get(), finallyStart.get());
         generator.emitThrow(tempExceptionRegister.get());
-        generator.emitLabel(handlerEndLabel.get());
+
+        // emit the finally block itself
+        generator.emitLabel(finallyStart.get());
         m_finallyBlock->emitCode(generator, dst);
+        generator.emitSubroutineReturn(finallyReturnAddr.get());
+
+        generator.emitLabel(finallyEndLabel.get());
     }
 
     return dst;

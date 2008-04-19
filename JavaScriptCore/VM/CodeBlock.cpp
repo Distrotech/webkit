@@ -490,6 +490,17 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] throw\t\t%s\n", location, registerName(r0).c_str());
             break;
         }
+        case op_jsr: {
+            int retAddrDst = (++it)->u.operand;
+            int offset = (++it)->u.operand;
+            printf("[%4d] jsr\t\t%s, %d(->%d)\n", location, registerName(retAddrDst).c_str(), offset, jumpTarget(begin, it, offset));
+            break;
+        }
+        case op_sret: {
+            int retAddrSrc = (++it)->u.operand;
+            printf("[%4d] sret\t\t%s\n", location, registerName(retAddrSrc).c_str());
+            break;
+        }
         case op_end: {
             int r0 = (++it)->u.operand;
             printf("[%4d] end\t\t%s\n", location, registerName(r0).c_str());

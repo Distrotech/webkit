@@ -54,6 +54,16 @@ namespace KJS {
         int scopeDepth;
     };
 
+    struct FinallyContext {
+        LabelID* finallyAddr;
+        RegisterID* retAddrDst;
+    };
+    
+    struct ControlFlowContext {
+        bool isFinallyBlock;
+        FinallyContext finallyContext;
+    };
+    
     class CodeGenerator {
     public:
         typedef DeclarationStacks::VarStack VarStack;
@@ -199,22 +209,28 @@ namespace KJS {
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpScopes(LabelID* target, int targetScopeDepth);
+
+        PassRefPtr<LabelID> emitJumpSubroutine(RegisterID* retAddrDst, LabelID*);
+        void emitSubroutineReturn(RegisterID* retAddrSrc);
         
         RegisterID* emitGetPropertyNames(RegisterID*, RegisterID*);
         RegisterID* emitNextPropertyName(RegisterID*, RegisterID*, LabelID*);
         
+        void pushFinallyContext(LabelID* target, RegisterID* returnAddrDst);
+        void popFinallyContext();
         void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
         void popJumpContext();
         JumpContext* jumpContextForLabel(const Identifier&);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
-        int scopeDepth() { return m_scopeDepth; }
+        int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }
 
         RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
         void emitThrow(RegisterID*);
 
     private:
+        PassRefPtr<LabelID> emitComplexJumpScopes(LabelID* target, ControlFlowContext* topScope, ControlFlowContext* bottomScope);
         struct JSValueHashTraits  {
             typedef JSValue* TraitType;
             typedef JSValueHashTraits StorageTraits;
@@ -255,7 +271,7 @@ namespace KJS {
         SymbolTable& symbolTable() { return *m_symbolTable; }
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
         
-        bool shouldOptimizeLocals() { return !m_isEvalCode && !m_scopeDepth; }
+        bool shouldOptimizeLocals() { return !m_isEvalCode && !m_dynamicScopeDepth; }
 
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
@@ -268,10 +284,12 @@ namespace KJS {
         Vector<RegisterID, 512> m_locals;
         Vector<RegisterID, 512> m_temporaries;
         Vector<LabelID, 512> m_labels;
-        int m_scopeDepth;
+        int m_finallyDepth;
+        int m_dynamicScopeDepth;
         bool m_isEvalCode;
         
         Vector<JumpContext> m_jumpContextStack;
+        Vector<ControlFlowContext> m_scopeContextStack;
 
         int m_nextVar;
         int m_nextParameter;
