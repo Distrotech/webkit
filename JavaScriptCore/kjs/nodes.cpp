@@ -5629,7 +5629,7 @@ void EvalNode::generateCode(ScopeChainNode* sc)
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
-    m_code.set(new ProgramCodeBlock(usesEval(), needsClosure(), globalObject));
+    m_code.set(new ProgramCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
     
     CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get());
     generator.generate();
@@ -5668,7 +5668,7 @@ FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* v
 
 void FunctionBodyNode::generateCode(ScopeChainNode* sc)
 {
-    m_code.set(new CodeBlock(usesEval(), needsClosure()));
+    m_code.set(new CodeBlock(sourceURL(), usesEval(), needsClosure()));
 
     ScopeChain scopeChain(sc);
     CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
@@ -5702,7 +5702,7 @@ void ProgramNode::generateCode(ScopeChainNode* sc)
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
-    m_code.set(new ProgramCodeBlock(usesEval(), needsClosure(), globalObject));
+    m_code.set(new ProgramCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
     
     CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack);
     generator.generate();

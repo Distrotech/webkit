@@ -49,8 +49,9 @@ namespace KJS {
     };
 
     struct CodeBlock {
-        CodeBlock(bool usesEval_, bool needsClosure_)
-            : numTemporaries(0)
+        CodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_)
+            : sourceURL(sourceURL_)
+            , numTemporaries(0)
             , numVars(0)
             , numParameters(0)
             , needsActivation(usesEval_ || needsClosure_)
@@ -65,7 +66,9 @@ namespace KJS {
         void mark();
 
         Vector<Instruction> instructions;
-        
+
+        UString sourceURL;
+
         int numTemporaries;
         int numVars;
         int numParameters;
@@ -90,8 +93,8 @@ namespace KJS {
     // responsible for marking it.
 
     struct ProgramCodeBlock : public CodeBlock {
-        ProgramCodeBlock(bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
-            : CodeBlock(usesEval_, needsClosure_)
+        ProgramCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
+            : CodeBlock(sourceURL_, usesEval_, needsClosure_)
             , globalObject(globalObject_)
         {
             globalObject->codeBlocks().add(this);
