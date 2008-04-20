@@ -123,12 +123,16 @@ namespace KJS {
         // Node::emitCode. They're the only functions that accept a NULL register.
         RegisterID* emitNode(RegisterID* dst, Node* n) {
             ASSERT(!dst || !dst->isTemporary() || dst->refCount()); // Node::emitCode assumes that dst, if provided, is either a local or a referenced temporary.
+            if (!m_codeBlock->lineInfo.size() || m_codeBlock->lineInfo.last().lineNumber != n->lineNo()) {
+                LineInfo info = { instructions().size(), n->lineNo() };
+                m_codeBlock->lineInfo.append(info);
+            }
             return n->emitCode(*this, dst);
         }
 
         RegisterID* emitNode(Node* n)
         {
-            return n->emitCode(*this);
+            return emitNode(0, n);
         }
 
         RegisterID* emitLoad(RegisterID*, bool);
