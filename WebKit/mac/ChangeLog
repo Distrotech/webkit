@@ -1,3 +1,14 @@
+2008-04-17  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Dan Bernstein.
+
+        Fix <rdar://problem/5863552> REGRESSION (r30741): Attachments don't appear in the iChat message window after sending
+
+        The order of arguments to -[NSDictionary initWithObjects:andKeys:] had been transposed accidentally during refactoring.
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::createPlugin): Pass the arguments in the correct order.
+
 2008-04-11  David Hyatt  <hyatt@apple.com>
 
         Rename CachedResource ref/deref methods to addClient/removeClient.
