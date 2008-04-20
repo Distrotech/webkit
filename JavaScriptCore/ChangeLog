@@ -2,6 +2,20 @@
 
         Reviewed by Maciej.
 
+        Don't call emitCode directly on subnodes, instead use CodeGenerator::emitNode
+
+        This patch just a preparation for tracking line numbers.
+
+        * kjs/nodes.cpp:
+        (KJS::ObjectLiteralNode::emitCode):
+        (KJS::PropertyListNode::emitCode):
+        (KJS::ArgumentListNode::emitCode):
+        (KJS::TryNode::emitCode):
+
+2008-04-19  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
         Bug 18619: Support continue, break, and return in try .. finally blocks
         <https://bugs.webkit.org/show_bug.cgi?id=18619>
 
