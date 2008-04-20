@@ -1,3 +1,23 @@
+2008-04-20  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Add support for AssignErrorNode, PrefixErrorNode, and PostfixErrorNode.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitCreateError):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::PostfixErrorNode::emitCode):
+        (KJS::PrefixErrorNode::emitCode):
+        (KJS::AssignErrorNode::emitCode):
+        * kjs/nodes.h:
+
 2008-04-20  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff and Mark.

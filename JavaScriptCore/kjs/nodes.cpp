@@ -2032,6 +2032,14 @@ JSValue* PostDecDotNode::evaluate(ExecState* exec)
 
 // ------------------------------ PostfixErrorNode -----------------------------------
 
+RegisterID* PostfixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    UString errorMessageString(m_operator == OpPlusPlus ? "Postfix ++ operator applied to value that is not a reference." : "Postfix -- operator applied to value that is not a reference.");
+    RegisterID* r0 = generator.emitCreateError(generator.newTemporary(), ReferenceError, jsOwnedString(errorMessageString));
+    generator.emitThrow(r0);
+    return dst;
+}
+
 JSValue* PostfixErrorNode::evaluate(ExecState* exec)
 {
     throwError(exec, ReferenceError, "Postfix %s operator applied to value that is not a reference.",
@@ -2604,6 +2612,15 @@ JSValue* PreDecDotNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ PrefixErrorNode -----------------------------------
+
+RegisterID* PrefixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    
+    UString errorMessageString(m_operator == OpPlusPlus ? "Prefix ++ operator applied to value that is not a reference." : "Prefix -- operator applied to value that is not a reference.");
+    RegisterID* r0 = generator.emitCreateError(generator.newTemporary(), ReferenceError, jsOwnedString(errorMessageString));
+    generator.emitThrow(r0);
+    return dst;
+}
 
 JSValue* PrefixErrorNode::evaluate(ExecState* exec)
 {
@@ -4338,6 +4355,14 @@ JSValue* ReadModifyDotNode::evaluate(ExecState* exec)
 }
 
 // ------------------------------ AssignErrorNode -----------------------------------
+
+RegisterID* AssignErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    UString errorMessageString("Left side of assignment is not a reference.");
+    RegisterID* r0 = generator.emitCreateError(generator.newTemporary(), ReferenceError, jsOwnedString(errorMessageString));
+    generator.emitThrow(r0);
+    return dst;
+}
 
 JSValue* AssignErrorNode::evaluate(ExecState* exec)
 {

@@ -232,6 +232,7 @@ namespace KJS {
 
         RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
         void emitThrow(RegisterID*);
+        RegisterID* emitCreateError(RegisterID*, ErrorType, JSValue*);
 
     private:
         PassRefPtr<LabelID> emitComplexJumpScopes(LabelID* target, ControlFlowContext* topScope, ControlFlowContext* bottomScope);
