@@ -5193,7 +5193,7 @@ RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     if (!generator.inContinueContext())
         return emitThrowError(generator, dst, SyntaxError, "Invalid continue statement.");
 
-    JumpContext* targetContext = generator.jumpContextForLabel(m_ident);
+    JumpContext* targetContext = generator.jumpContextForLabel(m_ident, true);
 
     if (!targetContext) {
         if (m_ident.isEmpty())

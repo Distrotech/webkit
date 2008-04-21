@@ -226,7 +226,7 @@ namespace KJS {
         bool inJumpContext() { return m_jumpContextStack.size() > 0; };
         void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
         void popJumpContext();
-        JumpContext* jumpContextForLabel(const Identifier&);
+        JumpContext* jumpContextForLabel(const Identifier&, bool forContinue = false);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
