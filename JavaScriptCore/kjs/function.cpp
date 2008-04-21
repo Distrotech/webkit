@@ -723,7 +723,7 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
     EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, globalObject);
 
     JSValue* exception = 0;
-    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception);
+    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception, globalObject);
 
 #if JAVASCRIPT_PROFILING
     Profiler::profiler()->didExecute(exec, UString(), 0);

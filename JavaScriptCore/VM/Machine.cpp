@@ -576,10 +576,24 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     return result;
 }
 
-JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception)
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
 {
-    CodeBlock* codeBlock = &evalNode->code(scopeChain);
-
+    EvalCodeBlock* codeBlock = &evalNode->code(scopeChain);
+    
+    if (!variableObject) {
+        ScopeChainNode* node;
+        
+        for (node = scopeChain; !node->object->isActivationObject() && node->next; node = node->next) { }
+        variableObject = node->object;
+    }
+    
+    for (Vector<Identifier>::const_iterator iter = codeBlock->declaredVariables.begin(); iter != codeBlock->declaredVariables.end(); ++iter) {
+        Identifier ident = *iter;
+        
+        if (!variableObject->hasProperty(exec, ident))
+            variableObject->put(exec, ident, jsUndefined());
+    }
+    
     size_t oldSize = registerFile->size();
     size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries;
     registerFile->grow(newSize);
@@ -593,22 +607,10 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     return result;
 }
 
-JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
 {
     RegisterFile* registerFile = registerFileStack->current();
-    CodeBlock* codeBlock = &evalNode->code(scopeChain);
-
-    size_t oldSize = registerFile->size();
-    size_t newSize = oldSize + codeBlock->numVars + codeBlock->numTemporaries;
-    registerFile->grow(newSize);
-    Register* r = (*registerFile->basePointer()) + oldSize + codeBlock->numVars;
-    
-    r[ProgramCodeThisRegister].u.jsValue = thisObj;
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
-    
-    registerFile->shrink(oldSize);
-    
-    return result;
+    return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception, variableObject);
 }
 
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)

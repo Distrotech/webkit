@@ -115,6 +115,15 @@ namespace KJS {
         JSGlobalObject* globalObject; // For program and eval nodes, the global object that marks the constant pool.
     };
 
+    struct EvalCodeBlock : public ProgramCodeBlock {
+        EvalCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
+            : ProgramCodeBlock(sourceURL_, usesEval_, needsClosure_, globalObject_)
+        {
+        }
+
+        Vector<Identifier> declaredVariables;
+    };
+
 } // namespace KJS
 
 #endif // CodeBlock_h
