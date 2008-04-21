@@ -68,9 +68,6 @@ namespace KJS {
 
     class ScopeChain {
     public:
-        typedef ScopeChainIterator const_iterator;
-        typedef JSObject* ValueType;
-
         ScopeChain() : _node(0) { }
         ~ScopeChain() { deref(); }
 
@@ -92,12 +89,8 @@ namespace KJS {
             ref();
         }
     
-        ScopeChain &operator=(const ScopeChain &);
-
-        bool isEmpty() const { return !_node; }
-        JSObject *top() const { return _node->object; }
-
-        JSObject *bottom() const;
+        JSObject* top() const { return _node->object; }
+        JSObject* bottom() const;
 
         ScopeChainIterator begin() const { return ScopeChainIterator(_node); }
         ScopeChainIterator end() const { return ScopeChainIterator(0); }
@@ -106,9 +99,7 @@ namespace KJS {
         void push(JSObject *);
         void push(const ScopeChain &);
         void push(ScopeChainNode*);
-        void replaceTop(JSObject*);
         void pop();
-        void popInlineScopeNode();
 
         void mark();
 
@@ -132,14 +123,6 @@ inline void ScopeChainNode::ref()
         if (n->refCount++ != 0)
             break;
     }
-}
-
-inline ScopeChain &ScopeChain::operator=(const ScopeChain &c)
-{
-    c.ref();
-    deref();
-    _node = c._node;
-    return *this;
 }
 
 inline JSObject *ScopeChain::bottom() const
@@ -167,12 +150,6 @@ inline void ScopeChain::push(ScopeChainNode *node)
     _node = node;
 }
 
-inline void ScopeChain::replaceTop(JSObject* o)
-{
-    ASSERT(o);
-    _node->object = o;
-}
-
 inline void ScopeChain::pop()
 {
     ScopeChainNode *oldNode = _node;
@@ -186,11 +163,6 @@ inline void ScopeChain::pop()
     } else {
         delete oldNode;
     }
-}
-
-inline void ScopeChain::popInlineScopeNode()
-{
-    _node = _node->next;
 }
 
 inline void ScopeChainNode::release()
