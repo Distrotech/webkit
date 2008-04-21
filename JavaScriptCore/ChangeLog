@@ -1,5 +1,14 @@
 2008-04-21  Maciej Stachowiak  <mjs@apple.com>
 
+        Rubber stamped by Alexey.
+        
+        Add some braces.x
+
+        * kjs/testkjs.cpp:
+        (runWithScripts):
+
+2008-04-21  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
         
         - only print "End:" output when -d flag is passed.
