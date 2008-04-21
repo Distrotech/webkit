@@ -40,7 +40,7 @@ namespace KJS {
         int refCount;
 
         void deref() { if (--refCount == 0) release(); }
-        void ref();
+        void ref() { ++refCount; }
 
         void release();
 
@@ -68,16 +68,15 @@ namespace KJS {
 
     class ScopeChain {
     public:
-        ScopeChain(const ScopeChain& c)
-            : _node(c._node)
-        {
-            if (_node)
-                ++_node->refCount;
-        }
-
         ScopeChain(JSObject* o)
             : _node(new ScopeChainNode(0, o))
         {
+        }
+
+        ScopeChain(const ScopeChain& c)
+            : _node(c._node)
+        {
+            ref();
         }
 
         explicit ScopeChain(ScopeChainNode* node)
@@ -112,17 +111,9 @@ namespace KJS {
     private:
         ScopeChainNode* _node;
         
-        void deref() { if (_node) _node->deref(); }
-        void ref() const { if (_node) _node->ref(); }
+        void deref() const { _node->deref(); }
+        void ref() const { _node->ref(); }
     };
-
-inline void ScopeChainNode::ref()
-{
-    for (ScopeChainNode* n = this; n; n = n->next) {
-        if (n->refCount++ != 0)
-            break;
-    }
-}
 
 inline JSObject *ScopeChain::bottom() const
 {

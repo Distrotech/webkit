@@ -2,6 +2,19 @@
 
         Reviewed by Maciej Stachowiak.
         
+        Simplified ScopeChain ref/deref.
+        
+        SunSpider reports a .4% speedup.
+        
+        * kjs/scope_chain.h:
+        (KJS::ScopeChainNode::ref): Removed this function because it was nonsense.
+        ScopeChainNodes are initialized with a refCount of 1, so the loop was
+        guaranteed to iterate exactly once.
+
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
         Removed support for empty ScopeChains.
 
         SunSpider reports no change.
