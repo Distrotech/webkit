@@ -1,3 +1,12 @@
+2008-04-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by NOBODY(Build fix)
+
+        Fix debug build
+
+        * kjs/nodes.cpp:
+        (KJS::ConstDeclNode::evaluateSingle):
+
 2008-04-21  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.
