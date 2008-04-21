@@ -222,6 +222,8 @@ namespace KJS {
         
         void pushFinallyContext(LabelID* target, RegisterID* returnAddrDst);
         void popFinallyContext();
+        bool inContinueContext() { return m_continueDepth > 0; };
+        bool inJumpContext() { return m_jumpContextStack.size() > 0; };
         void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
         void popJumpContext();
         JumpContext* jumpContextForLabel(const Identifier&);
@@ -233,7 +235,8 @@ namespace KJS {
         RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
         void emitThrow(RegisterID*);
         RegisterID* emitCreateError(RegisterID*, ErrorType, JSValue*);
-
+        
+        CodeType codeType() const { return m_codeType; }
     private:
         PassRefPtr<LabelID> emitComplexJumpScopes(LabelID* target, ControlFlowContext* topScope, ControlFlowContext* bottomScope);
         struct JSValueHashTraits  {
@@ -276,8 +279,7 @@ namespace KJS {
         SymbolTable& symbolTable() { return *m_symbolTable; }
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
         
-        bool shouldOptimizeLocals() { return !m_isEvalCode && !m_dynamicScopeDepth; }
-
+        bool shouldOptimizeLocals() { return (m_codeType != EvalCode) && !m_dynamicScopeDepth; }
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
         
@@ -291,9 +293,10 @@ namespace KJS {
         Vector<LabelID, 512> m_labels;
         int m_finallyDepth;
         int m_dynamicScopeDepth;
-        bool m_isEvalCode;
+        CodeType m_codeType;
         
         Vector<JumpContext> m_jumpContextStack;
+        int m_continueDepth;
         Vector<ControlFlowContext> m_scopeContextStack;
 
         int m_nextVar;

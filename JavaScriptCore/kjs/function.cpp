@@ -91,6 +91,7 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
 
 JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier& propertyName, const PropertySlot& slot)
 {
+    ASSERT_NOT_REACHED();
   FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
   
   for (ExecState* e = exec; e; e = e->callingExecState())

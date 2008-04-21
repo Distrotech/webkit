@@ -163,7 +163,8 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     , m_codeBlock(codeBlock)
     , m_finallyDepth(0)
     , m_dynamicScopeDepth(0)
-    , m_isEvalCode(false)
+    , m_codeType(GlobalCode)
+    , m_continueDepth(0)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 
@@ -206,7 +207,8 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     , m_codeBlock(codeBlock)
     , m_finallyDepth(0)
     , m_dynamicScopeDepth(0)
-    , m_isEvalCode(false)
+    , m_codeType(FunctionCode)
+    , m_continueDepth(0)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 {
@@ -245,7 +247,8 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
     , m_codeBlock(codeBlock)
     , m_finallyDepth(0)
     , m_dynamicScopeDepth(0)
-    , m_isEvalCode(true)
+    , m_codeType(EvalCode)
+    , m_continueDepth(0)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 {
@@ -909,17 +912,23 @@ void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget,
 {
     JumpContext context = { labels, continueTarget, breakTarget, scopeDepth() };
     m_jumpContextStack.append(context);
+    if (continueTarget)
+        m_continueDepth++;
 }
 
 void CodeGenerator::popJumpContext()
 {
     ASSERT(m_jumpContextStack.size());
+    if (m_jumpContextStack.last().continueTarget)
+        m_continueDepth--;
     m_jumpContextStack.removeLast();
 }
 
 JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label)
 {
-    ASSERT(m_jumpContextStack.size());
+    if(!m_jumpContextStack.size())
+        return 0;
+
     if (label.isEmpty())
         return &m_jumpContextStack.last();
     for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
