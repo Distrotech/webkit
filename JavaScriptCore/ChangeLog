@@ -1,3 +1,16 @@
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Removed indirection in ScopeChain::ref / ScopeChain::deref.
+        
+        SunSpider reports no change.
+        
+        * kjs/scope_chain.h:
+        (KJS::ScopeChain::ScopeChain):
+        (KJS::ScopeChain::~ScopeChain):
+        (KJS::ScopeChain::clear):
+
 2008-04-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by NOBODY(Build fix)
