@@ -119,6 +119,19 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
     }
 }
 
+// Returns the depth of the scope chain within a given call frame.
+static int depth(ScopeChain& sc)
+{
+    int scopeDepth = 0;
+    ScopeChainIterator iter = sc.begin(); 
+    ScopeChainIterator end = sc.end(); 
+    while (!(*iter)->isVariableObject()) {
+        ++iter;
+        ++scopeDepth;
+    }
+    return scopeDepth;
+}
+    
 static inline bool jsLess(ExecState* exec, JSValue* v1, JSValue* v2)
 {
     double n1;
@@ -476,7 +489,7 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     // Now unwind the scope chain within the exception handler's call frame.
     
     ScopeChain sc(scopeChain);
-    int scopeDelta = sc.depth() - scopeDepth;
+    int scopeDelta = depth(sc) - scopeDepth;
     ASSERT(scopeDelta >= 0);
     while (scopeDelta--)
         sc.pop();
