@@ -1,3 +1,11 @@
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Avoid creating unnecessary ScopeChain objects, to reduce refcount churn.
+
+        SunSpider reports no change.
+
 2008-04-21  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by Alexey.

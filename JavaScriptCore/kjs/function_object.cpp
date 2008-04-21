@@ -179,7 +179,7 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
     ScopeChain scopeChain;
     scopeChain.push(exec->lexicalGlobalObject());
 
-    FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain);
+    FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain.node());
 
     // parse parameter list. throw syntax error on illegal identifiers
     int len = p.size();
