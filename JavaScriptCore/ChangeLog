@@ -2,6 +2,15 @@
 
         Reviewed by Sam Weinig.
         
+        Moved push(JSObject*) and pop() from ScopeChain to ScopeChainNode,
+        rearranging scope_chain.h a bit.
+
+        SunSpider reports no change.
+
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
         Moved bottom() from ScopeChain to ScopeChainNode, simplifying it based
         on the knowledge that the ScopeChain is never empty.
 
