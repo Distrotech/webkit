@@ -53,6 +53,7 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject)
     , m_function(0)
     , m_arguments(0)
     , m_activation(0)
+    , m_scopeChain(globalObject)
     , m_inlineScopeChainNode(0, 0)
     , m_variableObject(globalObject)
     , m_thisValue(thisObject)
@@ -61,7 +62,6 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject)
     , m_switchDepth(0) 
     , m_codeType(GlobalCode)
 {
-    m_scopeChain.push(globalObject);
 }
 
 inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, ProgramNode* programNode)
@@ -75,6 +75,7 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, 
     , m_function(0)
     , m_arguments(0)
     , m_activation(0)
+    , m_scopeChain(globalObject)
     , m_inlineScopeChainNode(0, 0)
     , m_variableObject(globalObject)
     , m_thisValue(thisObject)
@@ -84,7 +85,6 @@ inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, 
     , m_codeType(GlobalCode)
 {
     ASSERT(m_scopeNode);
-    m_scopeChain.push(globalObject);
 }
 
 inline ExecState::ExecState(JSGlobalObject* globalObject, JSObject* thisObject, EvalNode* evalNode, ExecState* callingExec, const ScopeChain& scopeChain, JSVariableObject* variableObject)

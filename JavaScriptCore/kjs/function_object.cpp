@@ -176,8 +176,7 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
         // and return it
         return throwError(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL);
 
-    ScopeChain scopeChain;
-    scopeChain.push(exec->lexicalGlobalObject());
+    ScopeChain scopeChain(exec->lexicalGlobalObject());
 
     FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain.node());
 
