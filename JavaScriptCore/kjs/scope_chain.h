@@ -42,6 +42,8 @@ namespace KJS {
         void deref() { if (--refCount == 0) release(); }
         void ref() { ++refCount; }
 
+        JSObject* bottom() const;
+
         void release();
 
         ScopeChainIterator begin() const;
@@ -88,7 +90,7 @@ namespace KJS {
         ~ScopeChain() { _node->deref(); }
 
         JSObject* top() const { return _node->object; }
-        JSObject* bottom() const;
+        JSObject* bottom() const { return _node->bottom(); }
 
         ScopeChainIterator begin() const { return _node->begin(); }
         ScopeChainIterator end() const { return _node->end(); }
@@ -110,16 +112,6 @@ namespace KJS {
     private:
         ScopeChainNode* _node;
     };
-
-inline JSObject *ScopeChain::bottom() const
-{
-    ScopeChainNode *last = 0;
-    for (ScopeChainNode *n = _node; n; n = n->next)
-        last = n;
-    if (!last)
-        return 0;
-    return last->object;
-}
 
 inline void ScopeChain::push(JSObject *o)
 {
@@ -149,6 +141,14 @@ inline void ScopeChain::pop()
     } else {
         delete oldNode;
     }
+}
+
+inline JSObject* ScopeChainNode::bottom() const
+{
+    const ScopeChainNode* n = this;
+    while (n->next)
+        n = n->next;
+    return n->object;
 }
 
 inline void ScopeChainNode::release()
