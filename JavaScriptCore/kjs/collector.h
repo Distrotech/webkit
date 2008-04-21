@@ -35,8 +35,19 @@ namespace KJS {
 
   class Collector {
   public:
-    static void* allocate(size_t s);
-    static void* allocateNumber(size_t s);
+    class Thread;
+    enum HeapType { PrimaryHeap, NumberHeap };
+
+    static void* allocate(size_t s) 
+    {
+        return heapAllocate<PrimaryHeap>(s);
+    }
+
+    static void* allocateNumber(size_t s) 
+    {
+        return heapAllocate<NumberHeap>(s);
+    }
+
     static bool collect();
     static bool isBusy(); // true if an allocation or collection is in progress
 
@@ -56,15 +67,12 @@ namespace KJS {
     static size_t protectedGlobalObjectCount();
     static HashCountedSet<const char*>* protectedObjectTypeCounts();
 
-    class Thread;
     static void registerThread();
     
     static void registerAsMainThread();
 
     static bool isCellMarked(const JSCell*);
     static void markCell(JSCell*);
-
-    enum HeapType { PrimaryHeap, NumberHeap };
 
     static void markStackObjectsConservatively(void* start, void* end);
 

@@ -517,6 +517,25 @@ inline bool JSValue::isObject(const ClassInfo *c) const
     return !JSImmediate::isImmediate(this) && asCell()->isObject(c);
 }
 
+inline JSValue *JSObject::get(ExecState *exec, const Identifier &propertyName) const
+{
+  PropertySlot slot;
+
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
+inline JSValue *JSObject::get(ExecState *exec, unsigned propertyName) const
+{
+  PropertySlot slot;
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
 // It may seem crazy to inline a function this large but it makes a big difference
 // since this is function very hot in variable lookup
 inline bool JSObject::getPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -532,6 +551,24 @@ inline bool JSObject::getPropertySlot(ExecState *exec, const Identifier& propert
 
         object = static_cast<JSObject *>(proto);
     }
+}
+
+inline bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
+{
+  JSObject *imp = this;
+  
+  while (true) {
+    if (imp->getOwnPropertySlot(exec, propertyName, slot))
+      return true;
+    
+    JSValue *proto = imp->_proto;
+    if (!proto->isObject())
+      break;
+    
+    imp = static_cast<JSObject *>(proto);
+  }
+  
+  return false;
 }
 
 // It may seem crazy to inline a function this large, especially a virtual function,
