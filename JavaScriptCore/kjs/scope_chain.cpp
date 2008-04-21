@@ -1,6 +1,6 @@
 /*
  *  This file is part of the KDE libraries
- *  Copyright (C) 2003, 2006 Apple Inc.
+ *  Copyright (C) 2003, 2006, 2008 Apple Inc.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -21,9 +21,10 @@
 
 #include "config.h"
 #include "scope_chain.h"
+
 #include "PropertyNameArray.h"
-#include <stdio.h>
 #include "object.h"
+#include <stdio.h>
 
 namespace KJS {
 
@@ -39,7 +40,7 @@ void ScopeChain::push(const ScopeChain &c)
 
 #ifndef NDEBUG
 
-void ScopeChain::print()
+void ScopeChain::print() const
 {
     ScopeChainIterator scopeEnd = end();
     for (ScopeChainIterator scopeIter = begin(); scopeIter != scopeEnd; ++scopeIter) {

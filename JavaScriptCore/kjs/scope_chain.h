@@ -1,6 +1,6 @@
 /*
  *  This file is part of the KDE libraries
- *  Copyright (C) 2003 Apple Computer, Inc.
+ *  Copyright (C) 2003, 2008 Apple Computer, Inc.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef KJS_SCOPE_CHAIN_H
-#define KJS_SCOPE_CHAIN_H
+#ifndef ScopeChain_h
+#define ScopeChain_h
 
 #include <wtf/Assertions.h>
 
@@ -90,8 +90,8 @@ namespace KJS {
         JSObject* top() const { return _node->object; }
         JSObject* bottom() const;
 
-        ScopeChainIterator begin() const { return ScopeChainIterator(_node); }
-        ScopeChainIterator end() const { return ScopeChainIterator(0); }
+        ScopeChainIterator begin() const { return _node->begin(); }
+        ScopeChainIterator end() const { return _node->end(); }
 
         void clear() { _node->deref(); _node = 0; }
         void push(JSObject *);
@@ -99,13 +99,13 @@ namespace KJS {
         void push(ScopeChainNode*);
         void pop();
 
-        void mark();
+        void mark() const;
 
 #ifndef NDEBUG        
-        void print();
+        void print() const;
 #endif
         
-        ScopeChainNode* node() { return _node; }
+        ScopeChainNode* node() const { return _node; }
 
     private:
         ScopeChainNode* _node;
@@ -176,4 +176,4 @@ inline ScopeChainIterator ScopeChainNode::end() const
 
 } // namespace KJS
 
-#endif // KJS_SCOPE_CHAIN_H
+#endif // ScopeChain_h

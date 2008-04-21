@@ -1,5 +1,15 @@
 2008-04-21  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Oliver Hunt.
+        
+        Moved begin() and end() from ScopeChain to ScopeChainNode. 
+        
+        Also marked a few methods "const".
+
+        SunSpider reports no change.
+        
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Maciej Stachowiak.
         
         Turned ScopeChain::depth into a stand-alone function, and simplified it

@@ -26,7 +26,7 @@
 
 namespace KJS {
 
-    inline void ScopeChain::mark()
+    inline void ScopeChain::mark() const
     {
         for (ScopeChainNode* n = _node; n; n = n->next) {
             JSObject* o = n->object;
