@@ -1,3 +1,20 @@
+2008-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - throw proper exceptions for objects that don't implement call or construct
+        
+        This fixes 21 more JSC test regressions. It is also seemingly an
+        0.5% progression.
+
+        * VM/ExceptionHelpers.cpp:
+        (KJS::createNotAnObjectError):
+        (KJS::createNotAConstructorError):
+        (KJS::createNotAFunctionError):
+        * VM/ExceptionHelpers.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
