@@ -27,7 +27,6 @@
 namespace KJS {
 
     class JSObject;
-    class ExecState;
     class ScopeChainIterator;
     
     class ScopeChainNode {
@@ -49,11 +48,15 @@ namespace KJS {
 
         JSObject* bottom() const;
 
-        ScopeChainNode* push(JSObject* o);
+        ScopeChainNode* push(JSObject*);
         ScopeChainNode* pop();
 
         ScopeChainIterator begin() const;
         ScopeChainIterator end() const;
+        
+#ifndef NDEBUG        
+        void print() const;
+#endif
     };
 
     inline ScopeChainNode* ScopeChainNode::push(JSObject* o)
@@ -154,7 +157,6 @@ namespace KJS {
         ScopeChainIterator end() const { return _node->end(); }
 
         void push(JSObject* o) { _node = _node->push(o); }
-        void push(const ScopeChain &);
 
         void pop() { _node = _node->pop(); }
         void clear() { _node->deref(); _node = 0; }
@@ -162,7 +164,7 @@ namespace KJS {
         void mark() const;
 
 #ifndef NDEBUG        
-        void print() const;
+        void print() const { _node->print(); }
 #endif
         
     private:
