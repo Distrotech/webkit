@@ -13,7 +13,8 @@
         "scopeChain" properly, we also need to deref it when the script
         terminates.
 
-        SunSpider reports no change.
+        SunSpider reports a .2% regression, but an earlier round of ScopeChain
+        refactoring was a .4% speedup, so there.
 
 2008-04-22  Maciej Stachowiak  <mjs@apple.com>
 
