@@ -41,10 +41,21 @@ namespace KJS {
         ScopeChainNode* next;
         JSObject* object;
         int refCount;
-
+        
         void deref() { if (--refCount == 0) release(); }
         void ref() { ++refCount; }
         void release();
+
+        // Before calling "push" on a bare ScopeChainNode, a client should
+        // logically "copy" the node. Later, the client can "deref" the head
+        // of its chain of ScopeChainNodes to reclaim all the nodes it added
+        // after the logical copy, leaving nodes added before the logical copy
+        // (nodes shared with other clients) untouched.
+        ScopeChainNode* copy()
+        {
+            ref();
+            return this;
+        }
 
         JSObject* bottom() const;
 
@@ -135,17 +146,15 @@ namespace KJS {
         }
 
         ScopeChain(const ScopeChain& c)
-            : _node(c._node)
+            : _node(c._node->copy())
         {
-            _node->ref();
         }
 
         ScopeChain& operator=(const ScopeChain& c);
 
         explicit ScopeChain(ScopeChainNode* node)
-            : _node(node)
+            : _node(node->copy())
         {
-            _node->ref();
         }
     
         ~ScopeChain() { _node->deref(); }

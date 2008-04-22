@@ -43,7 +43,7 @@ namespace KJS {
     union ConstructData {
         struct {
             FunctionBodyNode* functionBody;
-            ScopeChain* scopeChain;
+            ScopeChainNode* scopeChain;
         } js;
     };
 

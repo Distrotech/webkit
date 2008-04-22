@@ -409,20 +409,18 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
     return r;
 }
 
-ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
+ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
 {
     if (newCodeBlock->needsActivation) {
-        char scMem[sizeof(ScopeChain)];
-        ScopeChain* sc = new (&scMem) ScopeChain(*callDataScopeChain);
-
         JSActivation* activation = new JSActivation(functionBody, registerBase, r - (*registerBase));
-        sc->push(activation);
-        ScopeChainNode* result = sc->node();
         callFrame[Machine::OptionalCalleeActivation].u.jsValue = activation;
-        return result;
-    } 
 
-    return callDataScopeChain->node();
+        ScopeChainNode* scopeChain = callDataScopeChain->copy();
+        scopeChain = scopeChain->push(activation);
+        return scopeChain;
+    }
+
+    return callDataScopeChain;
 }
 
 NEVER_INLINE bool Machine::unwindCallFrame(Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
@@ -535,25 +533,27 @@ static void* op_throw_end_indirect;
 static void* op_call_indirect;
 #endif
 
-JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
+JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
-
-    CodeBlock* codeBlock = &programNode->code(scopeChain->node());
+    CodeBlock* codeBlock = &programNode->code(scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->grow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
 
     ASSERT(exec->dynamicGlobalObject()->symbolTable().get(CommonIdentifiers::shared()->thisIdentifier.ustring().rep()) == ProgramCodeThisRegister);
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
+    
+    if (codeBlock->needsActivation)
+        scopeChain = scopeChain->copy();
 
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain->node(), codeBlock, exception);
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
 
     registerFileStack->popRegisterFile();
     return result;
 }
 
-JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, JSObject* thisObj, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* sc, JSValue** exception)
+JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, JSObject* thisObj, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->current();
 
@@ -578,10 +578,9 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     for (List::const_iterator it = args.begin(); it != end; ++it)
         (*++dst).u.jsValue = *it;
 
-    ScopeChainNode* scopeChain = sc->node();
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
-    scopeChain = scopeChainForCall(newCodeBlock, sc, functionBodyNode, callFrame, registerBase, r);            
+    scopeChain = scopeChainForCall(newCodeBlock, scopeChain, functionBodyNode, callFrame, registerBase, r);            
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
     registerFile->shrink(oldSize);
@@ -613,6 +612,10 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     
     ((*registerFile->basePointer()) + registerOffset)[CallerCodeBlock].u.codeBlock = 0;
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
+
+    if (codeBlock->needsActivation)
+        scopeChain = scopeChain->copy();
+
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
     
     registerFile->shrink(oldSize);
@@ -1309,10 +1312,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? exec->globalThisValue() : r[r2].u.jsValue; // "this" value
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
 
-            ScopeChain* callDataScopeChain = callData.js.scopeChain;
+            ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = callData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(callDataScopeChain->node());
+            codeBlock = &functionBodyNode->code(callDataScopeChain);
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
@@ -1406,10 +1409,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1);
             
-            ScopeChain* callDataScopeChain = constructData.js.scopeChain;
+            ScopeChainNode* callDataScopeChain = constructData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = constructData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(callDataScopeChain->node());
+            codeBlock = &functionBodyNode->code(callDataScopeChain);
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
@@ -1442,17 +1445,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* o = v->toObject(exec);
         VM_CHECK_EXCEPTION();
         
-        ScopeChain sc(scopeChain);
-        sc.push(o);
-        scopeChain = sc.node();
+        scopeChain = scopeChain->push(o);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pop_scope) {
-        ScopeChain sc(scopeChain);
-        sc.pop();
-        scopeChain = sc.node();
+        scopeChain = scopeChain->pop();
 
         ++vPC;
         NEXT_OPCODE;
@@ -1530,6 +1529,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {
+        if (codeBlock->needsActivation) {
+            ASSERT(scopeChain->refCount > 1);
+            scopeChain->deref();
+        }
         int r0 = (++vPC)->u.operand;
         return r[r0].u.jsValue;
     }

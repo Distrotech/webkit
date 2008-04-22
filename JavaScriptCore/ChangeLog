@@ -1,3 +1,20 @@
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed ScopeChainNode lifetime problems:
+        
+        (1) In "with" and "catch" scopes, we would construct a ScopeChain
+        object and then jump across its destructor, leaking the ScopeChainNode
+        we had pushed.
+
+        (2) In global and eval scopes, we would fail to initially ref
+        "scopeChain", causing us to overrelease it later. Now that we ref
+        "scopeChain" properly, we also need to deref it when the script
+        terminates.
+
+        SunSpider reports no change.
+
 2008-04-22  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Alexey.
