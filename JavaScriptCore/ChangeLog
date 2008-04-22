@@ -1,3 +1,16 @@
+2008-04-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - restore ScopeChain::operator= to avoid crash on many layout tests
+        
+        Otherwise, FunctionImp::setScope would cause a reference
+        underflow. I implemented using the copy construct and swap idiom.
+
+        * kjs/scope_chain.h:
+        (KJS::ScopeChain::swap):
+        (KJS::ScopeChain::operator=):
+
 2008-04-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

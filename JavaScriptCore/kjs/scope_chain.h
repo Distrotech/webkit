@@ -140,6 +140,8 @@ namespace KJS {
             _node->ref();
         }
 
+        ScopeChain& operator=(const ScopeChain& c);
+
         explicit ScopeChain(ScopeChainNode* node)
             : _node(node)
         {
@@ -147,6 +149,8 @@ namespace KJS {
         }
     
         ~ScopeChain() { _node->deref(); }
+
+        void swap(ScopeChain&);
 
         ScopeChainNode* node() const { return _node; }
 
@@ -170,6 +174,20 @@ namespace KJS {
     private:
         ScopeChainNode* _node;
     };
+
+    inline void ScopeChain::swap(ScopeChain& o)
+    {
+        ScopeChainNode* tmp = _node;
+        _node = o._node;
+        o._node = tmp;
+    }
+
+    inline ScopeChain& ScopeChain::operator=(const ScopeChain& c)
+    {
+        ScopeChain tmp(c);
+        swap(tmp);
+        return *this;
+    }
 
 } // namespace KJS
 
