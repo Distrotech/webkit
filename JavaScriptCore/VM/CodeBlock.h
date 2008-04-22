@@ -59,7 +59,7 @@ namespace KJS {
             , numTemporaries(0)
             , numVars(0)
             , numParameters(0)
-            , needsActivation(usesEval_ || needsClosure_)
+            , needsFullScopeChain(usesEval_ || needsClosure_)
             , usesEval(usesEval_)
             , needsClosure(needsClosure_)
         {
@@ -78,7 +78,7 @@ namespace KJS {
         int numVars;
         int numParameters;
         
-        bool needsActivation;
+        bool needsFullScopeChain;
         bool usesEval;
         bool needsClosure;
 
