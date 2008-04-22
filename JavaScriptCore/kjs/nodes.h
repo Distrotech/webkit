@@ -2555,7 +2555,9 @@ namespace KJS {
         Identifier m_ident;
         ListRefPtr<ConstDeclNode> m_next;
         RefPtr<ExpressionNode> m_init;
-
+        
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+        virtual RegisterID* emitCodeSingle(CodeGenerator&, RegisterID*) KJS_FAST_CALL;
     private:
         void handleSlowCase(ExecState*, const ScopeChain&, JSValue*) KJS_FAST_CALL NEVER_INLINE;
     };
@@ -2570,7 +2572,8 @@ namespace KJS {
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
-
+        
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
     private:
         RefPtr<ConstDeclNode> m_next;
     };

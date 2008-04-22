@@ -1,3 +1,21 @@
+2008-04-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Implement emitCode for ConstDeclNode.
+
+        This fixes the crash (assertion) in js1_5/Scope/scope-001.js
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::registerForLocalConstInit):
+        * VM/CodeGenerator.h:
+        * kjs/nodes.cpp:
+        (KJS::AssignResolveNode::emitCode):
+        (KJS::ConstDeclNode::emitCodeSingle):
+        (KJS::ConstDeclNode::emitCode):
+        (KJS::ConstStatementNode::emitCode):
+        * kjs/nodes.h:
+
 2008-04-21  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.

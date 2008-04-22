@@ -286,6 +286,17 @@ RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
     return &m_locals[localsIndex(index)];
 }
 
+RegisterID* CodeGenerator::registerForLocalConstInit(const Identifier& ident)
+{
+    if (m_codeType == EvalCode)
+        return 0;
+    
+    int index = symbolTable().get(ident.ustring().rep());
+    ASSERT(index != missingSymbolMarker());
+    
+    return &m_locals[localsIndex(index)];
+}
+
 RegisterID* CodeGenerator::newTemporary()
 {
     // Reclaim free register IDs.

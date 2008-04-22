@@ -83,6 +83,9 @@ namespace KJS {
         // such register exists. Registers returned by registerForLocal do not
         // require explicit reference counting.
         RegisterID* registerForLocal(const Identifier&);
+        // Behaves as registerForLocal does, but ignores dynamic scope as
+        // dynamic scope should not interfere with const initialisation
+        RegisterID* registerForLocalConstInit(const Identifier&);
 
         // Returns the next available temporary register. Registers returned by
         // newTemporary require a modified form of reference counting: any

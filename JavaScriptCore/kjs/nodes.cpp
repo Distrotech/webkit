@@ -4571,6 +4571,29 @@ inline void ConstDeclNode::evaluateSingle(ExecState* exec)
     }
 }
 
+RegisterID* ConstDeclNode::emitCodeSingle(CodeGenerator& generator, RegisterID* dst)
+{
+    if (RegisterID* constReg = generator.registerForLocalConstInit(m_ident)) {
+        RegisterID* exprResult = generator.emitNode(constReg, m_init.get());
+        return generator.moveToDestinationIfNeeded(dst, exprResult);
+    }
+
+    // FIXME: While this code should only be hit in eval code, it will potentially
+    // assign to the wrong base if m_ident exists in an intervening dynamic scope.
+    RefPtr<RegisterID> constBase = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* exprResult = generator.emitNode(dst, m_init.get());
+    return generator.emitPutPropId(constBase.get(), m_ident, exprResult);
+}
+
+RegisterID* ConstDeclNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* result = 0;
+    for (ConstDeclNode* n = this; n; n = n->m_next.get())
+        result = n->emitCodeSingle(generator, n->m_next ? 0 : dst);
+
+    return result;
+}
+
 JSValue* ConstDeclNode::evaluate(ExecState* exec)
 {
     evaluateSingle(exec);
@@ -4591,6 +4614,11 @@ void ConstStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, 
 {
     ASSERT(m_next);
     nodeStack.append(m_next.get());
+}
+
+RegisterID* ConstStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitNode(dst, m_next.get());
 }
 
 // ECMA 12.2
