@@ -1,3 +1,11 @@
+2008-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+
+        * kjs/testkjs.cpp:
+        (main): Convert signals to exit codes, so that crashing tests are
+        detected as regression test failures.
+
 2008-04-22  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt and Maciej Stachowiak.
