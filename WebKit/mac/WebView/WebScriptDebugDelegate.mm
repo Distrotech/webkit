@@ -155,13 +155,11 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
     if (!state->scopeNode())  // global frame
         return [NSArray arrayWithObject:_private->globalObject];
 
-    ScopeChain      chain  = state->scopeChain();
     NSMutableArray *scopes = [[NSMutableArray alloc] init];
 
-    while (!chain.isEmpty()) {
-        [scopes addObject:[self _convertValueToObjcValue:chain.top()]];
-        chain.pop();
-    }
+    ScopeChainIterator end = state->scopeChain().end();
+    for (ScopeChainIterator it = state->scopeChain().begin(); it != end; ++it)
+        [scopes addObject:[self _convertValueToObjcValue:(*it)]];
 
     NSArray *result = [NSArray arrayWithArray:scopes];
     [scopes release];
