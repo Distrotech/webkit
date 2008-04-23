@@ -373,7 +373,7 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     callFrame[Machine::ReturnValueRegister].u.i = returnValueRegister;
     callFrame[Machine::ArgumentStartRegister].u.i = argv; // original argument vector (for the sake of the "arguments" object)
     callFrame[Machine::CalledAsConstructor].u.i = calledAsConstructor;
-    // callFrame[Machine::OptionalCalleeActivation] gets optionally set later
+    callFrame[Machine::OptionalCalleeActivation].u.jsValue = 0;
 }
 
 ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc)
@@ -562,9 +562,6 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     int registerOffset = oldSize;
     Register* callFrame = (*registerBase) + registerOffset;
     
-    // put return info in place, using 0 codeBlock to indicate built-in caller
-    callFrame[CallerCodeBlock].u.codeBlock = 0;
-
     // put args in place, including "this"
     Register* dst = callFrame + CallFrameHeaderSize;
     (*dst).u.jsValue = thisObj;
@@ -572,6 +569,9 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     List::const_iterator end = args.end();
     for (List::const_iterator it = args.begin(); it != end; ++it)
         (*++dst).u.jsValue = *it;
+
+    // put call frame in place, using a 0 codeBlock to indicate a built-in caller
+    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, registerOffset + CallFrameHeaderSize, 0);
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
@@ -1357,10 +1357,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
         JSValue* returnValue = r[r1].u.jsValue;
-        
-        if (oldCodeBlock->needsFullScopeChain) {
-            ASSERT(scopeChain->object->isActivationObject());
-            static_cast<JSActivation*>(scopeChain->object)->copyRegisters();
+
+        if (JSActivation* activation = static_cast<JSActivation*>(callFrame[OptionalCalleeActivation].u.jsValue)) {
+            ASSERT(scopeChain->object == activation);
+            ASSERT(activation->isActivationObject());
+            activation->copyRegisters();
+            
+            ASSERT(codeBlock->needsFullScopeChain);
             scopeChain->deref();
         }
 
