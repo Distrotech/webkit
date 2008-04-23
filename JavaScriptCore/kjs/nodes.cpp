@@ -5717,7 +5717,7 @@ void EvalNode::generateCode(ScopeChainNode* sc)
     
     m_code.set(new EvalCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
     
-    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get(), m_varStack);
+    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get(), m_varStack, m_functionStack);
     generator.generate();
 
     m_children.shrinkCapacity(0);
