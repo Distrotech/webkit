@@ -590,16 +590,6 @@ JSGlobalObject* JSObject::toGlobalObject(ExecState*) const
     return 0;
 }
 
-void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
-{
-    _prop.put(propertyName, value, attr);
-}
-
-void JSObject::putDirect(const Identifier &propertyName, int value, int attr)
-{
-    _prop.put(propertyName, jsNumber(value), attr);
-}
-
 void JSObject::removeDirect(const Identifier &propertyName)
 {
     _prop.remove(propertyName);
