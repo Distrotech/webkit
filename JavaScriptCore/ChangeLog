@@ -1,3 +1,24 @@
+2008-04-22  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Implement LabelNode.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::pushJumpContext):
+        (KJS::CodeGenerator::jumpContextForContinue):
+        (KJS::CodeGenerator::jumpContextForBreak):
+        * VM/CodeGenerator.h:
+        * kjs/nodes.cpp:
+        (KJS::DoWhileNode::emitCode):
+        (KJS::WhileNode::emitCode):
+        (KJS::ForNode::emitCode):
+        (KJS::ForInNode::emitCode):
+        (KJS::ContinueNode::emitCode):
+        (KJS::BreakNode::emitCode):
+        (KJS::SwitchNode::emitCode):
+        (KJS::LabelNode::emitCode):
+
 2008-04-22  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

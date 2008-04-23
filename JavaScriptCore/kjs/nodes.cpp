@@ -4847,7 +4847,7 @@ RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<LabelID> conditionTarget = generator.newLabel();
     RefPtr<LabelID> breakTarget = generator.newLabel();
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
     
@@ -4909,7 +4909,7 @@ RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     generator.emitJump(conditionTarget.get());
     generator.emitLabel(l0.get());
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
     generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
 
@@ -4975,7 +4975,7 @@ RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     generator.emitJump(l1.get());
 
     generator.emitLabel(l0.get());
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
     RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
     generator.emitLabel(conditionTarget.get());  
@@ -5106,7 +5106,7 @@ RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitPutPropVal(base.get(), subscript, propertyName);
     }   
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
     generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
 
@@ -5221,7 +5221,7 @@ RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     if (!generator.inContinueContext())
         return emitThrowError(generator, dst, SyntaxError, "Invalid continue statement.");
 
-    JumpContext* targetContext = generator.jumpContextForLabel(m_ident, true);
+    JumpContext* targetContext = generator.jumpContextForContinue(m_ident);
 
     if (!targetContext) {
         if (m_ident.isEmpty())
@@ -5255,7 +5255,7 @@ RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     if (!generator.inJumpContext())
         return emitThrowError(generator, dst, SyntaxError, "Invalid break statement.");
     
-    JumpContext* targetContext = generator.jumpContextForLabel(m_ident);
+    JumpContext* targetContext = generator.jumpContextForBreak(m_ident);
     
     if (!targetContext) {
         if (m_ident.isEmpty())
@@ -5500,7 +5500,7 @@ RegisterID* SwitchNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<LabelID> breakTarget = generator.newLabel();
 
     RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
-    generator.pushJumpContext(&m_labelStack, 0, breakTarget.get());
+    generator.pushJumpContext(&m_labelStack, 0, breakTarget.get(), true);
     RegisterID* r1 = m_block->emitCodeForBlock(generator, r0.get(), dst);
     generator.popJumpContext();
 
@@ -5533,7 +5533,20 @@ JSValue* SwitchNode::execute(ExecState* exec)
 // ------------------------------ LabelNode ------------------------------------
 RegisterID* LabelNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    return generator.emitNode(dst, m_statement.get());
+    if (generator.jumpContextForBreak(m_label))
+        return emitThrowError(generator, dst, SyntaxError, "Duplicated label %s found.", m_label);
+    
+    RefPtr<LabelID> l0 = generator.newLabel();
+    m_labelStack.push(m_label);
+    generator.pushJumpContext(&m_labelStack, 0, l0.get(), false);
+    
+    RegisterID* r0 = generator.emitNode(dst, m_statement.get());
+    
+    generator.popJumpContext();
+    m_labelStack.pop();
+    
+    generator.emitLabel(l0.get());
+    return r0;
 }
 
 void LabelNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)

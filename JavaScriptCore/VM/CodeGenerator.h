@@ -52,6 +52,7 @@ namespace KJS {
         LabelID* continueTarget;
         LabelID* breakTarget;
         int scopeDepth;
+        bool isValidUnlabeledBreakTarget;
     };
 
     struct FinallyContext {
@@ -227,9 +228,10 @@ namespace KJS {
         void popFinallyContext();
         bool inContinueContext() { return m_continueDepth > 0; };
         bool inJumpContext() { return m_jumpContextStack.size() > 0; };
-        void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
+        void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget, bool isValidUnlabeledBreakTarget);
         void popJumpContext();
-        JumpContext* jumpContextForLabel(const Identifier&, bool forContinue = false);
+        JumpContext* jumpContextForContinue(const Identifier&);
+        JumpContext* jumpContextForBreak(const Identifier&);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
