@@ -1,3 +1,33 @@
+2008-04-23  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18672: SQUIRRELFISH: codegen fails with a large number of temporaries
+        <https://bugs.webkit.org/show_bug.cgi?id=18672>
+
+        Add a SegmentedVector type, which provides a Vector<T> which maintains
+        existing memory locations during resize.  This allows dynamically sizing
+        local, temporary and label "vectors" in CodeGenerator.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::newTemporary):
+        (KJS::CodeGenerator::newLabel):
+        * VM/CodeGenerator.h:
+        * VM/SegmentedVector.h: Added.
+        (KJS::SegmentedVector::SegmentedVector):
+        (KJS::SegmentedVector::~SegmentedVector):
+        (KJS::SegmentedVector::last):
+        (KJS::SegmentedVector::append):
+        (KJS::SegmentedVector::removeLast):
+        (KJS::SegmentedVector::size):
+        (KJS::SegmentedVector::operator[]):
+        (KJS::SegmentedVector::resize):
+        (KJS::SegmentedVector::shrink):
+        (KJS::SegmentedVector::grow):
+
 2008-04-23  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
