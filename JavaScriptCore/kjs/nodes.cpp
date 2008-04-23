@@ -6036,25 +6036,23 @@ RegisterID* FuncExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 
 FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChainNode* scopeChain)
 {
-    bool named = !m_ident.isNull();
-    JSObject* functionScopeObject = 0;
-
-    if (named) {
-        // named FunctionExpressions can recursively call themselves,
-        // but they won't register with the current scope chain and should
-        // be contained as single property in an anonymous object.
-        functionScopeObject = new JSObject;
-        exec->pushScope(functionScopeObject);
-    }
-
     FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
     func->putDirect(exec->propertyNames().prototype, proto, DontDelete);
 
-    if (named) {
-        functionScopeObject->putDirect(m_ident, func, ReadOnly | (exec->codeType() == EvalCode ? 0 : DontDelete));
-        exec->popScope();
+    /* 
+        The Identifier in a FunctionExpression can be referenced from inside
+        the FunctionExpression's FunctionBody to allow the function to call
+        itself recursively. However, unlike in a FunctionDeclaration, the
+        Identifier in a FunctionExpression cannot be referenced from and
+        does not affect the scope enclosing the FunctionExpression.
+     */
+
+    if (!m_ident.isNull()) {
+        JSObject* functionScopeObject = new JSObject;
+        functionScopeObject->putDirect(m_ident, func, ReadOnly | DontDelete);
+        func->scope().push(functionScopeObject);
     }
 
     return func;
