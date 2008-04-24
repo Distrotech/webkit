@@ -560,7 +560,8 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     
     Register** registerBase = registerFile->basePointer();
     int registerOffset = oldSize;
-    Register* callFrame = (*registerBase) + registerOffset;
+    int callFrameOffset = registerOffset;
+    Register* callFrame = (*registerBase) + callFrameOffset;
     
     // put args in place, including "this"
     Register* dst = callFrame + CallFrameHeaderSize;
@@ -575,6 +576,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
+    callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(newCodeBlock, scopeChain, functionBodyNode, callFrame, registerBase, r);            
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
@@ -1310,6 +1312,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (callType == CallTypeJS) {
             int registerOffset = r - (*registerBase);
             Register* callFrame = r + argv - CallFrameHeaderSize;
+            int callFrameOffset = registerOffset + argv - CallFrameHeaderSize;
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? exec->globalThisValue() : r[r2].u.jsValue; // "this" value
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
@@ -1319,6 +1322,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = &functionBodyNode->code(callDataScopeChain);
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
@@ -1402,6 +1406,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (constructType == ConstructTypeJS) {
             int registerOffset = r - (*registerBase);
             Register* callFrame = r + argv - CallFrameHeaderSize;
+            int callFrameOffset = registerOffset + argv - CallFrameHeaderSize;
 
             JSObject* prototype;
             JSValue* p = constructor->get(exec, exec->propertyNames().prototype);
@@ -1419,6 +1424,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = &functionBodyNode->code(callDataScopeChain);
             r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
