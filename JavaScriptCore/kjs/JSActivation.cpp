@@ -65,16 +65,19 @@ void JSActivation::copyRegisters()
     d()->registerOffset = numRegisters;
 }
 
-bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName, PropertySlot& slot)
+bool JSActivation::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     if (symbolTableGet(propertyName, slot))
         return true;
 
-    // FIXME: Implement the "arguments" property.
-    ASSERT(propertyName != CommonIdentifiers::shared()->arguments);
-
     if (JSValue** location = getDirectLocation(propertyName)) {
         slot.setValueSlot(this, location);
+        return true;
+    }
+
+    // Only return the built-in arguments object if it wasn't overridden above.
+    if (propertyName == exec->propertyNames().arguments) {
+        slot.setCustom(this, getArgumentsGetter());
         return true;
     }
 
@@ -122,6 +125,9 @@ void JSActivation::mark()
 {
     Base::mark();
     
+    if (d()->argumentsObject)
+        d()->argumentsObject->mark();
+    
     // No need to mark our values if they're still in the regsiter file, since
     // the register file gets marked independently.
     if(!d()->registerArray)
@@ -143,6 +149,28 @@ bool JSActivation::isActivationObject() const
 bool JSActivation::isDynamicScope() const
 {
     return d()->functionBody->usesEval();
+}
+
+JSValue* JSActivation::argumentsGetter(ExecState* exec, JSObject*, const Identifier&, const PropertySlot& slot)
+{
+    JSActivation* thisObj = static_cast<JSActivation*>(slot.slotBase());
+    if (!thisObj->d()->argumentsObject)
+        thisObj->d()->argumentsObject = thisObj->createArgumentsObject(exec);
+
+    return thisObj->d()->argumentsObject;
+}
+
+// These two functions serve the purpose of isolating the common case from a
+// PIC branch.
+
+PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
+{
+    return argumentsGetter;
+}
+
+JSObject* JSActivation::createArgumentsObject(ExecState*)
+{
+    return new JSObject;
 }
 
 } // namespace KJS

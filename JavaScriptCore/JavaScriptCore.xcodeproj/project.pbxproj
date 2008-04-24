@@ -96,7 +96,6 @@
 		14BD5A310A3E91F600BAF59C /* JSContextRef.h in Headers */ = {isa = PBXBuildFile; fileRef = 14BD5A2A0A3E91F600BAF59C /* JSContextRef.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		14BD5A320A3E91F600BAF59C /* JSValueRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14BD5A2B0A3E91F600BAF59C /* JSValueRef.cpp */; };
 		14D792660DAA03FB001A9F05 /* RegisterFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 14D792640DAA03FB001A9F05 /* RegisterFile.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */; };
 		14D797800DAC3307001A9F05 /* RegisterFileStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 14D7977E0DAC3307001A9F05 /* RegisterFileStack.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		14D797810DAC3307001A9F05 /* RegisterFileStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14D7977F0DAC3307001A9F05 /* RegisterFileStack.cpp */; };
 		14DA81900D99FD2000B0A4FB /* JSActivation.h in Headers */ = {isa = PBXBuildFile; fileRef = 14DA818E0D99FD2000B0A4FB /* JSActivation.h */; };
@@ -1533,7 +1532,6 @@
 				149B20DA0D8A0891009CB8C7 /* LabelID.cpp in Sources */,
 				149B25020D8AF6D1009CB8C7 /* Register.cpp in Sources */,
 				A727FF6B0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */,
-				14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */,
 				A72700900DAC6BBC00E548D7 /* JSNotAnObject.cpp in Sources */,
 				14D797810DAC3307001A9F05 /* RegisterFileStack.cpp in Sources */,
 				A72701B60DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */,
