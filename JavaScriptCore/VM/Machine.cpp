@@ -502,6 +502,9 @@ static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChain
 {
     JSValue* x = argc >= 2 ? r[argv + 1].u.jsValue : jsUndefined();
     
+    if (!x->isString())
+        return x;
+    
     UString s = x->toString(exec);
     if (exec->hadException()) {
         exceptionValue = exec->exception();
