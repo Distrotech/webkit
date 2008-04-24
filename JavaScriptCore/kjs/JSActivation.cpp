@@ -168,9 +168,9 @@ PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
     return argumentsGetter;
 }
 
-JSObject* JSActivation::createArgumentsObject(ExecState*)
+JSObject* JSActivation::createArgumentsObject(ExecState* exec)
 {
-    return new JSObject;
+    return new Arguments(exec, 0, exec->emptyList(), this);
 }
 
 } // namespace KJS
