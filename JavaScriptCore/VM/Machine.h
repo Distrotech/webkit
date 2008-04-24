@@ -52,6 +52,7 @@ namespace KJS {
                ReturnValueRegister,
                ArgumentStartRegister,
                CalledAsConstructor,
+               Callee,
                OptionalCalleeActivation,
                CallFrameHeaderSize};
         
@@ -79,7 +80,7 @@ namespace KJS {
         bool isOpcode(Opcode opcode);
         
         JSValue* execute(ProgramNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
-        JSValue* execute(FunctionBodyNode*, const List& args, JSObject* thisObj, ExecState*, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
+        JSValue* execute(FunctionBodyNode*, ExecState*, FunctionImp*, JSObject* thisObj, const List& args, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
         JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFile*, int registerOffset, ScopeChainNode*, JSValue** exception, JSObject* variableObject = 0);
         JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception, JSObject* variableObject);
         

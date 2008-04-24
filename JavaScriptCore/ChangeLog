@@ -1,3 +1,45 @@
+2008-04-24  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Put the callee in the call frame.
+        
+        Necessary in order to support "arguments" and "arguments.callee".
+
+        Also fixes a latent GC bug, where an executing function could be
+        subject to GC if the register holding it were overwritten. Here's
+        an example that would have caused problems:
+        
+        function f()
+        {
+            // Flood the machine stack to eliminate any old pointers to f.
+            g.call({});
+            
+            // Overwrite f in the register file.
+            f = 1;
+
+            // Force a GC.
+            for (var i = 0; i < 5000; ++i) {
+                ({});
+            }
+            
+            // Welcome to crash-ville.
+        }
+
+        function g()
+        {
+        }
+
+        f();
+
+        * VM/Machine.h: Changed the order of arguments to
+        execute(FunctionBodyNode*...) to match the other execute functions.
+        * kjs/function.cpp: Updated to match new argument requirements from
+        execute(FunctionBodyNode*...). Renamed newObj to thisObj to match the
+        rest of JavaScriptCore.
+
+        SunSpider reports no change.
+
 2008-04-23  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
