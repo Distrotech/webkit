@@ -1,3 +1,13 @@
+2008-04-25  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        A tiny bit of cleanup to the regexp code.
+        
+        Removed some static_cast.
+        
+        Removed createRegExpImp because it's no longer used.
+
 2008-04-25  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

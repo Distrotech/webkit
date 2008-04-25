@@ -578,9 +578,10 @@ RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return 0;
 }
 
-JSValue* RegExpNode::evaluate(OldInterpreterExecState* exec)
+JSValue* RegExpNode::evaluate(OldInterpreterExecState*)
 {
-    return exec->lexicalGlobalObject()->regExpConstructor()->createRegExpImp(exec, m_regExp);
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 // ------------------------------ ThisNode -------------------------------------
