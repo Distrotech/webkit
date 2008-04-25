@@ -1,3 +1,18 @@
+2008-04-24  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Geoffrey Garen.
+
+        Bug 18735: SQUIRRELFISH: closures are sometimes given an incorrect 'this' value when called
+        <https://bugs.webkit.org/show_bug.cgi?id=18735>
+
+        The overloaded toThisObject method was not copied over to JSActivation.
+
+        Fixes two regression tests.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::toThisObject):
+        * kjs/JSActivation.h:
+
 2008-04-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
