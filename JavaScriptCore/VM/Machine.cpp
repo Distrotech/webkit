@@ -235,6 +235,7 @@ static JSValue* jsTypeStringForValue(JSValue* v)
 }
 
 Machine::Machine()
+    : m_reentryDepth(0)
 {
     privateExecute(InitializeAndReturn);
 }
@@ -544,6 +545,11 @@ static void* op_call_indirect;
 
 JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
+    if (m_reentryDepth >= MaxReentryDepth) {
+        *exception = createStackOverflowError(exec);
+        return 0;
+    }
+
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
     CodeBlock* codeBlock = &programNode->code(scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
@@ -556,15 +562,20 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
-
+    m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
-
+    m_reentryDepth--;
     registerFileStack->popRegisterFile();
     return result;
 }
 
 JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, FunctionImp* function, JSObject* thisObj, const List& args, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
+    if (m_reentryDepth >= MaxReentryDepth) {
+        *exception = createStackOverflowError(exec);
+        return 0;
+    }
+
     RegisterFile* registerFile = registerFileStack->current();
 
     int argv = CallFrameHeaderSize;
@@ -601,8 +612,9 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
 
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(newCodeBlock, scopeChain, function, callFrame, registerBase, r);            
-
+    m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
+    m_reentryDepth--;
     registerFile->shrink(oldSize);
     return result;
     
@@ -610,6 +622,10 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
 
 JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
 {
+    if (m_reentryDepth >= MaxReentryDepth) {
+        *exception = createStackOverflowError(exec);
+        return 0;
+    }
     EvalCodeBlock* codeBlock = &evalNode->code(scopeChain);
     
     if (!variableObject) {
@@ -643,9 +659,9 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
 
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
-
+    m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
-    
+    m_reentryDepth--;
     registerFile->shrink(oldSize);
     
     return result;
