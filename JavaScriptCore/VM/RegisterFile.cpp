@@ -48,8 +48,10 @@ size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity,
     return capacity;
 }
 
-void RegisterFile::growBuffer(size_t minCapacity)
+bool RegisterFile::growBuffer(size_t minCapacity)
 {
+    if (minCapacity > m_maxSize)
+        return false;
     size_t numGlobalSlots = this->numGlobalSlots();
     size_t size = m_size + numGlobalSlots;
     size_t capacity = m_capacity + numGlobalSlots;
@@ -59,6 +61,7 @@ void RegisterFile::growBuffer(size_t minCapacity)
 
     setBase(m_buffer + numGlobalSlots);
     m_capacity = capacity - numGlobalSlots;
+    return true;
 }
 
 void RegisterFile::addGlobalSlots(size_t count)

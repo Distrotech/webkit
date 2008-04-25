@@ -1,3 +1,18 @@
+2008-04-25  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18732: SQUIRRELFISH: exceptions thrown by native constructors are ignored
+        <https://bugs.webkit.org/show_bug.cgi?id=18732>
+
+        More bounds checking.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::growBuffer):
+        * VM/RegisterFile.h:
+
 2008-04-25  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
