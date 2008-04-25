@@ -242,11 +242,6 @@ IndexToNameMap::IndexToNameMap(FunctionImp* func, const List& args)
   _map = new Identifier[args.size()];
   this->size = args.size();
   
-  // FIXME: We only support a NULL func as scaffolding. Remove this branch once
-  // we fully support the arguments object.
-  if (!func)
-    return;
-  
   int i = 0;
   List::const_iterator end = args.end();
   for (List::const_iterator it = args.begin(); it != end; ++i, ++it)
@@ -309,10 +304,7 @@ Arguments::Arguments(ExecState* exec, FunctionImp* func, const List& args, JSAct
     , _activationObject(act)
     , indexToNameMap(func, args)
 {
-    // FIXME: We only support a NULL func as scaffolding. Remove this branch once
-    // we fully support the arguments object.
-    if (func)
-        putDirect(exec->propertyNames().callee, func, DontEnum);
+    putDirect(exec->propertyNames().callee, func, DontEnum);
     putDirect(exec->propertyNames().length, args.size(), DontEnum);
   
     int i = 0;

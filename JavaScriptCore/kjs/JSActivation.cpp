@@ -35,8 +35,8 @@ namespace KJS {
 
 const ClassInfo JSActivation::info = { "JSActivation", 0, 0 };
 
-JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Register** registerBase, int registerOffset)
-    : Base(new JSActivationData(functionBody, registerBase, registerOffset))
+JSActivation::JSActivation(FunctionImp* function, Register** registerBase, int registerOffset)
+    : Base(new JSActivationData(function->body, function, registerBase, registerOffset))
 {
 }
 
@@ -125,6 +125,10 @@ void JSActivation::mark()
 {
     Base::mark();
     
+    // We don't mark d()->function because it can only be accessed while it's
+    // still live in the register file, and we don't want to keep it live
+    // after that.
+    
     if (d()->argumentsObject)
         d()->argumentsObject->mark();
     
@@ -170,7 +174,7 @@ PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
 
 JSObject* JSActivation::createArgumentsObject(ExecState* exec)
 {
-    return new Arguments(exec, 0, exec->emptyList(), this);
+    return new Arguments(exec, d()->function, exec->emptyList(), this);
 }
 
 } // namespace KJS
