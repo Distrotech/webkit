@@ -602,8 +602,8 @@ JSValue* ThisNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* ResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident))
-        return generator.moveToDestinationIfNeeded(dst, r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident))
+        return generator.moveToDestinationIfNeeded(dst, local);
 
     return generator.emitResolve(generator.finalDestination(dst), m_ident);
 }
@@ -875,20 +875,20 @@ JSValue* ElementNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* ArrayNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNewArray(generator.tempDestination(dst));
+    RefPtr<RegisterID> newArray = generator.emitNewArray(generator.tempDestination(dst));
     unsigned length = 0;
 
-    RegisterID* r1;
+    RegisterID* value;
     for (ElementNode* n = m_element.get(); n; n = n->m_next.get()) {
-        r1 = generator.emitNode(n->m_node.get());
+        value = generator.emitNode(n->m_node.get());
         length += n->m_elision;
-        generator.emitPutPropIndex(r0.get(), length++, r1);
+        generator.emitPutPropIndex(newArray.get(), length++, value);
     }
 
-    r1 = generator.emitLoad(generator.newTemporary(), jsNumber(m_elision + length));
-    generator.emitPutPropId(r0.get(), generator.propertyNames().length, r1);
+    value = generator.emitLoad(generator.newTemporary(), jsNumber(m_elision + length));
+    generator.emitPutPropId(newArray.get(), generator.propertyNames().length, value);
 
-    return generator.moveToDestinationIfNeeded(dst, r0.get());
+    return generator.moveToDestinationIfNeeded(dst, newArray.get());
 }
 
 void ArrayNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -948,16 +948,16 @@ JSValue* ObjectLiteralNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.tempDestination(dst);
+    RefPtr<RegisterID> newObj = generator.tempDestination(dst);
     
-    generator.emitNewObject(r0.get());
+    generator.emitNewObject(newObj.get());
     
     for (PropertyListNode* p = this; p; p = p->m_next.get()) {
-        RegisterID* r1 = generator.emitNode(p->m_node->m_assign.get());
+        RegisterID* value = generator.emitNode(p->m_node->m_assign.get());
         
         switch (p->m_node->m_type) {
             case PropertyNode::Constant: {
-                generator.emitPutPropId(r0.get(), p->m_node->name(), r1);
+                generator.emitPutPropId(newObj.get(), p->m_node->name(), value);
                 break;
             }
             // FIXME: No support for getters and setters yet, as it caused a performance regression
@@ -966,7 +966,7 @@ RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst
         }
     }
     
-    return generator.moveToDestinationIfNeeded(dst, r0.get());
+    return generator.moveToDestinationIfNeeded(dst, newObj.get());
 }
 
 void PropertyListNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1021,10 +1021,10 @@ JSValue* PropertyNode::evaluate(OldInterpreterExecState*)
 
 RegisterID* BracketAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* property = generator.emitNode(m_subscript.get());
 
-    return generator.emitGetPropVal(generator.finalDestination(dst), r0.get(), r1);
+    return generator.emitGetPropVal(generator.finalDestination(dst), base.get(), property);
 }
 
 void BracketAccessorNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1291,10 +1291,10 @@ inline JSValue* ExpressionNode::resolveAndCall(OldInterpreterExecState* exec, co
 
 RegisterID* EvalFunctionCallNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.tempDestination(dst);
-    RegisterID* r1 = generator.newTemporary();
-    generator.emitResolveBaseAndFunc(r0.get(), r1, CommonIdentifiers::shared()->eval);
-    return generator.emitCallEval(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
+    RefPtr<RegisterID> base = generator.tempDestination(dst);
+    RegisterID* func = generator.newTemporary();
+    generator.emitResolveBaseAndFunc(base.get(), func, CommonIdentifiers::shared()->eval);
+    return generator.emitCallEval(generator.finalDestination(dst, base.get()), func, base.get(), m_args.get());
 }
 
 void EvalFunctionCallNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1345,13 +1345,13 @@ JSValue* FunctionCallValueNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident))
-        return generator.emitCall(generator.finalDestination(dst), r0, 0, m_args.get());
+    if (RegisterID* local = generator.registerForLocal(m_ident))
+        return generator.emitCall(generator.finalDestination(dst), local, 0, m_args.get());
  
-    RefPtr<RegisterID> r0 = generator.tempDestination(dst);
-    RegisterID* r1 = generator.newTemporary();
-    generator.emitResolveBaseAndFunc(r0.get(), r1, m_ident);
-    return generator.emitCall(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
+    RefPtr<RegisterID> base = generator.tempDestination(dst);
+    RegisterID* func = generator.newTemporary();
+    generator.emitResolveBaseAndFunc(base.get(), func, m_ident);
+    return generator.emitCall(generator.finalDestination(dst, base.get()), func, base.get(), m_args.get());
 }
 
 void FunctionCallResolveNode::optimizeVariableAccess(OldInterpreterExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)
@@ -1567,10 +1567,10 @@ uint32_t NonLocalVarFunctionCallNode::evaluateToUInt32(OldInterpreterExecState* 
 
 RegisterID* FunctionCallBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitNode(m_subscript.get());
-    RegisterID* r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1);
-    return generator.emitCall(generator.finalDestination(dst, r0.get()), r2, r0.get(), m_args.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* property = generator.emitNode(m_subscript.get());
+    RegisterID* function = generator.emitGetPropVal(generator.newTemporary(), base.get(), property);
+    return generator.emitCall(generator.finalDestination(dst, base.get()), function, base.get(), m_args.get());
 }
 
 void FunctionCallBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1728,14 +1728,14 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     // FIXME: I think we can detect the absense of dependent expressions here, 
     // and emit a PreInc instead of a PostInc. A post-pass to eliminate dead
     // code would work, too.
-    if (RegisterID* r0 = generator.registerForLocal(m_ident))
-        return generator.emitPostInc(generator.finalDestination(dst), r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident))
+        return generator.emitPostInc(generator.finalDestination(dst), local);
 
-    RefPtr<RegisterID> r1 = generator.newTemporary();
-    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
-    RegisterID* r2 = generator.emitPostInc(generator.finalDestination(dst), r1.get());
-    generator.emitPutPropId(r0.get(), m_ident, r1.get());
-    return r2;
+    RefPtr<RegisterID> value = generator.newTemporary();
+    RefPtr<RegisterID> base = generator.emitResolveBaseAndProperty(generator.newTemporary(), value.get(), m_ident);
+    RegisterID* oldValue = generator.emitPostInc(generator.finalDestination(dst), value.get());
+    generator.emitPutPropId(base.get(), m_ident, value.get());
+    return oldValue;
 }
 
 // Increment
@@ -1808,14 +1808,14 @@ RegisterID* PostDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     // FIXME: I think we can detect the absense of dependent expressions here, 
     // and emit a PreDec instead of a PostDec. A post-pass to eliminate dead
     // code would work, too.
-    if (RegisterID* r0 = generator.registerForLocal(m_ident))
-        return generator.emitPostDec(generator.finalDestination(dst), r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident))
+        return generator.emitPostDec(generator.finalDestination(dst), local);
 
-    RefPtr<RegisterID> r1 = generator.newTemporary();
-    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
-    RegisterID* r2 = generator.emitPostDec(generator.finalDestination(dst), r1.get());
-    generator.emitPutPropId(r0.get(), m_ident, r1.get());
-    return r2;
+    RefPtr<RegisterID> value = generator.newTemporary();
+    RefPtr<RegisterID> base = generator.emitResolveBaseAndProperty(generator.newTemporary(), value.get(), m_ident);
+    RegisterID* oldValue = generator.emitPostDec(generator.finalDestination(dst), value.get());
+    generator.emitPutPropId(base.get(), m_ident, value.get());
+    return oldValue;
 }
 
 void PostDecResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -1919,12 +1919,12 @@ void PostfixBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const 
 
 RegisterID* PostIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
-    RefPtr<RegisterID> r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1.get());
-    RegisterID* r3 = generator.emitPostInc(generator.finalDestination(dst), r2.get());
-    generator.emitPutPropVal(r0.get(), r1.get(), r2.get());
-    return r3;
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> value = generator.emitGetPropVal(generator.newTemporary(), base.get(), property.get());
+    RegisterID* oldValue = generator.emitPostInc(generator.finalDestination(dst), value.get());
+    generator.emitPutPropVal(base.get(), property.get(), value.get());
+    return oldValue;
 }
 
 JSValue* PostIncBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -1960,12 +1960,12 @@ JSValue* PostIncBracketNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PostDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
-    RefPtr<RegisterID> r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1.get());
-    RegisterID* r3 = generator.emitPostDec(generator.finalDestination(dst), r2.get());
-    generator.emitPutPropVal(r0.get(), r1.get(), r2.get());
-    return r3;
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> value = generator.emitGetPropVal(generator.newTemporary(), base.get(), property.get());
+    RegisterID* oldValue = generator.emitPostDec(generator.finalDestination(dst), value.get());
+    generator.emitPutPropVal(base.get(), property.get(), value.get());
+    return oldValue;
 }
 
 JSValue* PostDecBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -2009,9 +2009,9 @@ RegisterID* PostIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> value = generator.emitGetPropId(generator.newTemporary(), base.get(), m_ident);
-    RegisterID* r2 = generator.emitPostInc(generator.finalDestination(dst), value.get());
+    RegisterID* oldValue = generator.emitPostInc(generator.finalDestination(dst), value.get());
     generator.emitPutPropId(base.get(), m_ident, value.get());
-    return r2;
+    return oldValue;
 }
 
 JSValue* PostIncDotNode::evaluate(OldInterpreterExecState* exec)
@@ -2033,9 +2033,9 @@ RegisterID* PostDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> value = generator.emitGetPropId(generator.newTemporary(), base.get(), m_ident);
-    RegisterID* r2 = generator.emitPostDec(generator.finalDestination(dst), value.get());
+    RegisterID* oldValue = generator.emitPostDec(generator.finalDestination(dst), value.get());
     generator.emitPutPropId(base.get(), m_ident, value.get());
-    return r2;
+    return oldValue;
 }
 
 JSValue* PostDecDotNode::evaluate(OldInterpreterExecState* exec)
@@ -2075,8 +2075,8 @@ RegisterID* DeleteResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     if (generator.registerForLocal(m_ident))
         return generator.emitLoad(generator.finalDestination(dst), false);
 
-    RegisterID* r0 = generator.emitResolveBase(generator.tempDestination(dst), m_ident);
-    return generator.emitDeletePropId(generator.finalDestination(dst, r0), r0, m_ident);
+    RegisterID* base = generator.emitResolveBase(generator.tempDestination(dst), m_ident);
+    return generator.emitDeletePropId(generator.finalDestination(dst, base), base, m_ident);
 }
 
 void DeleteResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
@@ -2271,12 +2271,12 @@ JSValue* LocalVarTypeOfNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* TypeOfResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident))
-        return generator.emitTypeOf(generator.finalDestination(dst), r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident))
+        return generator.emitTypeOf(generator.finalDestination(dst), local);
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.tempDestination(dst), m_ident);
-    generator.emitGetPropId(r0.get(), r0.get(), m_ident);
-    return generator.emitTypeOf(generator.finalDestination(dst, r0.get()), r0.get());
+    RefPtr<RegisterID> scratch = generator.emitResolveBase(generator.tempDestination(dst), m_ident);
+    generator.emitGetPropId(scratch.get(), scratch.get(), m_ident);
+    return generator.emitTypeOf(generator.finalDestination(dst, scratch.get()), scratch.get());
 }
 
 JSValue* TypeOfResolveNode::evaluate(OldInterpreterExecState* exec)
@@ -2325,15 +2325,15 @@ JSValue* TypeOfValueNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
-        generator.emitPreInc(r0);
-        return generator.moveToDestinationIfNeeded(dst, r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        generator.emitPreInc(local);
+        return generator.moveToDestinationIfNeeded(dst, local);
     }
     
-    RefPtr<RegisterID> r1 = generator.finalDestination(dst);
-    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
-    generator.emitPreInc(r1.get());
-    return generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    RefPtr<RegisterID> propDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> base = generator.emitResolveBaseAndProperty(generator.newTemporary(), propDst.get(), m_ident);
+    generator.emitPreInc(propDst.get());
+    return generator.emitPutPropId(base.get(), m_ident, propDst.get());
 }
 
 void PreIncResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2390,15 +2390,15 @@ JSValue* PreIncResolveNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
-        generator.emitPreDec(r0);
-        return generator.moveToDestinationIfNeeded(dst, r0);
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        generator.emitPreDec(local);
+        return generator.moveToDestinationIfNeeded(dst, local);
     }
 
-    RefPtr<RegisterID> r1 = generator.finalDestination(dst);
-    RefPtr<RegisterID> r0 = generator.emitResolveBaseAndProperty(generator.newTemporary(), r1.get(), m_ident);
-    generator.emitPreDec(r1.get());
-    return generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    RefPtr<RegisterID> propDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> base = generator.emitResolveBaseAndProperty(generator.newTemporary(), propDst.get(), m_ident);
+    generator.emitPreDec(propDst.get());
+    return generator.emitPutPropId(base.get(), m_ident, propDst.get());
 }
 
 void PreDecResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2495,11 +2495,11 @@ void PrefixBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const S
 
 RegisterID* PreIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
-    RegisterID* r2 = generator.emitGetPropVal(generator.finalDestination(dst), r0.get(), r1.get());
-    generator.emitPreInc(r2);
-    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RegisterID* value = generator.emitGetPropVal(generator.finalDestination(dst), base.get(), property.get());
+    generator.emitPreInc(value);
+    return generator.emitPutPropVal(base.get(), property.get(), value);
 }
 
 JSValue* PreIncBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -2536,11 +2536,11 @@ JSValue* PreIncBracketNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PreDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
-    RegisterID* r2 = generator.emitGetPropVal(generator.finalDestination(dst), r0.get(), r1.get());
-    generator.emitPreDec(r2);
-    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RegisterID* value = generator.emitGetPropVal(generator.finalDestination(dst), base.get(), property.get());
+    generator.emitPreDec(value);
+    return generator.emitPutPropVal(base.get(), property.get(), value);
 }
 
 JSValue* PreDecBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -4156,14 +4156,14 @@ void ReadModifyResolveNode::optimizeVariableAccess(OldInterpreterExecState*, con
 
 RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* r0 = generator.registerForLocal(m_ident)) {
-        RegisterID* r1 = generator.emitNode(r0, m_right.get());
-        return generator.moveToDestinationIfNeeded(dst, r1);
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        RegisterID* result = generator.emitNode(local, m_right.get());
+        return generator.moveToDestinationIfNeeded(dst, result);
     }
 
-    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* r1 = generator.emitNode(dst, m_right.get());
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    RefPtr<RegisterID> base = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* value = generator.emitNode(dst, m_right.get());
+    return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
 void AssignResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
@@ -4309,9 +4309,9 @@ found:
 
 RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitNode(dst, m_right.get());
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* value = generator.emitNode(dst, m_right.get());
+    return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
 void AssignDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4340,9 +4340,9 @@ RegisterID* ReadModifyDotNode::emitCode(CodeGenerator& generator, RegisterID* ds
 
     // FIXME: should not write temp value to dst if dst is a local!
     RefPtr<RegisterID> value = generator.emitGetPropId(generator.tempDestination(dst), base.get(), m_ident);
-    RegisterID* r2 = generator.emitNode(m_right.get());
-    RegisterID* r3 = emitReadModifyAssignment(generator, generator.finalDestination(dst, value.get()), value.get(), r2, m_operator);
-    return generator.emitPutPropId(base.get(), m_ident, r3);
+    RegisterID* change = generator.emitNode(m_right.get());
+    RegisterID* updatedValue = emitReadModifyAssignment(generator, generator.finalDestination(dst, value.get()), value.get(), change, m_operator);
+    return generator.emitPutPropId(base.get(), m_ident, updatedValue);
 }
 
 void ReadModifyDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4389,10 +4389,10 @@ JSValue* AssignErrorNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* AssignBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
-    RegisterID* r2 = generator.emitNode(dst, m_right.get());
-    return generator.emitPutPropVal(r0.get(), r1.get(), r2);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RegisterID* value = generator.emitNode(dst, m_right.get());
+    return generator.emitPutPropVal(base.get(), property.get(), value);
 }
 
 void AssignBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4430,16 +4430,16 @@ JSValue* AssignBracketNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* ReadModifyBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
 
-    RefPtr<RegisterID> r2 = generator.emitGetPropVal(generator.tempDestination(dst), r0.get(), r1.get());
-    RegisterID* r3 = generator.emitNode(m_right.get());
-    RegisterID* r4 = emitReadModifyAssignment(generator, generator.finalDestination(dst, r2.get()), r2.get(), r3, m_operator);
+    RefPtr<RegisterID> value = generator.emitGetPropVal(generator.tempDestination(dst), base.get(), property.get());
+    RegisterID* change = generator.emitNode(m_right.get());
+    RegisterID* updatedValue = emitReadModifyAssignment(generator, generator.finalDestination(dst, value.get()), value.get(), change, m_operator);
 
-    generator.emitPutPropVal(r0.get(), r1.get(), r4);
+    generator.emitPutPropVal(base.get(), property.get(), updatedValue);
 
-    return r4;
+    return updatedValue;
 }
 
 void ReadModifyBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4581,14 +4581,14 @@ inline void ConstDeclNode::evaluateSingle(OldInterpreterExecState* exec)
 
 RegisterID* ConstDeclNode::emitCodeSingle(CodeGenerator& generator)
 {
-    if (RegisterID* constReg = generator.registerForLocalConstInit(m_ident))
-        return generator.emitNode(constReg, m_init.get());
+    if (RegisterID* local = generator.registerForLocalConstInit(m_ident))
+        return generator.emitNode(local, m_init.get());
 
     // FIXME: While this code should only be hit in eval code, it will potentially
     // assign to the wrong base if m_ident exists in an intervening dynamic scope.
-    RefPtr<RegisterID> constBase = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* exprResult = generator.emitNode(m_init.get());
-    return generator.emitPutPropId(constBase.get(), m_ident, exprResult);
+    RefPtr<RegisterID> base = generator.emitResolveBase(generator.newTemporary(), m_ident);
+    RegisterID* value = generator.emitNode(m_init.get());
+    return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
 RegisterID* ConstDeclNode::emitCode(CodeGenerator& generator, RegisterID*)
