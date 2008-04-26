@@ -1,3 +1,17 @@
+2008-04-26  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18628: SQUIRRELFISH: need to support recursion limit
+        <https://bugs.webkit.org/show_bug.cgi?id=18628>
+
+        Test to ensure we don't crash when re-entering global code
+        with a full register file, and that we don't allow unbounded
+        recursion by re-entering on a new register file..
+
+        * fast/js/global-recursion-on-full-stack-expected.txt: Added.
+        * fast/js/global-recursion-on-full-stack.html: Added.
+
 2008-04-17  Antti Koivisto  <antti@apple.com>
 
         Update SVG animation test results.

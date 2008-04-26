@@ -554,7 +554,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     CodeBlock* codeBlock = &programNode->code(scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
 
-    registerFile->grow(codeBlock->numTemporaries);
+    registerFile->uncheckedGrow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
 
     ASSERT(exec->dynamicGlobalObject()->symbolTable().get(CommonIdentifiers::shared()->thisIdentifier.ustring().rep()) == ProgramCodeThisRegister);

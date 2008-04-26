@@ -1,3 +1,31 @@
+2008-04-26  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18628: SQUIRRELFISH: need to support recursion limit
+        <https://bugs.webkit.org/show_bug.cgi?id=18628>
+
+        Basically completes recursion limiting.  There is still some
+        tuning we may want to do to make things better in the face of
+        very bad code, but certainly nothing worse than anything already
+        possible in trunk.
+
+        Also fixes a WebKit test by fixing the exception text :D
+
+        * JavaScriptCore.exp:
+        * VM/ExceptionHelpers.cpp:
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::growBuffer):
+        (KJS::RegisterFile::addGlobalSlots):
+        * VM/RegisterFile.h:
+        (KJS::RegisterFile::grow):
+        (KJS::RegisterFile::uncheckedGrow):
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::pushRegisterFile):
+        * VM/RegisterFileStack.h:
+
 2008-04-25  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

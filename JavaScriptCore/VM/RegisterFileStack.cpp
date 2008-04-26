@@ -43,7 +43,8 @@ RegisterFile* RegisterFileStack::pushRegisterFile()
 
     // Slow case: Existing register file is in use: Create a nested
     // register file with a copy of this register file's globals.
-    RegisterFile* registerFile = allocateRegisterFile();
+    RegisterFile* registerFile = allocateRegisterFile(current->maxSize() - current->size());
+
     registerFile->addGlobalSlots(current->numGlobalSlots());
     registerFile->copyGlobals(current);
 
@@ -68,9 +69,9 @@ void RegisterFileStack::popRegisterFile()
     current->copyGlobals(tmp.get());
 }
 
-RegisterFile* RegisterFileStack::allocateRegisterFile()
+RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize)
 {
-    RegisterFile* registerFile = new RegisterFile(this);
+    RegisterFile* registerFile = new RegisterFile(this, maxSize);
     m_stack.append(registerFile);
     m_base = *registerFile->basePointer();
     return registerFile;
