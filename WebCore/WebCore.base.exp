@@ -838,7 +838,6 @@ _wkDrawMediaSliderThumb
 _wkDrawMediaSliderTrack
 _wkDrawMediaUnMuteButton
 _wkDrawTextFieldCellFocusRing
-_wkFontSmoothingModeIsLCD
 _wkGetATSStyleGroup
 _wkGetExtensionsForMIMEType
 _wkGetFontInLanguageForCharacter
