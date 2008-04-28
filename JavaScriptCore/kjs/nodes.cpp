@@ -1293,7 +1293,7 @@ RegisterID* EvalFunctionCallNode::emitCode(CodeGenerator& generator, RegisterID*
 {
     RefPtr<RegisterID> base = generator.tempDestination(dst);
     RegisterID* func = generator.newTemporary();
-    generator.emitResolveBaseAndFunc(base.get(), func, CommonIdentifiers::shared()->eval);
+    generator.emitResolveBaseAndProperty(base.get(), func, CommonIdentifiers::shared()->eval);
     return generator.emitCallEval(generator.finalDestination(dst, base.get()), func, base.get(), m_args.get());
 }
 

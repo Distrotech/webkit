@@ -1421,8 +1421,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         }
         
         // We didn't find the blessed version of eval, so reset vPC and process
-        // this instruction as a normal function call.
+        // this instruction as a normal function call, supplying the proper 'this'
+        // value.
         vPC -= 5;
+        r[r2].u.jsValue = base->toObject(exec)->toThisObject(exec);
 
 #if HAVE(COMPUTED_GOTO)
         // Hack around gcc performance quirk by performing an indirect goto
