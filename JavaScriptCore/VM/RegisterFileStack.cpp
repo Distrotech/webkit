@@ -33,6 +33,12 @@ using namespace std;
 
 namespace KJS {
 
+RegisterFileStack::~RegisterFileStack()
+{
+    for (size_t i = 0; i < m_stack.size(); ++i)
+        delete m_stack[i];
+}
+
 RegisterFile* RegisterFileStack::pushRegisterFile()
 {
     RegisterFile* current = this->current();
@@ -61,12 +67,13 @@ void RegisterFileStack::popRegisterFile()
 
     // Slow case: This is a nested register file: pop this register file and 
     // copy its globals to the previous register file.
-    auto_ptr<RegisterFile> tmp = m_stack.last();
+    RegisterFile* tmp = m_stack.last();
     m_stack.removeLast();
 
     RegisterFile* current = this->current();
     current->addGlobalSlots(tmp->numGlobalSlots() - current->numGlobalSlots());
-    current->copyGlobals(tmp.get());
+    current->copyGlobals(tmp);
+    delete tmp;
 }
 
 RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize)

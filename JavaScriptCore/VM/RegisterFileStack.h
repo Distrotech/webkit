@@ -41,10 +41,12 @@ namespace KJS {
             allocateRegisterFile();
         }
 
+        ~RegisterFileStack();
+
         RegisterFile* pushRegisterFile();
         void popRegisterFile();
 
-        RegisterFile* current() { return m_stack.last().get(); }
+        RegisterFile* current() { return m_stack.last(); }
         
         void mark()
         {
@@ -64,11 +66,11 @@ namespace KJS {
         }
 
     private:
-        typedef Vector<std::auto_ptr<RegisterFile>, 4> Stack;
+        typedef Vector<RegisterFile*, 4> Stack;
 
         RegisterFile* allocateRegisterFile(size_t maxSize = RegisterFile::DefaultRegisterFileSize);
 
-        RegisterFile* previous() { return m_stack[m_stack.size() - 2].get(); }
+        RegisterFile* previous() { return m_stack[m_stack.size() - 2]; }
         bool hasPrevious() { return m_stack.size() > 1; }
 
         Stack m_stack;
