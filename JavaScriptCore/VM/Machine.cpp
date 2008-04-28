@@ -365,7 +365,7 @@ static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
     return false;
 }
 
-ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChainNode* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor, JSValue* function)
+ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChainNode* scopeChain, int registerOffset, int returnValueRegister, int argv, int argc, int calledAsConstructor, JSValue* function)
 {
     callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
     callFrame[Machine::ReturnVPC].u.vPC = vPC + 1;
@@ -373,6 +373,7 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     callFrame[Machine::CallerRegisterOffset].u.i = registerOffset;
     callFrame[Machine::ReturnValueRegister].u.i = returnValueRegister;
     callFrame[Machine::ArgumentStartRegister].u.i = argv; // original argument vector (for the sake of the "arguments" object)
+    callFrame[Machine::ArgumentCount].u.i = argc; // original argument count (for the sake of the "arguments" object)
     callFrame[Machine::CalledAsConstructor].u.i = calledAsConstructor;
     callFrame[Machine::Callee].u.jsValue = function;
     callFrame[Machine::OptionalCalleeActivation].u.jsValue = 0;
@@ -601,7 +602,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
         (*++dst).u.jsValue = *it;
 
     // put call frame in place, using a 0 codeBlock to indicate a built-in caller
-    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, registerOffset + CallFrameHeaderSize, 0, function);
+    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, registerOffset + CallFrameHeaderSize, argc, 0, function);
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, *exception);
@@ -1452,7 +1453,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             int callFrameOffset = registerOffset + argv - CallFrameHeaderSize;
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? exec->globalThisValue() : r[r2].u.jsValue; // "this" value
-            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0, v);
+            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, argc, 0, v);
 
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = callData.js.functionBody;
@@ -1558,7 +1559,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             JSObject* newObject = new JSObject(prototype);
             r[argv].u.jsValue = newObject; // "this" value
 
-            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1, constructor);
+            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, argc, 1, constructor);
             
             ScopeChainNode* callDataScopeChain = constructData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = constructData.js.functionBody;

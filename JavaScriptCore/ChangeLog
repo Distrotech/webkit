@@ -1,3 +1,23 @@
+2008-04-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Groundwork for more handling of "arguments". I'm not checking in the
+        actual handling of "arguments" yet, because it still needs a little
+        fiddling to avoid a performance regression.
+        
+        SunSpider reports no change.
+
+        * VM/Machine.cpp:
+        (KJS::initializeCallFrame): Put argc in the register file, so the
+        arguments object can find it later, to determine arguments.length.
+
+        * kjs/nodes.h:
+        (KJS::FunctionBodyNode::): Added a special code accessor for when you
+        know the code has already been generated, and you don't have a scopeChain
+        to supply for potential code generation. (This is the case when the
+        activation object creates the arguments object.)
+
 2008-04-28  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
