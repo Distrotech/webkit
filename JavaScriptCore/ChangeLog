@@ -1,3 +1,25 @@
+2008-04-28  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18643: SQUIRRELFISH: need to support implicit function calls (valueOf, toString, getters/setters)
+        <https://bugs.webkit.org/show_bug.cgi?id=18643>
+
+        Partial fix.  This results in all implicit calls to toString or valueOf
+        executing in a separate RegisterFile, so ensuring that the the pointers
+        in the triggering interpreter don't get trashed.  This still leaves the
+        task of preventing new global re-entry from toString and valueOf from
+        clobbering the RegisterFile.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::pushFunctionRegisterFile):
+        (KJS::RegisterFileStack::popFunctionRegisterFile):
+        * VM/RegisterFileStack.h:
+        * kjs/object.cpp:
+        (KJS::tryGetAndCallProperty):
+
 2008-04-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.

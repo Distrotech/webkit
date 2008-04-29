@@ -314,16 +314,28 @@ bool JSObject::deleteProperty(ExecState *exec, unsigned propertyName)
 }
 
 static ALWAYS_INLINE JSValue *tryGetAndCallProperty(ExecState *exec, const JSObject *object, const Identifier &propertyName) {
-  JSValue *v = object->get(exec, propertyName);
+  JSValue* v = object->get(exec, propertyName);
   if (v->isObject()) {
-    JSObject *o = static_cast<JSObject*>(v);
-    if (o->implementsCall()) { // spec says "not primitive type" but ...
-      JSObject *thisObj = const_cast<JSObject*>(object);
-      JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
-      JSType defType = def->type();
-      ASSERT(defType != GetterSetterType);
-      if (defType != ObjectType)
-        return def;
+      JSObject* o = static_cast<JSObject*>(v);
+      CallData data;
+      CallType callType = o->getCallData(data);
+      // spec says "not primitive type" but ...
+      if (callType == CallTypeNative) {
+          JSObject* thisObj = const_cast<JSObject*>(object);
+          JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
+          JSType defType = def->type();
+          ASSERT(defType != GetterSetterType);
+          if (defType != ObjectType)
+              return def;
+      } else if (callType == CallTypeJS) {
+          JSObject* thisObj = const_cast<JSObject*>(object);
+          exec->dynamicGlobalObject()->registerFileStack().pushFunctionRegisterFile();
+          JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
+          exec->dynamicGlobalObject()->registerFileStack().popFunctionRegisterFile();
+          JSType defType = def->type();
+          ASSERT(defType != GetterSetterType);
+          if (defType != ObjectType)
+              return def;
     }
   }
   return NULL;
