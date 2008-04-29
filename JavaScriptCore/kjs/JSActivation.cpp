@@ -37,8 +37,8 @@ namespace KJS {
 
 const ClassInfo JSActivation::info = { "JSActivation", 0, 0 };
 
-JSActivation::JSActivation(FunctionImp* function, Register** registerBase, int registerOffset)
-    : Base(new JSActivationData(function->body, function, registerBase, registerOffset))
+JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Register** registerBase, int registerOffset)
+    : Base(new JSActivationData(functionBody, registerBase, registerOffset))
 {
 }
 
@@ -132,10 +132,6 @@ void JSActivation::mark()
 {
     Base::mark();
     
-    // We don't mark d()->function because it can only be accessed while it's
-    // still live in the register file, and we don't want to keep it live
-    // after that.
-    
     if (d()->argumentsObject)
         d()->argumentsObject->mark();
     
@@ -181,13 +177,15 @@ PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
 
 JSObject* JSActivation::createArgumentsObject(ExecState* exec)
 {
-    CodeBlock& codeBlock = d()->function->body->generatedCode();
+    CodeBlock& codeBlock = d()->functionBody->generatedCode();
     Register* callFrame = registers() - codeBlock.numVars - codeBlock.numParameters - Machine::CallFrameHeaderSize;
+
+    FunctionImp* function = static_cast<FunctionImp*>(callFrame[Machine::Callee].u.jsValue);
     int argv = callFrame[Machine::ArgumentStartRegister].u.i;
     int argc = callFrame[Machine::ArgumentCount].u.i;
-    List args(&(*registerBase() + argv + 1)->u.jsValue, argc - 1);
 
-    return new Arguments(exec, d()->function, args, this);
+    List args(&(*registerBase() + argv + 1)->u.jsValue, argc - 1);
+    return new Arguments(exec, function, args, this);
 }
 
 } // namespace KJS
