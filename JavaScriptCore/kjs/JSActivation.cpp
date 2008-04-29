@@ -29,6 +29,8 @@
 #include "config.h"
 #include "JSActivation.h"
 
+#include "CodeBlock.h"
+#include "Machine.h"
 #include "Register.h"
 
 namespace KJS {
@@ -179,7 +181,13 @@ PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
 
 JSObject* JSActivation::createArgumentsObject(ExecState* exec)
 {
-    return new Arguments(exec, d()->function, exec->emptyList(), this);
+    CodeBlock& codeBlock = d()->function->body->generatedCode();
+    Register* callFrame = registers() - codeBlock.numVars - codeBlock.numParameters - Machine::CallFrameHeaderSize;
+    int argv = callFrame[Machine::ArgumentStartRegister].u.i;
+    int argc = callFrame[Machine::ArgumentCount].u.i;
+    List args(&(*registerBase() + argv + 1)->u.jsValue, argc - 1);
+
+    return new Arguments(exec, d()->function, args, this);
 }
 
 } // namespace KJS
