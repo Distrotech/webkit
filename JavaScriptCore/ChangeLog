@@ -2,6 +2,15 @@
 
         Reviewed by Geoff.
 
+        Restore base pointer when popping a global RegisterFile
+
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::popGlobalRegisterFile):
+
+2008-04-28  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
         Bug 18643: SQUIRRELFISH: need to support implicit function calls (valueOf, toString, getters/setters)
         <https://bugs.webkit.org/show_bug.cgi?id=18643>
 
