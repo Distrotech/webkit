@@ -586,8 +586,6 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
     if (!globalObject || globalObject->evalFunction() != function)
         return throwError(exec, EvalError, "The \"this\" value passed to eval must be the global object from which eval originated");
 
-    ScopeChain scopeChain(globalObject);
-
     JSValue* x = args[0];
     if (!x->isString())
         return x;
@@ -609,10 +607,8 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
 
     ASSERT(!exec->dynamicGlobalObject()->debugger());
 
-    ExecState newExec(globalObject, thisObj, globalObject->globalScopeChain());
-
     JSValue* exception = 0;
-    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception);
+    JSValue* value = machine().execute(evalNode.get(), exec, thisObj, &exec->dynamicGlobalObject()->registerFileStack(), globalObject->globalScopeChain().node(), &exception);
 
 #if JAVASCRIPT_PROFILING
     Profiler::profiler()->didExecute(exec, UString(), 0);

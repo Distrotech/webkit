@@ -1,5 +1,16 @@
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Oliver Hunt.
+        
+        A little more ExecState refactoring: Now, only the global object creates
+        an ExecState.
+        
+        Also inlined ExecState::lexicalGlobalObject().
+        
+        SunSpider reports no change.
+
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
         WebCore build fix: forward-declare ScopeChain.
 
         * kjs/interpreter.h:

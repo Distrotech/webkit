@@ -131,8 +131,7 @@ void CodeGenerator::generate()
 #ifndef NDEBUG
     if (s_dumpsGeneratedCode) {
         JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
-        ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
-        m_codeBlock->dump(&tmpExec);
+        m_codeBlock->dump(globalObject->globalExec());
     }
 #endif
 }
@@ -186,8 +185,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
 
-    // FIXME: Remove this once we figure out how ExecState should work in squirrelfish.
-    ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
+    ExecState* exec = globalObject->globalExec();
 
     if (canCreateVariables) {
         for (size_t i = 0; i < functionStack.size(); ++i) {
@@ -196,21 +194,21 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
         }
         
         for (size_t i = 0; i < varStack.size(); ++i) {
-            if (!globalObject->hasProperty(&tmpExec, varStack[i].first))
+            if (!globalObject->hasProperty(exec, varStack[i].first))
                 emitLoad(addVar(varStack[i].first), jsUndefined());
         }
     } else {
         for (size_t i = 0; i < functionStack.size(); ++i) {
             FuncDeclNode* funcDecl = functionStack[i];
-            globalObject->putWithAttributes(&tmpExec, funcDecl->m_ident, funcDecl->makeFunction(&tmpExec, scopeChain.node()), DontDelete);
+            globalObject->putWithAttributes(exec, funcDecl->m_ident, funcDecl->makeFunction(exec, scopeChain.node()), DontDelete);
         }
         for (size_t i = 0; i < varStack.size(); ++i) {
-            if (globalObject->hasProperty(&tmpExec, varStack[i].first))
+            if (globalObject->hasProperty(exec, varStack[i].first))
                 continue;
             int attributes = DontDelete;
             if (varStack[i].second & DeclarationStacks::IsConstant)
                 attributes |= ReadOnly;
-            globalObject->putWithAttributes(&tmpExec, varStack[i].first, jsUndefined(), attributes);
+            globalObject->putWithAttributes(exec, varStack[i].first, jsUndefined(), attributes);
         }
     }
 }

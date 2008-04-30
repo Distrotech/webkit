@@ -55,7 +55,12 @@ namespace KJS  {
         
         // Global object in which the current script was defined. (Can be differ
         // from dynamicGlobalObject() during function calls across frames.)
-        JSGlobalObject* lexicalGlobalObject() const;
+        JSGlobalObject* ExecState::lexicalGlobalObject() const
+        {
+            JSObject* object = m_scopeChain->bottom();
+            ASSERT(isGlobalObject(object));
+            return (JSGlobalObject*)object;
+        }
         
         JSObject* globalThisValue() const { return m_globalThisValue; }
         
@@ -74,13 +79,17 @@ namespace KJS  {
         const List& emptyList() const { return *m_emptyList; }
 
     private:
+#ifndef NDEBUG
+        bool isGlobalObject(JSObject*) const;
+#endif
+    
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
 
         JSValue* m_exception;
         Instruction* m_exceptionSource;
 
-        CommonIdentifiers* m_propertyNames;
+        const CommonIdentifiers* m_propertyNames;
         const List* m_emptyList;
 
         const ScopeChainNode* m_scopeChain;
