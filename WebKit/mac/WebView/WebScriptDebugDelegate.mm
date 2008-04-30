@@ -151,6 +151,7 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 - (NSArray *)scopeChain
 {
+#if 0
     ExecState* state = _private->state;
     if (!state->scopeNode())  // global frame
         return [NSArray arrayWithObject:_private->globalObject];
@@ -164,6 +165,8 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
     NSArray *result = [NSArray arrayWithArray:scopes];
     [scopes release];
     return result;
+#endif
+    return [NSArray array];
 }
 
 // Returns the name of the function for this frame, if available.
