@@ -1,5 +1,10 @@
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
+        Build fix: supply a parameter that used to be implicit to
+        Interpreter::evaluate.
+
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
         Build fix: #ifdef'd out some code that doesn't work anymore.
 
         * bindings/objc/WebScriptObject.mm:

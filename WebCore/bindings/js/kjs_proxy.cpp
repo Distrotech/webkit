@@ -84,7 +84,7 @@ JSValue* KJSProxy::evaluate(const String& filename, int baseLine, const String& 
     m_frame->keepAlive();
 
     m_windowWrapper->window()->startTimeoutCheck();
-    Completion comp = Interpreter::evaluate(exec, filename, baseLine, str.characters(), str.length(), m_windowWrapper);
+    Completion comp = Interpreter::evaluate(exec, exec->dynamicGlobalObject()->globalScopeChain(), filename, baseLine, str.characters(), str.length(), m_windowWrapper);
     m_windowWrapper->window()->stopTimeoutCheck();
 
     if (comp.complType() == Normal || comp.complType() == ReturnValue) {
