@@ -88,7 +88,8 @@ namespace KJS {
     public:
         enum { DefaultRegisterFileSize = 2 * 1024 * 1024 };
         RegisterFile(RegisterFileStack* stack, size_t maxSize)
-            : m_size(0)
+            : m_isForImplicitCall(false)
+            , m_size(0)
             , m_capacity(0)
             , m_maxSize(maxSize)
             , m_base(0)
@@ -148,7 +149,9 @@ namespace KJS {
         {
             Collector::markStackObjectsConservatively(m_buffer, m_base + m_size);
         }
-
+        
+        void setIsForImplicitCall(bool isForImplicitCall) { m_isForImplicitCall = isForImplicitCall; }
+        bool isForImplicitCall() { return m_isForImplicitCall; }
     private:
         size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t maxSize, size_t offset);
         bool growBuffer(size_t minCapacity, size_t maxSize);
@@ -162,6 +165,7 @@ namespace KJS {
         
         void setBase(Register*);
         
+        bool m_isForImplicitCall;
         size_t m_size;
         size_t m_capacity;
         size_t m_maxSize;

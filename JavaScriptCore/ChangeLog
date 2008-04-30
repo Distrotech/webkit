@@ -1,3 +1,36 @@
+2008-04-29  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18643: SQUIRRELFISH: need to support implicit function calls (valueOf, toString, getters/setters)
+        <https://bugs.webkit.org/show_bug.cgi?id=18643>
+
+        Prevent static slot optimisation for new variables and functions in
+        globally re-entrant code called from an an implicit function call.
+
+        This is necessary to prevent us from needing to resize the global
+        slot portion of the root RegisterFile during an implicit (and hence
+        unguarded) function call.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/RegisterFile.h:
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::pushGlobalRegisterFile):
+        (KJS::RegisterFileStack::popGlobalRegisterFile):
+        (KJS::RegisterFileStack::pushFunctionRegisterFile):
+        (KJS::RegisterFileStack::popFunctionRegisterFile):
+        * VM/RegisterFileStack.h:
+        (KJS::RegisterFileStack::inImplicitFunctionCall):
+        (KJS::RegisterFileStack::lastGlobal):
+        * kjs/nodes.cpp:
+        (KJS::ProgramNode::generateCode):
+        * kjs/nodes.h:
+        (KJS::ProgramNode::):
+
 2008-04-29  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

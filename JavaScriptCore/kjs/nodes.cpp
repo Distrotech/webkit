@@ -5788,7 +5788,7 @@ RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
     return 0;
 }
 
-void ProgramNode::generateCode(ScopeChainNode* sc)
+void ProgramNode::generateCode(ScopeChainNode* sc, bool canCreateGlobals)
 {
     ScopeChain scopeChain(sc);
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
@@ -5796,7 +5796,7 @@ void ProgramNode::generateCode(ScopeChainNode* sc)
     
     m_code.set(new ProgramCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
     
-    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack);
+    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack, canCreateGlobals);
     generator.generate();
 
     m_children.shrinkCapacity(0);
