@@ -30,6 +30,7 @@ namespace KJS {
   class Completion;
   class ExecState;
   class JSValue;
+  class ScopeChain;
   class UString;
   
   class Interpreter {
