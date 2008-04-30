@@ -32,7 +32,6 @@
 
 namespace KJS  {
 
-    class ActivationImp;
     class CommonIdentifiers;
     class EvalNode;
     class FunctionBodyNode;
@@ -46,18 +45,21 @@ namespace KJS  {
 
     struct Instruction;
     
-    enum CodeType { GlobalCode, EvalCode, FunctionCode };
-
-    // Represents the current state of script execution.
     // Passed as the first argument to most functions.
     class ExecState : Noncopyable {
-        friend class JSGlobalObject;
     public:
-        // Global object that was in scope when the current script started executing.
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChain& globalScopeChain);
+
+        // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
         
-        // Global object that was in scope when the current body of code was defined.
+        // Global object in which the current script was defined. (Can be differ
+        // from dynamicGlobalObject() during function calls across frames.)
         JSGlobalObject* lexicalGlobalObject() const;
+        
+        JSObject* globalThisValue() const { return m_globalThisValue; }
+        
+        // Exception propogation.
         void setExceptionSource(Instruction* source) { m_exceptionSource = source; }
         Instruction* exceptionSource() { return m_exceptionSource; }
         void clearExceptionSource() { m_exceptionSource = 0; }
@@ -66,44 +68,32 @@ namespace KJS  {
         JSValue* exception() const { return m_exception; }
         JSValue** exceptionSlot() { return &m_exception; }
         bool hadException() const { return !!m_exception; }
-        JSValue* takeException() { JSValue* exception = m_exception; m_exception = 0; return exception; }
         
-        ScopeChain& scopeChain() { return m_scopeChain; }
-        void pushScope(JSObject* s) { m_scopeChain.push(s); }
-        void popScope() { m_scopeChain.pop(); }
-        
-        JSVariableObject* variableObject() const { ASSERT_NOT_REACHED(); return m_variableObject; }
-        void setVariableObject(JSVariableObject* v) { m_variableObject = v; }
-        
-        JSObject* thisValue() const { return m_thisValue; }
-        JSObject* globalThisValue() const { return m_globalThisValue; }
-        
-        ExecState* callingExecState() { return m_callingExec; }
-        
-        ActivationImp* activationObject() { ASSERT_NOT_REACHED(); return m_activation; }
-        void setActivationObject(ActivationImp* a) { m_activation = a; }
-        CodeType codeType() { return m_codeType; }
-        ScopeNode* scopeNode() { return m_scopeNode; }
-        FunctionImp* function() const { return m_function; }
-        const List* arguments() const { return m_arguments; }
-        
-        LabelStack& seenLabels() { return m_labelStack; }
-        
-        void pushIteration() { m_iterationDepth++; }
-        void popIteration() { m_iterationDepth--; }
-        bool inIteration() const { return (m_iterationDepth > 0); }
-        
-        void pushSwitch() { m_switchDepth++; }
-        void popSwitch() { m_switchDepth--; }
-        bool inSwitch() const { return (m_switchDepth > 0); }
-
-        // These pointers are used to avoid accessing global variables for these,
-        // to avoid taking PIC branches in Mach-O binaries.
+        // Fast access to commonly used data.
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
         const List& emptyList() const { return *m_emptyList; }
 
-        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *(LocalStorage*)0; }
-        void setLocalStorage(LocalStorage*) { ASSERT_NOT_REACHED(); }
+    private:
+        JSGlobalObject* m_globalObject;
+        JSObject* m_globalThisValue;
+
+        JSValue* m_exception;
+        Instruction* m_exceptionSource;
+
+        CommonIdentifiers* m_propertyNames;
+        const List* m_emptyList;
+
+        const ScopeChainNode* m_scopeChain;
+    };
+
+    // This code is now defunct:
+
+    enum CodeType { GlobalCode, EvalCode, FunctionCode };
+    class OldInterpreterExecState : public ExecState {
+    public:
+        void pushSwitch() { m_switchDepth++; }
+        void popSwitch() { m_switchDepth--; }
+        bool inSwitch() const { return (m_switchDepth > 0); }
 
         // These are only valid right after calling execute().
         ComplType completionType() const { return m_completionType; }
@@ -166,70 +156,38 @@ namespace KJS  {
             m_completionType = Interrupted;
             return 0;
         }
-
-    protected:
-        ExecState(JSGlobalObject*, JSObject* thisObject);
-        ExecState(JSGlobalObject*, JSObject* thisObject, ProgramNode*);
-        ExecState(JSGlobalObject*, JSObject* thisObject, EvalNode*, ExecState* callingExecState, const ScopeChain&, JSVariableObject*);
-        ExecState(JSGlobalObject*, JSObject* thisObject, JSObject* globalThisValue, FunctionBodyNode*, ExecState* callingExecState, FunctionImp*, const List& args);
-        ~ExecState();
-
-        // ExecStates are always stack-allocated, and the garbage collector
-        // marks the stack, so we don't need to protect the objects below from GC.
-
-        JSGlobalObject* m_globalObject;
-        JSValue* m_exception;
-        Instruction* m_exceptionSource;
-        CommonIdentifiers* m_propertyNames;
-        const List* m_emptyList;
-
-        ExecState* m_callingExec;
-
-        ScopeNode* m_scopeNode;
+        CodeType codeType() { return m_codeType; }
+        void pushIteration() { m_iterationDepth++; }
+        void popIteration() { m_iterationDepth--; }
+        bool inIteration() const { return (m_iterationDepth > 0); }
+        LabelStack& seenLabels() { return m_labelStack; }
+        void pushScope(JSObject* s) { m_scopeChain.push(s); }
+        void popScope() { m_scopeChain.pop(); }
+        JSVariableObject* variableObject() const { ASSERT_NOT_REACHED(); return m_variableObject; }
+        void setVariableObject(JSVariableObject* v) { m_variableObject = v; }
+        ExecState* callingExecState() { return m_callingExec; }
+        ScopeNode* scopeNode() { return m_scopeNode; }
+        const List* arguments() const { return m_arguments; }
+        FunctionImp* function() const { return m_function; }
+        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *(LocalStorage*)0; }
+        void setLocalStorage(LocalStorage*) { ASSERT_NOT_REACHED(); }
+        ScopeChain& scopeChain() { return m_scopeChain; }
+        JSObject* thisValue() const { return m_thisValue; }
         
-        FunctionImp* m_function;
-        const List* m_arguments;
-        ActivationImp* m_activation;
-
-        ScopeChain m_scopeChain;
-        ScopeChainNode m_inlineScopeChainNode;
-        JSVariableObject* m_variableObject;
-
-        JSObject* m_thisValue;
-        JSObject* m_globalThisValue;
-        
-        LabelStack m_labelStack;
-        int m_iterationDepth;
-        int m_switchDepth;
-        CodeType m_codeType;
-
         ComplType m_completionType;
         const Identifier* m_breakOrContinueTarget;
-    };
-
-    class GlobalExecState : public ExecState {
-    public:
-        GlobalExecState(JSGlobalObject*, JSObject* thisObject);
-        ~GlobalExecState();
-    };
-
-    class InterpreterExecState : public ExecState {
-    public:
-        InterpreterExecState(JSGlobalObject*, JSObject* thisObject, ProgramNode*);
-        ~InterpreterExecState();
-    };
-
-    class EvalExecState : public ExecState {
-    public:
-        EvalExecState(JSGlobalObject*, JSObject* thisObj, EvalNode*, ExecState* callingExec, const ScopeChain&, JSVariableObject*);
-        ~EvalExecState();
-    };
-
-    class FunctionExecState : public ExecState {
-    public:
-        FunctionExecState(JSGlobalObject*, JSObject* thisObject, JSObject* globalThisValue, FunctionBodyNode*,
-            ExecState* callingExecState, FunctionImp*, const List& args);
-        ~FunctionExecState();
+        int m_switchDepth;
+        CodeType m_codeType;
+        int m_iterationDepth;
+        LabelStack m_labelStack;
+        ScopeChainNode m_inlineScopeChainNode;
+        ScopeChain m_scopeChain;
+        JSVariableObject* m_variableObject;
+        ScopeNode* m_scopeNode;
+        const List* m_arguments;
+        FunctionImp* m_function;
+        ExecState* m_callingExec;
+        JSObject* m_thisValue;
     };
 
 } // namespace KJS

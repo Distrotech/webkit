@@ -21,7 +21,6 @@
 #ifndef scope_chain_mark_h
 #define scope_chain_mark_h
 
-#include "Activation.h"
 #include "scope_chain.h"
 
 namespace KJS {

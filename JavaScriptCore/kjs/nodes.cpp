@@ -87,7 +87,7 @@ if (UNLIKELY(exec->hadException())) { \
 }
 
 #if !ASSERT_DISABLED
-static inline bool canSkipLookup(ExecState* exec, const Identifier& ident)
+static inline bool canSkipLookup(OldInterpreterExecState* exec, const Identifier& ident)
 {
     // Static lookup in EvalCode is impossible because variables aren't DontDelete.
     // Static lookup in GlobalCode may be possible, but we haven't implemented support for it yet.
@@ -275,15 +275,17 @@ static void substitute(UString& string, const UString& substring)
 }
 
 static inline int currentSourceId(ExecState* exec) KJS_FAST_CALL;
-static inline int currentSourceId(ExecState* exec)
+static inline int currentSourceId(ExecState*)
 {
-    return exec->scopeNode()->sourceId();
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
-static inline const UString& currentSourceURL(ExecState* exec) KJS_FAST_CALL;
-static inline const UString& currentSourceURL(ExecState* exec)
+static inline const UString currentSourceURL(ExecState* exec) KJS_FAST_CALL;
+static inline const UString currentSourceURL(ExecState*)
 {
-    return exec->scopeNode()->sourceURL();
+    ASSERT_NOT_REACHED();
+    return UString();
 }
 
 JSValue* Node::setErrorCompletion(OldInterpreterExecState* exec, ErrorType e, const char* msg)

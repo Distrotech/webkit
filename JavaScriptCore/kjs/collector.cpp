@@ -1036,18 +1036,4 @@ bool Collector::isBusy()
     return (primaryHeap.operationInProgress != NoOperation) | (numberHeap.operationInProgress != NoOperation);
 }
 
-void Collector::reportOutOfMemoryToAllExecStates()
-{
-    if (!JSGlobalObject::head())
-        return;
-
-    JSGlobalObject* globalObject = JSGlobalObject::head();
-    do {
-        ExecStateStack::const_iterator end = globalObject->activeExecStates().end();
-        for (ExecStateStack::const_iterator it = globalObject->activeExecStates().begin(); it != end; ++it)
-            (*it)->setException(Error::create(*it, GeneralError, "Out of memory"));
-        globalObject = globalObject->next();
-    } while (globalObject != JSGlobalObject::head());
-}
-
 } // namespace KJS

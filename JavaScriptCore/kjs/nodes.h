@@ -55,10 +55,6 @@ namespace KJS {
     class PropertyListNode;
     class SourceStream;
 
-    class OldInterpreterExecState : public ExecState {
-    };
-
-
     enum Operator {
         OpEqual,
         OpPlusEq,

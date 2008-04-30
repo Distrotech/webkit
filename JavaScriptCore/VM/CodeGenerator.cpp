@@ -131,7 +131,7 @@ void CodeGenerator::generate()
 #ifndef NDEBUG
     if (s_dumpsGeneratedCode) {
         JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
-        InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+        ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
         m_codeBlock->dump(&tmpExec);
     }
 #endif
@@ -187,7 +187,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     ASSERT(globalObject->isGlobalObject());
 
     // FIXME: Remove this once we figure out how ExecState should work in squirrelfish.
-    InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+    ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
 
     if (canCreateVariables) {
         for (size_t i = 0; i < functionStack.size(); ++i) {
@@ -273,10 +273,7 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
     
     for (size_t i = 0; i < functionStack.size(); ++i) {
         FuncDeclNode* funcDecl = functionStack[i];
-        const Identifier& ident = funcDecl->m_ident;
-        
-        codeBlock->declaredFunctionNames.append(ident);
-        m_functions.add(ident.ustring().rep());
+        codeBlock->declaredFunctionNames.append(funcDecl->m_ident);
         addConstant(funcDecl);
     }
 }

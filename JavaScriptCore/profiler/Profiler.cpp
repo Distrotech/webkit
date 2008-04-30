@@ -120,8 +120,10 @@ void Profiler::insertStackNamesInTree(const Vector<UString>& callStackNames)
         foundNameInTree->willExecute();
 }
 
-void Profiler::getStackNames(Vector<UString>& names, ExecState* exec) const
+void Profiler::getStackNames(Vector<UString>&, ExecState*) const
 {
+    ASSERT_NOT_REACHED();
+#if 0
     UString currentName;
     for (ExecState* currentState = exec; currentState; currentState = currentState->callingExecState()) {
         if (FunctionImp* functionImp = exec->function())
@@ -129,6 +131,7 @@ void Profiler::getStackNames(Vector<UString>& names, ExecState* exec) const
         else if (ScopeNode* scopeNode = exec->scopeNode())
             names.prepend(Script + scopeNode->sourceURL() + ": " + UString::from(scopeNode->lineNo() + 1));   // FIXME: Why is the line number always off by one?
     }
+#endif
 }
 
 void Profiler::getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction) const
