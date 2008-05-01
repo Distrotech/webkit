@@ -85,7 +85,7 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
     JSValue* exception = 0;
     RegisterFileStack* stack = &exec->dynamicGlobalObject()->registerFileStack();
     RegisterFile* current = stack->current();
-    if (current->unsafeForReentry()) {
+    if (!current->safeForReentry()) {
         stack->pushFunctionRegisterFile();
         JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, stack, _scope.node(), &exception);
         stack->popFunctionRegisterFile();
@@ -93,7 +93,7 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
         return result;
     } else {
         JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, stack, _scope.node(), &exception);
-        current->setUnsafeForReentry(false);
+        current->setSafeForReentry(true);
         exec->setException(exception);
         return result;
     }
