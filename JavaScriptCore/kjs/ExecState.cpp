@@ -48,11 +48,9 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
 {
 }
 
-#ifndef NDEBUG
 bool ExecState::isGlobalObject(JSObject* o) const
 {
     return o->isGlobalObject();
 }
-#endif
 
 } // namespace KJS

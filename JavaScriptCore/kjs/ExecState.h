@@ -79,9 +79,7 @@ namespace KJS  {
         const List& emptyList() const { return *m_emptyList; }
 
     private:
-#ifndef NDEBUG
         bool isGlobalObject(JSObject*) const;
-#endif
     
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
