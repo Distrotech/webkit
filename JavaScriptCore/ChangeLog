@@ -1,3 +1,13 @@
+2008-04-30  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Minor code restructuring to prepare for getters and setters, 
+        also helps exception semantics a bit.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
         Fixed tyop.
