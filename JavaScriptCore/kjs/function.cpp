@@ -83,9 +83,20 @@ CallType FunctionImp::getCallData(CallData& callData)
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
     JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
-    exec->setException(exception);
-    return result;
+    RegisterFileStack* stack = &exec->dynamicGlobalObject()->registerFileStack();
+    RegisterFile* current = stack->current();
+    if (current->unsafeForReentry()) {
+        stack->pushFunctionRegisterFile();
+        JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, stack, _scope.node(), &exception);
+        stack->popFunctionRegisterFile();
+        exec->setException(exception);
+        return result;
+    } else {
+        JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, stack, _scope.node(), &exception);
+        current->setUnsafeForReentry(false);
+        exec->setException(exception);
+        return result;
+    }
 }
 
 JSValue* FunctionImp::argumentsGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&)

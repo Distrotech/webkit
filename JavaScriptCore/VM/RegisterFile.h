@@ -88,7 +88,8 @@ namespace KJS {
     public:
         enum { DefaultRegisterFileSize = 2 * 1024 * 1024 };
         RegisterFile(RegisterFileStack* stack, size_t maxSize)
-            : m_isForImplicitCall(false)
+            : m_unsafeForReentry(false)
+            , m_isForImplicitCall(false)
             , m_size(0)
             , m_capacity(0)
             , m_maxSize(maxSize)
@@ -149,7 +150,8 @@ namespace KJS {
         {
             Collector::markStackObjectsConservatively(m_buffer, m_base + m_size);
         }
-        
+        bool unsafeForReentry() { return m_unsafeForReentry; }
+        void setUnsafeForReentry(bool unsafeForReentry) { m_unsafeForReentry = unsafeForReentry; }
         void setIsForImplicitCall(bool isForImplicitCall) { m_isForImplicitCall = isForImplicitCall; }
         bool isForImplicitCall() { return m_isForImplicitCall; }
     private:
@@ -164,7 +166,7 @@ namespace KJS {
         }
         
         void setBase(Register*);
-        
+        bool m_unsafeForReentry;
         bool m_isForImplicitCall;
         size_t m_size;
         size_t m_capacity;
