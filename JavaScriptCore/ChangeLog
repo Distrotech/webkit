@@ -1,5 +1,14 @@
 2008-05-03  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Sam.
+        
+        - fix accidental breakage from last patch
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-05-03  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
         
         - a bunch more opcode documentation and corresponding parameter name fixes
