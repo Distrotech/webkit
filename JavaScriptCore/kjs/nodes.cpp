@@ -962,7 +962,14 @@ RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst
                 generator.emitPutPropId(newObj.get(), p->m_node->name(), value);
                 break;
             }
-            // FIXME: No support for getters and setters yet, as it caused a performance regression
+            case PropertyNode::Getter: {
+                generator.emitPutGetter(newObj.get(), p->m_node->name(), value);
+                break;
+            }
+            case PropertyNode::Setter: {
+                generator.emitPutSetter(newObj.get(), p->m_node->name(), value);
+                break;
+            }
             default:
                 ASSERT_NOT_REACHED();
         }

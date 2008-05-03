@@ -201,6 +201,8 @@ namespace KJS {
         RegisterID* emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* value);
         RegisterID* emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
         RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* value);
+        RegisterID* emitPutGetter(RegisterID* base, const Identifier& property, RegisterID* value);
+        RegisterID* emitPutSetter(RegisterID* base, const Identifier& property, RegisterID* value);
 
         RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitCallEval(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);

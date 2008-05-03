@@ -1704,6 +1704,56 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         return r[r0].u.jsValue;
     }
+    BEGIN_OPCODE(op_put_getter) {
+        /* put_getter base(r) property(id) function(r)
+         
+           Sets register function on register base as the getter named
+           by identifier property. Base and function are assumed to be
+           objects as this op should only be used for getters defined
+           in object literal form.
+         
+           Unlike many opcodes, this one does not write any output to
+           the register file.
+         */
+        
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+        int function = (++vPC)->u.operand;
+        
+        ASSERT(r[base].u.jsValue->isObject());
+        JSObject* baseObj = static_cast<JSObject*>(r[base].u.jsValue);
+        Identifier& ident = codeBlock->identifiers[property];
+        ASSERT(r[function].u.jsValue->isObject());
+        baseObj->defineGetter(exec, ident, static_cast<JSObject* >(r[function].u.jsValue));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_put_setter) {
+        /* put_setter base(r) property(id) function(r)
+         
+         Sets register function on register base as the setter named
+         by identifier property. Base and function are assumed to be
+         objects as this op should only be used for setters defined
+         in object literal form.
+         
+         Unlike many opcodes, this one does not write any output to
+         the register file.
+         */
+        
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+        int function = (++vPC)->u.operand;
+        
+        ASSERT(r[base].u.jsValue->isObject());
+        JSObject* baseObj = static_cast<JSObject*>(r[base].u.jsValue);
+        Identifier& ident = codeBlock->identifiers[property];
+        ASSERT(r[function].u.jsValue->isObject());
+        baseObj->defineSetter(exec, ident, static_cast<JSObject* >(r[function].u.jsValue));
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_jsr) {
         /* jsr retAddrDst(r) target(offset)
          

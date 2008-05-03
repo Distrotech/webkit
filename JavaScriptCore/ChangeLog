@@ -1,3 +1,23 @@
+2008-05-03  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18864: SquirrelFish: Support getter and setter definition in object literals
+        <https://bugs.webkit.org/show_bug.cgi?id=18864>
+
+        Add new opcodes to allow us to add getters and setters to an object.  These are
+        only used by the codegen for object literals.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitPutGetter):
+        (KJS::CodeGenerator::emitPutSetter):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::PropertyListNode::emitCode):
+
 2008-05-02  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
