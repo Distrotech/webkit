@@ -387,7 +387,7 @@ NEVER_INLINE JSValue* Node::rethrowException(OldInterpreterExecState* exec)
 
 RegisterID* Node::emitThrowError(CodeGenerator& generator, RegisterID* dst, ErrorType e, const char* msg)
 {
-    RegisterID* r0 = generator.emitCreateError(generator.newTemporary(), e, jsString(msg));
+    RegisterID* r0 = generator.emitNewError(generator.newTemporary(), e, jsString(msg));
     generator.emitThrow(r0);
     return dst;
 }
@@ -396,8 +396,8 @@ RegisterID* Node::emitThrowError(CodeGenerator& generator, RegisterID* dst, Erro
 {
     UString message = msg;
     substitute(message, label.ustring());
-    RegisterID* r0 = generator.emitCreateError(generator.newTemporary(), e, jsString(message));
-    generator.emitThrow(r0);
+    RegisterID* exception = generator.emitNewError(generator.newTemporary(), e, jsString(message));
+    generator.emitThrow(exception);
     return dst;
 }
     
@@ -575,8 +575,8 @@ RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         return generator.emitNewRegExp(generator.finalDestination(dst), m_regExp.get());
     
     UString errorMessageString = UString("Invalid regular expression: ").append(m_regExp->errorMessage());
-    RegisterID* r0 = generator.emitCreateError(generator.tempDestination(dst), SyntaxError, jsOwnedString(errorMessageString));
-    generator.emitThrow(r0);
+    RegisterID* exception = generator.emitNewError(generator.tempDestination(dst), SyntaxError, jsOwnedString(errorMessageString));
+    generator.emitThrow(exception);
     return 0;
 }
 
@@ -2316,8 +2316,8 @@ JSValue* TypeOfResolveNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* TypeOfValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr.get());
-    return generator.emitTypeOf(generator.finalDestination(dst), r0.get());
+    RefPtr<RegisterID> src = generator.emitNode(m_expr.get());
+    return generator.emitTypeOf(generator.finalDestination(dst), src.get());
 }
 
 JSValue* TypeOfValueNode::evaluate(OldInterpreterExecState* exec)
@@ -2660,8 +2660,8 @@ JSValue* PrefixErrorNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* UnaryPlusNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_expr.get());
-    return generator.emitToJSNumber(generator.finalDestination(dst), r0);
+    RegisterID* src = generator.emitNode(m_expr.get());
+    return generator.emitToJSNumber(generator.finalDestination(dst), src);
 }
 
 void UnaryPlusNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2701,8 +2701,8 @@ uint32_t UnaryPlusNode::evaluateToUInt32(OldInterpreterExecState* exec)
 
 RegisterID* NegateNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_expr.get());
-    return generator.emitNegate(generator.finalDestination(dst), r0);
+    RegisterID* src = generator.emitNode(m_expr.get());
+    return generator.emitNegate(generator.finalDestination(dst), src);
 }
 
 void NegateNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2727,8 +2727,8 @@ double NegateNode::evaluateToNumber(OldInterpreterExecState* exec)
 
 RegisterID* BitwiseNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_expr.get());
-    return generator.emitBitNot(generator.finalDestination(dst), r0);
+    RegisterID* src = generator.emitNode(m_expr.get());
+    return generator.emitBitNot(generator.finalDestination(dst), src);
 }
 
 void BitwiseNotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -2771,8 +2771,8 @@ uint32_t BitwiseNotNode::evaluateToUInt32(OldInterpreterExecState* exec)
 
 RegisterID* LogicalNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_expr.get());
-    return generator.emitNot(generator.finalDestination(dst), r0);
+    RegisterID* src = generator.emitNode(m_expr.get());
+    return generator.emitNot(generator.finalDestination(dst), src);
 }
 
 void LogicalNotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3507,9 +3507,9 @@ bool GreaterEqNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* InstanceOfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitInstanceOf(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> value = generator.emitNode(m_expr1.get());
+    RegisterID* base = generator.emitNode(m_expr2.get());
+    return generator.emitInstanceOf(generator.finalDestination(dst, value.get()), value.get(), base);
 }
 
 void InstanceOfNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3567,9 +3567,9 @@ bool InstanceOfNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* InNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitIn(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> property = generator.emitNode(m_expr1.get());
+    RegisterID* base = generator.emitNode(m_expr2.get());
+    return generator.emitIn(generator.finalDestination(dst, property.get()), property.get(), base);
 }
 
 void InNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)

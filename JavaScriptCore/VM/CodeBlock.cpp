@@ -309,12 +309,12 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printUnaryOp(location, it, "bitnot");
             break;
         }
-        case op_instance_of: {
-            printBinaryOp(location, it, "instance_of");
+        case op_instanceof: {
+            printBinaryOp(location, it, "instanceof");
             break;
         }
-        case op_type_of: {
-            printUnaryOp(location, it, "type_of");
+        case op_typeof: {
+            printUnaryOp(location, it, "typeof");
             break;
         }
         case op_in: {
@@ -490,11 +490,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] throw\t\t%s\n", location, registerName(r0).c_str());
             break;
         }
-        case op_create_error: {
+        case op_new_error: {
             int r0 = (++it)->u.operand;
             int errorType = (++it)->u.operand;
             int k0 = (++it)->u.operand;
-            printf("[%4d] create_error\t%s, %d, %s\n", location, registerName(r0).c_str(), errorType, constantName(exec, k0, jsValues[k0]).c_str());
+            printf("[%4d] new_error\t%s, %d, %s\n", location, registerName(r0).c_str(), errorType, constantName(exec, k0, jsValues[k0]).c_str());
             break;
         }
         case op_jsr: {
