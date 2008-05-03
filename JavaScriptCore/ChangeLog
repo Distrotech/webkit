@@ -1,5 +1,18 @@
 2008-05-03  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Sam Weinig.
+        
+        Fixed https://bugs.webkit.org/show_bug.cgi?id=18876
+        Squirrelfish: ScopeChainNode leak in op_jmp_scopes.
+        
+        SunSpider reports no change.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Don't construct a ScopeChain object,
+        since the direct threaded interpreter will goto across its destructor.
+
+2008-05-03  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt.
         
         A bit more efficient fix than r32832: Don't copy globals into function
