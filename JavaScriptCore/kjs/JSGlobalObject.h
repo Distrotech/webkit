@@ -275,6 +275,13 @@ namespace KJS {
         return checkTimeout();
     }
 
+    inline JSGlobalObject* ScopeChainNode::globalObject() const
+    {
+        JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(bottom());
+        ASSERT(globalObject->isGlobalObject());
+        return globalObject;
+    }
+
 } // namespace KJS
 
 #endif // KJS_GlobalObject_h

@@ -57,9 +57,7 @@ namespace KJS  {
         // from dynamicGlobalObject() during function calls across frames.)
         JSGlobalObject* ExecState::lexicalGlobalObject() const
         {
-            JSObject* object = m_scopeChain->bottom();
-            ASSERT(isGlobalObject(object));
-            return (JSGlobalObject*)object;
+            return m_scopeChain->globalObject();
         }
         
         JSObject* globalThisValue() const { return m_globalThisValue; }
