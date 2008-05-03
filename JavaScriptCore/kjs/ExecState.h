@@ -47,8 +47,10 @@ namespace KJS  {
     
     // Passed as the first argument to most functions.
     class ExecState : Noncopyable {
+        friend class Machine;
+
     public:
-        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChain& globalScopeChain);
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain);
 
         // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
@@ -77,7 +79,11 @@ namespace KJS  {
         const List& emptyList() const { return *m_emptyList; }
 
     private:
+        ExecState(ExecState*, ScopeChainNode*);
+
         bool isGlobalObject(JSObject*) const;
+        
+        ExecState* m_prev;
     
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
@@ -88,7 +94,7 @@ namespace KJS  {
         const CommonIdentifiers* m_propertyNames;
         const List* m_emptyList;
 
-        const ScopeChainNode* m_scopeChain;
+        ScopeChainNode* m_scopeChain;
     };
 
     // This code is now defunct:
