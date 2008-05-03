@@ -1,3 +1,14 @@
+2008-05-03  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        A bit more efficient fix than r32832: Don't copy globals into function
+        register files; instead, have the RegisterFileStack track only the base
+        of the last *global* register file, so the global object's register
+        references stay good.
+        
+        SunSpider reports a .3% speedup. Not sure what that's about.
+
 2008-05-03  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

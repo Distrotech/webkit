@@ -551,7 +551,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     }
 
     RegisterFile* registerFile = registerFileStack->pushGlobalRegisterFile();
-    CodeBlock* codeBlock = &programNode->code(scopeChain, !registerFileStack->inImplicitCall());
+    CodeBlock* codeBlock = &programNode->code(scopeChain, registerFileStack->current()->isGlobal());
     registerFile->addGlobalSlots(codeBlock->numVars);
 
     registerFile->uncheckedGrow(codeBlock->numTemporaries);
