@@ -1,3 +1,16 @@
+2008-05-04  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Fix assertion when accessing arguments object with too many arguments provided
+
+        The arguments constructor was assuming that the register offset given for argv
+        was an absolute offset into the registerfile, rather than the offset from the
+        frame.  This patches corrects that issue.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::createArgumentsObject):
+
 2008-05-04  Geoffrey Garen  <ggaren@apple.com>
 
         Rubber stamped by Sam Weinig.
