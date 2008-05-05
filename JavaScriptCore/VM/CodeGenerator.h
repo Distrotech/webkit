@@ -213,22 +213,22 @@ namespace KJS {
         RegisterID* emitConstruct(RegisterID*, RegisterID*, ArgumentsNode*);
 
         PassRefPtr<LabelID> emitLabel(LabelID*);
-        PassRefPtr<LabelID> emitJump(LabelID*);
-        PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
-        PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
+        PassRefPtr<LabelID> emitJump(LabelID* target);
+        PassRefPtr<LabelID> emitJumpIfTrue(RegisterID* cond, LabelID* target);
+        PassRefPtr<LabelID> emitJumpIfFalse(RegisterID* cond, LabelID* target);
         PassRefPtr<LabelID> emitJumpScopes(LabelID* target, int targetScopeDepth);
 
         PassRefPtr<LabelID> emitJumpSubroutine(RegisterID* retAddrDst, LabelID*);
         void emitSubroutineReturn(RegisterID* retAddrSrc);
         
-        RegisterID* emitGetPropertyNames(RegisterID*, RegisterID*);
-        RegisterID* emitNextPropertyName(RegisterID*, RegisterID*, LabelID*);
+        RegisterID* emitGetPropertyNames(RegisterID* dst, RegisterID* base);
+        RegisterID* emitNextPropertyName(RegisterID* dst, RegisterID* iter, LabelID* target);
 
         RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
         void emitThrow(RegisterID*);
         RegisterID* emitNewError(RegisterID* dst, ErrorType type, JSValue* message);
         
-        RegisterID* emitPushScope(RegisterID*);
+        RegisterID* emitPushScope(RegisterID* scope);
         void emitPopScope();
 
         int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }

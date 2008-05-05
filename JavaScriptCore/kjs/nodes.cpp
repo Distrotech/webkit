@@ -3914,12 +3914,12 @@ uint32_t BitOrNode::evaluateToUInt32(OldInterpreterExecState* exec)
 RegisterID* LogicalAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> newDst = generator.finalDestination(dst);
-    RefPtr<LabelID> l1 = generator.newLabel();
+    RefPtr<LabelID> target = generator.newLabel();
     
     generator.emitNode(newDst.get(), m_expr1.get());
-    generator.emitJumpIfFalse(newDst.get(), l1.get());
+    generator.emitJumpIfFalse(newDst.get(), target.get());
     generator.emitNode(newDst.get(), m_expr2.get());
-    generator.emitLabel(l1.get());
+    generator.emitLabel(target.get());
 
     return newDst.get();
 }
@@ -3954,12 +3954,12 @@ bool LogicalAndNode::evaluateToBoolean(OldInterpreterExecState* exec)
 RegisterID* LogicalOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> newDst = generator.finalDestination(dst);
-    RefPtr<LabelID> l1 = generator.newLabel();
+    RefPtr<LabelID> target = generator.newLabel();
     
     generator.emitNode(newDst.get(), m_expr1.get());
-    generator.emitJumpIfTrue(newDst.get(), l1.get());
+    generator.emitJumpIfTrue(newDst.get(), target.get());
     generator.emitNode(newDst.get(), m_expr2.get());
-    generator.emitLabel(l1.get());
+    generator.emitLabel(target.get());
 
     return newDst.get();
 }
@@ -3991,19 +3991,19 @@ bool LogicalOrNode::evaluateToBoolean(OldInterpreterExecState* exec)
 RegisterID* ConditionalNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> newDst = generator.finalDestination(dst);
-    RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> l1 = generator.newLabel();
+    RefPtr<LabelID> beforeElse = generator.newLabel();
+    RefPtr<LabelID> afterElse = generator.newLabel();
 
-    RegisterID* r1 = generator.emitNode(m_logical.get());
-    generator.emitJumpIfFalse(r1, l0.get());
+    RegisterID* cond = generator.emitNode(m_logical.get());
+    generator.emitJumpIfFalse(cond, beforeElse.get());
 
     generator.emitNode(newDst.get(), m_expr1.get());
-    generator.emitJump(l1.get());
+    generator.emitJump(afterElse.get());
 
-    generator.emitLabel(l0.get());
+    generator.emitLabel(beforeElse.get());
     generator.emitNode(newDst.get(), m_expr2.get());
 
-    generator.emitLabel(l1.get());
+    generator.emitLabel(afterElse.get());
 
     return newDst.get();
 }
@@ -4812,13 +4812,13 @@ JSValue* VarStatementNode::execute(OldInterpreterExecState* exec)
 
 RegisterID* IfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<LabelID> l0 = generator.newLabel();
+    RefPtr<LabelID> afterThen = generator.newLabel();
 
-    RegisterID* r0 = generator.emitNode(m_condition.get());
-    generator.emitJumpIfFalse(r0, l0.get());
+    RegisterID* cond = generator.emitNode(m_condition.get());
+    generator.emitJumpIfFalse(cond, afterThen.get());
 
     generator.emitNode(dst, m_ifBlock.get());
-    generator.emitLabel(l0.get());
+    generator.emitLabel(afterThen.get());
 
     // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
     return 0;
@@ -4843,19 +4843,19 @@ JSValue* IfNode::execute(OldInterpreterExecState* exec)
 
 RegisterID* IfElseNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> l1 = generator.newLabel();
+    RefPtr<LabelID> beforeElse = generator.newLabel();
+    RefPtr<LabelID> afterElse = generator.newLabel();
 
-    RegisterID* r1 = generator.emitNode(m_condition.get());
-    generator.emitJumpIfFalse(r1, l0.get());
+    RegisterID* cond = generator.emitNode(m_condition.get());
+    generator.emitJumpIfFalse(cond, beforeElse.get());
 
     generator.emitNode(dst, m_ifBlock.get());
-    generator.emitJump(l1.get());
+    generator.emitJump(afterElse.get());
 
-    generator.emitLabel(l0.get());
+    generator.emitLabel(beforeElse.get());
     generator.emitNode(dst, m_elseBlock.get());
 
-    generator.emitLabel(l1.get());
+    generator.emitLabel(afterElse.get());
 
     // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
     return 0;
@@ -4882,21 +4882,21 @@ JSValue* IfElseNode::execute(OldInterpreterExecState* exec)
 
 RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<LabelID> l0 = generator.newLabel();
-    generator.emitLabel(l0.get());
+    RefPtr<LabelID> topOfLoop = generator.newLabel();
+    generator.emitLabel(topOfLoop.get());
 
-    RefPtr<LabelID> conditionTarget = generator.newLabel();
+    RefPtr<LabelID> continueTarget = generator.newLabel();
     RefPtr<LabelID> breakTarget = generator.newLabel();
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
-    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
+    generator.pushJumpContext(&m_labelStack, continueTarget.get(), breakTarget.get(), true);
+    RefPtr<RegisterID> result = generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
     
-    generator.emitLabel(conditionTarget.get());
-    RegisterID* r1 = generator.emitNode(m_expr.get());
-    generator.emitJumpIfTrue(r1, l0.get());
+    generator.emitLabel(continueTarget.get());
+    RegisterID* cond = generator.emitNode(m_expr.get());
+    generator.emitJumpIfTrue(cond, topOfLoop.get());
     generator.emitLabel(breakTarget.get());
-    return r0.get();
+    return result.get();
 }
 
 void DoWhileNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4943,20 +4943,20 @@ JSValue* DoWhileNode::execute(OldInterpreterExecState* exec)
 
 RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> conditionTarget = generator.newLabel();
+    RefPtr<LabelID> topOfLoop = generator.newLabel();
+    RefPtr<LabelID> continueTarget = generator.newLabel();
     RefPtr<LabelID> breakTarget = generator.newLabel();
 
-    generator.emitJump(conditionTarget.get());
-    generator.emitLabel(l0.get());
+    generator.emitJump(continueTarget.get());
+    generator.emitLabel(topOfLoop.get());
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
+    generator.pushJumpContext(&m_labelStack, continueTarget.get(), breakTarget.get(), true);
     generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
 
-    generator.emitLabel(conditionTarget.get());
-    RegisterID* r1 = generator.emitNode(m_expr.get());
-    generator.emitJumpIfTrue(r1, l0.get());
+    generator.emitLabel(continueTarget.get());
+    RegisterID* cond = generator.emitNode(m_expr.get());
+    generator.emitJumpIfTrue(cond, topOfLoop.get());
 
     generator.emitLabel(breakTarget.get());
     
@@ -5009,24 +5009,24 @@ RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     generator.emitNode(m_expr1.get());
     
-    RefPtr<LabelID> l0 = generator.newLabel();
-    RefPtr<LabelID> l1 = generator.newLabel();
-    RefPtr<LabelID> conditionTarget = generator.newLabel(); 
+    RefPtr<LabelID> topOfLoop = generator.newLabel();
+    RefPtr<LabelID> beforeCondition = generator.newLabel();
+    RefPtr<LabelID> continueTarget = generator.newLabel(); 
     RefPtr<LabelID> breakTarget = generator.newLabel(); 
-    generator.emitJump(l1.get());
+    generator.emitJump(beforeCondition.get());
 
-    generator.emitLabel(l0.get());
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
-    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
+    generator.emitLabel(topOfLoop.get());
+    generator.pushJumpContext(&m_labelStack, continueTarget.get(), breakTarget.get(), true);
+    RefPtr<RegisterID> result = generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
-    generator.emitLabel(conditionTarget.get());  
+    generator.emitLabel(continueTarget.get());  
     generator.emitNode(m_expr3.get());
 
-    generator.emitLabel(l1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    generator.emitJumpIfTrue(r1, l0.get());
+    generator.emitLabel(beforeCondition.get());
+    RegisterID* cond = generator.emitNode(m_expr2.get());
+    generator.emitJumpIfTrue(cond, topOfLoop.get());
     generator.emitLabel(breakTarget.get());
-    return r0.get();
+    return result.get();
 }
 
 void ForNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5111,14 +5111,14 @@ void ForInNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTab
 RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<LabelID> loopStart = generator.newLabel();
-    RefPtr<LabelID> conditionTarget = generator.newLabel(); 
+    RefPtr<LabelID> continueTarget = generator.newLabel(); 
     RefPtr<LabelID> breakTarget = generator.newLabel(); 
 
     if (m_init)
         generator.emitNode(m_init.get());
-    RegisterID* iterObject = generator.emitNode(m_expr.get());
-    RefPtr<RegisterID> iteratorRegister = generator.emitGetPropertyNames(generator.newTemporary(), iterObject);
-    generator.emitJump(conditionTarget.get());
+    RegisterID* forInBase = generator.emitNode(m_expr.get());
+    RefPtr<RegisterID> iter = generator.emitGetPropertyNames(generator.newTemporary(), forInBase);
+    generator.emitJump(continueTarget.get());
     generator.emitLabel(loopStart.get());
     RegisterID* propertyName;
     if (m_lexpr->isResolveNode()) {
@@ -5147,12 +5147,12 @@ RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitPutByVal(base.get(), subscript, propertyName);
     }   
     
-    generator.pushJumpContext(&m_labelStack, conditionTarget.get(), breakTarget.get(), true);
+    generator.pushJumpContext(&m_labelStack, continueTarget.get(), breakTarget.get(), true);
     generator.emitNode(dst, m_statement.get());
     generator.popJumpContext();
 
-    generator.emitLabel(conditionTarget.get());
-    generator.emitNextPropertyName(propertyName, iteratorRegister.get(), loopStart.get());
+    generator.emitLabel(continueTarget.get());
+    generator.emitNextPropertyName(propertyName, iter.get(), loopStart.get());
     generator.emitLabel(breakTarget.get());
     return dst;
 }
@@ -5363,11 +5363,11 @@ JSValue* ReturnNode::execute(OldInterpreterExecState* exec)
 
 RegisterID* WithNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_expr.get());
-    generator.emitPushScope(r0);
-    RegisterID* r1 = generator.emitNode(dst, m_statement.get());
+    RegisterID* scope = generator.emitNode(m_expr.get());
+    generator.emitPushScope(scope);
+    RegisterID* result = generator.emitNode(dst, m_statement.get());
     generator.emitPopScope();
-    return r1;
+    return result;
 }
 
 void WithNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
