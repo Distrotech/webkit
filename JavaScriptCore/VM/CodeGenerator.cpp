@@ -430,7 +430,7 @@ RegisterID* CodeGenerator::emitNot(RegisterID* dst, RegisterID* src)
 
 RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
-    instructions().append(machine().getOpcode(op_equal));
+    instructions().append(machine().getOpcode(op_eq));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
@@ -439,7 +439,7 @@ RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID*
 
 RegisterID* CodeGenerator::emitNotEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
 {
-    instructions().append(machine().getOpcode(op_nequal));
+    instructions().append(machine().getOpcode(op_neq));
     instructions().append(r0->index());
     instructions().append(r1->index());
     instructions().append(r2->index());
@@ -715,36 +715,36 @@ RegisterID* CodeGenerator::emitResolveBase(RegisterID* dst, const Identifier& pr
     return dst;
 }
     
-RegisterID* CodeGenerator::emitResolveBaseAndProperty(RegisterID* baseDst, RegisterID* propDst, const Identifier& property)
+RegisterID* CodeGenerator::emitResolveWithBase(RegisterID* baseDst, RegisterID* propDst, const Identifier& property)
 {
-    instructions().append(machine().getOpcode(op_resolve_base_and_property));
+    instructions().append(machine().getOpcode(op_resolve_with_base));
     instructions().append(baseDst->index());
     instructions().append(propDst->index());
     instructions().append(addConstant(property));
     return baseDst;
 }
 
-RegisterID* CodeGenerator::emitResolveBaseAndFunc(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property)
+RegisterID* CodeGenerator::emitResolveFunction(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property)
 {
-    instructions().append(machine().getOpcode(op_resolve_base_and_func));
+    instructions().append(machine().getOpcode(op_resolve_func));
     instructions().append(baseDst->index());
     instructions().append(funcDst->index());
     instructions().append(addConstant(property));
     return baseDst;
 }
 
-RegisterID* CodeGenerator::emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& property)
+RegisterID* CodeGenerator::emitGetById(RegisterID* dst, RegisterID* base, const Identifier& property)
 {
-    instructions().append(machine().getOpcode(op_get_prop_id));
+    instructions().append(machine().getOpcode(op_get_by_id));
     instructions().append(dst->index());
     instructions().append(base->index());
     instructions().append(addConstant(property));
     return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropId(RegisterID* base, const Identifier& property, RegisterID* value)
+RegisterID* CodeGenerator::emitPutById(RegisterID* base, const Identifier& property, RegisterID* value)
 {
-    instructions().append(machine().getOpcode(op_put_prop_id));
+    instructions().append(machine().getOpcode(op_put_by_id));
     instructions().append(base->index());
     instructions().append(addConstant(property));
     instructions().append(value->index());
@@ -769,45 +769,45 @@ RegisterID* CodeGenerator::emitPutSetter(RegisterID* base, const Identifier& pro
     return value;
 }
 
-RegisterID* CodeGenerator::emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier& property)
+RegisterID* CodeGenerator::emitDeleteById(RegisterID* dst, RegisterID* base, const Identifier& property)
 {
-    instructions().append(machine().getOpcode(op_delete_prop_id));
+    instructions().append(machine().getOpcode(op_del_by_id));
     instructions().append(dst->index());
     instructions().append(base->index());
     instructions().append(addConstant(property));
     return dst;
 }
 
-RegisterID* CodeGenerator::emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
+RegisterID* CodeGenerator::emitGetByVal(RegisterID* dst, RegisterID* base, RegisterID* property)
 {
-    instructions().append(machine().getOpcode(op_get_prop_val));
+    instructions().append(machine().getOpcode(op_get_by_val));
     instructions().append(dst->index());
     instructions().append(base->index());
     instructions().append(property->index());
     return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* value)
+RegisterID* CodeGenerator::emitPutByVal(RegisterID* base, RegisterID* property, RegisterID* value)
 {
-    instructions().append(machine().getOpcode(op_put_prop_val));
+    instructions().append(machine().getOpcode(op_put_by_val));
     instructions().append(base->index());
     instructions().append(property->index());
     instructions().append(value->index());
     return value;
 }
 
-RegisterID* CodeGenerator::emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
+RegisterID* CodeGenerator::emitDeleteByVal(RegisterID* dst, RegisterID* base, RegisterID* property)
 {
-    instructions().append(machine().getOpcode(op_delete_prop_val));
+    instructions().append(machine().getOpcode(op_del_by_val));
     instructions().append(dst->index());
     instructions().append(base->index());
     instructions().append(property->index());
     return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* value)
+RegisterID* CodeGenerator::emitPutByIndex(RegisterID* base, unsigned index, RegisterID* value)
 {
-    instructions().append(machine().getOpcode(op_put_prop_index));
+    instructions().append(machine().getOpcode(op_put_by_index));
     instructions().append(base->index());
     instructions().append(index);
     instructions().append(value->index());
