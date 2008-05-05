@@ -2,6 +2,18 @@
 
         Reviewed by Oliver.
         
+        - fix some dumb mistakes in my last patch
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitPushScope):
+        (KJS::CodeGenerator::emitGetPropertyNames):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-05-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
         - document opcodes relating to jumps, scopes, and property name iteration
         
         Documented jmp, jtrue, false, push_scope, pop_scope, get_pnames,
