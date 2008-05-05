@@ -570,7 +570,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
     
-    ExecState newExec(exec, scopeChain);
+    ExecState newExec(exec, scopeChain, registerFile);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);
@@ -624,7 +624,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
 
-    ExecState newExec(exec, scopeChain);
+    ExecState newExec(exec, scopeChain, registerFile);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, newCodeBlock, exception);
@@ -677,7 +677,7 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
 
-    ExecState newExec(exec, scopeChain);
+    ExecState newExec(exec, scopeChain, registerFile);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);

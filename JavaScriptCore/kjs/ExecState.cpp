@@ -37,7 +37,7 @@ static inline List* globalEmptyList()
     return &staticEmptyList;
 }
 
-ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain)
+ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, RegisterFile* globalRegisterFile)
     : m_prev(0)
     , m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
@@ -46,10 +46,11 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
     , m_propertyNames(CommonIdentifiers::shared())
     , m_emptyList(globalEmptyList())
     , m_scopeChain(globalScopeChain)
+    , m_registerFile(globalRegisterFile)
 {
 }
 
-ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain)
+ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain, RegisterFile* registerFile)
     : m_prev(exec)
     , m_globalObject(exec->m_globalObject)
     , m_globalThisValue(exec->m_globalThisValue)
@@ -58,6 +59,7 @@ ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain)
     , m_propertyNames(exec->m_propertyNames)
     , m_emptyList(exec->m_emptyList)
     , m_scopeChain(scopeChain)
+    , m_registerFile(registerFile)
 {
     ASSERT(!exec->m_exception);
     ASSERT(!exec->m_exceptionSource);

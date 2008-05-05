@@ -41,6 +41,7 @@ namespace KJS  {
     class JSGlobalObject;
     class JSVariableObject;
     class ProgramNode;
+    class RegisterFile;
     class ScopeNode;
 
     struct Instruction;
@@ -50,7 +51,7 @@ namespace KJS  {
         friend class Machine;
 
     public:
-        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain);
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, RegisterFile* globalRegisterFile);
 
         // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
@@ -79,12 +80,12 @@ namespace KJS  {
         const List& emptyList() const { return *m_emptyList; }
 
     private:
-        ExecState(ExecState*, ScopeChainNode*);
+        ExecState(ExecState*, ScopeChainNode*, RegisterFile*);
 
         bool isGlobalObject(JSObject*) const;
-        
+
         ExecState* m_prev;
-    
+
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
 
@@ -95,6 +96,7 @@ namespace KJS  {
         const List* m_emptyList;
 
         ScopeChainNode* m_scopeChain;
+        RegisterFile* m_registerFile;
     };
 
     // This code is now defunct:
