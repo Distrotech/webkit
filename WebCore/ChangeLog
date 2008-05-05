@@ -1,3 +1,19 @@
+2008-04-28  Adam Roben  <aroben@apple.com>
+
+        Fix some Windows build errors in COMPtr
+
+        * platform/win/COMPtr.h: Explicitly name the WTF namespace when using
+        HashTableDeletedValueType.
+
+2008-04-28  Adam Roben  <aroben@apple.com>
+
+        Fix some Windows build errors in FontPlatfomrData
+
+        * platform/graphics/win/FontPlatformData.h: Removed the Deleted
+        constructor and replaced it with a HashTableDeletedValueType
+        constructor. Also added isHashTableDeletedValue() and
+        hashTableDeletedFontValue().
+
 2008-04-25  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Darin.
