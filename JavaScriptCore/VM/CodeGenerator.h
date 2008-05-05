@@ -90,6 +90,8 @@ namespace KJS {
         // dynamic scope should not interfere with const initialisation
         RegisterID* registerForLocalConstInit(const Identifier&);
 
+        bool isLocalConstant(const Identifier&);
+
         // Returns the next available temporary register. Registers returned by
         // newTemporary require a modified form of reference counting: any
         // register with a refcount of 0 is considered "available", meaning that
@@ -262,15 +264,15 @@ namespace KJS {
         int localsIndex(int registerIndex) { return -registerIndex - 1; }
         
         // Returns the RegisterID corresponding to ident.
-        RegisterID* addVar(const Identifier& ident)
+        RegisterID* addVar(const Identifier& ident, bool isConstant)
         {
             RegisterID* local;
-            addVar(ident, local);
+            addVar(ident, local, isConstant);
             return local;
         }
 
         // Returns true if a new RegisterID was added, false if a pre-existing RegisterID was re-used.
-        bool addVar(const Identifier&, RegisterID*&);
+        bool addVar(const Identifier&, RegisterID*&, bool isConstant);
 
         void addParameter(const Identifier&);
 

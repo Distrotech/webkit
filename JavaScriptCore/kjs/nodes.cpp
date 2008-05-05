@@ -1737,8 +1737,12 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     // FIXME: I think we can detect the absense of dependent expressions here, 
     // and emit a PreInc instead of a PostInc. A post-pass to eliminate dead
     // code would work, too.
-    if (RegisterID* local = generator.registerForLocal(m_ident))
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident))
+            return generator.emitToJSNumber(generator.finalDestination(dst), local);
+        
         return generator.emitPostInc(generator.finalDestination(dst), local);
+    }
 
     RefPtr<RegisterID> value = generator.newTemporary();
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), value.get(), m_ident);
@@ -1817,8 +1821,12 @@ RegisterID* PostDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     // FIXME: I think we can detect the absense of dependent expressions here, 
     // and emit a PreDec instead of a PostDec. A post-pass to eliminate dead
     // code would work, too.
-    if (RegisterID* local = generator.registerForLocal(m_ident))
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident))
+            return generator.emitToJSNumber(generator.finalDestination(dst), local);
+        
         return generator.emitPostDec(generator.finalDestination(dst), local);
+    }
 
     RefPtr<RegisterID> value = generator.newTemporary();
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), value.get(), m_ident);
@@ -2335,6 +2343,11 @@ JSValue* TypeOfValueNode::evaluate(OldInterpreterExecState* exec)
 RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident)) {
+            RefPtr<RegisterID> r0 = generator.emitLoad(generator.finalDestination(dst), 1.0);
+            return generator.emitAdd(r0.get(), local, r0.get());
+        }
+        
         generator.emitPreInc(local);
         return generator.moveToDestinationIfNeeded(dst, local);
     }
@@ -2400,6 +2413,11 @@ JSValue* PreIncResolveNode::evaluate(OldInterpreterExecState* exec)
 RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident)) {
+            RefPtr<RegisterID> r0 = generator.emitLoad(generator.finalDestination(dst), -1.0);
+            return generator.emitAdd(r0.get(), local, r0.get());
+        }
+        
         generator.emitPreDec(local);
         return generator.moveToDestinationIfNeeded(dst, local);
     }
@@ -4136,9 +4154,14 @@ static ALWAYS_INLINE RegisterID* emitReadModifyAssignment(CodeGenerator& generat
 
 RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (RegisterID* dst = generator.registerForLocal(m_ident)) {
+    if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident)) {
+            RegisterID* src2 = generator.emitNode(m_right.get());
+            return emitReadModifyAssignment(generator, generator.finalDestination(dst), local, src2, m_operator);
+        }
+        
         RegisterID* src2 = generator.emitNode(m_right.get());
-        RegisterID* result = emitReadModifyAssignment(generator, dst, dst, src2, m_operator);
+        RegisterID* result = emitReadModifyAssignment(generator, local, local, src2, m_operator);
         return generator.moveToDestinationIfNeeded(dst, result);
     }
 
@@ -4166,6 +4189,9 @@ void ReadModifyResolveNode::optimizeVariableAccess(OldInterpreterExecState*, con
 RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (RegisterID* local = generator.registerForLocal(m_ident)) {
+        if (generator.isLocalConstant(m_ident))
+            return generator.emitNode(dst, m_right.get());
+        
         RegisterID* result = generator.emitNode(local, m_right.get());
         return generator.moveToDestinationIfNeeded(dst, result);
     }

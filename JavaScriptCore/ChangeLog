@@ -1,3 +1,29 @@
+2008-05-05  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Bug 18749: SQUIRRELFISH: const support is broken
+        <https://bugs.webkit.org/show_bug.cgi?id=18749>
+
+        Adds support for const during code generation.
+
+        Fixes 2 layout tests.
+
+        * ChangeLog:
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::isLocalConstant):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::addVar):
+        * kjs/nodes.cpp:
+        (KJS::PostIncResolveNode::emitCode):
+        (KJS::PostDecResolveNode::emitCode):
+        (KJS::PreIncResolveNode::emitCode):
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::ReadModifyResolveNode::emitCode):
+        (KJS::AssignResolveNode::emitCode):
+
 2008-05-04  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.
