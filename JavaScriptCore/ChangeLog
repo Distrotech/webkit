@@ -1,3 +1,32 @@
+2008-05-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - document some more opcodes (and fix argument names)
+        
+        Added docs for eq, neq, stricteq, nstriceq, less and lesseq.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitEqual):
+        (KJS::CodeGenerator::emitNotEqual):
+        (KJS::CodeGenerator::emitStrictEqual):
+        (KJS::CodeGenerator::emitNotStrictEqual):
+        (KJS::CodeGenerator::emitLess):
+        (KJS::CodeGenerator::emitLessEq):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.cpp:
+        (KJS::LessNode::emitCode):
+        (KJS::GreaterNode::emitCode):
+        (KJS::LessEqNode::emitCode):
+        (KJS::GreaterEqNode::emitCode):
+        (KJS::EqualNode::emitCode):
+        (KJS::NotEqualNode::emitCode):
+        (KJS::StrictEqualNode::emitCode):
+        (KJS::NotStrictEqualNode::emitCode):
+        (KJS::CaseBlockNode::emitCodeForBlock):
+
 2008-05-04  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
