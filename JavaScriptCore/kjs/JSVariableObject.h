@@ -120,9 +120,11 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTablePutWithAttributes(const Identifier& propertyName, JSValue* value, unsigned attributes)
     {
-        SymbolTableEntry& entry = symbolTable().find(propertyName.ustring().rep())->second;
-        if (entry.index == missingSymbolMarker())
+        SymbolTable::iterator iter = symbolTable().find(propertyName.ustring().rep());
+        if (iter == symbolTable().end())
             return false;
+        SymbolTableEntry& entry = iter->second;
+        ASSERT(entry.index != missingSymbolMarker());
         entry.attributes = attributes;
         valueAt(entry.index) = value;
         return true;

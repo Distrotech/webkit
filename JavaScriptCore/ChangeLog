@@ -2,6 +2,16 @@
 
         Reviewed by Geoff.
 
+        Whoops, correctly handle properties that don't exist in the 
+        symbol table.
+
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTablePutWithAttributes):
+
+2008-05-04  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
         Add attribute information to SymbolTable as ground work for
         various DontEnum and ReadOnly issues.
 
