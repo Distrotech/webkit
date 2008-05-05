@@ -142,7 +142,7 @@ bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)
     pair<SymbolTable::iterator, bool> result = symbolTable().add(ident.ustring().rep(), index);
 
     if (!result.second)
-        index = result.first->second;
+        index = result.first->second.index;
     else {
         --m_nextVar;
         ++m_codeBlock->numVars;
@@ -175,7 +175,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
         m_locals.resize(size);
         SymbolTable::iterator end = symbolTable->end();
         for (SymbolTable::iterator it = symbolTable->begin(); it != end; ++it)
-            m_locals[localsIndex(it->second)].setIndex(it->second);
+            m_locals[localsIndex(it->second.index)].setIndex(it->second.index);
 
         // Shift new symbols so they get stored prior to previously defined symbols.
         m_nextVar -= size;
@@ -300,7 +300,7 @@ RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
     if (!shouldOptimizeLocals() && ident != m_propertyNames->thisIdentifier)
         return 0;
 
-    int index = symbolTable().get(ident.ustring().rep());
+    int index = symbolTable().get(ident.ustring().rep()).index;
     if (index == missingSymbolMarker())
         return 0;
 
@@ -312,7 +312,7 @@ RegisterID* CodeGenerator::registerForLocalConstInit(const Identifier& ident)
     if (m_codeType == EvalCode)
         return 0;
     
-    int index = symbolTable().get(ident.ustring().rep());
+    int index = symbolTable().get(ident.ustring().rep()).index;
     ASSERT(index != missingSymbolMarker());
     
     return &m_locals[localsIndex(index)];
@@ -393,7 +393,7 @@ unsigned CodeGenerator::addConstant(const Identifier& ident)
     if (result.second) // new entry
         m_codeBlock->identifiers.append(rep);
     
-    return result.first->second;
+    return result.first->second.index;
 }
 
 unsigned CodeGenerator::addConstant(JSValue* v)

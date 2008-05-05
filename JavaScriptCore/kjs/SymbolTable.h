@@ -52,16 +52,38 @@ namespace KJS {
 
     static ALWAYS_INLINE int missingSymbolMarker() { return std::numeric_limits<int>::max(); }
 
+    struct SymbolTableEntry {
+        SymbolTableEntry()
+            : index(missingSymbolMarker())
+            , attributes(0)
+        {
+        }
+        
+        SymbolTableEntry(int _index)
+            : index(_index)
+            , attributes(0)
+        {
+        }
+        
+        SymbolTableEntry(int _index, unsigned _attributes)
+            : index(_index)
+            , attributes(_attributes)
+        {
+        }
+        int index;
+        unsigned attributes;
+    };
+
     struct SymbolTableIndexHashTraits {
-        typedef int TraitType;
+        typedef SymbolTableEntry TraitType;
         typedef SymbolTableIndexHashTraits StorageTraits;
-        static int emptyValue() { return missingSymbolMarker(); }
+        static SymbolTableEntry emptyValue() { return SymbolTableEntry(); }
         static const bool emptyValueIsZero = false;
         static const bool needsDestruction = false;
         static const bool needsRef = false;
     };
 
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, IdentifierRepHashTraits, SymbolTableIndexHashTraits> SymbolTable;
+    typedef HashMap<RefPtr<UString::Rep>, SymbolTableEntry, IdentifierRepHash, IdentifierRepHashTraits, SymbolTableIndexHashTraits> SymbolTable;
 
 } // namespace KJS
 

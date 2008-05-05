@@ -148,14 +148,8 @@ void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
 
     SymbolTable::const_iterator end = symbolTable().end();
     size_t i = 0;
-    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it) {
-        unsigned attributes = 0;
-        if (isReadOnly(it->second))
-            attributes |= ReadOnly;
-        if (isDontEnum(it->second))
-            attributes |= DontEnum;
-        p.properties[i].init(it->first.get(), valueAt(it->second), attributes);
-    }
+    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it)
+        p.properties[i].init(it->first.get(), valueAt(it->second.index), it->second.attributes);
 }
 
 void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
