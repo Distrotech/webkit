@@ -1,3 +1,21 @@
+2008-05-05  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed ecma_3/Object/8.6.2.6-001.js, and similar bugs.
+        
+        SunSpider reports a .4% speedup. Not sure what that's about.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Check for exception return from equal,
+        since toPrimitive can throw.
+
+        * kjs/operations.cpp:
+        (KJS::strictEqual): In response to an error I made in an earlier version
+        of this patch, I changed strictEqual to make clear the fact that it
+        performs no conversions and can't throw, making it slightly more efficient
+        in the process.
+
 2008-05-05  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

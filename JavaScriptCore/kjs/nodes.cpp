@@ -3716,7 +3716,7 @@ bool StrictEqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
     JSValue* v2 = m_expr2->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
 
-    return strictEqual(exec,v1, v2);
+    return strictEqual(v1, v2);
 }
 
 JSValue* StrictEqualNode::evaluate(OldInterpreterExecState* exec)
@@ -3750,7 +3750,7 @@ bool NotStrictEqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
     JSValue* v2 = m_expr2->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
 
-    return !strictEqual(exec,v1, v2);
+    return !strictEqual(v1, v2);
 }
 
 JSValue* NotStrictEqualNode::evaluate(OldInterpreterExecState* exec)
@@ -5485,7 +5485,7 @@ JSValue* CaseBlockNode::executeBlock(OldInterpreterExecState* exec, JSValue* inp
         a = a->getNext();
         JSValue* v = clause->evaluate(exec);
         KJS_CHECKEXCEPTION
-        if (strictEqual(exec, input, v)) {
+        if (strictEqual(input, v)) {
             JSValue* res = clause->executeStatements(exec);
             if (exec->completionType() != Normal)
                 return res;
@@ -5504,7 +5504,7 @@ JSValue* CaseBlockNode::executeBlock(OldInterpreterExecState* exec, JSValue* inp
         b = b->getNext();
         JSValue* v = clause->evaluate(exec);
         KJS_CHECKEXCEPTION
-        if (strictEqual(exec, input, v)) {
+        if (strictEqual(input, v)) {
             JSValue* res = clause->executeStatements(exec);
             if (exec->completionType() != Normal)
                 return res;
