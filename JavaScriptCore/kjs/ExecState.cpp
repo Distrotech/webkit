@@ -37,7 +37,7 @@ static inline List* globalEmptyList()
     return &staticEmptyList;
 }
 
-ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, const RegisterFile* globalRegisterFile)
+ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain)
     : m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
     , m_exception(0)
@@ -45,13 +45,14 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
     , m_propertyNames(CommonIdentifiers::shared())
     , m_emptyList(globalEmptyList())
     , m_prev(0)
-    , m_registerFile(globalRegisterFile)
+    , m_machine(0)
+    , m_registerFile(0)
     , m_scopeChain(globalScopeChain)
-    , m_callFrameOffset(0)
+    , m_callFrameOffset(-1)
 {
 }
 
-ExecState::ExecState(const ExecState* exec, ScopeChainNode* scopeChain, const RegisterFile* registerFile, int callFrameOffset)
+ExecState::ExecState(ExecState* exec, Machine* machine, RegisterFile* registerFile, ScopeChainNode* scopeChain, int callFrameOffset)
     : m_globalObject(exec->m_globalObject)
     , m_globalThisValue(exec->m_globalThisValue)
     , m_exception(0)
@@ -59,6 +60,7 @@ ExecState::ExecState(const ExecState* exec, ScopeChainNode* scopeChain, const Re
     , m_propertyNames(exec->m_propertyNames)
     , m_emptyList(exec->m_emptyList)
     , m_prev(exec)
+    , m_machine(machine)
     , m_registerFile(registerFile)
     , m_scopeChain(scopeChain)
     , m_callFrameOffset(callFrameOffset)

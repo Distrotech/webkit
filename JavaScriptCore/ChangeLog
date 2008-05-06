@@ -1,3 +1,31 @@
+2008-05-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Trivial support for function.arguments: Currently, we only support
+        function.arguments from within the scope of function.
+        
+        This fixes the remaining Mozilla JS test failures.
+        
+        SunSpider reports no change.
+
+        * JavaScriptCore.exp:
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Separated scope chain deref from
+        activation register copying: since it is now possible for client code
+        to create an activation on behalf of a function that otherwise wouldn't
+        need one, having an activation no longer necessarily means that you need
+        to deref the scope chain.
+        
+        (KJS::Machine::getCallFrame): For now, this function only examines the
+        current scope. Walking parent scopes requires some refactoring in the
+        way we track execution stacks.
+
+        * kjs/ExecState.cpp:
+        (KJS::ExecState::ExecState): We use a negative call frame offset to
+        indicate that a given scope is not a function call scope.
+        
 2008-05-05  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
