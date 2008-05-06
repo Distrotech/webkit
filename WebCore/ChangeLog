@@ -1,3 +1,10 @@
+2008-04-29  Ada Chan  <adachan@apple.com>
+
+        Added missing return.        
+
+        * platform/win/COMPtr.h:
+        (WTF::):
+
 2008-04-29  Adam Roben  <aroben@apple.com>
 
         Restore the beloved COMPtr::operator&
