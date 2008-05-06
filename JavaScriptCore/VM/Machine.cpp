@@ -614,7 +614,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
         (*++dst).u.jsValue = *it;
 
     // put call frame in place, using a 0 codeBlock to indicate a built-in caller
-    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, registerOffset + CallFrameHeaderSize, argc, 0, function);
+    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, argv, argc, 0, function);
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, *exception);
