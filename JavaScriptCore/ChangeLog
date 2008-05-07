@@ -1,3 +1,56 @@
+2008-05-07  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Fix a performance regression caused by the introduction of property
+        attributes to SymbolTable in r32859 by encoding the attributes and the
+        register index into a single field of SymbolTableEntry.
+
+        This leaves Node::optimizeVariableAccess() definitely broken, although
+        it was probably not entirely correct in SquirrelFish before this change.
+
+        * VM/CodeBlock.h:
+        (KJS::missingThisObjectMarker):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::registerForLocal):
+        (KJS::CodeGenerator::registerForLocalConstInit):
+        (KJS::CodeGenerator::isLocalConstant):
+        (KJS::CodeGenerator::addConstant):
+        (KJS::CodeGenerator::emitCall):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::IdentifierMapIndexHashTraits::emptyValue):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::saveLocalStorage):
+        * kjs/JSVariableObject.cpp:
+        (KJS::JSVariableObject::getPropertyNames):
+        (KJS::JSVariableObject::getPropertyAttributes):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTableGet):
+        (KJS::JSVariableObject::symbolTablePut):
+        (KJS::JSVariableObject::symbolTablePutWithAttributes):
+        * kjs/SymbolTable.h:
+        (KJS::SymbolTableEntry::SymbolTableEntry):
+        (KJS::SymbolTableEntry::isEmpty):
+        (KJS::SymbolTableEntry::getIndex):
+        (KJS::SymbolTableEntry::getAttributes):
+        (KJS::SymbolTableEntry::setAttributes):
+        (KJS::SymbolTableEntry::isReadOnly):
+        * kjs/nodes.cpp:
+        (KJS::getSymbolTableEntry):
+        (KJS::PostIncResolveNode::optimizeVariableAccess):
+        (KJS::PostDecResolveNode::optimizeVariableAccess):
+        (KJS::DeleteResolveNode::optimizeVariableAccess):
+        (KJS::TypeOfResolveNode::optimizeVariableAccess):
+        (KJS::PreIncResolveNode::optimizeVariableAccess):
+        (KJS::PreDecResolveNode::optimizeVariableAccess):
+        (KJS::ReadModifyResolveNode::optimizeVariableAccess):
+        (KJS::AssignResolveNode::optimizeVariableAccess):
+        (KJS::ProgramNode::initializeSymbolTable):
+
 2008-05-06  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by Oliver.

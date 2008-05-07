@@ -149,7 +149,7 @@ void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
     SymbolTable::const_iterator end = symbolTable().end();
     size_t i = 0;
     for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it)
-        p.properties[i].init(it->first.get(), valueAt(it->second.index), it->second.attributes);
+        p.properties[i].init(it->first.get(), valueAt(it->second.getIndex()), it->second.getAttributes());
 }
 
 void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)

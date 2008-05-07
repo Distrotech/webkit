@@ -29,6 +29,7 @@
 #ifndef SymbolTable_h
 #define SymbolTable_h
 
+#include "object.h"
 #include "ustring.h"
 #include <wtf/AlwaysInline.h>
 
@@ -54,24 +55,67 @@ namespace KJS {
 
     struct SymbolTableEntry {
         SymbolTableEntry()
-            : index(missingSymbolMarker())
-            , attributes(0)
+            : rawValue(0)
         {
         }
         
-        SymbolTableEntry(int _index)
-            : index(_index)
-            , attributes(0)
+        SymbolTableEntry(int index)
         {
+            rawValue = index & ~0x80000000 & ~0x40000000;
         }
         
-        SymbolTableEntry(int _index, unsigned _attributes)
-            : index(_index)
-            , attributes(_attributes)
+        SymbolTableEntry(int index, unsigned attributes)
         {
+            rawValue = index;
+            
+            if (!(attributes & ReadOnly))
+                rawValue &= ~0x80000000;
+            
+            if (!(attributes & DontEnum))
+                rawValue &= ~0x40000000;
         }
-        int index;
-        unsigned attributes;
+
+        bool isEmpty() const
+        {
+            return rawValue == 0;
+        }
+
+        int getIndex() const
+        {
+            // Every register index we store is negative, so this bit twiddling works correctly
+            return rawValue | 0x80000000 | 0x40000000;
+        }
+
+        unsigned getAttributes() const
+        {
+            unsigned attributes = 0;
+            
+            if (rawValue & 0x80000000)
+                attributes |= ReadOnly;
+            
+            if (rawValue & 0x40000000)
+                attributes |= DontEnum;
+            
+            return attributes;
+        }
+
+        void setAttributes(unsigned attributes)
+        {
+            rawValue = getIndex();
+            
+            if (!(attributes & ReadOnly))
+                rawValue &= ~0x80000000;
+            
+            if (!(attributes & DontEnum))
+                rawValue &= ~0x40000000;
+        }
+
+        bool isReadOnly() const
+        {
+            return rawValue & 0x80000000;
+        }
+
+        int rawValue;
     };
 
     struct SymbolTableIndexHashTraits {
