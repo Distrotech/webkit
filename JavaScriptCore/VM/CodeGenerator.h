@@ -78,6 +78,8 @@ namespace KJS {
         CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier>& parameters);
         CodeGenerator(EvalNode*, const ScopeChain&, SymbolTable*, EvalCodeBlock*, VarStack&, FunctionStack& functionStack);
 
+        ~CodeGenerator();
+
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
 
         void generate();
