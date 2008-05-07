@@ -1,3 +1,29 @@
+2008-05-06  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18866: SQUIRRELFISH: JS/ObjC bridge is broken <https://bugs.webkit.org/show_bug.cgi?id=18866>
+        Bug 18867: SQUIRRELFISH: JS/NPRuntime bridge is broken <https://bugs.webkit.org/show_bug.cgi?id=18867>
+
+        This fixes function binding logic for the ObjC and NPRuntime by
+        replacing incorrect implementations of implementsCall (which is
+        no longer virtual) with implementations of getCallData.
+
+        * bindings/js/JSQuarantinedObjectWrapper.cpp:
+        (WebCore::JSQuarantinedObjectWrapper::getCallData):
+        * bindings/js/JSQuarantinedObjectWrapper.h:
+        * bridge/c/c_instance.cpp:
+        * bridge/c/c_instance.h:
+        * bridge/objc/objc_instance.h:
+        * bridge/objc/objc_instance.mm:
+        * bridge/objc/objc_runtime.h:
+        * bridge/objc/objc_runtime.mm:
+        (ObjcFallbackObjectImp::getCallData):
+        * bridge/runtime.h:
+        * bridge/runtime_object.cpp:
+        (RuntimeObjectImp::getCallData):
+        * bridge/runtime_object.h:
+
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix: supply a parameter that used to be implicit to

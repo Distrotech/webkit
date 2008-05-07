@@ -124,7 +124,7 @@ public:
     virtual bool supportsSetValueOfUndefinedField() { return false; }
     virtual void setValueOfUndefinedField(ExecState*, const Identifier&, JSValue*) {}
 
-    virtual bool implementsCall() const { return false; }
+    virtual CallType getCallData(CallData&) { return CallTypeNone; }
     
     virtual JSValue* invokeMethod(ExecState*, const MethodList&, const List& args) = 0;
     virtual JSValue* invokeDefaultMethod(ExecState*, const List&) { return jsUndefined(); }
