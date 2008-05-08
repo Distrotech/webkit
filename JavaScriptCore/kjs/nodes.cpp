@@ -577,7 +577,7 @@ RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     UString errorMessageString = UString("Invalid regular expression: ").append(m_regExp->errorMessage());
     RegisterID* exception = generator.emitNewError(generator.tempDestination(dst), SyntaxError, jsOwnedString(errorMessageString));
     generator.emitThrow(exception);
-    return 0;
+    return generator.finalDestination(dst);
 }
 
 JSValue* RegExpNode::evaluate(OldInterpreterExecState*)
