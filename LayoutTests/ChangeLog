@@ -1,3 +1,28 @@
+2008-05-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed up a few more tests that depended on the exact text of exception
+        messages.
+        
+        - In these tests, I fixed a bug in frame.html and iframe.html that
+        caused a function to execute too many times.
+
+        * dom/html/level2/html/HTMLFrameElement09-expected.txt:
+        * dom/html/level2/html/HTMLIFrameElement11-expected.txt:
+        * dom/html/level2/html/resources/frame.html:
+        * dom/html/level2/html/resources/iframe.html:
+
+        - I changed these tests to explicitly report exceptions, so their results
+        don't depend on how the engine constructs messages for implicit exceptions:
+
+        * dom/xhtml/level2/html/HTMLDocument17-expected.txt:
+        * dom/xhtml/level2/html/HTMLDocument18-expected.txt:
+        * dom/xhtml/level2/html/HTMLDocument19-expected.txt:
+        * dom/xhtml/level2/html/HTMLDocument20-expected.txt:
+        * dom/xhtml/level2/html/HTMLDocument21-expected.txt:
+        * dom/xhtml/level2/html/selfxhtml.js:
+
 2008-05-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
