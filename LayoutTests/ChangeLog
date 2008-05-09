@@ -1,5 +1,27 @@
 2008-05-09  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Sam Weinig.
+        
+        Restored the expected results for viewsource-empty-attribute-value.html
+        to what they were prior to r31100. These results expect that the
+        top-level name in the frame path is "" instead of "1".
+        
+        It's not clear how r31100 changed the top-level frame in the frame path
+        to be named "1". The change definitely wasn't related to any expected
+        behavior in r31100, which was about default margin-bottom for form
+        elements in quirks mode.
+        
+        It's also not clear how squirrelfish changes things back.
+        
+        Sam mentioned that the test result changes intermittently on trunk.
+        
+        For now, I don't think we need to think deeply about this issue,
+        since the "" result seems more correct than the "1" result.
+
+        * fast/frames/viewsource-empty-attribute-value-expected.txt:
+
+2008-05-09  Geoffrey Garen  <ggaren@apple.com>
+
         Added expected results for this test.
 
         * fast/js/closure-inside-extra-arg-call-expected.txt: Added.
