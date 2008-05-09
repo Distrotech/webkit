@@ -304,36 +304,37 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(ExecState* exec, CodeBlock* n
 {
     Register* r = 0;
     int oldOffset = registerOffset;
-    registerOffset += argv + argc + newCodeBlock->numVars;
+    registerOffset += argv + newCodeBlock->numLocals;
+    size_t size = registerOffset + newCodeBlock->numTemporaries;
 
     if (argc == newCodeBlock->numParameters) { // correct number of arguments
-        size_t size = registerOffset + newCodeBlock->numTemporaries;
         if (!registerFile->grow(size)) {
             exceptionValue = createStackOverflowError(exec);
             return *registerBase + oldOffset;
         }
         r = (*registerBase) + registerOffset;
     } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
-        int omittedArgCount = newCodeBlock->numParameters - argc;
-        size_t size = registerOffset + omittedArgCount + newCodeBlock->numTemporaries;
         if (!registerFile->grow(size)) {
             exceptionValue = createStackOverflowError(exec);
             return *registerBase + oldOffset;
         }
-        r = (*registerBase) + omittedArgCount + registerOffset;
+        r = (*registerBase) + registerOffset;
         
+        int omittedArgCount = newCodeBlock->numParameters - argc;
         Register* endOfParams = r - newCodeBlock->numVars;
         for (Register* it = endOfParams - omittedArgCount; it != endOfParams; ++it)
             (*it).u.jsValue = jsUndefined();
     } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-        size_t size = registerOffset + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
+        int shift = argc + Machine::CallFrameHeaderSize;
+        registerOffset += shift;
+        size += shift;
+
         if (!registerFile->grow(size)) {
             exceptionValue = createStackOverflowError(exec);
             return *registerBase + oldOffset;
         }
-        r = (*registerBase) + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + registerOffset;
+        r = (*registerBase) + registerOffset;
         
-        int shift = Machine::CallFrameHeaderSize + argc;
         Register* it = r - newCodeBlock->numLocals - Machine::CallFrameHeaderSize - shift;
         Register* end = it + Machine::CallFrameHeaderSize + newCodeBlock->numParameters;
         for ( ; it != end; ++it)
@@ -343,15 +344,13 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(ExecState* exec, CodeBlock* n
     return r;
 }
 
-ALWAYS_INLINE ScopeChainNode* scopeChainForCall(FunctionBodyNode* functionBodyNode, CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, Register* callFrame, Register** registerBase, Register* r)
+ALWAYS_INLINE ScopeChainNode* scopeChainForCall(FunctionBodyNode* functionBodyNode, CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, Register** registerBase, Register* r)
 {
     if (newCodeBlock->needsFullScopeChain) {
         JSActivation* activation = new JSActivation(functionBodyNode, registerBase, r - (*registerBase));
-        callFrame[Machine::OptionalCalleeActivation].u.jsValue = activation;
+        r[Machine::OptionalCalleeActivation - Machine::CallFrameHeaderSize - newCodeBlock->numLocals].u.jsValue = activation;
 
-        ScopeChainNode* scopeChain = callDataScopeChain->copy();
-        scopeChain = scopeChain->push(activation);
-        return scopeChain;
+        return callDataScopeChain->copy()->push(activation);
     }
 
     return callDataScopeChain;
@@ -618,8 +617,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
         return 0;
     }
 
-    callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-    scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
+    scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, registerBase, r);            
 
     ExecState newExec(exec, this, registerFile, scopeChain, callFrameOffset);
 
@@ -1644,9 +1642,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
                 goto vm_throw;
 
             codeBlock = newCodeBlock;
-            callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             exec->m_callFrameOffset = callFrameOffset;
-            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r));
+            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, registerBase, r));
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
@@ -1753,9 +1750,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
                 goto vm_throw;
 
             codeBlock = newCodeBlock;
-            callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             exec->m_callFrameOffset = callFrameOffset;
-            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r));
+            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, registerBase, r));
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
