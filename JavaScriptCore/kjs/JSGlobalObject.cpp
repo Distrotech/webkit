@@ -159,7 +159,7 @@ void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
     registerFileStack().current()->clear();
     registerFileStack().current()->addGlobalSlots(count);
     SavedProperty* property = p.properties.get();
-    ASSERT(count < std::numeric_limits<int>::max());
+    ASSERT(static_cast<int>(count) < std::numeric_limits<int>::max());
     for (int i = -static_cast<int>(count); i < 0; ++i, ++property) {
         ASSERT(!symbolTable().contains(property->name()));
         symbolTable().set(property->name(), i);
