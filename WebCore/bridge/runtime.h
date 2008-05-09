@@ -104,9 +104,6 @@ public:
     static void setDidExecuteFunction(KJSDidExecuteFunctionPtr func);
     static KJSDidExecuteFunctionPtr didExecuteFunction();
 
-    static void setCurrentGlobalObject(JSGlobalObject*);
-    static JSGlobalObject* currentGlobalObject();
-
     static JSObject* createRuntimeObject(PassRefPtr<Instance>);
     static Instance* getInstance(JSObject*, BindingLanguage);
 

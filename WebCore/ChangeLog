@@ -1,3 +1,22 @@
+2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Fixed platform/mac/plugins/bindings-test-objc.html.
+        
+        I've restored -[WebScriptObject setException] and
+        +[WebScriptObject throwException].
+        
+        Instead of mucking around in the JavaScript engine's execution state,
+        throwing an exception sets a global exception string, along with the
+        environment in which to throw it. An ObjC callback checks the global
+        exception string and, if it's non-nil and the environment matches the
+        current exceution environment, throws the global exception string as a
+        JS exception.
+
+        I also removed the old currentGlobalObject infrastructure: it's no longer
+        used.
+
 2008-05-06  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
