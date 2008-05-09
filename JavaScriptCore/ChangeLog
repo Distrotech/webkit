@@ -1,3 +1,22 @@
+2008-05-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Build fixes for SquirrelFish on windows.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        * JavaScriptCore.vcproj/testkjs/testkjs.vcproj:
+        * VM/Register.h:
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::restoreLocalStorage):
+        * kjs/collector.cpp:
+        (KJS::Collector::allocate):
+        (KJS::Collector::allocateNumber):
+        * kjs/collector.h:
+        (KJS::Collector::allocate):
+        (KJS::Collector::allocateNumber):
+        * kjs/property_slot.cpp:
+
 2008-05-08  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.

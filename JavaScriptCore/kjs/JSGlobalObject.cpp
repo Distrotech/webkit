@@ -159,12 +159,13 @@ void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
     registerFileStack().current()->clear();
     registerFileStack().current()->addGlobalSlots(count);
     SavedProperty* property = p.properties.get();
-    for (int i = -count; i < 0; ++i, ++property) {
+    ASSERT(count < std::numeric_limits<int>::max());
+    for (int i = -static_cast<int>(count); i < 0; ++i, ++property) {
         ASSERT(!symbolTable().contains(property->name()));
         symbolTable().set(property->name(), i);
         valueAt(i) = property->value();
         // FIXME: Fetch attributes from the SavedProperty and store them in the symbol table.
-        ASSERT(property->attributes() & ReadOnly == 0 && property->attributes() & DontEnum == 0);
+        ASSERT((property->attributes() & ReadOnly) == 0 && (property->attributes() & DontEnum) == 0);
     }
 }
 
