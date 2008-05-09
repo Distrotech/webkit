@@ -487,18 +487,8 @@ NEVER_INLINE bool Machine::unwindCallFrame(ExecState* exec, Register** registerB
 {
     CodeBlock* oldCodeBlock = codeBlock;
 
-    if (oldCodeBlock->needsFullScopeChain) {
-        // If this call frame created an activation, tear it off.
-        ScopeChainIterator end = scopeChain->end();
-        for (ScopeChainIterator it = scopeChain->begin(); it != end; ++it) {
-            if ((*it)->isActivationObject()) {
-                static_cast<JSActivation*>(*it)->copyRegisters();
-                break;
-            }
-        }
-
+    if (oldCodeBlock->needsFullScopeChain)
         scopeChain->deref();
-    }
     
     if (isGlobalCallFrame(registerBase, r))
         return false;
@@ -508,6 +498,12 @@ NEVER_INLINE bool Machine::unwindCallFrame(ExecState* exec, Register** registerB
     codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
     if (!codeBlock)
         return false;
+
+    // If this call frame created an activation, tear it off.
+    if (JSActivation* activation = static_cast<JSActivation*>(callFrame[OptionalCalleeActivation].u.jsValue)) {
+        ASSERT(activation->isActivationObject());
+        activation->copyRegisters();
+    }
 
     k = codeBlock->jsValues.data();
     scopeChain = callFrame[CallerScopeChain].u.scopeChain;
