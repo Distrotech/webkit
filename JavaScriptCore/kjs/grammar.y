@@ -209,6 +209,8 @@ static inline void appendToVarDeclarationList(ParserRefCountedData<DeclarationSt
 %token RSHIFTEQUAL URSHIFTEQUAL    /* >>= and >>>= */
 %token ANDEQUAL MODEQUAL           /* &= and %= */
 %token XOREQUAL OREQUAL            /* ^= and |= */
+%token <intValue> OPENBRACE        /* { (with char offset) */
+%token <intValue> CLOSEBRACE        /* { (with char offset) */
 
 /* terminal types */
 %token <doubleValue> NUMBER
@@ -298,8 +300,8 @@ Property:
     IDENT ':' AssignmentExpr            { $$ = createNodeFeatureInfo<PropertyNode*>(new PropertyNode(*$1, $3.m_node, PropertyNode::Constant), $3.m_featureInfo); }
   | STRING ':' AssignmentExpr           { $$ = createNodeFeatureInfo<PropertyNode*>(new PropertyNode(Identifier(*$1), $3.m_node, PropertyNode::Constant), $3.m_featureInfo); }
   | NUMBER ':' AssignmentExpr           { $$ = createNodeFeatureInfo<PropertyNode*>(new PropertyNode(Identifier(UString::from($1)), $3.m_node, PropertyNode::Constant), $3.m_featureInfo); }
-  | IDENT IDENT '(' ')' '{' FunctionBody '}'    { $$ = createNodeFeatureInfo<PropertyNode*>(makeGetterOrSetterPropertyNode(*$1, *$2, 0, $6), ClosureFeature); DBG($6, @5, @7); if (!$$.m_node) YYABORT; }
-  | IDENT IDENT '(' FormalParameterList ')' '{' FunctionBody '}'
+  | IDENT IDENT '(' ')' OPENBRACE FunctionBody CLOSEBRACE    { $$ = createNodeFeatureInfo<PropertyNode*>(makeGetterOrSetterPropertyNode(*$1, *$2, 0, $6), ClosureFeature); DBG($6, @5, @7); if (!$$.m_node) YYABORT; }
+  | IDENT IDENT '(' FormalParameterList ')' OPENBRACE FunctionBody CLOSEBRACE
                                         { $$ = createNodeFeatureInfo<PropertyNode*>(makeGetterOrSetterPropertyNode(*$1, *$2, $4.head, $7), ClosureFeature); DBG($7, @6, @8); if (!$$.m_node) YYABORT; }
 ;
 
@@ -314,10 +316,10 @@ PropertyList:
 
 PrimaryExpr:
     PrimaryExprNoBrace
-  | '{' '}'                             { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode(), 0); }
-  | '{' PropertyList '}'                { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode($2.m_node.head), $2.m_featureInfo); }
+  | OPENBRACE CLOSEBRACE                             { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode(), 0); }
+  | OPENBRACE PropertyList CLOSEBRACE                { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode($2.m_node.head), $2.m_featureInfo); }
   /* allow extra comma, see http://bugs.webkit.org/show_bug.cgi?id=5939 */
-  | '{' PropertyList ',' '}'            { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode($2.m_node.head), $2.m_featureInfo); }
+  | OPENBRACE PropertyList ',' CLOSEBRACE            { $$ = createNodeFeatureInfo<ExpressionNode*>(new ObjectLiteralNode($2.m_node.head), $2.m_featureInfo); }
 ;
 
 PrimaryExprNoBrace:
@@ -728,9 +730,9 @@ Statement:
 ;
 
 Block:
-    '{' '}'                             { $$ = createNodeDeclarationInfo<StatementNode*>(new BlockNode(0), 0, 0, 0);
+    OPENBRACE CLOSEBRACE                             { $$ = createNodeDeclarationInfo<StatementNode*>(new BlockNode(0), 0, 0, 0);
                                           DBG($$.m_node, @1, @2); }
-  | '{' SourceElements '}'              { $$ = createNodeDeclarationInfo<StatementNode*>(new BlockNode($2.m_node), $2.m_varDeclarations, $2.m_funcDeclarations, $2.m_featureInfo);
+  | OPENBRACE SourceElements CLOSEBRACE              { $$ = createNodeDeclarationInfo<StatementNode*>(new BlockNode($2.m_node), $2.m_varDeclarations, $2.m_funcDeclarations, $2.m_featureInfo);
                                           DBG($$.m_node, @1, @3); }
 ;
 
@@ -949,8 +951,8 @@ SwitchStatement:
 ;
 
 CaseBlock:
-    '{' CaseClausesOpt '}'              { $$ = createNodeDeclarationInfo<CaseBlockNode*>(new CaseBlockNode($2.m_node.head, 0, 0), $2.m_varDeclarations, $2.m_funcDeclarations, $2.m_featureInfo); }
-  | '{' CaseClausesOpt DefaultClause CaseClausesOpt '}'
+    OPENBRACE CaseClausesOpt CLOSEBRACE              { $$ = createNodeDeclarationInfo<CaseBlockNode*>(new CaseBlockNode($2.m_node.head, 0, 0), $2.m_varDeclarations, $2.m_funcDeclarations, $2.m_featureInfo); }
+  | OPENBRACE CaseClausesOpt DefaultClause CaseClausesOpt CLOSEBRACE
                                         { $$ = createNodeDeclarationInfo<CaseBlockNode*>(new CaseBlockNode($2.m_node.head, $3.m_node, $4.m_node.head),
                                                                                          mergeDeclarationLists(mergeDeclarationLists($2.m_varDeclarations, $3.m_varDeclarations), $4.m_varDeclarations),
                                                                                          mergeDeclarationLists(mergeDeclarationLists($2.m_funcDeclarations, $3.m_funcDeclarations), $4.m_funcDeclarations),
@@ -1023,16 +1025,16 @@ DebuggerStatement:
 ;
 
 FunctionDeclaration:
-    FUNCTION IDENT '(' ')' '{' FunctionBody '}' { $$ = new FuncDeclNode(*$2, $6); DBG($6, @5, @7); }
-  | FUNCTION IDENT '(' FormalParameterList ')' '{' FunctionBody '}'
+    FUNCTION IDENT '(' ')' OPENBRACE FunctionBody CLOSEBRACE { $$ = new FuncDeclNode(*$2, $6); DBG($6, @5, @7); }
+  | FUNCTION IDENT '(' FormalParameterList ')' OPENBRACE FunctionBody CLOSEBRACE
                                         { $$ = new FuncDeclNode(*$2, $4.head, $7); DBG($7, @6, @8); }
 ;
 
 FunctionExpr:
-    FUNCTION '(' ')' '{' FunctionBody '}' { $$ = createNodeFeatureInfo(new FuncExprNode(CommonIdentifiers::shared()->nullIdentifier, $5), ClosureFeature); DBG($5, @4, @6); }
-  | FUNCTION '(' FormalParameterList ')' '{' FunctionBody '}' { $$ = createNodeFeatureInfo(new FuncExprNode(CommonIdentifiers::shared()->nullIdentifier, $6, $3.head), ClosureFeature); DBG($6, @5, @7); }
-  | FUNCTION IDENT '(' ')' '{' FunctionBody '}' { $$ = createNodeFeatureInfo(new FuncExprNode(*$2, $6), ClosureFeature); DBG($6, @5, @7); }
-  | FUNCTION IDENT '(' FormalParameterList ')' '{' FunctionBody '}' { $$ = createNodeFeatureInfo(new FuncExprNode(*$2, $7, $4.head), ClosureFeature); DBG($7, @6, @8); }
+    FUNCTION '(' ')' OPENBRACE FunctionBody CLOSEBRACE { $$ = createNodeFeatureInfo(new FuncExprNode(CommonIdentifiers::shared()->nullIdentifier, $5), ClosureFeature); DBG($5, @4, @6); }
+  | FUNCTION '(' FormalParameterList ')' OPENBRACE FunctionBody CLOSEBRACE { $$ = createNodeFeatureInfo(new FuncExprNode(CommonIdentifiers::shared()->nullIdentifier, $6, $3.head), ClosureFeature); DBG($6, @5, @7); }
+  | FUNCTION IDENT '(' ')' OPENBRACE FunctionBody CLOSEBRACE { $$ = createNodeFeatureInfo(new FuncExprNode(*$2, $6), ClosureFeature); DBG($6, @5, @7); }
+  | FUNCTION IDENT '(' FormalParameterList ')' OPENBRACE FunctionBody CLOSEBRACE { $$ = createNodeFeatureInfo(new FuncExprNode(*$2, $7, $4.head), ClosureFeature); DBG($7, @6, @8); }
 ;
 
 FormalParameterList:
@@ -1290,7 +1292,7 @@ int yyerror(const char *)
 /* may we automatically insert a semicolon ? */
 static bool allowAutomaticSemicolon(Lexer& lexer, int yychar)
 {
-    return yychar == '}' || yychar == 0 || lexer.prevTerminator();
+    return yychar == CLOSEBRACE || yychar == 0 || lexer.prevTerminator();
 }
 
 static ExpressionNode* combineVarInitializers(ExpressionNode* list, AssignResolveNode* init)

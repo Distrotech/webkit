@@ -1,3 +1,17 @@
+2008-05-09  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - track character offsets of open and close braces, in preparation for saving function source
+        
+        I verified that there is no performance regression from this change.
+
+        * kjs/grammar.y:
+        * kjs/lexer.cpp:
+        (KJS::Lexer::lex):
+        (KJS::Lexer::matchPunctuator):
+        * kjs/lexer.h:
+
 2008-05-09  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Nobody (build fix).
