@@ -88,7 +88,8 @@ namespace KJS {
     public:
         enum { DefaultRegisterFileSize = 2 * 1024 * 1024 };
         RegisterFile(size_t maxSize, RegisterFileStack* m_baseObserver)
-            : m_size(0)
+            : m_safeForReentry(true)
+            , m_size(0)
             , m_capacity(0)
             , m_maxSize(maxSize)
             , m_base(0)
@@ -151,6 +152,8 @@ namespace KJS {
 
         bool isGlobal() { return !!m_baseObserver; }
 
+        bool safeForReentry() { return m_safeForReentry; }
+        void setSafeForReentry(bool safeForReentry) { m_safeForReentry = safeForReentry; }
     private:
         size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t maxSize, size_t offset);
         bool growBuffer(size_t minCapacity, size_t maxSize);
@@ -163,7 +166,7 @@ namespace KJS {
         }
         
         void setBase(Register*);
-        bool m_isForImplicitCall;
+        bool m_safeForReentry;
         size_t m_size;
         size_t m_capacity;
         size_t m_maxSize;
