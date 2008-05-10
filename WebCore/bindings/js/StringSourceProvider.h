@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer. 
+ *     notice, this list of conditions and the following disclaimer.
  * 2.  Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution. 
+ *     documentation and/or other materials provided with the distribution.
  * 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
  *     its contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission. 
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -26,42 +26,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "JSRun.h"
+#ifndef StringSourceProvider_h
+#define StringSourceProvider_h
 
-JSRun::JSRun(CFStringRef source, JSFlags inFlags)
-    :   JSBase(kJSRunTypeID),
-        fSource(CFStringToUString(source)),
-        fGlobalObject(new JSGlueGlobalObject(inFlags)),
-        fFlags(inFlags)
-{
+#include <kjs/SourceProvider.h>
+
+namespace WebCore {
+
+    class StringSourceProvider : public KJS::SourceProvider {
+    public:
+        static PassRefPtr<StringSourceProvider> create(const String& source) { return adoptRef(new StringSourceProvider(source)); }
+
+        KJS::UString getRange(int start, int end) const { return KJS::UString(m_source.characters() + start, end - start); }
+        const UChar* data() const { return m_source.characters(); }
+        int length() const { return m_source.length(); }
+
+    private:
+        StringSourceProvider(const String& source) : m_source(source) {}
+        String m_source;
+    };
+
+
 }
 
-JSRun::~JSRun()
-{
-}
-
-JSFlags JSRun::Flags() const
-{
-    return fFlags;
-}
-
-UString JSRun::GetSource() const
-{
-    return fSource;
-}
-
-JSGlobalObject* JSRun::GlobalObject() const
-{
-    return fGlobalObject;
-}
-
-Completion JSRun::Evaluate()
-{
-    return Interpreter::evaluate(fGlobalObject->globalExec(), fGlobalObject->globalScopeChain(), UString(), 0, fSource);
-}
-
-bool JSRun::CheckSyntax()
-{
-    return Interpreter::checkSyntax(fGlobalObject->globalExec(), UString(), 0, fSource).complType() != Throw;
-}
+#endif StringSourceProvider_h

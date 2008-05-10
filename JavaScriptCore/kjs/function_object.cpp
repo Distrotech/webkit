@@ -70,7 +70,7 @@ JSValue* functionProtoFuncToString(ExecState* exec, JSObject* thisObj, const Lis
 
     if (thisObj->inherits(&FunctionImp::info)) {
         FunctionImp* fi = static_cast<FunctionImp*>(thisObj);
-        return jsString("function " + fi->functionName().ustring() + "(" + fi->body->paramString() + ") " + fi->body->toString());
+        return jsString("function " + fi->functionName().ustring() + "(" + fi->body->paramString() + ") " + fi->body->toSourceString());
     }
 
     return jsString("function " + static_cast<InternalFunctionImp*>(thisObj)->functionName().ustring() + "() {\n    [native code]\n}");
@@ -162,7 +162,9 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
     int sourceId;
     int errLine;
     UString errMsg;
-    RefPtr<FunctionBodyNode> functionBody = parser().parse<FunctionBodyNode>(sourceURL, lineNumber, body.data(), body.size(), &sourceId, &errLine, &errMsg);
+    RefPtr<SourceProvider> source = UStringSourceProvider::create(body);
+    RefPtr<FunctionBodyNode> functionBody = parser().parse<FunctionBodyNode>(sourceURL, lineNumber, source, &sourceId, &errLine, &errMsg);
+    functionBody->setSource(SourceRange(source, 0, source->length()));
 
     // notify debugger that source has been parsed
     // send empty sourceURL to indicate constructed code

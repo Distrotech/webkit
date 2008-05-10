@@ -381,7 +381,7 @@ static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChain
     int sourceId;
     int errLine;
     UString errMsg;
-    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, UStringSourceProvider::create(s), &sourceId, &errLine, &errMsg);
     
     if (!evalNode) {
         exceptionValue = Error::create(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
