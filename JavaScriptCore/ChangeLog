@@ -1,3 +1,17 @@
+2008-05-11  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Bug 18961: SQUIRRELFISH: Gmail doesn't load
+        <https://bugs.webkit.org/show_bug.cgi?id=18961>
+
+        Fix codegen for logical nodes so that they don't use their destination
+        as a temporary.
+
+        * kjs/nodes.cpp:
+        (KJS::LogicalAndNode::emitCode):
+        (KJS::LogicalOrNode::emitCode):
+
 2008-05-10  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
