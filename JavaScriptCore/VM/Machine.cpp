@@ -56,6 +56,26 @@ static void* op_throw_end_indirect;
 static void* op_call_indirect;
 #endif
 
+// Retrieves the offset of a calling function within the current register file.
+bool getCallerFunctionOffset(Register** registerBase, int callOffset, int& callerOffset)
+{
+    Register* callFrame = (*registerBase) + callOffset;
+
+    CodeBlock* callerCodeBlock = callFrame[Machine::CallerCodeBlock].u.codeBlock;
+    if (!callerCodeBlock) // test for top frame of re-entrant function call
+        return false;
+
+    callerOffset = callFrame[Machine::CallerRegisterOffset].u.i - callerCodeBlock->numLocals - Machine::CallFrameHeaderSize;
+    if (callerOffset < 0) // test for global frame
+        return false;
+
+    Register* callerCallFrame = (*registerBase) + callerOffset;
+    if (!callerCallFrame[Machine::CallerCodeBlock].u.codeBlock) // test for eval frame
+        return false;
+
+    return true;
+}
+
 // Returns the depth of the scope chain within a given call frame.
 static int depth(ScopeChain& sc)
 {
@@ -437,7 +457,7 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
         end = it + CallFrameHeaderSize;
         if (it != end) {
             do {
-                printf("[call frame] | %10p | %10p \n", it, (*it).u.jsValue);
+                printf("[call frame]  | %10p | %10p \n", it, (*it).u.jsValue);
                 ++it;
             } while (it != end);
             printf("----------------------------------------\n");
@@ -2037,15 +2057,43 @@ JSValue* Machine::retrieveArguments(ExecState* exec, FunctionImp* function) cons
     return activation->get(exec, exec->propertyNames().arguments);
 }
 
+JSValue* Machine::retrieveCaller(ExecState* exec, FunctionImp* function) const
+{
+    Register** registerBase;
+    int callFrameOffset;
+
+    if (!getCallFrame(exec, function, registerBase, callFrameOffset))
+        return jsNull();
+
+    int callerFrameOffset;
+    if (!getCallerFunctionOffset(registerBase, callFrameOffset, callerFrameOffset))
+        return jsNull();
+
+    Register* callerFrame = (*registerBase) + callerFrameOffset;
+    ASSERT(callerFrame[Callee].u.jsValue);
+    return callerFrame[Callee].u.jsValue;
+}
+
 bool Machine::getCallFrame(ExecState* exec, FunctionImp* function, Register**& registerBase, int& callFrameOffset) const
 {
     callFrameOffset = exec->m_callFrameOffset;
-    if (callFrameOffset < 0)
-        return false;
-    
-    registerBase = exec->m_registerFile->basePointer();
-    Register* callFrame = (*registerBase) + callFrameOffset;
-    return callFrame[Callee].u.jsValue == function;
+
+    while (1) {
+        while (callFrameOffset < 0) {
+            exec = exec->m_prev;
+            if (!exec)
+                return false;
+            callFrameOffset = exec->m_callFrameOffset;
+        }
+
+        registerBase = exec->m_registerFile->basePointer();
+        Register* callFrame = (*registerBase) + callFrameOffset;
+        if (callFrame[Callee].u.jsValue == function)
+            return true;
+
+        if (!getCallerFunctionOffset(registerBase, callFrameOffset, callFrameOffset))
+            callFrameOffset = -1;
+    }
 }
 
 } // namespace KJS

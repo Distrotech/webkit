@@ -86,6 +86,7 @@ namespace KJS {
         JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
         
         JSValue* retrieveArguments(ExecState*, FunctionImp*) const;
+        JSValue* retrieveCaller(ExecState*, FunctionImp*) const;
         
     private:
         enum { MaxReentryDepth = 128 };
