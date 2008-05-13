@@ -1,3 +1,24 @@
+2008-04-21  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Add support for variable declarations in eval code.
+
+        * VM/CodeBlock.h:
+        (KJS::EvalCodeBlock::EvalCodeBlock):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/Machine.h:
+        * kjs/function.cpp:
+        (KJS::globalFuncEval):
+        * kjs/nodes.cpp:
+        (KJS::EvalNode::generateCode):
+        * kjs/nodes.h:
+        (KJS::EvalNode::):
+
 2008-04-20  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

@@ -5676,9 +5676,9 @@ void EvalNode::generateCode(ScopeChainNode* sc)
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
     
-    m_code.set(new ProgramCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
+    m_code.set(new EvalCodeBlock(sourceURL(), usesEval(), needsClosure(), globalObject));
     
-    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get());
+    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get(), m_varStack);
     generator.generate();
 
     m_children.shrinkCapacity(0);
