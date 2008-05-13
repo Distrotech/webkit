@@ -780,6 +780,34 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_construct) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int argv = (++vPC)->u.operand;
+        int argc = (++vPC)->u.operand;
+
+        JSValue* v = r[r1].u.jsValue;
+
+        // FIXME: We only support constructing native objects right now.
+        // FIXME: We should not use CallType for ConstuctType. 
+        CallData callData;
+        CallType callType = v->getCallData(callData);
+        ASSERT(callType == CallTypeNative);
+
+        // FIXME: We need to throw a TypeError here if v is not an Object.
+        ASSERT(v->isObject());
+
+        JSObject* constructor = static_cast<JSObject*>(v);
+
+        // FIXME: We need to throw a TypeError here if v doesn't implementConstuct.
+        ASSERT(constructor->implementsConstruct());
+
+        List args(&r[argv].u.jsValue, argc);
+        r[r0].u.jsValue = constructor->construct(exec, args);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_push_scope) {
         int r0 = (++vPC)->u.operand;
         JSValue* v = r[r0].u.jsValue;
