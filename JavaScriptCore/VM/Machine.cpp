@@ -257,19 +257,19 @@ bool Machine::isOpcode(Opcode opcode)
 
 static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
-    int r0 = (vPC + 1)->u.operand;
-    int id0 = (vPC + 2)->u.operand;
+    int dst = (vPC + 1)->u.operand;
+    int property = (vPC + 2)->u.operand;
 
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
     ASSERT(iter != end);
 
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[id0];
+    Identifier& ident = codeBlock->identifiers[property];
     do {
         JSObject* o = *iter;
         if (o->getPropertySlot(exec, ident, slot)) {
-            r[r0].u.jsValue = slot.getValue(exec, o, ident);
+            r[dst].u.jsValue = slot.getValue(exec, o, ident);
             return true;
         }
     } while (++iter != end);
@@ -279,32 +279,32 @@ static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r,
 
 static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
 {
-    int r0 = (vPC + 1)->u.operand;
-    int id0 = (vPC + 2)->u.operand;
+    int dst = (vPC + 1)->u.operand;
+    int property = (vPC + 2)->u.operand;
 
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
     ASSERT(iter != end);
 
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[id0];
+    Identifier& ident = codeBlock->identifiers[property];
     JSObject* base;
     do {
         base = *iter;
         if (base->getPropertySlot(exec, ident, slot)) {
-            r[r0].u.jsValue = base;
+            r[dst].u.jsValue = base;
             return;
         }
     } while (++iter != end);
 
-    r[r0].u.jsValue = base;
+    r[dst].u.jsValue = base;
 }
 
 static bool NEVER_INLINE resolveBaseAndProperty(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
-    int r0 = (vPC + 1)->u.operand;
-    int r1 = (vPC + 2)->u.operand;
-    int id0 = (vPC + 3)->u.operand;
+    int baseDst = (vPC + 1)->u.operand;
+    int propDst = (vPC + 2)->u.operand;
+    int property = (vPC + 3)->u.operand;
     
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
@@ -314,13 +314,13 @@ static bool NEVER_INLINE resolveBaseAndProperty(ExecState* exec, Instruction* vP
     ASSERT(iter != end);
     
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[id0];
+    Identifier& ident = codeBlock->identifiers[property];
     JSObject* base;
     do {
         base = *iter;
         if (base->getPropertySlot(exec, ident, slot)) {            
-            r[r0].u.jsValue = base;
-            r[r1].u.jsValue = slot.getValue(exec, base, ident);
+            r[baseDst].u.jsValue = base;
+            r[propDst].u.jsValue = slot.getValue(exec, base, ident);
             return true;
         }
         ++iter;
@@ -332,9 +332,9 @@ static bool NEVER_INLINE resolveBaseAndProperty(ExecState* exec, Instruction* vP
 
 static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
-    int r0 = (vPC + 1)->u.operand;
-    int r1 = (vPC + 2)->u.operand;
-    int id0 = (vPC + 3)->u.operand;
+    int baseDst = (vPC + 1)->u.operand;
+    int funcDst = (vPC + 2)->u.operand;
+    int property = (vPC + 3)->u.operand;
 
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
@@ -344,7 +344,7 @@ static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
     ASSERT(iter != end);
     
     PropertySlot slot;
-    Identifier& ident = codeBlock->identifiers[id0];
+    Identifier& ident = codeBlock->identifiers[property];
     JSObject* base;
     do {
         base = *iter;
@@ -358,8 +358,8 @@ static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
             // We also handle wrapper substitution for the global object at the same time.
             JSObject* thisObj = base->toThisObject(exec);
             
-            r[r0].u.jsValue = thisObj;
-            r[r1].u.jsValue = slot.getValue(exec, base, ident);
+            r[baseDst].u.jsValue = thisObj;
+            r[funcDst].u.jsValue = slot.getValue(exec, base, ident);
             return true;
         }
         ++iter;
@@ -1109,6 +1109,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve) {
+        /* resolve dst(r) property(id)
+
+           Looks up the property named by identifier property in the
+           scope chain, and writes the resulting value to register
+           dst. If the property is not found, raises an exception.
+        */
+
         if (UNLIKELY(!resolve(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
             goto vm_throw;
 
@@ -1117,12 +1124,30 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base) {
+        /* resolve_base dst(r) property(id)
+
+           Searches the scope chain for an object containing
+           identifier property, and if one is found, writes it to
+           register dst. If none is found, the outermost scope (which
+           will be the global object) is stored in register dst.
+        */
         resolveBase(exec, vPC, r, scopeChain, codeBlock);
         vPC += 3;
 
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base_and_property) {
+        /* resolve_base_and_property baseDst(r) propDst(r) property(id)
+
+           Searches the scope chain for an object containing
+           identifier property, and if one is found, writes it to
+           register srcDst, and the retrieved property value to register
+           propDst. If the property is not found, raises an exception.
+
+           This is more efficient than doing resolve_base followed by
+           resolve, or resolve_base followed by get_prop_id, as it
+           avoids duplicate hash lookups.
+        */
         if (UNLIKELY(!resolveBaseAndProperty(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
             goto vm_throw;
 
@@ -1131,6 +1156,20 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base_and_func) {
+        /* resolve_base_and_func baseDst(r) funcDst(r) property(id)
+
+           Searches the scope chain for an object containing
+           identifier property, and if one is found, writes the
+           appropriate object to use as "this" when calling its
+           properties to register baseDst; and the retrieved property
+           value to register propDst. If the property is not found,
+           raises an exception.
+
+           This differs from resolve_base_and_property, because the
+           global this value will be substituted for activations or
+           the global object, which is the right behavior for function
+           calls but not for other property lookup.
+        */
         if (UNLIKELY(!resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
             goto vm_throw;
         vPC += 4;
@@ -1158,48 +1197,71 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_put_prop_id) {
-        int r0 = (++vPC)->u.operand;
-        int id0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
+        /* put_prop_id base(r) property(id) value(r)
 
-        JSObject* base = r[r0].u.jsValue->toObject(exec);
+           Sets register value on register base as the property named
+           by identifier property. Base is converted to object first.
+ 
+           Unlike many opcodes, this one does not write any output to
+           the register file.
+        */
+
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+        int value = (++vPC)->u.operand;
+
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec);
         
-        Identifier& ident = codeBlock->identifiers[id0];
-        base->put(exec, ident, r[r1].u.jsValue);
+        Identifier& ident = codeBlock->identifiers[property];
+        baseObj->put(exec, ident, r[value].u.jsValue);
         
         VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_delete_prop_id) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int id0 = (++vPC)->u.operand;
+        /* delete_prop_id dst(r) base(r) property(id)
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec);
+           Converts register base to Object, deletes the property
+           named by identifier property from the object, and writes a
+           boolean indicating success (if true) or failure (if false)
+           to register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec);
         
-        Identifier& ident = codeBlock->identifiers[id0];
-        r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, ident));
+        Identifier& ident = codeBlock->identifiers[property];
+        r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, ident));
         
         VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_get_prop_val) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
+        /* get_prop_val dst(r) base(r) property(r)
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec); // may throw
+           Converts register base to Object, gets the property named
+           by register property from the object, and puts the result
+           in register dst. property is nominally converted to string
+           but numbers are treated more efficiently.
+        */
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec); // may throw
         
-        JSValue* subscript = r[r2].u.jsValue;
+        JSValue* subscript = r[property].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
-            r[r0].u.jsValue = base->get(exec, i);
+            r[dst].u.jsValue = baseObj->get(exec, i);
         else {
             VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            r[r0].u.jsValue = base->get(exec, Identifier(subscript->toString(exec)));
+            r[dst].u.jsValue = baseObj->get(exec, Identifier(subscript->toString(exec)));
         }
         
         VM_CHECK_EXCEPTION();
@@ -1207,20 +1269,30 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_put_prop_val) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
+        /* put_prop_val base(r) property(r) value(r)
 
-        JSObject* base = r[r0].u.jsValue->toObject(exec);
+           Sets register value on register base as the property named
+           by register property. Base is converted to object
+           first. register property is nominally converted to string
+           but numbers are treated more efficiently.
+ 
+           Unlike many opcodes, this one does not write any output to
+           the register file.
+        */
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+        int value = (++vPC)->u.operand;
+
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec);
         
-        JSValue* subscript = r[r1].u.jsValue;
+        JSValue* subscript = r[property].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
-            base->put(exec, i, r[r2].u.jsValue);
+            baseObj->put(exec, i, r[value].u.jsValue);
         else {
             VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            base->put(exec, Identifier(subscript->toString(exec)), r[r2].u.jsValue);
+            baseObj->put(exec, Identifier(subscript->toString(exec)), r[value].u.jsValue);
         }
         
         VM_CHECK_EXCEPTION();
@@ -1228,20 +1300,27 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_delete_prop_val) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
+        /* delete_prop_id dst(r) base(r) property(r)
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec); // may throw
+           Converts register base to Object, deletes the property
+           named by register property from the object, and writes a
+           boolean indicating success (if true) or failure (if false)
+           to register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
 
-        JSValue* subscript = r[r2].u.jsValue;
+        JSObject* baseObj = r[base].u.jsValue->toObject(exec); // may throw
+
+        JSValue* subscript = r[property].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
-            r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, i));
+            r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, i));
         else {
             VM_CHECK_EXCEPTION(); // This is needed as toString may have side effects
-            r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, Identifier(subscript->toString(exec))));
+            r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, Identifier(subscript->toString(exec))));
         }
         
         VM_CHECK_EXCEPTION();
@@ -1249,11 +1328,24 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_put_prop_index) {
-        int r0 = (++vPC)->u.operand;
-        unsigned n0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
+        /* put_prop_val base(r) property(n) value(r)
 
-        r[r0].u.jsObject->put(exec, n0, r[r1].u.jsValue);
+           Sets register value on register base as the property named
+           by the immediate number property. Base is converted to
+           object first. register property is nominally converted to
+           string but numbers are treated more efficiently.
+ 
+           Unlike many opcodes, this one does not write any output to
+           the register file.
+
+           This opcode is mainly used to initialize array literals.
+        */
+
+        int base = (++vPC)->u.operand;
+        unsigned property = (++vPC)->u.operand;
+        int value = (++vPC)->u.operand;
+
+        r[base].u.jsObject->put(exec, property, r[value].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
@@ -1604,22 +1696,24 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         return r[r0].u.jsValue;
     }
     BEGIN_OPCODE(op_jsr) {
-        /* jsr retAddrDst(r) target(address)
+        /* jsr retAddrDst(r) target(offset)
          
          Places the address of the next instruction into the retAddrDst
-         register and branches to target.
-         */
+         register and jumps to offset target from the current instruction.
+        */
         int retAddrDst = (++vPC)->u.operand;
-        int offset = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
         r[retAddrDst].u.vPC = vPC + 1;
-        vPC += offset;
+        vPC += target;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_sret) {
         /* sret retAddrSrc(r)
          
-         Sets the vPC to the address stored in the retAddrSrc register.
-         */
+         Jumps to the address stored in the retAddrSrc register. This
+         differs from op_jmp because the target address is stored in a
+         register, not as an immediate.
+        */
         int retAddrSrc = (++vPC)->u.operand;
         vPC = r[retAddrSrc].u.vPC;
         NEXT_OPCODE;

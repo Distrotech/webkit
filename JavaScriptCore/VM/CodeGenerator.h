@@ -188,23 +188,19 @@ namespace KJS {
 
         RegisterID* emitIn(RegisterID*, RegisterID*, RegisterID*);
 
-        RegisterID* emitResolve(RegisterID*, const Identifier&);
-        RegisterID* emitResolve(RegisterID*, int);
-        RegisterID* emitResolve(RegisterID*, int, int);
+        RegisterID* emitResolve(RegisterID* dst, const Identifier& property);
 
-        RegisterID* emitResolveBase(RegisterID*, const Identifier&);
-        RegisterID* emitResolveBase(RegisterID*, int);
-        RegisterID* emitResolveBase(RegisterID*, int, int);
-        RegisterID* emitResolveBaseAndProperty(RegisterID*, RegisterID*, const Identifier&);
-        RegisterID* emitResolveBaseAndFunc(RegisterID*, RegisterID*, const Identifier&);
+        RegisterID* emitResolveBase(RegisterID* dst, const Identifier& property);
+        RegisterID* emitResolveBaseAndProperty(RegisterID* baseDst, RegisterID* propDst, const Identifier& property);
+        RegisterID* emitResolveBaseAndFunc(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property);
         
         RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& property);
-        RegisterID* emitPutPropId(RegisterID* base, const Identifier&, RegisterID* val);
+        RegisterID* emitPutPropId(RegisterID* base, const Identifier& property, RegisterID* value);
         RegisterID* emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier&);
         RegisterID* emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
-        RegisterID* emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* val);
+        RegisterID* emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* value);
         RegisterID* emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
-        RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* val);
+        RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* value);
 
         RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitCallEval(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);

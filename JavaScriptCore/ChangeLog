@@ -1,3 +1,54 @@
+2008-04-26  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - document all property getting, setting and deleting opcodes
+        
+        (And fix function parameter names to match corresponding opcode parameter names.)
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitResolve):
+        (KJS::CodeGenerator::emitResolveBase):
+        (KJS::CodeGenerator::emitResolveBaseAndProperty):
+        (KJS::CodeGenerator::emitResolveBaseAndFunc):
+        (KJS::CodeGenerator::emitGetPropId):
+        (KJS::CodeGenerator::emitPutPropId):
+        (KJS::CodeGenerator::emitDeletePropId):
+        (KJS::CodeGenerator::emitPutPropVal):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::resolve):
+        (KJS::resolveBase):
+        (KJS::resolveBaseAndProperty):
+        (KJS::resolveBaseAndFunc):
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.cpp:
+        (KJS::ResolveNode::emitCode):
+        (KJS::ArrayNode::emitCode):
+        (KJS::PropertyListNode::emitCode):
+        (KJS::BracketAccessorNode::emitCode):
+        (KJS::EvalFunctionCallNode::emitCode):
+        (KJS::FunctionCallResolveNode::emitCode):
+        (KJS::FunctionCallBracketNode::emitCode):
+        (KJS::PostIncResolveNode::emitCode):
+        (KJS::PostDecResolveNode::emitCode):
+        (KJS::PostIncBracketNode::emitCode):
+        (KJS::PostDecBracketNode::emitCode):
+        (KJS::PostIncDotNode::emitCode):
+        (KJS::PostDecDotNode::emitCode):
+        (KJS::DeleteResolveNode::emitCode):
+        (KJS::TypeOfResolveNode::emitCode):
+        (KJS::PreIncResolveNode::emitCode):
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::AssignResolveNode::emitCode):
+        (KJS::AssignDotNode::emitCode):
+        (KJS::ReadModifyDotNode::emitCode):
+        (KJS::AssignBracketNode::emitCode):
+        (KJS::ReadModifyBracketNode::emitCode):
+        (KJS::ConstDeclNode::emitCodeSingle):
+
 2008-04-26  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
