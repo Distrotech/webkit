@@ -1,3 +1,12 @@
+2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Updated test results to reflect correct behavior: The line number in
+        the old results was off by 2.
+
+        * fast/js/recursion-limit-equal-expected.txt:
+
 2008-05-08  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
