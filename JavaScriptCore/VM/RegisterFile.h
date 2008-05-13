@@ -103,12 +103,21 @@ namespace KJS {
         // Pointer to a value that holds the base of this register file.
         Register** basePointer() { return &m_base; }
         
-        void resize(size_t size)
+        void shrink(size_t size)
         {
-            if (size > m_capacity)
-                growBuffer(size);
-            m_size = size;
+            if (size < m_size)
+                m_size = size;
         }
+
+        void grow(size_t size)
+        {
+            if (size > m_size) {
+                if (size > m_capacity)
+                    growBuffer(size);
+                m_size = size;
+            }
+        }
+
         size_t size() { return m_size; }
         
         void clear();
