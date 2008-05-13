@@ -238,9 +238,10 @@ bool JSQuarantinedObjectWrapper::hasInstance(ExecState* exec, JSValue* value)
     return result;
 }
 
-bool JSQuarantinedObjectWrapper::implementsCall() const
+CallType JSQuarantinedObjectWrapper::getCallData(CallData&)
 {
-    return m_unwrappedObject->implementsCall();
+    CallData temp;
+    return m_unwrappedObject->getCallData(temp) != CallTypeNone ? CallTypeNative : CallTypeNone;
 }
 
 JSValue* JSQuarantinedObjectWrapper::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
