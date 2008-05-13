@@ -60,10 +60,10 @@ namespace KJS {
 
 const ClassInfo FunctionImp::info = { "Function", &InternalFunctionImp::info, 0, 0 };
 
-FunctionImp::FunctionImp(ExecState* exec, const Identifier& name, FunctionBodyNode* b, const ScopeChain& sc)
+FunctionImp::FunctionImp(ExecState* exec, const Identifier& name, FunctionBodyNode* b, ScopeChainNode* scopeChain)
   : InternalFunctionImp(exec->lexicalGlobalObject()->functionPrototype(), name)
   , body(b)
-  , _scope(sc)
+  , _scope(scopeChain)
 {
 }
 
