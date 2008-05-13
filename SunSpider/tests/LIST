@@ -24,11 +24,3 @@ string-fasta
 string-tagcloud
 string-unpack-code
 string-validate-input
-
-tests/squirrelfish/loop-empty.js
-tests/squirrelfish/loop-sum.js
-tests/squirrelfish/loop-empty-resolve.js
-tests/squirrelfish/function-empty.js
-tests/squirrelfish/function-sum.js
-tests/squirrelfish/function-missing-args.js
-tests/squirrelfish/function-closure.js
