@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,6 +35,14 @@
 
 namespace KJS {
 
+static void printBinaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
+{
+    int r0 = (++it)->u.operand;
+    int r1 = (++it)->u.operand;
+    int r2 = (++it)->u.operand;
+    printf("[%4d] %s\t\tr[%d], r[%d], r[%d]\n", location, op, r0, r1, r2);
+}
+
 void CodeBlock::dump(ExecState* exec)
 {
     Vector<Instruction>::iterator begin = instructions.begin();
@@ -66,11 +75,28 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] mov\t\tr[%d], r[%d]\n", location, r0, r1);
             break;
         }
+        case op_equal: {
+            printBinaryOp(location, it, "equal");
+            break;
+        }
+        case op_nequal: {
+            printBinaryOp(location, it, "nequal");
+            break;
+        }
+        case op_stricteq: {
+            printBinaryOp(location, it, "stricteq");
+            break;
+        }
+        case op_nstricteq: {
+            printBinaryOp(location, it, "nstricteq");
+            break;
+        }
         case op_less: {
-            int r0 = (++it)->u.operand;
-            int r1 = (++it)->u.operand;
-            int r2 = (++it)->u.operand;
-            printf("[%4d] less\t\tr[%d], r[%d], r[%d]\n", location, r0, r1, r2);
+            printBinaryOp(location, it, "less");
+            break;
+        }
+        case op_lesseq: {
+            printBinaryOp(location, it, "lesseq");
             break;
         }
         case op_pre_inc: {
@@ -85,10 +111,47 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             break;
         }
         case op_add: {
-            int r0 = (++it)->u.operand;
-            int r1 = (++it)->u.operand;
-            int r2 = (++it)->u.operand;
-            printf("[%4d] add\t\tr[%d], r[%d], r[%d]\n", location, r0, r1, r2);
+            printBinaryOp(location, it, "add");
+            break;
+        }
+        case op_mult: {
+            printBinaryOp(location, it, "mult");
+            break;
+        }
+        case op_div: {
+            printBinaryOp(location, it, "div");
+            break;
+        }
+        case op_mod: {
+            printBinaryOp(location, it, "mod");
+            break;
+        }
+        case op_sub: {
+            printBinaryOp(location, it, "sub");
+            break;
+        }
+        case op_lshift: {
+            printBinaryOp(location, it, "lshift");
+            break;            
+        }
+        case op_rshift: {
+            printBinaryOp(location, it, "rshift");
+            break;
+        }
+        case op_urshift: {
+            printBinaryOp(location, it, "urshift");
+            break;
+        }
+        case op_bitand: {
+            printBinaryOp(location, it, "bitand");
+            break;
+        }
+        case op_bitxor: {
+            printBinaryOp(location, it, "bitxor");
+            break;
+        }
+        case op_bitor: {
+            printBinaryOp(location, it, "bitor");
             break;
         }
         case op_resolve: {

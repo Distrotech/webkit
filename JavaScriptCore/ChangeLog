@@ -1,3 +1,55 @@
+2008-03-26  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Geoffrey Garen.
+
+        Adds support for EqualNode, NotEqualNode, StrictEqualNode, NotStrictEqualNode,
+        LessEqNode, GreaterNode, GreaterEqNode, MultNode, DivNode, ModNode, SubNode,
+        LeftShiftNode, RightShiftNode, UnsignedRightShiftNode, BitAndNode, BitXOrNode,
+        and BitOrNode.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitEqual):
+        (KJS::CodeGenerator::emitNotEqual):
+        (KJS::CodeGenerator::emitStrictEqual):
+        (KJS::CodeGenerator::emitNotStrictEqual):
+        (KJS::CodeGenerator::emitLessEq):
+        (KJS::CodeGenerator::emitMult):
+        (KJS::CodeGenerator::emitDiv):
+        (KJS::CodeGenerator::emitMod):
+        (KJS::CodeGenerator::emitSub):
+        (KJS::CodeGenerator::emitLeftShift):
+        (KJS::CodeGenerator::emitRightShift):
+        (KJS::CodeGenerator::emitUnsignedRightShift):
+        (KJS::CodeGenerator::emitBitAnd):
+        (KJS::CodeGenerator::emitBitXOr):
+        (KJS::CodeGenerator::emitBitOr):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::jsLessEq):
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::MultNode::emitCode):
+        (KJS::DivNode::emitCode):
+        (KJS::ModNode::emitCode):
+        (KJS::SubNode::emitCode):
+        (KJS::LeftShiftNode::emitCode):
+        (KJS::RightShiftNode::emitCode):
+        (KJS::UnsignedRightShiftNode::emitCode):
+        (KJS::GreaterNode::emitCode):
+        (KJS::LessEqNode::emitCode):
+        (KJS::GreaterEqNode::emitCode):
+        (KJS::EqualNode::emitCode):
+        (KJS::NotEqualNode::emitCode):
+        (KJS::StrictEqualNode::emitCode):
+        (KJS::NotStrictEqualNode::emitCode):
+        (KJS::BitAndNode::emitCode):
+        (KJS::BitXOrNode::emitCode):
+        (KJS::BitOrNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-26  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
