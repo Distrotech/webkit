@@ -1254,10 +1254,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             int registerOffset = r - (*registerBase);
 
             JSValue* result = eval(exec, static_cast<JSObject*>(base), scopeChain, registerFile, r, argv, argc, exceptionValue);
+            r = (*registerBase) + registerOffset;
+
             if (exceptionValue)
                 goto vm_throw;
 
-            r = (*registerBase) + registerOffset;
             r[r0].u.jsValue = result;
             
             ++vPC;
