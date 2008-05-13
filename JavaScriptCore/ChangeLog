@@ -1,3 +1,26 @@
+2008-04-06  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        Implement codegen for PreDecResolveNode, PreIncBracketNode, PreDecBracketNode,
+        PreIncDotNode and PreDecDotNode.  This required adding one new op code, op_pre_dec.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitPreDec):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+        * kjs/nodes.h:
+
 2008-04-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.

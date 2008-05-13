@@ -119,6 +119,7 @@ namespace KJS {
         RegisterID* emitToJSNumber(RegisterID*, RegisterID*);
         RegisterID* emitNegate(RegisterID*, RegisterID*);
         RegisterID* emitPreInc(RegisterID*);
+        RegisterID* emitPreDec(RegisterID*);
         RegisterID* emitPostInc(RegisterID*, RegisterID*);
         RegisterID* emitPostDec(RegisterID*, RegisterID*);
         RegisterID* emitAdd(RegisterID*, RegisterID*, RegisterID*);
