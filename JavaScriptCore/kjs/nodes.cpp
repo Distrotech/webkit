@@ -1885,6 +1885,16 @@ void PostfixBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, 
     nodeStack.append(m_base.get());
 }
 
+RegisterID* PostIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1.get());
+    RegisterID* r3 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r2.get());
+    generator.emitPutPropVal(r0.get(), r1.get(), r2.get());
+    return r3;
+}
+
 JSValue* PostIncBracketNode::evaluate(ExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
@@ -1914,6 +1924,16 @@ JSValue* PostIncBracketNode::evaluate(ExecState* exec)
     JSValue* v2 = v->toJSNumber(exec);
     base->put(exec, propertyName, jsNumber(v2->toNumber(exec) + 1));
     return v2;
+}
+
+RegisterID* PostDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> r2 = generator.emitGetPropVal(generator.newTemporary(), r0.get(), r1.get());
+    RegisterID* r3 = generator.emitPostDec(dst ? dst : generator.newTemporary(), r2.get());
+    generator.emitPutPropVal(r0.get(), r1.get(), r2.get());
+    return r3;
 }
 
 JSValue* PostDecBracketNode::evaluate(ExecState* exec)
@@ -1956,7 +1976,7 @@ void PostfixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
 RegisterID* PostIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
     RegisterID* r2 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r1.get());
     generator.emitPutPropId(r0.get(), m_ident, r1.get());
     return r2;
@@ -1975,6 +1995,15 @@ JSValue* PostIncDotNode::evaluate(ExecState* exec)
     JSValue* v2 = v->toJSNumber(exec);
     base->put(exec, m_ident, jsNumber(v2->toNumber(exec) + 1));
     return v2;
+}
+
+RegisterID* PostDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitPostDec(dst ? dst : generator.newTemporary(), r1.get());
+    generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    return r2;
 }
 
 JSValue* PostDecDotNode::evaluate(ExecState* exec)
