@@ -86,8 +86,8 @@ namespace KJS {
     
     class RegisterFile : Noncopyable {
     public:
-        enum { DefaultRegisterFileSize = 8 * 1024 * 1024 };
-        RegisterFile(RegisterFileStack* stack, size_t maxSize = DefaultRegisterFileSize)
+        enum { DefaultRegisterFileSize = 2 * 1024 * 1024 };
+        RegisterFile(RegisterFileStack* stack, size_t maxSize)
             : m_size(0)
             , m_capacity(0)
             , m_maxSize(maxSize)
@@ -115,16 +115,27 @@ namespace KJS {
         {
             if (size > m_size) {
                 if (size > m_capacity) {
-                    if (size > DefaultRegisterFileSize)
+                    if (size > m_maxSize)
                         return false;
-                    growBuffer(size);
+                    growBuffer(size, m_maxSize);
                 }
                 m_size = size;
             }
             return true;
         }
+        
+        void uncheckedGrow(size_t size)
+        {
+            if (size > m_size) {
+                if (size > m_capacity)
+                    growBuffer(size, std::numeric_limits<size_t>::max());
+
+                m_size = size;
+            }       
+        }
 
         size_t size() { return m_size; }
+        size_t maxSize() { return m_maxSize; }
         
         void clear();
 
@@ -139,8 +150,8 @@ namespace KJS {
         }
 
     private:
-        size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t offset);
-        bool growBuffer(size_t minCapacity);
+        size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t maxSize, size_t offset);
+        bool growBuffer(size_t minCapacity, size_t maxSize);
         void setBuffer(Register* buffer)
         {
             if (m_buffer)
