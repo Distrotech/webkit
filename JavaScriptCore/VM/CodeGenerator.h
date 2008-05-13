@@ -255,6 +255,17 @@ namespace KJS {
 
         typedef HashMap<JSValue*, unsigned, DefaultHash<JSValue*>::Hash, JSValueHashTraits> JSValueMap;
         
+        struct IdentifierMapIndexHashTraits {
+            typedef int TraitType;
+            typedef IdentifierMapIndexHashTraits StorageTraits;
+            static int emptyValue() { return std::numeric_limits<int>::max(); }
+            static const bool emptyValueIsZero = false;
+            static const bool needsDestruction = false;
+            static const bool needsRef = false;
+        };
+
+        typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, HashTraits<RefPtr<UString::Rep> >, IdentifierMapIndexHashTraits> IdentifierMap;
+
         RegisterID* emitCall(OpcodeID, RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
 
         // Maps a register index in the symbol table to a RegisterID index in m_locals.
@@ -307,7 +318,7 @@ namespace KJS {
         int m_nextParameter;
 
         // Constant pool
-        SymbolTable m_identifierMap;
+        IdentifierMap m_identifierMap;
         JSValueMap m_jsValueMap;
 
         CommonIdentifiers* m_propertyNames;
