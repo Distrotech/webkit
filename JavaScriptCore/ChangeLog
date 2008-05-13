@@ -1,3 +1,15 @@
+2008-04-28  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Replace unsafe use of auto_ptr in Vector with manual memory
+        management.
+
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::~RegisterFileStack):
+        (KJS::RegisterFileStack::popRegisterFile):
+        * VM/RegisterFileStack.h:
+
 2008-04-27  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
