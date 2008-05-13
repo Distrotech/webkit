@@ -35,6 +35,13 @@
 
 namespace KJS {
 
+static void printUnaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
+{
+    int r0 = (++it)->u.operand;
+    int r1 = (++it)->u.operand;
+    printf("[%4d] %s\t\tr[%d], r[%d]\n", location, op, r0, r1);
+}
+
 static void printBinaryOp(int location, Vector<Instruction>::iterator& it, const char* op)
 {
     int r0 = (++it)->u.operand;
@@ -110,6 +117,14 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] post_inc\t\tr[%d], r[%d]\n", location, r0, r1);
             break;
         }
+        case op_to_jsnumber: {
+            printUnaryOp(location, it, "to_jsnumber");
+            break;
+        }
+        case op_negate: {
+            printUnaryOp(location, it, "negate");
+            break;
+        }
         case op_add: {
             printBinaryOp(location, it, "add");
             break;
@@ -154,6 +169,14 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printBinaryOp(location, it, "bitor");
             break;
         }
+         case op_bitnot: {
+             printUnaryOp(location, it, "bitnot");
+             break;
+         }
+         case op_not: {
+             printUnaryOp(location, it, "not");
+             break;
+         }
         case op_instance_of: {
             printBinaryOp(location, it, "instance_of");
             break;
