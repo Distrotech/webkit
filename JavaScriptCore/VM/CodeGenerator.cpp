@@ -412,20 +412,20 @@ unsigned CodeGenerator::addRegExp(RegExp* r)
     return index;
 }
 
-RegisterID* CodeGenerator::emitMove(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitMove(RegisterID* dst, RegisterID* src)
 {
     instructions().append(machine().getOpcode(op_mov));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNot(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitNot(RegisterID* dst, RegisterID* src)
 {
     instructions().append(machine().getOpcode(op_not));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
@@ -482,50 +482,50 @@ RegisterID* CodeGenerator::emitLessEq(RegisterID* r0, RegisterID* r1, RegisterID
     return r0;
 }
 
-RegisterID* CodeGenerator::emitPreInc(RegisterID* r0)
+RegisterID* CodeGenerator::emitPreInc(RegisterID* srcDst)
 {
     instructions().append(machine().getOpcode(op_pre_inc));
-    instructions().append(r0->index());
-    return r0;
+    instructions().append(srcDst->index());
+    return srcDst;
 }
 
-RegisterID* CodeGenerator::emitPreDec(RegisterID* r0)
+RegisterID* CodeGenerator::emitPreDec(RegisterID* srcDst)
 {
     instructions().append(machine().getOpcode(op_pre_dec));
-    instructions().append(r0->index());
-    return r0;
+    instructions().append(srcDst->index());
+    return srcDst;
 }
 
-RegisterID* CodeGenerator::emitPostInc(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitPostInc(RegisterID* dst, RegisterID* srcDst)
 {
     instructions().append(machine().getOpcode(op_post_inc));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(srcDst->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitPostDec(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitPostDec(RegisterID* dst, RegisterID* srcDst)
 {
     instructions().append(machine().getOpcode(op_post_dec));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(srcDst->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitToJSNumber(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitToJSNumber(RegisterID* dst, RegisterID* src)
 {
     instructions().append(machine().getOpcode(op_to_jsnumber));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNegate(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitNegate(RegisterID* dst, RegisterID* src)
 {
     instructions().append(machine().getOpcode(op_negate));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2)
@@ -627,76 +627,76 @@ RegisterID* CodeGenerator::emitBitOr(RegisterID* dst, RegisterID* src1, Register
     return dst;
 }
 
-RegisterID* CodeGenerator::emitBitNot(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitBitNot(RegisterID* dst, RegisterID* src)
 {
     instructions().append(machine().getOpcode(op_bitnot));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitInstanceOf(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitInstanceOf(RegisterID* dst, RegisterID* value, RegisterID* base)
 {
-    instructions().append(machine().getOpcode(op_instance_of));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(machine().getOpcode(op_instanceof));
+    instructions().append(dst->index());
+    instructions().append(value->index());
+    instructions().append(base->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitTypeOf(RegisterID* r0, RegisterID* r1)
+RegisterID* CodeGenerator::emitTypeOf(RegisterID* dst, RegisterID* src)
 {
-    instructions().append(machine().getOpcode(op_type_of));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    return r0;
+    instructions().append(machine().getOpcode(op_typeof));
+    instructions().append(dst->index());
+    instructions().append(src->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitIn(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitIn(RegisterID* dst, RegisterID* property, RegisterID* base)
 {
     instructions().append(machine().getOpcode(op_in));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(property->index());
+    instructions().append(base->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLoad(RegisterID* r0, bool b)
+RegisterID* CodeGenerator::emitLoad(RegisterID* dst, bool b)
 {
     instructions().append(machine().getOpcode(op_load));
-    instructions().append(r0->index());
+    instructions().append(dst->index());
     instructions().append(addConstant(jsBoolean(b)));
-    return r0;
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLoad(RegisterID* r0, double d)
+RegisterID* CodeGenerator::emitLoad(RegisterID* dst, double d)
 {
     instructions().append(machine().getOpcode(op_load));
-    instructions().append(r0->index());
+    instructions().append(dst->index());
     instructions().append(addConstant(jsNumber(d)));
-    return r0;
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLoad(RegisterID* r0, JSValue* v)
+RegisterID* CodeGenerator::emitLoad(RegisterID* dst, JSValue* v)
 {
     instructions().append(machine().getOpcode(op_load));
-    instructions().append(r0->index());
+    instructions().append(dst->index());
     instructions().append(addConstant(v));
-    return r0;
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNewObject(RegisterID* r0)
+RegisterID* CodeGenerator::emitNewObject(RegisterID* dst)
 {
     instructions().append(machine().getOpcode(op_new_object));
-    instructions().append(r0->index());
-    return r0;
+    instructions().append(dst->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNewArray(RegisterID* r0)
+RegisterID* CodeGenerator::emitNewArray(RegisterID* dst)
 {
     instructions().append(machine().getOpcode(op_new_array));
-    instructions().append(r0->index());
-    return r0;
+    instructions().append(dst->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitResolve(RegisterID* dst, const Identifier& property)
@@ -822,12 +822,12 @@ RegisterID* CodeGenerator::emitNewFunction(RegisterID* r0, FuncDeclNode* n)
     return r0;
 }
 
-RegisterID* CodeGenerator::emitNewRegExp(RegisterID* r0, RegExp* re)
+RegisterID* CodeGenerator::emitNewRegExp(RegisterID* dst, RegExp* regExp)
 {
     instructions().append(machine().getOpcode(op_new_regexp));
-    instructions().append(r0->index());
-    instructions().append(addRegExp(re));
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(addRegExp(regExp));
+    return dst;
 }
 
 
@@ -1114,13 +1114,13 @@ void CodeGenerator::emitThrow(RegisterID* exception)
     instructions().append(exception->index());
 }
 
-RegisterID* CodeGenerator::emitCreateError(RegisterID* r0, ErrorType errorType, JSValue* errorMessage)
+RegisterID* CodeGenerator::emitNewError(RegisterID* dst, ErrorType type, JSValue* message)
 {
-    instructions().append(machine().getOpcode(op_create_error));
-    instructions().append(r0->index());
-    instructions().append((int) errorType);
-    instructions().append(addConstant(errorMessage));
-    return r0;
+    instructions().append(machine().getOpcode(op_new_error));
+    instructions().append(dst->index());
+    instructions().append(static_cast<int>(type));
+    instructions().append(addConstant(message));
+    return dst;
 }
 
 PassRefPtr<LabelID> CodeGenerator::emitJumpSubroutine(RegisterID* retAddrDst, LabelID* finally)

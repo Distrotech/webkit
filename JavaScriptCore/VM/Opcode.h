@@ -69,10 +69,8 @@ namespace KJS {
         macro(op_bitor) \
         macro(op_bitnot) \
         \
-        macro(op_instance_of) \
-        \
-        macro(op_type_of) \
-        \
+        macro(op_instanceof) \
+        macro(op_typeof) \
         macro(op_in) \
         \
         macro(op_resolve) \
@@ -111,7 +109,7 @@ namespace KJS {
         macro(op_catch) \
         macro(op_throw) \
         macro(op_builtin_throw) \
-        macro(op_create_error) \
+        macro(op_new_error) \
         \
         macro(op_jsr) \
         macro(op_sret) \

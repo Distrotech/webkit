@@ -1,5 +1,78 @@
 2008-05-03  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Geoff.
+        
+        - a bunch more opcode documentation and corresponding parameter name fixes
+
+        I renamed a few opcodes:
+        
+        type_of --> typeof (that's what the JS operator is named)
+        instance_of --> instanceof (ditto)
+        create_error --> new_error (for consistency with other new_* opcodes)
+        
+        I documented the following opcodes:
+        
+        - load
+        - new_object
+        - new_array
+        - new_regexp
+        - mov
+        - pre_inc
+        - pre_dec
+        - post_inc
+        - post_dec
+        - to_jsnumber
+        - negate
+        - bitnot
+        - not
+        - instanceof
+        - typeof
+        - in
+        - new_func
+        - new_funcexp
+        - new_error
+
+        I also fixed formatting on some existing opcode docs.
+        
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitMove):
+        (KJS::CodeGenerator::emitNot):
+        (KJS::CodeGenerator::emitPreInc):
+        (KJS::CodeGenerator::emitPreDec):
+        (KJS::CodeGenerator::emitPostInc):
+        (KJS::CodeGenerator::emitPostDec):
+        (KJS::CodeGenerator::emitToJSNumber):
+        (KJS::CodeGenerator::emitNegate):
+        (KJS::CodeGenerator::emitBitNot):
+        (KJS::CodeGenerator::emitInstanceOf):
+        (KJS::CodeGenerator::emitTypeOf):
+        (KJS::CodeGenerator::emitIn):
+        (KJS::CodeGenerator::emitLoad):
+        (KJS::CodeGenerator::emitNewObject):
+        (KJS::CodeGenerator::emitNewArray):
+        (KJS::CodeGenerator::emitNewRegExp):
+        (KJS::CodeGenerator::emitNewError):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::scopeDepth):
+        (KJS::CodeGenerator::addVar):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::Node::emitThrowError):
+        (KJS::RegExpNode::emitCode):
+        (KJS::TypeOfValueNode::emitCode):
+        (KJS::UnaryPlusNode::emitCode):
+        (KJS::NegateNode::emitCode):
+        (KJS::BitwiseNotNode::emitCode):
+        (KJS::LogicalNotNode::emitCode):
+        (KJS::InstanceOfNode::emitCode):
+        (KJS::InNode::emitCode):
+
+2008-05-03  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff and Sam.
         
         - generate HTML bytecode docs at build time
