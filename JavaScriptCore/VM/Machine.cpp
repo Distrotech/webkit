@@ -294,6 +294,51 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     // callFrame[Machine::OptionalCalleeScopeChain] gets optionally set later
 }
 
+ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc, Register* r)
+{
+    registerOffset += argv + argc + newCodeBlock->numVars;
+    if (argc == newCodeBlock->numParameters) { // correct number of arguments
+        size_t size = registerOffset + newCodeBlock->numTemporaries;
+        registerFile->grow(size);
+        r = (*registerBase) + registerOffset;
+    } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
+        int omittedArgCount = newCodeBlock->numParameters - argc;
+        size_t size = registerOffset + omittedArgCount + newCodeBlock->numTemporaries;
+        registerFile->grow(size);
+        r = (*registerBase) + omittedArgCount + registerOffset;
+        
+        Register* end = r;
+        for (Register* it = r - omittedArgCount; it != end; ++it)
+            (*it).u.jsValue = jsUndefined();
+    } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
+        size_t size = registerOffset + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
+        registerFile->grow(size);
+        r = (*registerBase) + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + registerOffset;
+        
+        int shift = Machine::CallFrameHeaderSize + argc;
+        Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - Machine::CallFrameHeaderSize - shift;
+        Register* end = it + Machine::CallFrameHeaderSize + newCodeBlock->numParameters;
+        for ( ; it != end; ++it)
+            *(it + shift) = *it;
+    }
+
+    return r;
+}
+
+    ALWAYS_INLINE ScopeChain* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
+{
+    ScopeChain* scopeChain;
+
+    if (newCodeBlock->needsActivation) {
+        COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(callFrame[Machine::OptionalCalleeScopeChain]), ScopeChain_fits_in_register);
+        scopeChain = new (&callFrame[Machine::OptionalCalleeScopeChain]) ScopeChain(*callDataScopeChain);
+        scopeChain->push(new JSActivation(functionBody, registerBase, r - (*registerBase)));
+    } else
+        scopeChain = callDataScopeChain;
+
+    return scopeChain;
+}
+
 NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r)
 {
     if (isGlobalCallFrame(registerBase, r)) {
@@ -909,39 +954,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-            registerOffset += argv + argc + newCodeBlock->numVars;
-            if (argc == newCodeBlock->numParameters) { // correct number of arguments
-                size_t size = registerOffset + newCodeBlock->numTemporaries;
-                registerFile->grow(size);
-                r = (*registerBase) + registerOffset;
-            } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
-                int omittedArgCount = newCodeBlock->numParameters - argc;
-                size_t size = registerOffset + omittedArgCount + newCodeBlock->numTemporaries;
-                registerFile->grow(size);
-                r = (*registerBase) + omittedArgCount + registerOffset;
-                
-                Register* end = r;
-                for (Register* it = r - omittedArgCount; it != end; ++it)
-                    (*it).u.jsValue = jsUndefined();
-            } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-                size_t size = registerOffset + CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
-                registerFile->grow(size);
-                r = (*registerBase) + CallFrameHeaderSize + newCodeBlock->numParameters + registerOffset;
-
-                int shift = CallFrameHeaderSize + argc;
-                Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - CallFrameHeaderSize - shift;
-                Register* end = it + CallFrameHeaderSize + newCodeBlock->numParameters;
-                for ( ; it != end; ++it)
-                    *(it + shift) = *it;
-            }
-
-            if (newCodeBlock->needsActivation) {
-                COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(callFrame[OptionalCalleeScopeChain]), ScopeChain_fits_in_register);
-                scopeChain = new (&callFrame[OptionalCalleeScopeChain]) ScopeChain(*callData.js.scopeChain);
-                scopeChain->push(new JSActivation(callData.js.functionBody, registerBase, r - (*registerBase)));
-            } else
-                scopeChain = callData.js.scopeChain;
-            
+            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, r);
+            scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
             k = newCodeBlock->jsValues.data();
             vPC = newCodeBlock->instructions.begin();
             codeBlock = newCodeBlock;
