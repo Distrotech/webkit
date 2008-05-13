@@ -161,7 +161,8 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     , m_symbolTable(symbolTable)
     , m_scopeNode(programNode)
     , m_codeBlock(codeBlock)
-    , m_scopeDepth(0)
+    , m_finallyDepth(0)
+    , m_dynamicScopeDepth(0)
     , m_isEvalCode(false)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
@@ -203,7 +204,8 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     , m_symbolTable(symbolTable)
     , m_scopeNode(functionBody)
     , m_codeBlock(codeBlock)
-    , m_scopeDepth(0)
+    , m_finallyDepth(0)
+    , m_dynamicScopeDepth(0)
     , m_isEvalCode(false)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
@@ -241,7 +243,8 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
     , m_symbolTable(symbolTable)
     , m_scopeNode(evalNode)
     , m_codeBlock(codeBlock)
-    , m_scopeDepth(0)
+    , m_finallyDepth(0)
+    , m_dynamicScopeDepth(0)
     , m_isEvalCode(true)
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
@@ -864,21 +867,48 @@ RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
     m_codeBlock->needsActivation = true;
     instructions().append(machine().getOpcode(op_push_scope));
     instructions().append(r0->index());
-    m_scopeDepth++;
+
+    ControlFlowContext scope;
+    scope.isFinallyBlock = false;
+    m_scopeContextStack.append(scope);
+    m_dynamicScopeDepth++;
     return r0;
 }
 
 void CodeGenerator::emitPopScope()
 {
-    ASSERT(m_scopeDepth > 0);
+    ASSERT(m_scopeContextStack.size());
+    ASSERT(!m_scopeContextStack.last().isFinallyBlock);
+
     instructions().append(machine().getOpcode(op_pop_scope));
-    m_scopeDepth--;
+
+    m_scopeContextStack.removeLast();
+    m_dynamicScopeDepth--;
+}
+
+void CodeGenerator::pushFinallyContext(LabelID* target, RegisterID* retAddrDst)
+{
+    ControlFlowContext scope;
+    scope.isFinallyBlock = true;
+    FinallyContext context = { target, retAddrDst };
+    scope.finallyContext = context;
+    m_scopeContextStack.append(scope);
+    m_finallyDepth++;
+}
+
+void CodeGenerator::popFinallyContext()
+{
+    ASSERT(m_scopeContextStack.size());
+    ASSERT(m_scopeContextStack.last().isFinallyBlock);
+    ASSERT(m_finallyDepth > 0);
+    m_scopeContextStack.removeLast();
+    m_finallyDepth--;
 }
 
 void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
 {
-    JumpContext scope = { labels, continueTarget, breakTarget, m_scopeDepth };
-    m_jumpContextStack.append(scope);
+    JumpContext context = { labels, continueTarget, breakTarget, scopeDepth() };
+    m_jumpContextStack.append(context);
 }
 
 void CodeGenerator::popJumpContext()
@@ -900,14 +930,63 @@ JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label)
     return 0;
 }
 
+PassRefPtr<LabelID> CodeGenerator::emitComplexJumpScopes(LabelID* target, ControlFlowContext* topScope, ControlFlowContext* bottomScope)
+{
+    while (topScope > bottomScope) {
+        // First we count the number of dynamic scopes we need to remove to get
+        // to a finally block.
+        int nNormalScopes = 0;
+        while (topScope > bottomScope) {
+            if (topScope->isFinallyBlock)
+                break;
+            ++nNormalScopes;
+            --topScope;
+        }
+
+        if (nNormalScopes) {
+            // We need to remove a number of dynamic scopes to get to the next 
+            // finally block
+            instructions().append(machine().getOpcode(op_jmp_scopes));
+            instructions().append(nNormalScopes);
+            
+            // If topScope == bottomScope then there isn't actually a finally block
+            // left to emit, so make the jmp_scopes jump directly to the target label
+            if (topScope == bottomScope) {
+                instructions().append(target->offsetFrom(instructions().size()));
+                return target;
+            }
+
+            // Otherwise we just use jmp_scopes to pop a group of scopes and go 
+            // to the next instruction
+            RefPtr<LabelID> nextInsn = newLabel();
+            instructions().append(nextInsn->offsetFrom(instructions().size()));
+            emitLabel(nextInsn.get());
+        }
+
+        // To get here there must be at least one finally block present
+        do {
+            ASSERT(topScope->isFinallyBlock);
+            emitJumpSubroutine(topScope->finallyContext.retAddrDst, topScope->finallyContext.finallyAddr);
+            --topScope;
+            if (!topScope->isFinallyBlock)
+                break;
+        } while (topScope > bottomScope);
+    }
+    return emitJump(target);
+}
+
 PassRefPtr<LabelID> CodeGenerator::emitJumpScopes(LabelID* target, int targetScopeDepth)
 {
-    int scopeDelta = m_scopeDepth - targetScopeDepth;
-    ASSERT(scopeDelta >= 0);
-    
+    ASSERT(scopeDepth() - targetScopeDepth >= 0);
+
+    size_t scopeDelta = scopeDepth() - targetScopeDepth;
+    ASSERT(scopeDelta <= m_scopeContextStack.size());
     if (!scopeDelta)
         return emitJump(target);
-    
+
+    if (m_finallyDepth)
+        return emitComplexJumpScopes(target, &m_scopeContextStack.last(), &m_scopeContextStack.last() - scopeDelta);
+
     instructions().append(machine().getOpcode(op_jmp_scopes));
     instructions().append(scopeDelta);
     instructions().append(target->offsetFrom(instructions().size()));
@@ -933,7 +1012,7 @@ RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* iterator, RegisterID
 
 RegisterID* CodeGenerator::emitCatch(RegisterID* targetRegister, LabelID* start, LabelID* end)
 {
-    HandlerInfo info = { start->offsetFrom(0), end->offsetFrom(0), instructions().size(), m_scopeDepth };
+    HandlerInfo info = { start->offsetFrom(0), end->offsetFrom(0), instructions().size(), m_dynamicScopeDepth };
     exceptionHandlers().append(info);
     instructions().append(machine().getOpcode(op_catch));
     instructions().append(targetRegister->index());
@@ -944,6 +1023,20 @@ void CodeGenerator::emitThrow(RegisterID* exception)
 {
     instructions().append(machine().getOpcode(op_throw));
     instructions().append(exception->index());
+}
+
+PassRefPtr<LabelID> CodeGenerator::emitJumpSubroutine(RegisterID* retAddrDst, LabelID* finally)
+{
+    instructions().append(machine().getOpcode(op_jsr));
+    instructions().append(retAddrDst->index());
+    instructions().append(finally->offsetFrom(instructions().size()));
+    return finally;
+}
+
+void CodeGenerator::emitSubroutineReturn(RegisterID* retAddrSrc)
+{
+    instructions().append(machine().getOpcode(op_sret));
+    instructions().append(retAddrSrc->index());
 }
 
 } // namespace KJS
