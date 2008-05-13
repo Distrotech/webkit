@@ -1,3 +1,34 @@
+2008-05-05  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - document opcodes relating to jumps, scopes, and property name iteration
+        
+        Documented jmp, jtrue, false, push_scope, pop_scope, get_pnames,
+        next_pname and jmp_scopes.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitJump):
+        (KJS::CodeGenerator::emitJumpIfTrue):
+        (KJS::CodeGenerator::emitJumpIfFalse):
+        (KJS::CodeGenerator::emitPushScope):
+        (KJS::CodeGenerator::emitNextPropertyName):
+        (KJS::CodeGenerator::emitGetPropertyNames):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.cpp:
+        (KJS::LogicalAndNode::emitCode):
+        (KJS::LogicalOrNode::emitCode):
+        (KJS::ConditionalNode::emitCode):
+        (KJS::IfNode::emitCode):
+        (KJS::IfElseNode::emitCode):
+        (KJS::DoWhileNode::emitCode):
+        (KJS::WhileNode::emitCode):
+        (KJS::ForNode::emitCode):
+        (KJS::ForInNode::emitCode):
+        (KJS::WithNode::emitCode):
+
 2008-05-05  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.

@@ -1504,16 +1504,26 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_jmp) {
-        int offset = (++vPC)->u.operand;
-        vPC += offset;
+        /* jmp target(offset)
+         
+           Jumps unconditionally to offset target from the current
+           instruction.
+        */
+        int target = (++vPC)->u.operand;
+        vPC += target;
 
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_jtrue) {
-        int r0 = (++vPC)->u.operand;
-        int offset = (++vPC)->u.operand;
-        if (r[r0].u.jsValue->toBoolean(exec)) {
-            vPC += offset;
+        /* jtrue cond(r) target(offset)
+         
+           Jumps to offset target from the current instruction, if and
+           only if register cond converts to boolean as true.
+        */
+        int cond = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
+        if (r[cond].u.jsValue->toBoolean(exec)) {
+            vPC += target;
             NEXT_OPCODE;
         }
 
@@ -1521,10 +1531,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_jfalse) {
-        int r0 = (++vPC)->u.operand;
-        int offset = (++vPC)->u.operand;
-        if (!r[r0].u.jsValue->toBoolean(exec)) {
-            vPC += offset;
+        /* jfalse cond(r) target(offset)
+         
+           Jumps to offset target from the current instruction, if and
+           only if register cond converts to boolean as false.
+        */
+        int cond = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
+        if (!r[cond].u.jsValue->toBoolean(exec)) {
+            vPC += target;
             NEXT_OPCODE;
         }
 
@@ -1772,7 +1787,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         goto vm_throw;
     }
     BEGIN_OPCODE(op_push_scope) {
-        int r0 = (++vPC)->u.operand;
+        /* push_scope scope(r)
+
+           Converts register scope to object, and pushes it onto the top
+           of the current scope chain.
+        */
+        int scope = (++vPC)->u.operand;
         JSValue* v = r[r0].u.jsValue;
         JSObject* o = v->toObject(exec);
         VM_CHECK_EXCEPTION();
@@ -1783,44 +1803,70 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pop_scope) {
+        /* pop_scope
+
+           Removes the top item from the current scope chain.
+        */
         setScopeChain(exec, scopeChain, scopeChain->pop());
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_get_pnames) {
-        int iterReg = (++vPC)->u.operand;
-        int objectReg = (++vPC)->u.operand;
+        /* get_pnames dst(r) base(r)
 
-        r[iterReg].u.jsPropertyNameIterator = JSPropertyNameIterator::create(exec, r[objectReg].u.jsValue);
+           Creates a property name list for register base and puts it
+           in register dst. This is not a true JavaScript value, just
+           a synthetic value used to keep the iteration state in a
+           register.
+        */
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+
+        r[dst].u.jsPropertyNameIterator = JSPropertyNameIterator::create(exec, r[base].u.jsValue);
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_next_pname) {
-        int destReg = (++vPC)->u.operand;
-        int iterReg = (++vPC)->u.operand;
-        int offset = (++vPC)->u.operand;
+        /* next_pname dst(r) iter(r) target(offset)
 
-        JSPropertyNameIterator* iter = r[iterReg].u.jsPropertyNameIterator;
-        if (JSValue* temp = iter->next(exec)) {
-            r[destReg].u.jsValue = temp;
-            vPC += offset;
+           Tries to copies the next name from property name list in
+           register iter. If there are names left, then copies one to
+           register dst, and jumps to offset target. If there are none
+           left, invalidates the iterator and continues to the next
+           instruction.
+        */
+        int dst = (++vPC)->u.operand;
+        int iter = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
+
+        JSPropertyNameIterator* it = r[iter].u.jsPropertyNameIterator;
+        if (JSValue* temp = it->next(exec)) {
+            r[dst].u.jsValue = temp;
+            vPC += target;
             NEXT_OPCODE;
         }
-        iter->invalidate();
+        it->invalidate();
+
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_jmp_scopes) {
-        int scopeDelta = (++vPC)->u.operand;
-        int offset = (++vPC)->u.operand;
+        /* jmp_scopes count(n) target(offset)
+
+           Removes the a number of items from the current scope chain
+           specified by immediate number count, then jumps to offset
+           target.
+        */
+        int count = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
         
         ScopeChainNode* tmp = scopeChain;
-        while (scopeDelta--)
+        while (count--)
             tmp = tmp->pop();
         setScopeChain(exec, scopeChain, tmp);
             
-        vPC += offset;
+        vPC += target;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_catch) {

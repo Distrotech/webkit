@@ -355,27 +355,27 @@ PassRefPtr<LabelID> CodeGenerator::emitLabel(LabelID* l0)
     return l0;
 }
 
-PassRefPtr<LabelID> CodeGenerator::emitJump(LabelID* l0)
+PassRefPtr<LabelID> CodeGenerator::emitJump(LabelID* target)
 {
     instructions().append(machine().getOpcode(op_jmp));
-    instructions().append(l0->offsetFrom(instructions().size()));
-    return l0;
+    instructions().append(target->offsetFrom(instructions().size()));
+    return target;
 }
 
-PassRefPtr<LabelID> CodeGenerator::emitJumpIfTrue(RegisterID* r0, LabelID* l0)
+PassRefPtr<LabelID> CodeGenerator::emitJumpIfTrue(RegisterID* cond, LabelID* target)
 {
     instructions().append(machine().getOpcode(op_jtrue));
-    instructions().append(r0->index());
-    instructions().append(l0->offsetFrom(instructions().size()));
-    return l0;
+    instructions().append(cond->index());
+    instructions().append(target->offsetFrom(instructions().size()));
+    return target;
 }
 
-PassRefPtr<LabelID> CodeGenerator::emitJumpIfFalse(RegisterID* r0, LabelID* l0)
+PassRefPtr<LabelID> CodeGenerator::emitJumpIfFalse(RegisterID* cond, LabelID* target)
 {
     instructions().append(machine().getOpcode(op_jfalse));
-    instructions().append(r0->index());
-    instructions().append(l0->offsetFrom(instructions().size()));
-    return l0;
+    instructions().append(cond->index());
+    instructions().append(target->offsetFrom(instructions().size()));
+    return target;
 }
 
 unsigned CodeGenerator::addConstant(FuncDeclNode* n)
@@ -924,11 +924,11 @@ RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, Argumen
     return r0;
 }
 
-RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
+RegisterID* CodeGenerator::emitPushScope(RegisterID* scope)
 {
     m_codeBlock->needsFullScopeChain = true;
     instructions().append(machine().getOpcode(op_push_scope));
-    instructions().append(r0->index());
+    instructions().append(scope->index());
 
     ControlFlowContext scope;
     scope.isFinallyBlock = false;
@@ -1090,21 +1090,21 @@ PassRefPtr<LabelID> CodeGenerator::emitJumpScopes(LabelID* target, int targetSco
     return target;
 }
 
-RegisterID* CodeGenerator::emitNextPropertyName(RegisterID* dest, RegisterID* iterator, LabelID* target)
+RegisterID* CodeGenerator::emitNextPropertyName(RegisterID* dst, RegisterID* iter, LabelID* target)
 {
     instructions().append(machine().getOpcode(op_next_pname));
-    instructions().append(dest->index());
-    instructions().append(iterator->index());
+    instructions().append(dst->index());
+    instructions().append(iter->index());
     instructions().append(target->offsetFrom(instructions().size()));
-    return dest;
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* iterator, RegisterID* object)
+RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* dst, RegisterID* base)
 {
     instructions().append(machine().getOpcode(op_get_pnames));
-    instructions().append(iterator->index());
-    instructions().append(object->index());
-    return iterator;
+    instructions().append(dst->index());
+    instructions().append(base->index());
+    return base;
 }
 
 RegisterID* CodeGenerator::emitCatch(RegisterID* targetRegister, LabelID* start, LabelID* end)
