@@ -1,3 +1,13 @@
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Removed ScopeChain::push(ScopeChain&) because it was unused. Moved
+        ScopeChain::print to ScopeChainNode.
+        
+        ScopeChain is now nothing more than a resource-handling wrapper around
+        ScopeChainNode.
+
 2008-04-21  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
