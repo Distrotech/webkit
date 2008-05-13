@@ -1,5 +1,11 @@
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
+        Fixed tyop.
+
+        * kjs/ExecState.h:
+
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
         Debug build fix: export a missing symbol.
 
         * JavaScriptCore.exp:
