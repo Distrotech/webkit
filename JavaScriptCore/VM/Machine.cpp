@@ -1212,8 +1212,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     internal_throw: {
         exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
-        if (!exceptionTarget)
-            return exceptionValue;
+        if (!exceptionTarget) {
+            *exception = exceptionValue;
+            return jsNull();
+        }
         vPC = exceptionTarget;
         NEXT_OPCODE;
     }          
