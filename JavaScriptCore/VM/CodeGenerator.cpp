@@ -927,13 +927,24 @@ void CodeGenerator::popJumpContext()
     m_jumpContextStack.removeLast();
 }
 
-JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label)
+JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label, bool forContinue)
 {
     if(!m_jumpContextStack.size())
         return 0;
 
-    if (label.isEmpty())
+    if (label.isEmpty()) {
+        if (forContinue) {
+            for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
+                JumpContext* scope = &m_jumpContextStack[i];
+                if (scope->continueTarget)
+                    return scope;
+            }
+            return 0;
+        }
+        
         return &m_jumpContextStack.last();
+    }
+    
     for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
         JumpContext* scope = &m_jumpContextStack[i];
         if (scope->labels->contains(label))
