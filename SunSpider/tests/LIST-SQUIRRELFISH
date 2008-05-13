@@ -1,5 +1,8 @@
+tests/3d-cube.js
 tests/3d-morph.js
+tests/access-binary-trees.js
 tests/access-fannkuch.js
+tests/access-nbody.js
 tests/access-nsieve.js
 tests/bitops-3bit-bits-in-byte.js
 tests/bitops-bits-in-byte.js
