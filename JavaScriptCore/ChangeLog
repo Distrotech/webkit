@@ -1,3 +1,14 @@
+2008-04-22  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed crash when unwinding from exceptions inside eval.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::unwindCallFrame): Don't assume that the top of the
+        current call frame's scope chain is an activation: it can be the global
+        object, instead.
+
 2008-04-22  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.

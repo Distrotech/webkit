@@ -425,29 +425,24 @@ ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeCh
 
 NEVER_INLINE bool Machine::unwindCallFrame(Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
-    if (isGlobalCallFrame(registerBase, r)) {
-        if (codeBlock->needsFullScopeChain)
-            scopeChain->deref();
-        return false;
-    }
-
     CodeBlock* oldCodeBlock = codeBlock;
 
     if (oldCodeBlock->needsFullScopeChain) {
-        // Find the activation object
-        ScopeChainIterator it = scopeChain->begin(); 
+        // If this call frame created an activation, tear it off.
         ScopeChainIterator end = scopeChain->end();
-        while (!(*it)->isActivationObject()) {
-            ++it;
-            ASSERT(it != end);
+        for (ScopeChainIterator it = scopeChain->begin(); it != end; ++it) {
+            if ((*it)->isActivationObject()) {
+                static_cast<JSActivation*>(*it)->copyRegisters();
+                break;
+            }
         }
-
-        // Tear off the activation object's registers
-        static_cast<JSActivation*>(*it)->copyRegisters();
 
         scopeChain->deref();
     }
     
+    if (isGlobalCallFrame(registerBase, r))
+        return false;
+
     Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
     
     codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
