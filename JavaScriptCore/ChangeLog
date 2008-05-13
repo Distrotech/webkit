@@ -1,3 +1,35 @@
+2008-05-04  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Add attribute information to SymbolTable as ground work for
+        various DontEnum and ReadOnly issues.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addVar):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::registerForLocal):
+        (KJS::CodeGenerator::registerForLocalConstInit):
+        (KJS::CodeGenerator::addConstant):
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::saveLocalStorage):
+        * kjs/JSVariableObject.cpp:
+        (KJS::JSVariableObject::getPropertyNames):
+        (KJS::JSVariableObject::getPropertyAttributes):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTablePut):
+        (KJS::JSVariableObject::symbolTablePutWithAttributes):
+        * kjs/SymbolTable.h:
+        (KJS::SymbolTableEntry::SymbolTableEntry):
+        (KJS::SymbolTableIndexHashTraits::emptyValue):
+        * kjs/nodes.cpp:
+        (KJS::getSymbolTableEntry):
+        (KJS::ReadModifyResolveNode::optimizeVariableAccess):
+        (KJS::AssignResolveNode::optimizeVariableAccess):
+        (KJS::ProgramNode::initializeSymbolTable):
+
 2008-05-04  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

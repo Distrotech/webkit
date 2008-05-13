@@ -43,10 +43,6 @@ namespace KJS {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
 
-        // FIXME: Implement these checks for real by storing property attributes in the symbol table.
-        bool isReadOnly(int) const { return false; }
-        bool isDontEnum(int) const { return false; }
-
         virtual void putWithAttributes(ExecState*, const Identifier&, JSValue*, unsigned attributes) = 0;
 
         virtual bool deleteProperty(ExecState*, const Identifier&);
@@ -101,7 +97,7 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot)
     {
-        int index = symbolTable().inlineGet(propertyName.ustring().rep());
+        int index = symbolTable().inlineGet(propertyName.ustring().rep()).index;
         if (index != missingSymbolMarker()) {
             slot.setValueSlot(this, &valueAt(index));
             return true;
@@ -111,25 +107,22 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTablePut(const Identifier& propertyName, JSValue* value)
     {
-        int index = symbolTable().inlineGet(propertyName.ustring().rep());
-        if (index == missingSymbolMarker())
+        SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (entry.index == missingSymbolMarker())
             return false;
-        if (isReadOnly(index))
+        if (entry.attributes & ReadOnly)
             return true;
-        valueAt(index) = value;
+        valueAt(entry.index) = value;
         return true;
     }
 
     inline bool JSVariableObject::symbolTablePutWithAttributes(const Identifier& propertyName, JSValue* value, unsigned attributes)
     {
-        int index = symbolTable().get(propertyName.ustring().rep());
-        if (index == missingSymbolMarker())
+        SymbolTableEntry& entry = symbolTable().find(propertyName.ustring().rep())->second;
+        if (entry.index == missingSymbolMarker())
             return false;
-        // FIXME: Implement attribute support by storing attributes in the symbol table.
-        ASSERT(attributes & ReadOnly == 0);
-        ASSERT(attributes & DontEnum == 0);
-        UNUSED_PARAM(attributes);
-        valueAt(index) = value;
+        entry.attributes = attributes;
+        valueAt(entry.index) = value;
         return true;
     }
 
