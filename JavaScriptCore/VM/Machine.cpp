@@ -768,9 +768,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_pre_dec) {
         int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) - 1);
-
-        ++vPC;
+        Instruction* target;
+        double d = r[r0].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[r0].u.jsValue = jsNumber(d - 1);
+        vPC = target + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_post_inc) {
@@ -802,9 +803,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_negate) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(-r[r1].u.jsValue->toNumber(exec));
+        
+        Instruction* target;
+        double d = r[r1].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[r0].u.jsValue = jsNumber(-d);
 
-        ++vPC;
+        vPC = target + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_add) {
@@ -861,9 +865,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int dividend = (++vPC)->u.operand;
         int divisor = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsNumber(fmod(r[dividend].u.jsValue->toNumber(exec), r[divisor].u.jsValue->toNumber(exec)));
+        Instruction* firstTarget;
+        Instruction* secondTarget;
+        double left = r[dividend].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, firstTarget);
+        double right = r[divisor].u.jsValue->toNumber(exec, firstTarget, builtinThrowBuffer, secondTarget);
+        r[dst].u.jsValue = jsNumber(fmod(left, right));
         
-        ++vPC;
+        vPC = secondTarget + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_sub) {
@@ -876,9 +884,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsNumber(r[src1].u.jsValue->toNumber(exec) - r[src2].u.jsValue->toNumber(exec));
+        Instruction* firstTarget;
+        Instruction* secondTarget;
+        double left = r[src1].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, firstTarget);
+        double right = r[src2].u.jsValue->toNumber(exec, firstTarget, builtinThrowBuffer, secondTarget);
+        r[dst].u.jsValue = jsNumber(left - right);
         
-        ++vPC;
+        vPC = secondTarget + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_lshift) {
