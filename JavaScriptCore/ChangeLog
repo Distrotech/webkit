@@ -2,7 +2,7 @@
 
         Reviewed by Geoffrey Garen.
 
-        Implement codegen for ForInNode.
+        Implement codegen for InNode.
 
         * VM/CodeBlock.cpp:
         (KJS::CodeBlock::dump):
