@@ -133,7 +133,7 @@ namespace KJS {
         }
 
     private:
-        size_t newBuffer(size_t size, size_t capacity, size_t minCapacity);
+        size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t offset);
         void growBuffer(size_t minCapacity);
         void setBuffer(Register* buffer)
         {
