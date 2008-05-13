@@ -2267,8 +2267,9 @@ RegisterID* TypeOfResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     if (RegisterID* r0 = generator.registerForLocal(m_ident))
         return generator.emitTypeOf(generator.finalDestination(dst), r0);
 
-    RegisterID* r0 = generator.emitResolve(generator.tempDestination(dst), m_ident);
-    return generator.emitTypeOf(generator.finalDestination(dst, r0), r0);
+    RefPtr<RegisterID> r0 = generator.emitResolveBase(generator.tempDestination(dst), m_ident);
+    generator.emitGetPropId(r0.get(), r0.get(), m_ident);
+    return generator.emitTypeOf(generator.finalDestination(dst, r0.get()), r0.get());
 }
 
 JSValue* TypeOfResolveNode::evaluate(OldInterpreterExecState* exec)
