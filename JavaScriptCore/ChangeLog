@@ -1,3 +1,21 @@
+2008-03-29  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Mark the register file. 
+        
+        It's a conservative mark for now, but once registers are typed, we can
+        do an exact mark.
+        
+        1.4% regression regardless of whether we actually do the marking.
+        GCC is is worth every penny.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Most of the changes here are just for
+        the fact that "registers" is a pointer now.
+
+        * kjs/JSGlobalObject.cpp: The global object owns the register file now.
+
 2008-03-28  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
