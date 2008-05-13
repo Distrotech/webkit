@@ -3913,15 +3913,15 @@ uint32_t BitOrNode::evaluateToUInt32(OldInterpreterExecState* exec)
 
 RegisterID* LogicalAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> newDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> temp = generator.tempDestination(dst);
     RefPtr<LabelID> target = generator.newLabel();
     
-    generator.emitNode(newDst.get(), m_expr1.get());
-    generator.emitJumpIfFalse(newDst.get(), target.get());
-    generator.emitNode(newDst.get(), m_expr2.get());
+    generator.emitNode(temp.get(), m_expr1.get());
+    generator.emitJumpIfFalse(temp.get(), target.get());
+    generator.emitNode(temp.get(), m_expr2.get());
     generator.emitLabel(target.get());
 
-    return newDst.get();
+    return generator.moveToDestinationIfNeeded(dst, temp.get());
 }
 
 void LogicalAndNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3953,15 +3953,15 @@ bool LogicalAndNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* LogicalOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> newDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> temp = generator.tempDestination(dst);
     RefPtr<LabelID> target = generator.newLabel();
     
-    generator.emitNode(newDst.get(), m_expr1.get());
-    generator.emitJumpIfTrue(newDst.get(), target.get());
-    generator.emitNode(newDst.get(), m_expr2.get());
+    generator.emitNode(temp.get(), m_expr1.get());
+    generator.emitJumpIfTrue(temp.get(), target.get());
+    generator.emitNode(temp.get(), m_expr2.get());
     generator.emitLabel(target.get());
 
-    return newDst.get();
+    return generator.moveToDestinationIfNeeded(dst, temp.get());
 }
 
 void LogicalOrNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)

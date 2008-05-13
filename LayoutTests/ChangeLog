@@ -1,3 +1,16 @@
+2008-05-11  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Add tests for:
+
+        Bug 18961: SQUIRRELFISH: Gmail doesn't load
+        <https://bugs.webkit.org/show_bug.cgi?id=18961>
+
+        * fast/js/codegen-temporaries-expected.txt: Added.
+        * fast/js/codegen-temporaries.html: Added.
+        * fast/js/resources/codegen-temporaries.js: Added.
+
 2008-05-10  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
