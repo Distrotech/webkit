@@ -2,6 +2,13 @@
 
         Reviewed by Oliver Hunt.
         
+        Restored dumping of generated code as a command-line switch:
+        run-testkjs -d will do it.
+
+2008-04-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Next step toward supporting re-entrant evaluation: Moved register file
         maintenance code into a proper "RegisterFile" class.
         
