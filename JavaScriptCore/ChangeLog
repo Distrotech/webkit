@@ -2,6 +2,18 @@
 
         Reviewed by Maciej.
 
+        Bug 18732: SQUIRRELFISH: exceptions thrown by native constructors are ignored
+        <https://bugs.webkit.org/show_bug.cgi?id=18732>
+
+        Fixes another regression test.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-04-25  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
         Bug 18728: SQUIRRELFISH: invalid regular expression constants should throw exceptions
         <https://bugs.webkit.org/show_bug.cgi?id=18728>
 
