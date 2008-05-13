@@ -140,6 +140,8 @@
 		65DFC93508EA173A00F7300B /* HashTraits.h in Headers */ = {isa = PBXBuildFile; fileRef = 65DFC92F08EA173A00F7300B /* HashTraits.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		65E217BD08E7EECC0023E5F6 /* Assertions.h in Headers */ = {isa = PBXBuildFile; fileRef = 65E217B708E7EECC0023E5F6 /* Assertions.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		65E217C008E7EECC0023E5F6 /* FastMalloc.h in Headers */ = {isa = PBXBuildFile; fileRef = 65E217BA08E7EECC0023E5F6 /* FastMalloc.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		65E866F20DD59B6400A2B2A1 /* SourceProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 65E866ED0DD59AFA00A2B2A1 /* SourceProvider.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		65E866F30DD59B6400A2B2A1 /* SourceRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 65E866EE0DD59AFA00A2B2A1 /* SourceRange.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		65EA4C9C092AF9E20093D800 /* JSLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EA4C9A092AF9E20093D800 /* JSLock.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		65EA73650BAE35D1001BB560 /* CommonIdentifiers.h in Headers */ = {isa = PBXBuildFile; fileRef = 65EA73630BAE35D1001BB560 /* CommonIdentifiers.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		65F340940CD6C1C000C0CA8B /* LocalStorageEntry.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F340840CD6C0DE00C0CA8B /* LocalStorageEntry.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -482,11 +484,11 @@
 		659126BC0BDD1728001921FB /* AllInOneFile.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = AllInOneFile.cpp; sourceTree = "<group>"; };
 		6592C316098B7DE10003D4F6 /* Vector.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = Vector.h; sourceTree = "<group>"; };
 		6592C317098B7DE10003D4F6 /* VectorTraits.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = VectorTraits.h; sourceTree = "<group>"; };
-		65B1749909D0FEB700820339 /* array_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = array_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/array_object.lut.h; sourceTree = "<group>"; };
+		65B1749909D0FEB700820339 /* array_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = array_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/array_object.lut.h; sourceTree = "<group>"; };
 		65B174BE09D1000200820339 /* chartables.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 30; path = chartables.c; sourceTree = "<group>"; };
-		65B174F109D100FA00820339 /* math_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = math_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/math_object.lut.h; sourceTree = "<group>"; };
-		65B174F209D100FA00820339 /* number_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = number_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/number_object.lut.h; sourceTree = "<group>"; };
-		65B174F409D100FA00820339 /* string_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = string_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/string_object.lut.h; sourceTree = "<group>"; };
+		65B174F109D100FA00820339 /* math_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = math_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/math_object.lut.h; sourceTree = "<group>"; };
+		65B174F209D100FA00820339 /* number_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = number_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/number_object.lut.h; sourceTree = "<group>"; };
+		65B174F409D100FA00820339 /* string_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = string_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/string_object.lut.h; sourceTree = "<group>"; };
 		65B813A80CD1D01900DF59D6 /* LabelStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LabelStack.h; sourceTree = "<group>"; };
 		65C02FBB0637462A003E7EE6 /* protect.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = protect.h; sourceTree = "<group>"; tabWidth = 8; };
 		65C647B3093EF8D60022C380 /* RefPtr.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = RefPtr.h; sourceTree = "<group>"; tabWidth = 8; };
@@ -503,16 +505,18 @@
 		65E217B808E7EECC0023E5F6 /* Assertions.cpp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Assertions.cpp; sourceTree = "<group>"; tabWidth = 8; };
 		65E217B908E7EECC0023E5F6 /* FastMalloc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FastMalloc.cpp; sourceTree = "<group>"; tabWidth = 8; };
 		65E217BA08E7EECC0023E5F6 /* FastMalloc.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = FastMalloc.h; sourceTree = "<group>"; tabWidth = 8; };
+		65E866ED0DD59AFA00A2B2A1 /* SourceProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SourceProvider.h; sourceTree = "<group>"; };
+		65E866EE0DD59AFA00A2B2A1 /* SourceRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SourceRange.h; sourceTree = "<group>"; };
 		65EA4C99092AF9E20093D800 /* JSLock.cpp */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSLock.cpp; sourceTree = "<group>"; tabWidth = 8; };
 		65EA4C9A092AF9E20093D800 /* JSLock.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = JSLock.h; sourceTree = "<group>"; tabWidth = 8; };
 		65EA73620BAE35D1001BB560 /* CommonIdentifiers.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = CommonIdentifiers.cpp; sourceTree = "<group>"; };
 		65EA73630BAE35D1001BB560 /* CommonIdentifiers.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CommonIdentifiers.h; sourceTree = "<group>"; };
 		65F340840CD6C0DE00C0CA8B /* LocalStorageEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalStorageEntry.h; sourceTree = "<group>"; };
-		65FB3EB209D109F000F49DEB /* lexer.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = lexer.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/lexer.lut.h; sourceTree = "<group>"; };
-		65FB3F4709D11B2400F49DEB /* date_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = date_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/date_object.lut.h; sourceTree = "<group>"; };
+		65FB3EB209D109F000F49DEB /* lexer.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = lexer.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/lexer.lut.h; sourceTree = "<group>"; };
+		65FB3F4709D11B2400F49DEB /* date_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = date_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/date_object.lut.h; sourceTree = "<group>"; };
 		65FB3F4809D11B2400F49DEB /* grammar.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = grammar.cpp; sourceTree = "<group>"; };
-		65FB3F4909D11B2400F49DEB /* grammar.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = grammar.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/grammar.h; sourceTree = "<group>"; };
-		65FB3F4C09D11B2400F49DEB /* regexp_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = regexp_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/regexp_object.lut.h; sourceTree = "<group>"; };
+		65FB3F4909D11B2400F49DEB /* grammar.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = grammar.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/grammar.h; sourceTree = "<group>"; };
+		65FB3F4C09D11B2400F49DEB /* regexp_object.lut.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = regexp_object.lut.h; path = ../../../../../symroots/Debug/DerivedSources/JavaScriptCore/regexp_object.lut.h; sourceTree = "<group>"; };
 		704FD35305697E6D003DBED9 /* bool_object.h */ = {isa = PBXFileReference; fileEncoding = 30; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = bool_object.h; sourceTree = "<group>"; tabWidth = 8; };
 		7E2C6C980D31C6B6002D44E2 /* scope_chain_mark.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scope_chain_mark.h; sourceTree = "<group>"; };
 		9303F567099118FA00AD71B8 /* OwnPtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OwnPtr.h; sourceTree = "<group>"; };
@@ -945,6 +949,8 @@
 		65417200039E01BA0058BFEB /* kjs */ = {
 			isa = PBXGroup;
 			children = (
+				65E866ED0DD59AFA00A2B2A1 /* SourceProvider.h */,
+				65E866EE0DD59AFA00A2B2A1 /* SourceRange.h */,
 				659126BC0BDD1728001921FB /* AllInOneFile.cpp */,
 				93ADFCE60CCBD7AC00D30B08 /* array_instance.cpp */,
 				938772E5038BFE19008635CE /* array_instance.h */,
@@ -1131,6 +1137,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65E866F20DD59B6400A2B2A1 /* SourceProvider.h in Headers */,
+				65E866F30DD59B6400A2B2A1 /* SourceRange.h in Headers */,
 				1482B78B0A4305AB00517CFC /* APICast.h in Headers */,
 				938C4F6A0CA06BC700D9310A /* ASCIICType.h in Headers */,
 				93AA4F780957251F0084B3A7 /* AlwaysInline.h in Headers */,

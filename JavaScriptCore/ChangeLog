@@ -1,3 +1,70 @@
+2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - JavaScriptCore part of fix for: "SQUIRRELFISH: function toString broken after calling"
+        https://bugs.webkit.org/show_bug.cgi?id=18869
+       
+        Three layout tests are fixed:
+          fast/js/toString-elision-trailing-comma.html
+          fast/js/toString-prefix-postfix-preserve-parens.html
+          fast/js/kde/lval-exceptions.html
+        
+        Functions now save a shared subrange of the original source used
+        to make them (so in the common case this adds no storage above the
+        memory cache).
+        
+        * kjs/SourceProvider.h: Added.
+        (KJS::SourceProvider): New abstract base class for classes that provide on-demand access
+        to the source for a JavaScript program. This allows function objects to have access to their
+        original source without copying.
+        (KJS::UStringSourceProvider): SourceProvider subclass backed by a KJS::UString.
+        (KJS::UStringSourceProvider::create):
+        (KJS::UStringSourceProvider::getRange):
+        (KJS::UStringSourceProvider::data):
+        (KJS::UStringSourceProvider::length):
+        (KJS::UStringSourceProvider::UStringSourceProvider):
+        * kjs/SourceRange.h: Added.
+        (KJS::SourceRange::SourceRange): Class that holds a SourceProvider and a character range into
+        the source, to encapsulate on-demand access to the source of a function.
+        (KJS::SourceRange::toString):
+        * VM/Machine.cpp:
+        (KJS::eval): Pass a UStringSourceProvider to the parser.
+        * kjs/Parser.cpp:
+        (KJS::Parser::parse): Take a SourceProvider and pass it on to the lexer.
+        * kjs/Parser.h:
+        (KJS::Parser::parse): Take a SourceProvider.
+        * kjs/lexer.cpp:
+        (KJS::Lexer::setCode): Take a SourceProvider; keep it around, and
+        use it to get the raw buffer and length.
+        * kjs/lexer.h:
+        (KJS::Lexer::sourceRange): Convenience function to get a source
+        range based on the lexer's source provieder, and char offsets
+        right before and after the desired range.
+        * kjs/function.cpp:
+        (KJS::globalFuncEval): Pass a UStringSourceProvider to the parser.
+        * kjs/function_object.cpp:
+        (KJS::functionProtoFuncToString): Use toSourceString to get the source.
+        (KJS::FunctionObjectImp::construct): Give the parser a UStringSourceProvider.
+        * kjs/grammar.y: When parsing a function declaration, function
+        expression, or getter or setter, tell the function body about its
+        SourceRange.
+        * kjs/interpreter.cpp:
+        (KJS::Interpreter::checkSyntax): Pass a SourceProvider to the parser.
+        (KJS::Interpreter::evaluate): Pass a SourceProvider to the parser.
+        * kjs/interpreter.h:
+        * kjs/nodes.h:
+        (KJS::FunctionBodyNode::setSource): Establish a SourceRange for this function.
+        (KJS::FunctionBodyNode::toSourceString): Get the source string out
+        of the SourceRange.
+        (KJS::FuncExprNode::): Take a SourceRange and set it on the body.
+        (KJS::FuncDeclNode::): ditto
+        * kjs/testkjs.cpp:
+        (prettyPrintScript): Use a SourceProvider appropriately.
+        * JavaScriptCore.exp: Export new symbols.
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj: Add new files.
+        * JavaScriptCore.xcodeproj/project.pbxproj: Add new files.
+
 2008-05-09  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

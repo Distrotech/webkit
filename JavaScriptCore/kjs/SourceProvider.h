@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2005 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer. 
+ *     notice, this list of conditions and the following disclaimer.
  * 2.  Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution. 
+ *     documentation and/or other materials provided with the distribution.
  * 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
  *     its contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission. 
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -25,43 +25,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef SourceProvider_h
+#define SourceProvider_h
 
-#include "config.h"
-#include "JSRun.h"
+#include "ustring.h"
+#include <wtf/RefCounted.h>
 
-JSRun::JSRun(CFStringRef source, JSFlags inFlags)
-    :   JSBase(kJSRunTypeID),
-        fSource(CFStringToUString(source)),
-        fGlobalObject(new JSGlueGlobalObject(inFlags)),
-        fFlags(inFlags)
-{
+namespace KJS {
+
+    class SourceProvider : public RefCounted<SourceProvider> {
+    public:
+        virtual ~SourceProvider() {}
+        virtual UString getRange(int start, int end) const = 0;
+        virtual const UChar* data() const = 0;
+        virtual int length() const = 0;
+    };
+
+    class UStringSourceProvider : public SourceProvider {
+    public:
+        static PassRefPtr<UStringSourceProvider> create(const UString& source) { return adoptRef(new UStringSourceProvider(source)); }
+
+        UString getRange(int start, int end) const { return m_source.substr(start, end - start); }
+        const UChar* data() const { return m_source.data(); }
+        int length() const { return m_source.size(); }
+
+    private:
+        UStringSourceProvider(const UString& source) : m_source(source) {}
+        UString m_source;
+    };
+
 }
 
-JSRun::~JSRun()
-{
-}
-
-JSFlags JSRun::Flags() const
-{
-    return fFlags;
-}
-
-UString JSRun::GetSource() const
-{
-    return fSource;
-}
-
-JSGlobalObject* JSRun::GlobalObject() const
-{
-    return fGlobalObject;
-}
-
-Completion JSRun::Evaluate()
-{
-    return Interpreter::evaluate(fGlobalObject->globalExec(), fGlobalObject->globalScopeChain(), UString(), 0, fSource);
-}
-
-bool JSRun::CheckSyntax()
-{
-    return Interpreter::checkSyntax(fGlobalObject->globalExec(), UString(), 0, fSource).complType() != Throw;
-}
+#endif // SourceProvider_h

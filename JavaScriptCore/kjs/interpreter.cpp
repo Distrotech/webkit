@@ -39,16 +39,17 @@ namespace KJS {
 
 Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UString& code)
 {
-    return checkSyntax(exec, sourceURL, startingLineNumber, code.data(), code.size());
+    return checkSyntax(exec, sourceURL, startingLineNumber, UStringSourceProvider::create(code));
 }
 
-Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength)
+Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, int startingLineNumber, PassRefPtr<SourceProvider> source)
 {
     JSLock lock;
 
     int errLine;
     UString errMsg;
-    RefPtr<ProgramNode> progNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, code, codeLength, 0, &errLine, &errMsg);
+
+    RefPtr<ProgramNode> progNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, source, 0, &errLine, &errMsg);
     if (!progNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, 0, sourceURL));
     return Completion(Normal);
@@ -56,10 +57,10 @@ Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, i
 
 Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const UString& sourceURL, int startingLineNumber, const UString& code, JSValue* thisV)
 {
-    return evaluate(exec, scopeChain, sourceURL, startingLineNumber, code.data(), code.size(), thisV);
+    return evaluate(exec, scopeChain, sourceURL, startingLineNumber, UStringSourceProvider::create(code), thisV);
 }
 
-Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisValue)
+Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const UString& sourceURL, int startingLineNumber, PassRefPtr<SourceProvider> source, JSValue* thisValue)
 {
     JSLock lock;
     
@@ -72,7 +73,7 @@ Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const 
     Profiler::profiler()->willExecute(exec, sourceURL, startingLineNumber);
 #endif
 
-    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, code, codeLength, &sourceId, &errLine, &errMsg);
+    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, source, &sourceId, &errLine, &errMsg);
 
     // no program node means a syntax error occurred
     if (!programNode)

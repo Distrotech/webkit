@@ -13797,6 +13797,10 @@
 					RelativePath="..\bindings\js\ScheduledAction.h"
 					>
 				</File>
+				<File
+					RelativePath="..\bindings\js\StringSourceProvider.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

@@ -1,3 +1,27 @@
+2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - JavaScriptGlue part of fix for: "SQUIRRELFISH: function toString broken after calling"
+        https://bugs.webkit.org/show_bug.cgi?id=18869
+
+        * bindings/js/StringSourceProvider.h: Added. SourceProvider subclass backed by a WebCore::String.
+        (WebCore::StringSourceProvider::create):
+        (WebCore::StringSourceProvider::getRange):
+        (WebCore::StringSourceProvider::data):
+        (WebCore::StringSourceProvider::length):
+        (WebCore::StringSourceProvider::StringSourceProvider):
+        * bindings/js/kjs_proxy.cpp:
+        (WebCore::KJSProxy::evaluate): Pass a StringSourceProvider to
+        evaluate() instead of UChar* / length.
+        * html/HTMLScriptElement.cpp:
+        (WebCore::HTMLScriptElement::text): Modified to return the
+        original string as-is when the script element contains only a
+        single text node, to avoid excess memory use.
+        
+        * WebCore.vcproj/WebCore.vcproj: Add new file to build.
+        * WebCore.xcodeproj/project.pbxproj: ditto
+
 2008-05-09  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

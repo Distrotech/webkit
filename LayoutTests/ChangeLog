@@ -1,3 +1,29 @@
+2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - test changes for: "SQUIRRELFISH: function toString broken after calling"
+        https://bugs.webkit.org/show_bug.cgi?id=18869
+
+        All of these tests expected function.toString to somewhat change
+        things from the raw original source. They are now prepared for the
+        fact that this does not happen.
+        
+        * fast/js/function-decompilation-operators.html:
+        * fast/js/function-names-expected.txt:
+        * fast/js/function-prototype-expected.txt:
+        * fast/js/function-prototype.html:
+        * fast/js/function-toString-object-literals-expected.txt:
+        * fast/js/function-toString-parentheses-expected.txt:
+        * fast/js/kde/lval-exceptions-expected.txt:
+        * fast/js/modify-non-references-expected.txt:
+        * fast/js/resources/function-names.js:
+        * fast/js/resources/function-toString-object-literals.js:
+        * fast/js/resources/function-toString-parentheses.js:
+        * fast/js/resources/modify-non-references.js:
+        * fast/js/resources/toString-prefix-postfix-preserve-parens.js:
+        * fast/js/toString-prefix-postfix-preserve-parens-expected.txt:
+
 2008-05-09  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.

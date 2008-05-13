@@ -609,6 +609,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\kjs\SourceProvider.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\kjs\SourceRange.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\kjs\string_object.cpp"
 				>
 			</File>

@@ -29,6 +29,7 @@
 #include "internal.h"
 #include "regexp.h"
 #include "RegisterID.h"
+#include "SourceRange.h"
 #include "SymbolTable.h"
 #include <wtf/UnusedParam.h>
 #include <wtf/ListRefPtr.h>
@@ -3035,6 +3036,9 @@ namespace KJS {
 
         void mark();
 
+        void setSource(const SourceRange& source) { m_source = source; } 
+        UString toSourceString() const KJS_FAST_CALL { return UString("{") + m_source.toString() + UString("}"); }
+
     protected:
         FunctionBodyNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
@@ -3044,16 +3048,18 @@ namespace KJS {
         Vector<Identifier> m_parameters;
         SymbolTable m_symbolTable;
         OwnPtr<CodeBlock> m_code;
+        SourceRange m_source;
     };
 
     class FuncExprNode : public ExpressionNode {
     public:
-        FuncExprNode(const Identifier& ident, FunctionBodyNode* body, ParameterNode* parameter = 0) KJS_FAST_CALL
+        FuncExprNode(const Identifier& ident, FunctionBodyNode* body, const SourceRange& source, ParameterNode* parameter = 0) KJS_FAST_CALL
             : m_ident(ident)
             , m_parameter(parameter)
             , m_body(body)
         {
             addParams();
+            m_body->setSource(source);
         }
 
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
@@ -3077,19 +3083,13 @@ namespace KJS {
 
     class FuncDeclNode : public StatementNode {
     public:
-        FuncDeclNode(const Identifier& ident, FunctionBodyNode* body) KJS_FAST_CALL
-            : m_ident(ident)
-            , m_body(body)
-        {
-            addParams();
-        }
-
-        FuncDeclNode(const Identifier& ident, ParameterNode* parameter, FunctionBodyNode* body) KJS_FAST_CALL
+        FuncDeclNode(const Identifier& ident, FunctionBodyNode* body, const SourceRange& source, ParameterNode* parameter = 0) KJS_FAST_CALL
             : m_ident(ident)
             , m_parameter(parameter)
             , m_body(body)
         {
             addParams();
+            m_body->setSource(source);
         }
 
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
