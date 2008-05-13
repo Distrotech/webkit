@@ -32,9 +32,9 @@
 
 namespace KJS {
 
-  class ActivationImp;
   class FunctionBodyNode;
   class FunctionPrototype;
+  class JSActivation;
   class JSGlobalObject;
 
   class InternalFunctionImp : public JSObject {
@@ -110,7 +110,7 @@ namespace KJS {
   
   class Arguments : public JSObject {
   public:
-    Arguments(ExecState*, FunctionImp* func, const List& args, ActivationImp* act);
+    Arguments(ExecState*, FunctionImp* func, const List& args, JSActivation* act);
     virtual void mark();
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
     virtual void put(ExecState*, const Identifier& propertyName, JSValue*);
@@ -120,7 +120,7 @@ namespace KJS {
   private:
     static JSValue* mappedIndexGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot);
 
-    ActivationImp* _activationObject;
+    JSActivation* _activationObject;
     mutable IndexToNameMap indexToNameMap;
   };
 

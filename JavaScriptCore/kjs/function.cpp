@@ -29,6 +29,7 @@
 #include "Activation.h"
 #include "ExecState.h"
 #include "ExecStateInlines.h"
+#include "JSActivation.h"
 #include "JSGlobalObject.h"
 #include "Machine.h"
 #include "Parser.h"
@@ -241,6 +242,11 @@ IndexToNameMap::IndexToNameMap(FunctionImp* func, const List& args)
   _map = new Identifier[args.size()];
   this->size = args.size();
   
+  // FIXME: We only support a NULL func as scaffolding. Remove this branch once
+  // we fully support the arguments object.
+  if (!func)
+    return;
+  
   int i = 0;
   List::const_iterator end = args.end();
   for (List::const_iterator it = args.begin(); it != end; ++i, ++it)
@@ -298,12 +304,15 @@ Identifier& IndexToNameMap::operator[](const Identifier& index)
 const ClassInfo Arguments::info = { "Arguments", 0, 0, 0 };
 
 // ECMA 10.1.8
-Arguments::Arguments(ExecState* exec, FunctionImp* func, const List& args, ActivationImp* act)
+Arguments::Arguments(ExecState* exec, FunctionImp* func, const List& args, JSActivation* act)
     : JSObject(exec->lexicalGlobalObject()->objectPrototype())
     , _activationObject(act)
     , indexToNameMap(func, args)
 {
-    putDirect(exec->propertyNames().callee, func, DontEnum);
+    // FIXME: We only support a NULL func as scaffolding. Remove this branch once
+    // we fully support the arguments object.
+    if (func)
+        putDirect(exec->propertyNames().callee, func, DontEnum);
     putDirect(exec->propertyNames().length, args.size(), DontEnum);
   
     int i = 0;
@@ -442,12 +451,9 @@ void ActivationImp::mark()
     markChildren();
 }
 
-void ActivationImp::createArgumentsObject(ExecState* exec)
+void ActivationImp::createArgumentsObject(ExecState*)
 {
-    // Since "arguments" is only accessible while a function is being called,
-    // we can retrieve our argument list from the ExecState for our function 
-    // call instead of storing the list ourselves.
-    d()->argumentsObject = new Arguments(exec, d()->exec->function(), *d()->exec->arguments(), this);
+    ASSERT_NOT_REACHED();
 }
 
 JSObject* ActivationImp::toThisObject(ExecState* exec) const
