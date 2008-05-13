@@ -1,3 +1,32 @@
+o2008-05-07  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Added this test to demonstrate that, for "f(x)", it is correct to evaluate
+        "x" even if "f" is not a function, and therefore "f(x)" will throw an exception.
+
+        * fast/js/function-argument-evaluation-before-exception-expected.txt: Added.
+        * fast/js/function-argument-evaluation-before-exception.html: Added.
+        
+        These tests now have an extra "access denied" message in them, because
+        of the behavior change mentioned above.
+        
+        I also added try/catch clauses to eliminate the "is not object"
+        exception messages from the test output.
+        
+        * http/tests/security/listener/resources/targetChild-JSTargetNode-onclick-addEventListener.html:
+        * http/tests/security/listener/resources/targetChild-JSTargetNode-onclick-shortcut.html:
+        * http/tests/security/listener/resources/targetChild-XMLHttpRequest-addEventListener.html:
+        * http/tests/security/listener/resources/targetChild-XMLHttpRequest-shortcut.html:
+        * http/tests/security/listener/resources/targetChild-window-onclick-addEventListener.html:
+        * http/tests/security/listener/resources/targetChild-window-onclick-shortcut.html:
+        * http/tests/security/listener/xss-JSTargetNode-onclick-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-JSTargetNode-onclick-shortcut-expected.txt:
+        * http/tests/security/listener/xss-XMLHttpRequest-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-XMLHttpRequest-shortcut-expected.txt:
+        * http/tests/security/listener/xss-window-onclick-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-window-onclick-shortcut-expected.txt:
+
 2008-05-07  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
