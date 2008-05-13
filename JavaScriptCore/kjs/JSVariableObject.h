@@ -61,16 +61,13 @@ namespace KJS {
         // without increasing their own size (since there's a hard limit on the
         // size of a JSCell).
         struct JSVariableObjectData {
-            JSVariableObjectData()
-            {
-                ASSERT_NOT_REACHED();
-            }
-            
             JSVariableObjectData(SymbolTable* symbolTable_, Vector<Register>* registers_, int rOffset_)
                 : symbolTable(symbolTable_)
                 , registers(registers_)
                 , rOffset(rOffset_)
             {
+                ASSERT(symbolTable_);
+                ASSERT(registers_);
             }
 
             LocalStorage localStorage; // Storage for variables in the symbol table.
@@ -79,11 +76,6 @@ namespace KJS {
             Vector<Register>* registers; // The register file.
             int rOffset; // Offset of "r", the register past the end of local storage.
         };
-
-        JSVariableObject()
-        {
-            ASSERT_NOT_REACHED();
-        }
 
         JSVariableObject(JSVariableObjectData* data)
             : d(data) // Subclass owns this pointer.
