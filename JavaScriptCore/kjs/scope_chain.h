@@ -68,9 +68,6 @@ namespace KJS {
 
     class ScopeChain {
     public:
-        ScopeChain() : _node(0) { }
-        ~ScopeChain() { deref(); }
-
         ScopeChain(const ScopeChain& c)
             : _node(c._node)
         {
@@ -89,6 +86,8 @@ namespace KJS {
             ref();
         }
     
+        ~ScopeChain() { deref(); }
+
         JSObject* top() const { return _node->object; }
         JSObject* bottom() const;
 
