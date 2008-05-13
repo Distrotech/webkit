@@ -502,7 +502,7 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     ASSERT(scopeDelta >= 0);
     while (scopeDelta--)
         sc.pop();
-    scopeChain = sc.node();
+    setScopeChain(exec, scopeChain, sc.node());
 
     return handlerVPC;
 }
@@ -566,9 +566,11 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
+    
+    ExecState newExec(exec, scopeChain);
 
     m_reentryDepth++;
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
+    JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);
     m_reentryDepth--;
 
     registerFileStack->popGlobalRegisterFile();
@@ -619,8 +621,10 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
 
+    ExecState newExec(exec, scopeChain);
+
     m_reentryDepth++;
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
+    JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, newCodeBlock, exception);
     m_reentryDepth--;
 
     registerFile->shrink(oldSize);
@@ -670,8 +674,10 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
 
+    ExecState newExec(exec, scopeChain);
+
     m_reentryDepth++;
-    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
+    JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);
     m_reentryDepth--;
 
     registerFile->shrink(oldSize);
@@ -682,6 +688,12 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
 {
     RegisterFile* registerFile = registerFileStack->current();
     return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception);
+}
+
+ALWAYS_INLINE void Machine::setScopeChain(ExecState* exec, ScopeChainNode*& scopeChain, ScopeChainNode* newScopeChain)
+{
+    scopeChain = newScopeChain;
+    exec->m_scopeChain = newScopeChain;
 }
 
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
@@ -1479,7 +1491,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-            scopeChain = scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r);            
+            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r));
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
@@ -1538,7 +1550,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         
         k = codeBlock->jsValues.data();
         vPC = callFrame[ReturnVPC].u.vPC;
-        scopeChain = callFrame[CallerScopeChain].u.scopeChain;
+        setScopeChain(exec, scopeChain, callFrame[CallerScopeChain].u.scopeChain);
         r = (*registerBase) + callFrame[CallerRegisterOffset].u.i;
         int r0 = callFrame[ReturnValueRegister].u.i;
         r[r0].u.jsValue = returnValue;
@@ -1585,7 +1597,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-            scopeChain = scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r);            
+            setScopeChain(exec, scopeChain, scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r));
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
@@ -1617,13 +1629,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* o = v->toObject(exec);
         VM_CHECK_EXCEPTION();
         
-        scopeChain = scopeChain->push(o);
+        setScopeChain(exec, scopeChain, scopeChain->push(o));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pop_scope) {
-        scopeChain = scopeChain->pop();
+        setScopeChain(exec, scopeChain, scopeChain->pop());
 
         ++vPC;
         NEXT_OPCODE;
@@ -1654,8 +1666,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_jmp_scopes) {
         int scopeDelta = (++vPC)->u.operand;
         int offset = (++vPC)->u.operand;
+        
+        ScopeChainNode* tmp = scopeChain;
         while (scopeDelta--)
-            scopeChain = scopeChain->pop();
+            tmp = tmp->pop();
+        setScopeChain(exec, scopeChain, tmp);
+            
         vPC += offset;
         NEXT_OPCODE;
     }

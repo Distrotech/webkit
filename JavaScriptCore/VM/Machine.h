@@ -92,6 +92,8 @@ namespace KJS {
         enum { MaxReentryDepth = 128 };
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
 
+        ALWAYS_INLINE void setScopeChain(ExecState* exec, ScopeChainNode*&, ScopeChainNode*);
+
         NEVER_INLINE bool unwindCallFrame(Register**, const Instruction*&, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
         NEVER_INLINE Instruction* throwException(ExecState*, JSValue*, Register**, const Instruction*, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
 
