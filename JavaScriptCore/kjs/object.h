@@ -600,6 +600,16 @@ ALWAYS_INLINE bool JSObject::getOwnPropertySlot(ExecState* exec, const Identifie
     return false;
 }
 
+inline void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
+{
+    _prop.put(propertyName, value, attr);
+}
+
+inline void JSObject::putDirect(const Identifier &propertyName, int value, int attr)
+{
+    _prop.put(propertyName, jsNumber(value), attr);
+}
+
 inline JSValue* JSObject::toPrimitive(ExecState* exec, JSType preferredType) const
 {
     return defaultValue(exec, preferredType);

@@ -37,10 +37,14 @@
 namespace KJS {
 
     class CodeBlock;
+    class EvalNode;
     class ExecState;
+    class FunctionBodyNode;
+    class ProgramNode;
     class Register;
     class RegisterFile;
     class RegisterFileStack;
+    class ScopeChainNode;
     
     class Machine {
     public:
