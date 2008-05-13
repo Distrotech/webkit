@@ -641,7 +641,7 @@ uint32_t ResolveNode::evaluateToUInt32(ExecState* exec)
 
 static size_t getSymbolTableEntry(ExecState* exec, const Identifier& ident, const SymbolTable& symbolTable, size_t& stackDepth) 
 {
-    size_t index = symbolTable.get(ident.ustring().rep());
+    int index = symbolTable.get(ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         stackDepth = 0;
         return index;
@@ -676,7 +676,7 @@ static size_t getSymbolTableEntry(ExecState* exec, const Identifier& ident, cons
 void ResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
     size_t depth = 0;
-    size_t index = getSymbolTableEntry(exec, m_ident, symbolTable, depth);
+    int index = getSymbolTableEntry(exec, m_ident, symbolTable, depth);
     if (index != missingSymbolMarker()) {
         if (!depth)
             new (this) LocalVarAccessNode(index);
@@ -1306,7 +1306,7 @@ void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const Symb
     nodeStack.append(m_args.get());
 
     size_t depth = 0;
-    size_t index = getSymbolTableEntry(exec, m_ident, symbolTable, depth);
+    int index = getSymbolTableEntry(exec, m_ident, symbolTable, depth);
     if (index != missingSymbolMarker()) {
         if (!depth)
             new (this) LocalVarFunctionCallNode(index);
@@ -1673,7 +1673,7 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
 // Increment
 void PostIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) PostIncConstNode(index);
@@ -1737,7 +1737,7 @@ void PostIncLocalVarNode::optimizeForUnnecessaryResult()
 // Decrement
 void PostDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) PostDecConstNode(index);
@@ -1946,7 +1946,7 @@ JSValue* PostfixErrorNode::evaluate(ExecState* exec)
 
 void DeleteResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker())
         new (this) LocalVarDeleteNode();
 }
@@ -2101,7 +2101,7 @@ static JSValue* typeStringForValue(JSValue* v)
 
 void TypeOfResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker())
         new (this) LocalVarTypeOfNode(index);
 }
@@ -2164,7 +2164,7 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
 
 void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) PreIncConstNode(index);
@@ -2216,7 +2216,7 @@ JSValue* PreIncResolveNode::evaluate(ExecState* exec)
 
 void PreDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) PreDecConstNode(index);
@@ -3869,7 +3869,7 @@ static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(ExecState* exec, JSVa
 void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) ReadModifyConstNode(index);
@@ -3895,7 +3895,7 @@ RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
 void AssignResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
-    size_t index = symbolTable.get(m_ident.ustring().rep());
+    int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
         if (isConstant(localStorage, index))
             new (this) AssignConstNode;
@@ -5384,7 +5384,7 @@ void ProgramNode::processDeclarations(ExecState* exec)
     }
 
     for (size_t i = 0, size = m_varStack.size(); i < size; ++i) {
-        size_t index = m_varIndexes[i];
+        int index = m_varIndexes[i];
         if (index == missingSymbolMarker())
             continue;
 
@@ -5393,7 +5393,7 @@ void ProgramNode::processDeclarations(ExecState* exec)
             attributes |= ReadOnly;
         LocalStorageEntry entry = LocalStorageEntry(jsUndefined(), attributes);
 
-        ASSERT(index == localStorage.size());
+        ASSERT(static_cast<unsigned>(index) == localStorage.size());
         localStorage.uncheckedAppend(entry);
     }
 
