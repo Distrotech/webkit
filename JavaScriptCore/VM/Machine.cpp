@@ -360,7 +360,7 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     callFrame[Machine::ReturnValueRegister].u.i = returnValueRegister;
     callFrame[Machine::ArgumentStartRegister].u.i = argv; // original argument vector (for the sake of the "arguments" object)
     callFrame[Machine::CalledAsConstructor].u.i = calledAsConstructor;
-    // callFrame[Machine::OptionalCalleeScopeChain] gets optionally set later
+    // callFrame[Machine::OptionalCalleeActivation] gets optionally set later
 }
 
 ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc)
@@ -399,10 +399,14 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
 ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
 {
     if (newCodeBlock->needsActivation) {
-        COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(callFrame[Machine::OptionalCalleeScopeChain]), ScopeChain_fits_in_register);
-        ScopeChain* sc = new (&callFrame[Machine::OptionalCalleeScopeChain]) ScopeChain(*callDataScopeChain);
-        sc->push(new JSActivation(functionBody, registerBase, r - (*registerBase)));
-        return sc->node();
+        char scMem[sizeof(ScopeChain)];
+        ScopeChain* sc = new (&scMem) ScopeChain(*callDataScopeChain);
+
+        JSActivation* activation = new JSActivation(functionBody, registerBase, r - (*registerBase));
+        sc->push(activation);
+        ScopeChainNode* result = sc->node();
+        callFrame[Machine::OptionalCalleeActivation].u.jsValue = activation;
+        return result;
     } 
 
     return callDataScopeChain->node();
