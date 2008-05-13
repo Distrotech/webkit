@@ -1654,10 +1654,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_jmp_scopes) {
         int scopeDelta = (++vPC)->u.operand;
         int offset = (++vPC)->u.operand;
-        ScopeChain sc(scopeChain);
         while (scopeDelta--)
-            sc.pop();
-        scopeChain = sc.node();
+            scopeChain = scopeChain->pop();
         vPC += offset;
         NEXT_OPCODE;
     }
