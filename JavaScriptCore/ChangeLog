@@ -1,3 +1,18 @@
+2008-05-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Introduced support for function.caller.
+        
+        Improved support for walking interesting scopes for function introspection.
+        
+        This fixes all remaining layout tests not blocked by rebasing to trunk.
+        
+        SunSpider reports no change.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::dumpRegisters): Fixed a spacing issue.
+
 2008-05-11  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.
