@@ -60,7 +60,7 @@ void CodeBlock::dump(ExecState* exec)
         if (machine().isOpcode(it->u.opcode))
             ++instructionCount;
 
-    printf("%lu instructions; %lu bytes at %p; %d parameters; %d locals; %d temporaries\n\n", instructionCount, instructions.size() * sizeof(Instruction), this, numParameters, numLocals, numTemporaries);
+    printf("%lu instructions; %lu bytes at %p; %d locals (%d parameters); %d temporaries\n\n", instructionCount, instructions.size() * sizeof(Instruction), this, numParameters + numVars, numParameters, numTemporaries);
     
     for (Vector<Instruction>::iterator it = begin; it != end; ++it)
         dump(exec, begin, it);
