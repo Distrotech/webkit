@@ -52,6 +52,14 @@ namespace KJS {
         static const bool emptyValueIsZero = false;
     };
 
+    // LoopContexts are used to track entry and exit points for javascript loops
+    struct LoopContext {
+        LabelStack* labels;
+        LabelID* continueTarget;
+        LabelID* breakTarget;
+        int scopeDepth;
+    };
+
     class CodeGenerator {
     public:
         CodeGenerator(const ScopeChain& scopeChain, SymbolTable* symbolTable, unsigned localCount, unsigned parameterCount, ScopeNode* scopeNode, CodeBlock* codeBlock)
@@ -160,11 +168,11 @@ namespace KJS {
         PassRefPtr<LabelID> emitJump(LabelID*);
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
+        PassRefPtr<LabelID> emitJumpScopes(LabelID* target, int targetScopeDepth);
         
         void pushLoopContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
         void popLoopContext();
-        LabelID* labelForContinue(const Identifier&);
-        LabelID* labelForBreak(const Identifier&);
+        LoopContext* loopContextForLabel(const Identifier&);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
@@ -192,14 +200,7 @@ namespace KJS {
         
         HashMap<int, int, DefaultHash<int>::Hash, LocalsHashTraits> m_localsMap; // Maps register index to index in m_locals.
 
-        // LoopContexts are used to track entry and exit points for javascript loops
-        struct LoopContext {
-            LabelStack* labels;
-            LabelID* continueTarget;
-            LabelID* breakTarget;
-        };
         Vector<LoopContext> m_loopContextStack;
-        LoopContext* loopContextForIdentifier(const Identifier&);
 
         int m_nextLocal;
         int m_nextParameter;
