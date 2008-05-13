@@ -901,7 +901,7 @@ JSValue* ArrayNode::evaluate(ExecState* exec)
 RegisterID* ObjectLiteralNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (m_list)
-        return m_list->emitCode(generator, dst);
+        return generator.emitNode(dst, m_list.get());
     else
         return generator.emitNewObject(generator.finalDestination(dst));
 }
@@ -930,7 +930,7 @@ RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst
     generator.emitNewObject(r0.get());
     
     for (PropertyListNode* p = this; p; p = p->m_next.get()) {
-        RegisterID* r1 = p->m_node->m_assign->emitCode(generator);
+        RegisterID* r1 = generator.emitNode(p->m_node->m_assign.get());
         
         switch (p->m_node->m_type) {
             case PropertyNode::Constant: {
@@ -1116,7 +1116,7 @@ uint32_t DotAccessorNode::evaluateToUInt32(ExecState* exec)
 RegisterID* ArgumentListNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     ASSERT(m_expr);
-    return m_expr->emitCode(generator, dst);
+    return generator.emitNode(dst, m_expr.get());
 }
 
 void ArgumentListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5214,7 +5214,7 @@ JSValue* BreakNode::execute(ExecState* exec)
 
 RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = m_value ? m_value->emitCode(generator, dst) : generator.emitLoad(generator.finalDestination(dst), jsUndefined());
+    RegisterID* r0 = m_value ? generator.emitNode(dst, m_value.get()) : generator.emitLoad(generator.finalDestination(dst), jsUndefined());
     if (generator.scopeDepth()) {
         RefPtr<LabelID> l0 = generator.newLabel();
         generator.emitJumpScopes(l0.get(), 0);
@@ -5529,7 +5529,7 @@ RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitPutPropId(newScope, m_exceptionIdent, exceptionRegister.get());
         exceptionRegister = 0; // Release register used for temporaries
         generator.emitPushScope(newScope);
-        m_catchBlock->emitCode(generator, dst);
+        generator.emitNode(dst, m_catchBlock.get());
         generator.emitPopScope();
         generator.emitLabel(handlerEndLabel.get());
     }
@@ -5547,7 +5547,7 @@ RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 
         // emit the finally block itself
         generator.emitLabel(finallyStart.get());
-        m_finallyBlock->emitCode(generator, dst);
+        generator.emitNode(dst, m_finallyBlock.get());
         generator.emitSubroutineReturn(finallyReturnAddr.get());
 
         generator.emitLabel(finallyEndLabel.get());
