@@ -1,6 +1,43 @@
 2008-04-06  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
+        
+        Improved register dumping, plus a liberal smattering of "const". Here's
+        what the new format looks like:
+
+        (gdb) call (void)dumpCallFrame(codeBlock, scopeChain, registers->begin(), r)
+        4 instructions; 48 bytes at 0x509210; 3 locals (2 parameters); 1 temporaries
+
+        [   0] load             lr1, undefined(@k0)
+        [   3] load             lr1, 2(@k1)
+        [   6] add              tr0, lr2, lr1
+        [  10] ret              tr0
+
+        Constants:
+          k0 = undefined
+          k1 = 2
+
+        Register frame: 
+
+        ----------------------------------------
+             use      |   address  |    value   
+        ----------------------------------------
+        [return info] |   0x80ac08 |   0x5081c0 
+        [return info] |   0x80ac0c |   0x508e90 
+        [return info] |   0x80ac10 |   0x504acc 
+        [return info] |   0x80ac14 |        0x2 
+        [return info] |   0x80ac18 |        0x0 
+        [return info] |   0x80ac1c |        0x7 
+        [return info] |   0x80ac20 |        0x0 
+        ----------------------------------------
+        [param]       |   0x80ac24 |        0x1 
+        [param]       |   0x80ac28 |        0x7 
+        [var]         |   0x80ac2c |        0xb 
+        [temp]        |   0x80ac30 |        0xf 
+
+2008-04-06  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
 
         Support for evaluating multiple scripts in the same global environment.
         (Still don't support re-entrant evaluation yet.)
