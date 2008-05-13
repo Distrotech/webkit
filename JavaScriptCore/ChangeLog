@@ -1,5 +1,22 @@
 2008-04-22  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
+        Reviewed by Maciej.
+
+        Add support for function declarations in eval code.
+
+        (this fixes 12 more regression tests)
+        
+        * VM/CodeBlock.h:
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * kjs/nodes.cpp:
+        (KJS::EvalNode::generateCode):
+
+2008-04-22  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
         Reviewed by Oliver.
 
         Implement LabelNode.

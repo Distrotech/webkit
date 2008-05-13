@@ -121,7 +121,8 @@ namespace KJS {
         {
         }
 
-        Vector<Identifier> declaredVariables;
+        Vector<Identifier> declaredVariableNames;
+        Vector<Identifier> declaredFunctionNames;
     };
 
 } // namespace KJS

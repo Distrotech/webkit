@@ -593,12 +593,16 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
         variableObject = node->object;
     }
     
-    for (Vector<Identifier>::const_iterator iter = codeBlock->declaredVariables.begin(); iter != codeBlock->declaredVariables.end(); ++iter) {
+    for (Vector<Identifier>::const_iterator iter = codeBlock->declaredVariableNames.begin(); iter != codeBlock->declaredVariableNames.end(); ++iter) {
         Identifier ident = *iter;
         
         if (!variableObject->hasProperty(exec, ident))
             variableObject->put(exec, ident, jsUndefined());
     }
+    
+    ASSERT(codeBlock->functions.size() == codeBlock->declaredFunctionNames.size());
+    for (size_t i = 0; i < codeBlock->functions.size(); ++i)
+        variableObject->put(exec, codeBlock->declaredFunctionNames[i], codeBlock->functions[i]->makeFunction(exec, scopeChain));
     
     size_t oldSize = registerFile->size();
     size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries + CallFrameHeaderSize;
