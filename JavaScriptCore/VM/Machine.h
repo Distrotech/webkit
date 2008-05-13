@@ -54,6 +54,8 @@ namespace KJS {
                CalledAsConstructor,
                OptionalCalleeScopeChain,
                CallFrameHeaderSize};
+        
+        enum { ProgramCodeThisRegister = -1 };
 
         Machine();
         
@@ -76,7 +78,7 @@ namespace KJS {
 
         bool isOpcode(Opcode opcode);
         
-        JSValue* execute(ProgramNode*, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
+        JSValue* execute(ProgramNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChain*, JSValue** exception);
         JSValue* execute(FunctionBodyNode*, const List& args, JSObject* thisObj, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
         
     private:
