@@ -1,3 +1,11 @@
+2008-04-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Removed an unused test.
+
+        * tests/squirrelfish/loop-resolve.js: Removed.
+
 2008-04-10  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
