@@ -1,5 +1,17 @@
 2008-05-08  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Oliver Hunt.
+        
+        Added specific test cases for the root cause of squirrelfish's failure
+        in fast/canvas/canvas-pattern-behaviour.html.
+
+        * fast/js/exception-thrown-from-eval-inside-closure-expected.txt: Added.
+        * fast/js/exception-thrown-from-eval-inside-closure.html: Added.
+        * fast/js/exception-thrown-from-function-with-lazy-activation-expected.txt: Added.
+        * fast/js/exception-thrown-from-function-with-lazy-activation.html: Added.
+
+2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Sam Weinig.
         
         Updated test results to reflect correct behavior: The line number in
