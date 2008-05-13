@@ -1083,19 +1083,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         }
 
         if (callType == CallTypeNative) {
-            // FIXME: technically it seems like we should save registerOffset here
-            // and restore r below, as for native call, but it seems to cause a 
-            // significant perf regression
             int registerOffset = r - (*registerBase);
 
             List args(&r[argv + 1].u.jsValue, argc - 1);
-            r[r0].u.jsValue = constructor->construct(exec, args);
+            JSValue* returnValue = constructor->construct(exec, args);
         
-            // FIXME: technically it seems like we should restore r here and save
-            // registerOffset above, as for native call, but it seems to cause a
-            // significant perf regression
             r = (*registerBase) + registerOffset;
-
+            r[r0].u.jsValue = returnValue;
+            
             ++vPC;
             NEXT_OPCODE;
         }
