@@ -36,7 +36,7 @@ namespace KJS {
 const ClassInfo JSActivation::info = { "JSActivation", 0, 0, 0 };
 
 JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Vector<Register>* registers, int rOffset)
-    : m_data(new JSActivationData(functionBody, registers, rOffset))
+    : JSVariableObject(new JSActivationData(functionBody, registers, rOffset))
 {
 }
 
@@ -112,9 +112,6 @@ bool JSActivation::deleteProperty(ExecState* exec, const Identifier& propertyNam
     if (propertyName == exec->propertyNames().arguments)
         return false;
 
-    if (symbolTable().contains(propertyName.ustring().rep()))
-        return false;
-
     return Base::deleteProperty(exec, propertyName);
 }
 
@@ -129,9 +126,20 @@ void JSActivation::mark()
     
     Vector<Register>::iterator end = d()->registers->end();
     for (Vector<Register>::iterator it = d()->registers->begin(); it != end; ++it) {
-        if (!(*it).u.jsValue->marked())
-            (*it).u.jsValue->mark();
+        JSValue* v = it->u.jsValue;
+        if (!v->marked())
+            v->mark();
     }
+}
+
+bool JSActivation::isActivationObject() const
+{
+    return true;
+}
+
+bool JSActivation::isDynamicScope() const
+{
+    return d()->functionBody->usesEval();
 }
 
 } // namespace KJS

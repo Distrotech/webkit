@@ -1,6 +1,19 @@
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.
+
+        Next step toward global code: subclass JSActivation + JSActivationData
+        from JSVariableObject + JSVariableObjectData.
+        
+        JSActivation now relies on JSVariableObject for access to registers and
+        symbol table, and for some delete functionality, but not for anything
+        else yet.
+
+        (KJS::JSActivation::mark): Cleaned up the style here a little bit.
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Beth Dakin.
         
         Next step toward global code: store "rOffset" in JSVariableObjectData.
 

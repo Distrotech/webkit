@@ -29,9 +29,9 @@
 #ifndef JSActivation_h
 #define JSActivation_h
 
-#include "object.h"
-#include "nodes.h"
+#include "JSVariableObject.h"
 #include "SymbolTable.h"
+#include "nodes.h"
 
 namespace KJS {
 
@@ -41,13 +41,14 @@ namespace KJS {
     // ActivationImp. That's why, for example, it accesses all its data members
     // through d().
 
-    class JSActivation : public JSObject {
-    typedef JSObject Base;
+    class JSActivation : public JSVariableObject {
+    typedef JSVariableObject Base;
     public:
         JSActivation(PassRefPtr<FunctionBodyNode>, Vector<Register>*, int rOffset);
         virtual ~JSActivation();
         
-        virtual bool isActivationObject() const { return true; }
+        virtual bool isActivationObject() const;
+        virtual bool isDynamicScope() const;
 
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
 
@@ -63,31 +64,19 @@ namespace KJS {
         static const ClassInfo info;
         
     private:
-        struct JSActivationData {
-            JSActivationData(PassRefPtr<FunctionBodyNode> functionBody_, Vector<Register>* registers_, int rOffset_)
-                : didCopyRegisters(false)
+        struct JSActivationData : public JSVariableObjectData {
+            JSActivationData(PassRefPtr<FunctionBodyNode> functionBody_, Vector<Register>* registers, int rOffset)
+                : JSVariableObjectData(&functionBody_->symbolTable(), registers, rOffset)
+                , didCopyRegisters(false)
                 , functionBody(functionBody_)
-                , registers(registers_)
-                , rOffset(rOffset_)
-                , symbolTable(&functionBody->symbolTable())
             {
             }
 
             bool didCopyRegisters;
-
             RefPtr<FunctionBodyNode> functionBody; // Owns the symbol table
-
-            // Will be inherited from JSVariableObjectData
-            Vector<Register>* registers;
-            int rOffset;
-            SymbolTable* symbolTable; // Maps name -> index in register file.
         };
         
-        SymbolTable& symbolTable() { return *d()->symbolTable; }
-        Vector<Register>& registers() { return *d()->registers; }
-        JSActivationData* d() const { return static_cast<JSActivationData*>(m_data); }
-
-        JSActivationData* m_data;
+        JSActivationData* d() const { return static_cast<JSActivationData*>(JSVariableObject::d); }
     };
     
 } // namespace KJS
