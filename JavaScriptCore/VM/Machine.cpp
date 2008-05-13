@@ -55,12 +55,10 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
     printf("     use      |   address  |    value   \n");
     printf("----------------------------------------\n");
     
-    bool isGlobalFrame = !codeBlock->numParameters; // All functions have at least a "this" parameter
-
     const Register* it;
     const Register* end;
     
-    if (isGlobalFrame) {
+    if (isGlobalCallFrame(registerFile->basePointer(), r)) {
         it = r - registerFile->numGlobalSlots();
         end = r;
         if (it != end) {
@@ -285,8 +283,7 @@ NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue)
 
 NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r)
 {
-    if (!codeBlock->numParameters) {
-        // Global Scope
+    if (isGlobalCallFrame(registerBase, r)) {
         codeBlock = 0;
         return 0;
     }
@@ -349,6 +346,28 @@ NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue
 static void* throwTarget = 0;
 #endif
 
+void Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain)
+{
+    RegisterFile* registerFile = registerFileStack->pushRegisterFile();
+    CodeBlock* codeBlock = &programNode->code(*scopeChain);
+    registerFile->addGlobalSlots(codeBlock->numVars);
+    registerFile->resize(codeBlock->numTemporaries);
+
+    privateExecute(Normal, exec, registerFile, scopeChain, codeBlock);
+
+    registerFileStack->popRegisterFile();
+}
+
+void Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain)
+{
+    UNUSED_PARAM(exec);
+    UNUSED_PARAM(registerFileStack);
+    UNUSED_PARAM(scopeChain);
+    UNUSED_PARAM(functionBodyNode);
+
+    ASSERT_NOT_REACHED();
+}
+
 void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     // One-time initialization of our address tables. We have to put this code
@@ -368,8 +387,6 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         return;
     }
 
-    registerFile->addGlobalSlots(codeBlock->numVars);
-    registerFile->resize(codeBlock->numTemporaries);
     JSValue* exceptionData = 0;
     
     Register** registerBase = registerFile->basePointer();
