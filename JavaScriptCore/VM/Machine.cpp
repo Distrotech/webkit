@@ -412,44 +412,48 @@ ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeCh
     return callDataScopeChain->node();
 }
 
-NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register** registerBase, Register*& r)
+NEVER_INLINE bool Machine::unwindCallFrame(Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
     if (isGlobalCallFrame(registerBase, r)) {
-        codeBlock = 0;
-        return 0;
+        if (codeBlock->needsActivation)
+            scopeChain->deref();
+        return false;
     }
 
     CodeBlock* oldCodeBlock = codeBlock;
 
-    Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
-    
     if (oldCodeBlock->needsActivation) {
-        // Find the functions activation in the scope chain
-        ScopeChainIterator iter = scopeChain->begin(); 
+        // Find the activation object
+        ScopeChainIterator it = scopeChain->begin(); 
         ScopeChainIterator end = scopeChain->end();
-        while (!((*iter)->isActivationObject())) {
-            ++iter;
-            ASSERT(iter != end);
+        while (!(*it)->isActivationObject()) {
+            ++it;
+            ASSERT(it != end);
         }
 
-        // Clean up the activation if'n it's necessary
-        ASSERT((*iter)->isActivationObject());
-        static_cast<JSActivation*>(*iter)->copyRegisters();
+        // Tear off the activation object's registers
+        static_cast<JSActivation*>(*it)->copyRegisters();
+
         scopeChain->deref();
     }
     
+    Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
+    
     codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
     if (!codeBlock)
-        return 0; // 0 means we've hit a native call frame
+        return false;
 
     k = codeBlock->jsValues.data();
     scopeChain = callFrame[CallerScopeChain].u.scopeChain;
     r = (*registerBase) + callFrame[CallerRegisterOffset].u.i;
-    return callFrame[ReturnVPC].u.vPC;
+    vPC = callFrame[ReturnVPC].u.vPC;
+    return true;
 }
 
-NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exceptionValue, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
+NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exceptionValue, Register** registerBase, const Instruction* vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
+    // Set up the exception object
+
     if (exceptionValue->isObject()) {
         JSObject* exception = static_cast<JSObject*>(exceptionValue);
         if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
@@ -459,32 +463,25 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
         }
     }
 
-    while (codeBlock) {
-        int expectedDepth;        
-        Instruction* handlerVPC = 0;
-        if (!codeBlock->getHandlerForVPC(vPC, handlerVPC, expectedDepth)) {
-            vPC = unwindCallFrame(codeBlock, k, scopeChain, registerBase, r);
-            continue;
-        }
+    // Calculate an exception handler vPC, unwinding call frames as necessary.
 
-        // Now unwind the scope chain
-        ScopeChain sc(scopeChain);
-        // Step 1) work out how deep the scope chain is
-        int scopeDepth = sc.depth();
-        
-        // Step 2) reduce to the expect depth
-        int scopeDelta = scopeDepth - expectedDepth;
-        
-        // Step 3) Cry :-(
-        ASSERT(scopeDelta >= 0);
-        while (scopeDelta--)
-            sc.pop();
+    int scopeDepth;        
+    Instruction* handlerVPC;
 
-        scopeChain = sc.node();
-        
-        return handlerVPC;
-    }
-    return 0;
+    while (!codeBlock->getHandlerForVPC(vPC, handlerVPC, scopeDepth))
+        if (!unwindCallFrame(registerBase, vPC, codeBlock, k, scopeChain, r))
+            return 0;
+
+    // Now unwind the scope chain within the exception handler's call frame.
+    
+    ScopeChain sc(scopeChain);
+    int scopeDelta = sc.depth() - scopeDepth;
+    ASSERT(scopeDelta >= 0);
+    while (scopeDelta--)
+        sc.pop();
+    scopeChain = sc.node();
+
+    return handlerVPC;
 }
 
 static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBlock*, JSValue* value, JSValue*& exceptionData)
@@ -638,10 +635,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     // start applying the branch free exception logic to operands that increment
     // vPC by more than one Instruction we'll need to make this buffer larger.
     Instruction builtinThrow = getOpcode(op_builtin_throw);
-    Instruction builtinThrowBuffer[] = { builtinThrow,
-                                          builtinThrow};
-    Instruction* exceptionTarget = 0;
+    Instruction builtinThrowBuffer[] = { builtinThrow, builtinThrow };
     JSValue* exceptionValue = 0;
+    Instruction* handlerVPC = 0;
     
     Register** registerBase = registerFile->basePointer();
     Instruction* vPC = codeBlock->instructions.begin();
@@ -1495,8 +1491,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_throw) {
         int e = (++vPC)->u.operand;
         exceptionValue = r[e].u.jsValue;
-        exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
-        if (!exceptionTarget) {
+        handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);
+        if (!handlerVPC) {
             *exception = exceptionValue;
             return jsNull();
         }
@@ -1510,7 +1506,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     op_throw_end: {
 #endif
 
-        vPC = exceptionTarget;
+        vPC = handlerVPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {
@@ -1527,12 +1523,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         // exception handling.
     }
     vm_throw: {
-        exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
-        if (!exceptionTarget) {
+        handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);
+        if (!handlerVPC) {
             *exception = exceptionValue;
             return jsNull();
         }
-        vPC = exceptionTarget;
+        vPC = handlerVPC;
         NEXT_OPCODE;
     }          
     }

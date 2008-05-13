@@ -1,3 +1,24 @@
+2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed a bug in exception unwinding, where we wouldn't deref the scope
+        chain in global scope, so we would leak ScopeChainNodes when exceptions
+        were thrown inside "with" and "catch" scopes.
+        
+        Also did some cleanup of the unwinding code along the way.
+        
+        Scope chain reference counting is still wrong in a few ways. I thought
+        I would fix this portion of it first.
+        
+        run-sunspider shows no change.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::unwindCallFrame):
+        (KJS::Machine::throwException):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+
 2008-04-17  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
