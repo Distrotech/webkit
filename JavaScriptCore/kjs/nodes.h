@@ -3025,8 +3025,15 @@ namespace KJS {
         
         CodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
         {
+            ASSERT(scopeChain);
             if (!m_code)
                 generateCode(scopeChain);
+            return *m_code;
+        }
+
+        CodeBlock& generatedCode() KJS_FAST_CALL
+        {
+            ASSERT(m_code);
             return *m_code;
         }
 

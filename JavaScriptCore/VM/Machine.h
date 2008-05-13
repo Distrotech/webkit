@@ -54,6 +54,7 @@ namespace KJS {
                CallerRegisterOffset, 
                ReturnValueRegister,
                ArgumentStartRegister,
+               ArgumentCount,
                CalledAsConstructor,
                Callee,
                OptionalCalleeActivation,
