@@ -1,5 +1,11 @@
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
+        WebCore build fix: forward-declare ScopeChain.
+
+        * kjs/interpreter.h:
+
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
         Build fix for JavaScriptGlue: export a missing symbol.
 
         * JavaScriptCore.exp:
