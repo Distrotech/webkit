@@ -1,5 +1,14 @@
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
+        Build fix: marked ASSERT-only variables as UNUSED_PARAMs.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTableInitializeVariable):
+
+2008-04-01  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt.
         
         Next step toward global code: Moved get, put, and initializeVariable
