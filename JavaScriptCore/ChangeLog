@@ -1,5 +1,28 @@
 2008-03-31  Sam Weinig  <sam@webkit.org>
 
+        Reviewed by Geoffrey Garen.
+
+        Add emitCode support for TypeOfResolveNode and TypeOfValueNode.
+        Added new opcode op_type_of to handle them.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitNot):
+        (KJS::CodeGenerator::emitInstanceOf):
+        (KJS::CodeGenerator::emitTypeOf):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::jsTypeStringForValue):
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::TypeOfResolveNode::emitCode):
+        (KJS::TypeOfValueNode::emitCode):
+        * kjs/nodes.h:
+
+2008-03-31  Sam Weinig  <sam@webkit.org>
+
         Reviewed by Oliver Hunt.
 
         Fix non-computed goto version of isOpcode. op_end is a valid opcode.

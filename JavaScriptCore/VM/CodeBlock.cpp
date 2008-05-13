@@ -131,7 +131,7 @@ void CodeBlock::dump(ExecState* exec)
 void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it)
 {
     int location = it - begin;
-    switch(machine().getOpcodeID(it->u.opcode)) {
+    switch (machine().getOpcodeID(it->u.opcode)) {
         case op_load: {
             int r0 = (++it)->u.operand;
             int k0 = (++it)->u.operand;
@@ -152,6 +152,10 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             int r0 = (++it)->u.operand;
             int r1 = (++it)->u.operand;
             printf("[%4d] mov\t\t%s, %s\n", location, registerName(r0).c_str(), registerName(r1).c_str());
+            break;
+        }
+        case op_not: {
+            printUnaryOp(location, it, "not");
             break;
         }
         case op_equal: {
@@ -243,16 +247,16 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printBinaryOp(location, it, "bitor");
             break;
         }
-         case op_bitnot: {
-             printUnaryOp(location, it, "bitnot");
-             break;
-         }
-         case op_not: {
-             printUnaryOp(location, it, "not");
-             break;
-         }
+        case op_bitnot: {
+            printUnaryOp(location, it, "bitnot");
+            break;
+        }
         case op_instance_of: {
             printBinaryOp(location, it, "instance_of");
+            break;
+        }
+        case op_type_of: {
+            printUnaryOp(location, it, "type_of");
             break;
         }
         case op_resolve: {
