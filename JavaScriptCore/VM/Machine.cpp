@@ -344,15 +344,14 @@ static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
     do {
         base = *iter;
         if (base->getPropertySlot(exec, ident, slot)) {            
-            JSObject* thisObj = base;
-            // ECMA 11.2.3 says that in this situation the this value should be null.
+            // ECMA 11.2.3 says that if we hit an activation the this value should be null.
             // However, section 10.2.3 says that in the case where the value provided
             // by the caller is null, the global object should be used. It also says
             // that the section does not apply to internal functions, but for simplicity
             // of implementation we use the global object anyway here. This guarantees
             // that in host objects you always get a valid object for this.
-            if (thisObj->isActivationObject())
-                thisObj = exec->dynamicGlobalObject();
+            // We also handle wrapper substitution for the global object at the same time.
+            JSObject* thisObj = base->toThisObject(exec);
             
             r[r0].u.jsValue = thisObj;
             r[r1].u.jsValue = slot.getValue(exec, base, ident);
