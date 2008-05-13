@@ -58,7 +58,7 @@ JSGlobalObject* JSRun::GlobalObject() const
 
 Completion JSRun::Evaluate()
 {
-    return Interpreter::evaluate(fGlobalObject->globalExec(), UString(), 0, fSource.data(), fSource.size());
+    return Interpreter::evaluate(fGlobalObject->globalExec(), fGlobalObject->globalScopeChain(), UString(), 0, fSource.data(), fSource.size());
 }
 
 bool JSRun::CheckSyntax()
