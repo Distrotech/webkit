@@ -333,6 +333,13 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] resolve_base\t%s, %s\n", location, registerName(r0).c_str(), idName(id0, identifiers[id0]).c_str());
             break;
         }
+        case op_resolve_base_and_func: {
+            int r0 = (++it)->u.operand;
+            int r1 = (++it)->u.operand;
+            int id0 = (++it)->u.operand;
+            printf("[%4d] resolve_base_and_func\t%s, %s, %s\n", location, registerName(r0).c_str(), registerName(r1).c_str(), idName(id0, identifiers[id0]).c_str());
+            break;
+        }
         case op_get_prop_id: {
             int r0 = (++it)->u.operand;
             int r1 = (++it)->u.operand;
