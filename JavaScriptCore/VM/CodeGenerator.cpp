@@ -161,6 +161,8 @@ void CodeGenerator::addParameter(const Identifier& ident)
 
 RegisterID* CodeGenerator::getRegister(const Identifier& ident)
 {
+    if (m_scopeDepth)
+        return 0;
     unsigned index = symbolTable().get(ident.ustring().rep());
     if (index == missingSymbolMarker())
         return 0;
@@ -523,6 +525,22 @@ RegisterID* CodeGenerator::emitEnd(RegisterID* r0)
     instructions().append(machine().getOpcode(op_end));
     instructions().append(r0->index());
     return r0;
+}
+
+RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
+{
+    m_codeBlock->needsActivation = true;
+    instructions().append(machine().getOpcode(op_push_scope));
+    instructions().append(r0->index());
+    m_scopeDepth++;
+    return r0;
+}
+
+void CodeGenerator::emitPopScope()
+{
+    ASSERT(m_scopeDepth > 0);
+    instructions().append(machine().getOpcode(op_pop_scope));
+    m_scopeDepth--;
 }
 
 } // namespace KJS
