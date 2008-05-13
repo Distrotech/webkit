@@ -255,11 +255,12 @@ static void _didExecute(WebScriptObject *obj)
     if (!globalObject)
         return NO;
 
+#if 0
     if (globalObject->activeExecStates().size()) {
         throwError(globalObject->activeExecStates().last(), GeneralError, exceptionMessage);
         return YES;
     }
-
+#endif
     return NO;
 }
 
@@ -497,13 +498,14 @@ static void getListFromNSArray(ExecState *exec, NSArray *array, RootObject* root
     JSLock lock;
 
     ExecState* exec = 0;
+#if 0
     JSGlobalObject* globalObject = [self _rootObject]->globalObject();
     ExecStateStack::const_iterator end = globalObject->activeExecStates().end();
     for (ExecStateStack::const_iterator it = globalObject->activeExecStates().begin(); it != end; ++it) {
         if ((*it)->dynamicGlobalObject() == globalObject)
             exec = *it;
     }
-
+#endif
     if (exec)
         throwError(exec, GeneralError, description);
 }
