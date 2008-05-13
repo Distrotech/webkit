@@ -47,12 +47,13 @@ RegisterFile* RegisterFileStack::pushGlobalRegisterFile()
     if (!current->size())
         return current;
 
+    RegisterFile* srcGlobal = m_implicitCallDepth ? lastGlobal() : current;
+
     // Slow case: Existing register file is in use: Create a nested
     // register file with a copy of this register file's globals.
     RegisterFile* registerFile = allocateRegisterFile(current->maxSize() - current->size());
-
-    registerFile->addGlobalSlots(current->numGlobalSlots());
-    registerFile->copyGlobals(current);
+    registerFile->addGlobalSlots(srcGlobal->numGlobalSlots());
+    registerFile->copyGlobals(srcGlobal);
 
     return registerFile;
 }
@@ -70,16 +71,19 @@ void RegisterFileStack::popGlobalRegisterFile()
     RegisterFile* tmp = m_stack.last();
     m_stack.removeLast();
 
-    RegisterFile* current = this->current();
-    current->addGlobalSlots(tmp->numGlobalSlots() - current->numGlobalSlots());
-    current->copyGlobals(tmp);
-    m_base = *current->basePointer();
+    RegisterFile* dstGlobal = m_implicitCallDepth ? lastGlobal() : current();
+    dstGlobal->addGlobalSlots(tmp->numGlobalSlots() - dstGlobal->numGlobalSlots());
+    dstGlobal->copyGlobals(tmp);
+    m_base = *current()->basePointer();
     delete tmp;
 }
 
 RegisterFile* RegisterFileStack::pushFunctionRegisterFile()
 {
-    return allocateRegisterFile(current()->maxSize() - current()->size());;
+    m_implicitCallDepth++;
+    RegisterFile* result = allocateRegisterFile(current()->maxSize() - current()->size());
+    result->setIsForImplicitCall(true);
+    return result;
 }
 
 void RegisterFileStack::popFunctionRegisterFile()
@@ -87,6 +91,7 @@ void RegisterFileStack::popFunctionRegisterFile()
     delete m_stack.last();
     m_stack.removeLast();
     m_base = *m_stack.last()->basePointer();
+    m_implicitCallDepth--;
 }
 
 RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize)

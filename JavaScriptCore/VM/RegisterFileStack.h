@@ -37,6 +37,7 @@ namespace KJS {
     class RegisterFileStack {
     public:
         RegisterFileStack()
+            : m_implicitCallDepth(0)
         {
             allocateRegisterFile();
         }
@@ -67,6 +68,17 @@ namespace KJS {
             m_base = *registerFile->basePointer();
         }
 
+        bool inImplicitCall() { return m_implicitCallDepth > 0; }
+
+        RegisterFile* lastGlobal() {
+            ASSERT(m_stack.size());
+            for (size_t i = m_stack.size() - 1; i > 0; --i) {
+                if (!m_stack[i]->isForImplicitCall())
+                    return m_stack[i];
+            }
+            ASSERT(!m_stack[0]->isForImplicitCall());
+            return m_stack[0];
+        }
     private:
         typedef Vector<RegisterFile*, 4> Stack;
 
@@ -77,6 +89,7 @@ namespace KJS {
 
         Stack m_stack;
         Register* m_base;
+        int m_implicitCallDepth;
     };
 
 } // namespace KJS

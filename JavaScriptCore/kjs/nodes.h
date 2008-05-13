@@ -2965,17 +2965,17 @@ namespace KJS {
         
         virtual JSValue* execute(OldInterpreterExecState*) KJS_FAST_CALL;
 
-        ProgramCodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
+        ProgramCodeBlock& code(ScopeChainNode* scopeChain, bool canCreateGlobals) KJS_FAST_CALL
         {
             if (!m_code)
-                generateCode(scopeChain);
+                generateCode(scopeChain, canCreateGlobals);
             return *m_code;
         }
 
     private:
         ProgramNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        void generateCode(ScopeChainNode*) KJS_FAST_CALL;
+        void generateCode(ScopeChainNode*, bool) KJS_FAST_CALL;
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         void initializeSymbolTable(OldInterpreterExecState*) KJS_FAST_CALL;

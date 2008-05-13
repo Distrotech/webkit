@@ -155,7 +155,7 @@ bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)
     return result.second;
 }
 
-CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack)
+CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, bool canCreateVariables)
     : m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(programNode)
@@ -183,20 +183,36 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     } else
         addVar(m_propertyNames->thisIdentifier); // No need to make "this" a true parameter, since it's not passed by our caller.
 
-    for (size_t i = 0; i < functionStack.size(); ++i) {
-        FuncDeclNode* funcDecl = functionStack[i];
-        emitNewFunction(addVar(funcDecl->m_ident), funcDecl);
-    }
-
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
 
     // FIXME: Remove this once we figure out how ExecState should work in squirrelfish.
     InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
 
-    for (size_t i = 0; i < varStack.size(); ++i)
-        if (!globalObject->hasProperty(&tmpExec, varStack[i].first))
-             emitLoad(addVar(varStack[i].first), jsUndefined());
+    if (canCreateVariables) {
+        for (size_t i = 0; i < functionStack.size(); ++i) {
+            FuncDeclNode* funcDecl = functionStack[i];
+            emitNewFunction(addVar(funcDecl->m_ident), funcDecl);
+        }
+        
+        for (size_t i = 0; i < varStack.size(); ++i) {
+            if (!globalObject->hasProperty(&tmpExec, varStack[i].first))
+                emitLoad(addVar(varStack[i].first), jsUndefined());
+        }
+    } else {
+        for (size_t i = 0; i < functionStack.size(); ++i) {
+            FuncDeclNode* funcDecl = functionStack[i];
+            globalObject->putWithAttributes(&tmpExec, funcDecl->m_ident, funcDecl->makeFunction(&tmpExec, scopeChain.node()), DontDelete);
+        }
+        for (size_t i = 0; i < varStack.size(); ++i) {
+            if (globalObject->hasProperty(&tmpExec, varStack[i].first))
+                continue;
+            int attributes = DontDelete;
+            if (varStack[i].second & DeclarationStacks::IsConstant)
+                attributes |= ReadOnly;
+            globalObject->putWithAttributes(&tmpExec, varStack[i].first, jsUndefined(), attributes);
+        }
+    }
 }
 
 CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier>& parameters)
