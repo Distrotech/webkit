@@ -747,14 +747,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_new_object) {
         int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
+        r[r0].u.jsValue = scopeChain->globalObject()->objectConstructor()->construct(exec, exec->emptyList());
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_array) {
         int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = exec->lexicalGlobalObject()->arrayConstructor()->construct(exec, exec->emptyList());
+        r[r0].u.jsValue = scopeChain->globalObject()->arrayConstructor()->construct(exec, exec->emptyList());
         
         ++vPC;
         NEXT_OPCODE;
@@ -762,7 +762,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_new_regexp) {
         int dst = (++vPC)->u.operand;
         int regExp = (++vPC)->u.operand;
-        r[dst].u.jsValue = new RegExpImp(exec->lexicalGlobalObject()->regExpPrototype(), codeBlock->regexps[regExp]);
+        r[dst].u.jsValue = new RegExpImp(scopeChain->globalObject()->regExpPrototype(), codeBlock->regexps[regExp]);
 
         ++vPC;
         NEXT_OPCODE;
@@ -1417,7 +1417,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSValue* v = r[r1].u.jsValue;
         JSValue* base = r[r2].u.jsValue;
         
-        if (base == exec->lexicalGlobalObject() && v == exec->lexicalGlobalObject()->evalFunction()) {
+        if (base == scopeChain->globalObject() && v == scopeChain->globalObject()->evalFunction()) {
             int registerOffset = r - (*registerBase);
 
             int thisRegister = (codeBlock->codeType == FunctionCode) ? -(codeBlock->numVars + codeBlock->numParameters) : ProgramCodeThisRegister;
@@ -1569,7 +1569,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             if (p->isObject())
                 prototype = static_cast<JSObject*>(p);
             else
-                prototype = exec->lexicalGlobalObject()->objectPrototype();
+                prototype = scopeChain->globalObject()->objectPrototype();
             JSObject* newObject = new JSObject(prototype);
             r[argv].u.jsValue = newObject; // "this" value
 

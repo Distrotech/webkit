@@ -26,6 +26,7 @@
 
 namespace KJS {
 
+    class JSGlobalObject;
     class JSObject;
     class ScopeChainIterator;
     
@@ -64,6 +65,8 @@ namespace KJS {
 
         ScopeChainIterator begin() const;
         ScopeChainIterator end() const;
+        
+        JSGlobalObject* globalObject() const; // defined in JSGlobalObject.h
         
 #ifndef NDEBUG        
         void print() const;
@@ -173,6 +176,8 @@ namespace KJS {
 
         void pop() { _node = _node->pop(); }
         void clear() { _node->deref(); _node = 0; }
+        
+        JSGlobalObject* globalObject() const { return _node->globalObject(); }
 
         void mark() const;
 
