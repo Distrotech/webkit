@@ -608,10 +608,11 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     }
     
     size_t oldSize = registerFile->size();
-    size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries;
+    size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries + CallFrameHeaderSize;
     registerFile->grow(newSize);
-    Register* r = (*registerFile->basePointer()) + registerOffset + codeBlock->numVars;
+    Register* r = (*registerFile->basePointer()) + registerOffset + codeBlock->numVars + CallFrameHeaderSize;
     
+    ((*registerFile->basePointer()) + registerOffset)[CallerCodeBlock].u.codeBlock = 0;
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
     
