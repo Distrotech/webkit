@@ -380,6 +380,34 @@ double JSCallbackObject<Base>::toNumber(ExecState* exec) const
 }
 
 template <class Base>
+double JSCallbackObject<Base>::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
+{
+    if (normalExitPC == exceptionExitPC) {
+        resultPC = normalExitPC;
+        return NaN;
+    }
+
+    JSContextRef ctx = toRef(exec);
+    JSObjectRef thisRef = toRef(this);
+    
+    for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
+        if (JSObjectConvertToTypeCallback convertToType = jsClass->convertToType) {
+            JSLock::DropAllLocks dropAllLocks;
+            if (JSValueRef value = convertToType(ctx, thisRef, kJSTypeNumber, toRef(exec->exceptionSlot()))) {
+                resultPC = normalExitPC;
+                return toJS(value)->getNumber();
+            }
+            if (exec->hadException()) {
+                exec->setExceptionSource(normalExitPC);
+                resultPC = exceptionExitPC;
+                return NaN;
+            }
+        }
+    
+    return Base::toNumber(exec, normalExitPC, exceptionExitPC, resultPC);
+}
+
+template <class Base>
 UString JSCallbackObject<Base>::toString(ExecState* exec) const
 {
     JSContextRef ctx = toRef(exec);

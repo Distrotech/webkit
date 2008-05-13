@@ -37,6 +37,7 @@ class JSObject;
 class JSCell;
 
 struct ClassInfo;
+struct Instruction;
 
 /**
  * JSValue is the base type for all primitives (Undefined, Null, Boolean,
@@ -90,6 +91,7 @@ public:
 
     bool toBoolean(ExecState *exec) const;
     double toNumber(ExecState *exec) const;
+    double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     JSValue* toJSNumber(ExecState*) const; // Fast path for when you expect that the value is an immediate number.
     UString toString(ExecState *exec) const;
     JSObject *toObject(ExecState *exec) const;
@@ -168,6 +170,7 @@ public:
     virtual bool getPrimitiveNumber(ExecState* exec, double& number, JSValue*& value) = 0;
     virtual bool toBoolean(ExecState *exec) const = 0;
     virtual double toNumber(ExecState *exec) const = 0;
+    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const = 0;
     virtual UString toString(ExecState *exec) const = 0;
     virtual JSObject *toObject(ExecState *exec) const = 0;
 
@@ -462,6 +465,16 @@ ALWAYS_INLINE double JSValue::toNumber(ExecState *exec) const
     return JSImmediate::isImmediate(this) ? JSImmediate::toDouble(this) : asCell()->toNumber(exec);
 }
 
+ALWAYS_INLINE double JSValue::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
+{
+    if (JSImmediate::isImmediate(this)) {
+        resultPC = normalExitPC;
+        return JSImmediate::toDouble(this);
+    }
+
+    return asCell()->toNumber(exec, normalExitPC, exceptionExitPC, resultPC);
+}
+    
 ALWAYS_INLINE JSValue* JSValue::toJSNumber(ExecState* exec) const
 {
     return JSImmediate::isNumber(this) ? const_cast<JSValue*>(this) : jsNumber(this->toNumber(exec));

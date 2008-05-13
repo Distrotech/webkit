@@ -44,6 +44,8 @@ namespace KJS  {
     class JSVariableObject;
     class ProgramNode;
     class ScopeNode;
+
+    struct Instruction;
     
     enum CodeType { GlobalCode, EvalCode, FunctionCode };
 
@@ -70,7 +72,9 @@ namespace KJS  {
         
         // Global object that was in scope when the current body of code was defined.
         JSGlobalObject* lexicalGlobalObject() const;
-                
+        void setExceptionSource(Instruction* source) { m_exceptionSource = source; }
+        Instruction* exceptionSource() { return m_exceptionSource; }
+        void clearExceptionSource() { m_exceptionSource = 0; }
         void setException(JSValue* exception) { m_exception = exception; }
         void clearException() { m_exception = 0; }
         JSValue* exception() const { return m_exception; }
@@ -197,6 +201,7 @@ namespace KJS  {
 
         JSGlobalObject* m_globalObject;
         JSValue* m_exception;
+        Instruction* m_exceptionSource;
 
         ExecState* m_callingExec;
 
