@@ -84,7 +84,7 @@ JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifi
   
   for (ExecState* e = exec; e; e = e->callingExecState())
     if (e->function() == thisObj) {
-      e->dynamicGlobalObject()->tearOffActivation(e, e != exec);
+      ASSERT_NOT_REACHED();
       return e->activationObject()->get(exec, propertyName);
     }
   
@@ -371,34 +371,9 @@ PropertySlot::GetValueFunc ActivationImp::getArgumentsGetter()
   return ActivationImp::argumentsGetter;
 }
 
-bool ActivationImp::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+bool ActivationImp::getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&)
 {
-    if (symbolTableGet(propertyName, slot))
-        return true;
-
-    if (JSValue** location = getDirectLocation(propertyName)) {
-        slot.setValueSlot(this, location);
-        return true;
-    }
-
-    // Only return the built-in arguments object if it wasn't overridden above.
-    if (propertyName == exec->propertyNames().arguments) {
-        for (ExecState* e = exec; e; e = e->callingExecState())
-            if (e->function() == d()->function) {
-                e->dynamicGlobalObject()->tearOffActivation(e, e != exec);
-                ActivationImp* newActivation = e->activationObject();
-                slot.setCustom(newActivation, newActivation->getArgumentsGetter());
-                return true;
-            }
-        
-        slot.setCustom(this, getArgumentsGetter());
-        return true;
-    }
-
-    // We don't call through to JSObject because there's no way to give an 
-    // activation object getter properties or a prototype.
-    ASSERT(!_prop.hasGetterSetterProperties());
-    ASSERT(prototype() == jsNull());
+    ASSERT_NOT_REACHED();
     return false;
 }
 

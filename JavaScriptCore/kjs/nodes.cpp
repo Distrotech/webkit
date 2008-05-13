@@ -1240,7 +1240,7 @@ inline JSValue* ExpressionNode::resolveAndCall(ExecState* exec, const Identifier
 
             if (callerType == EvalOperator) {
                 if (base == exec->lexicalGlobalObject() && func == exec->lexicalGlobalObject()->evalFunction()) {
-                    exec->dynamicGlobalObject()->tearOffActivation(exec);
+                    ASSERT_NOT_REACHED();
                     return eval(exec, exec->scopeChain(), exec->variableObject(), exec->dynamicGlobalObject(), exec->thisValue(), argList);
                 }
             }
@@ -4942,18 +4942,10 @@ void WithNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const Loca
 }
 
 // ECMA 12.10
-JSValue* WithNode::execute(ExecState* exec)
+JSValue* WithNode::execute(ExecState*)
 {
-    JSValue* v = m_expr->evaluate(exec);
-    KJS_CHECKEXCEPTION
-    JSObject* o = v->toObject(exec);
-    KJS_CHECKEXCEPTION
-    exec->dynamicGlobalObject()->tearOffActivation(exec);
-    exec->pushScope(o);
-    JSValue* value = m_statement->execute(exec);
-    exec->popScope();
-
-    return value;
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 // ------------------------------ CaseClauseNode -------------------------------
@@ -5141,29 +5133,10 @@ void TryNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const Local
 }
 
 // ECMA 12.14
-JSValue* TryNode::execute(ExecState* exec)
+JSValue* TryNode::execute(ExecState*)
 {
-    JSValue* result = m_tryBlock->execute(exec);
-
-    if (m_catchBlock && exec->completionType() == Throw) {
-        JSObject* obj = new JSObject;
-        obj->putDirect(m_exceptionIdent, result, DontDelete);
-        exec->dynamicGlobalObject()->tearOffActivation(exec);
-        exec->pushScope(obj);
-        result = m_catchBlock->execute(exec);
-        exec->popScope();
-    }
-
-    if (m_finallyBlock) {
-        ComplType savedCompletionType = exec->completionType();
-        JSValue* finallyResult = m_finallyBlock->execute(exec);
-        if (exec->completionType() != Normal)
-            result = finallyResult;
-        else
-            exec->setCompletionType(savedCompletionType);
-    }
-
-    return result;
+    ASSERT_NOT_REACHED();
+    return 0;
 }
 
 // ------------------------------ FunctionBodyNode -----------------------------
@@ -5533,7 +5506,7 @@ void FuncExprNode::addParams()
 
 JSValue* FuncExprNode::evaluate(ExecState* exec)
 {
-    exec->dynamicGlobalObject()->tearOffActivation(exec);
+    ASSERT_NOT_REACHED();
 
     bool named = !m_ident.isNull();
     JSObject* functionScopeObject = 0;

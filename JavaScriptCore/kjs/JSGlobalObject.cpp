@@ -104,15 +104,6 @@ static inline unsigned getCurrentTime()
 
 JSGlobalObject* JSGlobalObject::s_head = 0;
 
-void JSGlobalObject::deleteActivationStack()
-{
-    ActivationStackNode* prevNode = 0;
-    for (ActivationStackNode* currentNode = d()->activations; currentNode; currentNode = prevNode) {
-        prevNode = currentNode->prev;
-        delete currentNode;
-    }
-}
-
 JSGlobalObject::~JSGlobalObject()
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
@@ -125,8 +116,6 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
-    
-    deleteActivationStack();
     
     delete d();
 }
@@ -544,28 +533,6 @@ JSGlobalObject* JSGlobalObject::toGlobalObject(ExecState*) const
 ExecState* JSGlobalObject::globalExec()
 {
     return d()->globalExec.get();
-}
-
-void JSGlobalObject::tearOffActivation(ExecState* exec, bool leaveRelic)
-{
-    ActivationImp* oldActivation = exec->activationObject();
-    if (!oldActivation || !oldActivation->isOnStack())
-        return;
-
-    ASSERT(exec->codeType() == FunctionCode);
-    ActivationImp* newActivation = new ActivationImp(*oldActivation->d(), leaveRelic);
-    
-    if (!leaveRelic) {
-        checkActivationCount();
-        d()->activationCount--;
-    }
-    
-    oldActivation->d()->localStorage.shrink(0);
-    
-    exec->setActivationObject(newActivation);
-    exec->setVariableObject(newActivation);
-    exec->setLocalStorage(&newActivation->localStorage());
-    exec->replaceScopeChainTop(newActivation);
 }
 
 bool JSGlobalObject::isDynamicScope() const
