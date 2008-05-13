@@ -2,6 +2,17 @@
 
         Reviewed by Oliver Hunt.
         
+        Only print debug dumps in debug builds.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::generate):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Moved a few files around in the XCode project.
 
         * JavaScriptCore.xcodeproj/project.pbxproj:
