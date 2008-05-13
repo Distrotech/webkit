@@ -37,14 +37,35 @@ namespace KJS {
 
     class RegisterID : Noncopyable {
     public:
-        explicit RegisterID(int index)
+        RegisterID()
             : m_refCount(0)
-            , m_index(index)
+#ifndef NDEBUG
+            , m_didSetIndex(false)
+#endif
         {
         }
 
+        explicit RegisterID(int index)
+            : m_refCount(0)
+            , m_index(index)
+#ifndef NDEBUG
+            , m_didSetIndex(true)
+#endif
+        {
+        }
+
+        void setIndex(int index)
+        {
+            ASSERT(!m_refCount);
+#ifndef NDEBUG
+            m_didSetIndex = true;
+#endif
+            m_index = index;
+        }
+        
         int index() const
         {
+            ASSERT(m_didSetIndex);
             return m_index;
         }
         
@@ -73,13 +94,20 @@ namespace KJS {
     
         int m_refCount;
         int m_index;
+#ifndef NDEBUG
+        bool m_didSetIndex;
+#endif
     };
     
 } // namespace KJS
 
 namespace WTF {
 
-    template<> struct VectorTraits<KJS::RegisterID> : VectorTraitsBase<true, KJS::RegisterID> { };
+    template<> struct VectorTraits<KJS::RegisterID> : VectorTraitsBase<true, KJS::RegisterID>
+    {
+        static const bool needsInitialization = true;
+        static const bool canInitializeWithMemset = true; // Default initialization just sets everything to 0 or false, so this is safe.
+    };
 
 } // namespace WTF
     
