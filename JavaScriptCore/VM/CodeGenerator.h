@@ -114,6 +114,8 @@ namespace KJS {
         RegisterID* emitBitXOr(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitBitOr(RegisterID*, RegisterID*, RegisterID*);
 
+        RegisterID* emitInstanceOf(RegisterID*, RegisterID*, RegisterID*);
+
         RegisterID* emitResolve(RegisterID*, const Identifier&);
         RegisterID* emitResolve(RegisterID*, int);
         RegisterID* emitResolve(RegisterID*, int, int);
