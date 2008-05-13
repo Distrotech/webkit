@@ -489,6 +489,13 @@ RegisterID* CodeGenerator::emitLoad(RegisterID* r0, JSValue* v)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitNewObject(RegisterID* r0)
+{
+    instructions().append(machine().getOpcode(op_new_object));
+    instructions().append(r0->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitResolve(RegisterID* r0, const Identifier& ident)
 {
     instructions().append(machine().getOpcode(op_resolve));

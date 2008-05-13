@@ -76,6 +76,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] load\t\tr[%d], k[%d]\t\t; %s\n", location, r0, k0, jsValues[k0]->toString(exec).ascii());
             break;
         }
+        case op_new_object: {
+            int r0 = (++it)->u.operand;
+            printf("[%4d] new_object\tr[%d]\n", location, r0);
+            break;
+        }
         case op_mov: {
             int r0 = (++it)->u.operand;
             int r1 = (++it)->u.operand;

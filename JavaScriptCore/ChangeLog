@@ -1,3 +1,24 @@
+2008-03-30  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Adds support for dot notation and object literals.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitNewObject):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::ObjectLiteralNode::emitCode):
+        (KJS::PropertyListNode::emitCode):
+        (KJS::DotAccessorNode::emitCode):
+        (KJS::AssignDotNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-29  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
