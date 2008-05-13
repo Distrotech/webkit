@@ -1,3 +1,20 @@
+2008-04-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Support for re-entrant execution of global code (global code -> built-in
+        function -> global code).
+        
+        Keep a stack of register files instead of just one. Globals propogate
+        between register files as the register files enter and exit the stack.
+        
+        An activation still uses its own register file's base as its
+        registerBase, but the global object uses the register file *stack*'s
+        registerBase, which updates dynamically to match the register file at
+        the top of the stack.
+        
+        sunspider --squirrelfish reports no regression.
+
 2008-04-08  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.

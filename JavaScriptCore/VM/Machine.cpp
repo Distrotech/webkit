@@ -61,7 +61,7 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
     const Register* end;
     
     if (isGlobalFrame) {
-        it = r - registerFile->numGlobals();
+        it = r - registerFile->numGlobalSlots();
         end = r;
         if (it != end) {
             do {
@@ -368,7 +368,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         return;
     }
 
-    registerFile->addGlobals(codeBlock->numVars);
+    registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->resize(codeBlock->numTemporaries);
     JSValue* exceptionData = 0;
     
@@ -1054,6 +1054,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         int e = (++vPC)->u.operand;
         exceptionData = prepareException(exec, r[e].u.jsValue);
         if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registerBase, r, vPC))) {
+            // Removing this line of code causes a measurable regression on squirrelfish/function-missing-args.js.
             registerFile->resize(0);
             return;
         }
@@ -1077,7 +1078,6 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
 #else
         UNUSED_PARAM(r0);
 #endif
-        registerFile->resize(0);
         return;
     }
     }

@@ -96,6 +96,8 @@
 		14BD5A320A3E91F600BAF59C /* JSValueRef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14BD5A2B0A3E91F600BAF59C /* JSValueRef.cpp */; };
 		14D792660DAA03FB001A9F05 /* RegisterFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 14D792640DAA03FB001A9F05 /* RegisterFile.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */; };
+		14D797800DAC3307001A9F05 /* RegisterFileStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 14D7977E0DAC3307001A9F05 /* RegisterFileStack.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		14D797810DAC3307001A9F05 /* RegisterFileStack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14D7977F0DAC3307001A9F05 /* RegisterFileStack.cpp */; };
 		14DA81900D99FD2000B0A4FB /* JSActivation.h in Headers */ = {isa = PBXBuildFile; fileRef = 14DA818E0D99FD2000B0A4FB /* JSActivation.h */; };
 		14DE0D690D02431400AACCA2 /* JSGlobalObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14DE0D680D02431400AACCA2 /* JSGlobalObject.cpp */; };
 		14F252570D08DD8D004ECFFF /* JSVariableObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 14F252560D08DD8D004ECFFF /* JSVariableObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -431,6 +433,8 @@
 		14BD5A2D0A3E91F600BAF59C /* testapi.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = testapi.c; sourceTree = "<group>"; };
 		14D792640DAA03FB001A9F05 /* RegisterFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RegisterFile.h; path = VM/RegisterFile.h; sourceTree = "<group>"; };
 		14D792650DAA03FB001A9F05 /* RegisterFile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegisterFile.cpp; path = VM/RegisterFile.cpp; sourceTree = "<group>"; };
+		14D7977E0DAC3307001A9F05 /* RegisterFileStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RegisterFileStack.h; path = VM/RegisterFileStack.h; sourceTree = "<group>"; };
+		14D7977F0DAC3307001A9F05 /* RegisterFileStack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RegisterFileStack.cpp; path = VM/RegisterFileStack.cpp; sourceTree = "<group>"; };
 		14D857740A4696C80032146C /* testapi.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = testapi.js; sourceTree = "<group>"; };
 		14DA818E0D99FD2000B0A4FB /* JSActivation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSActivation.h; sourceTree = "<group>"; };
 		14DA818F0D99FD2000B0A4FB /* JSActivation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSActivation.cpp; sourceTree = "<group>"; };
@@ -828,6 +832,8 @@
 				149B24FF0D8AF6D1009CB8C7 /* Register.h */,
 				14D792650DAA03FB001A9F05 /* RegisterFile.cpp */,
 				14D792640DAA03FB001A9F05 /* RegisterFile.h */,
+				14D7977F0DAC3307001A9F05 /* RegisterFileStack.cpp */,
+				14D7977E0DAC3307001A9F05 /* RegisterFileStack.h */,
 			);
 			name = VM;
 			sourceTree = "<group>";
@@ -1250,6 +1256,7 @@
 				14DA81900D99FD2000B0A4FB /* JSActivation.h in Headers */,
 				145C50800D9DF63B0088F6B9 /* CallData.h in Headers */,
 				14D792660DAA03FB001A9F05 /* RegisterFile.h in Headers */,
+				14D797800DAC3307001A9F05 /* RegisterFileStack.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1518,6 +1525,7 @@
 				149B25020D8AF6D1009CB8C7 /* Register.cpp in Sources */,
 				A727FF6B0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */,
 				14D795550DAB1567001A9F05 /* JSActivation.cpp in Sources */,
+				14D797810DAC3307001A9F05 /* RegisterFileStack.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

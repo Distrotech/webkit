@@ -29,8 +29,9 @@
 #ifndef Machine_h
 #define Machine_h
 
-#include <wtf/HashMap.h>
 #include "Opcode.h"
+#include "RegisterFileStack.h"
+#include <wtf/HashMap.h>
 
 namespace KJS {
 
@@ -38,6 +39,7 @@ namespace KJS {
     class ExecState;
     class Register;
     class RegisterFile;
+    class RegisterFileStack;
     
     class Machine {
     public:
@@ -64,7 +66,12 @@ namespace KJS {
 
         bool isOpcode(Opcode opcode);
         
-        void execute(ExecState* exec, RegisterFile* registers, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, registers, scopeChain, codeBlock); }
+        void execute(ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, CodeBlock* codeBlock)
+        {
+            RegisterFile* registerFile = registerFileStack->pushRegisterFile();
+            privateExecute(Normal, exec, registerFile, scopeChain, codeBlock);
+            registerFileStack->popRegisterFile();
+        }
         
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
