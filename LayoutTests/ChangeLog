@@ -1,3 +1,17 @@
+2008-05-13  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Darin.
+
+        Bug 18752: SQUIRRELFISH: exceptions are not always handled by the vm
+        <https://bugs.webkit.org/show_bug.cgi?id=18752>
+
+        Fairly extensive coverage of exception behaviour and sequencing.  There
+        are still a number of FAIL results but these all match firefox (although 
+        not opera).
+
+        * fast/js/exception-sequencing-expected.txt: Added.
+        * fast/js/exception-sequencing.html: Added.
+
 2008-05-13  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.
