@@ -231,10 +231,8 @@ void JSObject::put(ExecState* exec, const Identifier &propertyName, JSValue *val
             
           List args;
           args.append(value);
-          RegisterFileStack* stack = &exec->dynamicGlobalObject()->registerFileStack();
-          stack->pushFunctionRegisterFile();
+        
           setterFunc->call(exec, this->toThisObject(exec), args);
-          stack->popFunctionRegisterFile();
           return;
         } else {
           // If there's an existing property on the object or one of its 
@@ -320,18 +318,9 @@ static ALWAYS_INLINE JSValue *tryGetAndCallProperty(ExecState *exec, const JSObj
       CallData data;
       CallType callType = o->getCallData(data);
       // spec says "not primitive type" but ...
-      if (callType == CallTypeNative) {
+      if (callType != CallTypeNone) {
           JSObject* thisObj = const_cast<JSObject*>(object);
           JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
-          JSType defType = def->type();
-          ASSERT(defType != GetterSetterType);
-          if (defType != ObjectType)
-              return def;
-      } else if (callType == CallTypeJS) {
-          JSObject* thisObj = const_cast<JSObject*>(object);
-          exec->dynamicGlobalObject()->registerFileStack().pushFunctionRegisterFile();
-          JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
-          exec->dynamicGlobalObject()->registerFileStack().popFunctionRegisterFile();
           JSType defType = def->type();
           ASSERT(defType != GetterSetterType);
           if (defType != ObjectType)

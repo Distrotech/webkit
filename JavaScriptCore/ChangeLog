@@ -1,3 +1,21 @@
+2008-05-09  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bring back RegisterFile tainting in order to correctly handle
+        natively implemented getters and setters that re-enter JavaScript
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/RegisterFile.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+        * kjs/object.cpp:
+        (KJS::JSObject::put):
+        (KJS::tryGetAndCallProperty):
+        * kjs/property_slot.cpp:
+        (KJS::PropertySlot::functionGetter):
+
 2008-05-09  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
