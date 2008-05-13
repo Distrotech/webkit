@@ -1,5 +1,23 @@
 2008-04-20  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Geoff and Mark.
+
+        Provide line number information in exceptions
+
+        Simple patch, adds line number information metadata to CodeBlock
+        and a simple method to get the line number responsible for a given
+        Instruction*.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::lineNumberForVPC):
+        * VM/CodeBlock.h:
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::emitNode):
+        * VM/Machine.cpp:
+        (KJS::Machine::throwException):
+
+2008-04-20  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Maciej.
 
         Provide "sourceURL" in exceptions
