@@ -1,3 +1,23 @@
+2008-04-01  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Next step toward global code: Moved get, put, and initializeVariable
+        functionality up into JSVariableObject, and changed JSActivation to
+        rely on it. 
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::JSActivation):
+        (KJS::JSActivation::getOwnPropertySlot):
+        (KJS::JSActivation::put):
+        (KJS::JSActivation::initializeVariable):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::valueAt):
+        (KJS::JSVariableObject::isReadOnly):
+        (KJS::JSVariableObject::symbolTableGet):
+        (KJS::JSVariableObject::symbolTablePut):
+        (KJS::JSVariableObject::symbolTableInitializeVariable):
+
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.
