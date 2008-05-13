@@ -50,7 +50,7 @@ namespace WebCore {
         virtual bool deleteProperty(KJS::ExecState*, const KJS::Identifier&);
         virtual bool deleteProperty(KJS::ExecState*, unsigned);
 
-        virtual bool implementsConstruct() const;
+        virtual KJS::ConstructType getConstructData(KJS::ConstructData&);
         virtual KJS::JSObject* construct(KJS::ExecState*, const KJS::List& args);
 
         virtual bool implementsHasInstance() const;

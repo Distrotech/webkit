@@ -1,3 +1,9 @@
+2008-04-10  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        Adjusted WebCore JS functions to the new "getConstructData" calling convention.
+
 2008-03-30  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

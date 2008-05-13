@@ -1775,7 +1775,7 @@ EOF
 
     if ($canConstruct) {
 $implContent .= << "EOF";
-    virtual bool implementsConstruct() const { return true; }
+    virtual ConstructType getConstructData(ConstructData&) { return ConstructTypeNative; }
     virtual JSObject* construct(ExecState* exec, const List& args) { return static_cast<JSObject*>(toJS(exec, ${interfaceName}::create())); }
 EOF
     }
