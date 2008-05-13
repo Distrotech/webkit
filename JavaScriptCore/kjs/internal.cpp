@@ -91,6 +91,11 @@ JSObject* StringImp::toObject(ExecState *exec) const
 
 // ------------------------------ NumberImp ------------------------------------
 
+JSType NumberImp::type() const
+{
+    return NumberType;
+}
+
 JSValue* NumberImp::toPrimitive(ExecState*, JSType) const
 {
     return const_cast<NumberImp*>(this);

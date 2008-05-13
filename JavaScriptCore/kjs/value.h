@@ -180,7 +180,36 @@ public:
     bool marked() const;
 };
 
-JSValue *jsNumberCell(double);
+class NumberImp : public JSCell {
+  friend JSValue* jsNumberCell(double);
+
+public:
+  double value() const { return val; }
+
+  virtual JSType type() const;
+
+  virtual JSValue* toPrimitive(ExecState*, JSType preferred = UnspecifiedType) const;
+  virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
+  virtual bool toBoolean(ExecState* exec) const;
+  virtual double toNumber(ExecState* exec) const;
+  virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
+  virtual UString toString(ExecState* exec) const;
+  virtual JSObject* toObject(ExecState* exec) const;
+  
+  void* operator new(size_t size)
+  {
+      return Collector::allocateNumber(size);
+  }
+
+private:
+  NumberImp(double v) : val(v) { }
+
+  virtual bool getUInt32(uint32_t&) const;
+  virtual bool getTruncatedInt32(int32_t&) const;
+  virtual bool getTruncatedUInt32(uint32_t&) const;
+
+  double val;
+};
 
 JSCell *jsString(const UString&); // returns empty string if passed null string
 JSCell *jsString(const char* = ""); // returns empty string if passed 0
@@ -192,6 +221,13 @@ JSCell *jsOwnedString(const UString&);
 
 extern const double NaN;
 extern const double Inf;
+
+// Beware marking this function ALWAYS_INLINE: It takes a PIC branch, so
+// inlining it may not always be a win.
+inline JSValue* jsNumberCell(double d)
+{
+    return new NumberImp(d);
+}
 
 ALWAYS_INLINE JSValue *jsUndefined()
 {

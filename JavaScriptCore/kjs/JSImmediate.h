@@ -278,6 +278,16 @@ ALWAYS_INLINE bool JSImmediate::getTruncatedUInt32(const JSValue* v, uint32_t& i
     return getUInt32(v, i);
 }
 
+ALWAYS_INLINE JSType JSImmediate::type(const JSValue* v)
+{
+    ASSERT(isImmediate(v));
+    
+    uintptr_t tag = getTag(v);
+    if (tag == UndefinedType)
+        return v == undefinedImmediate() ? UndefinedType : NullType;
+    return static_cast<JSType>(tag);
+}
+
 } // namespace KJS
 
 #endif

@@ -292,16 +292,6 @@ collect:
   return newCell;
 }
 
-void* Collector::allocate(size_t s) 
-{
-    return heapAllocate<PrimaryHeap>(s);
-}
-
-void* Collector::allocateNumber(size_t s) 
-{
-    return heapAllocate<NumberHeap>(s);
-}
-
 static inline void* currentThreadStackBase()
 {
 #if PLATFORM(DARWIN)

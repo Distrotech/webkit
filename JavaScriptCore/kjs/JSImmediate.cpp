@@ -63,14 +63,4 @@ UString JSImmediate::toString(const JSValue* v)
     return UString::from(getTruncatedInt32(v));
 }
 
-JSType JSImmediate::type(const JSValue *v)
-{
-    ASSERT(isImmediate(v));
-    
-    uintptr_t tag = getTag(v);
-    if (tag == UndefinedType)
-        return v == jsUndefined() ? UndefinedType : NullType;
-    return static_cast<JSType>(tag);
-}
-
 } // namespace KJS
