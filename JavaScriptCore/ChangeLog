@@ -1,3 +1,13 @@
+2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Geoffrey Garen.
+
+        Add support for FunctionCallDotNode.
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallDotNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Beth Dakin.
