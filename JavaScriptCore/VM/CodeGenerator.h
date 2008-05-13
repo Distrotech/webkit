@@ -81,7 +81,8 @@ namespace KJS {
         // Node::emitCode. They're the only functions that accept a NULL register.
         RegisterID* emitNode(RegisterID* r0, Node* n) { return n->emitCode(*this, r0); }
         RegisterID* emitNode(Node* n) { return n->emitCode(*this); }
-        
+
+        RegisterID* emitLoad(RegisterID*, bool);
         RegisterID* emitLoad(RegisterID*, double);
         RegisterID* emitLoad(RegisterID*, JSValue*);
         
@@ -130,6 +131,7 @@ namespace KJS {
         PassRefPtr<LabelID> emitLabel(LabelID*);
         PassRefPtr<LabelID> emitJump(LabelID*);
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
+        PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
 
     private:
         typedef HashMap<JSValue*, unsigned> JSValueMap;

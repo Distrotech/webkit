@@ -265,7 +265,13 @@ namespace KJS {
 
     class NullNode : public ExpressionNode {
     public:
-        NullNode() KJS_FAST_CALL : ExpressionNode(NullType) {}
+        NullNode() KJS_FAST_CALL
+            : ExpressionNode(NullType)
+        {
+        }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         virtual Precedence precedence() const { return PrecPrimary; }
@@ -277,6 +283,8 @@ namespace KJS {
             : ExpressionNode(BooleanType)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual bool evaluateToBoolean(ExecState*) KJS_FAST_CALL { return false; }
@@ -290,6 +298,8 @@ namespace KJS {
             : ExpressionNode(BooleanType)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         virtual bool evaluateToBoolean(ExecState*) KJS_FAST_CALL { return true; }
@@ -2563,6 +2573,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2580,6 +2591,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2596,6 +2608,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
@@ -2613,6 +2626,7 @@ namespace KJS {
         {
         }
 
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
