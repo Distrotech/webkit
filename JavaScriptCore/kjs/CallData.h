@@ -32,7 +32,7 @@
 namespace KJS {
 
     class FunctionBodyNode;
-    class ScopeChain;
+    class ScopeChainNode;
 
     enum CallType {
         CallTypeNone,
@@ -43,7 +43,7 @@ namespace KJS {
     union CallData {
         struct {
             FunctionBodyNode* functionBody;
-            ScopeChain* scopeChain;
+            ScopeChainNode* scopeChain;
         } js;
     };
 
