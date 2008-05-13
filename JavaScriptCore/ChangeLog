@@ -1,5 +1,21 @@
 2008-04-23  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed scopes for named function expressions.
+        
+        Fixes one regression test.
+        
+        Two changes here:
+        
+        (1) The function's name is supposed to have attributes DontDelete,
+        ReadOnly, regardless of the type of code executing.
+        
+        (2) Push the name object on the function's scope chain, rather than
+        the ExecState's scope chain because, well, that's where it belongs.
+
+2008-04-23  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt.
         
         Inlined JSObject::putDirect, for a .4% SunSpider speedup.
