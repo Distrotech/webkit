@@ -24,7 +24,7 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
-#include "Register.h"
+#include "RegisterFile.h"
 #include <wtf/HashSet.h>
 #include <wtf/OwnPtr.h>
 
@@ -79,7 +79,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
-                : JSVariableObjectData(&symbolTable, registerVector.dataSlot(), 0)
+                : JSVariableObjectData(&symbolTable, registerFile.basePointer(), 0)
                 , globalExec(new GlobalExecState(globalObject, thisValue))
             {
             }
@@ -146,7 +146,7 @@ namespace KJS {
 
             PerThreadData perThreadData;
 
-            Vector<Register> registerVector;
+            RegisterFile registerFile;
         };
 
     public:
@@ -249,7 +249,7 @@ namespace KJS {
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
-        Vector<Register>& registerVector() { return d()->registerVector; }
+        RegisterFile& registerFile() { return d()->registerFile; }
 
         // Per-thread hash tables, cached on the global object for faster access.
         const PerThreadData* perThreadData() const { return &d()->perThreadData; }
