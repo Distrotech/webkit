@@ -365,8 +365,9 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, R
     RegisterFile* registerFile = registerFileStack->current();
     CodeBlock* codeBlock = &functionBodyNode->code(*scopeChain);
 
-    // do we need return info, too?
-    registerFile->resize(registerFile->size() + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
+    registerFile->resize(registerFile->size() + returnInfoSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
+    // put return info in place
+        // use 0 codeBlock to indicate termination
     // put args in place
 
     return privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
@@ -980,6 +981,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         }
 
         codeBlock = returnInfo[0].u.codeBlock;
+        if (!codeBlock)
+            return returnValue;
+        
         k = codeBlock->jsValues.data();
         vPC = returnInfo[1].u.vPC;
         scopeChain = returnInfo[2].u.scopeChain;
