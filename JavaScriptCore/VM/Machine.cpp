@@ -570,7 +570,6 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     registerFile->uncheckedGrow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
 
-    ASSERT(exec->dynamicGlobalObject()->symbolTable().get(CommonIdentifiers::shared()->thisIdentifier.ustring().rep()).index == ProgramCodeThisRegister);
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
     
     if (codeBlock->needsFullScopeChain)
