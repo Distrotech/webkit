@@ -173,7 +173,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     // Global code can inherit previously defined symbols.
     if (int size = symbolTable->size()) {
         // re-add "this" to symbol table
-        ASSERT(symbolTable->contains(m_propertyNames->thisIdentifier.ustring().rep()));
+        ASSERT(!symbolTable->contains(m_propertyNames->thisIdentifier.ustring().rep()));
         symbolTable->add(m_propertyNames->thisIdentifier.ustring().rep(), Machine::ProgramCodeThisRegister);
         ++size;
 

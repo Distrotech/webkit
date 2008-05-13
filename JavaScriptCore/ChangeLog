@@ -1,5 +1,14 @@
 2008-05-06  Maciej Stachowiak  <mjs@apple.com>
 
+        Rubber stamped by Oliver.
+        
+        - add missing ! in an assert that I failed to reverse
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+
+2008-05-06  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
         
         - fixed "SQUIRRELFISH: window.this shows up as a property, but it shouldn't"
