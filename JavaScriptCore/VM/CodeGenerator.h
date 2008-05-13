@@ -123,6 +123,7 @@ namespace KJS {
         RegisterID* emitNewArray(RegisterID*);
 
         RegisterID* emitNewFunction(RegisterID*, FuncDeclNode*);
+        RegisterID* emitNewFunctionExpression(RegisterID*, FuncExprNode*);
         
         RegisterID* emitMove(RegisterID*, RegisterID*);
 
@@ -191,6 +192,7 @@ namespace KJS {
         typedef HashMap<JSValue*, unsigned> JSValueMap;
         
         unsigned addConstant(FuncDeclNode*);
+        unsigned addConstant(FuncExprNode*);
         unsigned addConstant(const Identifier&);
         unsigned addConstant(JSValue*);
         

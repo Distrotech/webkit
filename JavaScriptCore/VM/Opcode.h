@@ -83,6 +83,7 @@ namespace KJS {
         macro(op_jmp_scopes) \
         \
         macro(op_new_func) \
+        macro(op_new_func_exp) \
         macro(op_call) \
         macro(op_ret) \
         \

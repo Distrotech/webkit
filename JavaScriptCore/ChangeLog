@@ -1,3 +1,24 @@
+2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Add support for FuncExprNode to SquirrelFish.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeBlock.h:
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addConstant):
+        (KJS::CodeGenerator::emitNewFunctionExpression):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::FuncExprNode::emitCode):
+        (KJS::FuncExprNode::makeFunction):
+        * kjs/nodes.h:
+
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
