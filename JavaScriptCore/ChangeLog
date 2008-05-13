@@ -1,3 +1,12 @@
+2008-05-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Rubber stamped by Oliver Hunt.
+        
+        Removed ExecState.cpp from AllInOneFile.cpp, for a .2% speedup.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/AllInOneFile.cpp:
+
 2008-05-01  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff and Maciej.
