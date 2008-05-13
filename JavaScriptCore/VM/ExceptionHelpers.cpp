@@ -44,6 +44,11 @@ static void substitute(UString& string, const UString& substring)
     newString.append(string.substr(position + 2));
     string = newString;
 }
+    
+JSValue* createError(ExecState* exec, ErrorType e, const char* msg)
+{
+    return Error::create(exec, e, msg, -1, -1, 0); // lineNo(), currentSourceId(exec), currentSourceURL(exec)
+}
 
 JSValue* createError(ExecState* exec, ErrorType e, const char* msg, const Identifier& label)
 {
@@ -61,6 +66,11 @@ JSValue* createError(ExecState* exec, ErrorType e, const char* msg, JSValue* v, 
     else
         substitute(message, "<<no string for expression>>");
     return Error::create(exec, e, message, -1, -1, 0); //, lineNo(), currentSourceId(exec), currentSourceURL(exec));
+}
+
+JSValue* createStackOverflowError(ExecState* exec)
+{
+    return createError(exec, RangeError, "Stack overflow");
 }
 
 JSValue* createUndefinedVariableError(ExecState* exec, const Identifier& ident)

@@ -1,3 +1,27 @@
+2008-04-24  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18628: SQUIRRELFISH: need to support recursion limit
+        <https://bugs.webkit.org/show_bug.cgi?id=18628>
+
+        Partial fix -- this gets us some of the required bounds checking, but not
+        complete coverage.  But it does manage to do them without regressing :D
+
+        * VM/ExceptionHelpers.cpp:
+        (KJS::createError):
+        (KJS::createStackOverflowError):
+        * VM/ExceptionHelpers.h:
+        * VM/Machine.cpp:
+        (KJS::slideRegisterWindowForCall):
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/RegisterFile.cpp:
+        * VM/RegisterFile.h:
+        (KJS::RegisterFile::):
+        (KJS::RegisterFile::RegisterFile):
+        (KJS::RegisterFile::grow):
+
 2008-04-24  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

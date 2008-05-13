@@ -38,7 +38,7 @@ using namespace std;
 
 size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t offset)
 {
-    capacity = (max(minCapacity, max<size_t>(16, capacity + capacity / 4 + 1)));
+    capacity = (max(minCapacity, min(m_maxSize, max<size_t>(16, capacity + capacity / 4 + 1))));
     Register* newBuffer = static_cast<Register*>(fastCalloc(capacity, sizeof(Register))); // zero-filled memory
 
     if (m_buffer)
