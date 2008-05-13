@@ -66,9 +66,10 @@ namespace KJS {
                 ASSERT_NOT_REACHED();
             }
             
-            JSVariableObjectData(SymbolTable* symbolTable_, Vector<Register>* registers_)
+            JSVariableObjectData(SymbolTable* symbolTable_, Vector<Register>* registers_, int rOffset_)
                 : symbolTable(symbolTable_)
                 , registers(registers_)
+                , rOffset(rOffset_)
             {
             }
 
@@ -76,6 +77,7 @@ namespace KJS {
             SymbolTable* symbolTable; // Maps name -> index in localStorage.
 
             Vector<Register>* registers; // The register file.
+            int rOffset; // Offset of "r", the register past the end of local storage.
         };
 
         JSVariableObject()
