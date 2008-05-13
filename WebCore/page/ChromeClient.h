@@ -47,7 +47,6 @@ namespace WebCore {
     class String;
     class Widget;
     
-    struct DashboardRegionValue;
     struct FrameLoadRequest;
     struct WindowFeatures;
 
@@ -120,13 +119,18 @@ namespace WebCore {
 
         virtual void exceededDatabaseQuota(Frame*, const String& databaseName) = 0;
 
+#if ENABLE(DASHBOARD_SUPPORT)
         virtual void dashboardRegionsChanged();
+#endif
 
         virtual void populateVisitedLinks();
 
         virtual FloatRect customHighlightRect(Node*, const AtomicString& type, const FloatRect& lineRect);
         virtual void paintCustomHighlight(Node*, const AtomicString& type, const FloatRect& boxRect, const FloatRect& lineRect,
             bool behindText, bool entireLine);
+            
+        virtual bool shouldReplaceWithGeneratedFileForUpload(const String& path, String& generatedFilename);
+        virtual String generateReplacementFile(const String& path);
 
 #if PLATFORM(MAC)
         virtual void runOpenPanel(PassRefPtr<FileChooser>);

@@ -28,7 +28,7 @@ using namespace KJS;
 
 namespace WebCore {
 
-const ClassInfo JSImageConstructor::s_info = { "ImageConstructor", 0, 0 };
+const ClassInfo JSImageConstructor::s_info = { "ImageConstructor", 0, 0, 0 };
 
 JSImageConstructor::JSImageConstructor(ExecState* exec, Document* document)
     : DOMObject(exec->lexicalGlobalObject()->objectPrototype())
@@ -36,9 +36,9 @@ JSImageConstructor::JSImageConstructor(ExecState* exec, Document* document)
 {
 }
 
-ConstructType JSImageConstructor::getConstructData(ConstructData&)
+bool JSImageConstructor::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* JSImageConstructor::construct(ExecState* exec, const List& args)

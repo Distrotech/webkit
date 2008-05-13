@@ -1,18 +1,545 @@
-2008-05-09  Oliver Hunt  <oliver@apple.com>
+2008-05-12  Dan Bernstein  <mitz@apple.com>
 
-        Reviewed by Geoff.
+        Reviewed by Ada Chan.
 
-        Build fixes for SquirrelFish on windows.
+        - WebKit/win changes for https://bugs.webkit.org/show_bug.cgi?id=17097
+          <rdar://problem/5715471> CGFontRefs (and HFONTs on Windows) leak because FontCache grows without bound
+
+        Added font cache statistics and a function to purge inactive font data.
+
+        * Interfaces/IWebCoreStatistics.idl:
+        * WebCoreStatistics.cpp:
+        (WebCoreStatistics::cachedFontDataCount):
+        (WebCoreStatistics::cachedFontDataInactiveCount):
+        (WebCoreStatistics::purgeInactiveFontData):
+        (WebCoreStatistics::glyphPageCount):
+        * WebCoreStatistics.h:
+
+2008-05-12  Adam Roben  <aroben@apple.com>
+
+        Build fix
+
+        * WebKitPrefix.cpp: Touch this so that it will rebuild after
+        ENABLE_CROSS_DOCUMENT_MESSAGING was removed.
+
+2008-05-12  Alexey Proskuryakov  <ap@webkit.org>
+
+        Roll out recent  threading changes (r32807, r32810, r32819, r32822) to simplify
+        SquirrelFish merging.
+
+        * WebCoreStatistics.cpp:
+        (WebCoreStatistics::javaScriptObjectsCount):
+        (WebCoreStatistics::javaScriptGlobalObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedGlobalObjectsCount):
+        * WebJavaScriptCollector.cpp:
+        (WebJavaScriptCollector::objectCount):
+        * WebScriptCallFrame.cpp:
+        (WebScriptCallFrame::valueByEvaluatingJavaScriptFromString):
+
+2008-05-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Fix a hang-on-quit bug where in the DLL_PROCESS_DETACH DllMain callback, we assummed that
+        we could cleanly shutdown WebKit but we couldn't because any background threads have already
+        been uncleanly aborted at that point.
+        
+        * ForEachCoClass.cpp:
+        (shutDownWebKit): Moved from WebKitDLL to here, to be exposed via WebKit.def
+        * ForEachCoClass.h:
+        
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit_debug.def:
+        
+        * WebKitDLL.cpp:
+        (DllMain): Don't call shutDownWebKit here
+
+2008-05-09  Sam Weinig  <sam@webkit.org>
+
+        Rubber-stamped by Mark Rowe.
+
+        Remove the ENABLE_CROSS_DOCUMENT_MESSAGING #ifdefs.
+
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Build fix
+
+        * Interfaces/WebKit.idl: Touched.
+
+2008-05-06  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Adele Peterson and John Sullivan.
+
+        changes needed to build on Windows after r32911 and r32927
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accParent):
+        * AccessibleDocument.cpp:
+        (AccessibleDocument::document):
+
+2008-05-06  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin Adler
+
+        Preparation for upcoming work making LocalStorage persistent.
+
+        When the application terminates, all LocalStorage areas must be sync'ed out to disk first.
+
+        * WebKitDLL.cpp:
+        (shutDownWebKit): Close all LocalStorage areas before quitting.
+
+2008-05-05  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        Add preference for enabling the offline web application cache.
+        
+        * Interfaces/IWebPreferencesPrivate.idl:
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initializeDefaultSettings):
+        (WebPreferences::setOfflineWebApplicationCacheEnabled):
+        (WebPreferences::offlineWebApplicationCacheEnabled):
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2008-05-05  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Tim Hatcher.
+
+        Make the Inspector's localizable strings file match the format used by Dashboard widgets.
+
+        * WebCoreSupport/WebInspectorClient.cpp:
+        (WebInspectorClient::localizedStringsURL):
+
+2008-05-05  Steve Falkenburg  <sfalken@apple.com>
+
+        Add WebPreference for application chrome mode.
+        
+        Reviewed by Dave Hyatt.
+
+        * Interfaces/IWebPreferencesPrivate.idl:
+        * WebPreferenceKeysPrivate.h:
+        * WebPreferences.cpp:
+        (WebPreferences::initializeDefaultSettings):
+        (WebPreferences::inApplicationChromeMode):
+        (WebPreferences::setApplicationChromeMode):
+        * WebPreferences.h:
+        * WebView.cpp:
+        (WebView::notifyPreferencesChanged):
+
+2008-05-02  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18826
+        Make JavaScript heap per-thread
+
+        * WebCoreStatistics.cpp:
+        (WebCoreStatistics::javaScriptObjectsCount):
+        (WebCoreStatistics::javaScriptGlobalObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedObjectsCount):
+        (WebCoreStatistics::javaScriptProtectedGlobalObjectsCount):
+        * WebJavaScriptCollector.cpp:
+        (WebJavaScriptCollector::objectCount):
+        * WebScriptCallFrame.cpp:
+        (WebScriptCallFrame::valueByEvaluatingJavaScriptFromString):
+        Replaced static Collector calls with calls to a current thread's instance. Pass ExecState to jsString().
+
+2008-04-29  Ada Chan  <adachan@apple.com>
+
+        Support text shadow in WebDrawText().
+        Remove DrawTextAtPoint() since it is only called by WebDrawText().
+
+        Reviewed by Adam.
+
+        * WebKit.vcproj/WebKit.def:
+        * WebKit.vcproj/WebKit_debug.def:
+        * WebKitGraphics.cpp:
+        (WebDrawText):
+        * WebKitGraphics.h:
+
+2008-04-29  Adam Roben  <aroben@apple.com>
+
+        Restore the beloved COMPtr::operator&
+
+2008-04-29  Adam Roben  <aroben@apple.com>
+
+        Windows build fix
+
+        Replaced uses of COMPtr::operator& with COMPtr::adoptionPointer.
+
+2008-04-29  Adam Roben  <aroben@apple.com>
+
+        Fix a Windows build error
 
         * WebScriptCallFrame.cpp:
-        (callingFunctionOrGlobalExecState):
-        (WebScriptCallFrame::caller):
-        (WebScriptCallFrame::functionName):
-        (WebScriptCallFrame::variableNames):
-        (WebScriptCallFrame::valueForVariable):
-        (WebScriptCallFrame::valueByEvaluatingJavaScriptFromString):
-        * WebScriptDebugServer.cpp:
-        (WebScriptDebugServer::willLeaveCallFrame):
+        (WebScriptCallFrame::variableNames): Don't use ::adopt now that
+        PropertyNameArray has no swap function.
+
+2008-04-28  Adam Roben  <aroben@apple.com>
+
+        Fix some Windows build errors in WebKit
+
+        * Interfaces/WebKit.idl: Touched to force Interfaces to rebuild.
+        * WebKitPrefix.cpp: Touched to force WebKit to rebuild.
+
+2008-04-25  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Fix run-webkit-tests --threading
+        and provisionally fix <https://bugs.webkit.org/show_bug.cgi?id=18661>
+        Proxy server issue in Sunday's Nightly
+
+        * WebView.cpp: (WebView::WebView): Initialize threading. Previously, this was only done from
+        icon database code, which is not robust enough.
+
+2008-04-26  Adam Barth <hk9565@gmail.com>
+
+        Reviewed by Adam Roben and Sam Weinig.
+
+        Renamed "domain" method to "host" to match SecurityOrigin.
+
+        * Interfaces/IWebSecurityOrigin.idl:
+        * WebSecurityOrigin.cpp:
+        (WebSecurityOrigin::host):
+        * WebSecurityOrigin.h:
+
+2008-04-25  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Fix internal debug build.
+        
+        * WebKit.vcproj/WebKit.vcproj:
+
+2008-04-24  Dan Bernstein  <mitz@apple.com>
+
+        - build fix
+
+        * WebView.cpp:
+        (WebView::handleContextMenuEvent):
+
+2008-04-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Revert my previous change to WebKit/Win until I can make it act more like the new Mac code
+
+        * WebView.cpp:
+        (WebView::initWithFrame):
+
+2008-04-24  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Change some String arguments to be const references instead.
+
+        * WebCoreSupport/WebEditorClient.cpp:
+        (WebEditorClient::shouldInsertText):
+        * WebCoreSupport/WebEditorClient.h:
+
+2008-04-23  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        In some current work I noticed that when a new Page is created, it is possible that it requires info from its Settings
+        object before the Settings object is initialized.  It seems quite prudent to post the preferences changed notification,
+        thereby populating the Settings object, immediately after the Page is created.
+
+        * WebView.cpp:
+        (WebView::initWithFrame): Post the notification right after the Page is created
+
+2008-04-23  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Brady.
+
+        Implement accDoDefaultAction().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::accDoDefaultAction): Call the object's
+        performDefaultAction() method. Return S_FALSE if the call returns false,
+        indicating that the object has no default action associated with it.
+
+2008-04-23  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Adam.
+
+        Implement accHitTest().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::accHitTest): Perform a hit test for a child object. If
+        none is found, report whether the point was within our own bounding box.
+
+2008-04-23  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Adam and Darin.
+
+        Implement accNavigate().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::accNavigate): This method navigates between elements,
+        given a start point and a direction. The directions UP, DOWN, LEFT,
+        RIGHT are not are not implemented, matching Mozilla and IE. The
+        directions FIRSTCHILD and LASTCHILD are only allowed from self. NEXT and
+        PREVIOUS are allowed from self or any of our children.
+
+2008-04-23  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Adam.
+
+        Implement accLocation().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::accLocation): Report the screen coordinates for the
+        object's bounding box.
+
+2008-04-23  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Adam, Darin, Oliver.
+
+        Implement get_accDefaultAction().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accDefaultAction): Report the result of calling the
+        object's actionVerb method.
+        * English.lproj/Localizable.strings: Updated with new strings.
+        * WebCoreLocalizedStrings.cpp: 
+        (WebCore::AXButtonActionVerb): Return a localized string representing
+        the object's default action.
+        (WebCore::AXRadioButtonActionVerb): Same.
+        (WebCore::AXTextFieldActionVerb): Same.
+        (WebCore::AXCheckedCheckBoxActionVerb): Same
+        (WebCore::AXUncheckedCheckBoxActionVerb): Same.
+        (WebCore::AXLinkActionVerb): Same.
+
+2008-04-23  Daniel Zucker  <zucker@wake3.com>
+
+        Reviewed by Adam Roben.
+
+        <https://bugs.webkit.org/show_bug.cgi?id=18468>
+
+        * WebError.h:  include RetainPtr.h to fix build errors in Cairo build
+
+2008-04-23  Daniel Zucker  <zucker@wake3.com>
+
+        Reviewed by Adam Roben.
+
+        Move the location of #if USE(CFNETWORK) to fix a cairo/curl build error.
+        <https://bugs.webkit.org/show_bug.cgi?id=18470>
+
+        * WebError.cpp:
+        (WebError::sslPeerCertificate):
+
+2008-04-22  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Adam.
+
+        Implement get_accFocus().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accRole): Remove redundant initialization;
+        VariantInit does this.
+        (AccessibleBase::get_accState): Same.
+        (AccessibleBase::get_accSelection): Relocated next to accSelect().
+        (AccessibleBase::get_accFocus): If the focused object is this object or
+        a child of this object, report it. Otherwise, report VT_EMPTY.
+
+2008-04-22  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Sam.
+
+        Implement get_accKeyboardShortcut().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accKeyboardShortcut): Report the key combination
+        that will perform the object's access key action, represented as a
+        string.
+
+2008-04-19  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement get_accHelp().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accHelp): Report the result of calling the object's
+        helpText() method.
+
+2008-04-19  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement get_accState().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accState):
+
+2008-04-21  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Move collector main thread initialization from WebKit/win to KJS::initializeThreading.
+
+        * WebView.cpp:
+        (WebView::WebView):
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement get_accRole().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accRole): Report the result of role().
+        (MSAARole): Added; returns the MSAA role for a WebCore role.
+        (AccessibleBase::role): Return the MSAA role for the object's roleValue.
+        * AccessibleBase.h: Add declaration for role().
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement get_accName(), get_accValue(), get_accDescription(). Added
+        virtual methods that accessible objects can override to customize the
+        result.
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accName): Report result of name().
+        (AccessibleBase::get_accValue): Report result of value().
+        (AccessibleBase::get_accDescription): Report result of description().
+        (AccessibleBase::name): Added; returns AccessibilityObject::title().
+        (AccessibleBase::value): Added; returns
+        AccessibilityObject::stringValue().
+        (AccessibleBase::description): Added; returns
+        AccessibilityObject::accessibilityDescription().
+        * AccessibleBase.h: Added declarations for name(), value(), and
+        description().
+        * ChangeLog: Fix my misuse of "definition."
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Fix build after r32231.
+
+        * WebFrame.cpp:
+        (WebFrame::renderTreeAsExternalRepresentation): renderer() ->
+        contentRenderer()
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Fix build after r32231.
+
+        * WebView.cpp:
+        (WebView::paintIntoBackingStore): renderer() -> contentRenderer()
+        (WebView::elementAtPoint): Same.
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        * AccessibleBase.cpp: Build fix for copy/paste error.
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement IAccessible::get_accChild().
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accChild): Call getAccessibilityObjectForChild
+        to find the AccessibilityObject for the VARIANT vChild. Get the
+        AccessibilityObjectWrapper for the child, add a ref, and pass it back.
+        (AccessibleBase::getAccessibilityObjectForChild): Added; finds the
+        AccessibilityObject referred to by a VARIANT, or returns a COM error on
+        failure.
+        (AccessibleBase::wrapper): Added; returns the wrapper for the
+        AccessibilityObject. Creates one if necessary.
+        * AccessibleBase.h: Added declarations for wrapper() and
+        getAccessibilityObjectForChild().
+
+2008-04-18  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin, Ollie. 
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accChildCount): Implement get_accChildCount.
+
+2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Implement IAccessible::get_accParent(). 
+
+        * AccessibleBase.cpp:
+        (AccessibleBase::get_accParent): Call AccessibleObjectFromWindow with
+        OBJID_WINDOW. This will be handled by Windows to return the default
+        accessible object for the WebView, because we only handle OBJID_CLIENT.
+        * WebView.cpp:
+        (WebView::AccessibleObjectFromWindow): Added; calls through to the
+        AccessibleObjectFromWindow in the MSAA DLL.
+        * WebView.h: Added declaration for AccessibleObjectFromWindow.
+
+2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Return an AccessibleDocument when our root accessible object is queried
+        for.
+
+        * AccessibleDocument.cpp: Added; represents an AccessibilityObject that
+        itself represents a Document.
+        (AccessibleDocument::AccessibleDocument): Initialize AccessibleBase with
+        the AccessibilityObject for this Document.
+        * AccessibleDocument.h: Added.
+        * WebFrame.cpp:
+        (WebFrame::accessible): If m_accessible is 0, or if Document in this
+        frame does not match the Document in the cached m_accessible object,
+        create a new AccessibleDocument for this frame's Document.
+        * WebFrame.h: Swap AccessibleBase.h for AccessibleDocument.h
+        * WebKit.vcproj/WebKit.vcproj: Add AccessibleDocument.{h,cpp}
+
+2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
+
+        Reviewed by Darin.
+
+        Respond to WM_GETOBJECT messages. Currently returns NULL.
+
+        * WebFrame.cpp:
+        (WebFrame::accessible): Added; will return the root accessible object
+        for this frame.
+        * WebFrame.h: Added declaration for accessible().
+        * WebView.cpp:
+        (WebViewWndProc): Handle WM_GETOBJECT messages by calling onGetObject().
+        (WebView::onGetObject): Added; enables the AXObjectCache in WebCore,
+        queries the top-level frame for its root accessible object, and loads
+        the MSAA DLL and locates its LresultFromObject function. If calling
+        LresultFromObject succeeds, it returns a reference to the accessible
+        object to pass back to Windows. If not, we return false and let Windows
+        handle the request through DefWindowProc.
+        * WebView.h: Added declaration for onGetObject().
+
+2008-04-18  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Don't clear the PageGroup on _close, as the WebCore::Page destructor already does this.
+        No reason to do the work twice...
+
+        * WebView.cpp:
+        (WebView::close):
+
+2008-04-18  Adam Roben  <aroben@apple.com>
+
+        Update WebScriptDebugServer for JavaScriptDebugListener changes
+
+        Reviewed by Tim Hatcher.
+
+        * WebScriptDebugServer.cpp: Changed to use KJS::UString instead of
+        WebCore::String.
+        * WebScriptDebugServer.h: Ditto.
 
 2008-04-16  Jon Honeycutt  <jhoneycutt@apple.com>
 

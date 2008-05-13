@@ -32,6 +32,7 @@
 #include "HitTestResult.h"
 #include "InlineTextBox.h"
 #include "RenderImage.h"
+#include "RenderReplica.h"
 #include "RenderTableCell.h"
 #include "RenderTextFragment.h"
 #include "RenderTheme.h"
@@ -150,70 +151,58 @@ void RenderBlock::addChildToFlow(RenderObject* newChild, RenderObject* beforeChi
     // Make sure we don't append things after :after-generated content if we have it.
     if (!beforeChild && isAfterContent(lastChild()))
         beforeChild = lastChild();
-    
+
     bool madeBoxesNonInline = false;
 
     // If the requested beforeChild is not one of our children, then this is most likely because
     // there is an anonymous block box within this object that contains the beforeChild. So
     // just insert the child into the anonymous block box instead of here.
     if (beforeChild && beforeChild->parent() != this) {
-
         ASSERT(beforeChild->parent());
         ASSERT(beforeChild->parent()->isAnonymousBlock());
 
-        if (newChild->isInline()) {
-            beforeChild->parent()->addChild(newChild,beforeChild);
-            return;
-        }
-        else if (beforeChild->parent()->firstChild() != beforeChild)
-            return beforeChild->parent()->addChild(newChild, beforeChild);
+        if (newChild->isInline() || beforeChild->parent()->firstChild() != beforeChild)
+            beforeChild->parent()->addChild(newChild, beforeChild);
         else
-            return addChildToFlow(newChild, beforeChild->parent());
+            addChildToFlow(newChild, beforeChild->parent());
+
+        return;
     }
 
     // A block has to either have all of its children inline, or all of its children as blocks.
     // So, if our children are currently inline and a block child has to be inserted, we move all our
-    // inline children into anonymous block boxes
-    if ( m_childrenInline && !newChild->isInline() && !newChild->isFloatingOrPositioned() )
-    {
+    // inline children into anonymous block boxes.
+    if (m_childrenInline && !newChild->isInline() && !newChild->isFloatingOrPositioned()) {
         // This is a block with inline content. Wrap the inline content in anonymous blocks.
         makeChildrenNonInline(beforeChild);
         madeBoxesNonInline = true;
-        
+
         if (beforeChild && beforeChild->parent() != this) {
             beforeChild = beforeChild->parent();
             ASSERT(beforeChild->isAnonymousBlock());
             ASSERT(beforeChild->parent() == this);
         }
-    }
-    else if (!m_childrenInline && !newChild->isFloatingOrPositioned())
-    {
+    } else if (!m_childrenInline && (newChild->isFloatingOrPositioned() || newChild->isInline())) {
         // If we're inserting an inline child but all of our children are blocks, then we have to make sure
         // it is put into an anomyous block box. We try to use an existing anonymous box if possible, otherwise
         // a new one is created and inserted into our list of children in the appropriate position.
-        if (newChild->isInline()) {
-            if (beforeChild) {
-                if (beforeChild->previousSibling() && beforeChild->previousSibling()->isAnonymousBlock()) {
-                    beforeChild->previousSibling()->addChild(newChild);
-                    return;
-                }
-            }
-            else {
-                if (lastChild() && lastChild()->isAnonymousBlock()) {
-                    lastChild()->addChild(newChild);
-                    return;
-                }
-            }
+        RenderObject* afterChild = beforeChild ? beforeChild->previousSibling() : lastChild();
 
-            // no suitable existing anonymous box - create a new one
+        if (afterChild && afterChild->isAnonymousBlock()) {
+            afterChild->addChild(newChild);
+            return;
+        }
+
+        if (newChild->isInline()) {
+            // No suitable existing anonymous box - create a new one.
             RenderBlock* newBox = createAnonymousBlock();
-            RenderContainer::addChild(newBox,beforeChild);
+            RenderContainer::addChild(newBox, beforeChild);
             newBox->addChild(newChild);
             return;
         }
     }
 
-    RenderContainer::addChild(newChild,beforeChild);
+    RenderContainer::addChild(newChild, beforeChild);
     // ### care about aligned stuff
 
     if (madeBoxesNonInline && parent() && isAnonymousBlock())
@@ -377,9 +366,13 @@ void RenderBlock::removeChild(RenderObject *oldChild)
 int RenderBlock::overflowHeight(bool includeInterior) const
 {
     if (!includeInterior && hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow())
-            return m_height + max(boxShadow->y + boxShadow->blur, 0);
-        return m_height;
+        int shadowHeight = 0;
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next)
+            shadowHeight = max(boxShadow->y + boxShadow->blur, shadowHeight);
+        int height = m_height + shadowHeight;
+        if (hasReflection())
+            height = max(height, reflectionBox().bottom());
+        return height;
     }
     return m_overflowHeight;
 }
@@ -387,9 +380,13 @@ int RenderBlock::overflowHeight(bool includeInterior) const
 int RenderBlock::overflowWidth(bool includeInterior) const
 {
     if (!includeInterior && hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow())
-            return m_width + max(boxShadow->x + boxShadow->blur, 0);
-        return m_width;
+        int shadowWidth = 0;
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next)
+            shadowWidth = max(boxShadow->x + boxShadow->blur, shadowWidth);
+        int width = m_width + shadowWidth;
+        if (hasReflection())
+            width = max(width, reflectionBox().right());
+        return width;
     }
     return m_overflowWidth;
 }
@@ -397,9 +394,13 @@ int RenderBlock::overflowWidth(bool includeInterior) const
 int RenderBlock::overflowLeft(bool includeInterior) const
 {
     if (!includeInterior && hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow())
-            return min(boxShadow->x - boxShadow->blur, 0);
-        return 0;
+        int shadowLeft = 0;
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next)
+            shadowLeft = min(boxShadow->x - boxShadow->blur, shadowLeft);
+        int left = shadowLeft;
+        if (hasReflection())
+            left = min(left, reflectionBox().x());
+        return left;
     }
     return m_overflowLeft;
 }
@@ -407,9 +408,13 @@ int RenderBlock::overflowLeft(bool includeInterior) const
 int RenderBlock::overflowTop(bool includeInterior) const
 {
     if (!includeInterior && hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow())
-            return min(boxShadow->y - boxShadow->blur, 0);
-        return 0;
+        int shadowTop = 0;
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next)
+            shadowTop = min(boxShadow->y - boxShadow->blur, shadowTop);
+        int top = shadowTop;
+        if (hasReflection())
+            top = min(top, reflectionBox().y());
+        return top;
     }
     return m_overflowTop;
 }
@@ -418,14 +423,33 @@ IntRect RenderBlock::overflowRect(bool includeInterior) const
 {
     if (!includeInterior && hasOverflowClip()) {
         IntRect box = borderBox();
-        if (ShadowData* boxShadow = style()->boxShadow()) {
-            int shadowLeft = min(boxShadow->x - boxShadow->blur, 0);
-            int shadowRight = max(boxShadow->x + boxShadow->blur, 0);
-            int shadowTop = min(boxShadow->y - boxShadow->blur, 0);
-            int shadowBottom = max(boxShadow->y + boxShadow->blur, 0);
-            box.move(shadowLeft, shadowTop);
-            box.setWidth(box.width() - shadowLeft + shadowRight);
-            box.setHeight(box.height() - shadowTop + shadowBottom);
+        int shadowLeft = 0;
+        int shadowRight = 0;
+        int shadowTop = 0;
+        int shadowBottom = 0;
+
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next) {
+            shadowLeft = min(boxShadow->x - boxShadow->blur, shadowLeft);
+            shadowRight = max(boxShadow->x + boxShadow->blur, shadowRight);
+            shadowTop = min(boxShadow->y - boxShadow->blur, shadowTop);
+            shadowBottom = max(boxShadow->y + boxShadow->blur, shadowBottom);
+        }
+
+        box.move(shadowLeft, shadowTop);
+        box.setWidth(box.width() - shadowLeft + shadowRight);
+        box.setHeight(box.height() - shadowTop + shadowBottom);
+
+        if (hasReflection()) {
+            IntRect reflection(reflectionBox());
+            int reflectTop = min(box.y(), reflection.y());
+            int reflectBottom = max(box.bottom(), reflection.bottom());
+            box.setHeight(reflectBottom - reflectTop);
+            box.setY(reflectTop);
+            
+            int reflectLeft = min(box.x(), reflection.x());
+            int reflectRight = max(box.right(), reflection.right());
+            box.setWidth(reflectRight - reflectLeft);
+            box.setX(reflectLeft);
         }
         return box;
     }
@@ -519,7 +543,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren)
     }
 
     bool hadColumns = m_hasColumns;
-    if (!hadColumns)
+    if (!hadColumns && !hasReflection())
         view()->pushLayoutState(this, IntSize(xPos(), yPos()));
     else
         view()->disableLayoutState();
@@ -636,15 +660,20 @@ void RenderBlock::layoutBlock(bool relayoutChildren)
     m_overflowHeight = max(m_overflowHeight, m_height);
 
     if (!hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow()) {
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next) {
             m_overflowLeft = min(m_overflowLeft, boxShadow->x - boxShadow->blur);
             m_overflowWidth = max(m_overflowWidth, m_width + boxShadow->x + boxShadow->blur);
             m_overflowTop = min(m_overflowTop, boxShadow->y - boxShadow->blur);
             m_overflowHeight = max(m_overflowHeight, m_height + boxShadow->y + boxShadow->blur);
         }
+        
+        if (hasReflection()) {
+            m_overflowTop = min(m_overflowTop, reflectionBox().y());
+            m_overflowHeight = max(m_overflowHeight, reflectionBox().bottom());
+        }
     }
 
-    if (!hadColumns)
+    if (!hadColumns && !hasReflection())
         view()->popLayoutState();
     else
         view()->enableLayoutState();
@@ -679,8 +708,11 @@ void RenderBlock::layoutBlock(bool relayoutChildren)
         }
 
         // Make sure the rect is still non-empty after intersecting for overflow above
-        if (!repaintRect.isEmpty())
+        if (!repaintRect.isEmpty()) {
             repaintRectangle(repaintRect); // We need to do a partial repaint of our content.
+            if (hasReflection())
+                layer()->reflection()->repaintRectangle(repaintRect);
+        }
     }
     setNeedsLayout(false);
 }
@@ -1298,6 +1330,11 @@ bool RenderBlock::layoutOnlyPositionedObjects()
     else
         view()->disableLayoutState();
 
+    if (needsPositionedMovementLayout()) {
+        calcWidth();
+        calcHeight();
+    }
+
     // All we have to is lay out our positioned objects.
     layoutPositionedObjects(false);
 
@@ -1399,7 +1436,7 @@ void RenderBlock::paint(PaintInfo& paintInfo, int tx, int ty)
             return;
     }
 
-    bool useControlClip = phase != PaintPhaseBlockBackground && phase != PaintPhaseSelfOutline && hasControlClip();
+    bool useControlClip = phase != PaintPhaseBlockBackground && phase != PaintPhaseSelfOutline && phase != PaintPhaseMask && hasControlClip();
 
     // Push a clip.
     if (useControlClip) {
@@ -1570,6 +1607,11 @@ void RenderBlock::paintObject(PaintInfo& paintInfo, int tx, int ty)
         (paintPhase == PaintPhaseBlockBackground || paintPhase == PaintPhaseChildBlockBackground) &&
         hasBoxDecorations() && style()->visibility() == VISIBLE) {
         paintBoxDecorations(paintInfo, tx, ty);
+    }
+
+    if (paintPhase == PaintPhaseMask && style()->visibility() == VISIBLE) {
+        paintMask(paintInfo, tx, ty);
+        return;
     }
 
     // We're done.  We don't bother painting any children.
@@ -2611,7 +2653,7 @@ void RenderBlock::markLinesDirtyInVerticalRange(int top, int bottom)
         lowestDirtyLine = lowestDirtyLine->prevRootBox();
     }
 
-    while (afterLowest && afterLowest->blockHeight() > top) {
+    while (afterLowest && afterLowest->blockHeight() >= top) {
         afterLowest->markDirty();
         afterLowest = afterLowest->prevRootBox();
     }
@@ -4189,9 +4231,7 @@ void RenderBlock::updateFirstLetter()
         pseudoStyle->setPosition( StaticPosition ); // CSS2 says first-letter can't be positioned.
         
         RenderObject* firstLetter = RenderFlow::createAnonymousFlow(document(), pseudoStyle); // anonymous box
-        // FIXME: This adds in the wrong place if list markers were skipped above.  Should be
-        // firstLetterContainer->addChild(firstLetter, currChild);
-        firstLetterContainer->addChild(firstLetter, firstLetterContainer->firstChild());
+        firstLetterContainer->addChild(firstLetter, currChild);
         
         // The original string is going to be either a generated content string or a DOM node's
         // string.  We want the original string before it got transformed in case first-letter has

@@ -281,7 +281,7 @@ void WebScriptDebugServer::didLoadMainResourceForDataSource(IWebView* webView, I
         (**it).didLoadMainResourceForDataSource(webView, dataSource);
 }
 
-void WebScriptDebugServer::didParseSource(ExecState* exec, const String& source, int startingLineNumber, const String& sourceURL, int sourceID)
+void WebScriptDebugServer::didParseSource(ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int sourceID)
 {
     BString bSource = source;
     BString bSourceURL = sourceURL;
@@ -292,7 +292,7 @@ void WebScriptDebugServer::didParseSource(ExecState* exec, const String& source,
         (**it).didParseSource(webView(exec), bSource, startingLineNumber, bSourceURL, sourceID, webFrame(exec));
 }
 
-void WebScriptDebugServer::failedToParseSource(ExecState* exec, const String& source, int startingLineNumber, const String& sourceURL, int errorLine, const String& errorMessage)
+void WebScriptDebugServer::failedToParseSource(ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
 {
     BString bSource = source;
     BString bSourceURL = sourceURL;
@@ -331,7 +331,6 @@ void WebScriptDebugServer::willExecuteStatement(ExecState* exec, int sourceID, i
 
 void WebScriptDebugServer::willLeaveCallFrame(ExecState* exec, int sourceID, int lineNumber)
 {
-#if 0
     COMPtr<WebScriptCallFrame> callFrame(AdoptCOM, WebScriptCallFrame::createInstance(exec->callingExecState()));
     ListenerSet listenersCopy = s_Listeners;
     ListenerSet::iterator end = listenersCopy.end();
@@ -339,7 +338,6 @@ void WebScriptDebugServer::willLeaveCallFrame(ExecState* exec, int sourceID, int
         (**it).willLeaveCallFrame(webView(exec), callFrame.get(), sourceID, lineNumber, webFrame(exec));
 
     suspendProcessIfPaused();
-#endif
 }
 
 void WebScriptDebugServer::exceptionWasRaised(ExecState* exec, int sourceID, int lineNumber)

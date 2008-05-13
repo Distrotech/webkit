@@ -1,3 +1,79 @@
+2008-05-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mark.
+
+        Add x86_64 rule.
+        
+        * Makefile:
+
+2008-05-09  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Removed explicit linkage against libxml and libxslt on Qt/Mac builds.
+        
+        This dependency is completely unnecessary here and creates only problems by
+        propagating through WebCore.pro over libQtWebKit.prl right now customer
+        applications.
+        
+
+        * WebKit.pri:
+
+2008-05-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mark.
+
+        Add an "x86_64" make rule.
+        
+        * Makefile.shared:
+
+2008-05-02  Jan Michael Alonzo  <jmalonzo@unpluggable.com>
+
+        Reviewed by Eric.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18811
+        Enable dashboard and offline web apps in autotools
+
+        * configure.ac:
+
+2008-05-01  Marc Ordinas i Llopis  <marc.ordinasillopis@collabora.co.uk>
+
+        Reviewed by Alp Toker.
+
+        https://bugs.webkit.org/show_bug.cgi?id=14750
+        Added support for NPAPI plugins on Gtk and Qt-x11 ports.
+
+        * GNUmakefile.am: Added Xt library.
+
+2008-04-29  David Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX for ENABLE(DASHBOARD_SUPPORT)
+
+        * configure.ac: Added conditional for ENABLE_DASHBOARD_SUPPORT.
+
+2008-04-22  Alp Toker  <alp@nuanti.com>
+
+        GTK+ debug build fix for changes in r32257.
+
+        * GNUmakefile.am:
+
+2008-04-18  Jan Michael Alonzo  <jmalonzo@unpluggable.com>
+
+        Reviewed by Alp Toker.
+
+        http://bugs.webkit.org/show_bug.cgi?id=16620
+        [GTK] Autotools make dist and make check support
+
+        Cleanups.
+
+        * GNUmakefile.am:
+
+2008-04-11  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Antti Koivisto.
+
+        * GNUmakefile.am: Disable a warning that GCC 4.3 triggers all over the show.
+
 2008-04-17  Alp Toker  <alp@atoker.com>
 
         GTK+ build fix. Back out the libjpeg check part of r32008 from bug

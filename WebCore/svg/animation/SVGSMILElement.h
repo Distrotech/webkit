@@ -122,14 +122,14 @@ private:
         // for example <animate begin="otherElement.begin + 8s; button.click" ... />
         struct Condition {
             enum Type { EventBase, Syncbase, AccessKey };
-            Condition(Type, BeginOrEnd beginOrEnd, String baseID, const String& name, SMILTime offset, int repeats = -1);
+            Condition(Type, BeginOrEnd beginOrEnd, const String& baseID, const String& name, SMILTime offset, int repeats = -1);
             Type m_type;
             BeginOrEnd m_beginOrEnd;
             String m_baseID;
             String m_name;
             SMILTime m_offset;
             int m_repeats;
-            RefPtr<Element> m_base;
+            RefPtr<Element> m_syncbase;
             RefPtr<ConditionEventListener> m_eventListener;
         };
         bool parseCondition(const String&, BeginOrEnd beginOrEnd);

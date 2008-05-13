@@ -38,6 +38,7 @@
 #import "ClipboardMac.h"
 #import "ColorMac.h"
 #import "Cursor.h"
+#import "DOMAbstractViewFrame.h"
 #import "DOMInternal.h"
 #import "DOMWindow.h"
 #import "DocumentLoader.h"
@@ -84,7 +85,6 @@
 #import "TextResourceDecoder.h"
 #import "UserStyleSheetLoader.h"
 #import "WebCoreViewFactory.h"
-#import "WebDashboardRegion.h"
 #import "WebScriptObjectPrivate.h"
 #import "kjs_proxy.h"
 #import "visible_units.h"
@@ -101,6 +101,9 @@
 #import "runtime.h"
 #if ENABLE(MAC_JAVA_BRIDGE)
 #import "jni_instance.h"
+#endif
+#if ENABLE(DASHBOARD_SUPPORT)
+#import "WebDashboardRegion.h"
 #endif
 
 @interface NSObject (WebPlugin)
@@ -504,6 +507,7 @@ void Frame::setUseSecureKeyboardEntry(bool enable)
     }
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
 NSMutableDictionary* Frame::dashboardRegionsDictionary()
 {
     Document* doc = document();
@@ -541,6 +545,7 @@ NSMutableDictionary* Frame::dashboardRegionsDictionary()
     
     return webRegions;
 }
+#endif
 
 DragImageRef Frame::dragImageForSelection() 
 {
@@ -595,11 +600,12 @@ WebScriptObject* Frame::windowScriptObject()
 
     if (!d->m_windowScriptObject) {
         KJS::JSLock lock;
-        KJS::JSObject* win = toJSDOMWindowWrapper(this);
+        KJS::JSObject* win = toJSDOMWindowShell(this);
         KJS::Bindings::RootObject *root = bindingRootObject();
         d->m_windowScriptObject = [WebScriptObject scriptObjectForJSObject:toRef(win) originRootObject:root rootObject:root];
     }
 
+    ASSERT([d->m_windowScriptObject.get() isKindOfClass:[DOMAbstractView class]]);
     return d->m_windowScriptObject.get();
 }
 
@@ -608,6 +614,14 @@ void Frame::clearPlatformScriptObjects()
     if (d->m_windowScriptObject) {
         KJS::Bindings::RootObject* root = bindingRootObject();
         [d->m_windowScriptObject.get() _setOriginRootObject:root andRootObject:root];
+    }
+}
+
+void Frame::disconnectPlatformScriptObjects()
+{
+    if (d->m_windowScriptObject) {
+        ASSERT([d->m_windowScriptObject.get() isKindOfClass:[DOMAbstractView class]]);
+        [(DOMAbstractView *)d->m_windowScriptObject.get() _disconnectFrame];
     }
 }
 

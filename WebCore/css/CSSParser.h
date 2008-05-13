@@ -125,15 +125,16 @@ namespace WebCore {
         bool parseContent(int propId, bool important);
 
         PassRefPtr<CSSValue> parseBackgroundColor();
-        bool parseBackgroundImage(RefPtr<CSSValue>&);
-        PassRefPtr<CSSValue> parseBackgroundPositionXY(bool& xFound, bool& yFound);
-        void parseBackgroundPosition(RefPtr<CSSValue>&, RefPtr<CSSValue>&);
-        PassRefPtr<CSSValue> parseBackgroundSize();
-        
-        bool parseBackgroundProperty(int propId, int& propId1, int& propId2, RefPtr<CSSValue>&, RefPtr<CSSValue>&);
-        bool parseBackgroundShorthand(bool important);
 
-        void addBackgroundValue(RefPtr<CSSValue>& lval, PassRefPtr<CSSValue> rval);
+        bool parseFillImage(RefPtr<CSSValue>&);
+        PassRefPtr<CSSValue> parseFillPositionXY(bool& xFound, bool& yFound);
+        void parseFillPosition(RefPtr<CSSValue>&, RefPtr<CSSValue>&);
+        PassRefPtr<CSSValue> parseFillSize();
+        
+        bool parseFillProperty(int propId, int& propId1, int& propId2, RefPtr<CSSValue>&, RefPtr<CSSValue>&);
+        bool parseFillShorthand(int propId, const int* properties, int numProperties, bool important);
+
+        void addFillValue(RefPtr<CSSValue>& lval, PassRefPtr<CSSValue> rval);
 
         void addTransitionValue(RefPtr<CSSValue>& lval, PassRefPtr<CSSValue> rval);
         PassRefPtr<CSSValue> parseTransitionDuration();
@@ -173,13 +174,15 @@ namespace WebCore {
 
         // CSS3 Parsing Routines (for properties specific to CSS3)
         bool parseShadow(int propId, bool important);
-        bool parseBorderImage(int propId, bool important);
+        bool parseBorderImage(int propId, bool important, RefPtr<CSSValue>&);
         
+        bool parseReflect(int propId, bool important);
+
         // Image generators
         bool parseCanvas(RefPtr<CSSValue>&);
         bool parseGradient(RefPtr<CSSValue>&);
 
-        PassRefPtr<CSSValue> parseTransform();
+        PassRefPtr<CSSValueList> parseTransform();
         bool parseTransformOrigin(int propId, int& propId1, int& propId2, RefPtr<CSSValue>&, RefPtr<CSSValue>&);
         
         int yyparse();
@@ -208,6 +211,7 @@ namespace WebCore {
         Vector<MediaQueryExp*>* createFloatingMediaQueryExpList();
         Vector<MediaQueryExp*>* sinkFloatingMediaQueryExpList(Vector<MediaQueryExp*>*);
         MediaQuery* createFloatingMediaQuery(MediaQuery::Restrictor, const String&, Vector<MediaQueryExp*>*);
+        MediaQuery* createFloatingMediaQuery(Vector<MediaQueryExp*>*);
         MediaQuery* sinkFloatingMediaQuery(MediaQuery*);
 
     public:

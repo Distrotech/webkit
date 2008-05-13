@@ -30,7 +30,7 @@ namespace KJS {
 
 // ------------------------------ BooleanInstance ---------------------------
 
-const ClassInfo BooleanInstance::info = { "Boolean", 0, 0 };
+const ClassInfo BooleanInstance::info = { "Boolean", 0, 0, 0 };
 
 BooleanInstance::BooleanInstance(JSObject* proto)
     : JSWrapperObject(proto)
@@ -93,9 +93,9 @@ BooleanObjectImp::BooleanObjectImp(ExecState* exec, FunctionPrototype* functionP
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly | DontDelete | DontEnum);
 }
 
-ConstructType BooleanObjectImp::getConstructData(ConstructData&)
+bool BooleanObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.6.2

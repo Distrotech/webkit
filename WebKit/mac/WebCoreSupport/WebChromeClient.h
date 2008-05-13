@@ -73,7 +73,7 @@ public:
     
     virtual void setResizable(bool);
     
-    virtual void addMessageToConsole(const WebCore::String& message, unsigned int lineNumber, const WebCore::String& sourceID);
+    virtual void addMessageToConsole(const WebCore::String& message, unsigned int lineNumber, const WebCore::String& sourceURL);
 
     virtual bool canRunBeforeUnloadConfirmPanel();
     virtual bool runBeforeUnloadConfirmPanel(const WebCore::String& message, WebCore::Frame* frame);
@@ -104,7 +104,9 @@ public:
 
     virtual void populateVisitedLinks();
 
+#if ENABLE(DASHBOARD_SUPPORT)
     virtual void dashboardRegionsChanged();
+#endif
 
     virtual void runOpenPanel(PassRefPtr<WebCore::FileChooser>);
 
@@ -120,6 +122,9 @@ public:
     virtual void makeFirstResponder(NSResponder *);
 
     virtual void willPopUpMenu(NSMenu *);
+    
+    virtual bool shouldReplaceWithGeneratedFileForUpload(const WebCore::String& path, WebCore::String &generatedFilename);
+    virtual WebCore::String generateReplacementFile(const WebCore::String& path);
 
 private:
     WebView *m_webView;

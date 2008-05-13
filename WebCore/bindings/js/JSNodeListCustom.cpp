@@ -31,8 +31,6 @@
 #include "Node.h"
 #include "NodeList.h"
 
-using namespace KJS;
-
 namespace WebCore {
 
 // Need to support both get and call, so that list[0] and list(0) work.
@@ -48,9 +46,9 @@ KJS::JSValue* JSNodeList::callAsFunction(KJS::ExecState* exec, KJS::JSObject* th
     return KJS::jsUndefined();
 }
 
-CallType JSNodeList::getCallData(CallData&)
+bool JSNodeList::implementsCall() const
 {
-    return CallTypeNative;
+    return true;
 }
 
 bool JSNodeList::canGetItemsForName(KJS::ExecState*, NodeList* impl, const KJS::Identifier& propertyName)

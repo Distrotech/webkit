@@ -29,14 +29,23 @@
 #include "config.h"
 #include "Profiler.h"
 
+#include "ExecState.h"
+#include "function.h"
 #include "FunctionCallProfile.h"
-#include <kjs/ExecState.h>
-#include <kjs/function.h>
+#include "JSGlobalObject.h"
+#include "Profile.h"
+
+#include <stdio.h>
 
 namespace KJS {
 
 static Profiler* sharedProfiler = 0;
 static const char* Script = "[SCRIPT] ";
+
+static void getStackNames(Vector<UString>&, ExecState*);
+static void getStackNames(Vector<UString>&, ExecState*, JSObject*);
+static void getStackNames(Vector<UString>&, ExecState*, const UString& sourceURL, int startingLineNumber);
+static UString getFunctionName(FunctionImp*);
 
 Profiler* Profiler::profiler()
 {
@@ -45,99 +54,82 @@ Profiler* Profiler::profiler()
     return sharedProfiler;
 }
 
-void Profiler::startProfiling()
+void Profiler::startProfiling(unsigned pageGroupIdentifier, const UString& title)
 {
     if (m_profiling)
         return;
 
-    // FIXME: When multi-threading is supported this will be a vector and calls
-    // into the profiler will need to know which thread it is executing on.
-    m_callTree.set(new FunctionCallProfile("Thread_1"));
+    m_pageGroupIdentifier = pageGroupIdentifier;
+
+    m_currentProfile.set(new Profile(title));
     m_profiling = true;
 }
 
 void Profiler::stopProfiling()
 {
     m_profiling = false;
+
+    if (!m_currentProfile)
+        return;
+
+    m_currentProfile->stopProfiling();
+    m_allProfiles.append(m_currentProfile.release());
 }
 
 void Profiler::willExecute(ExecState* exec, JSObject* calledFunction)
 {
-    ASSERT(m_profiling);
+    if (!m_profiling || exec->lexicalGlobalObject()->pageGroupIdentifier() != m_pageGroupIdentifier)
+        return;
 
     Vector<UString> callStackNames;
     getStackNames(callStackNames, exec, calledFunction);
-    insertStackNamesInTree(callStackNames);
+    m_currentProfile->willExecute(callStackNames);
 }
 
 void Profiler::willExecute(ExecState* exec, const UString& sourceURL, int startingLineNumber)
 {
-    ASSERT(m_profiling);
+    if (!m_profiling || exec->lexicalGlobalObject()->pageGroupIdentifier() != m_pageGroupIdentifier)
+        return;
 
     Vector<UString> callStackNames;
     getStackNames(callStackNames, exec, sourceURL, startingLineNumber);
-    insertStackNamesInTree(callStackNames);
+    m_currentProfile->willExecute(callStackNames);
 }
 
 void Profiler::didExecute(ExecState* exec, JSObject* calledFunction)
 {
-    ASSERT(m_profiling);
+    if (!m_profiling || exec->lexicalGlobalObject()->pageGroupIdentifier() != m_pageGroupIdentifier)
+        return;
 
     Vector<UString> callStackNames;
     getStackNames(callStackNames, exec, calledFunction);
-    m_callTree->didExecute(callStackNames, 0);
+    m_currentProfile->didExecute(callStackNames);
 }
 
 void Profiler::didExecute(ExecState* exec, const UString& sourceURL, int startingLineNumber)
 {
-    ASSERT(m_profiling);
+    if (!m_profiling || exec->lexicalGlobalObject()->pageGroupIdentifier() != m_pageGroupIdentifier)
+        return;
 
     Vector<UString> callStackNames;
     getStackNames(callStackNames, exec, sourceURL, startingLineNumber);
-    m_callTree->didExecute(callStackNames, 0);
+    m_currentProfile->didExecute(callStackNames);
 }
 
-void Profiler::insertStackNamesInTree(const Vector<UString>& callStackNames)
+void getStackNames(Vector<UString>& names, ExecState* exec)
 {
-    FunctionCallProfile* callTreeInsertionPoint = 0;
-    FunctionCallProfile* foundNameInTree = m_callTree.get();
-    NameIterator callStackLocation = callStackNames.begin();
-
-    while (callStackLocation != callStackNames.end() && foundNameInTree) {
-        callTreeInsertionPoint = foundNameInTree;
-        foundNameInTree = callTreeInsertionPoint->findChild(*callStackLocation);
-        ++callStackLocation;
-    }
-
-    if (!foundNameInTree) {   // Insert remains of the stack into the call tree.
-        --callStackLocation;
-        for (FunctionCallProfile* next; callStackLocation != callStackNames.end(); ++callStackLocation) {
-            next = new FunctionCallProfile(*callStackLocation);
-            callTreeInsertionPoint->addChild(next);
-            callTreeInsertionPoint = next;
-        }
-    } else    // We are calling a function that is already in the call tree.
-        foundNameInTree->willExecute();
-}
-
-void Profiler::getStackNames(Vector<UString>&, ExecState*) const
-{
-    ASSERT_NOT_REACHED();
-#if 0
-    UString currentName;
     for (ExecState* currentState = exec; currentState; currentState = currentState->callingExecState()) {
-        if (FunctionImp* functionImp = exec->function())
+
+        if (FunctionImp* functionImp = currentState->function())
             names.prepend(getFunctionName(functionImp));
-        else if (ScopeNode* scopeNode = exec->scopeNode())
+        else if (ScopeNode* scopeNode = currentState->scopeNode())
             names.prepend(Script + scopeNode->sourceURL() + ": " + UString::from(scopeNode->lineNo() + 1));   // FIXME: Why is the line number always off by one?
     }
-#endif
 }
 
-void Profiler::getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction) const
+void getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction)
 {
     getStackNames(names, exec);
-
     if (calledFunction->inherits(&FunctionImp::info))
         names.append(getFunctionName(static_cast<FunctionImp*>(calledFunction)));
     else if (calledFunction->inherits(&InternalFunctionImp::info))
@@ -145,13 +137,13 @@ void Profiler::getStackNames(Vector<UString>& names, ExecState* exec, JSObject* 
 }
 
 
-void Profiler::getStackNames(Vector<UString>& names, ExecState* exec, const UString& sourceURL, int startingLineNumber) const
+void getStackNames(Vector<UString>& names, ExecState* exec, const UString& sourceURL, int startingLineNumber)
 {
     getStackNames(names, exec);
     names.append(Script + sourceURL + ": " + UString::from(startingLineNumber + 1));
 }
 
-UString Profiler::getFunctionName(FunctionImp* functionImp) const
+UString getFunctionName(FunctionImp* functionImp)
 {
     UString name = functionImp->functionName().ustring();
     int lineNumber = functionImp->body->lineNo();
@@ -160,14 +152,14 @@ UString Profiler::getFunctionName(FunctionImp* functionImp) const
     return (name.isEmpty() ? "[anonymous function]" : name) + " " + URL + ": " + UString::from(lineNumber);
 }
 
-void Profiler::printDataSampleStyle() const
+void Profiler::printDataInspectorStyle(unsigned whichProfile) const
 {
-    printf("Call graph:\n");
-    m_callTree->printDataSampleStyle(0);
+    m_allProfiles[whichProfile]->printDataInspectorStyle();
+}
 
-    // FIXME: Since no one seems to understand this part of sample's output I will implement it when I have a better idea of what it's meant to be doing.
-    printf("\nTotal number in stack (recursive counted multiple, when >=5):\n");
-    printf("\nSort by top of stack, same collapsed (when >= 5):\n");
+void Profiler::printDataSampleStyle(unsigned whichProfile) const
+{
+    m_allProfiles[whichProfile]->printDataSampleStyle();
 }
 
 void Profiler::debugLog(UString message)

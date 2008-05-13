@@ -173,8 +173,16 @@ static gboolean webkit_web_view_popup_menu_handler(GtkWidget* widget)
 
         // Calculate the rect of the first line of the selection (cribbed from -[WebCoreFrameBridge firstRectForDOMRange:]).
         int extraWidthToEndOfLine = 0;
-        IntRect startCaretRect = renderer->caretRect(start.offset(), DOWNSTREAM, &extraWidthToEndOfLine);
-        IntRect endCaretRect = renderer->caretRect(end.offset(), UPSTREAM);
+
+        InlineBox* startInlineBox;
+        int startCaretOffset;
+        start.getInlineBoxAndOffset(DOWNSTREAM, startInlineBox, startCaretOffset);
+        IntRect startCaretRect = renderer->caretRect(startInlineBox, startCaretOffset, &extraWidthToEndOfLine);
+
+        InlineBox* endInlineBox;
+        int endCaretOffset;
+        end.getInlineBoxAndOffset(UPSTREAM, endInlineBox, endCaretOffset);
+        IntRect endCaretRect = renderer->caretRect(endInlineBox, endCaretOffset);
 
         IntRect firstRect;
         if (startCaretRect.y() == endCaretRect.y())
@@ -258,7 +266,7 @@ static gboolean webkit_web_view_expose_event(GtkWidget* widget, GdkEventExpose* 
     cairo_t* cr = gdk_cairo_create(event->window);
     GraphicsContext ctx(cr);
     ctx.setGdkExposeEvent(event);
-    if (frame->renderer() && frame->view()) {
+    if (frame->contentRenderer() && frame->view()) {
         frame->view()->layoutIfNeededRecursive();
 
         if (priv->transparent) {
@@ -343,14 +351,13 @@ static gboolean webkit_web_view_button_press_event(GtkWidget* widget, GdkEventBu
 {
     WebKitWebView* webView = WEBKIT_WEB_VIEW(widget);
 
-    Frame* frame = core(webView)->mainFrame();
-
     // FIXME: need to keep track of subframe focus for key events
     gtk_widget_grab_focus(widget);
 
     if (event->button == 3)
         return webkit_web_view_forward_context_menu_event(webView, PlatformMouseEvent(event));
 
+    Frame* frame = core(webView)->mainFrame();
     if (!frame->view())
         return FALSE;
 
@@ -361,6 +368,7 @@ static gboolean webkit_web_view_button_release_event(GtkWidget* widget, GdkEvent
 {
     WebKitWebView* webView = WEBKIT_WEB_VIEW(widget);
     WebKitWebViewPrivate* priv = webView->priv;
+
     Frame* focusedFrame = core(webView)->focusController()->focusedFrame();
 
     if (focusedFrame && focusedFrame->editor()->canEdit()) {
@@ -372,10 +380,11 @@ static gboolean webkit_web_view_button_release_event(GtkWidget* widget, GdkEvent
 #endif
     }
 
-    if (!focusedFrame->view())
+    Frame* mainFrame = core(webView)->mainFrame();
+    if (!mainFrame->view())
         return FALSE;
 
-    return focusedFrame->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(event));
+    return mainFrame->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(event));
 }
 
 static gboolean webkit_web_view_motion_event(GtkWidget* widget, GdkEventMotion* event)
@@ -1286,7 +1295,7 @@ static void webkit_web_view_settings_notify(WebKitWebSettings* webSettings, GPar
         settings->setTextAreasAreResizable(g_value_get_boolean(&value));
     else if (name == g_intern_string("user-stylesheet-uri"))
         settings->setUserStyleSheetLocation(KURL(g_value_get_string(&value)));
-    else
+    else if (!g_object_class_find_property(G_OBJECT_GET_CLASS(webSettings), name))
         g_warning("Unexpected setting '%s'", name);
     g_value_unset(&value);
 }

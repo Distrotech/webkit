@@ -170,6 +170,7 @@ zoom
 -webkit-box-ordinal-group
 -webkit-box-orient
 -webkit-box-pack
+-webkit-box-reflect
 -webkit-box-shadow
 -webkit-box-sizing
 -webkit-column-break-after
@@ -183,7 +184,6 @@ zoom
 -webkit-column-rule-width
 -webkit-column-width
 -webkit-columns
--webkit-dashboard-region
 -webkit-font-size-delta
 -webkit-highlight
 -webkit-line-break
@@ -198,6 +198,18 @@ zoom
 -webkit-marquee-repetition
 -webkit-marquee-speed
 -webkit-marquee-style
+-webkit-mask
+-webkit-mask-attachment
+-webkit-mask-box-image
+-webkit-mask-clip
+-webkit-mask-composite
+-webkit-mask-image
+-webkit-mask-origin
+-webkit-mask-position
+-webkit-mask-position-x
+-webkit-mask-position-y
+-webkit-mask-repeat
+-webkit-mask-size
 -webkit-match-nearest-mail-blockquote-color
 -webkit-nbsp-mode
 -webkit-padding-start

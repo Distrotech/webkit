@@ -26,20 +26,20 @@
 
 #include "AXObjectCache.h"
 #include "CDATASection.h"
-#include "CachedCSSStyleSheet.h"
 #include "CSSHelper.h"
 #include "CSSStyleSelector.h"
 #include "CSSStyleSheet.h"
 #include "CSSValueKeywords.h"
 #include "CString.h"
+#include "CachedCSSStyleSheet.h"
 #include "Comment.h"
 #include "CookieJar.h"
 #include "DOMImplementation.h"
+#include "DOMWindow.h"
 #include "DocLoader.h"
 #include "DocumentFragment.h"
 #include "DocumentLoader.h"
 #include "DocumentType.h"
-#include "DOMWindow.h"
 #include "EditingText.h"
 #include "Editor.h"
 #include "EditorClient.h"
@@ -74,6 +74,7 @@
 #include "HitTestResult.h"
 #include "KeyboardEvent.h"
 #include "Logging.h"
+#include "MessageEvent.h"
 #include "MouseEvent.h"
 #include "MouseEventWithHitTestResults.h"
 #include "MutationEvent.h"
@@ -113,10 +114,6 @@
 #if ENABLE(DATABASE)
 #include "Database.h"
 #include "DatabaseThread.h"
-#endif
-
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-#include "MessageEvent.h"
 #endif
 
 #if ENABLE(XPATH)
@@ -259,7 +256,7 @@ static bool acceptsEditingFocus(Node *node)
     return frame->editor()->shouldBeginEditing(rangeOfContents(root).get());
 }
 
-DeprecatedPtrList<Document>*  Document::changedDocuments = 0;
+static DeprecatedPtrList<Document>* changedDocuments = 0;
 
 // FrameView might be 0
 Document::Document(DOMImplementation* impl, Frame* frame, bool isXHTML)
@@ -286,8 +283,10 @@ Document::Document(DOMImplementation* impl, Frame* frame, bool isXHTML)
 #if ENABLE(SVG)
     , m_svgExtensions(0)
 #endif
+#if ENABLE(DASHBOARD_SUPPORT)
     , m_hasDashboardRegions(false)
     , m_dashboardRegionsDirty(false)
+#endif
     , m_accessKeyMapValid(false)
     , m_createRenderers(true)
     , m_inPageCache(false)
@@ -588,7 +587,7 @@ PassRefPtr<Node> Document::importNode(Node* importedNode, bool deep, ExceptionCo
     ec = 0;
     
     if (!importedNode
-#if ENABLE(SVG)
+#if ENABLE(SVG) && ENABLE(DASHBOARD_SUPPORT)
         || (importedNode->isSVGElement() && page() && page()->settings()->usesDashboardBackwardCompatibilityMode())
 #endif
         ) {
@@ -1532,10 +1531,20 @@ void Document::implicitClose()
             ASSERT(!ec);
         }
     }
-    
+
+    // FIXME: We kick off the icon loader when the Document is done parsing.
+    // There are earlier opportunities we could start it:
+    //  -When the <head> finishes parsing
+    //  -When any new HTMLLinkElement is inserted into the document
+    // But those add a dynamic component to the favicon that has UI 
+    // ramifications, and we need to decide what is the Right Thing To Do(tm)
+    Frame* f = frame();
+    if (f)
+        f->loader()->startIconLoader();
+
     dispatchImageLoadEventsNow();
     this->dispatchWindowEvent(loadEvent, false, false);
-    if (Frame* f = frame())
+    if (f)
         f->loader()->handledOnloadEvents();
 #ifdef INSTRUMENT_LAYOUT_SCHEDULING
     if (!ownerElement())
@@ -1820,6 +1829,13 @@ static Node* previousNodeWithLowerTabIndex(Node* start, int tabIndex, KeyboardEv
 Node* Document::nextFocusableNode(Node* start, KeyboardEvent* event)
 {
     if (start) {
+        // If a node is excluded from the normal tabbing cycle, the next focusable node is determined by tree order
+        if (start->tabIndex() < 0) {
+            for (Node* n = start->traverseNextNode(); n; n = n->traverseNextNode())
+                if (n->isKeyboardFocusable(event) && n->tabIndex() >= 0)
+                    return n;
+        }
+    
         // First try to find a node with the same tabindex as start that comes after start in the document.
         if (Node* winner = nextNodeWithExactTabIndex(start->traverseNextNode(), start->tabIndex(), event))
             return winner;
@@ -1856,6 +1872,13 @@ Node* Document::previousFocusableNode(Node* start, KeyboardEvent* event)
     } else {
         startingNode = last;
         startingTabIndex = 0;
+    }
+    
+    // However, if a node is excluded from the normal tabbing cycle, the previous focusable node is determined by tree order
+    if (startingTabIndex < 0) {
+        for (Node* n = startingNode; n; n = n->traversePreviousNode())
+            if (n->isKeyboardFocusable(event) && n->tabIndex() >= 0)
+                return n;        
     }
 
     if (Node* winner = previousNodeWithExactTabIndex(startingNode, startingTabIndex, event))
@@ -2320,6 +2343,7 @@ void Document::activeChainNodeDetached(Node* node)
         m_activeNode = m_activeNode->parent();
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
 const Vector<DashboardRegionValue>& Document::dashboardRegions() const
 {
     return m_dashboardRegions;
@@ -2330,6 +2354,7 @@ void Document::setDashboardRegions(const Vector<DashboardRegionValue>& regions)
     m_dashboardRegions = regions;
     setDashboardRegionsDirty(false);
 }
+#endif
 
 bool Document::setFocusedNode(PassRefPtr<Node> newFocusedNode)
 {    
@@ -2466,9 +2491,11 @@ void Document::detachNodeIterator(NodeIterator *ni)
 
 void Document::nodeChildrenChanged(ContainerNode* container)
 {
-    HashSet<Range*>::const_iterator end = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->nodeChildrenChanged(container);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        HashSet<Range*>::const_iterator end = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+            (*it)->nodeChildrenChanged(container);
+    }
 }
 
 void Document::nodeWillBeRemoved(Node* n)
@@ -2477,9 +2504,11 @@ void Document::nodeWillBeRemoved(Node* n)
     for (HashSet<NodeIterator*>::const_iterator it = m_nodeIterators.begin(); it != nodeIteratorsEnd; ++it)
         (*it)->nodeWillBeRemoved(n);
 
-    HashSet<Range*>::const_iterator rangesEnd = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != rangesEnd; ++it)
-        (*it)->nodeWillBeRemoved(n);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        HashSet<Range*>::const_iterator rangesEnd = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != rangesEnd; ++it)
+            (*it)->nodeWillBeRemoved(n);
+    }
 
     if (Frame* frame = this->frame()) {
         frame->selectionController()->nodeWillBeRemoved(n);
@@ -2489,9 +2518,11 @@ void Document::nodeWillBeRemoved(Node* n)
 
 void Document::textInserted(Node* text, unsigned offset, unsigned length)
 {
-    HashSet<Range*>::const_iterator end = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->textInserted(text, offset, length);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        HashSet<Range*>::const_iterator end = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+            (*it)->textInserted(text, offset, length);
+    }
 
     // Update the markers for spelling and grammar checking.
     shiftMarkers(text, offset, length);
@@ -2499,9 +2530,11 @@ void Document::textInserted(Node* text, unsigned offset, unsigned length)
 
 void Document::textRemoved(Node* text, unsigned offset, unsigned length)
 {
-    HashSet<Range*>::const_iterator end = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->textRemoved(text, offset, length);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        HashSet<Range*>::const_iterator end = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+            (*it)->textRemoved(text, offset, length);
+    }
 
     // Update the markers for spelling and grammar checking.
     removeMarkers(text, offset, length);
@@ -2510,19 +2543,23 @@ void Document::textRemoved(Node* text, unsigned offset, unsigned length)
 
 void Document::textNodesMerged(Text* oldNode, unsigned offset)
 {
-    NodeWithIndex oldNodeWithIndex(oldNode);
-    HashSet<Range*>::const_iterator end = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->textNodesMerged(oldNodeWithIndex, offset);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        NodeWithIndex oldNodeWithIndex(oldNode);
+        HashSet<Range*>::const_iterator end = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+            (*it)->textNodesMerged(oldNodeWithIndex, offset);
+    }
 
     // FIXME: This should update markers for spelling and grammar checking.
 }
 
 void Document::textNodeSplit(Text* oldNode)
 {
-    HashSet<Range*>::const_iterator end = m_ranges.end();
-    for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
-        (*it)->textNodeSplit(oldNode);
+    if (!page() || !page()->settings()->rangeMutationDisabledForOldAppleMail()) {
+        HashSet<Range*>::const_iterator end = m_ranges.end();
+        for (HashSet<Range*>::const_iterator it = m_ranges.begin(); it != end; ++it)
+            (*it)->textNodeSplit(oldNode);
+    }
 
     // FIXME: This should update markers for spelling and grammar checking.
 }
@@ -2561,10 +2598,8 @@ PassRefPtr<Event> Document::createEvent(const String& eventType, ExceptionCode& 
     if (eventType == "SVGZoomEvents")
         return new SVGZoomEvent;
 #endif
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
     if (eventType == "MessageEvent")
         return new MessageEvent;
-#endif
     ec = NOT_SUPPORTED_ERR;
     return 0;
 }
@@ -2731,7 +2766,7 @@ String Document::referrer() const
 
 String Document::domain() const
 {
-    return m_securityOrigin->host();
+    return m_securityOrigin->domain();
 }
 
 void Document::setDomain(const String& newDomain)
@@ -3791,7 +3826,7 @@ FormElementKey& FormElementKey::operator=(const FormElementKey& other)
 
 void FormElementKey::ref() const
 {
-    if (name() && name() != HashTraits<AtomicStringImpl*>::deletedValue())
+    if (name())
         name()->ref();
     if (type())
         type()->ref();
@@ -3799,7 +3834,7 @@ void FormElementKey::ref() const
 
 void FormElementKey::deref() const
 {
-    if (name() && name() != HashTraits<AtomicStringImpl*>::deletedValue())
+    if (name())
         name()->deref();
     if (type())
         type()->deref();
@@ -3836,17 +3871,6 @@ unsigned FormElementKeyHash::hash(const FormElementKey& k)
         hash = 0x80000000;
 
     return hash;
-}
-
-FormElementKey FormElementKeyHashTraits::deletedValue()
-{
-    return HashTraits<AtomicStringImpl*>::deletedValue();
-}
-
-
-String Document::iconURL()
-{
-    return m_iconURL;
 }
 
 void Document::setIconURL(const String& iconURL, const String& type)

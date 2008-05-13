@@ -28,7 +28,7 @@ using namespace KJS;
 
 namespace WebCore {
 
-const ClassInfo JSXMLHttpRequestConstructor::s_info = { "XMLHttpRequestConstructor", 0, 0 };
+const ClassInfo JSXMLHttpRequestConstructor::s_info = { "XMLHttpRequestConstructor", 0, 0, 0 };
 
 JSXMLHttpRequestConstructor::JSXMLHttpRequestConstructor(ExecState* exec, Document* document)
     : DOMObject(exec->lexicalGlobalObject()->objectPrototype())
@@ -37,9 +37,9 @@ JSXMLHttpRequestConstructor::JSXMLHttpRequestConstructor(ExecState* exec, Docume
     putDirect(exec->propertyNames().prototype, JSXMLHttpRequestPrototype::self(exec), None);
 }
 
-KJS::ConstructType JSXMLHttpRequestConstructor::getConstructData(KJS::ConstructData& data)
+bool JSXMLHttpRequestConstructor::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* JSXMLHttpRequestConstructor::construct(ExecState* exec, const List&)

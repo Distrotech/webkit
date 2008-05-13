@@ -46,7 +46,7 @@ class ResourceRequest;
     
 class ApplicationCache : public RefCounted<ApplicationCache> {
 public:
-    static PassRefPtr<ApplicationCache> create(ApplicationCacheGroup* group) { return adoptRef(new ApplicationCache(group)); }
+    static PassRefPtr<ApplicationCache> create() { return adoptRef(new ApplicationCache); }
     ~ApplicationCache();
 
     void addResource(PassRefPtr<ApplicationCacheResource> resource);
@@ -55,6 +55,7 @@ public:
     void setManifestResource(PassRefPtr<ApplicationCacheResource> manifest);
     ApplicationCacheResource* manifestResource() const { return m_manifest; }
     
+    void setGroup(ApplicationCacheGroup*);
     ApplicationCacheGroup* group() const { return m_group; }
     
     ApplicationCacheResource* resourceForRequest(const ResourceRequest&);
@@ -67,6 +68,7 @@ public:
     void removeDynamicEntry(const String& url);
     
     void setOnlineWhitelist(const HashSet<String>& onlineWhitelist);
+    const HashSet<String>& onlineWhitelist() const { return m_onlineWhitelist; }
     bool isURLInOnlineWhitelist(const KURL&);
     
 #ifndef NDEBUG
@@ -77,14 +79,21 @@ public:
     ResourceMap::const_iterator begin() const { return m_resources.begin(); }
     ResourceMap::const_iterator end() const { return m_resources.end(); }
     
+    void setStorageID(unsigned storageID) { m_storageID = storageID; }
+    unsigned storageID() const { return m_storageID; }
+    void clearStorageID();
+    
+    static bool requestIsHTTPOrHTTPSGet(const ResourceRequest&);
 private:
-    ApplicationCache(ApplicationCacheGroup*);
+    ApplicationCache();
     
     ApplicationCacheGroup* m_group;
     ResourceMap m_resources;
     ApplicationCacheResource* m_manifest;
     
     HashSet<String> m_onlineWhitelist;
+    
+    unsigned m_storageID;
 };
 
 } // namespace WebCore

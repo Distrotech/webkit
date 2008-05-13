@@ -41,21 +41,6 @@ class FontDescription;
 
 class FontPlatformData {
 public:
-    class Deleted {};
-
-    // Used for deleted values in the font cache's hash tables.
-    FontPlatformData(Deleted)
-        : m_font(RefCountedHFONT::createDeleted())
-#if PLATFORM(CAIRO)
-        , m_fontFace(0)
-#endif
-        , m_size(0)
-        , m_syntheticBold(false)
-        , m_syntheticOblique(false)
-        , m_useGDI(false)
-    {
-    }
-
     FontPlatformData()
 #if PLATFORM(CAIRO)
         : m_fontFace(0)
@@ -79,6 +64,9 @@ public:
     FontPlatformData(cairo_font_face_t*, float size, bool bold, bool oblique);
 #endif
     ~FontPlatformData();
+
+    FontPlatformData(WTF::HashTableDeletedValueType) : m_font(WTF::HashTableDeletedValue) { }
+    bool isHashTableDeletedValue() const { return m_font.isHashTableDeletedValue(); }
 
     HFONT hfont() const { return m_font->hfont(); }
 #if PLATFORM(CG)

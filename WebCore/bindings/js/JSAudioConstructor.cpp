@@ -37,7 +37,7 @@ using namespace KJS;
 
 namespace WebCore {
 
-const ClassInfo JSAudioConstructor::s_info = { "AudioConstructor", 0, 0 };
+const ClassInfo JSAudioConstructor::s_info = { "AudioConstructor", 0, 0, 0 };
 
 JSAudioConstructor::JSAudioConstructor(ExecState* exec, Document* document)
     : DOMObject(exec->lexicalGlobalObject()->objectPrototype())
@@ -46,9 +46,9 @@ JSAudioConstructor::JSAudioConstructor(ExecState* exec, Document* document)
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly|DontDelete|DontEnum);
 }
 
-ConstructType JSAudioConstructor::getConstructData(ConstructData&)
+bool JSAudioConstructor::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* JSAudioConstructor::construct(ExecState* exec, const List& args)

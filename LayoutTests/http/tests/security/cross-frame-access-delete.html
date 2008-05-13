@@ -13,7 +13,7 @@
             if (e.data == "setValuesComplete")
                 deleteTest();
         }
-        document.addEventListener('message', receiver, false);
+        addEventListener('message', receiver, false);
 
         deleteTest = function()
         {
@@ -26,7 +26,7 @@
             shouldBe("eval('delete targetWindow.location.existingProperty')", "false");
             shouldBe("eval('delete targetWindow.location[1]')", "false");
 
-            targetWindow.postMessage("deletingValuesComplete");
+            targetWindow.postMessage("deletingValuesComplete", "*");
         }
     </script>
 </head>

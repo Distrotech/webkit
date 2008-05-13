@@ -28,8 +28,6 @@
 #ifndef MessageEvent_h
 #define MessageEvent_h
 
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-
 #include "Event.h"
 
 namespace WebCore {
@@ -39,27 +37,25 @@ namespace WebCore {
     class MessageEvent : public Event {
     public:
         MessageEvent();
-        MessageEvent(const String& data, const String& domain, const String& uri, DOMWindow* source);
+        MessageEvent(const String& data, const String& origin, const String& lastEventId, DOMWindow* source);
         virtual ~MessageEvent();
 
-        void initMessageEvent(const AtomicString& type, bool canBubble, bool cancelable, const String& data, const String& domain, const String& uri, DOMWindow* source);
+        void initMessageEvent(const AtomicString& type, bool canBubble, bool cancelable, const String& data, const String& origin, const String& lastEventId, DOMWindow* source);
         
         const String& data() const { return m_data; }
-        const String& domain() const { return m_domain; }
-        const String& uri() const { return m_uri; }
+        const String& origin() const { return m_origin; }
+        const String& lastEventId() const { return m_lastEventId; }
         DOMWindow* source() const { return m_source.get(); }
         
         virtual bool isMessageEvent() const;
 
     private:    
         String m_data;
-        String m_domain;
-        String m_uri;
+        String m_origin;
+        String m_lastEventId;
         RefPtr<DOMWindow> m_source;
     };
 
 } // namespace WebCore
-
-#endif // ENABLE(CROSS_DOCUMENT_MESSAGING)
 
 #endif // MessageEvent_h

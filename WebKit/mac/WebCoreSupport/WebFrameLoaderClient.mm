@@ -52,9 +52,6 @@
 #import "WebHistoryItemInternal.h"
 #import "WebHistoryInternal.h"
 #import "WebIconDatabaseInternal.h"
-#if ENABLE(MAC_JAVA_BRIDGE)
-#import "WebJavaPlugIn.h"
-#endif
 #import "WebKitErrorsPrivate.h"
 #import "WebKitLogging.h"
 #import "WebKitNSStringExtras.h"
@@ -109,6 +106,10 @@
 #import <WebKit/DOMHTMLFormElement.h>
 #import <wtf/PassRefPtr.h>
 
+#if ENABLE(MAC_JAVA_BRIDGE)
+#import "WebJavaPlugIn.h"
+#endif
+
 using namespace WebCore;
 
 #if ENABLE(MAC_JAVA_BRIDGE)
@@ -117,7 +118,6 @@ using namespace WebCore;
 @end
 #endif
 
-// Needed for <rdar://problem/5121850> 
 @interface NSURLDownload (WebNSURLDownloadDetails)
 - (void)_setOriginatingURL:(NSURL *)originatingURL;
 @end
@@ -984,7 +984,17 @@ void WebFrameLoaderClient::receivedPolicyDecison(PolicyAction action)
 
 String WebFrameLoaderClient::userAgent(const KURL& url)
 {
-    return [getWebView(m_webFrame.get()) _userAgentForURL:url];
+    WebView *webView = getWebView(m_webFrame.get());
+    ASSERT(webView);
+
+    // We should never get here with nil for the WebView unless there is a bug somewhere else.
+    // But if we do, it's better to return the empty string than just crashing on the spot.
+    // Most other call sites are tolerant of nil because of Objective-C behavior, but this one
+    // is not because the return value of _userAgentForURL is a const KURL&.
+    if (!webView)
+        return String("");
+
+    return [webView _userAgentForURL:url];
 }
 
 static const MouseEvent* findMouseEvent(const Event* event)
@@ -1198,6 +1208,30 @@ static NSView *pluginView(WebFrame *frame, WebPluginPackage *pluginPackage,
     return view;
 }
 
+#if ENABLE(NETSCAPE_PLUGIN_API)
+
+class NetscapePluginWidget : public Widget {
+public:
+    NetscapePluginWidget(WebNetscapePluginEmbeddedView *view)
+    : Widget(view)
+    {
+    }
+    
+    virtual void handleEvent(Event*)
+    {
+        Frame* frame = Frame::frameForWidget(this);
+        if (!frame)
+            return;
+        
+        NSEvent* event = frame->eventHandler()->currentNSEvent();
+        if ([event type] == NSMouseMoved)
+            [(WebNetscapePluginEmbeddedView *)getView() handleMouseMoved:event];
+    }
+    
+};
+
+#endif // ENABLE(NETSCAPE_PLUGIN_API)
+
 Widget* WebFrameLoaderClient::createPlugin(const IntSize& size, Element* element, const KURL& url,
     const Vector<String>& paramNames, const Vector<String>& paramValues, const String& mimeType, bool loadManually)
 {
@@ -1270,7 +1304,8 @@ Widget* WebFrameLoaderClient::createPlugin(const IntSize& size, Element* element
                 attributeValues:kit(paramValues)
                 loadManually:loadManually
                 DOMElement:kit(element)] autorelease];
-            view = embeddedView;
+            
+            return new NetscapePluginWidget(embeddedView);
         } 
 #endif
     } else
@@ -1321,7 +1356,7 @@ void WebFrameLoaderClient::redirectDataToPlugin(Widget* pluginWidget)
 
     END_BLOCK_OBJC_EXCEPTIONS;
 }
-
+    
 Widget* WebFrameLoaderClient::createJavaAppletWidget(const IntSize& size, Element* element, const KURL& baseURL, 
     const Vector<String>& paramNames, const Vector<String>& paramValues)
 {

@@ -80,7 +80,8 @@ enum PaintPhase {
     PaintPhaseSelfOutline,
     PaintPhaseSelection,
     PaintPhaseCollapsedTableBorders,
-    PaintPhaseTextClip
+    PaintPhaseTextClip,
+    PaintPhaseMask
 };
 
 enum PaintRestriction {
@@ -109,6 +110,7 @@ enum VerticalPositionHint {
     PositionUndefined = 0x1fff
 };
 
+#if ENABLE(DASHBOARD_SUPPORT)
 struct DashboardRegionValue {
     bool operator==(const DashboardRegionValue& o) const
     {
@@ -124,6 +126,7 @@ struct DashboardRegionValue {
     IntRect clip;
     int type;
 };
+#endif
 
 // FIXME: This should be a HashSequencedSet, but we don't have that data structure yet.
 // This means the paint order of outlines will be wrong, although this is a minor issue.
@@ -133,6 +136,7 @@ typedef HashSet<RenderFlow*> RenderFlowSequencedSet;
 class RenderObject : public CachedResourceClient {
     friend class RenderContainer;
     friend class RenderSVGContainer;
+    friend class RenderLayer;
 public:
     // Anonymous objects should pass the document as their node, and they will then automatically be
     // marked as anonymous in the constructor.
@@ -256,34 +260,36 @@ private:
 public:
     RenderArena* renderArena() const { return document()->renderArena(); }
 
-    virtual bool isRenderBlock() const { return false; }
-    virtual bool isRenderInline() const { return false; }
-    virtual bool isRenderImage() const { return false; }
-    virtual bool isInlineFlow() const { return false; }
-    virtual bool isBlockFlow() const { return false; }
-    virtual bool isInlineBlockOrInlineTable() const { return false; }
-    virtual bool isInlineContinuation() const;
-    virtual bool isListItem() const { return false; }
-    virtual bool isListMarker() const { return false; }
-    virtual bool isCounter() const { return false; }
-    virtual bool isRenderView() const { return false; }
+    virtual bool isApplet() const { return false; }
     virtual bool isBR() const { return false; }
-    virtual bool isTableCell() const { return false; }
-    virtual bool isTableRow() const { return false; }
-    virtual bool isTableSection() const { return false; }
-    virtual bool isTableCol() const { return false; }
-    virtual bool isTable() const { return false; }
-    virtual bool isWidget() const { return false; }
-    virtual bool isImage() const { return false; }
-    virtual bool isTextArea() const { return false; }
-    virtual bool isTextField() const { return false; }
+    virtual bool isBlockFlow() const { return false; }
+    virtual bool isCounter() const { return false; }
     virtual bool isFrame() const { return false; }
     virtual bool isFrameSet() const { return false; }
-    virtual bool isApplet() const { return false; }
-    virtual bool isMenuList() const { return false; }
+    virtual bool isImage() const { return false; }
+    virtual bool isInlineBlockOrInlineTable() const { return false; }
+    virtual bool isInlineContinuation() const;
+    virtual bool isInlineFlow() const { return false; }
     virtual bool isListBox() const { return false; }
-    virtual bool isSlider() const { return false; }
+    virtual bool isListItem() const { return false; }
+    virtual bool isListMarker() const { return false; }
     virtual bool isMedia() const { return false; }
+    virtual bool isMenuList() const { return false; }
+    virtual bool isRenderBlock() const { return false; }
+    virtual bool isRenderImage() const { return false; }
+    virtual bool isRenderInline() const { return false; }
+    virtual bool isRenderPart() const { return false; }
+    virtual bool isRenderView() const { return false; }
+    virtual bool isSlider() const { return false; }
+    virtual bool isTable() const { return false; }
+    virtual bool isTableCell() const { return false; }
+    virtual bool isTableCol() const { return false; }
+    virtual bool isTableRow() const { return false; }
+    virtual bool isTableSection() const { return false; }
+    virtual bool isTextArea() const { return false; }
+    virtual bool isTextField() const { return false; }
+    virtual bool isWidget() const { return false; }
+
 
     bool isRoot() const { return document()->documentElement() == node(); }
     bool isBody() const;
@@ -338,6 +344,7 @@ public:
                                                               
     bool needsLayout() const { return m_needsLayout || m_normalChildNeedsLayout || m_posChildNeedsLayout || m_needsPositionedMovementLayout; }
     bool selfNeedsLayout() const { return m_needsLayout; }
+    bool needsPositionedMovementLayout() const { return m_needsPositionedMovementLayout; }
     bool needsPositionedMovementLayoutOnly() const { return m_needsPositionedMovementLayout && !m_needsLayout && !m_normalChildNeedsLayout && !m_posChildNeedsLayout; }
     bool posChildNeedsLayout() const { return m_posChildNeedsLayout; }
     bool normalChildNeedsLayout() const { return m_normalChildNeedsLayout; }
@@ -361,6 +368,8 @@ public:
     virtual int horizontalScrollbarHeight() const;
     
     bool hasTransform() const { return m_hasTransform; }
+    bool hasMask() const { return style() && style()->hasMask(); }
+    virtual IntRect maskClipRect() { return borderBox(); }
 
 private:
     bool includeVerticalScrollbarSize() const { return hasOverflowClip() && (style()->overflowY() == OSCROLL || style()->overflowY() == OAUTO); }
@@ -413,10 +422,12 @@ public:
     void setHasOverflowClip(bool b = true) { m_hasOverflowClip = b; }
     void setHasLayer(bool b = true) { m_hasLayer = b; }
     void setHasTransform(bool b = true) { m_hasTransform = b; }
+    void setHasReflection(bool b = true) { m_hasReflection = b; }
 
     void scheduleRelayout();
 
-    void updateBackgroundImages(RenderStyle* oldStyle);
+    void updateFillImages(const FillLayer*, const FillLayer*);
+    void updateImage(StyleImage*, StyleImage*);
 
     virtual InlineBox* createInlineBox(bool makePlaceHolderBox, bool isRootLineBox, bool isOnlyRun = false);
     virtual void dirtyLineBoxes(bool fullLayout, bool isRootLineBox = false);
@@ -427,8 +438,6 @@ public:
     virtual InlineBox* inlineBoxWrapper() const;
     virtual void setInlineBoxWrapper(InlineBox*);
     virtual void deleteLineBoxWrapper();
-
-    virtual InlineBox* inlineBox(int offset = 0, EAffinity = UPSTREAM);
 
     // for discussion of lineHeight see CSS2 spec
     virtual short lineHeight(bool firstLine, bool isRootLineBox = false) const;
@@ -464,16 +473,16 @@ public:
 
     virtual void paint(PaintInfo&, int tx, int ty);
     void paintBorder(GraphicsContext*, int tx, int ty, int w, int h, const RenderStyle*, bool begin = true, bool end = true);
-    bool paintBorderImage(GraphicsContext*, int tx, int ty, int w, int h, const RenderStyle*);
+    bool paintNinePieceImage(GraphicsContext*, int tx, int ty, int w, int h, const RenderStyle*, const NinePieceImage&, CompositeOperator = CompositeSourceOver);
     void paintOutline(GraphicsContext*, int tx, int ty, int w, int h, const RenderStyle*);
     void paintBoxShadow(GraphicsContext*, int tx, int ty, int w, int h, const RenderStyle*, bool begin = true, bool end = true);
 
     // RenderBox implements this.
     virtual void paintBoxDecorations(PaintInfo&, int tx, int ty) { }
-
-    virtual void paintBackgroundExtended(const PaintInfo&, const Color&, const BackgroundLayer*,
-                                         int clipy, int cliph, int tx, int ty, int width, int height,
-                                         InlineFlowBox* box = 0) { }
+    virtual void paintMask(PaintInfo&, int tx, int ty) { }
+    virtual void paintFillLayerExtended(const PaintInfo&, const Color&, const FillLayer*,
+                                        int clipy, int cliph, int tx, int ty, int width, int height,
+                                        InlineFlowBox* box = 0, CompositeOperator = CompositeSourceOver) { }
 
     
     /*
@@ -512,8 +521,10 @@ public:
 
     virtual void updateWidgetPosition();
 
+#if ENABLE(DASHBOARD_SUPPORT)
     void addDashboardRegions(Vector<DashboardRegionValue>&);
     void collectDashboardRegions(Vector<DashboardRegionValue>&);
+#endif
 
     // Used to signal a specific subrect within an object that must be repainted after
     // layout is complete.
@@ -758,6 +769,10 @@ public:
     bool isTransparent() const { return style()->opacity() < 1.0f; }
     float opacity() const { return style()->opacity(); }
 
+    bool hasReflection() const { return m_hasReflection; }
+    IntRect reflectionBox() const;
+    int reflectionOffset() const;
+
     // Applied as a "slop" to dirty rect checks during the outline painting phase's dirty-rect checks.
     int maximalOutlineSize(PaintPhase) const;
 
@@ -827,7 +842,7 @@ public:
      * @param extraWidthToEndOfLine optional out arg to give extra width to end of line -
      * useful for character range rect computations
      */
-    virtual IntRect caretRect(int offset, EAffinity = UPSTREAM, int* extraWidthToEndOfLine = 0);
+    virtual IntRect caretRect(InlineBox*, int caretOffset, int* extraWidthToEndOfLine = 0);
 
     virtual int lowestPosition(bool /*includeOverflowInterior*/ = true, bool /*includeSelf*/ = true) const { return 0; }
     virtual int rightmostPosition(bool /*includeOverflowInterior*/ = true, bool /*includeSelf*/ = true) const { return 0; }
@@ -933,6 +948,7 @@ private:
     bool m_hasLayer                  : 1;
     bool m_hasOverflowClip           : 1;
     bool m_hasTransform              : 1;
+    bool m_hasReflection             : 1;
 
     bool m_hasOverrideSize           : 1;
     

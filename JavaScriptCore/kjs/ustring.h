@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 2 -*-
 /*
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ *  Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -47,6 +47,7 @@ namespace KJS {
   using WTF::PlacementNewAdoptType;
   using WTF::PlacementNewAdopt;
 
+  class IdentifierTable;
   class UString;
   
   /**
@@ -74,6 +75,8 @@ namespace KJS {
     char *data;
     size_t length;
   };
+
+  typedef Vector<char, 32> CStringBuffer;
 
   /**
    * @short Unicode string class
@@ -111,10 +114,10 @@ namespace KJS {
       int len;
       int rc; // For null and empty static strings, this field does not reflect a correct count, because ref/deref are not thread-safe. A special case in destroy() guarantees that these do not get deleted.
       mutable unsigned _hash;
-      bool isIdentifier : 1;
-      bool isStatic : 1;
+      IdentifierTable* identifierTable; // 0 if not an identifier. Since garbage collection can happen on a different thread, there is no other way to get to the table during destruction.
       UString::Rep* baseString;
-      size_t reportedCost;
+      bool isStatic : 1;
+      size_t reportedCost : 31;
 
       // potentially shared data
       UChar *buf;
@@ -218,12 +221,12 @@ namespace KJS {
 
     /**
      * @return The string converted to the 8-bit string type CString().
-     * This method is not Unicode safe and shouldn't be used unless the string
-     * is known to be ASCII.
+     * Returns false if any character is non-ASCII.
      */
-    CString cstring() const;
+    bool getCString(CStringBuffer&) const;
+
     /**
-     * Convert the Unicode string to plain ASCII chars chopping of any higher
+     * Convert the Unicode string to plain ASCII chars chopping off any higher
      * bytes. This method should only be used for *debugging* purposes as it
      * is neither Unicode safe nor free from side effects nor thread-safe.
      * In order not to waste any memory the char buffer is static and *shared*
@@ -283,7 +286,7 @@ namespace KJS {
     /**
      * Const character at specified position.
      */
-    const UChar operator[](int pos) const;
+    UChar operator[](int pos) const;
 
     /**
      * Attempts an conversion to a number. Apart from floating point numbers,
@@ -406,7 +409,18 @@ inline size_t UString::cost() const
    if (capacityDelta < static_cast<size_t>(minShareSize))
        return 0;
 
+#if COMPILER(MSVC)
+// MSVC complains about this assignment, since reportedCost is a 31-bit size_t.
+#pragma warning(push)
+#pragma warning(disable: 4267)
+#endif
+
    m_rep->baseString->reportedCost = capacity;
+
+#if COMPILER(MSVC)
+#pragma warning(pop)
+#endif
+
    return capacityDelta;
 }
 

@@ -518,9 +518,11 @@ RootInlineBox* RenderBlock::constructLine(unsigned runCount, BidiRun* firstRun, 
         bool isOnlyRun = (runCount == 1);
         if (runCount == 2 && !r->m_object->isListMarker())
             isOnlyRun = ((style()->direction() == RTL) ? lastRun : firstRun)->m_object->isListMarker();
-        r->m_box = r->m_object->createInlineBox(r->m_object->isPositioned(), false, isOnlyRun);
 
-        if (r->m_box) {
+        InlineBox* box = r->m_object->createInlineBox(r->m_object->isPositioned(), false, isOnlyRun);
+        r->m_box = box;
+
+        if (box) {
             // If we have no parent box yet, or if the run is not simply a sibling,
             // then we need to construct inline boxes as necessary to properly enclose the
             // run's inline box.
@@ -529,14 +531,15 @@ RootInlineBox* RenderBlock::constructLine(unsigned runCount, BidiRun* firstRun, 
                 parentBox = createLineBoxes(r->m_object->parent());
 
             // Append the inline box to this line.
-            parentBox->addToLine(r->m_box);
-            
-            if (r->m_box->isInlineTextBox()) {
-                InlineTextBox* text = static_cast<InlineTextBox*>(r->m_box);
+            parentBox->addToLine(box);
+
+            bool visuallyOrdered = r->m_object->style()->visuallyOrdered();
+            box->setBidiLevel(visuallyOrdered ? 0 : r->level());
+
+            if (box->isInlineTextBox()) {
+                InlineTextBox* text = static_cast<InlineTextBox*>(box);
                 text->setStart(r->m_start);
                 text->setLen(r->m_stop - r->m_start);
-                bool visuallyOrdered = r->m_object->style()->visuallyOrdered();
-                text->m_reversed = r->reversed(visuallyOrdered);
                 text->m_dirOverride = r->dirOverride(visuallyOrdered);
             }
         }
@@ -559,7 +562,7 @@ RootInlineBox* RenderBlock::constructLine(unsigned runCount, BidiRun* firstRun, 
     return lastRootBox();
 }
 
-void RenderBlock::computeHorizontalPositionsForLine(RootInlineBox* lineBox, BidiRun* firstRun, BidiRun* logicallyLastRun, bool reachedEnd)
+void RenderBlock::computeHorizontalPositionsForLine(RootInlineBox* lineBox, BidiRun* firstRun, BidiRun* trailingSpaceRun, bool reachedEnd)
 {
     // First determine our total width.
     int availableWidth = lineWidth(m_height);
@@ -576,7 +579,7 @@ void RenderBlock::computeHorizontalPositionsForLine(RootInlineBox* lineBox, Bidi
         if (r->m_object->isText()) {
             RenderText* rt = static_cast<RenderText*>(r->m_object);
 
-            if (textAlign == JUSTIFY) {
+            if (textAlign == JUSTIFY && r != trailingSpaceRun) {
                 const UChar* characters = rt->characters();
                 for (int i = r->m_start; i < r->m_stop; i++) {
                     UChar c = characters[i];
@@ -603,12 +606,6 @@ void RenderBlock::computeHorizontalPositionsForLine(RootInlineBox* lineBox, Bidi
             totWidth += r->m_box->width();
     }
 
-    if (totWidth > availableWidth && logicallyLastRun->m_object->style(m_firstLine)->autoWrap()
-        && logicallyLastRun->m_object->style(m_firstLine)->breakOnlyAfterWhiteSpace() && !logicallyLastRun->m_compact) {
-        logicallyLastRun->m_box->setWidth(logicallyLastRun->m_box->width() - totWidth + availableWidth);
-        totWidth = availableWidth;
-    }
-
     // Armed with the total width of the line (without justification),
     // we now examine our text-align property in order to determine where to position the
     // objects horizontally.  The total width of the line can be increased if we end up
@@ -619,38 +616,71 @@ void RenderBlock::computeHorizontalPositionsForLine(RootInlineBox* lineBox, Bidi
         case WEBKIT_LEFT:
             // The direction of the block should determine what happens with wide lines.  In
             // particular with RTL blocks, wide lines should still spill out to the left.
-            if (style()->direction() == RTL && totWidth > availableWidth)
-                x -= (totWidth - availableWidth);
+            if (style()->direction() == LTR) {
+                if (totWidth > availableWidth && trailingSpaceRun)
+                    trailingSpaceRun->m_box->setWidth(trailingSpaceRun->m_box->width() - totWidth + availableWidth);
+            } else {
+                if (trailingSpaceRun)
+                    trailingSpaceRun->m_box->setWidth(0);
+                else if (totWidth > availableWidth)
+                    x -= (totWidth - availableWidth);
+            }
             break;
         case JUSTIFY:
-            if (numSpaces && !reachedEnd && !lineBox->endsWithBreak())
+            if (numSpaces && !reachedEnd && !lineBox->endsWithBreak()) {
+                if (trailingSpaceRun) {
+                    totWidth -= trailingSpaceRun->m_box->width();
+                    trailingSpaceRun->m_box->setWidth(0);
+                }
                 break;
+            }
             // fall through
         case TAAUTO:
             numSpaces = 0;
             // for right to left fall through to right aligned
-            if (style()->direction() == LTR)
+            if (style()->direction() == LTR) {
+                if (totWidth > availableWidth && trailingSpaceRun)
+                    trailingSpaceRun->m_box->setWidth(trailingSpaceRun->m_box->width() - totWidth + availableWidth);
                 break;
+            }
         case RIGHT:
         case WEBKIT_RIGHT:
             // Wide lines spill out of the block based off direction.
             // So even if text-align is right, if direction is LTR, wide lines should overflow out of the right
             // side of the block.
-            if (style()->direction() == RTL || totWidth < availableWidth)
-                x += availableWidth - totWidth;
+            if (style()->direction() == LTR) {
+                if (trailingSpaceRun) {
+                    totWidth -= trailingSpaceRun->m_box->width();
+                    trailingSpaceRun->m_box->setWidth(0);
+                }
+                if (totWidth < availableWidth)
+                    x += availableWidth - totWidth;
+            } else {
+                if (totWidth > availableWidth && trailingSpaceRun) {
+                    trailingSpaceRun->m_box->setWidth(trailingSpaceRun->m_box->width() - totWidth + availableWidth);
+                    totWidth -= trailingSpaceRun->m_box->width();
+                } else
+                    x += availableWidth - totWidth;
+            }
             break;
         case CENTER:
         case WEBKIT_CENTER:
+            int trailingSpaceWidth = 0;
+            if (trailingSpaceRun) {
+                totWidth -= trailingSpaceRun->m_box->width();
+                trailingSpaceWidth = min(trailingSpaceRun->m_box->width(), (availableWidth - totWidth + 1) / 2);
+                trailingSpaceRun->m_box->setWidth(trailingSpaceWidth);
+            }
             if (style()->direction() == LTR)
                 x += max((availableWidth - totWidth) / 2, 0);
             else
-                x += totWidth > availableWidth ? (availableWidth - totWidth) : (availableWidth - totWidth) / 2;
+                x += totWidth > availableWidth ? (availableWidth - totWidth) : (availableWidth - totWidth) / 2 - trailingSpaceWidth;
             break;
     }
 
     if (numSpaces) {
         for (BidiRun* r = firstRun; r; r = r->next()) {
-            if (!r->m_box)
+            if (!r->m_box || r == trailingSpaceRun)
                 continue;
 
             int spaceAdd = 0;
@@ -748,6 +778,17 @@ static void buildCompactRuns(RenderObject* compactObj, BidiState& bidi)
     sNumMidpoints = 0;
     sCurrMidpoint = 0;
     betweenMidpoints = false;
+}
+
+static inline bool isCollapsibleSpace(UChar character, RenderText* renderer)
+{
+    if (character == ' ' || character == '\t' || character == softHyphen)
+        return true;
+    if (character == '\n')
+        return !renderer->style()->preserveNewline();
+    if (character == noBreakSpace)
+        return renderer->style()->nbspMode() == SPACE;
+    return false;
 }
 
 void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, int& repaintBottom)
@@ -873,18 +914,21 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
             // If the last line before the start line ends with a line break that clear floats,
             // adjust the height accordingly.
             // A line break can be either the first or the last object on a line, depending on its direction.
-            RenderObject* lastObject = lastRootBox()->lastLeafChild()->object();
-            if (!lastObject->isBR())
-                lastObject = lastRootBox()->firstLeafChild()->object();
-            if (lastObject->isBR()) {
-                EClear clear = lastObject->style()->clear();
-                if (clear != CNONE)
-                    newLine(clear);
+            if (InlineBox* lastLeafChild = lastRootBox()->lastLeafChild()) {
+                RenderObject* lastObject = lastLeafChild->object();
+                if (!lastObject->isBR())
+                    lastObject = lastRootBox()->firstLeafChild()->object();
+                if (lastObject->isBR()) {
+                    EClear clear = lastObject->style()->clear();
+                    if (clear != CNONE)
+                        newLine(clear);
+                }
             }
         }
 
         bool endLineMatched = false;
         bool checkForEndLineMatch = endLine;
+        int lastHeight = m_height;
 
         while (!end.atEnd()) {
             // FIXME: Is this check necessary before the first iteration or can it be moved to the end?
@@ -907,6 +951,62 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
 
             if (!isLineEmpty) {
                 bidiReorderLine(start, end);
+                ASSERT(start.position() == end);
+
+                BidiRun* trailingSpaceRun = 0;
+                if (!previousLineBrokeCleanly && start.runCount() && start.logicallyLastRun()->m_object->style()->breakOnlyAfterWhiteSpace()) {
+                    trailingSpaceRun = start.logicallyLastRun();
+                    RenderObject* lastObject = trailingSpaceRun->m_object;
+                    if (lastObject->isText()) {
+                        RenderText* lastText = static_cast<RenderText*>(lastObject);
+                        const UChar* characters = lastText->characters();
+                        int firstSpace = trailingSpaceRun->stop();
+                        while (firstSpace > trailingSpaceRun->start()) {
+                            UChar current = characters[firstSpace - 1];
+                            if (!isCollapsibleSpace(current, lastText))
+                                break;
+                            firstSpace--;
+                        }
+                        if (firstSpace == trailingSpaceRun->stop())
+                            trailingSpaceRun = 0;
+                        else {
+                            TextDirection direction = style()->direction();
+                            bool shouldReorder = trailingSpaceRun != (direction == LTR ? start.lastRun() : start.firstRun());
+                            if (firstSpace != trailingSpaceRun->start()) {
+                                ETextAlign textAlign = style()->textAlign();
+                                // If the trailing white space is at the right hand side of a left-aligned line, then computeHorizontalPositionsForLine()
+                                // does not care if trailingSpaceRun includes non-spaces at the beginning. In all other cases, trailingSpaceRun has to
+                                // contain only the spaces, either because we re-order them or because computeHorizontalPositionsForLine() needs to know
+                                // their width.
+                                bool shouldSeparateSpaces = textAlign != LEFT && textAlign != WEBKIT_LEFT && textAlign != TAAUTO || trailingSpaceRun->m_level % 2 || direction == RTL || shouldReorder;
+                                if (shouldSeparateSpaces) {
+                                    BidiContext* baseContext = start.context();
+                                    while (BidiContext* parent = baseContext->parent())
+                                        baseContext = parent;
+
+                                    BidiRun* newTrailingRun = new (renderArena()) BidiRun(firstSpace, trailingSpaceRun->m_stop, trailingSpaceRun->m_object, baseContext, OtherNeutral);
+                                    trailingSpaceRun->m_stop = firstSpace;
+                                    if (direction == LTR)
+                                        start.addRun(newTrailingRun);
+                                    else
+                                        start.prependRun(newTrailingRun);
+                                    trailingSpaceRun = newTrailingRun;
+                                    shouldReorder = false;
+                                }
+                            }
+                            if (shouldReorder) {
+                                if (direction == LTR) {
+                                    start.moveRunToEnd(trailingSpaceRun);
+                                    trailingSpaceRun->m_level = 0;
+                                } else {
+                                    start.moveRunToBeginning(trailingSpaceRun);
+                                    trailingSpaceRun->m_level = 1;
+                                }
+                            }
+                        }
+                    } else
+                        trailingSpaceRun = 0;
+                }
 
                 // Now that the runs have been ordered, we create the line boxes.
                 // At the same time we figure out where border/padding/margin should be applied for
@@ -919,7 +1019,7 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                         lineBox->setEndsWithBreak(previousLineBrokeCleanly);
 
                         // Now we position all of our text runs horizontally.
-                        computeHorizontalPositionsForLine(lineBox, start.firstRun(), start.logicallyLastRun(), end.atEnd());
+                        computeHorizontalPositionsForLine(lineBox, start.firstRun(), trailingSpaceRun, end.atEnd());
 
                         // Now position our text runs vertically.
                         computeVerticalPositionsForLine(lineBox, start.firstRun());
@@ -959,7 +1059,8 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                 } else
                     m_floatingObjects->first();
                 for (FloatingObject* f = m_floatingObjects->current(); f; f = m_floatingObjects->next()) {
-                    lastRootBox()->floats().append(f->m_renderer);
+                    if (f->m_bottom > lastHeight)
+                        lastRootBox()->floats().append(f->m_renderer);
                     ASSERT(f->m_renderer == floats[floatIndex].object);
                     // If a float's geometry has changed, give up on syncing with clean lines.
                     if (floats[floatIndex].rect != IntRect(f->m_left, f->m_top, f->m_width, f->m_bottom - f->m_top))
@@ -969,6 +1070,7 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                 lastFloat = m_floatingObjects->last();
             }
 
+            lastHeight = m_height;
             sNumMidpoints = 0;
             sCurrMidpoint = 0;
             start.setPosition(end);
@@ -1020,8 +1122,10 @@ void RenderBlock::layoutInlineChildren(bool relayoutChildren, int& repaintTop, i
                     m_floatingObjects->next();
                 } else
                     m_floatingObjects->first();
-                for (FloatingObject* f = m_floatingObjects->current(); f; f = m_floatingObjects->next())
-                    lastRootBox()->floats().append(f->m_renderer);
+                for (FloatingObject* f = m_floatingObjects->current(); f; f = m_floatingObjects->next()) {
+                    if (f->m_bottom > lastHeight)
+                        lastRootBox()->floats().append(f->m_renderer);
+                }
                 lastFloat = m_floatingObjects->last();
             }
         }
@@ -1787,12 +1891,6 @@ BidiIterator RenderBlock::findNextLineBreak(BidiState& start, EClear* clear)
                                 lineWasTooWide = true;
                                 lBreak.obj = o;
                                 lBreak.pos = pos;
-                                if (pos > 0) {
-                                    // Separate the trailing space into its own box, which we will
-                                    // resize to fit on the line in computeHorizontalPositionsForLine().
-                                    addMidpoint(BidiIterator(0, o, pos - 1)); // Stop
-                                    addMidpoint(BidiIterator(0, o, pos)); // Start
-                                }
                                 skipWhitespace(lBreak);
                             }
                         }

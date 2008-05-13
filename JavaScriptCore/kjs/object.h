@@ -65,8 +65,18 @@ namespace KJS {
     const ClassInfo* parentClass;
     /**
      * Static hash-table of properties.
+     * For classes that can be used from multiple threads, it is accessed via a getter function that would typically return a pointer to thread-specific value.
      */
-    const HashTable* propHashTable;
+    const HashTable* propHashTable(ExecState* exec) const
+    {
+        if (classPropHashTableGetterFunction)
+            return classPropHashTableGetterFunction(exec);
+        return staticPropHashTable;
+    }
+
+    const HashTable* staticPropHashTable;
+    typedef const HashTable* (*ClassPropHashTableGetterFunction)(ExecState*);
+    const ClassPropHashTableGetterFunction classPropHashTableGetterFunction;
   };
   
   // This is an internal value object which stores getter and setter functions
@@ -80,8 +90,7 @@ namespace KJS {
     virtual JSValue* toPrimitive(ExecState*, JSType preferred = UnspecifiedType) const;
     virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
     virtual bool toBoolean(ExecState *exec) const;
-      virtual double toNumber(ExecState *exec) const;
-      virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
+    virtual double toNumber(ExecState *exec) const;
     virtual UString toString(ExecState *exec) const;
     virtual JSObject *toObject(ExecState *exec) const;
       
@@ -146,8 +155,8 @@ namespace KJS {
      * And in your source file:
      *
      * \code
-     *   const ClassInfo BarImp::info = { "Bar", 0, 0 }; // no parent class
-     *   const ClassInfo FooImp::info = { "Foo", &BarImp::info, 0 };
+     *   const ClassInfo BarImp::info = { "Bar", 0, 0, 0 }; // no parent class
+     *   const ClassInfo FooImp::info = { "Foo", &BarImp::info, 0, 0 };
      * \endcode
      *
      * @see inherits()
@@ -307,6 +316,16 @@ namespace KJS {
     virtual JSValue *defaultValue(ExecState *exec, JSType hint) const;
 
     /**
+     * Whether or not the object implements the construct() method. If this
+     * returns false you should not call the construct() method on this
+     * object (typically, an assertion will fail to indicate this).
+     *
+     * @return true if this object implements the construct() method, otherwise
+     * false
+     */
+    virtual bool implementsConstruct() const;
+
+    /**
      * Creates a new object based on this object. Typically this means the
      * following:
      * 1. A new object is created
@@ -323,8 +342,8 @@ namespace KJS {
      * will be set. This can be tested for with ExecState::hadException().
      * Under some circumstances, the exception object may also be returned.
      *
-     * Note: This function should not be called if getConstructData() returns
-     * ConstructTypeNone, in which case it will result in an assertion failure.
+     * Note: This function should not be called if implementsConstruct() returns
+     * false, in which case it will result in an assertion failure.
      *
      * @param exec The current execution state
      * @param args The arguments to be passed to call() once the new object has
@@ -336,6 +355,16 @@ namespace KJS {
      */
     virtual JSObject* construct(ExecState* exec, const List& args);
     virtual JSObject* construct(ExecState* exec, const List& args, const Identifier& functionName, const UString& sourceURL, int lineNumber);
+
+    /**
+     * Whether or not the object implements the call() method. If this returns
+     * false you should not call the call() method on this object (typically,
+     * an assertion will fail to indicate this).
+     *
+     * @return true if this object implements the call() method, otherwise
+     * false
+     */
+    virtual bool implementsCall() const;
 
     /**
      * Calls this object as if it is a function.
@@ -354,9 +383,7 @@ namespace KJS {
      * @param args List of arguments to be passed to the function
      * @return The return value from the function
      */
-    bool implementsCall();
     JSValue *call(ExecState *exec, JSObject *thisObj, const List &args);
-
     virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
 
     /**
@@ -386,14 +413,13 @@ namespace KJS {
     virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
     virtual bool toBoolean(ExecState *exec) const;
     virtual double toNumber(ExecState *exec) const;
-    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     virtual UString toString(ExecState *exec) const;
     virtual JSObject *toObject(ExecState *exec) const;
 
     virtual JSObject* toThisObject(ExecState*) const;
     virtual JSGlobalObject* toGlobalObject(ExecState*) const;
 
-    virtual bool getPropertyAttributes(const Identifier& propertyName, unsigned& attributes) const;
+    virtual bool getPropertyAttributes(ExecState*, const Identifier& propertyName, unsigned& attributes) const;
     
     // WebCore uses this to make document.all and style.filter undetectable
     virtual bool masqueradeAsUndefined() const { return false; }
@@ -419,9 +445,6 @@ namespace KJS {
     virtual JSValue* lookupGetter(ExecState*, const Identifier& propertyName);
     virtual JSValue* lookupSetter(ExecState*, const Identifier& propertyName);
 
-    void saveProperties(SavedProperties &p) const { _prop.save(p); }
-    void restoreProperties(const SavedProperties &p) { _prop.restore(p); }
-
     virtual bool isActivationObject() const { return false; }
     virtual bool isGlobalObject() const { return false; }
     virtual bool isVariableObject() const { return false; }
@@ -430,7 +453,7 @@ namespace KJS {
     PropertyMap _prop;
 
   private:
-    const HashEntry* findPropertyHashEntry( const Identifier& propertyName ) const;
+    const HashEntry* findPropertyHashEntry(ExecState*, const Identifier& propertyName) const;
     JSValue *_proto;
   };
 
@@ -517,25 +540,6 @@ inline bool JSValue::isObject(const ClassInfo *c) const
     return !JSImmediate::isImmediate(this) && asCell()->isObject(c);
 }
 
-inline JSValue *JSObject::get(ExecState *exec, const Identifier &propertyName) const
-{
-  PropertySlot slot;
-
-  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
-    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
-    
-  return jsUndefined();
-}
-
-inline JSValue *JSObject::get(ExecState *exec, unsigned propertyName) const
-{
-  PropertySlot slot;
-  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
-    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
-    
-  return jsUndefined();
-}
-
 // It may seem crazy to inline a function this large but it makes a big difference
 // since this is function very hot in variable lookup
 inline bool JSObject::getPropertySlot(ExecState *exec, const Identifier& propertyName, PropertySlot& slot)
@@ -551,24 +555,6 @@ inline bool JSObject::getPropertySlot(ExecState *exec, const Identifier& propert
 
         object = static_cast<JSObject *>(proto);
     }
-}
-
-inline bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
-{
-  JSObject *imp = this;
-  
-  while (true) {
-    if (imp->getOwnPropertySlot(exec, propertyName, slot))
-      return true;
-    
-    JSValue *proto = imp->_proto;
-    if (!proto->isObject())
-      break;
-    
-    imp = static_cast<JSObject *>(proto);
-  }
-  
-  return false;
 }
 
 // It may seem crazy to inline a function this large, especially a virtual function,
@@ -593,14 +579,17 @@ ALWAYS_INLINE bool JSObject::getOwnPropertySlot(ExecState* exec, const Identifie
     return false;
 }
 
-inline void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
+inline void ScopeChain::release()
 {
-    _prop.put(propertyName, value, attr);
-}
-
-inline void JSObject::putDirect(const Identifier &propertyName, int value, int attr)
-{
-    _prop.put(propertyName, jsNumber(value), attr);
+    // This function is only called by deref(),
+    // Deref ensures these conditions are true.
+    ASSERT(_node && _node->refCount == 0);
+    ScopeChainNode *n = _node;
+    do {
+        ScopeChainNode *next = n->next;
+        delete n;
+        n = next;
+    } while (n && --n->refCount == 0);
 }
 
 inline JSValue* JSObject::toPrimitive(ExecState* exec, JSType preferredType) const

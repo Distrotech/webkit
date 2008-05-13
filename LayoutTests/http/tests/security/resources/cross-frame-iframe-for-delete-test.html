@@ -7,7 +7,7 @@
             if (e.data == "deletingValuesComplete")
                 setCheck();
         }
-        document.addEventListener('message', receiver, false);
+        addEventListener('message', receiver, false);
 
         window.onload = function()
         {
@@ -18,7 +18,7 @@
             window.location.existingProperty = "test value";
             window.location[1] = "test value";
 
-            window.parent.postMessage("setValuesComplete");
+            window.parent.postMessage("setValuesComplete", "*");
         }
 
         setCheck = function()

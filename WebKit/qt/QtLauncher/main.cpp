@@ -27,6 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include <qwebpage.h>
 #include <qwebview.h>
 #include <qwebframe.h>
@@ -34,161 +35,12 @@
 
 #include <QtGui>
 #include <QDebug>
+#if QT_VERSION >= 0x040400
+#include <QPrintPreviewDialog>
+#endif
 
+#include <QtUiTools/QUiLoader>
 
-
-class InfoWidget :public QProgressBar {
-    Q_OBJECT
-public:
-    InfoWidget(QWidget *parent)
-        : QProgressBar(parent), m_progress(0)
-    {
-        setMinimum(0);
-        setMaximum(100);
-    }
-    QSize sizeHint() const
-    {
-        QSize size(100, 20);
-        return size;
-    }
-public slots:
-    void startLoad()
-    {
-        setValue(m_progress);
-        show();
-    }
-    void changeLoad(int change)
-    {
-        m_progress = change;
-        setValue(change);
-    }
-    void endLoad()
-    {
-        QTimer::singleShot(1000, this, SLOT(hide()));
-        m_progress = 0;
-    }
-
-protected:
-    int m_progress;
-};
-
-class HoverLabel : public QWidget {
-    Q_OBJECT
-public:
-    HoverLabel(QWidget *parent=0)
-        : QWidget(parent),
-          m_animating(false),
-          m_percent(0)
-    {
-        m_timer.setInterval(1000/30);
-        m_hideTimer.setInterval(500);
-        m_hideTimer.setSingleShot(true);
-        connect(&m_timer, SIGNAL(timeout()),
-                this, SLOT(update()));
-        connect(&m_hideTimer, SIGNAL(timeout()),
-                this, SLOT(hide()));
-    }
-
-public slots:
-    void setHoverLink(const QString &link) {
-        m_link = link;
-        if (m_link.isEmpty()) {
-            m_hideTimer.start();
-        } else {
-            m_hideTimer.stop();
-            m_oldSize = m_newSize;
-            m_newSize = sizeForFont();
-            resetAnimation();
-            updateSize();
-            show();
-            repaint();
-        }
-    }
-    QSize sizeForFont() const {
-        QFont f = font();
-        QFontMetrics fm(f);
-        return QSize(fm.width(m_link) + 10, fm.height() + 6);
-    }
-    QSize sizeHint() const {
-        if (!m_animating)
-            return sizeForFont();
-        else
-            return (m_newSize.width() > m_oldSize.width()) ? m_newSize : m_oldSize;
-    }
-    void updateSize() {
-        QRect r = geometry();
-        QSize newSize = sizeHint();
-        r = QRect(r.x(), r.y(), newSize.width(), newSize.height());
-        setGeometry(r);
-    }
-    void resetAnimation() {
-        m_animating = true;
-        m_percent = 0;
-        if (!m_timer.isActive())
-            m_timer.start();
-    }
-protected:
-    void paintEvent(QPaintEvent *e) {
-        QPainter p(this);
-        p.setClipRect(e->rect());
-        p.setPen(QPen(Qt::black, 1));
-        QLinearGradient gradient(rect().topLeft(), rect().bottomLeft());
-        gradient.setColorAt(0, QColor(255, 255, 255, 220));
-        gradient.setColorAt(1, QColor(193, 193, 193, 220));
-        p.setBrush(QBrush(gradient));
-        QSize size;
-        {
-            //draw a nicely rounded corner rectangle. to avoid unwanted
-            // borders we move the coordinates outsize the our clip region
-            size = interpolate(m_oldSize, m_newSize, m_percent);
-            QRect r(-1, 0, size.width(), size.height()+2);
-            const int roundness = 20;
-            QPainterPath path;
-            path.moveTo(r.x(), r.y());
-            path.lineTo(r.topRight().x()-roundness, r.topRight().y());
-            path.cubicTo(r.topRight().x(), r.topRight().y(),
-                         r.topRight().x(), r.topRight().y(),
-                         r.topRight().x(), r.topRight().y() + roundness);
-            path.lineTo(r.bottomRight());
-            path.lineTo(r.bottomLeft());
-            path.closeSubpath();
-            p.setRenderHint(QPainter::Antialiasing);
-            p.drawPath(path);
-        }
-        if (m_animating) {
-            if (qFuzzyCompare(m_percent, 1)) {
-                m_animating = false;
-                m_percent = 0;
-                m_timer.stop();
-            } else {
-                m_percent += 0.1;
-                if (m_percent >= 0.99) {
-                    m_percent = 1;
-                }
-            }
-        }
-
-        QString txt;
-        QFontMetrics fm(fontMetrics());
-        txt = fm.elidedText(m_link, Qt::ElideRight, size.width()-5);
-        p.drawText(5, height()-6, txt);
-    }
-
-private:
-    QSize interpolate(const QSize &src, const QSize &dst, qreal percent) {
-        int widthDiff  = int((dst.width() - src.width())  * percent);
-        int heightDiff = int((dst.height() - src.height()) * percent);
-        return QSize(src.width()  + widthDiff,
-                     src.height() + heightDiff);
-    }
-    QString m_link;
-    bool    m_animating;
-    QTimer  m_timer;
-    QTimer  m_hideTimer;
-    QSize   m_oldSize;
-    QSize   m_newSize;
-    qreal   m_percent;
-};
 
 class SearchEdit;
 
@@ -210,7 +62,7 @@ public:
         int width = height; //parentWidget()->geometry().width();
 
         painter.setRenderHint(QPainter::Antialiasing, true);
-        painter.setPen(Qt::lightGray);
+        painter.setPen(hasFocus() ? Qt::darkGray : Qt::lightGray);
         painter.setBrush(isDown() ?
                          QColor(140, 140, 190) :
                          underMouse() ? QColor(220, 220, 255) : QColor(200, 200, 230)
@@ -276,7 +128,8 @@ class WebPage : public QWebPage
 public:
     inline WebPage(QWidget *parent) : QWebPage(parent) {}
 
-    virtual QWebPage *createWindow();
+    virtual QWebPage *createWindow(QWebPage::WebWindowType);
+    virtual QObject* createPlugin(const QString&, const QUrl&, const QStringList&, const QStringList&);
 };
 
 class MainWindow : public QMainWindow
@@ -287,20 +140,28 @@ public:
     {
         view = new QWebView(this);
         view->setPage(new WebPage(view));
-        info = new InfoWidget(this);
 
-        connect(view, SIGNAL(loadStarted()),
-                info, SLOT(startLoad()));
-        connect(view, SIGNAL(loadProgressChanged(int)),
-                info, SLOT(changeLoad(int)));
-        connect(view, SIGNAL(loadFinished()),
-                info, SLOT(endLoad()));
-        connect(view, SIGNAL(loadFinished()),
+        progress = new QProgressBar(this);
+        progress->setRange(0, 100);
+        progress->setMinimumSize(100, 20);
+        progress->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        progress->hide();
+        statusBar()->addPermanentWidget(progress);
+
+        connect(view, SIGNAL(loadProgress(int)),
+                progress, SLOT(show()));
+        connect(view, SIGNAL(loadProgress(int)),
+                progress, SLOT(setValue(int)));
+        connect(view, SIGNAL(loadFinished(bool)),
+                progress, SLOT(hide()));
+
+        connect(view, SIGNAL(loadFinished(bool)),
                 this, SLOT(loadFinished()));
         connect(view, SIGNAL(titleChanged(const QString&)),
                 this, SLOT(setWindowTitle(const QString&)));
-        connect(view->page(), SIGNAL(hoveringOverLink(const QString&, const QString&)),
+        connect(view->page(), SIGNAL(linkHovered(const QString&, const QString&, const QString &)),
                 this, SLOT(showLinkHover(const QString&, const QString&)));
+        connect(view->page(), SIGNAL(windowCloseRequested()), this, SLOT(deleteLater()));
 
 
         setCentralWidget(view);
@@ -310,39 +171,41 @@ public:
         urlEdit->setSizePolicy(QSizePolicy::Expanding, urlEdit->sizePolicy().verticalPolicy());
         connect(urlEdit, SIGNAL(returnPressed()),
                 SLOT(changeLocation()));
-        bar->addAction(view->action(QWebPage::GoBack));
-        bar->addAction(view->action(QWebPage::Stop));
-        bar->addAction(view->action(QWebPage::GoForward));
-        QAction* reloadAction = view->action(QWebPage::Reload);
+        bar->addAction(view->pageAction(QWebPage::Back));
+        bar->addAction(view->pageAction(QWebPage::Stop));
+        bar->addAction(view->pageAction(QWebPage::Forward));
+        QAction* reloadAction = view->pageAction(QWebPage::Reload);
         reloadAction->setShortcut(QKeySequence::Refresh);
         bar->addAction(reloadAction);
         bar->addSeparator();
-        bar->addAction(view->action(QWebPage::Cut));
-        bar->addAction(view->action(QWebPage::Copy));
-        bar->addAction(view->action(QWebPage::Paste));
+        bar->addAction(view->pageAction(QWebPage::Cut));
+        bar->addAction(view->pageAction(QWebPage::Copy));
+        bar->addAction(view->pageAction(QWebPage::Paste));
         bar->addSeparator();
-        bar->addAction(view->action(QWebPage::Undo));
-        bar->addAction(view->action(QWebPage::Redo));
+        bar->addAction(view->pageAction(QWebPage::Undo));
+        bar->addAction(view->pageAction(QWebPage::Redo));
+
+#if QT_VERSION >= 0x040400
+        bar->addSeparator();
+        bar->addAction(tr("Print"), this, SLOT(print()));
+#endif
 
         addToolBarBreak();
         bar = addToolBar("Location");
         bar->addWidget(new QLabel(tr("Location:")));
         bar->addWidget(urlEdit);
 
-        hoverLabel = new HoverLabel(this);
-        hoverLabel->hide();
-
         if (url.isValid())
             view->load(url);
-
-        info->raise();
     }
     inline QWebPage *webPage() const { return view->page(); }
 protected slots:
     void changeLocation()
     {
-        QUrl url(urlEdit->text());
+        QUrl url = guessUrlFromString(urlEdit->text());
+        urlEdit->setText(url.toString());
         view->load(url);
+        view->setFocus(Qt::OtherFocusReason);
     }
     void loadFinished()
     {
@@ -350,34 +213,73 @@ protected slots:
     }
     void showLinkHover(const QString &link, const QString &toolTip)
     {
-        //statusBar()->showMessage(link);
-        hoverLabel->setHoverLink(link);
+        statusBar()->showMessage(link);
 #ifndef QT_NO_TOOLTIP
         if (!toolTip.isEmpty())
             QToolTip::showText(QCursor::pos(), toolTip);
 #endif
     }
-protected:
-    void resizeEvent(QResizeEvent *) {
-        QSize hoverSize = hoverLabel->sizeHint();
-        hoverLabel->setGeometry(0, height()-hoverSize.height(),
-                                300, hoverSize.height());
-        QSize infoSize = info->sizeHint();
-        info->setGeometry(width() - infoSize.width(),
-                height() - infoSize.height(),
-                infoSize.width(), infoSize.height());
+    void print()
+    {
+#if QT_VERSION >= 0x040400
+        QPrintPreviewDialog dlg(this);
+        connect(&dlg, SIGNAL(paintRequested(QPrinter *)),
+                view, SLOT(print(QPrinter *)));
+        dlg.exec();
+#endif
     }
-private:
+protected:
+ private:
+    QUrl guessUrlFromString(const QString &string) {
+        QString urlStr = string.trimmed();
+        QRegExp test(QLatin1String("^[a-zA-Z]+\\:.*"));
+
+        // Check if it looks like a qualified URL. Try parsing it and see.
+        bool hasSchema = test.exactMatch(urlStr);
+        if (hasSchema) {
+            QUrl url(urlStr, QUrl::TolerantMode);
+            if (url.isValid())
+                return url;
+        }
+
+        // Might be a file.
+        if (QFile::exists(urlStr))
+            return QUrl::fromLocalFile(urlStr);
+
+        // Might be a shorturl - try to detect the schema.
+        if (!hasSchema) {
+            int dotIndex = urlStr.indexOf(QLatin1Char('.'));
+            if (dotIndex != -1) {
+                QString prefix = urlStr.left(dotIndex).toLower();
+                QString schema = (prefix == QLatin1String("ftp")) ? prefix : QLatin1String("http");
+                QUrl url(schema + QLatin1String("://") + urlStr, QUrl::TolerantMode);
+                if (url.isValid())
+                    return url;
+            }
+        }
+
+        // Fall back to QUrl's own tolerant parser.
+        return QUrl(string, QUrl::TolerantMode);
+    }
+
     QWebView *view;
     QLineEdit *urlEdit;
-    HoverLabel *hoverLabel;
-    InfoWidget *info;
+    QProgressBar *progress;
 };
 
-QWebPage *WebPage::createWindow()
+QWebPage *WebPage::createWindow(QWebPage::WebWindowType)
 {
     MainWindow *mw = new MainWindow;
     return mw->webPage();
+}
+
+QObject *WebPage::createPlugin(const QString &classId, const QUrl &url, const QStringList &paramNames, const QStringList &paramValues)
+{
+    Q_UNUSED(url);
+    Q_UNUSED(paramNames);
+    Q_UNUSED(paramValues);
+    QUiLoader loader;
+    return loader.createWidget(classId, view());
 }
 
 #include "main.moc"
@@ -387,11 +289,17 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     QString url = QString("%1/%2").arg(QDir::homePath()).arg(QLatin1String("index.html"));
 
-    QWebSettings::setPageCacheCapacity(4);
+    QWebSettings::setMaximumPagesInCache(4);
+
+    app.setApplicationName("QtLauncher");
+#if QT_VERSION >= 0x040400
+    app.setApplicationVersion("0.1");
+#endif
+
     QWebSettings::setObjectCacheCapacities((16*1024*1024)/8, (16*1024*1024)/8, 16*1024*1024);
 
-    QWebSettings::defaultSettings()->setAttribute(QWebSettings::PluginsEnabled);
-    QWebSettings::defaultSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled);
+    QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, true);
+    QWebSettings::globalSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
     const QStringList args = app.arguments();
     if (args.count() > 1)

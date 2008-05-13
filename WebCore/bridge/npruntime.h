@@ -75,10 +75,6 @@ extern "C" {
 #include <stdint.h>
 #include "npapi.h"
 
-#if defined(XP_MACOSX) && defined(__LP64__)
-#error 64-bit Netscape plug-ins are not supported on Mac OS X
-#endif
-
 /*
     This API is used to facilitate binding code written in C to script
     objects.  The API in this header does not assume the presence of a
@@ -340,6 +336,7 @@ bool NPN_RemoveProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
 bool NPN_HasProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
 bool NPN_HasMethod(NPP npp, NPObject *npobj, NPIdentifier methodName);
 bool NPN_Enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier, uint32_t *count);
+bool NPN_Construct(NPP npp, NPObject *npobj, const NPVariant *args, uint32_t argCount, NPVariant *result);
 
 /*
     NPN_SetException may be called to trigger a script exception upon return

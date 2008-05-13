@@ -32,7 +32,7 @@ using namespace KJS;
 
 namespace WebCore {
 
-const ClassInfo JSQuarantinedObjectWrapper::s_info = { "JSQuarantinedObjectWrapper", 0, 0 };
+const ClassInfo JSQuarantinedObjectWrapper::s_info = { "JSQuarantinedObjectWrapper", 0, 0, 0 };
 
 JSQuarantinedObjectWrapper* JSQuarantinedObjectWrapper::asWrapper(JSValue* value)
 {
@@ -190,9 +190,9 @@ bool JSQuarantinedObjectWrapper::deleteProperty(ExecState* exec, unsigned identi
     return result;
 }
 
-KJS::ConstructType JSQuarantinedObjectWrapper::getConstructData(KJS::ConstructData& data)
+bool JSQuarantinedObjectWrapper::implementsConstruct() const
 {
-    return m_unwrappedObject->getConstructData(data);
+    return m_unwrappedObject->implementsConstruct();
 }
 
 JSObject* JSQuarantinedObjectWrapper::construct(ExecState* exec, const List& args)
@@ -238,10 +238,9 @@ bool JSQuarantinedObjectWrapper::hasInstance(ExecState* exec, JSValue* value)
     return result;
 }
 
-CallType JSQuarantinedObjectWrapper::getCallData(CallData&)
+bool JSQuarantinedObjectWrapper::implementsCall() const
 {
-    CallData temp;
-    return m_unwrappedObject->getCallData(temp) != CallTypeNone ? CallTypeNative : CallTypeNone;
+    return m_unwrappedObject->implementsCall();
 }
 
 JSValue* JSQuarantinedObjectWrapper::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)

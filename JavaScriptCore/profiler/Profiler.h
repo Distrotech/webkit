@@ -29,7 +29,7 @@
 #ifndef Profiler_h
 #define Profiler_h
 
-#include "FunctionCallProfile.h"
+#include "Profile.h"
 #include <wtf/OwnPtr.h>
 
 namespace KJS {
@@ -39,39 +39,38 @@ namespace KJS {
     class JSObject;
 
     class Profiler {
-        typedef Vector<UString>::const_iterator NameIterator;
-
     public:
         static Profiler* profiler();
         static void debugLog(UString);
 
-        void startProfiling();
+        ~Profiler() { deleteAllValues(m_allProfiles); }
+
+        void startProfiling(unsigned pageGroupIdentifier, const UString&);
         void stopProfiling();
+
         void willExecute(ExecState*, JSObject* calledFunction);
         void willExecute(ExecState*, const UString& sourceURL, int startingLineNumber);
         void didExecute(ExecState*, JSObject* calledFunction);
         void didExecute(ExecState*, const UString& sourceURL, int startingLineNumber);
-        
-        void printDataSampleStyle() const;
+
+        Vector<Profile*>& allProfiles() { return m_allProfiles; };
+        void clearProfiles() { if (!m_profiling) deleteAllValues(m_allProfiles); };
+
+        void printDataInspectorStyle(unsigned whichProfile) const;
+        void printDataSampleStyle(unsigned whichProfile) const;
 
     private:
         Profiler()
             : m_profiling(false)
+            , m_pageGroupIdentifier(0)
         {
         }
 
-        void getStackNames(Vector<UString>&, ExecState*) const;
-        void getStackNames(Vector<UString>&, ExecState*, JSObject*) const;
-        void getStackNames(Vector<UString>&, ExecState*, const UString& sourceURL, int startingLineNumber) const;
-
-        void insertStackNamesInTree(const Vector<UString>& callStackNames);
-
-        UString getFunctionName(FunctionImp*) const;
-
         bool m_profiling;
-        // FIXME: Make this a vector of FunctionCallProfiles where each one is the
-        // root of a new thread.
-        OwnPtr<FunctionCallProfile> m_callTree;
+        unsigned m_pageGroupIdentifier;
+
+        OwnPtr<Profile> m_currentProfile;
+        Vector<Profile*> m_allProfiles;
     };
 
 } // namespace KJS

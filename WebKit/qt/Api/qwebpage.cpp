@@ -17,10 +17,8 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
 */
+
 #include "config.h"
 #include "qwebpage.h"
 #include "qwebview.h"
@@ -32,6 +30,7 @@
 #include "qwebsettings.h"
 
 #include "Frame.h"
+#include "FrameTree.h"
 #include "FrameLoaderClientQt.h"
 #include "FrameView.h"
 #include "ChromeClientQt.h"
@@ -48,6 +47,7 @@
 #include "FrameLoader.h"
 #include "FrameLoadRequest.h"
 #include "KURL.h"
+#include "Logging.h"
 #include "Image.h"
 #include "InspectorClientQt.h"
 #include "InspectorController.h"
@@ -64,6 +64,7 @@
 #include "LocalizedStrings.h"
 
 #include <QApplication>
+#include <QBasicTimer>
 #include <QDebug>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
@@ -78,6 +79,8 @@
 #include <QUrl>
 #include <QPainter>
 #include <QClipboard>
+#include <QSslSocket>
+#include <QSysInfo>
 #if QT_VERSION >= 0x040400
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -86,7 +89,22 @@
 #endif
 
 using namespace WebCore;
-        
+
+#ifndef QT_NO_CURSOR
+SetCursorEvent::SetCursorEvent(const QCursor& cursor)
+    : QEvent(static_cast<QEvent::Type>(EventType))
+    , m_cursor(cursor)
+{}
+
+QCursor SetCursorEvent::cursor() const
+{
+    return m_cursor;
+}
+#endif
+
+// If you change this make sure to also adjust the docs for QWebPage::userAgentForUrl
+#define WEBKIT_VERSION "523.15"
+
 static inline DragOperation dropActionToDragOp(Qt::DropActions actions)
 {
     unsigned result = 0;
@@ -117,6 +135,8 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     , modified(false)
     , viewportSize(QSize(0,0))
 {
+    WebCore::InitializeLoggingChannelsIfNecessary();
+
     chromeClient = new ChromeClientQt(q);
     contextMenuClient = new ContextMenuClientQt();
     editorClient = new EditorClientQt(q);
@@ -132,12 +152,14 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     mainFrame = 0;
 #if QT_VERSION < 0x040400
     networkInterface = 0;
-    pluginFactory = 0;
 #else
     networkManager = 0;
-    pluginFactory = 0;
 #endif
+    pluginFactory = 0;
     insideOpenCall = false;
+    forwardUnsupportedContent = false;
+    linkPolicy = QWebPage::DontDelegateLinks;
+    currentContextMenu = 0;
 
     history.d = new QWebHistoryPrivate(page->backForwardList());
     memset(actions, 0, sizeof(actions));
@@ -145,29 +167,27 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
 
 QWebPagePrivate::~QWebPagePrivate()
 {
+    delete currentContextMenu;
     delete undoStack;
     delete settings;
     delete page;
-#if QT_VERSION >= 0x040400
-    delete networkManager;
-#endif
 }
 
 #if QT_VERSION < 0x040400
-QWebPage::NavigationRequestResponse QWebPagePrivate::navigationRequested(QWebFrame *frame, const QWebNetworkRequest &request, QWebPage::NavigationType type)
+bool QWebPagePrivate::acceptNavigationRequest(QWebFrame *frame, const QWebNetworkRequest &request, QWebPage::NavigationType type)
 {
     if (insideOpenCall
         && frame == mainFrame)
-        return QWebPage::AcceptNavigationRequest;
-    return q->navigationRequested(frame, request, type);
+        return true;
+    return q->acceptNavigationRequest(frame, request, type);
 }
 #else
-QWebPage::NavigationRequestResponse QWebPagePrivate::navigationRequested(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
+bool QWebPagePrivate::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
     if (insideOpenCall
         && frame == mainFrame)
-        return QWebPage::AcceptNavigationRequest;
-    return q->navigationRequested(frame, request, type);
+        return true;
+    return q->acceptNavigationRequest(frame, request, type);
 }
 #endif
 
@@ -197,8 +217,8 @@ static QWebPage::WebAction webActionForContextMenuAction(WebCore::ContextMenuAct
         case WebCore::ContextMenuItemTagCopyImageToClipboard: return QWebPage::CopyImageToClipboard;
         case WebCore::ContextMenuItemTagOpenFrameInNewWindow: return QWebPage::OpenFrameInNewWindow;
         case WebCore::ContextMenuItemTagCopy: return QWebPage::Copy;
-        case WebCore::ContextMenuItemTagGoBack: return QWebPage::GoBack;
-        case WebCore::ContextMenuItemTagGoForward: return QWebPage::GoForward;
+        case WebCore::ContextMenuItemTagGoBack: return QWebPage::Back;
+        case WebCore::ContextMenuItemTagGoForward: return QWebPage::Forward;
         case WebCore::ContextMenuItemTagStop: return QWebPage::Stop;
         case WebCore::ContextMenuItemTagReload: return QWebPage::Reload;
         case WebCore::ContextMenuItemTagCut: return QWebPage::Cut;
@@ -217,7 +237,7 @@ static QWebPage::WebAction webActionForContextMenuAction(WebCore::ContextMenuAct
 
 QMenu *QWebPagePrivate::createContextMenu(const WebCore::ContextMenu *webcoreMenu, const QList<WebCore::ContextMenuItem> *items)
 {
-    QMenu *menu = new QMenu;
+    QMenu* menu = new QMenu(view);
     for (int i = 0; i < items->count(); ++i) {
         const ContextMenuItem &item = items->at(i);
         switch (item.type()) {
@@ -242,7 +262,17 @@ QMenu *QWebPagePrivate::createContextMenu(const WebCore::ContextMenu *webcoreMen
                 break;
             case WebCore::SubmenuType: {
                 QMenu *subMenu = createContextMenu(webcoreMenu, item.platformSubMenu());
-                if (!subMenu->actions().isEmpty()) {
+
+                bool anyEnabledAction = false;
+
+                QList<QAction *> actions = subMenu->actions();
+                for (int i = 0; i < actions.count(); ++i) {
+                    if (actions.at(i)->isVisible())
+                        anyEnabledAction |= actions.at(i)->isEnabled();
+                }
+
+                // don't show sub-menus with just disabled actions
+                if (anyEnabledAction) {
                     subMenu->setTitle(item.title());
                     menu->addAction(subMenu->menuAction());
                 } else {
@@ -293,10 +323,10 @@ void QWebPagePrivate::updateAction(QWebPage::WebAction action)
     bool enabled = a->isEnabled();
 
     switch (action) {
-        case QWebPage::GoBack:
+        case QWebPage::Back:
             enabled = loader->canGoBackOrForward(-1);
             break;
-        case QWebPage::GoForward:
+        case QWebPage::Forward:
             enabled = loader->canGoBackOrForward(1);
             break;
         case QWebPage::Stop:
@@ -326,8 +356,8 @@ void QWebPagePrivate::updateAction(QWebPage::WebAction action)
 
 void QWebPagePrivate::updateNavigationActions()
 {
-    updateAction(QWebPage::GoBack);
-    updateAction(QWebPage::GoForward);
+    updateAction(QWebPage::Back);
+    updateAction(QWebPage::Forward);
     updateAction(QWebPage::Stop);
     updateAction(QWebPage::Reload);
 }
@@ -339,13 +369,23 @@ void QWebPagePrivate::updateEditorActions()
     updateAction(QWebPage::Paste);
 }
 
+void QWebPagePrivate::timerEvent(QTimerEvent *ev)
+{
+    int timerId = ev->timerId();
+    if (timerId == tripleClickTimer.timerId())
+        tripleClickTimer.stop();
+    else
+        q->QObject::timerEvent(ev);
+}
+
 void QWebPagePrivate::mouseMoveEvent(QMouseEvent *ev)
 {
     WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
     if (!frame->view())
         return;
 
-    frame->eventHandler()->mouseMoved(PlatformMouseEvent(ev, 0));
+    bool accepted = frame->eventHandler()->mouseMoved(PlatformMouseEvent(ev, 0));
+    ev->setAccepted(accepted);
 }
 
 void QWebPagePrivate::mousePressEvent(QMouseEvent *ev)
@@ -354,7 +394,15 @@ void QWebPagePrivate::mousePressEvent(QMouseEvent *ev)
     if (!frame->view())
         return;
 
-    frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 1));
+    if (tripleClickTimer.isActive()
+            && (ev->pos() - tripleClick).manhattanLength()
+                < QApplication::startDragDistance()) {
+        mouseTripleClickEvent(ev);
+        return;
+    }
+
+    bool accepted = frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 1));
+    ev->setAccepted(accepted);
 }
 
 void QWebPagePrivate::mouseDoubleClickEvent(QMouseEvent *ev)
@@ -363,7 +411,21 @@ void QWebPagePrivate::mouseDoubleClickEvent(QMouseEvent *ev)
     if (!frame->view())
         return;
 
-    frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 2));
+    bool accepted = frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 2));
+    ev->setAccepted(accepted);
+
+    tripleClickTimer.start(QApplication::doubleClickInterval(), q);
+    tripleClick = ev->pos();
+}
+
+void QWebPagePrivate::mouseTripleClickEvent(QMouseEvent *ev)
+{
+    WebCore::Frame* frame = QWebFramePrivate::core(mainFrame);
+    if (!frame->view())
+        return;
+
+    bool accepted = frame->eventHandler()->handleMousePressEvent(PlatformMouseEvent(ev, 3));
+    ev->setAccepted(accepted);
 }
 
 void QWebPagePrivate::mouseReleaseEvent(QMouseEvent *ev)
@@ -372,7 +434,8 @@ void QWebPagePrivate::mouseReleaseEvent(QMouseEvent *ev)
     if (!frame->view())
         return;
 
-    frame->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+    bool accepted = frame->eventHandler()->handleMouseReleaseEvent(PlatformMouseEvent(ev, 0));
+    ev->setAccepted(accepted);
 
 #ifndef QT_NO_CLIPBOARD
     if (QApplication::clipboard()->supportsSelection()) {
@@ -395,27 +458,11 @@ void QWebPagePrivate::mouseReleaseEvent(QMouseEvent *ev)
 
 void QWebPagePrivate::contextMenuEvent(QContextMenuEvent *ev)
 {
-    page->contextMenuController()->clearContextMenu();
-
-    WebCore::Frame* focusedFrame = page->focusController()->focusedOrMainFrame();
-    focusedFrame->eventHandler()->sendContextMenuEvent(PlatformMouseEvent(ev, 1));
-    ContextMenu *menu = page->contextMenuController()->contextMenu();
-    // If the website defines its own handler then sendContextMenuEvent takes care of
-    // calling/showing it and the context menu pointer will be zero. This is the case
-    // on maps.google.com for example.
-    if (!menu)
-        return;
-
-    QWebPageContext oldContext = currentContext;
-    currentContext = QWebPageContext(menu->hitTestResult());
-
-    const QList<ContextMenuItem> *items = menu->platformDescription();
-    QMenu *qmenu = createContextMenu(menu, items);
-    if (qmenu) {
-        qmenu->exec(ev->globalPos());
-        delete qmenu;
+    if (currentContextMenu) {
+        currentContextMenu->exec(ev->globalPos());
+        delete currentContextMenu;
+        currentContextMenu = 0;
     }
-    currentContext = oldContext;
 }
 
 void QWebPagePrivate::wheelEvent(QWheelEvent *ev)
@@ -429,160 +476,81 @@ void QWebPagePrivate::wheelEvent(QWheelEvent *ev)
     ev->setAccepted(accepted);
 }
 
+static QWebPage::WebAction editorActionForKeyEvent(QKeyEvent* event)
+{
+    static struct {
+        QKeySequence::StandardKey standardKey;
+        QWebPage::WebAction action;
+    } editorActions[32] = {
+        { QKeySequence::Cut, QWebPage::Cut },
+        { QKeySequence::Copy, QWebPage::Copy },
+        { QKeySequence::Paste, QWebPage::Paste },
+        { QKeySequence::Undo, QWebPage::Undo },
+        { QKeySequence::Redo, QWebPage::Redo },
+        { QKeySequence::MoveToNextChar, QWebPage::MoveToNextChar },
+        { QKeySequence::MoveToPreviousChar, QWebPage::MoveToPreviousChar },
+        { QKeySequence::MoveToNextWord, QWebPage::MoveToNextWord },
+        { QKeySequence::MoveToPreviousWord, QWebPage::MoveToPreviousWord },
+        { QKeySequence::MoveToNextLine, QWebPage::MoveToNextLine },
+        { QKeySequence::MoveToPreviousLine, QWebPage::MoveToPreviousLine },
+        { QKeySequence::MoveToStartOfLine, QWebPage::MoveToStartOfLine },
+        { QKeySequence::MoveToEndOfLine, QWebPage::MoveToEndOfLine },
+        { QKeySequence::MoveToStartOfBlock, QWebPage::MoveToStartOfBlock },
+        { QKeySequence::MoveToEndOfBlock, QWebPage::MoveToEndOfBlock },
+        { QKeySequence::MoveToStartOfDocument, QWebPage::MoveToStartOfDocument },
+        { QKeySequence::MoveToEndOfDocument, QWebPage::MoveToEndOfDocument },
+        { QKeySequence::SelectNextChar, QWebPage::SelectNextChar },
+        { QKeySequence::SelectPreviousChar, QWebPage::SelectPreviousChar },
+        { QKeySequence::SelectNextWord, QWebPage::SelectNextWord },
+        { QKeySequence::SelectPreviousWord, QWebPage::SelectPreviousWord },
+        { QKeySequence::SelectNextLine, QWebPage::SelectNextLine },
+        { QKeySequence::SelectPreviousLine, QWebPage::SelectPreviousLine },
+        { QKeySequence::SelectStartOfLine, QWebPage::SelectStartOfLine },
+        { QKeySequence::SelectEndOfLine, QWebPage::SelectEndOfLine },
+        { QKeySequence::SelectStartOfBlock, QWebPage::SelectStartOfBlock },
+        { QKeySequence::SelectEndOfBlock,  QWebPage::SelectEndOfBlock },
+        { QKeySequence::SelectStartOfDocument, QWebPage::SelectStartOfDocument },
+        { QKeySequence::SelectEndOfDocument, QWebPage::SelectEndOfDocument },
+        { QKeySequence::DeleteStartOfWord, QWebPage::DeleteStartOfWord },
+        { QKeySequence::DeleteEndOfWord, QWebPage::DeleteEndOfWord },
+        { QKeySequence::UnknownKey, QWebPage::NoWebAction }
+    };
+
+    for (int i = 0; editorActions[i].standardKey != QKeySequence::UnknownKey; ++i)
+        if (event == editorActions[i].standardKey)
+            return editorActions[i].action;
+
+    return QWebPage::NoWebAction;
+}
+
 void QWebPagePrivate::keyPressEvent(QKeyEvent *ev)
 {
     bool handled = false;
-    WebCore::Frame *frame = page->focusController()->focusedOrMainFrame();
-    WebCore::Editor *editor = frame->editor();
+    WebCore::Frame* frame = page->focusController()->focusedOrMainFrame();
+    WebCore::Editor* editor = frame->editor();
     if (editor->canEdit()) {
-        if (ev == QKeySequence::Cut) {
-            q->triggerAction(QWebPage::Cut);
+        QWebPage::WebAction action = editorActionForKeyEvent(ev);
+        if (action != QWebPage::NoWebAction) {
+            q->triggerAction(action);
             handled = true;
-        } else if (ev == QKeySequence::Copy) {
-            q->triggerAction(QWebPage::Copy);
-            handled = true;
-        } else if (ev == QKeySequence::Paste) {
-            q->triggerAction(QWebPage::Paste);
-            handled = true;
-        } else if (ev == QKeySequence::Undo) {
-            q->triggerAction(QWebPage::Undo);
-            handled = true;
-        } else if (ev == QKeySequence::Redo) {
-            q->triggerAction(QWebPage::Redo);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToNextChar) {
-            q->triggerAction(QWebPage::MoveToNextChar);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToPreviousChar) {
-            q->triggerAction(QWebPage::MoveToPreviousChar);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToNextWord) {
-            q->triggerAction(QWebPage::MoveToNextWord);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToPreviousWord) {
-            q->triggerAction(QWebPage::MoveToPreviousWord);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToNextLine) {
-            q->triggerAction(QWebPage::MoveToNextLine);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToPreviousLine) {
-            q->triggerAction(QWebPage::MoveToPreviousLine);
-            handled = true;
-//             } else if(ev == QKeySequence::MoveToNextPage) {
-//             } else if(ev == QKeySequence::MoveToPreviousPage) {
-        } else if(ev == QKeySequence::MoveToStartOfLine) {
-            q->triggerAction(QWebPage::MoveToStartOfLine);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToEndOfLine) {
-            q->triggerAction(QWebPage::MoveToEndOfLine);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToStartOfBlock) {
-            q->triggerAction(QWebPage::MoveToStartOfBlock);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToEndOfBlock) {
-            q->triggerAction(QWebPage::MoveToEndOfBlock);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToStartOfDocument) {
-            q->triggerAction(QWebPage::MoveToStartOfDocument);
-            handled = true;
-        } else if(ev == QKeySequence::MoveToEndOfDocument) {
-            q->triggerAction(QWebPage::MoveToEndOfDocument);
-            handled = true;
-        } else if(ev == QKeySequence::SelectNextChar) {
-            q->triggerAction(QWebPage::SelectNextChar);
-            handled = true;
-        } else if(ev == QKeySequence::SelectPreviousChar) {
-            q->triggerAction(QWebPage::SelectPreviousChar);
-            handled = true;
-        } else if(ev == QKeySequence::SelectNextWord) {
-            q->triggerAction(QWebPage::SelectNextWord);
-            handled = true;
-        } else if(ev == QKeySequence::SelectPreviousWord) {
-            q->triggerAction(QWebPage::SelectPreviousWord);
-            handled = true;
-        } else if(ev == QKeySequence::SelectNextLine) {
-            q->triggerAction(QWebPage::SelectNextLine);
-            handled = true;
-        } else if(ev == QKeySequence::SelectPreviousLine) {
-            q->triggerAction(QWebPage::SelectPreviousLine);
-            handled = true;
-//             } else if(ev == QKeySequence::SelectNextPage) {
-//             } else if(ev == QKeySequence::SelectPreviousPage) {
-        } else if(ev == QKeySequence::SelectStartOfLine) {
-            q->triggerAction(QWebPage::SelectStartOfLine);
-            handled = true;
-        } else if(ev == QKeySequence::SelectEndOfLine) {
-            q->triggerAction(QWebPage::SelectEndOfLine);
-            handled = true;
-        } else if(ev == QKeySequence::SelectStartOfBlock) {
-            q->triggerAction(QWebPage::SelectStartOfBlock);
-            handled = true;
-        } else if(ev == QKeySequence::SelectEndOfBlock) {
-            q->triggerAction(QWebPage::SelectEndOfBlock);
-            handled = true;
-        } else if(ev == QKeySequence::SelectStartOfDocument) {
-            q->triggerAction(QWebPage::SelectStartOfDocument);
-            handled = true;
-        } else if(ev == QKeySequence::SelectEndOfDocument) {
-            q->triggerAction(QWebPage::SelectEndOfDocument);
-            handled = true;
-        } else if(ev == QKeySequence::DeleteStartOfWord) {
-            q->triggerAction(QWebPage::DeleteStartOfWord);
-            handled = true;
-        } else if(ev == QKeySequence::DeleteEndOfWord) {
-            q->triggerAction(QWebPage::DeleteEndOfWord);
-            handled = true;
-//             } else if(ev == QKeySequence::DeleteEndOfLine) {
         }
     }
     if (!handled)
         handled = frame->eventHandler()->keyEvent(ev);
     if (!handled) {
         handled = true;
-        PlatformScrollbar *h, *v;
-        h = mainFrame->d->horizontalScrollBar();
-        v = mainFrame->d->verticalScrollBar();
         QFont defaultFont;
         if (view)
             defaultFont = view->font();
         QFontMetrics fm(defaultFont);
         int fontHeight = fm.height();
-        if (ev == QKeySequence::MoveToNextPage
-            || ev->key() == Qt::Key_Space) {
-            if (v)
-                v->setValue(v->value() + q->viewportSize().height() - fontHeight);
-        } else if (ev == QKeySequence::MoveToPreviousPage) {
-            if (v)
-                v->setValue(v->value() - q->viewportSize().height() + fontHeight);
-        } else if (ev->key() == Qt::Key_Up && ev->modifiers() == Qt::ControlModifier) {
-            if (v)
-                v->setValue(0);
-        } else if (ev->key() == Qt::Key_Down && ev->modifiers() == Qt::ControlModifier) {
-            if (v)
-                v->setValue(INT_MAX);
-        } else {
+        if (!handleScrolling(ev)) {
             switch (ev->key()) {
-            case Qt::Key_Up:
-                if (v)
-                    v->setValue(v->value() - fontHeight);
-                break;
-            case Qt::Key_Down:
-                if (v)
-                    v->setValue(v->value() + fontHeight);
-                break;
-            case Qt::Key_Left:
-                if (h)
-                    h->setValue(h->value() - fontHeight);
-                break;
-            case Qt::Key_Right:
-                if (h)
-                    h->setValue(h->value() + fontHeight);
-                break;
             case Qt::Key_Backspace:
                 if (ev->modifiers() == Qt::ShiftModifier)
-                    q->triggerAction(QWebPage::GoForward);
+                    q->triggerAction(QWebPage::Forward);
                 else
-                    q->triggerAction(QWebPage::GoBack);
+                    q->triggerAction(QWebPage::Back);
             default:
                 handled = false;
                 break;
@@ -607,14 +575,33 @@ void QWebPagePrivate::keyReleaseEvent(QKeyEvent *ev)
 
 void QWebPagePrivate::focusInEvent(QFocusEvent *ev)
 {
-    if (ev->reason() != Qt::PopupFocusReason)
-        page->focusController()->setFocusedFrame(QWebFramePrivate::core(mainFrame));
+    if (ev->reason() == Qt::PopupFocusReason)
+        return;
+
+    FocusController *focusController = page->focusController();
+    Frame *frame = focusController->focusedFrame();
+    focusController->setActive(true);
+    if (frame) {
+        frame->selectionController()->setFocused(true);
+    } else {
+        focusController->setFocusedFrame(QWebFramePrivate::core(mainFrame));
+    }
 }
 
 void QWebPagePrivate::focusOutEvent(QFocusEvent *ev)
 {
-    if (ev->reason() != Qt::PopupFocusReason)
-        page->focusController()->setFocusedFrame(0);
+    if (ev->reason() == Qt::PopupFocusReason)
+        return;
+
+    // only set the focused frame inactive so that we stop painting the caret
+    // and the focus frame. But don't tell the focus controller so that upon
+    // focusInEvent() we can re-activate the frame.
+    FocusController *focusController = page->focusController();
+    focusController->setActive(false);
+    Frame *frame = focusController->focusedFrame();
+    if (frame) {
+        frame->selectionController()->setFocused(false);
+    }
 }
 
 void QWebPagePrivate::dragEnterEvent(QDragEnterEvent *ev)
@@ -658,6 +645,33 @@ void QWebPagePrivate::dropEvent(QDropEvent *ev)
 #endif
 }
 
+void QWebPagePrivate::leaveEvent(QEvent *ev)
+{
+    // Fake a mouse move event just outside of the widget, since all
+    // the interesting mouse-out behavior like invalidating scrollbars
+    // is handled by the WebKit event handler's mouseMoved function.
+    QMouseEvent fakeEvent(QEvent::MouseMove, QCursor::pos(), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    mouseMoveEvent(&fakeEvent);
+}
+
+/*!
+    \property QWebPage::palette
+    \brief the page's palette
+
+    The background brush of the palette is used to draw the background of the main frame.
+*/
+void QWebPage::setPalette(const QPalette &pal)
+{
+    d->palette = pal;
+    if (d->mainFrame)
+        d->mainFrame->d->updateBackground();
+}
+
+QPalette QWebPage::palette() const
+{
+    return d->palette;
+}
+
 void QWebPagePrivate::inputMethodEvent(QInputMethodEvent *ev)
 {
     WebCore::Frame *frame = page->focusController()->focusedOrMainFrame();
@@ -668,7 +682,7 @@ void QWebPagePrivate::inputMethodEvent(QInputMethodEvent *ev)
         return;
     }
 
-    if (!ev->preeditString().isEmpty()) {        
+    if (!ev->preeditString().isEmpty()) {
         QString preedit = ev->preeditString();
         // ### FIXME: use the provided QTextCharFormat (use color at least)
         Vector<CompositionUnderline> underlines;
@@ -680,6 +694,92 @@ void QWebPagePrivate::inputMethodEvent(QInputMethodEvent *ev)
     ev->accept();
 }
 
+void QWebPagePrivate::shortcutOverrideEvent(QKeyEvent* event)
+{
+    WebCore::Frame* frame = page->focusController()->focusedOrMainFrame();
+    WebCore::Editor* editor = frame->editor();
+    if (editor->canEdit()) {
+        if (event->modifiers() == Qt::NoModifier
+            || event->modifiers() == Qt::ShiftModifier
+            || event->modifiers() == Qt::KeypadModifier) {
+                if (event->key() < Qt::Key_Escape) {
+                    event->accept();
+                } else {
+                    switch (event->key()) {
+                    case Qt::Key_Return:
+                    case Qt::Key_Enter:
+                    case Qt::Key_Delete:
+                    case Qt::Key_Home:
+                    case Qt::Key_End:
+                    case Qt::Key_Backspace:
+                    case Qt::Key_Left:
+                    case Qt::Key_Right:
+                    case Qt::Key_Up:
+                    case Qt::Key_Down:
+                    case Qt::Key_Tab:
+                        event->accept();
+                    default:
+                        break;
+                    }
+                }
+        }
+#ifndef QT_NO_SHORTCUT
+        else if (editorActionForKeyEvent(event) != QWebPage::NoWebAction) {
+            event->accept();
+        }
+#endif
+    }
+}
+
+bool QWebPagePrivate::handleScrolling(QKeyEvent *ev)
+{
+    ScrollDirection direction;
+    ScrollGranularity granularity;
+
+    if (ev == QKeySequence::MoveToNextPage
+        || ev->key() == Qt::Key_Space) {
+        granularity = ScrollByPage;
+        direction = ScrollDown;
+    } else if (ev == QKeySequence::MoveToPreviousPage) {
+        granularity = ScrollByPage;
+        direction = ScrollUp;
+    } else if (ev->key() == Qt::Key_Up && ev->modifiers() & Qt::ControlModifier
+               || ev->key() == Qt::Key_Home) {
+        granularity = ScrollByDocument;
+        direction = ScrollUp;
+    } else if (ev->key() == Qt::Key_Down && ev->modifiers() & Qt::ControlModifier
+               || ev->key() == Qt::Key_End) {
+        granularity = ScrollByDocument;
+        direction = ScrollDown;
+    } else {
+        switch (ev->key()) {
+            case Qt::Key_Up:
+                granularity = ScrollByLine;
+                direction = ScrollUp;
+                break;
+            case Qt::Key_Down:
+                granularity = ScrollByLine;
+                direction = ScrollDown;
+                break;
+            case Qt::Key_Left:
+                granularity = ScrollByLine;
+                direction = ScrollLeft;
+                break;
+            case Qt::Key_Right:
+                granularity = ScrollByLine;
+                direction = ScrollRight;
+                break;
+            default:
+                return false;
+        }
+    }
+
+    if (!mainFrame->d->frame->eventHandler()->scrollOverflow(direction, granularity))
+        mainFrame->d->frame->view()->scroll(direction, granularity);
+
+    return true;
+}
+
 /*!
   This method is used by the input method to query a set of properties of the page
   to be able to support complex input method operations as support for surrounding
@@ -687,7 +787,7 @@ void QWebPagePrivate::inputMethodEvent(QInputMethodEvent *ev)
 
   \a property specifies which property is queried.
 
-  \sa inputMethodEvent(), QInputMethodEvent, QInputContext.
+  \sa QWidget::inputMethodEvent(), QInputMethodEvent, QInputContext
 */
 QVariant QWebPage::inputMethodQuery(Qt::InputMethodQuery property) const
 {
@@ -733,6 +833,45 @@ QVariant QWebPage::inputMethodQuery(Qt::InputMethodQuery property) const
 }
 
 /*!
+   \enum QWebPage::FindFlag
+
+   This enum describes the options available to QWebPage's findText() function. The options
+   can be OR-ed together from the following list:
+
+   \value FindBackward Searches backwards instead of forwards.
+   \value FindCaseSensitively By default findText() works case insensitive. Specifying this option
+   changes the behaviour to a case sensitive find operation.
+   \value FindWrapsAroundDocument Makes findText() restart from the beginning of the document if the end
+   was reached and the text was not found.
+*/
+
+/*!
+    \enum QWebPage::LinkDelegationPolicy
+
+    This enum defines the delegation policies a webpage can have when activating links and emitting
+    the linkClicked() signal.
+
+    \value DontDelegateLinks No links are delegated. Instead, QWebPage tries to handle them all.
+    \value DelegateExternalLinks When activating links that point to documents not stored on the
+    local filesystem or an equivalent - such as the Qt resource system - then linkClicked() is emitted.
+    \value DelegateAllLinks Whenever a link is activated the linkClicked() signal is emitted.
+*/
+
+/*!
+    \enum QWebPage::NavigationType
+
+    This enum describes the types of navigation available when browsing through hyperlinked
+    documents.
+
+    \value NavigationTypeLinkClicked The user clicked on a link or pressed return on a focused link.
+    \value NavigationTypeFormSubmitted The user activated a submit button for an HTML form.
+    \value NavigationTypeBackOrForward Navigation to a previously shown document in the back or forward history is requested.
+    \value NavigationTypeReload The user activated the reload action.
+    \value NavigationTypeFormResubmitted An HTML form was submitted a second time.
+    \value NavigationTypeOther A navigation to another document using a method not listed above.
+*/
+
+/*!
     \enum QWebPage::WebAction
 
     \value NoWebAction No action is triggered.
@@ -744,8 +883,8 @@ QVariant QWebPage::inputMethodQuery(Qt::InputMethodQuery property) const
     \value OpenImageInNewWindow Open the highlighted image in a new window.
     \value DownloadImageToDisk Download the highlighted image to the disk.
     \value CopyImageToClipboard Copy the highlighted image to the clipboard.
-    \value GoBack Navigate back in the history of navigated links.
-    \value GoForward Navigate forward in the history of navigated links.
+    \value Back Navigate back in the history of navigated links.
+    \value Forward Navigate forward in the history of navigated links.
     \value Stop Stop loading the current page.
     \value Reload Reload the current page.
     \value Cut Cut the content currently selected into the clipboard.
@@ -791,13 +930,64 @@ QVariant QWebPage::inputMethodQuery(Qt::InputMethodQuery property) const
 */
 
 /*!
+    \enum QWebPage::WebWindowType
+
+    \value WebBrowserWindow The window is a regular web browser window.
+    \value WebModalDialog The window acts as modal dialog.
+*/
+
+/*!
     \class QWebPage
     \since 4.4
-    \brief The QWebPage class provides a widget that is used to view and edit web documents.
+    \brief The QWebPage class provides an object to view and edit web documents.
 
     QWebPage holds a main frame responsible for web content, settings, the history
-    of navigated links as well as actions. This class can be used, together with QWebFrame,
-    if you want to provide functionality like QWebView in a setup without widgets.
+    of navigated links and actions. This class can be used, together with QWebFrame,
+    to provide functionality like QWebView in a widget-less environment.
+
+    QWebPage's API is very similar to QWebView, as you are still provided with
+    common functions like action() (known as \l{QWebView::}{pageAction()} in
+    QWebView), triggerAction(), findText() and settings(). More QWebView-like
+    functions can be found in the main frame of QWebPage, obtained via
+    QWebPage::mainFrame(). For example, the load(), setUrl() and setHtml()
+    unctions for QWebPage can be accessed using QWebFrame.
+
+    The loadStarted() signal is emitted when the page begins to load.The
+    loadProgress() signal, on the other hand, is emitted whenever an element
+    of the web page completes loading, such as an embedded image, a script,
+    etc. Finally, the loadFinished() signal is emitted when the page has
+    loaded completely. It's argument - either \c true or \c false - indicates
+    load success or failure.
+
+    \section1 Using QWebPage in a Widget-less Environment
+
+    Before you begin painting a QWebPage object, you need to set the size of
+    the viewport by calling setViewportSize(). Then, you invoke the main
+    frame's render function (QWebFrame::render()). An example of this
+    is shown in the code snippet below.
+
+    Suppose we have a \c Thumbnail class as follows:
+
+    \snippet doc/src/snippets/webkit/webpage/main.cpp 0
+
+    The \c Thumbnail's constructor takes in a \a url. We connect our QWebPage
+    object's \l{QWebPage::}{loadFinished()} signal to our private slot,
+    \c render().
+
+    \snippet doc/src/snippets/webkit/webpage/main.cpp 1
+
+    The \c render() function shows how we can paint a thumbnail using a
+    QWebPage object.
+
+    \snippet doc/src/snippets/webkit/webpage/main.cpp 2
+
+    We begin by setting the \l{QWebPage::viewportSize()}{viewportSize} and
+    then we instantiate a QImage object, \c image, with the same size as our
+    \l{QWebPage::viewportSize()}{viewportSize}. This image is then sent
+    as a parameter to \c painter. Next, we render the contents of the main
+    frame and its subframes into \c painter. Finally, we save the scaled image.
+
+    \sa QWebFrame
 */
 
 /*!
@@ -809,11 +999,11 @@ QWebPage::QWebPage(QObject *parent)
 {
     setView(qobject_cast<QWidget *>(parent));
 
-    connect(this, SIGNAL(loadProgressChanged(int)), this, SLOT(_q_onLoadProgressChanged(int)));
+    connect(this, SIGNAL(loadProgress(int)), this, SLOT(_q_onLoadProgressChanged(int)));
 }
 
 /*!
-    Destructor.
+    Destroys the web page.
 */
 QWebPage::~QWebPage()
 {
@@ -828,6 +1018,8 @@ QWebPage::~QWebPage()
 
     The main frame provides access to the hierarchy of sub-frames and is also needed if you
     want to explicitly render a web page into a given painter.
+
+    \sa currentFrame()
 */
 QWebFrame *QWebPage::mainFrame() const
 {
@@ -837,6 +1029,8 @@ QWebFrame *QWebPage::mainFrame() const
 
 /*!
     Returns the frame currently active.
+
+    \sa mainFrame(), frameCreated()
 */
 QWebFrame *QWebPage::currentFrame() const
 {
@@ -845,7 +1039,6 @@ QWebFrame *QWebPage::currentFrame() const
 
 /*!
     Returns a pointer to the view's history of navigated web pages.
-
 */
 QWebHistory *QWebPage::history() const
 {
@@ -873,16 +1066,25 @@ QWidget *QWebPage::view() const
     return d->view;
 }
 
-
 /*!
-    This function is called whenever a JavaScript program tries to print to what is the console in web browsers.
+    This function is called whenever a JavaScript program tries to print a \a message to the web browser's console.
+
+    For example in case of evaluation errors the source URL may be provided in \a sourceID as well as the \a lineNumber.
+
+    The default implementation prints nothing.
 */
-void QWebPage::javaScriptConsoleMessage(const QString& message, unsigned int lineNumber, const QString& sourceID)
+void QWebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
 {
+    Q_UNUSED(message)
+    Q_UNUSED(lineNumber)
+    Q_UNUSED(sourceID)
 }
 
 /*!
-    This function is called whenever a JavaScript program calls the alert() function.
+    This function is called whenever a JavaScript program running inside \a frame calls the alert() function with
+    the message \a msg.
+
+    The default implementation shows the message, \a msg, with QMessageBox::information.
 */
 void QWebPage::javaScriptAlert(QWebFrame *frame, const QString& msg)
 {
@@ -890,15 +1092,24 @@ void QWebPage::javaScriptAlert(QWebFrame *frame, const QString& msg)
 }
 
 /*!
-    This function is called whenever a JavaScript program calls the confirm() function.
+    This function is called whenever a JavaScript program running inside \a frame calls the confirm() function
+    with the message, \a msg. Returns true if the user confirms the message; otherwise returns false.
+
+    The default implementation executes the query using QMessageBox::information with QMessageBox::Yes and QMessageBox::No buttons.
 */
 bool QWebPage::javaScriptConfirm(QWebFrame *frame, const QString& msg)
 {
-    return 0 == QMessageBox::information(d->view, mainFrame()->title(), msg, QMessageBox::Yes, QMessageBox::No);
+    return QMessageBox::Yes == QMessageBox::information(d->view, mainFrame()->title(), msg, QMessageBox::Yes, QMessageBox::No);
 }
 
 /*!
-    This function is called whenever a JavaScript program tries to prompt the user of input.
+    This function is called whenever a JavaScript program running inside \a frame tries to prompt the user for input.
+    The program may provide an optional message, \a msg, as well as a default value for the input in \a defaultValue.
+
+    If the prompt was cancelled by the user the implementation should return false; otherwise the
+    result should be written to \a result and true should be returned.
+
+    The default implementation uses QInputDialog::getText.
 */
 bool QWebPage::javaScriptPrompt(QWebFrame *frame, const QString& msg, const QString& defaultValue, QString* result)
 {
@@ -913,25 +1124,24 @@ bool QWebPage::javaScriptPrompt(QWebFrame *frame, const QString& msg, const QStr
 }
 
 /*!
-    This function is called whenever WebKit wants to create a new window, for example as a result of
-    a JavaScript request to open a document in a new window.
+    This function is called whenever WebKit wants to create a new window of the given \a type, for
+    example when a JavaScript program requests to open a document in a new window.
+
+    If the new window can be created, the new window's QWebPage is returned; otherwise a null pointer is returned.
+
+    If the view associated with the web page is a QWebView object, then the default implementation forwards
+    the request to QWebView's createWindow() function; otherwise it returns a null pointer.
+
+    \sa acceptNavigationRequest()
 */
-QWebPage *QWebPage::createWindow()
+QWebPage *QWebPage::createWindow(WebWindowType type)
 {
     QWebView *webView = qobject_cast<QWebView *>(d->view);
     if (webView) {
-        QWebView *newView = webView->createWindow();
+        QWebView *newView = webView->createWindow(type);
         if (newView)
             return newView->page();
     }
-    return 0;
-}
-
-/*!
-    This function is called whenever WebKit wants to create a new window that should act as a modal dialog.
-*/
-QWebPage *QWebPage::createModalDialog()
-{
     return 0;
 }
 
@@ -972,6 +1182,8 @@ static void openNewWindow(const QUrl& url, WebCore::Frame* frame)
 
     If \a action is a checkable action then \a checked specified whether the action
     is toggled or not.
+
+    \sa action()
 */
 void QWebPage::triggerAction(WebAction action, bool checked)
 {
@@ -983,9 +1195,9 @@ void QWebPage::triggerAction(WebAction action, bool checked)
 
     switch (action) {
         case OpenLink:
-            if (QWebFrame *targetFrame = d->currentContext.targetFrame()) {
+            if (QWebFrame *targetFrame = d->hitTestResult.linkTargetFrame()) {
                 WTF::RefPtr<WebCore::Frame> wcFrame = targetFrame->d->frame;
-                targetFrame->d->frame->loader()->load(frameLoadRequest(d->currentContext.linkUrl(), wcFrame.get()),
+                targetFrame->d->frame->loader()->load(frameLoadRequest(d->hitTestResult.linkUrl(), wcFrame.get()),
                                                       /*lockHistory*/ false,
                                                       /*userGesture*/ true,
                                                       /*event*/ 0,
@@ -996,7 +1208,7 @@ void QWebPage::triggerAction(WebAction action, bool checked)
             }
             // fall through
         case OpenLinkInNewWindow:
-            openNewWindow(d->currentContext.linkUrl(), frame);
+            openNewWindow(d->hitTestResult.linkUrl(), frame);
             break;
         case OpenFrameInNewWindow: {
             KURL url = frame->loader()->documentLoader()->unreachableURL();
@@ -1006,22 +1218,26 @@ void QWebPage::triggerAction(WebAction action, bool checked)
             break;
         }
         case CopyLinkToClipboard:
-            editor->copyURL(d->currentContext.linkUrl(), d->currentContext.text());
+            editor->copyURL(d->hitTestResult.linkUrl(), d->hitTestResult.linkText());
             break;
         case OpenImageInNewWindow:
-            openNewWindow(d->currentContext.imageUrl(), frame);
+            openNewWindow(d->hitTestResult.imageUrl(), frame);
             break;
         case DownloadImageToDisk:
+            frame->loader()->client()->startDownload(WebCore::ResourceRequest(d->hitTestResult.imageUrl(), frame->loader()->outgoingReferrer()));
+            break;
         case DownloadLinkToDisk:
-            frame->loader()->client()->startDownload(WebCore::ResourceRequest(d->currentContext.linkUrl(), frame->loader()->outgoingReferrer()));
+            frame->loader()->client()->startDownload(WebCore::ResourceRequest(d->hitTestResult.linkUrl(), frame->loader()->outgoingReferrer()));
             break;
+#ifndef QT_NO_CLIPBOARD
         case CopyImageToClipboard:
-            QApplication::clipboard()->setPixmap(d->currentContext.image());
+            QApplication::clipboard()->setPixmap(d->hitTestResult.pixmap());
             break;
-        case GoBack:
+#endif
+        case Back:
             d->page->goBack();
             break;
-        case GoForward:
+        case Forward:
             d->page->goForward();
             break;
         case Stop:
@@ -1147,7 +1363,7 @@ void QWebPage::triggerAction(WebAction action, bool checked)
             break;
 
         case InspectElement:
-            d->page->inspectorController()->inspect(d->currentContext.d->innerNonSharedNode.get());
+            d->page->inspectorController()->inspect(d->hitTestResult.d->innerNonSharedNode.get());
             break;
 
         default: break;
@@ -1167,8 +1383,9 @@ QSize QWebPage::viewportSize() const
 
 /*!
     \property QWebPage::viewportSize
+    \brief the size of the viewport
 
-    Specifies the size of the viewport. The size affects for example the visibility of scrollbars
+    The size affects for example the visibility of scrollbars
     if the document is larger than the viewport.
 */
 void QWebPage::setViewportSize(const QSize &size) const
@@ -1185,20 +1402,50 @@ void QWebPage::setViewportSize(const QSize &size) const
 }
 
 
-#if QT_VERSION < 0x040400
-QWebPage::NavigationRequestResponse QWebPage::navigationRequested(QWebFrame *frame, const QWebNetworkRequest &request, QWebPage::NavigationType type)
+/*!
+    \fn bool QWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
+
+    This function is called whenever WebKit requests to navigate \a frame to the resource specified by \a request by means of
+    the specified navigation type \a type.
+
+    If \a frame is a null pointer then navigation to a new window is requested. If the request is
+    accepted createWindow() will be called.
+
+    The default implementation interprets the page's linkDelegationPolicy and emits linkClicked accordingly or returns true
+    to let QWebPage handle the navigation itself.
+
+    \sa createWindow()
+*/
+#if QT_VERSION >= 0x040400
+bool QWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 #else
-QWebPage::NavigationRequestResponse QWebPage::navigationRequested(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
+bool QWebPage::acceptNavigationRequest(QWebFrame *frame, const QWebNetworkRequest &request, QWebPage::NavigationType type)
 #endif
 {
-    Q_UNUSED(request)
-    return AcceptNavigationRequest;
+    if (type == NavigationTypeLinkClicked) {
+        switch (d->linkPolicy) {
+            case DontDelegateLinks:
+                return true;
+
+            case DelegateExternalLinks:
+                if (WebCore::FrameLoader::shouldTreatSchemeAsLocal(request.url().scheme()))
+                    return true;
+                emit linkClicked(request.url());
+                return false;
+
+            case DelegateAllLinks:
+                emit linkClicked(request.url());
+                return false;
+        }
+    }
+    return true;
 }
 
 /*!
     \property QWebPage::selectedText
+    \brief the text currently selected
 
-    Returns the text currently selected.
+    \sa selectionChanged()
 */
 QString QWebPage::selectedText() const
 {
@@ -1213,6 +1460,8 @@ QString QWebPage::selectedText() const
 
    QWebPage also takes care of implementing the action, so that upon
    triggering the corresponding action is performed on the page.
+
+   \sa triggerAction()
 */
 QAction *QWebPage::action(WebAction action) const
 {
@@ -1253,13 +1502,13 @@ QAction *QWebPage::action(WebAction action) const
             text = contextMenuItemTagCopyImageToClipboard();
             break;
 
-        case GoBack:
+        case Back:
             text = contextMenuItemTagGoBack();
 #if QT_VERSION >= 0x040400
             icon = style->standardIcon(QStyle::SP_ArrowBack);
 #endif
             break;
-        case GoForward:
+        case Forward:
             text = contextMenuItemTagGoForward();
 #if QT_VERSION >= 0x040400
             icon = style->standardIcon(QStyle::SP_ArrowForward);
@@ -1378,14 +1627,12 @@ QAction *QWebPage::action(WebAction action) const
 
 /*!
     \property QWebPage::modified
-
-    Specifies if the page contains unsubmitted form data.
+    \brief whether the page contains unsubmitted form data
 */
 bool QWebPage::isModified() const
 {
     return d->modified;
 }
-
 
 /*!
     Returns a pointer to the undo stack used for editable content.
@@ -1403,6 +1650,9 @@ QUndoStack *QWebPage::undoStack() const
 bool QWebPage::event(QEvent *ev)
 {
     switch (ev->type()) {
+    case QEvent::Timer:
+        d->timerEvent(static_cast<QTimerEvent*>(ev));
+        break;
     case QEvent::MouseMove:
         d->mouseMoveEvent(static_cast<QMouseEvent*>(ev));
         break;
@@ -1449,6 +1699,12 @@ bool QWebPage::event(QEvent *ev)
 #endif
     case QEvent::InputMethod:
         d->inputMethodEvent(static_cast<QInputMethodEvent*>(ev));
+    case QEvent::ShortcutOverride:
+        d->shortcutOverrideEvent(static_cast<QKeyEvent*>(ev));
+        break;
+    case QEvent::Leave:
+        d->leaveEvent(ev);
+        break;
     default:
         return QObject::event(ev);
     }
@@ -1458,7 +1714,9 @@ bool QWebPage::event(QEvent *ev)
 
 /*!
     Similar to QWidget::focusNextPrevChild it focuses the next focusable web element
-    if \a next is true. Otherwise the previous element is focused.
+    if \a next is true; otherwise the previous element is focused.
+
+    Returns true if it can find a new focusable element, or false if it can't.
 */
 bool QWebPage::focusNextPrevChild(bool next)
 {
@@ -1475,9 +1733,183 @@ bool QWebPage::focusNextPrevChild(bool next)
 }
 
 /*!
-    Returns a pointe to the page's settings object.
+    \property QWebPage::forwardUnsupportedContent
+    \brief whether QWebPage should forward unsupported content through the
+    unsupportedContent signal
+
+    If disabled the download of such content is aborted immediately.
+
+    By default unsupported content is not forwarded.
 */
-QWebSettings *QWebPage::settings()
+
+void QWebPage::setForwardUnsupportedContent(bool forward)
+{
+    d->forwardUnsupportedContent = forward;
+}
+
+bool QWebPage::forwardUnsupportedContent() const
+{
+    return d->forwardUnsupportedContent;
+}
+
+/*!
+    \property QWebPage::linkDelegationPolicy
+    \brief how QWebPage should delegate the handling of links through the
+    linkClicked() signal
+
+    The default is to delegate no links.
+*/
+
+void QWebPage::setLinkDelegationPolicy(LinkDelegationPolicy policy)
+{
+    d->linkPolicy = policy;
+}
+
+QWebPage::LinkDelegationPolicy QWebPage::linkDelegationPolicy() const
+{
+    return d->linkPolicy;
+}
+
+/*!
+    Filters the context menu event, \a event, through handlers for scrollbars and
+    custom event handlers in the web page. Returns true if the event was handled;
+    otherwise false.
+
+    A web page may swallow a context menu event through a custom event handler, allowing for context
+    menus to be implemented in HTML/JavaScript. This is used by \l{http://maps.google.com/}{Google
+    Maps}, for example.
+*/
+bool QWebPage::swallowContextMenuEvent(QContextMenuEvent *event)
+{
+    d->page->contextMenuController()->clearContextMenu();
+
+    if (QWebFrame* webFrame = d->frameAt(event->pos())) {
+        Frame* frame = QWebFramePrivate::core(webFrame);
+        if (PlatformScrollbar* scrollbar = frame->view()->scrollbarUnderMouse(PlatformMouseEvent(event, 1))) {
+            return scrollbar->handleContextMenuEvent(PlatformMouseEvent(event, 1));
+        }
+    }
+
+    WebCore::Frame* focusedFrame = d->page->focusController()->focusedOrMainFrame();
+    focusedFrame->eventHandler()->sendContextMenuEvent(PlatformMouseEvent(event, 1));
+    ContextMenu *menu = d->page->contextMenuController()->contextMenu();
+    // If the website defines its own handler then sendContextMenuEvent takes care of
+    // calling/showing it and the context menu pointer will be zero. This is the case
+    // on maps.google.com for example.
+
+    return !menu;
+}
+
+/*!
+    Updates the page's actions depending on the position \a pos. For example if \a pos is over an image
+    element the CopyImageToClipboard action is enabled.
+*/
+void QWebPage::updatePositionDependentActions(const QPoint &pos)
+{
+    // disable position dependent actions first and enable them if WebCore adds them enabled to the context menu.
+
+    for (int i = ContextMenuItemTagNoAction; i < ContextMenuItemBaseApplicationTag; ++i) {
+        QWebPage::WebAction action = webActionForContextMenuAction(WebCore::ContextMenuAction(i));
+        QAction *a = this->action(action);
+        if (a)
+            a->setEnabled(false);
+    }
+
+    WebCore::Frame* focusedFrame = d->page->focusController()->focusedOrMainFrame();
+    HitTestResult result = focusedFrame->eventHandler()->hitTestResultAtPoint(focusedFrame->view()->windowToContents(pos), /*allowShadowContent*/ false);
+
+    d->hitTestResult = QWebHitTestResult(new QWebHitTestResultPrivate(result));
+    WebCore::ContextMenu menu(result);
+    menu.populate();
+    if (d->page->inspectorController()->enabled())
+        menu.addInspectElementItem();
+
+    delete d->currentContextMenu;
+    // createContextMenu also enables actions if necessary
+    d->currentContextMenu = d->createContextMenu(&menu, menu.platformDescription());
+}
+
+/*!
+    \enum QWebPage::Extension
+
+    This enum describes the types of extensions that the page can support. Before using these extensions, you
+    should verify that the extension is supported by calling supportsExtension().
+
+    Currently there are no extensions.
+*/
+
+/*!
+    \class QWebPage::ExtensionOption
+    \since 4.4
+    \brief The ExtensionOption class provides an extended input argument to QWebPage's extension support.
+
+    \sa QWebPage::extension()
+*/
+
+/*!
+    \class QWebPage::ExtensionReturn
+    \since 4.4
+    \brief The ExtensionOption class provides an extended output argument to QWebPage's extension support.
+
+    \sa QWebPage::extension()
+*/
+
+/*!
+    This virtual function can be reimplemented in a QWebPage subclass to provide support for extensions. The \a option
+    argument is provided as input to the extension; the output results can be stored in \a output.
+
+    The behavior of this function is determined by \a extension.
+
+    You can call supportsExtension() to check if an extension is supported by the page.
+
+    By default, no extensions are supported, and this function returns false.
+
+    \sa supportsExtension(), Extension
+*/
+bool QWebPage::extension(Extension extension, const ExtensionOption *option, ExtensionReturn *output)
+{
+    Q_UNUSED(extension)
+    Q_UNUSED(option)
+    Q_UNUSED(output)
+    return false;
+}
+
+/*!
+    This virtual function returns true if the web page supports \a extension; otherwise false is returned.
+
+    \sa extension()
+*/
+bool QWebPage::supportsExtension(Extension extension) const
+{
+    Q_UNUSED(extension)
+    return false;
+}
+
+/*!
+    Finds the next occurrence of the string, \a subString, in the page, using the given \a options.
+    Returns true of \a subString was found and selects the match visually; otherwise returns false.
+*/
+bool QWebPage::findText(const QString &subString, FindFlags options)
+{
+    ::TextCaseSensitivity caseSensitivity = ::TextCaseInsensitive;
+    if (options & FindCaseSensitively)
+        caseSensitivity = ::TextCaseSensitive;
+
+    ::FindDirection direction = ::FindDirectionForward;
+    if (options & FindBackward)
+        direction = ::FindDirectionBackward;
+
+    const bool shouldWrap = options & FindWrapsAroundDocument;
+
+    return d->page->findString(subString, caseSensitivity, direction, shouldWrap);
+}
+
+/*!
+    Returns a pointer to the page's settings object.
+
+    \sa QWebSettings::globalSettings()
+*/
+QWebSettings *QWebPage::settings() const
 {
     return d->settings;
 }
@@ -1485,17 +1917,20 @@ QWebSettings *QWebPage::settings()
 /*!
     This function is called when the web content requests a file name, for example
     as a result of the user clicking on a "file upload" button in a HTML form.
+
+    A suggested filename may be provided in \a suggestedFile. The frame originating the
+    request is provided as \a parentFrame.
 */
-QString QWebPage::chooseFile(QWebFrame *parentFrame, const QString& oldFile)
+QString QWebPage::chooseFile(QWebFrame *parentFrame, const QString& suggestedFile)
 {
 #ifndef QT_NO_FILEDIALOG
-    return QFileDialog::getOpenFileName(d->view, QString::null, oldFile);
+    return QFileDialog::getOpenFileName(d->view, QString::null, suggestedFile);
 #else
     return QString::null;
 #endif
 }
 
-#if QT_VERSION < 0x040400
+#if QT_VERSION < 0x040400 && !defined qdoc
 
 void QWebPage::setNetworkInterface(QWebNetworkInterface *interface)
 {
@@ -1525,24 +1960,25 @@ QNetworkProxy QWebPage::networkProxy() const
 #else
 
 /*!
-    Sets the QNetworkAccessManager \a manager that is responsible for serving network
-    requests for this QWebPage.
+    Sets the QNetworkAccessManager \a manager responsible for serving network requests for this
+    QWebPage.
 
-    \sa networkAccessManager
+    \sa networkAccessManager()
 */
 void QWebPage::setNetworkAccessManager(QNetworkAccessManager *manager)
 {
     if (manager == d->networkManager)
         return;
-    delete d->networkManager;
+    if (d->networkManager && d->networkManager->parent() == this)
+        delete d->networkManager;
     d->networkManager = manager;
 }
 
 /*!
-    Returns the QNetworkAccessManager \a manager that is responsible for serving network
+    Returns the QNetworkAccessManager that is responsible for serving network
     requests for this QWebPage.
 
-    \sa setNetworkAccessManager
+    \sa setNetworkAccessManager()
 */
 QNetworkAccessManager *QWebPage::networkAccessManager() const
 {
@@ -1555,11 +1991,25 @@ QNetworkAccessManager *QWebPage::networkAccessManager() const
 
 #endif
 
+/*!
+    Sets the QWebPluginFactory \a factory responsible for creating plugins embedded into this
+    QWebPage.
+
+    Note: The plugin factory is only used if the QWebSettings::PluginsEnabled attribute is enabled.
+
+    \sa pluginFactory()
+*/
 void QWebPage::setPluginFactory(QWebPluginFactory *factory)
 {
     d->pluginFactory = factory;
 }
 
+/*!
+    Returns the QWebPluginFactory that is responsible for creating plugins embedded into
+    this QWebPage. If no plugin factory is installed a null pointer is returned.
+
+    \sa setPluginFactory()
+*/
 QWebPluginFactory *QWebPage::pluginFactory() const
 {
     return d->pluginFactory;
@@ -1568,11 +2018,187 @@ QWebPluginFactory *QWebPage::pluginFactory() const
 /*!
     This function is called when a user agent for HTTP requests is needed. You can re-implement this
     function to dynamically return different user agent's for different urls, based on the \a url parameter.
+
+    The default implementation returns the following value:
+
+    "Mozilla/5.0 (%Platform%; %Security%; %Subplatform%; %Locale%) AppleWebKit/%WebKitVersion% (KHTML, like Gecko, Safari/419.3) %AppVersion"
+
+    In this string the following values are replaced at run-time:
+    \list
+    \o %Platform% and %Subplatform% are expanded to the windowing system and the operation system.
+    \o %Security% expands to U if SSL is enabled, otherwise N. SSL is enabled if QSslSocket::supportsSsl() returns true.
+    \o %Locale% is replaced with QLocale::name().
+    \o %WebKitVersion% currently expands to 523.15
+    \o %AppVersion% expands to QCoreApplication::applicationName()/QCoreApplication::applicationVersion() if they're set; otherwise defaulting to Qt and the current Qt version.
+    \endlist
 */
-QString QWebPage::userAgentFor(const QUrl& url) const
+QString QWebPage::userAgentForUrl(const QUrl& url) const
 {
     Q_UNUSED(url)
-    return QLatin1String("Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en) AppleWebKit/523.15 (KHTML, like Gecko) Safari/419.3 Qt");
+    QString ua = QLatin1String("Mozilla/5.0 ("
+
+    // Plastform
+#ifdef Q_WS_MAC
+    "Macintosh"
+#elif defined Q_WS_QWS
+    "QtEmbedded"
+#elif defined Q_WS_WIN
+    "Windows"
+#elif defined Q_WS_X11
+    "X11"
+#else
+    "Unknown"
+#endif
+    "; "
+
+    // Placeholder for security strength (N or U)
+    "%1; "
+
+    // Subplatform"
+#ifdef Q_OS_AIX
+    "AIX"
+#elif defined Q_OS_WIN32
+    "%2"
+#elif defined Q_OS_DARWIN
+#ifdef __i386__ || __x86_64__
+    "Intel Mac OS X"
+#else
+    "PPC Mac OS X"
+#endif
+
+#elif defined Q_OS_BSDI
+    "BSD"
+#elif defined Q_OS_BSD4
+    "BSD Four"
+#elif defined Q_OS_CYGWIN
+    "Cygwin"
+#elif defined Q_OS_DGUX
+    "DG/UX"
+#elif defined Q_OS_DYNIX
+    "DYNIX/ptx"
+#elif defined Q_OS_FREEBSD
+    "FreeBSD"
+#elif defined Q_OS_HPUX
+    "HP-UX"
+#elif defined Q_OS_HURD
+    "GNU Hurd"
+#elif defined Q_OS_IRIX
+    "SGI Irix"
+#elif defined Q_OS_LINUX
+    "Linux"
+#elif defined Q_OS_LYNX
+    "LynxOS"
+#elif defined Q_OS_NETBSD
+    "NetBSD"
+#elif defined Q_OS_OS2
+    "OS/2"
+#elif defined Q_OS_OPENBSD
+    "OpenBSD"
+#elif defined Q_OS_OS2EMX
+    "OS/2"
+#elif defined Q_OS_OSF
+    "HP Tru64 UNIX"
+#elif defined Q_OS_QNX6
+    "QNX RTP Six"
+#elif defined Q_OS_QNX
+    "QNX"
+#elif defined Q_OS_RELIANT
+    "Reliant UNIX"
+#elif defined Q_OS_SCO
+    "SCO OpenServer"
+#elif defined Q_OS_SOLARIS
+    "Sun Solaris"
+#elif defined Q_OS_ULTRIX
+    "DEC Ultrix"
+#elif defined Q_OS_UNIX
+    "UNIX BSD/SYSV system"
+#elif defined Q_OS_UNIXWARE
+    "UnixWare Seven, Open UNIX Eight"
+#else
+    "Unknown"
+#endif
+    "; ");
+
+    QChar securityStrength(QLatin1Char('N'));
+#if !defined(QT_NO_OPENSSL)
+    if (QSslSocket::supportsSsl())
+        securityStrength = QLatin1Char('U');
+#endif
+    ua = ua.arg(securityStrength);
+
+#if defined Q_OS_WIN32
+    QString ver;
+    switch(QSysInfo::WindowsVersion) {
+        case QSysInfo::WV_32s:
+            ver = "Windows 3.1";
+            break;
+        case QSysInfo::WV_95:
+            ver = "Windows 95";
+            break;
+        case QSysInfo::WV_98:
+            ver = "Windows 98";
+            break;
+        case QSysInfo::WV_Me:
+            ver = "Windows 98; Win 9x 4.90";
+            break;
+        case QSysInfo::WV_NT:
+            ver = "WinNT4.0";
+            break;
+        case QSysInfo::WV_2000:
+            ver = "Windows NT 5.0";
+            break;
+        case QSysInfo::WV_XP:
+            ver = "Windows NT 5.1";
+            break;
+        case QSysInfo::WV_2003:
+            ver = "Windows NT 5.2";
+            break;
+        case QSysInfo::WV_VISTA:
+            ver = "Windows NT 6.0";
+            break;
+        case QSysInfo::WV_CE:
+            ver = "Windows CE";
+            break;
+        case QSysInfo::WV_CENET:
+            ver = "Windows CE .NET";
+            break;
+        case QSysInfo::WV_CE_5:
+            ver = "Windows CE 5.x";
+            break;
+        case QSysInfo::WV_CE_6:
+            ver = "Windows CE 6.x";
+            break;
+    }
+    ua = QString(ua).arg(ver);
+#endif
+
+    // Language
+    QLocale locale;
+    if (d->view)
+        locale = d->view->locale();
+    QString name = locale.name();
+    name[2] = QLatin1Char('-');
+    ua.append(name);
+    ua.append(QLatin1String(") "));
+
+    // webkit/qt version
+    ua.append(QLatin1String("AppleWebKit/" WEBKIT_VERSION " (KHTML, like Gecko, Safari/419.3) "));
+
+    // Application name/version
+    QString appName = QCoreApplication::applicationName();
+    if (!appName.isEmpty()) {
+        ua.append(QLatin1Char(' ') + appName);
+#if QT_VERSION >= 0x040400
+        QString appVer = QCoreApplication::applicationVersion();
+        if (!appVer.isEmpty())
+            ua.append(QLatin1Char('/') + appVer);
+#endif
+    } else {
+        // Qt version
+        ua.append(QLatin1String("Qt/"));
+        ua.append(QLatin1String(qVersion()));
+    }
+    return ua;
 }
 
 
@@ -1585,6 +2211,8 @@ void QWebPagePrivate::_q_onLoadProgressChanged(int) {
 /*!
     Returns the total number of bytes that were received from the network to render the current page,
     including extra content such as embedded images.
+
+    \sa bytesReceived()
 */
 quint64 QWebPage::totalBytes() const {
     return d->m_bytesReceived;
@@ -1593,123 +2221,54 @@ quint64 QWebPage::totalBytes() const {
 
 /*!
     Returns the number of bytes that were received from the network to render the current page.
+
+    \sa totalBytes()
 */
 quint64 QWebPage::bytesReceived() const {
     return d->m_totalBytes;
 }
 
-QWebPageContext::QWebPageContext(const WebCore::HitTestResult &hitTest)
-    : d(new QWebPageContextPrivate)
-{
-    d->pos = hitTest.point();
-    d->text = hitTest.textContent();
-    d->linkUrl = hitTest.absoluteLinkURL().string();
-    d->imageUrl = hitTest.absoluteImageURL().string();
-    d->innerNonSharedNode = hitTest.innerNonSharedNode();
-    WebCore::Image *img = hitTest.image();
-    if (img) {
-        QPixmap *pix = img->getPixmap();
-        if (pix)
-            d->image = *pix;
-    }
-    WebCore::Frame *frame = hitTest.targetFrame();
-    if (frame)
-        d->targetFrame = QWebFramePrivate::kit(frame);
-}
-
-QWebPageContext::QWebPageContext()
-    : d(0)
-{
-}
-
-QWebPageContext::QWebPageContext(const QWebPageContext &other)
-    : d(0)
-{
-    if (other.d)
-        d = new QWebPageContextPrivate(*other.d);
-}
-
-QWebPageContext &QWebPageContext::operator=(const QWebPageContext &other)
-{
-    if (this != &other) {
-        if (other.d) {
-            if (!d)
-                d = new QWebPageContextPrivate;
-            *d = *other.d;
-        } else {
-            delete d;
-            d = 0;
-        }
-    }
-    return *this;
-}
-
-QWebPageContext::~QWebPageContext()
-{
-    delete d;
-}
-
-QPoint QWebPageContext::pos() const
-{
-    if (!d)
-        return QPoint();
-    return d->pos;
-}
-
-QString QWebPageContext::text() const
-{
-    if (!d)
-        return QString();
-    return d->text;
-}
-
-QUrl QWebPageContext::linkUrl() const
-{
-    if (!d)
-        return QUrl();
-    return d->linkUrl;
-}
-
-QUrl QWebPageContext::imageUrl() const
-{
-    if (!d)
-        return QUrl();
-    return d->imageUrl;
-}
-
-QPixmap QWebPageContext::image() const
-{
-    if (!d)
-        return QPixmap();
-    return d->image;
-}
-
-QWebFrame *QWebPageContext::targetFrame() const
-{
-    if (!d)
-        return 0;
-    return d->targetFrame;
-}
-
 /*!
-    \fn void QWebPage::loadProgressChanged(int progress)
+    \fn void QWebPage::loadStarted()
 
-    This signal is emitted when the global progress status changes.
-    The current value is provided by \a progress in percent.
-    It accumulates changes from all the child frames.
+    This signal is emitted when a new load of the page is started.
+
+    \sa loadFinished()
 */
 
 /*!
-    \fn void QWebPage::hoveringOverLink(const QString &link, const QString &title, const QString &textContent)
+    \fn void QWebPage::loadProgress(int progress)
+
+    This signal is emitted when the global progress status changes.
+    The current value is provided by \a progress and scales from 0 to 100,
+    which is the default range of QProgressBar.
+    It accumulates changes from all the child frames.
+
+    \sa bytesReceived()
+*/
+
+/*!
+    \fn void QWebPage::loadFinished(bool ok)
+
+    This signal is emitted when a load of the page is finished.
+    \a ok will indicate whether the load was successful or any error occurred.
+
+    \sa loadStarted()
+*/
+
+/*!
+    \fn void QWebPage::linkHovered(const QString &link, const QString &title, const QString &textContent)
 
     This signal is emitted when the mouse is hovering over a link.
     The first parameter is the \a link url, the second is the link \a title
     if any, and third \a textContent is the text content. Method is emitter with both
     empty parameters when the mouse isn't hovering over any link element.
+
+    \sa linkClicked()
 */
 
 /*!
-    \fn void QWebPage::statusBarTextChanged(const QString& text)
+    \fn void QWebPage::statusBarMessage(const QString& text)
 
     This signal is emitted when the statusbar \a text is changed by the page.
 */
@@ -1724,50 +2283,73 @@ QWebFrame *QWebPageContext::targetFrame() const
     \fn void QWebPage::selectionChanged()
 
     This signal is emitted whenever the selection changes.
+
+    \sa selectedText()
 */
 
 /*!
-    \fn void QWebPage::geometryChangeRequest(const QRect& geom)
+    \fn void QWebPage::geometryChangeRequested(const QRect& geom)
 
     This signal is emitted whenever the document wants to change the position and size of the
     page to \a geom. This can happen for example through JavaScript.
 */
 
 /*!
-    \fn void QWebPage::updateRequest(const QRect& dirtyRect)
+    \fn void QWebPage::repaintRequested(const QRect& dirtyRect)
 
     This signal is emitted whenever this QWebPage should be updated and no view was set.
     \a dirtyRect contains the area that needs to be updated. To paint the QWebPage get
     the mainFrame() and call the render(QPainter*, const QRegion&) method with the
     \a dirtyRect as the second parameter.
-    
+
     \sa mainFrame()
-    \sa QWebFrame::render(QPainter*, const QRegion&)
     \sa view()
 */
 
 /*!
-    \fn void QWebPage::scrollRequest(int dy, int dy, const QRect& rectToScroll)
+    \fn void QWebPage::scrollRequested(int dx, int dy, const QRect& rectToScroll)
 
     This signal is emitted whenever the content given by \a rectToScroll needs
-    to be scrolled dx and dy downwards and no view was set.
+    to be scrolled \a dx and \a dy downwards and no view was set.
 
     \sa view()
-    
 */
 
 /*!
-    \fn void QWebPage::handleUnsupportedContent(QNetworkReply *reply)
+    \fn void QWebPage::windowCloseRequested()
+
+    This signal is emitted whenever the page requests the web browser window to be closed,
+    for example through the JavaScript \c{window.close()} call.
+*/
+
+/*!
+    \fn void QWebPage::printRequested(QWebFrame *frame)
+
+    This signal is emitted whenever the page requests the web browser to print \a frame,
+    for example through the JavaScript \c{window.print()} call.
+
+    \sa QWebFrame::print(), QPrintPreviewDialog
+*/
+
+/*!
+    \fn void QWebPage::unsupportedContent(QNetworkReply *reply)
 
     This signals is emitted when webkit cannot handle a link the user navigated to.
 
-    At signal emissions time the meta data of the QNetworkReply is available.
+    At signal emissions time the meta data of the QNetworkReply \a reply is available.
+
+    \note This signal is only emitted if the forwardUnsupportedContent property is set to true.
+
+    \sa downloadRequested()
 */
 
 /*!
-    \fn void QWebPage::download(const QNetworkRequest &request)
+    \fn void QWebPage::downloadRequested(const QNetworkRequest &request)
 
-    This signal is emitted when the user decides to download a link.
+    This signal is emitted when the user decides to download a link. The url of
+    the link as well as additional meta-information is contained in \a request.
+
+    \sa unsupportedContent()
 */
 
 /*!
@@ -1777,6 +2359,38 @@ QWebFrame *QWebPageContext::targetFrame() const
     element changes. It is used inform input methods about the new on-screen position where
     the user is able to enter text. This signal is usually connected to QWidget's updateMicroFocus()
     slot.
+*/
+
+/*!
+    \fn void QWebPage::linkClicked(const QUrl &url)
+
+    This signal is emitted whenever the user clicks on a link and the page's linkDelegationPolicy
+    property is set to delegate the link handling for the specified \a url.
+
+    By default no links are delegated and are handled by QWebPage instead.
+
+    \sa linkHovered()
+*/
+
+/*!
+    \fn void QWebPage::toolBarVisibilityChangeRequested(bool visible)
+
+    This signal is emitted whenever the visibility of the toolbar in a web browser
+    window that hosts QWebPage should be changed to \a visible.
+*/
+
+/*!
+    \fn void QWebPage::statusBarVisibilityChangeRequested(bool visible)
+
+    This signal is emitted whenever the visibility of the statusbar in a web browser
+    window that hosts QWebPage should be changed to \a visible.
+*/
+
+/*!
+    \fn void QWebPage::menuBarVisibilityChangeRequested(bool visible)
+
+    This signal is emitted whenever the visibility of the menubar in a web browser
+    window that hosts QWebPage should be changed to \a visible.
 */
 
 #include "moc_qwebpage.cpp"

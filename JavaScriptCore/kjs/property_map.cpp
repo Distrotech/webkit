@@ -125,15 +125,6 @@ struct PropertyMapHashTable {
 static const unsigned emptyEntryIndex = 0;
 static const unsigned deletedSentinelIndex = 1;
 
-SavedProperties::SavedProperties()
-    : count(0)
-{
-}
-
-SavedProperties::~SavedProperties()
-{
-}
-
 #if !DO_PROPERTYMAP_CONSTENCY_CHECK
 
 inline void PropertyMap::checkConsistency()
@@ -673,7 +664,7 @@ void PropertyMap::getEnumerablePropertyNames(PropertyNameArray& propertyNames) c
 #if USE_SINGLE_ENTRY
         UString::Rep* key = m_singleEntryKey;
         if (key && !(m_singleEntryAttributes & DontEnum))
-            propertyNames.add(Identifier(key));
+            propertyNames.add(key);
 #endif
         return;
     }
@@ -692,8 +683,13 @@ void PropertyMap::getEnumerablePropertyNames(PropertyNameArray& propertyNames) c
                 ++i;
             }
         }
-        for (int k = 0; k < i; ++k)
-            propertyNames.add(Identifier(a[k]->key));
+        if (!propertyNames.size()) {
+            for (int k = 0; k < i; ++k)
+                propertyNames.addKnownUnique(a[k]->key);
+        } else {
+            for (int k = 0; k < i; ++k)
+                propertyNames.add(a[k]->key);
+        }
         return;
     }
 
@@ -713,71 +709,7 @@ void PropertyMap::getEnumerablePropertyNames(PropertyNameArray& propertyNames) c
 
     // Put the keys of the sorted entries into the list.
     for (Entry** q = sortedEnumerables.data(); q != p; ++q)
-        propertyNames.add(Identifier(q[0]->key));
-}
-
-void PropertyMap::save(SavedProperties& s) const
-{
-    unsigned count = 0;
-
-    if (!m_usingTable) {
-#if USE_SINGLE_ENTRY
-        if (m_singleEntryKey && !(m_singleEntryAttributes & (ReadOnly | Function)))
-            ++count;
-#endif
-    } else {
-        unsigned entryCount = m_u.table->keyCount + m_u.table->deletedSentinelCount;
-        for (unsigned i = 1; i <= entryCount; ++i)
-            if (m_u.table->entries()[i].key && !(m_u.table->entries()[i].attributes & (ReadOnly | Function)))
-                ++count;
-    }
-
-    s.properties.clear();
-    s.count = count;
-
-    if (count == 0)
-        return;
-    
-    s.properties.set(new SavedProperty[count]);
-    
-    SavedProperty* prop = s.properties.get();
-    
-#if USE_SINGLE_ENTRY
-    if (!m_usingTable) {
-        prop->init(m_singleEntryKey, m_u.singleEntryValue, m_singleEntryAttributes);
-        return;
-    }
-#endif
-
-    // Save in the right order so we don't lose the order.
-    // Another possibility would be to save the indices.
-
-    // Allocate a buffer to use to sort the keys.
-    Vector<Entry*, smallMapThreshold> sortedEntries(count);
-
-    // Get pointers to the entries in the buffer.
-    Entry** p = sortedEntries.data();
-    unsigned entryCount = m_u.table->keyCount + m_u.table->deletedSentinelCount;
-    for (unsigned i = 1; i <= entryCount; ++i) {
-        if (m_u.table->entries()[i].key && !(m_u.table->entries()[i].attributes & (ReadOnly | Function)))
-            *p++ = &m_u.table->entries()[i];
-    }
-    ASSERT(p == sortedEntries.data() + count);
-
-    // Sort the entries by index.
-    qsort(sortedEntries.data(), p - sortedEntries.data(), sizeof(Entry*), comparePropertyMapEntryIndices);
-
-    // Put the sorted entries into the saved properties list.
-    for (Entry** q = sortedEntries.data(); q != p; ++q, ++prop) {
-        Entry* e = *q;
-        prop->init(e->key, e->value, e->attributes);
-    }
-}
-
-void PropertyMap::restore(const SavedProperties& p)
-{
-    for (unsigned i = 0; i != p.count; ++i)
-        put(Identifier(p.properties[i].name()), p.properties[i].value(), p.properties[i].attributes());
+        propertyNames.add(q[0]->key);
 }
 
 #if DO_PROPERTYMAP_CONSTENCY_CHECK

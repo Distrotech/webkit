@@ -44,6 +44,7 @@
 #include "PlatformWheelEvent.h"
 #include "RenderObject.h"
 #include "RenderTreeAsText.h"
+#include "RenderView.h"
 #include "SelectionController.h"
 #include "Settings.h"
 #include "SubstituteData.h"
@@ -96,7 +97,8 @@ wxWebViewLoadEvent::wxWebViewLoadEvent(wxWindow* win)
 {
     SetEventType( wxEVT_WEBVIEW_LOAD);
     SetEventObject( win );
-    SetId(win->GetId());
+    if (win)
+        SetId(win->GetId());
 }
 
 IMPLEMENT_DYNAMIC_CLASS(wxWebViewBeforeLoadEvent, wxCommandEvent)
@@ -108,7 +110,8 @@ wxWebViewBeforeLoadEvent::wxWebViewBeforeLoadEvent(wxWindow* win)
     m_cancelled = false;
     SetEventType(wxEVT_WEBVIEW_BEFORE_LOAD);
     SetEventObject(win);
-    SetId(win->GetId());
+    if (win)
+        SetId(win->GetId());
 }
 
 IMPLEMENT_DYNAMIC_CLASS(wxWebViewNewWindowEvent, wxCommandEvent)
@@ -119,7 +122,8 @@ wxWebViewNewWindowEvent::wxWebViewNewWindowEvent(wxWindow* win)
 {
     SetEventType(wxEVT_WEBVIEW_NEW_WINDOW);
     SetEventObject(win);
-    SetId(win->GetId());
+    if (win)
+        SetId(win->GetId());
 }
 
 IMPLEMENT_DYNAMIC_CLASS(wxWebViewRightClickEvent, wxCommandEvent)
@@ -130,7 +134,8 @@ wxWebViewRightClickEvent::wxWebViewRightClickEvent(wxWindow* win)
 {
     SetEventType(wxEVT_WEBVIEW_RIGHT_CLICK);
     SetEventObject(win);
-    SetId(win->GetId());
+    if (win)
+        SetId(win->GetId());
 }
 
 IMPLEMENT_DYNAMIC_CLASS(wxWebViewConsoleMessageEvent, wxCommandEvent)
@@ -141,7 +146,8 @@ wxWebViewConsoleMessageEvent::wxWebViewConsoleMessageEvent(wxWindow* win)
 {
     SetEventType(wxEVT_WEBVIEW_CONSOLE_MESSAGE);
     SetEventObject(win);
-    SetId(win->GetId());
+    if (win)
+        SetId(win->GetId());
 }
 
 //---------------------------------------------------------
@@ -215,14 +221,11 @@ wxWebView::wxWebView(wxWindow* parent, int id, const wxPoint& position,
     
     m_impl->frame = new WebCore::Frame(m_impl->page, parentFrame, loaderClient);
     m_impl->frame->deref();
-    m_impl->frameView = new WebCore::FrameView(m_impl->frame.get());
-    m_impl->frameView->deref();
-    
-    m_impl->frame->setView(m_impl->frameView.get());
-    m_impl->frame->init();
-    
-    m_impl->frameView->setNativeWindow(this);
+
     loaderClient->setFrame(m_impl->frame.get());
+    loaderClient->setWebView(this);
+    
+    m_impl->frame->init();
         
     // Default settings - we should have wxWebViewSettings class for this
     // eventually
@@ -246,10 +249,7 @@ wxWebView::~wxWebView()
     m_impl->frame->loader()->detachFromParent();
     
     delete m_impl->page;
-    m_impl->page = 0;
-    // Since frameView has the last reference to Frame, once it is
-    // destroyed the destructor for Frame will happen as well.
-    m_impl->frameView = 0;    
+    m_impl->page = 0;   
 }
 
 void wxWebView::Stop()
@@ -267,8 +267,8 @@ void wxWebView::Reload()
 wxString wxWebView::GetPageSource()
 {
     if (m_impl->frame) {
-        if (m_impl->frameView && m_impl->frameView->layoutPending())
-            m_impl->frameView->layout();
+        if (m_impl->frame->view() && m_impl->frame->view()->layoutPending())
+            m_impl->frame->view()->layout();
     
         WebCore::Document* doc = m_impl->frame->document();
         
@@ -292,8 +292,8 @@ void wxWebView::SetPageSource(const wxString& source, const wxString& baseUrl)
 
 wxString wxWebView::GetInnerText()
 {
-    if (m_impl->frameView && m_impl->frameView->layoutPending())
-        m_impl->frameView->layout();
+    if (m_impl->frame->view() && m_impl->frame->view()->layoutPending())
+        m_impl->frame->view()->layout();
         
     WebCore::Element *documentElement = m_impl->frame->document()->documentElement();
     return documentElement->innerText();
@@ -309,10 +309,10 @@ wxString wxWebView::GetAsMarkup()
 
 wxString wxWebView::GetExternalRepresentation()
 {
-    if (m_impl->frameView && m_impl->frameView->layoutPending())
-        m_impl->frameView->layout();
+    if (m_impl->frame->view() && m_impl->frame->view()->layoutPending())
+        m_impl->frame->view()->layout();
 
-    return externalRepresentation(m_impl->frame->renderer());
+    return externalRepresentation(m_impl->frame->contentRenderer());
 }
 
 wxString wxWebView::RunScript(const wxString& javascript)
@@ -350,15 +350,34 @@ void wxWebView::LoadURL(wxString url)
 
 bool wxWebView::GoBack()
 {
-    if (m_impl->frame && m_impl->frame->page()) {
+    if (m_impl->frame && m_impl->frame->page())
         return m_impl->frame->page()->goBack();
-    }
+
+    return false;
 }
 
 bool wxWebView::GoForward()
 {
     if (m_impl->frame && m_impl->frame->page())
         return m_impl->frame->page()->goForward();
+
+    return false;
+}
+
+bool wxWebView::CanGoBack()
+{
+    if (m_impl->frame && m_impl->frame->page() && m_impl->frame->page()->backForwardList())
+        return m_impl->frame->page()->backForwardList()->backItem() != NULL;
+
+    return false;
+}
+
+bool wxWebView::CanGoForward()
+{
+    if (m_impl->frame && m_impl->frame->page() && m_impl->frame->page()->backForwardList())
+        return m_impl->frame->page()->backForwardList()->forwardItem() != NULL;
+
+    return false;
 }
 
 bool wxWebView::CanIncreaseTextSize() const
@@ -407,7 +426,7 @@ void wxWebView::MakeEditable(bool enable)
 
 void wxWebView::OnPaint(wxPaintEvent& event)
 {
-    if (m_beingDestroyed || !m_impl->frameView || !m_impl->frame)
+    if (m_beingDestroyed || !m_impl->frame->view() || !m_impl->frame)
         return;
     
     wxAutoBufferedPaintDC dc(this);
@@ -420,7 +439,7 @@ void wxWebView::OnPaint(wxPaintEvent& event)
         if (dc.IsOk()) {
             wxRect paintRect = GetUpdateRegion().GetBox();
 
-            WebCore::IntSize offset = m_impl->frameView->scrollOffset();
+            WebCore::IntSize offset = m_impl->frame->view()->scrollOffset();
 #if USE(WXGC)
             gcdc.SetDeviceOrigin(-offset.width(), -offset.height());
 #endif
@@ -432,9 +451,9 @@ void wxWebView::OnPaint(wxPaintEvent& event)
 #else
             WebCore::GraphicsContext* gc = new WebCore::GraphicsContext((wxWindowDC*)&dc);
 #endif
-            if (gc && m_impl->frame->renderer()) {
-                if (m_impl->frameView->needsLayout())
-                    m_impl->frameView->layout();
+            if (gc && m_impl->frame->contentRenderer()) {
+                if (m_impl->frame->view()->needsLayout())
+                    m_impl->frame->view()->layout();
 
                 m_impl->frame->paint(gc, paintRect);
             }
@@ -444,9 +463,9 @@ void wxWebView::OnPaint(wxPaintEvent& event)
 
 void wxWebView::OnSize(wxSizeEvent& event)
 { 
-    if (m_isInitialized && m_impl->frame && m_impl->frameView) {
+    if (m_isInitialized && m_impl->frame && m_impl->frame->view()) {
         m_impl->frame->sendResizeEvent();
-        m_impl->frameView->layout();
+        m_impl->frame->view()->layout();
     }
     
     event.Skip();
@@ -457,7 +476,7 @@ void wxWebView::OnMouseEvents(wxMouseEvent& event)
 {
     event.Skip();
     
-    if (!m_impl->frame  && m_impl->frameView)
+    if (!m_impl->frame  && m_impl->frame->view())
         return; 
         
     wxPoint globalPoint = ClientToScreen(event.GetPosition());
@@ -485,7 +504,7 @@ void wxWebView::OnMouseEvents(wxMouseEvent& event)
 
 bool wxWebView::CanCopy()
 {
-    if (m_impl->frame && m_impl->frameView)
+    if (m_impl->frame && m_impl->frame->view())
         return (m_impl->frame->editor()->canCopy() || m_impl->frame->editor()->canDHTMLCopy());
 
     return false;
@@ -499,7 +518,7 @@ void wxWebView::Copy()
 
 bool wxWebView::CanCut()
 {
-    if (m_impl->frame && m_impl->frameView)
+    if (m_impl->frame && m_impl->frame->view())
         return (m_impl->frame->editor()->canCut() || m_impl->frame->editor()->canDHTMLCut());
 
     return false;
@@ -513,7 +532,7 @@ void wxWebView::Cut()
 
 bool wxWebView::CanPaste()
 {
-    if (m_impl->frame && m_impl->frameView)
+    if (m_impl->frame && m_impl->frame->view())
         return (m_impl->frame->editor()->canPaste() || m_impl->frame->editor()->canDHTMLPaste());
 
     return false;
@@ -528,7 +547,7 @@ void wxWebView::Paste()
 
 void wxWebView::OnKeyEvents(wxKeyEvent& event)
 {
-    if (m_impl->frame && m_impl->frameView) {
+    if (m_impl->frame && m_impl->frame->view()) {
         // WebCore doesn't handle these events itself, so we need to do
         // it and not send the event down or else CTRL+C will erase the text
         // and replace it with c.

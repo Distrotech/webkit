@@ -33,6 +33,7 @@
 #import <WebKit/npfunctions.h>
 #import <WebKit/npapi.h>
 #import <WebKit/WebBasePluginPackage.h>
+#import <wtf/HashMap.h>
 
 @class DOMElement;
 @class WebDataSource;
@@ -43,6 +44,9 @@
 @class WebNetscapePluginStream;
 @class WebView;
 
+class PluginTimer;
+class WebNetscapePluginEventHandler;
+
 typedef union PluginPort {
 #ifndef NP_NO_QUICKDRAW
     NP_Port qdPort;
@@ -51,7 +55,9 @@ typedef union PluginPort {
     NP_GLContext aglPort;
 } PluginPort;
 
-@interface WebBaseNetscapePluginView : NSView <WebPluginManualLoader>
+typedef struct _NPPluginTextInputFuncs NPPluginTextInputFuncs;
+
+@interface WebBaseNetscapePluginView : NSView <WebPluginManualLoader, NSTextInput>
 {
     WebNetscapePluginPackage *pluginPackage;
     
@@ -75,6 +81,7 @@ typedef union PluginPort {
     PluginPort nPort;
     PluginPort lastSetPort;
     NPDrawingModel drawingModel;
+    NPEventModel eventModel;
     
     // These are only valid when drawingModel is NPDrawingModelOpenGL
     AGLContext aglContext;
@@ -85,14 +92,18 @@ typedef union PluginPort {
     GWorldPtr offscreenGWorld;
 #endif
 
+    WebNetscapePluginEventHandler *eventHandler;
+    
     BOOL isStarted;
     BOOL inSetWindow;
-    BOOL suspendKeyUpEvents;
     BOOL hasFocus;
-    BOOL currentEventIsUserGesture;
     BOOL isTransparent;
     BOOL isCompletelyObscured;
     BOOL shouldStopSoon;
+
+    BOOL shouldFireTimers;
+    uint32 currentTimerID;
+    HashMap<uint32, PluginTimer*>* timers;
 
     unsigned pluginFunctionCallDepth;
     
@@ -106,7 +117,8 @@ typedef union PluginPort {
     NSTrackingRectTag trackingTag;
     NSMutableArray *streams;
     NSMutableDictionary *pendingFrameLoads;
-    NSTimer *nullEventTimer;
+    
+    NPPluginTextInputFuncs *textInputFuncs;
     
     NPP_NewProcPtr NPP_New;
     NPP_DestroyProcPtr NPP_Destroy;
@@ -120,9 +132,7 @@ typedef union PluginPort {
     NPP_HandleEventProcPtr NPP_HandleEvent;
     NPP_URLNotifyProcPtr NPP_URLNotify;
     NPP_GetValueProcPtr NPP_GetValue;
-    NPP_SetValueProcPtr NPP_SetValue;
-    
-    EventHandlerRef keyEventHandler;
+    NPP_SetValueProcPtr NPP_SetValue;    
 }
 
 + (WebBaseNetscapePluginView *)currentPluginView;
@@ -142,6 +152,8 @@ typedef union PluginPort {
 - (BOOL)start;
 - (BOOL)isStarted;
 - (void)stop;
+- (void)stopTimers;
+- (void)restartTimers;
 
 - (WebFrame *)webFrame;
 - (WebDataSource *)dataSource;
@@ -176,6 +188,8 @@ typedef union PluginPort {
 // once for every call to -willCallPlugInFunction.
 // See <rdar://problem/4480737>.
 - (void)didCallPlugInFunction;
+
+- (void)handleMouseMoved:(NSEvent *)event;
 
 @end
 #endif

@@ -29,6 +29,7 @@
 #include "ResourceHandleInternal.h"
 #include "ResourceResponse.h"
 #include "ResourceRequest.h"
+#include <QDateTime>
 #include <QFile>
 #include <QNetworkReply>
 #include <QNetworkCookie>
@@ -36,6 +37,7 @@
 #include <qwebpage.h>
 
 #include <QDebug>
+#include <QCoreApplication>
 
 namespace WebCore {
 
@@ -113,7 +115,7 @@ void FormDataIODevice::setParent(QNetworkReply* reply)
 {
     QIODevice::setParent(reply);
 
-    connect(reply, SIGNAL(finished()), SLOT(slotFinished()));
+    connect(reply, SIGNAL(finished()), SLOT(slotFinished()), Qt::QueuedConnection);
 }
 
 bool FormDataIODevice::isSequential() const
@@ -132,6 +134,7 @@ QNetworkReplyHandler::QNetworkReplyHandler(ResourceHandle *handle)
     , m_reply(0)
     , m_redirected(false)
     , m_responseSent(false)
+    , m_startTime(0)
 {
     const ResourceRequest &r = m_resourceHandle->request();
 
@@ -179,14 +182,19 @@ void QNetworkReplyHandler::finish()
     if (!m_resourceHandle)
         return;
     ResourceHandleClient* client = m_resourceHandle->client();
-    m_reply->deleteLater();
-    if (!client)
+    if (!client) {
+        m_reply->deleteLater();
+        m_reply = 0;
         return;
+    }
+    QNetworkReply* oldReply = m_reply;
     if (m_redirected) {
         m_redirected = false;
         m_responseSent = false;
         start();
-    } else if (m_reply->error() != QNetworkReply::NoError) {
+    } else if (m_reply->error() != QNetworkReply::NoError
+               // a web page that returns 404 can still have content
+               && m_reply->error() != QNetworkReply::ContentNotFoundError) {
         QUrl url = m_reply->url();
         ResourceError error(url.host(), m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(),
                             url.toString(), m_reply->errorString());
@@ -194,6 +202,9 @@ void QNetworkReplyHandler::finish()
     } else {
         client->didFinishLoading(m_resourceHandle);
     }
+    oldReply->deleteLater();
+    if (oldReply == m_reply)
+        m_reply = 0;
 }
 
 void QNetworkReplyHandler::sendResponseIfNeeded()
@@ -221,12 +232,15 @@ void QNetworkReplyHandler::sendResponseIfNeeded()
     }
 
     KURL url(m_reply->url());
-    String contentDisposition = QString::fromAscii(m_reply->rawHeader("Content-Disposition"));
+    String suggestedFilename = filenameFromHTTPContentDisposition(QString::fromAscii(m_reply->rawHeader("Content-Disposition")));
+
+    if (suggestedFilename.isEmpty())
+        suggestedFilename = url.lastPathComponent();
 
     ResourceResponse response(url, mimeType,
                               m_reply->header(QNetworkRequest::ContentLengthHeader).toLongLong(),
                               encoding,
-                              filenameFromHTTPContentDisposition(contentDisposition));
+                              suggestedFilename);
 
     const bool isLocalFileReply = (m_reply->url().scheme() == QLatin1String("file"));
     int statusCode = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -248,6 +262,9 @@ void QNetworkReplyHandler::sendResponseIfNeeded()
 
         response.setHTTPHeaderField(QString::fromAscii(headerName), QString::fromAscii(m_reply->rawHeader(headerName)));
     }
+
+    if (isLocalFileReply)
+        response.setExpirationDate(m_startTime);
 
     QUrl redirection = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
     if (redirection.isValid()) {
@@ -304,6 +321,8 @@ void QNetworkReplyHandler::start()
         && (!url.toLocalFile().isEmpty() || url.scheme() == QLatin1String("data")))
         m_method = QNetworkAccessManager::GetOperation;
 
+    m_startTime = QDateTime::currentDateTime().toTime_t();
+
     switch (m_method) {
         case QNetworkAccessManager::GetOperation:
             m_reply = manager->get(m_request);
@@ -323,23 +342,32 @@ void QNetworkReplyHandler::start()
             putDevice->setParent(m_reply);
             break;
         }
-        case QNetworkAccessManager::UnknownOperation:
-            break; // eh?
+        case QNetworkAccessManager::UnknownOperation: {
+            m_reply = 0;
+            ResourceHandleClient* client = m_resourceHandle->client();
+            if (client) {
+                ResourceError error(url.host(), 400 /*bad request*/,
+                                    url.toString(),
+                                    QCoreApplication::translate("QWebPage", "Bad HTTP request"));
+                client->didFail(m_resourceHandle, error);
+            }
+            return;
+        }
     }
 
     m_reply->setParent(this);
 
     connect(m_reply, SIGNAL(finished()),
-            this, SLOT(finish()));
+            this, SLOT(finish()), Qt::QueuedConnection);
 
     // For http(s) we know that the headers are complete upon metaDataChanged() emission, so we
     // can send the response as early as possible
     if (scheme == QLatin1String("http") || scheme == QLatin1String("https"))
         connect(m_reply, SIGNAL(metaDataChanged()),
-                this, SLOT(sendResponseIfNeeded()));
+                this, SLOT(sendResponseIfNeeded()), Qt::QueuedConnection);
 
     connect(m_reply, SIGNAL(readyRead()),
-            this, SLOT(forwardData()));
+            this, SLOT(forwardData()), Qt::QueuedConnection);
 }
 
 }

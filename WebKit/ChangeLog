@@ -1,3 +1,53 @@
+2008-05-09  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/5774495> Make Unicode text input possible in Netscape-style plug-ins
+        
+        Add nptextinput.h as a public header.
+        
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-05-06  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Andersca.
+
+        prepare for plugin fast teardown work - make WebPluginDatabase a objective C++ file.
+
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Tim.
+
+        Remove npfunctions.h
+        
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-05-01  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Anders Carlsson.
+
+        Turn off deprecated warnings for WebNetscapePluginEventHandlerCarbon.mm.
+
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-04-30  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add Cocoa event handler.
+        
+        * WebKit.xcodeproj/project.pbxproj:
+
+2008-04-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add new event handlers.
+        
+        * WebKit.xcodeproj/project.pbxproj:
+
 2008-04-07  John Sullivan  <sullivan@apple.com>
 
         Reviewed by Tim

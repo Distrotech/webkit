@@ -1,3 +1,89 @@
+2008-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Ooops, I made some mistakes trying to fix the validation errors. This time for sure.
+
+        * demos/transitions-and-transforms/index.html:
+
+2008-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Make the demo valid HTML5 (according to validator.nu) and add alt text to the images.
+
+        * demos/transitions-and-transforms/index.html:
+
+2008-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Tweaked demo visuals slightly.
+
+        * demos/transitions-and-transforms/leopard.css:
+
+2008-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Tweak CSS to look a little better while loading.
+
+        * demos/transitions-and-transforms/leopard.css:
+
+2008-05-12  Maciej Stachowiak  <mjs@apple.com>
+
+        Not reviewed - new demo.
+        
+        Added a demo of CSS Transforms and Transitions.
+
+        * demos/transitions-and-transforms: Added.
+        * demos/transitions-and-transforms/Finder Coverflow.png: Added.
+        * demos/transitions-and-transforms/Horsehead.png: Added.
+        * demos/transitions-and-transforms/Mail Stationery.png: Added.
+        * demos/transitions-and-transforms/Quick Look.png: Added.
+        * demos/transitions-and-transforms/Spaces.png: Added.
+        * demos/transitions-and-transforms/Stacks.png: Added.
+        * demos/transitions-and-transforms/Time Machine.png: Added.
+        * demos/transitions-and-transforms/index.html: Added.
+        * demos/transitions-and-transforms/leopard.css: Added.
+        * demos/transitions-and-transforms/no-style.html: Added.
+
+2008-05-08  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Add a link to the Mac OS Forge terms of use.
+
+        * nav.inc:
+
+2008-04-25  Mark Rowe  <mrowe@apple.com>
+
+        Upgrade to WordPress 2.5.1.  Another day, another security vulnerability in WordPress.
+
+        * blog:
+
+2008-04-21  Dean Jackson  <dino@apple.com>
+
+        Updated CSS Visual Effects proposals.
+        
+        CSS Animations
+
+        * described simplified sandwich model (that animations have no effect
+          outside their duration and last specified animation wins)
+        * diagram showing the above
+        * specified animations to start at style resolution or document load,
+          whichever is later.
+        * animation start events always have elapsedTime == 0
+
+        CSS Transforms
+
+        * removed text saying that elements cannot be drawn as intersecting.
+        * described that preserve-3d trees often need a flattening parent, otherwise
+          elements can be hidden behind their ancestor's background.
+        * describe that preserve-3d is not always possible, such as when
+          overflow is 'hidden'.
+
+        CSS Transitions
+
+        * no change
+
+        * specs/CSSVisualEffects/CSSAnimation.html:
+        * specs/CSSVisualEffects/CSSTransforms.html:
+        * specs/CSSVisualEffects/CSSTransitions.html:
+        * specs/CSSVisualEffects/sandwich.png: Added.
+
 2008-04-08  Dean Jackson  <dino@apple.com>
 
         Add some updated proposals for CSS specifications, such as 

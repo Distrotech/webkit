@@ -52,7 +52,7 @@
 #include "HTMLNames.h"
 #include "HTMLTableCellElement.h"
 #include "HitTestResult.h"
-#include "JSDOMWindowWrapper.h"
+#include "JSDOMWindowShell.h"
 #include "Logging.h"
 #include "MediaFeatureNames.h"
 #include "NP_jsobject.h"
@@ -173,8 +173,8 @@ Frame::~Frame()
     --FrameCounter::count;
 #endif
 
-    if (d->m_jscript && d->m_jscript->haveWindowWrapper())
-        d->m_jscript->windowWrapper()->disconnectFrame();
+    if (d->m_jscript.haveWindowShell())
+        d->m_jscript.windowShell()->disconnectFrame();
 
     disconnectOwnerElement();
     
@@ -185,7 +185,9 @@ Frame::~Frame()
         d->m_view->hide();
         d->m_view->clearFrame();
     }
-  
+
+    disconnectPlatformScriptObjects();
+
     ASSERT(!d->m_lifeSupportTimer.isActive());
 
 #if FRAME_LOADS_USER_STYLESHEET
@@ -198,12 +200,12 @@ Frame::~Frame()
 
 void Frame::init()
 {
-    d->m_loader->init();
+    d->m_loader.init();
 }
 
 FrameLoader* Frame::loader() const
 {
-    return d->m_loader;
+    return &d->m_loader;
 }
 
 FrameView* Frame::view() const
@@ -232,18 +234,14 @@ void Frame::setView(FrameView* view)
     loader()->resetMultipleFormSubmissionProtection();
 }
 
-KJSProxy *Frame::scriptProxy()
+KJSProxy* Frame::scriptProxy()
 {
-    if (!d->m_jscript)
-        d->m_jscript = new KJSProxy(this);
-    return d->m_jscript;
+    return &d->m_jscript;
 }
 
-Document *Frame::document() const
+Document* Frame::document() const
 {
-    if (d)
-        return d->m_doc.get();
-    return 0;
+    return d->m_doc.get();
 }
 
 void Frame::setDocument(PassRefPtr<Document> newDoc)
@@ -259,10 +257,9 @@ void Frame::setDocument(PassRefPtr<Document> newDoc)
         
     if (d->m_doc && !d->m_doc->attached())
         d->m_doc->attach();
-    
+
     // Remove the cached 'document' property, which is now stale.
-    if (d->m_jscript)
-        d->m_jscript->clearDocumentWrapper();
+    d->m_jscript.clearDocumentWrapper();
 }
 
 Settings* Frame::settings() const
@@ -281,11 +278,16 @@ IntRect Frame::firstRectForRange(Range* range) const
     ExceptionCode ec = 0;
     ASSERT(range->startContainer(ec));
     ASSERT(range->endContainer(ec));
-    IntRect startCaretRect = range->startContainer(ec)->renderer()->caretRect(range->startOffset(ec), DOWNSTREAM, &extraWidthToEndOfLine);
-    ASSERT(!ec);
-    IntRect endCaretRect = range->endContainer(ec)->renderer()->caretRect(range->endOffset(ec), UPSTREAM);
-    ASSERT(!ec);
-    
+    InlineBox* startInlineBox;
+    int startCaretOffset;
+    range->startPosition().getInlineBoxAndOffset(DOWNSTREAM, startInlineBox, startCaretOffset);
+    IntRect startCaretRect = range->startContainer(ec)->renderer()->caretRect(startInlineBox, startCaretOffset, &extraWidthToEndOfLine);
+
+    InlineBox* endInlineBox;
+    int endCaretOffset;
+    range->endPosition().getInlineBoxAndOffset(UPSTREAM, endInlineBox, endCaretOffset);
+    IntRect endCaretRect = range->endContainer(ec)->renderer()->caretRect(endInlineBox, endCaretOffset);
+
     if (startCaretRect.y() == endCaretRect.y()) {
         // start and end are on the same line
         return IntRect(min(startCaretRect.x(), endCaretRect.x()), 
@@ -453,6 +455,9 @@ String Frame::searchForLabelsBeforeElement(const Vector<String>& labels, Element
 String Frame::matchLabelsAgainstElement(const Vector<String>& labels, Element* element)
 {
     String name = element->getAttribute(nameAttr);
+    if (name.isEmpty())
+        return String();
+
     // Make numbers and _'s in field names behave like word boundaries, e.g., "address2"
     replace(name, RegularExpression("\\d"), " ");
     name.replace('_', ' ');
@@ -472,7 +477,7 @@ String Frame::matchLabelsAgainstElement(const Vector<String>& labels, Element* e
                 bestPos = pos;
                 bestLength = length;
             }
-            start = pos+1;
+            start = pos + 1;
         }
     } while (pos != -1);
 
@@ -592,9 +597,9 @@ void Frame::selectionLayoutChanged()
         }
     }
 
-    if (!renderer())
+    RenderView* canvas = contentRenderer();
+    if (!canvas)
         return;
-    RenderView* canvas = static_cast<RenderView*>(renderer());
 
     Selection selection = selectionController()->selection();
         
@@ -1114,14 +1119,14 @@ NPObject* Frame::windowScriptNPObject()
     
 void Frame::clearScriptProxy()
 {
-    if (d->m_jscript)
-        d->m_jscript->clear();
+    d->m_jscript.clear();
 }
 
 void Frame::clearDOMWindow()
 {
     if (d->m_domWindow)
         d->m_domWindow->clear();
+    d->m_domWindow = 0;
 }
 
 void Frame::cleanupScriptObjectsForPlugin(void* nativeHandle)
@@ -1163,10 +1168,16 @@ void Frame::clearScriptObjects()
     clearPlatformScriptObjects();
 }
 
-RenderObject *Frame::renderer() const
+RenderView* Frame::contentRenderer() const
 {
-    Document *doc = document();
-    return doc ? doc->renderer() : 0;
+    Document* doc = document();
+    if (!doc)
+        return 0;
+    RenderObject* object = doc->renderer();
+    if (!object)
+        return 0;
+    ASSERT(object->isRenderView());
+    return static_cast<RenderView*>(object);
 }
 
 HTMLFrameOwnerElement* Frame::ownerElement() const
@@ -1174,18 +1185,27 @@ HTMLFrameOwnerElement* Frame::ownerElement() const
     return d->m_ownerElement;
 }
 
-RenderPart* Frame::ownerRenderer()
+RenderPart* Frame::ownerRenderer() const
 {
     HTMLFrameOwnerElement* ownerElement = d->m_ownerElement;
     if (!ownerElement)
         return 0;
-    return static_cast<RenderPart*>(ownerElement->renderer());
+    RenderObject* object = ownerElement->renderer();
+    if (!object)
+        return 0;
+    // FIXME: If <object> is ever fixed to disassociate itself from frames
+    // that it has started but canceled, then this can turn into an ASSERT
+    // since d->m_ownerElement would be 0 when the load is canceled.
+    // https://bugs.webkit.org/show_bug.cgi?id=18585
+    if (!object->isRenderPart())
+        return 0;
+    return static_cast<RenderPart*>(object);
 }
 
 // returns FloatRect because going through IntRect would truncate any floats
 FloatRect Frame::selectionRect(bool clipToVisibleContent) const
 {
-    RenderView *root = static_cast<RenderView*>(renderer());
+    RenderView* root = contentRenderer();
     if (!root)
         return IntRect();
     
@@ -1195,7 +1215,7 @@ FloatRect Frame::selectionRect(bool clipToVisibleContent) const
 
 void Frame::selectionTextRects(Vector<FloatRect>& rects, bool clipToVisibleContent) const
 {
-    RenderView *root = static_cast<RenderView*>(renderer());
+    RenderView* root = contentRenderer();
     if (!root)
         return;
 
@@ -1333,23 +1353,25 @@ void Frame::paint(GraphicsContext* p, const IntRect& rect)
     if (isTopLevelPainter)
         s_currentPaintTimeStamp = currentTime();
     
-    if (renderer()) {
+    if (contentRenderer()) {
         ASSERT(d->m_view && !d->m_view->needsLayout());
         ASSERT(!d->m_isPainting);
         
         d->m_isPainting = true;
         
         // d->m_elementToDraw is used to draw only one element
-        RenderObject *eltRenderer = d->m_elementToDraw ? d->m_elementToDraw->renderer() : 0;
+        RenderObject* eltRenderer = d->m_elementToDraw ? d->m_elementToDraw->renderer() : 0;
         if (d->m_paintRestriction == PaintRestrictionNone)
-            renderer()->document()->invalidateRenderedRectsForMarkersInRect(rect);
-        renderer()->layer()->paint(p, rect, d->m_paintRestriction, eltRenderer);
+            document()->invalidateRenderedRectsForMarkersInRect(rect);
+        contentRenderer()->layer()->paint(p, rect, d->m_paintRestriction, eltRenderer);
         
         d->m_isPainting = false;
 
+#if ENABLE(DASHBOARD_SUPPORT)
         // Regions may have changed as a result of the visibility/z-index of element changing.
-        if (renderer()->document()->dashboardRegionsDirty())
-            renderer()->view()->frameView()->updateDashboardRegions();
+        if (document()->dashboardRegionsDirty())
+            view()->updateDashboardRegions();
+#endif
     } else
         LOG_ERROR("called Frame::paint with nil renderer");
         
@@ -1369,7 +1391,7 @@ bool Frame::isPainting() const
 
 void Frame::adjustPageHeight(float *newBottom, float oldTop, float oldBottom, float bottomLimit)
 {
-    RenderView *root = static_cast<RenderView*>(document()->renderer());
+    RenderView* root = contentRenderer();
     if (root) {
         // Use a context with painting disabled.
         GraphicsContext context((PlatformGraphicsContext*)0);
@@ -1458,12 +1480,11 @@ void Frame::sendScrollEvent()
     doc->dispatchHTMLEvent(scrollEvent, true, false);
 }
 
-void Frame::clearTimers(FrameView *view)
+void Frame::clearTimers(FrameView *view, Document *document)
 {
     if (view) {
         view->unscheduleRelayout();
         if (view->frame()) {
-            Document* document = view->frame()->document();
             if (document && document->renderer() && document->renderer()->hasLayer())
                 document->renderer()->layer()->suspendMarquees();
             view->frame()->animationController()->suspendAnimations();
@@ -1473,7 +1494,7 @@ void Frame::clearTimers(FrameView *view)
 
 void Frame::clearTimers()
 {
-    clearTimers(d->m_view.get());
+    clearTimers(d->m_view.get(), document());
 }
 
 RenderStyle *Frame::styleForSelectionStart(Node *&nodeToRemove) const
@@ -1647,7 +1668,7 @@ unsigned Frame::markAllMatchesForText(const String& target, bool caseFlag, unsig
     // Do a "fake" paint in order to execute the code that computes the rendered rect for 
     // each text match.
     Document* doc = document();
-    if (doc && d->m_view && renderer()) {
+    if (doc && d->m_view && contentRenderer()) {
         doc->updateLayout(); // Ensure layout is up to date.
         IntRect visibleRect(enclosingIntRect(d->m_view->visibleContentRect()));
         GraphicsContext context((PlatformGraphicsContext*)0);
@@ -1704,9 +1725,9 @@ void Frame::pageDestroyed()
         d->m_page->focusController()->setFocusedFrame(0);
 
     // This will stop any JS timers
-    if (d->m_jscript && d->m_jscript->haveWindowWrapper()) {
-        if (JSDOMWindowWrapper* windowWrapper = toJSDOMWindowWrapper(this))
-            windowWrapper->disconnectFrame();
+    if (d->m_jscript.haveWindowShell()) {
+        if (JSDOMWindowShell* windowShell = toJSDOMWindowShell(this))
+            windowShell->disconnectFrame();
     }
 
     clearScriptObjects();
@@ -1877,7 +1898,7 @@ Document* Frame::documentAtPoint(const IntPoint& point)
     IntPoint pt = view()->windowToContents(point);
     HitTestResult result = HitTestResult(pt);
     
-    if (renderer())
+    if (contentRenderer())
         result = eventHandler()->hitTestResultAtPoint(pt, false);
     return result.innerNode() ? result.innerNode()->document() : 0;
 }
@@ -1886,8 +1907,9 @@ FramePrivate::FramePrivate(Page* page, Frame* parent, Frame* thisFrame, HTMLFram
                            FrameLoaderClient* frameLoaderClient)
     : m_page(page)
     , m_treeNode(thisFrame, parent)
+    , m_loader(thisFrame, frameLoaderClient)
     , m_ownerElement(ownerElement)
-    , m_jscript(0)
+    , m_jscript(thisFrame)
     , m_zoomFactor(parent ? parent->d->m_zoomFactor : 1.0f)
     , m_zoomFactorIsTextOnly(parent ? parent->d->m_zoomFactorIsTextOnly : true)
     , m_selectionGranularity(CharacterGranularity)
@@ -1900,7 +1922,6 @@ FramePrivate::FramePrivate(Page* page, Frame* parent, Frame* thisFrame, HTMLFram
     , m_caretPaint(true)
     , m_isPainting(false)
     , m_lifeSupportTimer(thisFrame, &Frame::lifeSupportTimerFired)
-    , m_loader(new FrameLoader(thisFrame, frameLoaderClient))
     , m_paintRestriction(PaintRestrictionNone)
     , m_highlightTextMatches(false)
     , m_inViewSourceMode(false)
@@ -1921,8 +1942,6 @@ FramePrivate::FramePrivate(Page* page, Frame* parent, Frame* thisFrame, HTMLFram
 
 FramePrivate::~FramePrivate()
 {
-    delete m_jscript;
-    delete m_loader;
 }
 
 } // namespace WebCore

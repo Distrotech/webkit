@@ -356,8 +356,8 @@ void CanvasRenderingContext2D::transform(float m11, float m12, float m21, float 
         return;
     
     // HTML5 3.14.11.1 -- ignore any calls that pass non-finite numbers
-    if (!isfinite(m11) || !isfinite(m21) || !isfinite(dx) || 
-        !isfinite(m12) || !isfinite(m22) || !isfinite(dy))
+    if (!isfinite(m11) | !isfinite(m21) | !isfinite(dx) | 
+        !isfinite(m12) | !isfinite(m22) | !isfinite(dy))
         return;
     AffineTransform transform(m11, m12, m21, m22, dx, dy);
     c->concatCTM(transform);
@@ -437,54 +437,87 @@ void CanvasRenderingContext2D::closePath()
 
 void CanvasRenderingContext2D::moveTo(float x, float y)
 {
+    if (!isfinite(x) | !isfinite(y))
+        return;
     m_path.moveTo(FloatPoint(x, y));
 }
 
 void CanvasRenderingContext2D::lineTo(float x, float y)
 {
+    if (!isfinite(x) | !isfinite(y))
+        return;
     m_path.addLineTo(FloatPoint(x, y));
 }
 
 void CanvasRenderingContext2D::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
+    if (!isfinite(cpx) | !isfinite(cpy) | !isfinite(x) | !isfinite(y))
+        return;
     m_path.addQuadCurveTo(FloatPoint(cpx, cpy), FloatPoint(x, y));
 }
 
 void CanvasRenderingContext2D::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y, float x, float y)
 {
+    if (!isfinite(cp1x) | !isfinite(cp1y) | !isfinite(cp2x) | !isfinite(cp2y) | !isfinite(x) | !isfinite(y))
+        return;
     m_path.addBezierCurveTo(FloatPoint(cp1x, cp1y), FloatPoint(cp2x, cp2y), FloatPoint(x, y));
 }
 
 void CanvasRenderingContext2D::arcTo(float x0, float y0, float x1, float y1, float r, ExceptionCode& ec)
 {
     ec = 0;
-    if (!(r > 0)) {
+    if (!isfinite(x0) | !isfinite(y0) | !isfinite(x1) | !isfinite(y1) | !isfinite(r))
+        return;
+    
+    if (r < 0) {
         ec = INDEX_SIZE_ERR;
         return;
     }
+    
     m_path.addArcTo(FloatPoint(x0, y0), FloatPoint(x1, y1), r);
 }
 
 void CanvasRenderingContext2D::arc(float x, float y, float r, float sa, float ea, bool anticlockwise, ExceptionCode& ec)
 {
     ec = 0;
-    if (!(r >= 0)) {
+    if (!isfinite(x) | !isfinite(y) | !isfinite(r) | !isfinite(sa) | !isfinite(ea))
+        return;
+    
+    if (r < 0) {
         ec = INDEX_SIZE_ERR;
         return;
     }
+    
     m_path.addArc(FloatPoint(x, y), r, sa, ea, anticlockwise);
 }
-
-void CanvasRenderingContext2D::rect(float x, float y, float width, float height, ExceptionCode& ec)
+    
+static bool validateRectForCanvas(float& x, float& y, float& width, float& height)
 {
-    ec = 0;
-    if (!(width >= 0 && height >= 0)) {
-        ec = INDEX_SIZE_ERR;
-        return;
+    if (!isfinite(x) | !isfinite(y) | !isfinite(width) | !isfinite(height))
+        return false;
+    
+    if (width < 0) {
+        width = -width;
+        x -= width;
     }
+    
+    if (height < 0) {
+        height = -height;
+        y -= height;
+    }
+    
+    return true;
+}
+
+void CanvasRenderingContext2D::rect(float x, float y, float width, float height)
+{
+    if (!validateRectForCanvas(x, y, width, height))
+        return;
+        
     m_path.addRect(FloatRect(x, y, width, height));
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
 void CanvasRenderingContext2D::clearPathForDashboardBackwardCompatibilityMode()
 {
     if (m_canvas)
@@ -492,6 +525,7 @@ void CanvasRenderingContext2D::clearPathForDashboardBackwardCompatibilityMode()
             if (settings->usesDashboardBackwardCompatibilityMode())
                 m_path.clear();
 }
+#endif
 
 void CanvasRenderingContext2D::fill()
 {
@@ -541,7 +575,9 @@ void CanvasRenderingContext2D::fill()
     cairo_restore(cr);
 #endif
 
+#if ENABLE(DASHBOARD_SUPPORT)
     clearPathForDashboardBackwardCompatibilityMode();
+#endif
 }
 
 void CanvasRenderingContext2D::stroke()
@@ -604,7 +640,9 @@ void CanvasRenderingContext2D::stroke()
     cairo_restore(cr);
 #endif
 
+#if ENABLE(DASHBOARD_SUPPORT)
     clearPathForDashboardBackwardCompatibilityMode();
+#endif
 }
 
 void CanvasRenderingContext2D::clip()
@@ -613,7 +651,9 @@ void CanvasRenderingContext2D::clip()
     if (!c)
         return;
     c->clip(m_path);
+#if ENABLE(DASHBOARD_SUPPORT)
     clearPathForDashboardBackwardCompatibilityMode();
+#endif
 }
 
 bool CanvasRenderingContext2D::isPointInPath(const float x, const float y)
@@ -631,13 +671,10 @@ bool CanvasRenderingContext2D::isPointInPath(const float x, const float y)
     return m_path.contains(transformedPoint);
 }
 
-void CanvasRenderingContext2D::clearRect(float x, float y, float width, float height, ExceptionCode& ec)
+void CanvasRenderingContext2D::clearRect(float x, float y, float width, float height)
 {
-    ec = 0;
-    if (!(width >= 0 && height >= 0)) {
-        ec = INDEX_SIZE_ERR;
+    if (!validateRectForCanvas(x, y, width, height))
         return;
-    }
     GraphicsContext* c = drawingContext();
     if (!c)
         return;
@@ -646,14 +683,10 @@ void CanvasRenderingContext2D::clearRect(float x, float y, float width, float he
     c->clearRect(rect);
 }
 
-void CanvasRenderingContext2D::fillRect(float x, float y, float width, float height, ExceptionCode& ec)
+void CanvasRenderingContext2D::fillRect(float x, float y, float width, float height)
 {
-    ec = 0;
-
-    if (!(width >= 0 && height >= 0)) {
-        ec = INDEX_SIZE_ERR;
+    if (!validateRectForCanvas(x, y, width, height))
         return;
-    }
 
     GraphicsContext* c = drawingContext();
     if (!c)
@@ -699,19 +732,20 @@ void CanvasRenderingContext2D::fillRect(float x, float y, float width, float hei
 #endif
 }
 
-void CanvasRenderingContext2D::strokeRect(float x, float y, float width, float height, ExceptionCode& ec)
+void CanvasRenderingContext2D::strokeRect(float x, float y, float width, float height)
 {
-    strokeRect(x, y, width, height, state().m_lineWidth, ec);
+    if (!validateRectForCanvas(x, y, width, height))
+        return;
+    strokeRect(x, y, width, height, state().m_lineWidth);
 }
 
-void CanvasRenderingContext2D::strokeRect(float x, float y, float width, float height, float lineWidth, ExceptionCode& ec)
+void CanvasRenderingContext2D::strokeRect(float x, float y, float width, float height, float lineWidth)
 {
-    ec = 0;
-
-    if (!(width >= 0 && height >= 0 && lineWidth >= 0)) {
-        ec = INDEX_SIZE_ERR;
+    if (!validateRectForCanvas(x, y, width, height))
         return;
-    }
+    
+    if (!(lineWidth >= 0))
+        return;
 
     GraphicsContext* c = drawingContext();
     if (!c)
@@ -910,9 +944,8 @@ void CanvasRenderingContext2D::drawImage(HTMLImageElement* image,
 
 void CanvasRenderingContext2D::checkOrigin(const KURL& url)
 {
-    RefPtr<SecurityOrigin> origin = SecurityOrigin::create(url.protocol(), url.host(), url.port(), 0);
-    SecurityOrigin::Reason reason;
-    if (!m_canvas->document()->securityOrigin()->canAccess(origin.get(), reason))
+    RefPtr<SecurityOrigin> origin = SecurityOrigin::create(url);
+    if (!m_canvas->document()->securityOrigin()->canAccess(origin.get()))
         m_canvas->setOriginTainted();
 }
 
@@ -996,8 +1029,9 @@ void CanvasRenderingContext2D::drawImage(HTMLCanvasElement* canvas, const FloatR
     if (!canvas->originClean())
         m_canvas->setOriginTainted();
 
-    willDraw(destRect);
-    c->drawImage(buffer->image(), sourceRect, destRect);
+    c->drawImage(buffer->image(), destRect, sourceRect);
+    willDraw(destRect); // This call comes after drawImage, since the buffer we draw into may be our own, and we need to make sure it is dirty.
+                        // FIXME: Arguably willDraw should become didDraw and occur after drawing calls and not before them to avoid problems like this.
 }
 
 // FIXME: Why isn't this just another overload of drawImage? Why have a different name?
@@ -1061,9 +1095,8 @@ PassRefPtr<CanvasPattern> CanvasRenderingContext2D::createPattern(HTMLImageEleme
     bool originClean = true;
     if (CachedImage* cachedImage = image->cachedImage()) {
         KURL url(cachedImage->url());
-        RefPtr<SecurityOrigin> origin = SecurityOrigin::create(url.protocol(), url.host(), url.port(), 0);
-        SecurityOrigin::Reason reason;
-        originClean = m_canvas->document()->securityOrigin()->canAccess(origin.get(), reason);
+        RefPtr<SecurityOrigin> origin = SecurityOrigin::create(url);
+        originClean = m_canvas->document()->securityOrigin()->canAccess(origin.get());
     }
     return new CanvasPattern(image->cachedImage(), repeatX, repeatY, originClean);
 }

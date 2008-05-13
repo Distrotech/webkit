@@ -111,15 +111,14 @@ PassRefPtr<StorageMap> StorageMap::setItem(const String& key, const String& valu
     pair<HashMap<String, String>::iterator, bool> addResult = m_map.add(key, value);
 
     if (addResult.second) {
-        // If the add succeeded, the map has been mutated and the iterator needs to be invalidated
-        invalidateIterator();
-        
-        // Plus, there was no "oldValue" so null it out.
+        // There was no "oldValue" so null it out.
         oldValue = String();
     } else {
         oldValue = addResult.first->second;
-        m_map.set(key, value);
+        addResult.first->second = value;
     }
+
+    invalidateIterator();
 
     return 0;
 }
@@ -144,6 +143,16 @@ PassRefPtr<StorageMap> StorageMap::removeItem(const String& key, String& oldValu
 bool StorageMap::contains(const String& key) const
 {
     return m_map.contains(key);
+}
+
+void StorageMap::importItem(const String& key, const String& value) const
+{
+    // Be sure to copy the keys/values as items imported on a background thread are destined
+    // to cross a thread boundary
+    pair<HashMap<String, String>::iterator, bool> result = m_map.add(key.copy(), String());
+
+    if (result.second)
+        result.first->second = value.copy();
 }
 
 }

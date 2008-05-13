@@ -30,8 +30,7 @@
 #include "config.h"
 #include "JSGlobalObject.h"
 
-#include "CodeBlock.h"
-#include "SavedBuiltins.h"
+#include "Activation.h"
 #include "array_object.h"
 #include "bool_object.h"
 #include "date_object.h"
@@ -44,6 +43,11 @@
 #include "regexp_object.h"
 #include "scope_chain_mark.h"
 #include "string_object.h"
+
+#if USE(MULTIPLE_THREADS)
+#include <wtf/ThreadSpecific.h>
+using namespace WTF;
+#endif
 
 #if HAVE(SYS_TIME_H)
 #include <sys/time.h>
@@ -58,6 +62,14 @@
 #endif
 
 namespace KJS {
+
+extern const HashTable arrayTable;
+extern const HashTable dateTable;
+extern const HashTable mathTable;
+extern const HashTable numberTable;
+extern const HashTable RegExpImpTable;
+extern const HashTable RegExpObjectImpTable;
+extern const HashTable stringTable;
 
 // Default number of ticks before a timeout check should be done.
 static const int initialTickCountThreshold = 255;
@@ -92,6 +104,15 @@ static inline unsigned getCurrentTime()
 
 JSGlobalObject* JSGlobalObject::s_head = 0;
 
+void JSGlobalObject::deleteActivationStack()
+{
+    ActivationStackNode* prevNode = 0;
+    for (ActivationStackNode* currentNode = d()->activations; currentNode; currentNode = prevNode) {
+        prevNode = currentNode->prev;
+        delete currentNode;
+    }
+}
+
 JSGlobalObject::~JSGlobalObject()
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
@@ -104,15 +125,68 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
-
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->globalObject = 0;
+    
+    deleteActivationStack();
     
     delete d();
 }
 
-void JSGlobalObject::init()
+struct ThreadClassInfoHashTables {
+    ThreadClassInfoHashTables()
+        : arrayTable(KJS::arrayTable)
+        , dateTable(KJS::dateTable)
+        , mathTable(KJS::mathTable)
+        , numberTable(KJS::numberTable)
+        , RegExpImpTable(KJS::RegExpImpTable)
+        , RegExpObjectImpTable(KJS::RegExpObjectImpTable)
+        , stringTable(KJS::stringTable)
+    {
+    }
+
+    ~ThreadClassInfoHashTables()
+    {
+#if USE(MULTIPLE_THREADS)
+        delete[] arrayTable.table;
+        delete[] dateTable.table;
+        delete[] mathTable.table;
+        delete[] numberTable.table;
+        delete[] RegExpImpTable.table;
+        delete[] RegExpObjectImpTable.table;
+        delete[] stringTable.table;
+#endif
+    }
+
+#if USE(MULTIPLE_THREADS)
+    HashTable arrayTable;
+    HashTable dateTable;
+    HashTable mathTable;
+    HashTable numberTable;
+    HashTable RegExpImpTable;
+    HashTable RegExpObjectImpTable;
+    HashTable stringTable;
+#else
+    const HashTable& arrayTable;
+    const HashTable& dateTable;
+    const HashTable& mathTable;
+    const HashTable& numberTable;
+    const HashTable& RegExpImpTable;
+    const HashTable& RegExpObjectImpTable;
+    const HashTable& stringTable;
+#endif
+};
+
+ThreadClassInfoHashTables* JSGlobalObject::threadClassInfoHashTables()
+{
+#if USE(MULTIPLE_THREADS)
+    static ThreadSpecific<ThreadClassInfoHashTables> sharedInstance;
+    return sharedInstance;
+#else
+    static ThreadClassInfoHashTables sharedInstance;
+    return &sharedInstance;
+#endif
+}
+
+void JSGlobalObject::init(JSObject* thisValue)
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
 
@@ -131,42 +205,25 @@ void JSGlobalObject::init()
     d()->recursion = 0;
     d()->debugger = 0;
     
+    ActivationStackNode* newStackNode = new ActivationStackNode;
+    newStackNode->prev = 0;    
+    d()->activations = newStackNode;
+    d()->activationCount = 0;
+
+    d()->perThreadData.arrayTable = &threadClassInfoHashTables()->arrayTable;
+    d()->perThreadData.dateTable = &threadClassInfoHashTables()->dateTable;
+    d()->perThreadData.mathTable = &threadClassInfoHashTables()->mathTable;
+    d()->perThreadData.numberTable = &threadClassInfoHashTables()->numberTable;
+    d()->perThreadData.RegExpImpTable = &threadClassInfoHashTables()->RegExpImpTable;
+    d()->perThreadData.RegExpObjectImpTable = &threadClassInfoHashTables()->RegExpObjectImpTable;
+    d()->perThreadData.stringTable = &threadClassInfoHashTables()->stringTable;
+    d()->perThreadData.propertyNames = CommonIdentifiers::shared();
+
+    d()->globalExec.set(new GlobalExecState(this, thisValue));
+
+    d()->pageGroupIdentifier = 0;
+
     reset(prototype());
-}
-
-void JSGlobalObject::saveLocalStorage(SavedProperties& p) const
-{
-    unsigned count = symbolTable().size();
-
-    p.properties.clear();
-    p.count = count;
-
-    if (!count)
-        return;
-
-    p.properties.set(new SavedProperty[count]);
-
-    SymbolTable::const_iterator end = symbolTable().end();
-    size_t i = 0;
-    for (SymbolTable::const_iterator it = symbolTable().begin(); it != end; ++i, ++it)
-        p.properties[i].init(it->first.get(), valueAt(it->second.getIndex()), it->second.getAttributes());
-}
-
-void JSGlobalObject::restoreLocalStorage(const SavedProperties& p)
-{
-    unsigned count = p.count;
-    symbolTable().clear();
-    registerFileStack().current()->clear();
-    registerFileStack().current()->addGlobalSlots(count);
-    SavedProperty* property = p.properties.get();
-    ASSERT(static_cast<int>(count) < std::numeric_limits<int>::max());
-    for (int i = -static_cast<int>(count); i < 0; ++i, ++property) {
-        ASSERT(!symbolTable().contains(property->name()));
-        symbolTable().set(property->name(), i);
-        valueAt(i) = property->value();
-        // FIXME: Fetch attributes from the SavedProperty and store them in the symbol table.
-        ASSERT((property->attributes() & ReadOnly) == 0 && (property->attributes() & DontEnum) == 0);
-    }
 }
 
 bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -211,7 +268,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    registerFileStack().current()->clear();
+    localStorage().clear();
     symbolTable().clear();
 
     // Prototypes
@@ -253,7 +310,7 @@ void JSGlobalObject::reset(JSValue* prototype)
 
     d()->evalFunction = 0;
 
-    ExecState* exec = &d()->globalExec;
+    ExecState* exec = d()->globalExec.get();
 
     // Prototypes
     d()->functionPrototype = new FunctionPrototype(exec);
@@ -332,11 +389,21 @@ void JSGlobalObject::reset(JSValue* prototype)
     putDirect("URIError", d()->URIErrorConstructor);
 
     // Set global values.
-
-    putDirect("Math", new MathObjectImp(exec, d()->objectPrototype), DontEnum);
-    putDirect("NaN", jsNaN(), DontEnum | DontDelete);
-    putDirect("Infinity", jsNumber(Inf), DontEnum | DontDelete);
-    putDirect("undefined", jsUndefined(), DontEnum | DontDelete);
+    Identifier mathIdent = "Math";
+    JSValue* mathObject = new MathObjectImp(exec, d()->objectPrototype);
+    symbolTableInsert(mathIdent, mathObject, DontEnum | DontDelete);
+    
+    Identifier nanIdent = "NaN";
+    JSValue* nanValue = jsNaN();
+    symbolTableInsert(nanIdent, nanValue, DontEnum | DontDelete);
+    
+    Identifier infinityIdent = "Infinity";
+    JSValue* infinityValue = jsNumber(Inf);
+    symbolTableInsert(infinityIdent, infinityValue, DontEnum | DontDelete);
+    
+    Identifier undefinedIdent = "undefined";
+    JSValue* undefinedValue = jsUndefined();
+    symbolTableInsert(undefinedIdent, undefinedValue, DontEnum | DontDelete);
 
     // Set global functions.
 
@@ -422,97 +489,15 @@ bool JSGlobalObject::checkTimeout()
     return false;
 }
 
-void JSGlobalObject::saveBuiltins(SavedBuiltins& builtins) const
-{
-    if (!builtins._internal)
-        builtins._internal = new SavedBuiltinsInternal;
-
-    builtins._internal->objectConstructor = d()->objectConstructor;
-    builtins._internal->functionConstructor = d()->functionConstructor;
-    builtins._internal->arrayConstructor = d()->arrayConstructor;
-    builtins._internal->booleanConstructor = d()->booleanConstructor;
-    builtins._internal->stringConstructor = d()->stringConstructor;
-    builtins._internal->numberConstructor = d()->numberConstructor;
-    builtins._internal->dateConstructor = d()->dateConstructor;
-    builtins._internal->regExpConstructor = d()->regExpConstructor;
-    builtins._internal->errorConstructor = d()->errorConstructor;
-    builtins._internal->evalErrorConstructor = d()->evalErrorConstructor;
-    builtins._internal->rangeErrorConstructor = d()->rangeErrorConstructor;
-    builtins._internal->referenceErrorConstructor = d()->referenceErrorConstructor;
-    builtins._internal->syntaxErrorConstructor = d()->syntaxErrorConstructor;
-    builtins._internal->typeErrorConstructor = d()->typeErrorConstructor;
-    builtins._internal->URIErrorConstructor = d()->URIErrorConstructor;
-    
-    builtins._internal->evalFunction = d()->evalFunction;
-    
-    builtins._internal->objectPrototype = d()->objectPrototype;
-    builtins._internal->functionPrototype = d()->functionPrototype;
-    builtins._internal->arrayPrototype = d()->arrayPrototype;
-    builtins._internal->booleanPrototype = d()->booleanPrototype;
-    builtins._internal->stringPrototype = d()->stringPrototype;
-    builtins._internal->numberPrototype = d()->numberPrototype;
-    builtins._internal->datePrototype = d()->datePrototype;
-    builtins._internal->regExpPrototype = d()->regExpPrototype;
-    builtins._internal->errorPrototype = d()->errorPrototype;
-    builtins._internal->evalErrorPrototype = d()->evalErrorPrototype;
-    builtins._internal->rangeErrorPrototype = d()->rangeErrorPrototype;
-    builtins._internal->referenceErrorPrototype = d()->referenceErrorPrototype;
-    builtins._internal->syntaxErrorPrototype = d()->syntaxErrorPrototype;
-    builtins._internal->typeErrorPrototype = d()->typeErrorPrototype;
-    builtins._internal->URIErrorPrototype = d()->URIErrorPrototype;
-}
-
-void JSGlobalObject::restoreBuiltins(const SavedBuiltins& builtins)
-{
-    if (!builtins._internal)
-        return;
-
-    d()->objectConstructor = builtins._internal->objectConstructor;
-    d()->functionConstructor = builtins._internal->functionConstructor;
-    d()->arrayConstructor = builtins._internal->arrayConstructor;
-    d()->booleanConstructor = builtins._internal->booleanConstructor;
-    d()->stringConstructor = builtins._internal->stringConstructor;
-    d()->numberConstructor = builtins._internal->numberConstructor;
-    d()->dateConstructor = builtins._internal->dateConstructor;
-    d()->regExpConstructor = builtins._internal->regExpConstructor;
-    d()->errorConstructor = builtins._internal->errorConstructor;
-    d()->evalErrorConstructor = builtins._internal->evalErrorConstructor;
-    d()->rangeErrorConstructor = builtins._internal->rangeErrorConstructor;
-    d()->referenceErrorConstructor = builtins._internal->referenceErrorConstructor;
-    d()->syntaxErrorConstructor = builtins._internal->syntaxErrorConstructor;
-    d()->typeErrorConstructor = builtins._internal->typeErrorConstructor;
-    d()->URIErrorConstructor = builtins._internal->URIErrorConstructor;
-    
-    d()->evalFunction = builtins._internal->evalFunction;
-
-    d()->objectPrototype = builtins._internal->objectPrototype;
-    d()->functionPrototype = builtins._internal->functionPrototype;
-    d()->arrayPrototype = builtins._internal->arrayPrototype;
-    d()->booleanPrototype = builtins._internal->booleanPrototype;
-    d()->stringPrototype = builtins._internal->stringPrototype;
-    d()->numberPrototype = builtins._internal->numberPrototype;
-    d()->datePrototype = builtins._internal->datePrototype;
-    d()->regExpPrototype = builtins._internal->regExpPrototype;
-    d()->errorPrototype = builtins._internal->errorPrototype;
-    d()->evalErrorPrototype = builtins._internal->evalErrorPrototype;
-    d()->rangeErrorPrototype = builtins._internal->rangeErrorPrototype;
-    d()->referenceErrorPrototype = builtins._internal->referenceErrorPrototype;
-    d()->syntaxErrorPrototype = builtins._internal->syntaxErrorPrototype;
-    d()->typeErrorPrototype = builtins._internal->typeErrorPrototype;
-    d()->URIErrorPrototype = builtins._internal->URIErrorPrototype;
-}
-
 void JSGlobalObject::mark()
 {
     JSVariableObject::mark();
-    
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->mark();
 
-    registerFileStack().mark();
+    ExecStateStack::const_iterator end = d()->activeExecStates.end();
+    for (ExecStateStack::const_iterator it = d()->activeExecStates.begin(); it != end; ++it)
+        (*it)->m_scopeChain.mark();
 
-    markIfNeeded(d()->globalExec.exception());
+    markIfNeeded(d()->globalExec->exception());
 
     markIfNeeded(d()->objectConstructor);
     markIfNeeded(d()->functionConstructor);
@@ -556,12 +541,35 @@ JSGlobalObject* JSGlobalObject::toGlobalObject(ExecState*) const
 
 ExecState* JSGlobalObject::globalExec()
 {
-    return &d()->globalExec;
+    return d()->globalExec.get();
+}
+
+void JSGlobalObject::tearOffActivation(ExecState* exec, bool leaveRelic)
+{
+    ActivationImp* oldActivation = exec->activationObject();
+    if (!oldActivation || !oldActivation->isOnStack())
+        return;
+
+    ASSERT(exec->codeType() == FunctionCode);
+    ActivationImp* newActivation = new ActivationImp(*oldActivation->d(), leaveRelic);
+    
+    if (!leaveRelic) {
+        checkActivationCount();
+        d()->activationCount--;
+    }
+    
+    oldActivation->d()->localStorage.shrink(0);
+    
+    exec->setActivationObject(newActivation);
+    exec->setVariableObject(newActivation);
+    exec->setLocalStorage(&newActivation->localStorage());
+    exec->replaceScopeChainTop(newActivation);
 }
 
 bool JSGlobalObject::isDynamicScope() const
 {
     return true;
 }
+
 
 } // namespace KJS

@@ -44,7 +44,7 @@ namespace KJS {
     public:
         ErrorObjectImp(ExecState*, FunctionPrototype*, ErrorPrototype*);
 
-        virtual ConstructType getConstructData(ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual JSObject* construct(ExecState*, const List&);
 
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
@@ -59,9 +59,8 @@ namespace KJS {
     public:
         NativeErrorImp(ExecState*, FunctionPrototype*, NativeErrorPrototype*);
 
-        virtual ConstructType getConstructData(ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual JSObject* construct(ExecState*, const List&);
-
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
 
         virtual void mark();

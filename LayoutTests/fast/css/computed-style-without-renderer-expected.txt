@@ -86,6 +86,7 @@ Computed style of an element whose parent's 'display' value is 'none':
     -webkit-background-origin: padding
     -webkit-background-size: auto auto
     -webkit-border-fit: border
+    -webkit-border-image: none
     -webkit-border-horizontal-spacing: 0px
     -webkit-border-vertical-spacing: 0px
     -webkit-box-align: stretch
@@ -96,6 +97,7 @@ Computed style of an element whose parent's 'display' value is 'none':
     -webkit-box-ordinal-group: 1
     -webkit-box-orient: horizontal
     -webkit-box-pack: start
+    -webkit-box-reflect: none
     -webkit-box-shadow: none
     -webkit-box-sizing: content-box
     -webkit-column-break-after: auto
@@ -116,6 +118,15 @@ Computed style of an element whose parent's 'display' value is 'none':
     -webkit-marquee-increment: 6px
     -webkit-marquee-repetition: infinite
     -webkit-marquee-style: scroll
+    -webkit-mask-attachment: scroll
+    -webkit-mask-box-image: none
+    -webkit-mask-image: none
+    -webkit-mask-position: 0% 0%
+    -webkit-mask-repeat: repeat
+    -webkit-mask-clip: border
+    -webkit-mask-composite: source-over
+    -webkit-mask-origin: border
+    -webkit-mask-size: auto auto
     -webkit-nbsp-mode: normal
     -webkit-rtl-ordering: logical
     -webkit-text-decorations-in-effect: none

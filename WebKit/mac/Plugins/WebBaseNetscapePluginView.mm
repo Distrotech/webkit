@@ -46,6 +46,7 @@
 #import "WebNSViewExtras.h"
 #import "WebNetscapePluginPackage.h"
 #import "WebNetscapePluginStream.h"
+#import "WebNetscapePluginEventHandler.h"
 #import "WebNullPluginView.h"
 #import "WebPreferences.h"
 #import "WebViewInternal.h"
@@ -62,15 +63,12 @@
 #import <WebCore/Page.h> 
 #import <WebCore/SoftLinking.h> 
 #import <WebCore/WebCoreObjCExtras.h>
+#import <WebKit/nptextinput.h>
 #import <WebKit/DOMPrivate.h>
 #import <WebKit/WebUIDelegate.h>
 #import <objc/objc-runtime.h>
 
 using namespace WebCore;
-
-// Send null events 50 times a second when active, so plug-ins like Flash get high frame rates.
-#define NullEventIntervalActive         0.02
-#define NullEventIntervalNotActive      0.25
 
 #define LoginWindowDidSwitchFromUserNotification    @"WebLoginWindowDidSwitchFromUserNotification"
 #define LoginWindowDidSwitchToUserNotification      @"WebLoginWindowDidSwitchToUserNotification"
@@ -119,6 +117,47 @@ static WebBaseNetscapePluginView *currentPluginView = nil;
 
 typedef struct OpaquePortState* PortState;
 
+static const double ThrottledTimerInterval = 0.25;
+
+class PluginTimer : public TimerBase {
+public:
+    typedef void (*TimerFunc)(NPP npp, uint32 timerID);
+    
+    PluginTimer(NPP npp, uint32 timerID, uint32 interval, NPBool repeat, TimerFunc timerFunc)
+        : m_npp(npp)
+        , m_timerID(timerID)
+        , m_interval(interval)
+        , m_repeat(repeat)
+        , m_timerFunc(timerFunc)
+    {
+    }
+    
+    void start(bool throttle)
+    {
+        ASSERT(!isActive());
+        
+        double timeInterval = throttle ? ThrottledTimerInterval : m_interval / 1000.0;
+        if (m_repeat)
+            startRepeating(timeInterval);
+        else
+            startOneShot(timeInterval);
+    }
+
+private:
+    virtual void fired() 
+    {
+        m_timerFunc(m_npp, m_timerID);
+        if (!m_repeat)
+            delete this;
+    }
+    
+    NPP m_npp;
+    uint32 m_timerID;
+    uint32 m_interval;
+    NPBool m_repeat;
+    TimerFunc m_timerFunc;
+};
+
 #ifndef NP_NO_QUICKDRAW
 
 // QuickDraw is not available in 64-bit
@@ -142,6 +181,11 @@ typedef struct {
 typedef struct {
     AGLContext oldContext;
 } PortState_GL;
+
+@class NSInputContext;
+@interface NSResponder (IMSecretsIKnowAbout)
+- (NSInputContext *)inputContext;
+@end
 
 @interface WebPluginRequest : NSObject
 {
@@ -167,8 +211,6 @@ typedef struct {
 - (NSInteger)_web_locationAfterFirstBlankLine;
 @end
 
-static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEvent, void *pluginView);
-
 @interface WebBaseNetscapePluginView (ForwardDeclarations)
 - (void)setWindowIfNecessary;
 - (NPError)loadRequest:(NSMutableURLRequest *)request inTarget:(const char *)cTarget withNotifyData:(void *)notifyData sendNotification:(BOOL)sendNotification;
@@ -185,72 +227,6 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 }
 
 #pragma mark EVENTS
-
-+ (void)getCarbonEvent:(EventRecord *)carbonEvent
-{
-    carbonEvent->what = nullEvent;
-    carbonEvent->message = 0;
-    carbonEvent->when = TickCount();
-    
-    GetGlobalMouse(&carbonEvent->where);
-    carbonEvent->where.h = static_cast<short>(carbonEvent->where.h * HIGetScaleFactor());
-    carbonEvent->where.v = static_cast<short>(carbonEvent->where.v * HIGetScaleFactor());
-    carbonEvent->modifiers = GetCurrentKeyModifiers();
-    if (!Button())
-        carbonEvent->modifiers |= btnState;
-}
-
-- (void)getCarbonEvent:(EventRecord *)carbonEvent
-{
-    [[self class] getCarbonEvent:carbonEvent];
-}
-
-- (EventModifiers)modifiersForEvent:(NSEvent *)event
-{
-    EventModifiers modifiers;
-    unsigned int modifierFlags = [event modifierFlags];
-    NSEventType eventType = [event type];
-    
-    modifiers = 0;
-    
-    if (eventType != NSLeftMouseDown && eventType != NSRightMouseDown)
-        modifiers |= btnState;
-    
-    if (modifierFlags & NSCommandKeyMask)
-        modifiers |= cmdKey;
-    
-    if (modifierFlags & NSShiftKeyMask)
-        modifiers |= shiftKey;
-
-    if (modifierFlags & NSAlphaShiftKeyMask)
-        modifiers |= alphaLock;
-
-    if (modifierFlags & NSAlternateKeyMask)
-        modifiers |= optionKey;
-
-    if (modifierFlags & NSControlKeyMask || eventType == NSRightMouseDown)
-        modifiers |= controlKey;
-    
-    return modifiers;
-}
-
-- (void)getCarbonEvent:(EventRecord *)carbonEvent withEvent:(NSEvent *)cocoaEvent
-{
-    if (WKConvertNSEventToCarbonEvent(carbonEvent, cocoaEvent)) {
-        carbonEvent->where.h = static_cast<short>(carbonEvent->where.h * HIGetScaleFactor());
-        carbonEvent->where.v = static_cast<short>(carbonEvent->where.v * HIGetScaleFactor());
-        return;
-    }
-    
-    NSPoint where = [[cocoaEvent window] convertBaseToScreen:[cocoaEvent locationInWindow]];
-        
-    carbonEvent->what = nullEvent;
-    carbonEvent->message = 0;
-    carbonEvent->when = (UInt32)([cocoaEvent timestamp] * 60); // seconds to ticks
-    carbonEvent->where.h = (short)where.x;
-    carbonEvent->where.v = (short)(NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - where.y);
-    carbonEvent->modifiers = [self modifiersForEvent:cocoaEvent];
-}
 
 - (BOOL)superviewsHaveSuperviews
 {
@@ -353,9 +329,6 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
         [self fixWindowPort];
 #endif
 
-    WindowRef windowRef = (WindowRef)[[self currentWindow] windowRef];
-    ASSERT(windowRef);
-    
     // Use AppKit to convert view coordinates to NSWindow coordinates.
     NSRect boundsInWindow = [self convertRect:[self bounds] toView:nil];
     NSRect visibleRectInWindow = [self convertRect:[self visibleRect] toView:nil];
@@ -366,6 +339,9 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     visibleRectInWindow.origin.y = borderViewHeight - NSMaxY(visibleRectInWindow);
     
 #ifndef NP_NO_QUICKDRAW
+    WindowRef windowRef = (WindowRef)[[self currentWindow] windowRef];
+    ASSERT(windowRef);
+        
     // Look at the Carbon port to convert top-left-based window coordinates into top-left-based content coordinates.
     if (drawingModel == NPDrawingModelQuickDraw) {
         ::Rect portBounds;
@@ -569,7 +545,11 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
             cgPortState->context = context;
             
             // Update the plugin's window/context
-            nPort.cgPort.window = windowRef;
+#ifdef NP_NO_CARBON
+            nPort.cgPort.window = (NPNSWindow *)[self currentWindow];
+#else
+            nPort.cgPort.window = eventHandler->platformWindow([self currentWindow]);
+#endif /* NP_NO_CARBON */
             nPort.cgPort.context = context;
             window.window = &nPort.cgPort;
 
@@ -606,7 +586,11 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
             }
             
             // Update the plugin's window/context
-            nPort.aglPort.window = windowRef;
+#ifdef NP_NO_CARBON
+            nPort.aglPort.window = (NPNSWindow *)[self currentWindow];
+#else
+            nPort.aglPort.window = eventHandler->platformWindow([self currentWindow]);
+#endif // NP_NO_CARBON
             nPort.aglPort.context = [self _cglContext];
             window.window = &nPort.aglPort;
             
@@ -700,20 +684,12 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     }
 }
 
-- (BOOL)sendEvent:(EventRecord *)event
+- (BOOL)sendEvent:(void*)event isDrawRect:(BOOL)eventIsDrawRect
 {
     if (![self window])
         return NO;
     ASSERT(event);
-   
-    // If at any point the user clicks or presses a key from within a plugin, set the 
-    // currentEventIsUserGesture flag to true. This is important to differentiate legitimate 
-    // window.open() calls;  we still want to allow those.  See rdar://problem/4010765
-    if (event->what == mouseDown || event->what == keyDown || event->what == mouseUp || event->what == autoKey)
-        currentEventIsUserGesture = YES;
-    
-    suspendKeyUpEvents = NO;
-    
+       
     if (!isStarted)
         return NO;
 
@@ -737,15 +713,14 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     if (!wasDeferring)
         page->setDefersLoading(true);
 
-    // Can only send updateEvt to CoreGraphics and OpenGL plugins when actually drawing
-    ASSERT((drawingModel != NPDrawingModelCoreGraphics && drawingModel != NPDrawingModelOpenGL) || event->what != updateEvt || [NSView focusView] == self);
+    // Can only send drawRect (updateEvt) to CoreGraphics and OpenGL plugins when actually drawing
+    ASSERT((drawingModel != NPDrawingModelCoreGraphics && drawingModel != NPDrawingModelOpenGL) || !eventIsDrawRect || [NSView focusView] == self);
     
-    BOOL updating = event->what == updateEvt;
     PortState portState;
-    if ((drawingModel != NPDrawingModelCoreGraphics && drawingModel != NPDrawingModelOpenGL) || event->what == updateEvt) {
+    if ((drawingModel != NPDrawingModelCoreGraphics && drawingModel != NPDrawingModelOpenGL) || eventIsDrawRect) {
         // In CoreGraphics or OpenGL mode, the port state only needs to be saved/set when redrawing the plug-in view.  The plug-in is not
         // allowed to draw at any other time.
-        portState = [self saveAndSetNewPortStateForUpdate:updating];
+        portState = [self saveAndSetNewPortStateForUpdate:eventIsDrawRect];
         
         // We may have changed the window, so inform the plug-in.
         [self setWindowIfNecessary];
@@ -756,7 +731,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     // Draw green to help debug.
     // If we see any green we know something's wrong.
     // Note that PaintRect() only works for QuickDraw plugins; otherwise the current QD port is undefined.
-    if (drawingModel == NPDrawingModelQuickDraw && !isTransparent && event->what == updateEvt) {
+    if (drawingModel == NPDrawingModelQuickDraw && !isTransparent && eventIsDrawRect) {
         ForeColor(greenColor);
         const ::Rect bigRect = { -10000, -10000, 10000, 10000 };
         PaintRect(&bigRect);
@@ -774,9 +749,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
         acceptedEvent = NPP_HandleEvent(plugin, event);
     }
     [self didCallPlugInFunction];
-    
-    currentEventIsUserGesture = NO;
-    
+        
     if (portState) {
         if ([self currentWindow])
             [self restorePortState:portState];
@@ -791,85 +764,56 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
 - (void)sendActivateEvent:(BOOL)activate
 {
-    EventRecord event;
-    
-    [self getCarbonEvent:&event];
-    event.what = activateEvt;
-    WindowRef windowRef = (WindowRef)[[self window] windowRef];
-    event.message = (unsigned long)windowRef;
-    if (activate) {
-        event.modifiers |= activeFlag;
-    }
-    
-    BOOL acceptedEvent;
-    acceptedEvent = [self sendEvent:&event]; 
-    
-    LOG(PluginEvents, "NPP_HandleEvent(activateEvent): %d  isActive: %d", acceptedEvent, activate);
+    eventHandler->windowFocusChanged(activate);
 }
 
-- (BOOL)sendUpdateEvent
+- (void)sendDrawRectEvent:(NSRect)rect
 {
-    EventRecord event;
-    
-    [self getCarbonEvent:&event];
-    event.what = updateEvt;
-    WindowRef windowRef = (WindowRef)[[self window] windowRef];
-    event.message = (unsigned long)windowRef;
-
-    BOOL acceptedEvent = [self sendEvent:&event];
-
-    LOG(PluginEvents, "NPP_HandleEvent(updateEvt): %d", acceptedEvent);
-
-    return acceptedEvent;
+    eventHandler->drawRect(rect);
 }
 
--(void)sendNullEvent
+- (void)stopTimers
 {
-    EventRecord event;
-
-    [self getCarbonEvent:&event];
-
-    // Plug-in should not react to cursor position when not active or when a menu is down.
-    MenuTrackingData trackingData;
-    OSStatus error = GetMenuTrackingData(NULL, &trackingData);
-
-    // Plug-in should not react to cursor position when the actual window is not key.
-    if (![[self window] isKeyWindow] || (error == noErr && trackingData.menu)) {
-        // FIXME: Does passing a v and h of -1 really prevent it from reacting to the cursor position?
-        event.where.v = -1;
-        event.where.h = -1;
-    }
+    if (eventHandler)
+        eventHandler->stopTimers();
     
-    [self sendEvent:&event];
+    shouldFireTimers = NO;
+    
+    if (!timers)
+        return;
+
+    HashMap<uint32, PluginTimer*>::const_iterator end = timers->end();
+    for (HashMap<uint32, PluginTimer*>::const_iterator it = timers->begin(); it != end; ++it) {
+        PluginTimer* timer = it->second;
+        timer->stop();
+    }    
 }
 
-- (void)stopNullEvents
-{
-    [nullEventTimer invalidate];
-    [nullEventTimer release];
-    nullEventTimer = nil;
-}
-
-- (void)restartNullEvents
+- (void)restartTimers
 {
     ASSERT([self window]);
     
-    if (nullEventTimer)
-        [self stopNullEvents];
+    if (shouldFireTimers)
+        [self stopTimers];
     
     if (!isStarted || [[self window] isMiniaturized])
         return;
 
-    NSTimeInterval interval;
-
+    shouldFireTimers = YES;
+    
     // If the plugin is completely obscured (scrolled out of view, for example), then we will
     // send null events at a reduced rate.
-    interval = !isCompletelyObscured ? NullEventIntervalActive : NullEventIntervalNotActive;    
-    nullEventTimer = [[NSTimer scheduledTimerWithTimeInterval:interval
-                                                       target:self
-                                                     selector:@selector(sendNullEvent)
-                                                     userInfo:nil
-                                                      repeats:YES] retain];
+    eventHandler->startTimers(isCompletelyObscured);
+    
+    if (!timers)
+        return;
+    
+    HashMap<uint32, PluginTimer*>::const_iterator end = timers->end();
+    for (HashMap<uint32, PluginTimer*>::const_iterator it = timers->begin(); it != end; ++it) {
+        PluginTimer* timer = it->second;
+        ASSERT(!timer->isActive());
+        timer->start(isCompletelyObscured);
+    }    
 }
 
 - (BOOL)acceptsFirstResponder
@@ -877,50 +821,18 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
     return YES;
 }
 
-- (void)installKeyEventHandler
-{
-    static const EventTypeSpec sTSMEvents[] =
-    {
-    { kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
-    };
-    
-    if (!keyEventHandler) {
-        InstallEventHandler(GetWindowEventTarget((WindowRef)[[self window] windowRef]),
-                            NewEventHandlerUPP(TSMEventHandler),
-                            GetEventTypeCount(sTSMEvents),
-                            sTSMEvents,
-                            self,
-                            &keyEventHandler);
-    }
-}
-
-- (void)removeKeyEventHandler
-{
-    if (keyEventHandler) {
-        RemoveEventHandler(keyEventHandler);
-        keyEventHandler = NULL;
-    }
-}
-
 - (void)setHasFocus:(BOOL)flag
 {
-    if (hasFocus != flag) {
-        hasFocus = flag;
-        EventRecord event;
-        [self getCarbonEvent:&event];
-        BOOL acceptedEvent;
-        if (hasFocus) {
-            event.what = getFocusEvent;
-            acceptedEvent = [self sendEvent:&event]; 
-            LOG(PluginEvents, "NPP_HandleEvent(getFocusEvent): %d", acceptedEvent);
-            [self installKeyEventHandler];
-        } else {
-            event.what = loseFocusEvent;
-            acceptedEvent = [self sendEvent:&event]; 
-            LOG(PluginEvents, "NPP_HandleEvent(loseFocusEvent): %d", acceptedEvent);
-            [self removeKeyEventHandler];
-        }
-    }
+    if (hasFocus == flag)
+        return;
+    
+    hasFocus = flag;
+    
+    // We need to null check the event handler here because
+    // the plug-in view can resign focus after it's been stopped
+    // and the event handler has been deleted.
+    if (eventHandler)
+        eventHandler->focusChanged(hasFocus);    
 }
 
 - (BOOL)becomeFirstResponder
@@ -949,187 +861,79 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
-    EventRecord event;
-
-    [self getCarbonEvent:&event withEvent:theEvent];
-    event.what = mouseDown;
-
-    BOOL acceptedEvent;
-    acceptedEvent = [self sendEvent:&event]; 
-    
-    LOG(PluginEvents, "NPP_HandleEvent(mouseDown): %d pt.v=%d, pt.h=%d", acceptedEvent, event.where.v, event.where.h);
+    eventHandler->mouseDown(theEvent);
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
-    EventRecord event;
-    
-    [self getCarbonEvent:&event withEvent:theEvent];
-    event.what = mouseUp;
-
-    BOOL acceptedEvent;
-    acceptedEvent = [self sendEvent:&event]; 
-    
-    LOG(PluginEvents, "NPP_HandleEvent(mouseUp): %d pt.v=%d, pt.h=%d", acceptedEvent, event.where.v, event.where.h);
+    eventHandler->mouseUp(theEvent);
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent
 {
-    EventRecord event;
-    
-    [self getCarbonEvent:&event withEvent:theEvent];
-    event.what = adjustCursorEvent;
-
-    BOOL acceptedEvent;
-    acceptedEvent = [self sendEvent:&event]; 
-
-    LOG(PluginEvents, "NPP_HandleEvent(mouseEntered): %d", acceptedEvent);
+    eventHandler->mouseEntered(theEvent);
 }
 
 - (void)mouseExited:(NSEvent *)theEvent
 {
-    EventRecord event;
+    eventHandler->mouseExited(theEvent);
     
-    [self getCarbonEvent:&event withEvent:theEvent];
-    event.what = adjustCursorEvent;
-
-    BOOL acceptedEvent;
-    acceptedEvent = [self sendEvent:&event]; 
-
     // Set cursor back to arrow cursor.  Because NSCursor doesn't know about changes that the plugin made, we could get confused about what we think the
     // current cursor is otherwise.  Therefore we have no choice but to unconditionally reset the cursor when the mouse exits the plugin.
     [[NSCursor arrowCursor] set];
-
-    LOG(PluginEvents, "NPP_HandleEvent(mouseExited): %d", acceptedEvent);
 }
 
+// We can't name this method mouseMoved because we don't want to override 
+// the NSView mouseMoved implementation.
+- (void)handleMouseMoved:(NSEvent *)theEvent
+{
+    eventHandler->mouseMoved(theEvent);
+}
+    
 - (void)mouseDragged:(NSEvent *)theEvent
 {
-    // Do nothing so that other responders don't respond to the drag that initiated in this view.
+    eventHandler->mouseDragged(theEvent);
 }
 
-- (UInt32)keyMessageForEvent:(NSEvent *)event
+- (void)scrollWheel:(NSEvent *)theEvent
 {
-    NSData *data = [[event characters] dataUsingEncoding:CFStringConvertEncodingToNSStringEncoding(CFStringGetSystemEncoding())];
-    if (!data) {
-        return 0;
-    }
-    UInt8 characterCode;
-    [data getBytes:&characterCode length:1];
-    UInt16 keyCode = [event keyCode];
-    return keyCode << 8 | characterCode;
+    if (!eventHandler->scrollWheel(theEvent))
+        [super scrollWheel:theEvent];
 }
 
 - (void)keyUp:(NSEvent *)theEvent
 {
-    WKSendKeyEventToTSM(theEvent);
-    
-    // TSM won't send keyUp events so we have to send them ourselves.
-    // Only send keyUp events after we receive the TSM callback because this is what plug-in expect from OS 9.
-    if (!suspendKeyUpEvents) {
-        EventRecord event;
-        
-        [self getCarbonEvent:&event withEvent:theEvent];
-        event.what = keyUp;
-        
-        if (event.message == 0) {
-            event.message = [self keyMessageForEvent:theEvent];
-        }
-        
-        [self sendEvent:&event];
-    }
+    eventHandler->keyUp(theEvent);
 }
 
 - (void)keyDown:(NSEvent *)theEvent
 {
-    suspendKeyUpEvents = YES;
-    WKSendKeyEventToTSM(theEvent);
+    eventHandler->keyDown(theEvent);
 }
 
-static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEvent, void *pluginView)
-{    
-    EventRef rawKeyEventRef;
-    OSStatus status = GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent, typeEventRef, NULL, sizeof(EventRef), NULL, &rawKeyEventRef);
-    if (status != noErr) {
-        LOG_ERROR("GetEventParameter failed with error: %d", status);
-        return noErr;
-    }
-    
-    // Two-pass read to allocate/extract Mac charCodes
-    ByteCount numBytes;    
-    status = GetEventParameter(rawKeyEventRef, kEventParamKeyMacCharCodes, typeChar, NULL, 0, &numBytes, NULL);
-    if (status != noErr) {
-        LOG_ERROR("GetEventParameter failed with error: %d", status);
-        return noErr;
-    }
-    char *buffer = (char *)malloc(numBytes);
-    status = GetEventParameter(rawKeyEventRef, kEventParamKeyMacCharCodes, typeChar, NULL, numBytes, NULL, buffer);
-    if (status != noErr) {
-        LOG_ERROR("GetEventParameter failed with error: %d", status);
-        free(buffer);
-        return noErr;
-    }
-    
-    EventRef cloneEvent = CopyEvent(rawKeyEventRef);
-    unsigned i;
-    for (i = 0; i < numBytes; i++) {
-        status = SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes, typeChar, 1 /* one char code */, &buffer[i]);
-        if (status != noErr) {
-            LOG_ERROR("SetEventParameter failed with error: %d", status);
-            free(buffer);
-            return noErr;
-        }
-        
-        EventRecord eventRec;
-        if (ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
-            BOOL acceptedEvent;
-            acceptedEvent = [(WebBaseNetscapePluginView *)pluginView sendEvent:&eventRec];
-            
-            LOG(PluginEvents, "NPP_HandleEvent(keyDown): %d charCode:%c keyCode:%lu",
-                acceptedEvent, (char) (eventRec.message & charCodeMask), (eventRec.message & keyCodeMask));
-            
-            // We originally thought that if the plug-in didn't accept this event,
-            // we should pass it along so that keyboard scrolling, for example, will work.
-            // In practice, this is not a good idea, because plug-ins tend to eat the event but return false.
-            // MacIE handles each key event twice because of this, but we will emulate the other browsers instead.
-        }
-    }
-    ReleaseEvent(cloneEvent);
-    
-    free(buffer);
-
-    return noErr;
-}
-
-// Fake up command-modified events so cut, copy, paste and select all menus work.
-- (void)sendModifierEventWithKeyCode:(int)keyCode character:(char)character
+- (void)flagsChanged:(NSEvent *)theEvent
 {
-    EventRecord event;
-    [self getCarbonEvent:&event];
-    event.what = keyDown;
-    event.modifiers |= cmdKey;
-    event.message = keyCode << 8 | character;
-    [self sendEvent:&event];
+    eventHandler->flagsChanged(theEvent);
 }
 
 - (void)cut:(id)sender
 {
-    [self sendModifierEventWithKeyCode:7 character:'x'];
+    eventHandler->keyDown([NSApp currentEvent]);
 }
 
 - (void)copy:(id)sender
 {
-    [self sendModifierEventWithKeyCode:8 character:'c'];
+    eventHandler->keyDown([NSApp currentEvent]);
 }
 
 - (void)paste:(id)sender
 {
-    [self sendModifierEventWithKeyCode:9 character:'v'];
+    eventHandler->keyDown([NSApp currentEvent]);
 }
 
 - (void)selectAll:(id)sender
 {
-    [self sendModifierEventWithKeyCode:0 character:'a'];
+    eventHandler->keyDown([NSApp currentEvent]);
 }
 
 #pragma mark WEB_NETSCAPE_PLUGIN
@@ -1199,8 +1003,13 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     // NPP_SetWindow() with an empty NPWindow struct.
     if (!isStarted)
         return;
+#ifdef NP_NO_QUICKDRAW
+    if (![self canDraw])
+        return;
+#else
     if (drawingModel != NPDrawingModelQuickDraw && ![self canDraw])
         return;
+#endif // NP_NO_QUICKDRAW
     
     BOOL didLockFocus = [NSView focusView] != self && [self lockFocusIfCanDraw];
     PortState portState = [self saveAndSetNewPortState];
@@ -1382,6 +1191,9 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     // Initialize drawingModel to an invalid value so that we can detect when the plugin does not specify a drawingModel
     drawingModel = (NPDrawingModel)-1;
     
+    // Initialize eventModel to an invalid value so that we can detect when the plugin does not specify an event model.
+    eventModel = (NPEventModel)-1;
+    
     // Plug-ins are "windowed" by default.  On MacOS, windowed plug-ins share the same window and graphics port as the main
     // browser window.  Windowless plug-ins are rendered off-screen, then copied into the main browser window.
     window.type = NPWindowTypeWindow;
@@ -1399,16 +1211,46 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         // Default to QuickDraw if the plugin did not specify a drawing model.
         drawingModel = NPDrawingModelQuickDraw;
 #else
-        // QuickDraw is not available, so we can't default to it.  We could default to CoreGraphics instead, but
-        // if the plugin did not specify the CoreGraphics drawing model then it must be one of the old QuickDraw
-        // plugins.  Thus, the plugin is unsupported and should not be started.  Destroy it here and bail out.
-        LOG(Plugins, "Plugin only supports QuickDraw, but QuickDraw is unavailable: %@", pluginPackage);
-        [self _destroyPlugin];
-        [pluginPackage close];
-        return NO;
+        // QuickDraw is not available, so we can't default to it. Instead, default to CoreGraphics.
+        drawingModel = NPDrawingModelCoreGraphics;
 #endif
     }
 
+    if (eventModel == (NPEventModel)-1) {
+        // If the plug-in did not specify a drawing model we default to Carbon when it is available.
+#ifndef NP_NO_CARBON
+        eventModel = NPEventModelCarbon;
+#else
+        eventModel = NPEventModelCocoa;
+#endif // NP_NO_CARBON
+    }
+
+#ifndef NP_NO_CARBON
+    if (eventModel == NPEventModelCocoa &&
+        drawingModel == NPDrawingModelQuickDraw) {
+        LOG(Plugins, "Plugin can't use use Cocoa event model with QuickDraw drawing model: %@", pluginPackage);
+        [self _destroyPlugin];
+        [pluginPackage close];
+        
+        return NO;
+    }        
+#endif // NP_NO_CARBON
+    
+    // Create the event handler
+    eventHandler = WebNetscapePluginEventHandler::create(self);
+    
+    // Get the text input vtable
+    if (eventModel == NPEventModelCocoa) {
+        [self willCallPlugInFunction];
+        {
+            KJS::JSLock::DropAllLocks dropAllLocks;
+            NPPluginTextInputFuncs *value;
+            if (NPP_GetValue(plugin, NPPVpluginTextInputFuncs, &value) == NPERR_NO_ERROR && value)
+                textInputFuncs = value;
+        }
+        [self didCallPlugInFunction];
+    }
+    
     isStarted = YES;
         
     [self updateAndSetWindow];
@@ -1418,7 +1260,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         if ([[self window] isKeyWindow]) {
             [self sendActivateEvent:YES];
         }
-        [self restartNullEvents];
+        [self restartTimers];
     }
 
     [self resetTrackingRect];
@@ -1452,8 +1294,8 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     [streamsCopy makeObjectsPerformSelector:@selector(stop)];
     [streamsCopy release];
    
-    // Stop the null events
-    [self stopNullEvents];
+    // Stop the timers
+    [self stopTimers];
     
     // Stop notifications and callbacks.
     [self removeWindowObservers];
@@ -1466,9 +1308,10 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     [self _destroyPlugin];
     [pluginPackage close];
     
-    // We usually remove the key event handler in resignFirstResponder but it is possible that resignFirstResponder 
-    // may never get called so we can't completely rely on it.
-    [self removeKeyEventHandler];
+    delete eventHandler;
+    eventHandler = 0;
+    
+    textInputFuncs = 0;
     
     if (drawingModel == NPDrawingModelOpenGL)
         [self _destroyAGLContext];
@@ -1477,6 +1320,11 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 - (BOOL)isStarted
 {
     return isStarted;
+}
+
+- (NPEventModel)eventModel
+{
+    return eventModel;
 }
 
 - (WebDataSource *)dataSource
@@ -1653,6 +1501,13 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     }
     free(cAttributes);
     free(cValues);
+    
+    ASSERT(!eventHandler);
+    
+    if (timers) {
+        deleteAllValues(*timers);
+        delete timers;
+    }    
 }
 
 - (void)disconnectStream:(WebBaseNetscapePluginStream*)stream
@@ -1701,7 +1556,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     }
     
     if ([NSGraphicsContext currentContextDrawingToScreen])
-        [self sendUpdateEvent];
+        [self sendDrawRectEvent:rect];
     else {
         NSBitmapImageRep *printedPluginBitmap = [self _printedPluginBitmap];
         if (printedPluginBitmap) {
@@ -1792,7 +1647,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
         
         if ([[self webView] hostWindow]) {
             // View will be moved out of the actual window but it still has a host window.
-            [self stopNullEvents];
+            [self stopTimers];
         } else {
             // View will have no associated windows.
             [self stop];
@@ -1832,7 +1687,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 
         // View moved to an actual window. Start it if not already started.
         [self start];
-        [self restartNullEvents];
+        [self restartTimers];
         [self addWindowObservers];
     } else if ([[self webView] hostWindow]) {
         // View moved out of an actual window, but still has a host window.
@@ -1872,35 +1727,37 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
 {
     [self sendActivateEvent:YES];
     [self setNeedsDisplay:YES];
-    [self restartNullEvents];
+    [self restartTimers];
+#ifndef NP_NO_CARBON
     SetUserFocusWindow((WindowRef)[[self window] windowRef]);
+#endif // NP_NO_CARBON
 }
 
 - (void)windowResignedKey:(NSNotification *)notification
 {
     [self sendActivateEvent:NO];
     [self setNeedsDisplay:YES];
-    [self restartNullEvents];
+    [self restartTimers];
 }
 
 - (void)windowDidMiniaturize:(NSNotification *)notification
 {
-    [self stopNullEvents];
+    [self stopTimers];
 }
 
 - (void)windowDidDeminiaturize:(NSNotification *)notification
 {
-    [self restartNullEvents];
+    [self stopTimers];
 }
 
 - (void)loginWindowDidSwitchFromUser:(NSNotification *)notification
 {
-    [self stopNullEvents];
+    [self stopTimers];
 }
 
 -(void)loginWindowDidSwitchToUser:(NSNotification *)notification
 {
-    [self restartNullEvents];
+    [self restartTimers];
 }
 
 - (void)preferencesHaveChanged:(NSNotification *)notification
@@ -2012,6 +1869,160 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     if ([self isStarted])
         [_manualStream finishedLoading];
 }
+
+#pragma mark NSTextInput implementation
+
+- (NSInputContext *)inputContext
+{
+#ifndef NP_NO_CARBON
+    if ([self isStarted] && eventModel == NPEventModelCarbon)
+        return nil;
+#endif
+        
+    return [super inputContext];
+}
+
+- (BOOL)hasMarkedText
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+    
+    if (textInputFuncs && textInputFuncs->hasMarkedText)
+        return textInputFuncs->hasMarkedText(plugin);
+    
+    return NO;
+}
+
+- (void)insertText:(id)aString
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+    
+    if (textInputFuncs && textInputFuncs->insertText)
+        textInputFuncs->insertText(plugin, aString);
+}
+
+- (NSRange)markedRange
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->markedRange)
+        return textInputFuncs->markedRange(plugin);
+    
+    return NSMakeRange(NSNotFound, 0);
+}
+
+- (NSRange)selectedRange
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->selectedRange)
+        return textInputFuncs->selectedRange(plugin);
+
+    return NSMakeRange(NSNotFound, 0);
+}    
+
+- (void)setMarkedText:(id)aString selectedRange:(NSRange)selRange
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->setMarkedText)
+        textInputFuncs->setMarkedText(plugin, aString, selRange);
+}
+
+- (void)unmarkText
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+    
+    if (textInputFuncs && textInputFuncs->unmarkText)
+        textInputFuncs->unmarkText(plugin);
+}
+
+- (NSArray *)validAttributesForMarkedText
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+        
+    if (textInputFuncs && textInputFuncs->validAttributesForMarkedText)
+        return textInputFuncs->validAttributesForMarkedText(plugin);
+    
+    return [NSArray array];
+}
+
+- (NSAttributedString *)attributedSubstringFromRange:(NSRange)theRange
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+    
+    if (textInputFuncs && textInputFuncs->attributedSubstringFromRange)
+        return textInputFuncs->attributedSubstringFromRange(plugin, theRange);
+
+    return nil;
+}
+
+- (NSUInteger)characterIndexForPoint:(NSPoint)thePoint
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->characterIndexForPoint) {
+        // Convert the point to window coordinates
+        NSPoint point = [[self window] convertScreenToBase:thePoint];
+        
+        // And view coordinates
+        point = [self convertPoint:point fromView:nil];
+        
+        return textInputFuncs->characterIndexForPoint(plugin, point);
+    }        
+
+    return NSNotFound;
+}
+
+- (void)doCommandBySelector:(SEL)aSelector
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->doCommandBySelector)
+        textInputFuncs->doCommandBySelector(plugin, aSelector);
+}
+
+- (NSRect)firstRectForCharacterRange:(NSRange)theRange
+{
+    ASSERT(eventModel == NPEventModelCocoa);
+    ASSERT([self isStarted]);
+
+    if (textInputFuncs && textInputFuncs->firstRectForCharacterRange) {
+        NSRect rect = textInputFuncs->firstRectForCharacterRange(plugin, theRange);
+        
+        // Convert the rect to window coordinates
+        rect = [self convertRect:rect toView:nil];
+        
+        // Convert the rect location to screen coordinates
+        rect.origin = [[self window] convertBaseToScreen:rect.origin];
+        
+        return rect;
+    }
+
+    return NSZeroRect;
+}
+
+// test for 10.4 because of <rdar://problem/4243463>
+#ifdef BUILDING_ON_TIGER
+- (long)conversationIdentifier
+{
+    return (long)self;
+}
+#else
+- (NSInteger)conversationIdentifier
+{
+    return (NSInteger)self;
+}
+#endif
 
 @end
 
@@ -2220,7 +2231,15 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
             return NPERR_INVALID_PARAM;
         }
         
-        WebPluginRequest *pluginRequest = [[WebPluginRequest alloc] initWithRequest:request frameName:target notifyData:notifyData sendNotification:sendNotification didStartFromUserGesture:currentEventIsUserGesture];
+        bool currentEventIsUserGesture = false;
+        if (eventHandler)
+            currentEventIsUserGesture = eventHandler->currentEventIsUserGesture();
+        
+        WebPluginRequest *pluginRequest = [[WebPluginRequest alloc] initWithRequest:request 
+                                                                          frameName:target
+                                                                         notifyData:notifyData 
+                                                                   sendNotification:sendNotification
+                                                            didStartFromUserGesture:currentEventIsUserGesture];
         [self performSelector:@selector(loadPluginRequest:) withObject:pluginRequest afterDelay:0];
         [pluginRequest release];
         if (target)
@@ -2466,6 +2485,18 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     [[self window] displayIfNeeded];
 }
 
+static NPBrowserTextInputFuncs *browserTextInputFuncs()
+{
+    static NPBrowserTextInputFuncs inputFuncs = {
+        0,
+        sizeof(NPBrowserTextInputFuncs),
+        NPN_MarkedTextAbandoned,
+        NPN_MarkedTextSelectionChanged
+    };
+    
+    return &inputFuncs;
+}
+
 - (NPError)getVariable:(NPNVariable)variable value:(void *)value
 {
     switch (variable) {
@@ -2527,6 +2558,33 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
             return NPERR_NO_ERROR;
         }
         
+        case NPNVpluginEventModel:
+        {
+            *(NPEventModel *)value = eventModel;
+            return NPERR_NO_ERROR;
+        }
+        
+#ifndef NP_NO_CARBON
+        case NPNVsupportsCarbonBool:
+        {
+            *(NPBool *)value = TRUE;
+            return NPERR_NO_ERROR;
+        }
+#endif /* NP_NO_CARBON */
+            
+        case NPNVsupportsCocoaBool:
+        {
+            *(NPBool *)value = TRUE;
+            return NPERR_NO_ERROR;
+        }
+            
+        case NPNVbrowserTextInputFuncs:
+        {
+            if (eventModel == NPEventModelCocoa) {
+                *(NPBrowserTextInputFuncs **)value = browserTextInputFuncs();
+                return NPERR_NO_ERROR;
+            }
+        }
         default:
             break;
     }
@@ -2586,9 +2644,73 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
             }
         }
         
+        case NPPVpluginEventModel:
+        {
+            // Can only set event model inside NPP_New()
+            if (self != [[self class] currentPluginView])
+                return NPERR_GENERIC_ERROR;
+            
+            // Check for valid, supported event model
+            NPEventModel newEventModel = (NPEventModel)(uintptr_t)value;
+            switch (newEventModel) {
+                // Supported event models:
+#ifndef NP_NO_CARBON
+                case NPEventModelCarbon:
+#endif
+                case NPEventModelCocoa:
+                    eventModel = newEventModel;
+                    return NPERR_NO_ERROR;
+                    
+                    // Unsupported (or unknown) event models:
+                default:
+                    LOG(Plugins, "Plugin %@ uses unsupported event model: %d", pluginPackage, eventModel);
+                    return NPERR_GENERIC_ERROR;
+            }
+        }
+            
         default:
             return NPERR_GENERIC_ERROR;
     }
+}
+
+- (uint32)scheduleTimerWithInterval:(uint32)interval repeat:(NPBool)repeat timerFunc:(void (*)(NPP npp, uint32 timerID))timerFunc
+{
+    if (!timerFunc)
+        return 0;
+    
+    if (!timers)
+        timers = new HashMap<uint32, PluginTimer*>;
+    
+    uint32 timerID = ++currentTimerID;
+    
+    PluginTimer* timer = new PluginTimer(plugin, timerID, interval, repeat, timerFunc);
+    timers->set(timerID, timer);
+
+    if (shouldFireTimers)
+        timer->start(isCompletelyObscured);
+    
+    return 0;
+}
+
+- (void)unscheduleTimer:(uint32)timerID
+{
+    if (!timers)
+        return;
+    
+    if (PluginTimer* timer = timers->take(timerID))
+        delete timer;
+}
+
+- (NPError)popUpContextMenu:(NPMenu *)menu
+{
+    NSEvent *currentEvent = [NSApp currentEvent];
+    
+    // NPN_PopUpContextMenu must be called from within the plug-in's NPP_HandleEvent.
+    if (!currentEvent)
+        return NPERR_GENERIC_ERROR;
+    
+    [NSMenu popUpContextMenu:(NSMenu *)menu withEvent:currentEvent forView:self];
+    return NPERR_NO_ERROR;
 }
 
 @end
@@ -2695,7 +2817,7 @@ static OSStatus TSMEventHandler(EventHandlerCallRef inHandlerRef, EventRef inEve
     BOOL oldIsObscured = isCompletelyObscured;
     isCompletelyObscured = NSIsEmptyRect([self visibleRect]);
     if (isCompletelyObscured != oldIsObscured)
-        [self restartNullEvents];
+        [self restartTimers];
 }
 
 - (NSBitmapImageRep *)_printedPluginBitmap

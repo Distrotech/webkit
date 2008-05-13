@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 /*
  *  Copyright (C) 2007 Eric Seidel <eric@webkit.org>
- *  Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ *  Copyright (C) 2007 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -24,12 +24,11 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
-#include "RegisterFileStack.h"
-#include <wtf/HashSet.h>
-#include <wtf/OwnPtr.h>
+#include "Activation.h"
 
 namespace KJS {
 
+    class ActivationImp;
     class ArrayObjectImp;
     class ArrayPrototype;
     class BooleanObjectImp;
@@ -43,6 +42,7 @@ namespace KJS {
     class EvalErrorPrototype;
     class FunctionObjectImp;
     class FunctionPrototype;
+    struct HashTable;
     class JSGlobalObject;
     class NativeErrorImp;
     class NativeErrorPrototype;
@@ -50,7 +50,6 @@ namespace KJS {
     class NumberPrototype;
     class ObjectObjectImp;
     class ObjectPrototype;
-    class ProgramCodeBlock;
     class PrototypeReflexiveFunction;
     class RangeError;
     class RangeErrorPrototype;
@@ -60,7 +59,6 @@ namespace KJS {
     class RegExpObjectImp;
     class RegExpPrototype;
     class RuntimeMethod;
-    class SavedBuiltins;
     class ScopeChain;
     class StringObjectImp;
     class StringPrototype;
@@ -69,6 +67,8 @@ namespace KJS {
     class TypeErrorPrototype;
     class UriError;
     class UriErrorPrototype;
+    struct ActivationStackNode;
+    struct ThreadClassInfoHashTables;
 
     typedef Vector<ExecState*, 16> ExecStateStack;
 
@@ -77,10 +77,8 @@ namespace KJS {
         using JSVariableObject::JSVariableObjectData;
 
         struct JSGlobalObjectData : public JSVariableObjectData {
-            JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
-                : JSVariableObjectData(&symbolTable, registerFileStack.globalBasePointer(), 0)
-                , globalScopeChain(globalObject)
-                , globalExec(globalObject, thisValue, globalScopeChain.node())
+            JSGlobalObjectData()
+                : JSVariableObjectData(&inlineSymbolTable)
             {
             }
 
@@ -89,10 +87,7 @@ namespace KJS {
 
             Debugger* debugger;
             
-            RegisterFileStack registerFileStack;
-            ScopeChain globalScopeChain;
-            ExecState globalExec;
-            
+            OwnPtr<GlobalExecState> globalExec;
             int recursion;
 
             unsigned timeoutTime;
@@ -136,24 +131,32 @@ namespace KJS {
             NativeErrorPrototype* typeErrorPrototype;
             NativeErrorPrototype* URIErrorPrototype;
             
-            SymbolTable symbolTable;
-            HashSet<ProgramCodeBlock*> codeBlocks;
+            SymbolTable inlineSymbolTable;
+
+            ExecStateStack activeExecStates;
+
+            ActivationStackNode* activations;
+            size_t activationCount;
+            
+            unsigned pageGroupIdentifier;
 
             OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
+
+            PerThreadData perThreadData;
         };
 
     public:
         JSGlobalObject()
-            : JSVariableObject(new JSGlobalObjectData(this, this))
+            : JSVariableObject(new JSGlobalObjectData)
         {
-            init();
+            init(this);
         }
 
     protected:
         JSGlobalObject(JSValue* proto, JSObject* globalThisValue)
-            : JSVariableObject(proto, new JSGlobalObjectData(this, globalThisValue))
+            : JSVariableObject(proto, new JSGlobalObjectData)
         {
-            init();
+            init(globalThisValue);
         }
 
     public:
@@ -210,11 +213,8 @@ namespace KJS {
         NativeErrorPrototype* typeErrorPrototype() const { return d()->typeErrorPrototype; }
         NativeErrorPrototype* URIErrorPrototype() const { return d()->URIErrorPrototype; }
 
-        void saveLocalStorage(SavedProperties&) const;
-        void restoreLocalStorage(const SavedProperties&);
-
-        void saveBuiltins(SavedBuiltins&) const;
-        void restoreBuiltins(const SavedBuiltins&);
+        void setPageGroupIdentifier(unsigned value) { d()->pageGroupIdentifier = value; }
+        unsigned pageGroupIdentifier() const { return d()->pageGroupIdentifier; }
 
         void setTimeoutTime(unsigned timeoutTime) { d()->timeoutTime = timeoutTime; }
         void startTimeoutCheck();
@@ -227,8 +227,6 @@ namespace KJS {
         int recursion() { return d()->recursion; }
         void incRecursion() { ++d()->recursion; }
         void decRecursion() { --d()->recursion; }
-        
-        ScopeChain& globalScopeChain() { return d()->globalScopeChain; }
 
         virtual void mark();
 
@@ -241,21 +239,32 @@ namespace KJS {
 
         virtual bool allowsAccessFrom(const JSGlobalObject*) const { return true; }
 
+        ActivationImp* pushActivation(ExecState*);
+        void popActivation();
+        void tearOffActivation(ExecState*, bool markAsRelic = false);
+
         virtual bool isDynamicScope() const;
+
+        ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
-        HashSet<ProgramCodeBlock*>& codeBlocks() { return d()->codeBlocks; }
+        // Per-thread hash tables, cached on the global object for faster access.
+        const PerThreadData* perThreadData() const { return &d()->perThreadData; }
 
-        RegisterFileStack& registerFileStack() { return d()->registerFileStack; }
+        // Initialize and/or retrieve per-thread hash tables - use perThreadData() for faster access instead.
+        static ThreadClassInfoHashTables* threadClassInfoHashTables();
 
     private:
-        void init();
+        void init(JSObject* thisValue);
         
         JSGlobalObjectData* d() const { return static_cast<JSGlobalObjectData*>(JSVariableObject::d); }
 
         bool checkTimeout();
         void resetTimeoutCheck();
+
+        void deleteActivationStack();
+        void checkActivationCount();
 
         static JSGlobalObject* s_head;
     };
@@ -270,11 +279,35 @@ namespace KJS {
         return checkTimeout();
     }
 
-    inline JSGlobalObject* ScopeChainNode::globalObject() const
+    inline ActivationImp* JSGlobalObject::pushActivation(ExecState* exec)
     {
-        JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(bottom());
-        ASSERT(globalObject->isGlobalObject());
-        return globalObject;
+        if (d()->activationCount == activationStackNodeSize) {
+            ActivationStackNode* newNode = new ActivationStackNode;
+            newNode->prev = d()->activations;
+            d()->activations = newNode;
+            d()->activationCount = 0;
+        }
+        
+        StackActivation* stackEntry = &d()->activations->data[d()->activationCount++];
+        stackEntry->activationStorage.init(exec);
+        return &stackEntry->activationStorage;
+    }
+
+    inline void JSGlobalObject::checkActivationCount()
+    {
+        if (!d()->activationCount) {
+            ActivationStackNode* prev = d()->activations->prev;
+            ASSERT(prev);
+            delete d()->activations;
+            d()->activations = prev;
+            d()->activationCount = activationStackNodeSize;
+        }
+    }
+
+    inline void JSGlobalObject::popActivation()
+    {
+        checkActivationCount();
+        d()->activations->data[--d()->activationCount].activationDataStorage.localStorage.shrink(0);    
     }
 
 } // namespace KJS

@@ -29,6 +29,8 @@
 #ifndef InspectorController_h
 #define InspectorController_h
 
+#include "JavaScriptDebugListener.h"
+
 #include "Console.h"
 #include <JavaScriptCore/JSContextRef.h>
 #include <wtf/HashMap.h>
@@ -56,7 +58,7 @@ struct InspectorDatabaseResource;
 struct InspectorResource;
 class ResourceRequest;
 
-class InspectorController {
+class InspectorController : JavaScriptDebugListener {
 public:
     typedef HashMap<long long, RefPtr<InspectorResource> > ResourcesMap;
     typedef HashMap<RefPtr<Frame>, ResourcesMap*> FrameResourcesMap;
@@ -128,6 +130,10 @@ public:
 
     void moveWindowBy(float x, float y) const;
 
+    void startDebuggingAndReloadInspectedPage();
+    void stopDebugging();
+    bool debuggerAttached() const { return m_debuggerAttached; }
+
     void drawNodeHighlight(GraphicsContext&) const;
 
 private:
@@ -158,8 +164,19 @@ private:
 #endif
 
     JSValueRef callSimpleFunction(JSContextRef, JSObjectRef thisObject, const char* functionName) const;
+    JSValueRef callFunction(JSContextRef, JSObjectRef thisObject, const char* functionName, size_t argumentCount, const JSValueRef arguments[], JSValueRef& exception) const;
 
-    bool handleException(JSValueRef exception, unsigned lineNumber) const;
+    bool handleException(JSContextRef, JSValueRef exception, unsigned lineNumber) const;
+
+    void showWindow();
+    void closeWindow();
+
+    virtual void didParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
+    virtual void failedToParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
+    virtual void didEnterCallFrame(KJS::ExecState*, int sourceID, int lineNumber);
+    virtual void willExecuteStatement(KJS::ExecState*, int sourceID, int lineNumber);
+    virtual void willLeaveCallFrame(KJS::ExecState*, int sourceID, int lineNumber);
+    virtual void exceptionWasRaised(KJS::ExecState*, int sourceID, int lineNumber);
 
     Page* m_inspectedPage;
     InspectorClient* m_client;
@@ -176,6 +193,7 @@ private:
     JSObjectRef m_controllerScriptObject;
     JSContextRef m_scriptContext;
     bool m_windowVisible;
+    bool m_debuggerAttached;
     SpecialPanels m_showAfterVisible;
     long long m_nextIdentifier;
     RefPtr<Node> m_highlightedNode;

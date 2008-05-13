@@ -26,8 +26,11 @@
 #include "HTMLFormElement.h"
 
 #include "CSSHelper.h"
+#include "ChromeClient.h"
+#include "Document.h"
 #include "Event.h"
 #include "EventNames.h"
+#include "FileSystem.h"
 #include "FormData.h"
 #include "FormDataList.h"
 #include "Frame.h"
@@ -38,6 +41,7 @@
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
 #include "MIMETypeRegistry.h"
+#include "Page.h"
 #include "RenderTextControl.h"
 
 #if PLATFORM(QT)
@@ -207,23 +211,6 @@ static int randomNumber()
 #endif
 }
 
-// FIXME: Move to platform directory?
-// Warning: this helper doesn't currently have a reliable cross-platform behavior in
-// certain edge cases (see basename(3) specification for examples).
-// Consider this if it ever needs to become a general purpose method.
-static String pathGetFilename(String path)
-{
-#if PLATFORM(QT)
-    return QFileInfo(path).fileName();
-#elif PLATFORM(WX)
-    return wxFileName(path).GetFullName();
-#elif PLATFORM(WIN_OS)
-    return String(PathFindFileName(path.charactersWithNullTermination()));
-#else
-    return path.substring(path.reverseFind('/') + 1);
-#endif
-}
-
 TextEncoding HTMLFormElement::dataEncoding() const
 {
     if (isMailtoForm())
@@ -279,12 +266,22 @@ PassRefPtr<FormData> HTMLFormElement::formData(const char* boundary) const
                     header.append(item.m_data.data(), item.m_data.length());
                     header.append('"');
 
+                    bool shouldGenerateFile = false;
                     // if the current type is FILE, then we also need to
                     // include the filename
                     if (control->hasLocalName(inputTag)
                             && static_cast<HTMLInputElement*>(control)->inputType() == HTMLInputElement::FILE) {
                         String path = static_cast<HTMLInputElement*>(control)->value();
-                        String filename = pathGetFilename(path);
+                        String filename = pathGetFileName(path);
+
+                        // Let the application specify a filename if its going to generate a replacement file for the upload
+                        if (Page* page = document()->page()) {
+                            String generatedFilename;
+                            shouldGenerateFile = page->chrome()->client()->shouldReplaceWithGeneratedFileForUpload(path, generatedFilename);
+                            if (shouldGenerateFile)
+                                filename = generatedFilename;
+                        }
+                        
 
                         // FIXME: This won't work if the filename includes a " mark,
                         // or control characters like CR or LF. This also does strange
@@ -294,8 +291,8 @@ PassRefPtr<FormData> HTMLFormElement::formData(const char* boundary) const
                         appendString(header, encoding.encode(filename.characters(), filename.length(), QuestionMarksForUnencodables));
                         header.append('"');
 
-                        if (!path.isEmpty()) {
-                            String mimeType = MIMETypeRegistry::getMIMETypeForPath(path);
+                        if (!filename.isEmpty()) {
+                            String mimeType = MIMETypeRegistry::getMIMETypeForPath(filename);
                             if (!mimeType.isEmpty()) {
                                 appendString(header, "\r\nContent-Type: ");
                                 appendString(header, mimeType.latin1());
@@ -311,7 +308,7 @@ PassRefPtr<FormData> HTMLFormElement::formData(const char* boundary) const
                     if (size_t dataSize = item.m_data.length())
                         result->appendData(item.m_data.data(), dataSize);
                     else if (!item.m_path.isEmpty())
-                        result->appendFile(item.m_path);
+                        result->appendFile(item.m_path, shouldGenerateFile);
                     result->appendData("\r\n", 2);
 
                     ++j;

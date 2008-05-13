@@ -64,7 +64,7 @@ void JSDocument::setLocation(ExecState* exec, JSValue* value)
 
     // IE and Mozilla both resolve the URL relative to the source frame,
     // not the target frame.
-    Frame* activeFrame = toJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
+    Frame* activeFrame = asJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
     if (activeFrame)
         str = activeFrame->document()->completeURL(str).string();
 
@@ -93,7 +93,7 @@ JSValue* toJS(ExecState* exec, Document* doc)
     // Make sure the document is kept around by the window object, and works right with the
     // back/forward cache.
     if (doc->frame())
-        toJSDOMWindowWrapper(doc->frame())->window()->putDirect("document", ret, DontDelete|ReadOnly);
+        toJSDOMWindowShell(doc->frame())->window()->putDirect("document", ret, DontDelete|ReadOnly);
     else {
         size_t nodeCount = 0;
         for (Node* n = doc; n; n = n->traverseNextNode())

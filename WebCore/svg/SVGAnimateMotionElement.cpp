@@ -26,10 +26,12 @@
 #include "SVGAnimateMotionElement.h"
 
 #include "RenderObject.h"
+#include "SVGElementInstance.h"
 #include "SVGMPathElement.h"
 #include "SVGParserUtilities.h"
 #include "SVGPathElement.h"
 #include "SVGTransformList.h"
+#include <math.h>
 
 namespace WebCore {
     
@@ -38,7 +40,6 @@ using namespace SVGNames;
 SVGAnimateMotionElement::SVGAnimateMotionElement(const QualifiedName& tagName, Document* doc)
     : SVGAnimationElement(tagName, doc)
     , m_baseIndexInTransformList(0)
-    , m_rotateMode(AngleMode)
     , m_angle(0)
 {
 }
@@ -51,27 +52,28 @@ bool SVGAnimateMotionElement::hasValidTarget() const
 {
     if (!SVGAnimationElement::hasValidTarget())
         return false;
-    if (!targetElement()->isStyledTransformable())
+    SVGElement* targetElement = this->targetElement();
+    if (!targetElement->isStyledTransformable() && !targetElement->hasTagName(SVGNames::textTag))
         return false;
     // Spec: SVG 1.1 section 19.2.15
-    if (targetElement()->hasTagName(gTag)
-        || targetElement()->hasTagName(defsTag)
-        || targetElement()->hasTagName(useTag)
-        || targetElement()->hasTagName(imageTag)
-        || targetElement()->hasTagName(switchTag)
-        || targetElement()->hasTagName(pathTag)
-        || targetElement()->hasTagName(rectTag)
-        || targetElement()->hasTagName(circleTag)
-        || targetElement()->hasTagName(ellipseTag)
-        || targetElement()->hasTagName(lineTag)
-        || targetElement()->hasTagName(polylineTag)
-        || targetElement()->hasTagName(polygonTag)
-        || targetElement()->hasTagName(textTag)
-        || targetElement()->hasTagName(clipPathTag)
-        || targetElement()->hasTagName(maskTag)
-        || targetElement()->hasTagName(aTag)
+    if (targetElement->hasTagName(gTag)
+        || targetElement->hasTagName(defsTag)
+        || targetElement->hasTagName(useTag)
+        || targetElement->hasTagName(imageTag)
+        || targetElement->hasTagName(switchTag)
+        || targetElement->hasTagName(pathTag)
+        || targetElement->hasTagName(rectTag)
+        || targetElement->hasTagName(circleTag)
+        || targetElement->hasTagName(ellipseTag)
+        || targetElement->hasTagName(lineTag)
+        || targetElement->hasTagName(polylineTag)
+        || targetElement->hasTagName(polygonTag)
+        || targetElement->hasTagName(textTag)
+        || targetElement->hasTagName(clipPathTag)
+        || targetElement->hasTagName(maskTag)
+        || targetElement->hasTagName(aTag)
 #if ENABLE(SVG_FOREIGN_OBJECT)
-        || targetElement()->hasTagName(foreignObjectTag)
+        || targetElement->hasTagName(foreignObjectTag)
 #endif
         )
         return true;
@@ -80,36 +82,37 @@ bool SVGAnimateMotionElement::hasValidTarget() const
 
 void SVGAnimateMotionElement::parseMappedAttribute(MappedAttribute* attr)
 {
-    if (attr->name() == SVGNames::rotateAttr) {
-        if (attr->value() == "auto")
-            m_rotateMode = AutoMode;
-        else if (attr->value() == "auto-reverse")
-            m_rotateMode = AutoReverseMode;
-        else {
-            m_rotateMode = AngleMode;
-            m_angle = attr->value().toFloat();
-        }
-    } else if (attr->name() == SVGNames::keyPointsAttr) {
-        // FIXME: Implement key points.
-    } else if (attr->name() == SVGNames::dAttr) {
+    if (attr->name() == SVGNames::pathAttr) {
         m_path = Path();
         pathFromSVGData(m_path, attr->value());
     } else
         SVGAnimationElement::parseMappedAttribute(attr);
 }
-
-Path SVGAnimateMotionElement::animationPath()
+    
+SVGAnimateMotionElement::RotateMode SVGAnimateMotionElement::rotateMode() const
 {
-    for (Node* child = firstChild(); child; child->nextSibling()) {
+    static const AtomicString autoVal("auto");
+    static const AtomicString autoReverse("auto-reverse");
+    String rotate = getAttribute(SVGNames::rotateAttr);
+    if (rotate == autoVal)
+        return RotateAuto;
+    if (rotate == autoReverse)
+        return RotateAutoReverse;
+    return RotateAngle;
+}
+
+Path SVGAnimateMotionElement::animationPath() const
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling()) {
         if (child->hasTagName(SVGNames::mpathTag)) {
             SVGMPathElement* mPath = static_cast<SVGMPathElement*>(child);
             SVGPathElement* pathElement = mPath->pathElement();
             if (pathElement)
                 return pathElement->toPathData();
-            // The spec would probably have us throw up an error here, but instead we try to fall back to the d value
+            return Path();
         }
     }
-    if (hasAttribute(SVGNames::dAttr))
+    if (hasAttribute(SVGNames::pathAttr))
         return m_path;
     return Path();
 }
@@ -142,10 +145,11 @@ void SVGAnimateMotionElement::resetToBaseValue(const String&)
 {
     if (!hasValidTarget())
         return;
-    SVGStyledTransformableElement* transformableElement = static_cast<SVGStyledTransformableElement*>(targetElement());
-    // FIXME: This should modify supplemental transform, not the transform attribute!
-    ExceptionCode ec;
-    transformableElement->transform()->clear(ec);
+    SVGElement* target = targetElement();
+    AffineTransform* transform = target->supplementalTransform();
+    if (!transform)
+        return;
+    transform->reset();
 }
 
 bool SVGAnimateMotionElement::calculateFromAndToValues(const String& fromString, const String& toString)
@@ -164,40 +168,75 @@ bool SVGAnimateMotionElement::calculateFromAndByValues(const String& fromString,
     return true;
 }
 
-void SVGAnimateMotionElement::calculateAnimatedValue(float percentage, unsigned repeat, SVGSMILElement* resultElement)
+void SVGAnimateMotionElement::calculateAnimatedValue(float percentage, unsigned repeat, SVGSMILElement*)
 {
-    if (!resultElement->targetElement()->isStyledTransformable())
+    SVGElement* target = targetElement();
+    if (!target)
+        return;
+    AffineTransform* transform = target->supplementalTransform();
+    if (!transform)
         return;
     
-    // FIXME: This should modify supplemental transform, not the transform attribute!
-    SVGStyledTransformableElement* transformableElement = static_cast<SVGStyledTransformableElement*>(resultElement->targetElement());
-    RefPtr<SVGTransformList> transformList = transformableElement->transform();
-    if (!transformList)
-        return;
+    if (!isAdditive())
+        transform->reset();
     
-    ExceptionCode ec;
-    if (!isAdditive()) {
-        ASSERT(this == resultElement);
-        transformList->clear(ec);
+    // FIXME: Implement accumulate.
+    
+    if (animationMode() == PathAnimation) {
+        ASSERT(!animationPath().isEmpty());
+        Path path = animationPath();
+        float positionOnPath = path.length() * percentage;
+        bool ok;
+        FloatPoint position = path.pointAtLength(positionOnPath, ok);
+        if (ok) {
+            transform->translate(position.x(), position.y());
+            RotateMode rotateMode = this->rotateMode();
+            if (rotateMode == RotateAuto || rotateMode == RotateAutoReverse) {
+                float angle = path.normalAngleAtLength(positionOnPath, ok);
+                if (rotateMode == RotateAutoReverse)
+                    angle += 180.f;
+                transform->rotate(angle);
+            }
+        }
+        return;
     }
-    
     FloatSize diff = m_toPoint - m_fromPoint;
-    AffineTransform transform;
-    // FIXME: Animate angles
-    transform.translate(diff.width() * percentage + m_fromPoint.x(), diff.height() * percentage + m_fromPoint.y());
-    
-    // FIXME: Accumulate.
-
-    if (!transform.isIdentity())
-        transformList->appendItem(SVGTransform(transform), ec);
-
-    if (transformableElement->renderer())
-        transformableElement->renderer()->setNeedsLayout(true); // should be part of setTransform
+    transform->translate(diff.width() * percentage + m_fromPoint.x(), diff.height() * percentage + m_fromPoint.y());
 }
     
 void SVGAnimateMotionElement::applyResultsToTarget()
 {
+    // We accumulate to the target element transform list so there is not much to do here.
+    SVGElement* targetElement = this->targetElement();
+    if (targetElement && targetElement->renderer())
+        targetElement->renderer()->setNeedsLayout(true);
     
+    // ...except in case where we have additional instances in <use> trees.
+    HashSet<SVGElementInstance*>* instances = document()->accessSVGExtensions()->instancesForElement(targetElement);
+    if (!instances)
+        return;
+    HashSet<SVGElementInstance*>::iterator end = instances->end();
+    for (HashSet<SVGElementInstance*>::iterator it = instances->begin(); it != end; ++it) {
+        SVGElement* shadowTreeElement = (*it)->shadowTreeElement();
+        ASSERT(shadowTreeElement);
+        AffineTransform* transform = shadowTreeElement->supplementalTransform();
+        AffineTransform* t = targetElement->supplementalTransform();
+        transform->setMatrix(t->a(), t->b(), t->c(), t->d(), t->e(), t->f());
+        if (shadowTreeElement->renderer())
+            shadowTreeElement->renderer()->setNeedsLayout(true);
+    }
+}
+
+float SVGAnimateMotionElement::calculateDistance(const String& fromString, const String& toString)
+{
+    FloatPoint from;
+    FloatPoint to;
+    if (!parsePoint(fromString, from))
+        return -1.f;
+    if (!parsePoint(toString, to))
+        return -1.f;
+    FloatSize diff = to - from;
+    return sqrtf(diff.width() * diff.width() + diff.height() * diff.height());
 }
 
 }

@@ -31,10 +31,13 @@
 #import "WebCache.h"
 #import "WebFrameInternal.h"
 #import <JavaScriptCore/interpreter.h>
+#import <WebCore/FontCache.h>
 #import <WebCore/Frame.h>
 #import <WebCore/GCController.h>
+#import <WebCore/GlyphPageTreeNode.h>
 #import <WebCore/IconDatabase.h>
 #import <WebCore/RenderTreeAsText.h>
+#import <WebCore/RenderView.h>
 
 using namespace KJS;
 using namespace WebCore;
@@ -115,6 +118,26 @@ using namespace WebCore;
     return iconDatabase()->iconRecordCountWithData();
 }
 
++ (size_t)cachedFontDataCount
+{
+    return FontCache::fontDataCount();
+}
+
++ (size_t)cachedFontDataInactiveCount
+{
+    return FontCache::inactiveFontDataCount();
+}
+
++ (void)purgeInactiveFontData
+{
+    FontCache::purgeInactiveFontData();
+}
+
++ (size_t)glyphPageCount
+{
+    return GlyphPageTreeNode::treeGlyphPageCount();
+}
+
 + (BOOL)shouldPrintExceptions
 {
     JSLock lock;
@@ -180,7 +203,7 @@ using namespace WebCore;
 
 - (NSString *)renderTreeAsExternalRepresentation
 {
-    return externalRepresentation(_private->coreFrame->renderer());
+    return externalRepresentation(_private->coreFrame->contentRenderer());
 }
 
 @end

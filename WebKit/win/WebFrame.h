@@ -31,6 +31,8 @@
 #include "WebKit.h"
 #include "WebDataSource.h"
 
+#include "AccessibleDocument.h"
+
 #pragma warning(push, 0)
 #include <WebCore/FrameWin.h>
 #include <WebCore/KURL.h>
@@ -295,6 +297,8 @@ public:
 
     WebView* webView() const;
 
+    COMPtr<IAccessible> accessible() const;
+
 protected:
     void loadHTMLString(BSTR string, BSTR baseURL, BSTR unreachableURL);
     void loadData(PassRefPtr<WebCore::SharedBuffer>, BSTR mimeType, BSTR textEncodingName, BSTR baseURL, BSTR failingURL);
@@ -312,6 +316,7 @@ protected:
     bool                m_inPrintingMode;
     Vector<WebCore::IntRect> m_pageRects;
     int m_pageHeight;   // height of the page adjusted by margins
+    mutable COMPtr<AccessibleDocument> m_accessible;
 };
 
 #endif

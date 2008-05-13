@@ -46,6 +46,8 @@
 #include <QDebug>
 #include <QWidget>
 #include <QPainter>
+#include <QApplication>
+#include <QPalette>
 
 #ifdef Q_WS_MAC
 #include <Carbon/Carbon.h>
@@ -64,6 +66,7 @@ public:
     ScrollViewPrivate(ScrollView* view)
       : m_view(view)
       , m_hasStaticBackground(false)
+      , m_nativeWidgets(0)
       , m_scrollbarsSuppressed(false)
       , m_inUpdateScrollbars(false)
       , m_scrollbarsAvoidingResizer(0)
@@ -91,6 +94,7 @@ public:
     IntSize m_scrollOffset;
     IntSize m_contentsSize;
     bool m_hasStaticBackground;
+    int  m_nativeWidgets;
     bool m_scrollbarsSuppressed;
     bool m_inUpdateScrollbars;
     int m_scrollbarsAvoidingResizer;
@@ -159,12 +163,11 @@ void ScrollView::ScrollViewPrivate::scrollBackingStore(const IntSize& scrollDelt
     IntRect updateRect = clipRect;
     updateRect.intersect(scrollViewRect);
 
-    if (!m_hasStaticBackground) {
+    if (!m_hasStaticBackground && !m_view->topLevel()->hasNativeWidgets()) {
        m_view->scrollBackingStore(-scrollDelta.width(), -scrollDelta.height(),
                                   scrollViewRect, clipRect);
     } else  {
-       // We need to go ahead and repaint the entire backing store.  Do it now before moving the
-       // plugins.
+       // We need to go ahead and repaint the entire backing store.
        m_view->addToDirtyRegion(updateRect);
        m_view->updateBackingStore();
     }
@@ -292,6 +295,8 @@ void ScrollView::geometryChanged() const
     HashSet<Widget*>::const_iterator end = m_data->m_children.end();
     for (HashSet<Widget*>::const_iterator current = m_data->m_children.begin(); current != end; ++current)
         (*current)->geometryChanged();
+
+    const_cast<ScrollView *>(this)->invalidateScrollbars();
 }
 
 
@@ -391,30 +396,35 @@ WebCore::ScrollbarMode ScrollView::vScrollbarMode() const
 void ScrollView::suppressScrollbars(bool suppressed, bool repaintOnSuppress)
 {
     m_data->m_scrollbarsSuppressed = suppressed;
-    if (repaintOnSuppress && !suppressed) {
-        if (m_data->m_hBar)
-            m_data->m_hBar->invalidate();
-        if (m_data->m_vBar)
-            m_data->m_vBar->invalidate();
+    if (repaintOnSuppress && !suppressed)
+        invalidateScrollbars();
+}
 
-        // Invalidate the scroll corner too on unsuppress.
-        IntRect hCorner;
-        if (m_data->m_hBar && width() - m_data->m_hBar->width() > 0) {
-            hCorner = IntRect(m_data->m_hBar->width(),
-                              height() - m_data->m_hBar->height(),
-                              width() - m_data->m_hBar->width(),
-                              m_data->m_hBar->height());
-            invalidateRect(hCorner);
-        }
+void ScrollView::invalidateScrollbars()
+{
+    if (m_data->m_hBar)
+        m_data->m_hBar->invalidate();
+    if (m_data->m_vBar)
+        m_data->m_vBar->invalidate();
 
-        if (m_data->m_vBar && height() - m_data->m_vBar->height() > 0) {
-            IntRect vCorner(width() - m_data->m_vBar->width(),
-                            m_data->m_vBar->height(),
-                            m_data->m_vBar->width(),
-                            height() - m_data->m_vBar->height());
-            if (vCorner != hCorner)
-                invalidateRect(vCorner);
-        }
+
+    // Invalidate the scroll corner too
+    IntRect hCorner;
+    if (m_data->m_hBar && width() - m_data->m_hBar->width() > 0) {
+        hCorner = IntRect(m_data->m_hBar->width(),
+                         height() - m_data->m_hBar->height(),
+                         width() - m_data->m_hBar->width(),
+                         m_data->m_hBar->height());
+       addToDirtyRegion(convertToContainingWindow(hCorner));
+    }
+
+    if (m_data->m_vBar && height() - m_data->m_vBar->height() > 0) {
+        IntRect vCorner(width() - m_data->m_vBar->width(),
+                       m_data->m_vBar->height(),
+                       m_data->m_vBar->width(),
+                       height() - m_data->m_vBar->height());
+        if (vCorner != hCorner)
+            addToDirtyRegion(convertToContainingWindow(vCorner));
     }
 }
 
@@ -614,14 +624,33 @@ void ScrollView::addChild(Widget* child)
 {
     child->setParent(this);
     m_data->m_children.add(child);
+
+    if (child->nativeWidget())
+        topLevel()->incrementNativeWidgetCount();
 }
 
 void ScrollView::removeChild(Widget* child)
 {
+    if (child->nativeWidget())
+        topLevel()->decrementNativeWidgetCount();
+
     child->setParent(0);
     child->hide();
     m_data->m_children.remove(child);
 }
+
+static void drawScrollbarCorner(GraphicsContext* context, const IntRect& rect)
+{
+#if QT_VERSION < 0x040500
+    context->fillRect(rect, QApplication::palette().color(QPalette::Normal, QPalette::Window));
+#else
+    QStyleOption option;
+    option.rect = rect;
+    QApplication::style()->drawPrimitive(QStyle::PE_PanelScrollAreaCorner,
+            &option, context->platformContext(), 0);
+#endif
+}
+
 
 void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
 {
@@ -661,7 +690,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
         if (m_data->m_vBar)
             m_data->m_vBar->paint(context, scrollViewDirtyRect);
 
-        // Fill the scroll corner with white.
+        // Fill the scroll corners using the current Qt style
         IntRect hCorner;
         if (m_data->m_hBar && width() - m_data->m_hBar->width() > 0) {
             hCorner = IntRect(m_data->m_hBar->width(),
@@ -669,7 +698,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
                               width() - m_data->m_hBar->width(),
                               m_data->m_hBar->height());
             if (hCorner.intersects(scrollViewDirtyRect))
-                context->fillRect(hCorner, Color::white);
+                drawScrollbarCorner(context, hCorner);
         }
 
         if (m_data->m_vBar && height() - m_data->m_vBar->height() > 0) {
@@ -678,7 +707,7 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
                             m_data->m_vBar->width(),
                             height() - m_data->m_vBar->height());
             if (vCorner != hCorner && vCorner.intersects(scrollViewDirtyRect))
-                context->fillRect(vCorner, Color::white);
+                drawScrollbarCorner(context, vCorner);
         }
 
         context->restore();
@@ -687,15 +716,31 @@ void ScrollView::paint(GraphicsContext* context, const IntRect& rect)
 
 void ScrollView::wheelEvent(PlatformWheelEvent& e)
 {
+    float deltaX = e.deltaX();
+    float deltaY = e.deltaY();
+
+    PlatformMouseEvent mouseEvent(e.pos(), e.globalPos(), NoButton, MouseEventScroll,
+            0, e.shiftKey(), e.ctrlKey(), e.altKey(), e.metaKey(), 0);
+    PlatformScrollbar* scrollBar = scrollbarUnderMouse(mouseEvent);
+
+    if (scrollBar && scrollBar == verticalScrollBar()) {
+        deltaY = (deltaY == 0 ? deltaX : deltaY);
+        deltaX = 0;
+    } else if (scrollBar && scrollBar == horizontalScrollBar()) {
+        deltaX = (deltaX == 0 ? deltaY : deltaX);
+        deltaY = 0;
+    }
+
     // Determine how much we want to scroll.  If we can move at all, we will accept the event.
     IntSize maxScrollDelta = maximumScroll();
-    if ((e.deltaX() < 0 && maxScrollDelta.width() > 0) ||
-        (e.deltaX() > 0 && scrollOffset().width() > 0) ||
-        (e.deltaY() < 0 && maxScrollDelta.height() > 0) ||
-        (e.deltaY() > 0 && scrollOffset().height() > 0))
-        e.accept();
+    if ((deltaX < 0 && maxScrollDelta.width() > 0) ||
+        (deltaX > 0 && scrollOffset().width() > 0) ||
+        (deltaY < 0 && maxScrollDelta.height() > 0) ||
+        (deltaY > 0 && scrollOffset().height() > 0)) {
 
-    scrollBy(-e.deltaX() * LINE_STEP, -e.deltaY() * LINE_STEP);
+        e.accept();
+        scrollBy(int(-deltaX * LINE_STEP), int(-deltaY * LINE_STEP));
+    }
 }
 
 bool ScrollView::scroll(ScrollDirection direction, ScrollGranularity granularity)
@@ -776,6 +821,21 @@ void ScrollView::updateBackingStore()
     if (!page)
         return;
     page->chrome()->updateBackingStore();
+}
+
+void ScrollView::incrementNativeWidgetCount()
+{
+    ++m_data->m_nativeWidgets;
+}
+
+void ScrollView::decrementNativeWidgetCount()
+{
+    --m_data->m_nativeWidgets;
+}
+
+bool ScrollView::hasNativeWidgets() const
+{
+    return m_data->m_nativeWidgets != 0;
 }
 
 }

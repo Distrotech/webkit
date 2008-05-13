@@ -93,6 +93,7 @@
 #import <JavaScriptCore/RefPtr.h>
 #import <JavaScriptCore/array_object.h>
 #import <JavaScriptCore/date_object.h>
+#import <WebCore/ApplicationCacheStorage.h>
 #import <WebCore/Cache.h>
 #import <WebCore/ColorMac.h>
 #import <WebCore/Document.h>
@@ -110,6 +111,7 @@
 #import <WebCore/MIMETypeRegistry.h>
 #import <WebCore/Page.h>
 #import <WebCore/PageCache.h>
+#import <WebCore/PageGroup.h>
 #import <WebCore/PlatformMouseEvent.h>
 #import <WebCore/ProgressTracker.h>
 #import <WebCore/SelectionController.h>
@@ -122,11 +124,16 @@
 #import <WebKit/DOM.h>
 #import <WebKit/DOMExtensions.h>
 #import <WebKit/DOMPrivate.h>
-#import <WebKit/WebDashboardRegion.h>
 #import <WebKitSystemInterface.h>
+#import <kjs/InitializeThreading.h>
 #import <mach-o/dyld.h>
 #import <objc/objc-auto.h>
 #import <objc/objc-runtime.h>
+#import <sys/param.h>
+
+#if ENABLE(DASHBOARD_SUPPORT)
+#import <WebKit/WebDashboardRegion.h>
+#endif
 
 using namespace WebCore;
 using namespace KJS;
@@ -358,10 +365,12 @@ static int pluginDatabaseClientCount = 0;
 
     BOOL smartInsertDeleteEnabled;
         
+#if ENABLE(DASHBOARD_SUPPORT)
     BOOL dashboardBehaviorAlwaysSendMouseEventsToAllWindows;
     BOOL dashboardBehaviorAlwaysSendActiveNullEventsToPlugIns;
     BOOL dashboardBehaviorAlwaysAcceptsFirstMouse;
     BOOL dashboardBehaviorAllowWheelScrolling;
+#endif
     
     // WebKit has both a global plug-in database and a separate, per WebView plug-in database. Dashboard uses the per WebView database.
     WebPluginDatabase *pluginDatabase;
@@ -457,10 +466,13 @@ static BOOL grammarCheckingEnabled;
     self = [super init];
     if (!self)
         return nil;
+    KJS::initializeThreading();
     allowsUndo = YES;
     zoomMultiplier = 1;
     zoomMultiplierIsTextOnly = YES;
+#if ENABLE(DASHBOARD_SUPPORT)
     dashboardBehaviorAllowWheelScrolling = YES;
+#endif
     shouldCloseWithWindow = objc_collecting_enabled();
     continuousSpellCheckingEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:WebContinuousSpellCheckingEnabled];
 
@@ -693,7 +705,6 @@ static bool debugWidget = true;
         mainFrame->loader()->detachFromParent();
 
     [self _removeFromAllWebViewsSet];
-    [self setGroupName:nil];
     [self setHostWindow:nil];
 
     [self setDownloadDelegate:nil];
@@ -934,7 +945,7 @@ static bool debugWidget = true;
 {
     WebPreferences *preferences = (WebPreferences *)[notification object];
     ASSERT(preferences == [self preferences]);
-
+    
     if (!_private->userAgentOverridden)
         *_private->userAgent = String();
 
@@ -955,6 +966,7 @@ static bool debugWidget = true;
     settings->setFixedFontFamily([preferences fixedFontFamily]);
     settings->setForceFTPDirectoryListings([preferences _forceFTPDirectoryListings]);
     settings->setFTPDirectoryTemplatePath([preferences _ftpDirectoryTemplatePath]);
+    settings->setLocalStorageDatabasePath([preferences _localStorageDatabasePath]);
     settings->setJavaEnabled([preferences isJavaEnabled]);
     settings->setJavaScriptEnabled([preferences isJavaScriptEnabled]);
     settings->setJavaScriptCanOpenWindowsAutomatically([preferences javaScriptCanOpenWindowsAutomatically]);
@@ -984,6 +996,8 @@ static bool debugWidget = true;
     settings->setNeedsKeyboardEventDisambiguationQuirks([self _needsKeyboardEventDisambiguationQuirks]);
     settings->setNeedsSiteSpecificQuirks(_private->useSiteSpecificSpoofing);
     settings->setWebArchiveDebugModeEnabled([preferences webArchiveDebugModeEnabled]);
+    settings->disableRangeMutationForOldAppleMail(WKAppVersionCheckLessThan(@"com.apple.mail", -1, 4.0));
+    settings->setOfflineWebApplicationCacheEnabled([preferences offlineWebApplicationCacheEnabled]);
 }
 
 static inline IMP getMethod(id o, SEL s)
@@ -1322,6 +1336,8 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
     _private->page->dragController()->setDidInitiateDrag(initiatedDrag);
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
+
 #define DASHBOARD_CONTROL_LABEL @"control"
 
 - (void)_addScrollerDashboardRegions:(NSMutableDictionary *)regions from:(NSArray *)views
@@ -1432,6 +1448,8 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
     }
     return NO;
 }
+
+#endif /* ENABLE(DASHBOARD_SUPPORT) */
 
 + (void)_setShouldUseFontSmoothing:(BOOL)f
 {
@@ -1690,6 +1708,8 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
     applicationIsTerminating = YES;
     if (!pluginDatabaseClientCount)
         [WebPluginDatabase closeSharedDatabase];
+
+    PageGroup::closeLocalStorage();
 }
 
 + (BOOL)canShowMIMEType:(NSString *)MIMEType
@@ -1796,6 +1816,36 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
     [types release];
 }
 
+static void WebKitInitializeApplicationCachePathIfNecessary()
+{
+    static BOOL initialized = NO;
+    if (initialized)
+        return;
+
+    NSString *appName = [[NSBundle mainBundle] bundleIdentifier];
+    if (!appName)
+        appName = [[NSProcessInfo processInfo] processName];
+    
+    ASSERT(appName);
+
+    NSString* cacheDir = nil;
+    
+#ifdef BUILDING_ON_TIGER
+    cacheDir = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Caches"];
+#else
+    char cacheDirectory[MAXPATHLEN];
+    size_t cacheDirectoryLen = confstr(_CS_DARWIN_USER_CACHE_DIR, cacheDirectory, MAXPATHLEN);
+    
+    if (cacheDirectoryLen)
+        cacheDir = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:cacheDirectory length:cacheDirectoryLen - 1];
+#endif
+
+    cacheDir = [cacheDir stringByAppendingPathComponent:appName];    
+
+    cacheStorage().setCacheDirectory(cacheDir);
+    initialized = YES;
+}
+
 - (void)_commonInitializationWithFrameName:(NSString *)frameName groupName:(NSString *)groupName
 {
     WebPreferences *standardPreferences = [WebPreferences standardPreferences];
@@ -1818,8 +1868,10 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
     WebCore::InitializeLoggingChannelsIfNecessary();
     [WebHistoryItem initWindowWatcherIfNecessary];
     WebKitInitializeDatabasesIfNecessary();
-
+    WebKitInitializeApplicationCachePathIfNecessary();
+    
     _private->page = new Page(new WebChromeClient(self), new WebContextMenuClient(self), new WebEditorClient(self), new WebDragClient(self), new WebInspectorClient(self));
+
     [WebFrame _createMainFrameWithPage:_private->page frameName:frameName frameView:frameView];
 
 #ifndef BUILDING_ON_TIGER
@@ -1855,6 +1907,7 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
 
     // Post a notification so the WebCore settings update.
     [[self preferences] _postPreferencesChangesNotification];
+
 
     if (!WebKitLinkedOnOrAfter(WEBKIT_FIRST_VERSION_WITH_LOCAL_RESOURCE_SECURITY_RESTRICTION))
         FrameLoader::setRestrictAccessToLocal(false);
@@ -2022,18 +2075,24 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
 
 - (void)viewWillMoveToWindow:(NSWindow *)window
 {
-    // Don't do anything if we aren't initialized.  This happens when decoding a WebView.
+    // Don't do anything if the WebView isn't initialized.
+    // This happens when decoding a WebView in a nib.
+    // FIXME: What sets up the observer of NSWindowWillCloseNotification in this case?
     if (!_private)
         return;
+
+    if (_private->closed)
+        return;
     
-    if ([self window])
+    if ([self window] && [self window] != [self hostWindow])
         [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:[self window]];
 
     if (window) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowWillClose:) name:NSWindowWillCloseNotification object:window];
 
-        // Ensure that we will receive the events that WebHTMLView (at least) needs. It's expensive enough
-        // that we don't want to call it over and over.
+        // Ensure that we will receive the events that WebHTMLView (at least) needs.
+        // The following are expensive enough that we don't want to call them over
+        // and over, so do them when we move into a window.
         [window setAcceptsMouseMovedEvents:YES];
         WKSetNSWindowShouldPostEventNotifications(window, YES);
     }
@@ -2431,19 +2490,22 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
 
 - (void)setHostWindow:(NSWindow *)hostWindow
 {
-    if (!_private->closed && hostWindow != _private->hostWindow) {
-        Frame* coreFrame = core([self mainFrame]);
-        for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
-            [[[kit(frame) frameView] documentView] viewWillMoveToHostWindow:hostWindow];
-        if (_private->hostWindow)
-            [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:_private->hostWindow];
-        if (hostWindow)
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowWillClose:) name:NSWindowWillCloseNotification object:hostWindow];
-        [_private->hostWindow release];
-        _private->hostWindow = [hostWindow retain];
-        for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
-            [[[kit(frame) frameView] documentView] viewDidMoveToHostWindow];
-    }
+    if (_private->closed)
+        return;
+    if (hostWindow == _private->hostWindow)
+        return;
+
+    Frame* coreFrame = core([self mainFrame]);
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
+        [[[kit(frame) frameView] documentView] viewWillMoveToHostWindow:hostWindow];
+    if (_private->hostWindow && [self window] != _private->hostWindow)
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:NSWindowWillCloseNotification object:_private->hostWindow];
+    if (hostWindow)
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_windowWillClose:) name:NSWindowWillCloseNotification object:hostWindow];
+    [_private->hostWindow release];
+    _private->hostWindow = [hostWindow retain];
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame))
+        [[[kit(frame) frameView] documentView] viewDidMoveToHostWindow];
 }
 
 - (NSWindow *)hostWindow
@@ -2502,22 +2564,30 @@ WebFrameLoadDelegateImplementationCache* WebViewGetFrameLoadDelegateImplementati
 
 - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)draggingInfo
 {
+    Page* page = core(self);
+    if (!page)
+        return NSDragOperationNone;
+
     NSView <WebDocumentView>* view = [self documentViewAtWindowPoint:[draggingInfo draggingLocation]];
     WebPasteboardHelper helper([view isKindOfClass:[WebHTMLView class]] ? (WebHTMLView*)view : nil);
     IntPoint client([draggingInfo draggingLocation]);
     IntPoint global(globalPoint([draggingInfo draggingLocation], [self window]));
     DragData dragData(draggingInfo, client, global, (DragOperation)[draggingInfo draggingSourceOperationMask], &helper);
-    return core(self)->dragController()->dragUpdated(&dragData);
+    return page->dragController()->dragUpdated(&dragData);
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)draggingInfo
 {
+    Page* page = core(self);
+    if (!page)
+        return;
+
     NSView <WebDocumentView>* view = [self documentViewAtWindowPoint:[draggingInfo draggingLocation]];
     WebPasteboardHelper helper([view isKindOfClass:[WebHTMLView class]] ? (WebHTMLView*)view : nil);
     IntPoint client([draggingInfo draggingLocation]);
     IntPoint global(globalPoint([draggingInfo draggingLocation], [self window]));
     DragData dragData(draggingInfo, client, global, (DragOperation)[draggingInfo draggingSourceOperationMask], &helper);
-    core(self)->dragController()->dragExited(&dragData);
+    page->dragController()->dragExited(&dragData);
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)draggingInfo
@@ -3996,6 +4066,9 @@ static WebFrameView *containingFrameView(NSView *view)
     [nsurlCache setMemoryCapacity:nsurlCacheMemoryCapacity];
     [nsurlCache setDiskCapacity:nsurlCacheDiskCapacity];
 
+    // Empty the application cache.
+    cacheStorage().empty();
+    
     s_cacheModel = cacheModel;
     s_didSetCacheModel = YES;
 }

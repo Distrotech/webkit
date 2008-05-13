@@ -110,7 +110,12 @@ void RenderReplaced::paint(PaintInfo& paintInfo, int tx, int ty)
     if (hasBoxDecorations() && (paintInfo.phase == PaintPhaseForeground || paintInfo.phase == PaintPhaseSelection)) 
         paintBoxDecorations(paintInfo, tx, ty);
     
-    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && style()->outlineWidth() && style()->visibility() == VISIBLE)
+    if (paintInfo.phase == PaintPhaseMask) {
+        paintMask(paintInfo, tx, ty);
+        return;
+    }
+
+    if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && style()->outlineWidth())
         paintOutline(paintInfo.context, tx, ty, width(), height(), style());
     
     if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection)
@@ -135,7 +140,7 @@ void RenderReplaced::paint(PaintInfo& paintInfo, int tx, int ty)
 bool RenderReplaced::shouldPaint(PaintInfo& paintInfo, int& tx, int& ty)
 {
     if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseOutline && paintInfo.phase != PaintPhaseSelfOutline 
-            && paintInfo.phase != PaintPhaseSelection)
+            && paintInfo.phase != PaintPhaseSelection && paintInfo.phase != PaintPhaseMask)
         return false;
 
     if (!shouldPaintWithinRoot(paintInfo))
@@ -189,20 +194,6 @@ short RenderReplaced::lineHeight(bool, bool) const
 short RenderReplaced::baselinePosition(bool, bool) const
 {
     return height() + marginTop() + marginBottom();
-}
-
-int RenderReplaced::caretMinOffset() const 
-{ 
-    return 0; 
-}
-
-// Returns 1 since a replaced element can have the caret positioned 
-// at its beginning (0), or at its end (1).
-// NOTE: Yet, "select" elements can have any number of "option" elements
-// as children, so this "0 or 1" idea does not really hold up.
-int RenderReplaced::caretMaxOffset() const 
-{ 
-    return 1; 
 }
 
 unsigned RenderReplaced::caretMaxRenderedOffset() const
@@ -313,21 +304,21 @@ void RenderReplaced::setIntrinsicSize(const IntSize& size)
 
 void RenderReplaced::adjustOverflowForBoxShadow()
 {
-    if (ShadowData* boxShadow = style()->boxShadow()) {
-        if (!gOverflowRectMap)
-            gOverflowRectMap = new OverflowRectMap();
-
+    IntRect overflow;
+    for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next) {
         IntRect shadow = borderBox();
         shadow.move(boxShadow->x, boxShadow->y);
         shadow.inflate(boxShadow->blur);
-        shadow.unite(borderBox());
-
-        gOverflowRectMap->set(this, shadow);
-        m_hasOverflow = true;
-        return;
+        overflow.unite(shadow);
     }
 
-    if (m_hasOverflow) {
+    if (!overflow.isEmpty()) {
+        if (!gOverflowRectMap)
+            gOverflowRectMap = new OverflowRectMap();
+        overflow.unite(borderBox());
+        gOverflowRectMap->set(this, overflow);
+        m_hasOverflow = true;
+    } else if (m_hasOverflow) {
         gOverflowRectMap->remove(this);
         m_hasOverflow = false;
     }

@@ -50,9 +50,10 @@ This file contains the list of files needed to build WebCore.
         bindings/js/JSCustomVoidCallback.cpp
         bindings/js/JSCustomXPathNSResolver.cpp
         bindings/js/JSDatabaseCustom.cpp
+        bindings/js/JSDOMApplicationCacheCustom.cpp
         bindings/js/JSDOMWindowBase.cpp
         bindings/js/JSDOMWindowCustom.cpp
-        bindings/js/JSDOMWindowWrapper.cpp
+        bindings/js/JSDOMWindowShell.cpp
         bindings/js/JSDocumentCustom.cpp
         bindings/js/JSElementCustom.cpp
         bindings/js/JSEventCustom.cpp
@@ -99,7 +100,8 @@ This file contains the list of files needed to build WebCore.
         bindings/js/JSTreeWalkerCustom.cpp
         bindings/js/JSXMLHttpRequestConstructor.cpp
         bindings/js/JSXMLHttpRequestCustom.cpp
-        bindings/js/JSXSLTProcessor.cpp
+        bindings/js/JSXSLTProcessorConstructor.cpp
+        bindings/js/JSXSLTProcessorCustom.cpp
         bindings/js/kjs_binding.cpp
         bindings/js/kjs_events.cpp
         bindings/js/kjs_html.cpp
@@ -146,6 +148,7 @@ This file contains the list of files needed to build WebCore.
         css/CSSParser.cpp
         css/CSSPrimitiveValue.cpp
         css/CSSProperty.cpp
+        css/CSSReflectValue.cpp
         css/CSSRule.cpp
         css/CSSRuleList.cpp
         css/CSSSelector.cpp
@@ -317,12 +320,14 @@ This file contains the list of files needed to build WebCore.
         DerivedSources/WebCore/JSWheelEvent.cpp
         DerivedSources/WebCore/JSXMLHttpRequest.cpp
         DerivedSources/WebCore/JSXMLHttpRequestException.cpp
+        DerivedSources/WebCore/JSXMLHttpRequestProgressEvent.cpp
         DerivedSources/WebCore/JSXMLSerializer.cpp
         DerivedSources/WebCore/JSXPathEvaluator.cpp
         DerivedSources/WebCore/JSXPathException.cpp
         DerivedSources/WebCore/JSXPathExpression.cpp
         DerivedSources/WebCore/JSXPathNSResolver.cpp
         DerivedSources/WebCore/JSXPathResult.cpp
+        DerivedSources/WebCore/JSXSLTProcessor.cpp
         DerivedSources/WebCore/UserAgentStyleSheetsData.cpp
         DerivedSources/WebCore/XLinkNames.cpp
         DerivedSources/WebCore/XMLNames.cpp
@@ -541,6 +546,11 @@ This file contains the list of files needed to build WebCore.
     </set>
     
     <set append="1" var="WEBCORE_SOURCES_LOADER">
+        loader/appcache/ApplicationCache.cpp
+        loader/appcache/ApplicationCacheGroup.cpp
+        loader/appcache/ApplicationCacheResource.cpp
+        loader/appcache/DOMApplicationCache.cpp
+        loader/appcache/ManifestParser.cpp
         loader/archive/ArchiveFactory.cpp
         loader/archive/ArchiveResource.cpp
         loader/archive/ArchiveResourceCollection.cpp
@@ -581,6 +591,9 @@ This file contains the list of files needed to build WebCore.
 
     <set append="1" var="WEBCORE_SOURCES_PAGE">
         page/AccessibilityObject.cpp
+        page/AccessibilityListBox.cpp
+        page/AccessibilityListBoxOption.cpp
+        page/AccessibilityRenderObject.cpp
         page/AnimationController.cpp
         page/AXObjectCache.cpp
         page/BarInfo.cpp
@@ -775,6 +788,7 @@ This file contains the list of files needed to build WebCore.
         rendering/RenderPart.cpp
         rendering/RenderPartObject.cpp
         rendering/RenderReplaced.cpp
+        rendering/RenderReplica.cpp
         rendering/RenderSlider.cpp
         rendering/RenderStyle.cpp
         rendering/RenderTable.cpp
@@ -804,6 +818,8 @@ This file contains the list of files needed to build WebCore.
         storage/DatabaseTracker.cpp
         storage/LocalStorage.cpp
         storage/LocalStorageArea.cpp
+        storage/LocalStorageTask.cpp
+        storage/LocalStorageThread.cpp
         storage/OriginQuotaManager.cpp
         storage/OriginUsageRecord.cpp
         storage/SQLResultSet.cpp
@@ -819,9 +835,13 @@ This file contains the list of files needed to build WebCore.
     </set>
 
     <set append="1" var="WEBCORE_SOURCES_XML">
+        xml/AccessControlList.cpp
+        xml/AccessItem.cpp
+        xml/AccessItemRule.cpp
         xml/DOMParser.cpp
         xml/NativeXPathNSResolver.cpp
         xml/XMLHttpRequest.cpp
+        xml/XMLHttpRequestProgressEvent.cpp
         xml/XMLSerializer.cpp
         xml/XPathEvaluator.cpp
         xml/XPathExpression.cpp

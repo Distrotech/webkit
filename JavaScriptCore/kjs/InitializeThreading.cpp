@@ -29,9 +29,11 @@
 #include "config.h"
 #include "InitializeThreading.h"
 
+#include "collector.h"
 #include "DateMath.h"
 #include "dtoa.h"
 #include "identifier.h"
+#include "JSGlobalObject.h"
 #include "lexer.h"
 #include "Parser.h"
 #include "ustring.h"
@@ -39,17 +41,37 @@
 
 namespace KJS {
 
-void initializeThreading()
+#if PLATFORM(DARWIN)
+static pthread_once_t initializeThreadingKeyOnce = PTHREAD_ONCE_INIT;
+#endif
+
+static void initializeThreadingOnce()
 {
     WTF::initializeThreading();
 #if USE(MULTIPLE_THREADS)
-    if (!s_dtoaP5Mutex) {
-        s_dtoaP5Mutex = new Mutex;
-        UString::null();
-        Identifier::initializeIdentifierThreading();
-        CommonIdentifiers::shared();
-        lexer();
-        initDateMath();
+    s_dtoaP5Mutex = new Mutex;
+#if !PLATFORM(DARWIN) // Darwin has pthread_main_np(), and doesn't need registerAsMainThread() called.
+    Collector::registerAsMainThread();
+#endif
+    UString::null();
+    Identifier::initializeIdentifierThreading();
+    CommonIdentifiers::shared();
+    lexer();
+    initDateMath();
+    JSGlobalObject::threadClassInfoHashTables();
+    JSGlobalObject::head();
+#endif
+}
+
+void initializeThreading()
+{
+#if PLATFORM(DARWIN)
+    pthread_once(&initializeThreadingKeyOnce, initializeThreadingOnce);
+#else
+    static bool initializedThreading = false;
+    if (!initializedThreading) {
+        initializeThreadingOnce();
+        initializedThreading = true;
     }
 #endif
 }

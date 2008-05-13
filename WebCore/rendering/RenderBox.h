@@ -139,11 +139,11 @@ public:
 
     virtual RenderLayer* layer() const { return m_layer; }
 
-    virtual IntRect caretRect(int offset, EAffinity = UPSTREAM, int* extraWidthToEndOfLine = 0);
+    virtual IntRect caretRect(InlineBox*, int caretOffset, int* extraWidthToEndOfLine = 0);
 
-    virtual void paintBackgroundExtended(const PaintInfo&, const Color&, const BackgroundLayer*, int clipY, int clipHeight,
-                                         int tx, int ty, int width, int height, InlineFlowBox* = 0);
-    IntSize calculateBackgroundSize(const BackgroundLayer*, int scaledWidth, int scaledHeight) const;
+    virtual void paintFillLayerExtended(const PaintInfo&, const Color&, const FillLayer*, int clipY, int clipHeight,
+                                        int tx, int ty, int width, int height, InlineFlowBox* = 0, CompositeOperator = CompositeSourceOver);
+    IntSize calculateBackgroundSize(const FillLayer*, int scaledWidth, int scaledHeight) const;
 
     virtual int staticX() const;
     virtual int staticY() const;
@@ -154,6 +154,7 @@ public:
     virtual IntRect getClipRect(int tx, int ty);
 
     virtual void paintBoxDecorations(PaintInfo&, int tx, int ty);
+    virtual void paintMask(PaintInfo& paintInfo, int tx, int ty);
     virtual void imageChanged(WrappedImagePtr);
 
     // Called when a positioned object moves but doesn't change size.  A simplified layout is done
@@ -164,9 +165,13 @@ public:
         setNeedsLayout(false);
     }
 
+    virtual IntRect maskClipRect();
+    
 protected:
-    void paintBackground(const PaintInfo&, const Color&, const BackgroundLayer*, int clipY, int clipHeight, int tx, int ty, int width, int height);
-    void paintBackgrounds(const PaintInfo&, const Color&, const BackgroundLayer*, int clipY, int clipHeight, int tx, int ty, int width, int height);
+    void paintFillLayer(const PaintInfo&, const Color&, const FillLayer*, int clipY, int clipHeight, int tx, int ty, int width, int height, CompositeOperator = CompositeSourceOver);
+    void paintFillLayers(const PaintInfo&, const Color&, const FillLayer*, int clipY, int clipHeight, int tx, int ty, int width, int height, CompositeOperator = CompositeSourceOver);
+
+    void paintMaskImages(const PaintInfo&, int clipY, int clipHeight, int tx, int ty, int width, int height);
 
 #if PLATFORM(MAC)
     void paintCustomHighlight(int tx, int ty, const AtomicString& type, bool behindText);
@@ -179,7 +184,7 @@ protected:
 private:
     void paintRootBoxDecorations(PaintInfo&, int tx, int ty);
 
-    void calculateBackgroundImageGeometry(const BackgroundLayer*, int tx, int ty, int w, int h, IntRect& destRect, IntPoint& phase, IntSize& tileSize);
+    void calculateBackgroundImageGeometry(const FillLayer*, int tx, int ty, int w, int h, IntRect& destRect, IntPoint& phase, IntSize& tileSize);
     
     int containingBlockWidthForPositioned(const RenderObject* containingBlock) const;
     int containingBlockHeightForPositioned(const RenderObject* containingBlock) const;

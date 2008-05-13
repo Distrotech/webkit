@@ -28,7 +28,6 @@
 
 #include "CString.h"
 #include "ExceptionCode.h"
-#include "PlatformString.h"
 #include "SecurityOrigin.h"
 #include "StorageMap.h"
 
@@ -40,9 +39,9 @@ StorageArea::StorageArea(SecurityOrigin* origin)
 {
 }
 
-StorageArea::StorageArea(SecurityOrigin* origin, PassRefPtr<StorageMap> map)
+StorageArea::StorageArea(SecurityOrigin* origin, StorageArea* area)
     : m_securityOrigin(origin)
-    , m_storageMap(map)
+    , m_storageMap(area->m_storageMap)
 {
 }
 
@@ -50,12 +49,12 @@ StorageArea::~StorageArea()
 {
 }
 
-unsigned StorageArea::length() const
+unsigned StorageArea::internalLength() const
 {
     return m_storageMap->length();
 }
 
-String StorageArea::key(unsigned index, ExceptionCode& ec) const
+String StorageArea::internalKey(unsigned index, ExceptionCode& ec) const
 {
     String key;
     
@@ -67,18 +66,14 @@ String StorageArea::key(unsigned index, ExceptionCode& ec) const
     return key;
 }
 
-String StorageArea::getItem(const String& key) const
+String StorageArea::internalGetItem(const String& key) const
 {
     return m_storageMap->getItem(key);
 }
 
-void StorageArea::setItem(const String& key, const String& value, ExceptionCode& ec, Frame* frame)
+void StorageArea::internalSetItem(const String& key, const String& value, ExceptionCode& ec, Frame* frame)
 {
-    // Per the spec, inserting a NULL value into the map is the same as removing the key altogether
-    if (value.isNull()) {
-        removeItem(key, frame);
-        return;
-    }
+    ASSERT(!value.isNull());
     
     // FIXME: For LocalStorage where a disk quota will be enforced, here is where we need to do quota checking.
     //        If we decide to enforce a memory quota for SessionStorage, this is where we'd do that, also.
@@ -98,8 +93,8 @@ void StorageArea::setItem(const String& key, const String& value, ExceptionCode&
         itemChanged(key, oldValue, value, frame);
 }
 
-void StorageArea::removeItem(const String& key, Frame* frame)
-{    
+void StorageArea::internalRemoveItem(const String& key, Frame* frame)
+{   
     String oldValue;
     RefPtr<StorageMap> newMap = m_storageMap->removeItem(key, oldValue);
     if (newMap)
@@ -110,14 +105,21 @@ void StorageArea::removeItem(const String& key, Frame* frame)
         itemRemoved(key, oldValue, frame);
 }
 
-bool StorageArea::contains(const String& key) const
+void StorageArea::internalClear(Frame* frame)
+{
+    m_storageMap = StorageMap::create();
+    
+    areaCleared(frame);
+}
+
+bool StorageArea::internalContains(const String& key) const
 {
     return m_storageMap->contains(key);
 }
 
-PassRefPtr<StorageMap> StorageArea::storageMap()
+void StorageArea::importItem(const String& key, const String& value)
 {
-    return m_storageMap;
+    m_storageMap->importItem(key, value);
 }
 
 }

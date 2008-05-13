@@ -43,8 +43,8 @@ Parser::Parser()
 }
 
 void Parser::parse(int startingLineNumber,
-                   PassRefPtr<SourceProvider> source,
-                   int* sourceId, int* errLine, UString* errMsg)
+    const UChar* code, unsigned length,
+    int* sourceId, int* errLine, UString* errMsg)
 {
     ASSERT(!m_sourceElements);
 
@@ -55,7 +55,7 @@ void Parser::parse(int startingLineNumber,
         
     Lexer& lexer = KJS::lexer();
 
-    lexer.setCode(startingLineNumber, source);
+    lexer.setCode(startingLineNumber, code, length);
     m_sourceId++;
     if (sourceId)
         *sourceId = m_sourceId;

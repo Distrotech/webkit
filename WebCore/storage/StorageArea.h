@@ -26,6 +26,8 @@
 #ifndef StorageArea_h
 #define StorageArea_h
 
+#include "PlatformString.h"
+
 #include <wtf/Forward.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
@@ -36,32 +38,41 @@ namespace WebCore {
     class Frame;
     class SecurityOrigin;
     class StorageMap;
-    class String;
     typedef int ExceptionCode;
 
     class StorageArea : public RefCounted<StorageArea> {
     public:
         virtual ~StorageArea();
         
-        unsigned length() const;
-        String key(unsigned index, ExceptionCode&) const;
-        String getItem(const String&) const;
-        void setItem(const String& key, const String& value, ExceptionCode&, Frame* sourceFrame);
-        void removeItem(const String&, Frame* sourceFrame);
-
-        bool contains(const String& key) const;
+        virtual unsigned length() const { return internalLength(); }
+        virtual String key(unsigned index, ExceptionCode& ec) const { return internalKey(index, ec); }
+        virtual String getItem(const String& key) const { return internalGetItem(key); }
+        virtual void setItem(const String& key, const String& value, ExceptionCode& ec, Frame* sourceFrame) { internalSetItem(key, value, ec, sourceFrame); }
+        virtual void removeItem(const String& key, Frame* sourceFrame) { internalRemoveItem(key, sourceFrame); }
+        virtual void clear(Frame* sourceFrame) { internalClear(sourceFrame); }
+        virtual bool contains(const String& key) const { return internalContains(key); }
         
         SecurityOrigin* securityOrigin() { return m_securityOrigin.get(); }
 
     protected:
         StorageArea(SecurityOrigin*);
-        StorageArea(SecurityOrigin*, PassRefPtr<StorageMap>);
-
-        PassRefPtr<StorageMap> storageMap();
+        StorageArea(SecurityOrigin*, StorageArea*);
+                
+        unsigned internalLength() const;
+        String internalKey(unsigned index, ExceptionCode&) const;
+        String internalGetItem(const String&) const;
+        void internalSetItem(const String& key, const String& value, ExceptionCode&, Frame* sourceFrame);
+        void internalRemoveItem(const String&, Frame* sourceFrame);
+        void internalClear(Frame* sourceFrame);
+        bool internalContains(const String& key) const;
         
+        // This is meant to be called from a background thread for LocalStorageArea's background thread import procedure.
+        void importItem(const String& key, const String& value);
+
     private:
         virtual void itemChanged(const String& key, const String& oldValue, const String& newValue, Frame* sourceFrame) = 0;
         virtual void itemRemoved(const String& key, const String& oldValue, Frame* sourceFrame) = 0;
+        virtual void areaCleared(Frame* sourceFrame) = 0;
 
         RefPtr<SecurityOrigin> m_securityOrigin;
         RefPtr<StorageMap> m_storageMap;

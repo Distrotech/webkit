@@ -104,9 +104,8 @@ public:
     AnimationController* animationController() const;
     KJSProxy* scriptProxy();
 
-    // FIXME: Rename to contentRenderer and change type to RenderView.
-    RenderObject* renderer() const; // root renderer for the document contained in this frame
-    RenderPart* ownerRenderer(); // renderer for the element that contains this frame
+    RenderView* contentRenderer() const; // root renderer for the document contained in this frame
+    RenderPart* ownerRenderer() const; // renderer for the element that contains this frame
 
     friend class FramePrivate;
 
@@ -138,7 +137,7 @@ public:
     void setDocument(PassRefPtr<Document>);
 
     void clearTimers();
-    static void clearTimers(FrameView*);
+    static void clearTimers(FrameView*, Document*);
 
     // Convenience, to avoid repeating the code to dig down to get this.
     UChar backslashAsCurrencySymbol() const;
@@ -157,6 +156,7 @@ public:
 
 private:
     void clearPlatformScriptObjects();
+    void disconnectPlatformScriptObjects();
 
     void lifeSupportTimerFired(Timer<Frame>*);
     
@@ -329,7 +329,9 @@ public:
     NSString* searchForLabelsBeforeElement(NSArray* labels, Element*);
     NSString* matchLabelsAgainstElement(NSArray* labels, Element*);
 
+#if ENABLE(DASHBOARD_SUPPORT)
     NSMutableDictionary* dashboardRegionsDictionary();
+#endif
 
     NSImage* selectionImage(bool forceBlackText = false) const;
     NSImage* snapshotDragImage(Node*, NSRect* imageRect, NSRect* elementRect) const;

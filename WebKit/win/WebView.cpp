@@ -49,6 +49,7 @@
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
 #include <CoreGraphics/CGContext.h>
+#include <WebCore/AXObjectCache.h>
 #include <WebCore/BString.h>
 #include <WebCore/Cache.h>
 #include <WebCore/ContextMenu.h>
@@ -93,23 +94,26 @@
 #include <WebCore/TypingCommand.h>
 #include <WebCore/WindowMessageBroadcaster.h>
 #pragma warning(pop)
-#include <JavaScriptCore/collector.h>
+#include <kjs/InitializeThreading.h>
 #include <JavaScriptCore/value.h>
 #include <CFNetwork/CFURLCachePriv.h>
 #include <CFNetwork/CFURLProtocolPriv.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <WebKitSystemInterface/WebKitSystemInterface.h>
 #include <wtf/HashSet.h>
-#include <tchar.h>
 #include <dimm.h>
-#include <windowsx.h>
+#include <oleacc.h>
 #include <ShlObj.h>
+#include <tchar.h>
+#include <windowsx.h>
 
 using namespace WebCore;
 using namespace WebCore::EventNames;
 using KJS::JSLock;
 using std::min;
 using std::max;
+
+static HMODULE accessibilityLib;
 
 WebView* kit(Page* page)
 {
@@ -270,7 +274,7 @@ WebView::WebView()
 , m_topLevelParent(0)
 , m_deleteBackingStoreTimerActive(false)
 {
-    KJS::Collector::registerAsMainThread();
+    KJS::initializeThreading();
 
     m_backingStoreSize.cx = m_backingStoreSize.cy = 0;
 
@@ -591,9 +595,6 @@ void WebView::close()
         ::TrackMouseEvent(m_mouseOutTracker.get());
         m_mouseOutTracker.set(0);
     }
-
-    if (m_page)
-        m_page->setGroupName(String());
     
     setHostWindow(0);
 
@@ -920,7 +921,7 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, const In
 #endif
 
     FillRect(bitmapDC, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-    if (frameView && frameView->frame() && frameView->frame()->renderer()) {
+    if (frameView && frameView->frame() && frameView->frame()->contentRenderer()) {
         GraphicsContext gc(bitmapDC);
         gc.save();
         gc.clip(dirtyRect);
@@ -1025,8 +1026,16 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
 
             // Calculate the rect of the first line of the selection (cribbed from -[WebCoreFrameBridge firstRectForDOMRange:]).
             int extraWidthToEndOfLine = 0;
-            IntRect startCaretRect = renderer->caretRect(start.offset(), DOWNSTREAM, &extraWidthToEndOfLine);
-            IntRect endCaretRect = renderer->caretRect(end.offset(), UPSTREAM);
+
+            InlineBox* startInlineBox;
+            int startCaretOffset;
+            start.getInlineBoxAndOffset(DOWNSTREAM, startInlineBox, startCaretOffset);
+            IntRect startCaretRect = renderer->caretRect(startInlineBox, startCaretOffset, &extraWidthToEndOfLine);
+
+            InlineBox* endInlineBox;
+            int endCaretOffset;
+            end.getInlineBoxAndOffset(UPSTREAM, endInlineBox, endCaretOffset);
+            IntRect endCaretRect = renderer->caretRect(endInlineBox, endCaretOffset);
 
             IntRect firstRect;
             if (startCaretRect.y() == endCaretRect.y())
@@ -1804,7 +1813,9 @@ static LRESULT CALLBACK WebViewWndProc(HWND hWnd, UINT message, WPARAM wParam, L
             handled = false;
             break;
         }
-
+        case WM_GETOBJECT:
+            handled = webView->onGetObject(wParam, lParam, lResult);
+            break;
         case WM_IME_STARTCOMPOSITION:
             handled = webView->onIMEStartComposition();
             break;
@@ -2082,7 +2093,7 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     WebKitSetWebDatabasesPathIfNecessary();
 
     m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this), new WebInspectorClient(this));
-
+    
     if (m_uiDelegate) {
         COMPtr<IWebUIDelegate2> uiDelegate2;
         if (SUCCEEDED(m_uiDelegate->QueryInterface(IID_IWebUIDelegate2, (void**)&uiDelegate2))) {
@@ -2939,7 +2950,7 @@ HRESULT STDMETHODCALLTYPE WebView::elementAtPoint(
 
     IntPoint webCorePoint = IntPoint(point->x, point->y);
     HitTestResult result = HitTestResult(webCorePoint);
-    if (frame->renderer())
+    if (frame->contentRenderer())
         result = frame->eventHandler()->hitTestResultAtPoint(webCorePoint, false);
     *elementDictionary = WebElementPropertyBag::createInstance(result);
     return S_OK;
@@ -4034,6 +4045,16 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
         settings->setAuthorAndUserStylesEnabled(enabled);
     }
 
+    hr = prefsPrivate->inApplicationChromeMode(&enabled);
+    if (FAILED(hr))
+        return hr;
+    settings->setApplicationChromeMode(enabled);
+
+    hr = prefsPrivate->offlineWebApplicationCacheEnabled(&enabled);
+    if (FAILED(hr))
+        return hr;
+    settings->setOfflineWebApplicationCacheEnabled(enabled);
+
     m_mainFrame->invalidate(); // FIXME
 
     hr = updateSharedSettingsFromPreferencesIfNeeded(preferences.get());
@@ -4770,6 +4791,48 @@ HRESULT STDMETHODCALLTYPE WebView::paintDocumentRectToContext(
     return S_OK;
 }
 
+bool WebView::onGetObject(WPARAM wParam, LPARAM lParam, LRESULT& lResult) const
+{
+    lResult = 0;
+
+    if (lParam != OBJID_CLIENT)
+        return false;
+
+    AXObjectCache::enableAccessibility();
+
+    // Get the accessible object for the top-level frame.
+    WebFrame* mainFrameImpl = topLevelFrame();
+    if (!mainFrameImpl)
+        return false;
+
+    COMPtr<IAccessible> accessible = mainFrameImpl->accessible();
+    if (!accessible)
+        return false;
+
+    if (!accessibilityLib) {
+        if (!(accessibilityLib = ::LoadLibrary(TEXT("oleacc.dll"))))
+            return false;
+    }
+
+    static LPFNLRESULTFROMOBJECT procPtr = reinterpret_cast<LPFNLRESULTFROMOBJECT>(::GetProcAddress(accessibilityLib, "LresultFromObject"));
+    if (!procPtr)
+        return false;
+
+    // LresultFromObject returns a reference to the accessible object, stored
+    // in an LRESULT. If this call is not successful, Windows will handle the
+    // request through DefWindowProc.
+    return SUCCEEDED(lResult = procPtr(__uuidof(IAccessible), wParam, accessible.get()));
+}
+
+STDMETHODIMP WebView::AccessibleObjectFromWindow(HWND hwnd, DWORD objectID, REFIID riid, void** ppObject)
+{
+    ASSERT(accessibilityLib);
+    static LPFNACCESSIBLEOBJECTFROMWINDOW procPtr = reinterpret_cast<LPFNACCESSIBLEOBJECTFROMWINDOW>(::GetProcAddress(accessibilityLib, "AccessibleObjectFromWindow"));
+    if (!procPtr)
+        return E_FAIL;
+    return procPtr(hwnd, objectID, riid, ppObject);
+}
+
 class EnumTextMatches : public IEnumTextMatches
 {
     long m_ref;
@@ -4853,3 +4916,4 @@ Page* core(IWebView* iWebView)
 
     return page;
 }
+

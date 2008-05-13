@@ -28,21 +28,75 @@
 
 #include "ChromeClient.h"
 #include "Document.h"
-#include "LocalStorage.h"
 #include "Page.h"
+#include "Settings.h"
+
+#if ENABLE(DOM_STORAGE)
+#include "LocalStorage.h"
 #include "StorageArea.h"
+#endif
 
 namespace WebCore {
+
+static unsigned getUniqueIdentifier()
+{
+    static unsigned currentIdentifier = 0;
+    return ++currentIdentifier;
+}
 
 // --------
 
 static bool shouldTrackVisitedLinks;
 
+PageGroup::PageGroup(const String& name)
+    : m_name(name)
+    , m_visitedLinksPopulated(false)
+    , m_identifier(getUniqueIdentifier())
+{
+}
+
 PageGroup::PageGroup(Page* page)
     : m_visitedLinksPopulated(false)
+    , m_identifier(getUniqueIdentifier())
 {
     ASSERT(page);
-    m_pages.add(page);
+    addPage(page);
+}
+
+typedef HashMap<String, PageGroup*> PageGroupMap;
+static PageGroupMap* pageGroups = 0;
+
+PageGroup* PageGroup::pageGroup(const String& groupName)
+{
+    ASSERT(!groupName.isEmpty());
+    
+    if (!pageGroups)
+        pageGroups = new PageGroupMap;
+
+    pair<PageGroupMap::iterator, bool> result = pageGroups->add(groupName, 0);
+
+    if (result.second) {
+        ASSERT(!result.first->second);
+        result.first->second = new PageGroup(groupName);
+    }
+
+    ASSERT(result.first->second);
+    return result.first->second;
+}
+
+void PageGroup::closeLocalStorage()
+{
+#if ENABLE(DOM_STORAGE)
+    if (!pageGroups)
+        return;
+
+    PageGroupMap::iterator end = pageGroups->end();
+
+    for (PageGroupMap::iterator it = pageGroups->begin(); it != end; ++it) {
+        if (LocalStorage* localStorage = it->second->localStorage())
+            localStorage->close();
+    }
+#endif
 }
 
 void PageGroup::addPage(Page* page)
@@ -50,6 +104,10 @@ void PageGroup::addPage(Page* page)
     ASSERT(page);
     ASSERT(!m_pages.contains(page));
     m_pages.add(page);
+#if ENABLE(DOM_STORAGE)
+    if (!m_localStorage)
+        m_localStorage = LocalStorage::create(this, page->settings()->localStorageDatabasePath());
+#endif
 }
 
 void PageGroup::removePage(Page* page)
@@ -116,12 +174,11 @@ void PageGroup::setShouldTrackVisitedLinks(bool shouldTrack)
         removeAllVisitedLinks();
 }
 
+#if ENABLE(DOM_STORAGE)
 LocalStorage* PageGroup::localStorage()
 {
-    if (!m_localStorage)
-        m_localStorage = LocalStorage::create(this);
-        
     return m_localStorage.get();
 }
+#endif
 
 } // namespace WebCore

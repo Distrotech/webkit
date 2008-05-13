@@ -51,6 +51,7 @@
 #include "JSInspectorCallbackWrapper.h"
 #include "JSNode.h"
 #include "JSRange.h"
+#include "JavaScriptDebugServer.h"
 #include "Page.h"
 #include "Range.h"
 #include "ResourceRequest.h"
@@ -78,26 +79,53 @@ using namespace std;
 
 namespace WebCore {
 
-#define HANDLE_EXCEPTION(exception) handleException((exception), __LINE__)
+static JSRetainPtr<JSStringRef> jsStringRef(const char* str)
+{
+    return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithUTF8CString(str));
+}
+
+static JSRetainPtr<JSStringRef> jsStringRef(const String& str)
+{
+    return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithCharacters(str.characters(), str.length()));
+}
+
+static String toString(JSContextRef context, JSValueRef value, JSValueRef* exception)
+{
+    ASSERT_ARG(value, value);
+    if (!value)
+        return String();
+    JSRetainPtr<JSStringRef> scriptString(Adopt, JSValueToStringCopy(context, value, exception));
+    if (exception && *exception)
+        return String();
+    return String(JSStringGetCharactersPtr(scriptString.get()), JSStringGetLength(scriptString.get()));
+}
+
+#define HANDLE_EXCEPTION(context, exception) handleException((context), (exception), __LINE__)
 
 JSValueRef InspectorController::callSimpleFunction(JSContextRef context, JSObjectRef thisObject, const char* functionName) const
+{
+    JSValueRef exception = 0;
+    return callFunction(context, thisObject, functionName, 0, 0, exception);
+}
+
+JSValueRef InspectorController::callFunction(JSContextRef context, JSObjectRef thisObject, const char* functionName, size_t argumentCount, const JSValueRef arguments[], JSValueRef& exception) const
 {
     ASSERT_ARG(context, context);
     ASSERT_ARG(thisObject, thisObject);
 
-    JSValueRef exception = 0;
+    if (exception)
+        return JSValueMakeUndefined(context);
 
-    JSRetainPtr<JSStringRef> functionNameString(Adopt, JSStringCreateWithUTF8CString(functionName));
-    JSValueRef functionProperty = JSObjectGetProperty(context, thisObject, functionNameString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSValueRef functionProperty = JSObjectGetProperty(context, thisObject, jsStringRef(functionName).get(), &exception);
+    if (HANDLE_EXCEPTION(context, exception))
         return JSValueMakeUndefined(context);
 
     JSObjectRef function = JSValueToObject(context, functionProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(context, exception))
         return JSValueMakeUndefined(context);
 
-    JSValueRef result = JSObjectCallAsFunction(context, function, thisObject, 0, 0, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSValueRef result = JSObjectCallAsFunction(context, function, thisObject, argumentCount, arguments, &exception);
+    if (HANDLE_EXCEPTION(context, exception))
         return JSValueMakeUndefined(context);
 
     return result;
@@ -436,7 +464,7 @@ static JSValueRef getResourceDocumentNode(JSContextRef ctx, JSObjectRef /*functi
     if (document->isPluginDocument() || document->isImageDocument())
         return undefined;
 
-    ExecState* exec = toJSDOMWindowWrapper(resource->frame.get())->window()->globalExec();
+    ExecState* exec = toJSDOMWindowShell(resource->frame.get())->window()->globalExec();
 
     KJS::JSLock lock;
     JSValueRef documentValue = toRef(JSInspectedObjectWrapper::wrap(exec, toJS(exec, document)));
@@ -529,16 +557,11 @@ static JSValueRef search(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef
     if (!node)
         return JSValueMakeUndefined(ctx);
 
-    JSRetainPtr<JSStringRef> searchString(Adopt, JSValueToStringCopy(ctx, arguments[1], exception));
-    if (exception && *exception)
-        return JSValueMakeUndefined(ctx);
-
-    String target(JSStringGetCharactersPtr(searchString.get()), JSStringGetLength(searchString.get()));
+    String target = toString(ctx, arguments[1], exception);
 
     JSObjectRef global = JSContextGetGlobalObject(ctx);
-    JSRetainPtr<JSStringRef> arrayString(Adopt, JSStringCreateWithUTF8CString("Array"));
 
-    JSValueRef arrayProperty = JSObjectGetProperty(ctx, global, arrayString.get(), exception);
+    JSValueRef arrayProperty = JSObjectGetProperty(ctx, global, jsStringRef("Array").get(), exception);
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
@@ -550,8 +573,7 @@ static JSValueRef search(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
-    JSRetainPtr<JSStringRef> pushString(Adopt, JSStringCreateWithUTF8CString("push"));
-    JSValueRef pushProperty = JSObjectGetProperty(ctx, result, pushString.get(), exception);
+    JSValueRef pushProperty = JSObjectGetProperty(ctx, result, jsStringRef("push").get(), exception);
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
@@ -604,9 +626,8 @@ static JSValueRef databaseTableNames(JSContextRef ctx, JSObjectRef /*function*/,
         return JSValueMakeUndefined(ctx);
 
     JSObjectRef global = JSContextGetGlobalObject(ctx);
-    JSRetainPtr<JSStringRef> arrayString(Adopt, JSStringCreateWithUTF8CString("Array"));
 
-    JSValueRef arrayProperty = JSObjectGetProperty(ctx, global, arrayString.get(), exception);
+    JSValueRef arrayProperty = JSObjectGetProperty(ctx, global, jsStringRef("Array").get(), exception);
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
@@ -618,8 +639,7 @@ static JSValueRef databaseTableNames(JSContextRef ctx, JSObjectRef /*function*/,
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
-    JSRetainPtr<JSStringRef> pushString(Adopt, JSStringCreateWithUTF8CString("push"));
-    JSValueRef pushProperty = JSObjectGetProperty(ctx, result, pushString.get(), exception);
+    JSValueRef pushProperty = JSObjectGetProperty(ctx, result, jsStringRef("push").get(), exception);
     if (exception && *exception)
         return JSValueMakeUndefined(ctx);
 
@@ -631,8 +651,7 @@ static JSValueRef databaseTableNames(JSContextRef ctx, JSObjectRef /*function*/,
     unsigned length = tableNames.size();
     for (unsigned i = 0; i < length; ++i) {
         String tableName = tableNames[i];
-        JSRetainPtr<JSStringRef> tableNameString(Adopt, JSStringCreateWithCharacters(tableName.characters(), tableName.length()));
-        JSValueRef tableNameValue = JSValueMakeString(ctx, tableNameString.get());
+        JSValueRef tableNameValue = JSValueMakeString(ctx, jsStringRef(tableName).get());
 
         JSValueRef pushArguments[] = { tableNameValue };
         JSObjectCallAsFunction(ctx, pushFunction, result, 1, pushArguments, exception);
@@ -665,8 +684,7 @@ static JSValueRef localizedStrings(JSContextRef ctx, JSObjectRef /*function*/, J
     if (url.isNull())
         return JSValueMakeNull(ctx);
 
-    JSRetainPtr<JSStringRef> urlString(Adopt, JSStringCreateWithCharacters(url.characters(), url.length()));
-    return JSValueMakeString(ctx, urlString.get());
+    return JSValueMakeString(ctx, jsStringRef(url).get());
 }
 
 static JSValueRef platform(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments[]*/, JSValueRef* /*exception*/)
@@ -689,8 +707,7 @@ static JSValueRef platform(JSContextRef ctx, JSObjectRef /*function*/, JSObjectR
     static const String platform = "unknown";
 #endif
 
-    JSRetainPtr<JSStringRef> platformString(Adopt, JSStringCreateWithCharacters(platform.characters(), platform.length()));
-    JSValueRef platformValue = JSValueMakeString(ctx, platformString.get());
+    JSValueRef platformValue = JSValueMakeString(ctx, jsStringRef(platform).get());
 
     return platformValue;
 }
@@ -730,6 +747,36 @@ static JSValueRef wrapCallback(JSContextRef ctx, JSObjectRef /*function*/, JSObj
     return toRef(JSInspectorCallbackWrapper::wrap(toJS(ctx), toJS(arguments[0])));
 }
 
+static JSValueRef startDebuggingAndReloadInspectedPage(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->startDebuggingAndReloadInspectedPage();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef stopDebugging(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->stopDebugging();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef debuggerAttached(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+    return JSValueMakeBoolean(ctx, controller->debuggerAttached());
+}
+
 #pragma mark -
 #pragma mark InspectorController Class
 
@@ -741,6 +788,7 @@ InspectorController::InspectorController(Page* page, InspectorClient* client)
     , m_controllerScriptObject(0)
     , m_scriptContext(0)
     , m_windowVisible(false)
+    , m_debuggerAttached(false)
     , m_showAfterVisible(FocusedNodeDocumentPanel)
     , m_nextIdentifier(-2)
 {
@@ -756,11 +804,10 @@ InspectorController::~InspectorController()
         JSValueRef exception = 0;
 
         JSObjectRef global = JSContextGetGlobalObject(m_scriptContext);
-        JSRetainPtr<JSStringRef> controllerString(Adopt, JSStringCreateWithUTF8CString("InspectorController"));
-        JSValueRef controllerProperty = JSObjectGetProperty(m_scriptContext, global, controllerString.get(), &exception);
-        if (!HANDLE_EXCEPTION(exception)) {
+        JSValueRef controllerProperty = JSObjectGetProperty(m_scriptContext, global, jsStringRef("InspectorController").get(), &exception);
+        if (!HANDLE_EXCEPTION(m_scriptContext, exception)) {
             if (JSObjectRef controller = JSValueToObject(m_scriptContext, controllerProperty, &exception)) {
-                if (!HANDLE_EXCEPTION(exception))
+                if (!HANDLE_EXCEPTION(m_scriptContext, exception))
                     JSObjectSetPrivate(controller, 0);
             }
         }
@@ -768,6 +815,8 @@ InspectorController::~InspectorController()
 
     if (m_page)
         m_page->setParentInspectorController(0);
+
+    stopDebugging();
 
     deleteAllValues(m_frameResources);
     deleteAllValues(m_consoleMessages);
@@ -841,20 +890,7 @@ void InspectorController::focusNode()
     m_nodeToFocus = 0;
 
     JSValueRef exception = 0;
-
-    JSRetainPtr<JSStringRef> functionString(Adopt, JSStringCreateWithUTF8CString("updateFocusedNode"));
-    JSValueRef functionProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, functionString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSObjectRef function = JSValueToObject(m_scriptContext, functionProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    ASSERT(function);
-
-    JSObjectCallAsFunction(m_scriptContext, function, m_scriptObject, 1, &arg0, &exception);
-    HANDLE_EXCEPTION(exception);
+    callFunction(m_scriptContext, m_scriptObject, "updateFocusedNode", 1, &arg0, exception);
 }
 
 void InspectorController::highlight(Node* node)
@@ -971,6 +1007,9 @@ void InspectorController::windowScriptObjectAvailable()
         { "platform", platform, kJSPropertyAttributeNone },
         { "moveByUnrestricted", moveByUnrestricted, kJSPropertyAttributeNone },
         { "wrapCallback", wrapCallback, kJSPropertyAttributeNone },
+        { "startDebuggingAndReloadInspectedPage", WebCore::startDebuggingAndReloadInspectedPage, kJSPropertyAttributeNone },
+        { "stopDebugging", WebCore::stopDebugging, kJSPropertyAttributeNone },
+        { "debuggerAttached", WebCore::debuggerAttached, kJSPropertyAttributeNone },
         { 0, 0, 0 }
     };
 
@@ -985,8 +1024,7 @@ void InspectorController::windowScriptObjectAvailable()
     m_controllerScriptObject = JSObjectMake(m_scriptContext, controllerClass, reinterpret_cast<void*>(this));
     ASSERT(m_controllerScriptObject);
 
-    JSRetainPtr<JSStringRef> controllerObjectString(Adopt, JSStringCreateWithUTF8CString("InspectorController"));
-    JSObjectSetProperty(m_scriptContext, global, controllerObjectString.get(), m_controllerScriptObject, kJSPropertyAttributeNone, 0);
+    JSObjectSetProperty(m_scriptContext, global, jsStringRef("InspectorController").get(), m_controllerScriptObject, kJSPropertyAttributeNone, 0);
 }
 
 void InspectorController::scriptObjectReady()
@@ -1000,9 +1038,8 @@ void InspectorController::scriptObjectReady()
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> inspectorString(Adopt, JSStringCreateWithUTF8CString("WebInspector"));
-    JSValueRef inspectorValue = JSObjectGetProperty(m_scriptContext, global, inspectorString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSValueRef inspectorValue = JSObjectGetProperty(m_scriptContext, global, jsStringRef("WebInspector").get(), &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     ASSERT(inspectorValue);
@@ -1010,7 +1047,7 @@ void InspectorController::scriptObjectReady()
         return;
 
     m_scriptObject = JSValueToObject(m_scriptContext, inspectorValue, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     ASSERT(m_scriptObject);
@@ -1018,7 +1055,7 @@ void InspectorController::scriptObjectReady()
     JSValueProtect(m_scriptContext, m_scriptObject);
 
     // Make sure our window is visible now that the page loaded
-    m_client->showWindow();
+    showWindow();
 }
 
 void InspectorController::show()
@@ -1032,11 +1069,11 @@ void InspectorController::show()
             return;
         m_page->setParentInspectorController(this);
 
-        // m_client->showWindow() will be called after the page loads in scriptObjectReady()
+        // showWindow() will be called after the page loads in scriptObjectReady()
         return;
     }
 
-    m_client->showWindow();
+    showWindow();
 }
 
 void InspectorController::showConsole()
@@ -1074,7 +1111,7 @@ void InspectorController::close()
     if (!enabled())
         return;
 
-    m_client->closeWindow();
+    closeWindow();
     if (m_page)
         m_page->setParentInspectorController(0);
 
@@ -1086,6 +1123,19 @@ void InspectorController::close()
     m_scriptContext = 0;
 }
 
+void InspectorController::showWindow()
+{
+    ASSERT(enabled());
+
+    m_client->showWindow();
+}
+
+void InspectorController::closeWindow()
+{
+    stopDebugging();
+    m_client->closeWindow();
+}
+
 static void addHeaders(JSContextRef context, JSObjectRef object, const HTTPHeaderMap& headers, JSValueRef* exception)
 {
     ASSERT_ARG(context, context);
@@ -1093,10 +1143,8 @@ static void addHeaders(JSContextRef context, JSObjectRef object, const HTTPHeade
 
     HTTPHeaderMap::const_iterator end = headers.end();
     for (HTTPHeaderMap::const_iterator it = headers.begin(); it != end; ++it) {
-        JSRetainPtr<JSStringRef> field(Adopt, JSStringCreateWithCharacters(it->first.characters(), it->first.length()));
-        JSRetainPtr<JSStringRef> valueString(Adopt, JSStringCreateWithCharacters(it->second.characters(), it->second.length()));
-        JSValueRef value = JSValueMakeString(context, valueString.get());
-        JSObjectSetProperty(context, object, field.get(), value, kJSPropertyAttributeNone, exception);
+        JSValueRef value = JSValueMakeString(context, jsStringRef(it->second).get());
+        JSObjectSetProperty(context, object, jsStringRef(it->first).get(), value, kJSPropertyAttributeNone, exception);
         if (exception && *exception)
             return;
     }
@@ -1134,42 +1182,30 @@ JSObjectRef InspectorController::addScriptResource(InspectorResource* resource)
     if (!resource->scriptObject) {
         JSValueRef exception = 0;
 
-        JSRetainPtr<JSStringRef> resourceString(Adopt, JSStringCreateWithUTF8CString("Resource"));
-        JSValueRef resourceProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, resourceString.get(), &exception);
-        if (HANDLE_EXCEPTION(exception))
+        JSValueRef resourceProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, jsStringRef("Resource").get(), &exception);
+        if (HANDLE_EXCEPTION(m_scriptContext, exception))
             return 0;
 
         JSObjectRef resourceConstructor = JSValueToObject(m_scriptContext, resourceProperty, &exception);
-        if (HANDLE_EXCEPTION(exception))
+        if (HANDLE_EXCEPTION(m_scriptContext, exception))
             return 0;
 
-        String urlString = resource->requestURL.string();
-        JSRetainPtr<JSStringRef> url(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-        JSValueRef urlValue = JSValueMakeString(m_scriptContext, url.get());
-
-        urlString = resource->requestURL.host();
-        JSRetainPtr<JSStringRef> domain(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-        JSValueRef domainValue = JSValueMakeString(m_scriptContext, domain.get());
-
-        urlString = resource->requestURL.path();
-        JSRetainPtr<JSStringRef> path(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-        JSValueRef pathValue = JSValueMakeString(m_scriptContext, path.get());
-
-        urlString = resource->requestURL.lastPathComponent();
-        JSRetainPtr<JSStringRef> lastPathComponent(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-        JSValueRef lastPathComponentValue = JSValueMakeString(m_scriptContext, lastPathComponent.get());
+        JSValueRef urlValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.string()).get());
+        JSValueRef domainValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.host()).get());
+        JSValueRef pathValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.path()).get());
+        JSValueRef lastPathComponentValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.lastPathComponent()).get());
 
         JSValueRef identifier = JSValueMakeNumber(m_scriptContext, resource->identifier);
         JSValueRef mainResource = JSValueMakeBoolean(m_scriptContext, m_mainResource == resource);
         JSValueRef cached = JSValueMakeBoolean(m_scriptContext, resource->cached);
 
         JSObjectRef scriptObject = scriptObjectForRequest(m_scriptContext, resource, &exception);
-        if (HANDLE_EXCEPTION(exception))
+        if (HANDLE_EXCEPTION(m_scriptContext, exception))
             return 0;
 
         JSValueRef arguments[] = { scriptObject, urlValue, domainValue, pathValue, lastPathComponentValue, identifier, mainResource, cached };
         JSObjectRef result = JSObjectCallAsConstructor(m_scriptContext, resourceConstructor, 8, arguments, &exception);
-        if (HANDLE_EXCEPTION(exception))
+        if (HANDLE_EXCEPTION(m_scriptContext, exception))
             return 0;
 
         ASSERT(result);
@@ -1178,19 +1214,9 @@ JSObjectRef InspectorController::addScriptResource(InspectorResource* resource)
     }
 
     JSValueRef exception = 0;
+    callFunction(m_scriptContext, m_scriptObject, "addResource", 1, &resource->scriptObject, exception);
 
-    JSRetainPtr<JSStringRef> addResourceString(Adopt, JSStringCreateWithUTF8CString("addResource"));
-    JSValueRef addResourceProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, addResourceString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return 0;
-
-    JSObjectRef addResourceFunction = JSValueToObject(m_scriptContext, addResourceProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return 0;
-
-    JSValueRef addArguments[] = { resource->scriptObject };
-    JSObjectCallAsFunction(m_scriptContext, addResourceFunction, m_scriptObject, 1, addArguments, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (exception)
         return 0;
 
     return resource->scriptObject;
@@ -1227,19 +1253,7 @@ void InspectorController::removeScriptResource(InspectorResource* resource)
     resource->setScriptObject(0, 0);
 
     JSValueRef exception = 0;
-
-    JSRetainPtr<JSStringRef> removeResourceString(Adopt, JSStringCreateWithUTF8CString("removeResource"));
-    JSValueRef removeResourceProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, removeResourceString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSObjectRef removeResourceFunction = JSValueToObject(m_scriptContext, removeResourceProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSValueRef arguments[] = { scriptObject };
-    JSObjectCallAsFunction(m_scriptContext, removeResourceFunction, m_scriptObject, 1, arguments, &exception);
-    HANDLE_EXCEPTION(exception);
+    callFunction(m_scriptContext, m_scriptObject, "removeResource", 1, &scriptObject, exception);
 }
 
 static void updateResourceRequest(InspectorResource* resource, const ResourceRequest& request)
@@ -1264,58 +1278,41 @@ void InspectorController::updateScriptResourceRequest(InspectorResource* resourc
     if (!resource->scriptObject || !m_scriptContext)
         return;
 
-    String urlString = resource->requestURL.string();
-    JSRetainPtr<JSStringRef> url(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-    JSValueRef urlValue = JSValueMakeString(m_scriptContext, url.get());
-
-    urlString = resource->requestURL.host();
-    JSRetainPtr<JSStringRef> domain(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-    JSValueRef domainValue = JSValueMakeString(m_scriptContext, domain.get());
-
-    urlString = resource->requestURL.path();
-    JSRetainPtr<JSStringRef> path(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-    JSValueRef pathValue = JSValueMakeString(m_scriptContext, path.get());
-
-    urlString = resource->requestURL.lastPathComponent();
-    JSRetainPtr<JSStringRef> lastPathComponent(Adopt, JSStringCreateWithCharacters(urlString.characters(), urlString.length()));
-    JSValueRef lastPathComponentValue = JSValueMakeString(m_scriptContext, lastPathComponent.get());
+    JSValueRef urlValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.string()).get());
+    JSValueRef domainValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.host()).get());
+    JSValueRef pathValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.path()).get());
+    JSValueRef lastPathComponentValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->requestURL.lastPathComponent()).get());
 
     JSValueRef mainResourceValue = JSValueMakeBoolean(m_scriptContext, m_mainResource == resource);
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> propertyName(Adopt, JSStringCreateWithUTF8CString("url"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), urlValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("url").get(), urlValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("domain"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), domainValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("domain").get(), domainValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("path"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), pathValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("path").get(), pathValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("lastPathComponent"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), lastPathComponentValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("lastPathComponent").get(), lastPathComponentValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     JSObjectRef scriptObject = scriptObjectForRequest(m_scriptContext, resource, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("requestHeaders"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), scriptObject, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("requestHeaders").get(), scriptObject, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("mainResource"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), mainResourceValue, kJSPropertyAttributeNone, &exception);
-    HANDLE_EXCEPTION(exception);
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("mainResource").get(), mainResourceValue, kJSPropertyAttributeNone, &exception);
+    HANDLE_EXCEPTION(m_scriptContext, exception);
 }
 
 void InspectorController::updateScriptResourceResponse(InspectorResource* resource)
@@ -1325,50 +1322,42 @@ void InspectorController::updateScriptResourceResponse(InspectorResource* resour
     if (!resource->scriptObject || !m_scriptContext)
         return;
 
-    JSRetainPtr<JSStringRef> mimeType(Adopt, JSStringCreateWithCharacters(resource->mimeType.characters(), resource->mimeType.length()));
-    JSValueRef mimeTypeValue = JSValueMakeString(m_scriptContext, mimeType.get());
+    JSValueRef mimeTypeValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->mimeType).get());
 
-    JSRetainPtr<JSStringRef> suggestedFilename(Adopt, JSStringCreateWithCharacters(resource->suggestedFilename.characters(), resource->suggestedFilename.length()));
-    JSValueRef suggestedFilenameValue = JSValueMakeString(m_scriptContext, suggestedFilename.get());
+    JSValueRef suggestedFilenameValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->suggestedFilename).get());
 
     JSValueRef expectedContentLengthValue = JSValueMakeNumber(m_scriptContext, static_cast<double>(resource->expectedContentLength));
     JSValueRef statusCodeValue = JSValueMakeNumber(m_scriptContext, resource->responseStatusCode);
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> propertyName(Adopt, JSStringCreateWithUTF8CString("mimeType"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), mimeTypeValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("mimeType").get(), mimeTypeValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("suggestedFilename"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), suggestedFilenameValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("suggestedFilename").get(), suggestedFilenameValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("expectedContentLength"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), expectedContentLengthValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("expectedContentLength").get(), expectedContentLengthValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("statusCode"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), statusCodeValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("statusCode").get(), statusCodeValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     JSObjectRef scriptObject = scriptObjectForResponse(m_scriptContext, resource, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("responseHeaders"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), scriptObject, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("responseHeaders").get(), scriptObject, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     JSValueRef typeValue = JSValueMakeNumber(m_scriptContext, resource->type());
-    propertyName.adopt(JSStringCreateWithUTF8CString("type"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), typeValue, kJSPropertyAttributeNone, &exception);
-    HANDLE_EXCEPTION(exception);
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("type").get(), typeValue, kJSPropertyAttributeNone, &exception);
+    HANDLE_EXCEPTION(m_scriptContext, exception);
 }
 
 void InspectorController::updateScriptResource(InspectorResource* resource, int length)
@@ -1382,9 +1371,8 @@ void InspectorController::updateScriptResource(InspectorResource* resource, int 
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> propertyName(Adopt, JSStringCreateWithUTF8CString("contentLength"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), lengthValue, kJSPropertyAttributeNone, &exception);
-    HANDLE_EXCEPTION(exception);
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("contentLength").get(), lengthValue, kJSPropertyAttributeNone, &exception);
+    HANDLE_EXCEPTION(m_scriptContext, exception);
 }
 
 void InspectorController::updateScriptResource(InspectorResource* resource, bool finished, bool failed)
@@ -1399,14 +1387,12 @@ void InspectorController::updateScriptResource(InspectorResource* resource, bool
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> propertyName(Adopt, JSStringCreateWithUTF8CString("failed"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), failedValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("failed").get(), failedValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("finished"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), finishedValue, kJSPropertyAttributeNone, &exception);
-    HANDLE_EXCEPTION(exception);
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("finished").get(), finishedValue, kJSPropertyAttributeNone, &exception);
+    HANDLE_EXCEPTION(m_scriptContext, exception);
 }
 
 void InspectorController::updateScriptResource(InspectorResource* resource, double startTime, double responseReceivedTime, double endTime)
@@ -1422,19 +1408,16 @@ void InspectorController::updateScriptResource(InspectorResource* resource, doub
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> propertyName(Adopt, JSStringCreateWithUTF8CString("startTime"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), startTimeValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("startTime").get(), startTimeValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("responseReceivedTime"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), responseReceivedTimeValue, kJSPropertyAttributeNone, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("responseReceivedTime").get(), responseReceivedTimeValue, kJSPropertyAttributeNone, &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    propertyName.adopt(JSStringCreateWithUTF8CString("endTime"));
-    JSObjectSetProperty(m_scriptContext, resource->scriptObject, propertyName.get(), endTimeValue, kJSPropertyAttributeNone, &exception);
-    HANDLE_EXCEPTION(exception);
+    JSObjectSetProperty(m_scriptContext, resource->scriptObject, jsStringRef("endTime").get(), endTimeValue, kJSPropertyAttributeNone, &exception);
+    HANDLE_EXCEPTION(m_scriptContext, exception);
 }
 
 void InspectorController::populateScriptObjects()
@@ -1477,13 +1460,12 @@ JSObjectRef InspectorController::addDatabaseScriptResource(InspectorDatabaseReso
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> databaseString(Adopt, JSStringCreateWithUTF8CString("Database"));
-    JSValueRef databaseProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, databaseString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSValueRef databaseProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, jsStringRef("Database").get(), &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return 0;
 
     JSObjectRef databaseConstructor = JSValueToObject(m_scriptContext, databaseProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return 0;
 
     ExecState* exec = toJSDOMWindow(frame)->globalExec();
@@ -1495,34 +1477,20 @@ JSObjectRef InspectorController::addDatabaseScriptResource(InspectorDatabaseReso
         database = toRef(JSInspectedObjectWrapper::wrap(exec, toJS(exec, resource->database.get())));
     }
 
-    JSRetainPtr<JSStringRef> domain(Adopt, JSStringCreateWithCharacters(resource->domain.characters(), resource->domain.length()));
-    JSValueRef domainValue = JSValueMakeString(m_scriptContext, domain.get());
-
-    JSRetainPtr<JSStringRef> name(Adopt, JSStringCreateWithCharacters(resource->name.characters(), resource->name.length()));
-    JSValueRef nameValue = JSValueMakeString(m_scriptContext, name.get());
-
-    JSRetainPtr<JSStringRef> version(Adopt, JSStringCreateWithCharacters(resource->version.characters(), resource->version.length()));
-    JSValueRef versionValue = JSValueMakeString(m_scriptContext, version.get());
+    JSValueRef domainValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->domain).get());
+    JSValueRef nameValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->name).get());
+    JSValueRef versionValue = JSValueMakeString(m_scriptContext, jsStringRef(resource->version).get());
 
     JSValueRef arguments[] = { database, domainValue, nameValue, versionValue };
     JSObjectRef result = JSObjectCallAsConstructor(m_scriptContext, databaseConstructor, 4, arguments, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return 0;
 
     ASSERT(result);
 
-    JSRetainPtr<JSStringRef> addDatabaseString(Adopt, JSStringCreateWithUTF8CString("addDatabase"));
-    JSValueRef addDatabaseProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, addDatabaseString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return 0;
+    callFunction(m_scriptContext, m_scriptObject, "addDatabase", 1, &result, exception);
 
-    JSObjectRef addDatabaseFunction = JSValueToObject(m_scriptContext, addDatabaseProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return 0;
-
-    JSValueRef addArguments[] = { result };
-    JSObjectCallAsFunction(m_scriptContext, addDatabaseFunction, m_scriptObject, 1, addArguments, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (exception)
         return 0;
 
     resource->setScriptObject(m_scriptContext, result);
@@ -1546,19 +1514,7 @@ void InspectorController::removeDatabaseScriptResource(InspectorDatabaseResource
     resource->setScriptObject(0, 0);
 
     JSValueRef exception = 0;
-
-    JSRetainPtr<JSStringRef> removeDatabaseString(Adopt, JSStringCreateWithUTF8CString("removeDatabase"));
-    JSValueRef removeDatabaseProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, removeDatabaseString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSObjectRef removeDatabaseFunction = JSValueToObject(m_scriptContext, removeDatabaseProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSValueRef arguments[] = { scriptObject };
-    JSObjectCallAsFunction(m_scriptContext, removeDatabaseFunction, m_scriptObject, 1, arguments, &exception);
-    HANDLE_EXCEPTION(exception);
+    callFunction(m_scriptContext, m_scriptObject, "removeDatabase", 1, &scriptObject, exception);
 }
 #endif
 
@@ -1568,29 +1524,18 @@ void InspectorController::addScriptConsoleMessage(const ConsoleMessage* message)
 
     JSValueRef exception = 0;
 
-    JSRetainPtr<JSStringRef> messageConstructorString(Adopt, JSStringCreateWithUTF8CString("ConsoleMessage"));
-    JSValueRef messageConstructorProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, messageConstructorString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
+    JSValueRef messageConstructorProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, jsStringRef("ConsoleMessage").get(), &exception);
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     JSObjectRef messageConstructor = JSValueToObject(m_scriptContext, messageConstructorProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSRetainPtr<JSStringRef> addMessageString(Adopt, JSStringCreateWithUTF8CString("addMessageToConsole"));
-    JSValueRef addMessageProperty = JSObjectGetProperty(m_scriptContext, m_scriptObject, addMessageString.get(), &exception);
-    if (HANDLE_EXCEPTION(exception))
-        return;
-
-    JSObjectRef addMessage = JSValueToObject(m_scriptContext, addMessageProperty, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
     JSValueRef sourceValue = JSValueMakeNumber(m_scriptContext, message->source);
     JSValueRef levelValue = JSValueMakeNumber(m_scriptContext, message->level);
     JSValueRef lineValue = JSValueMakeNumber(m_scriptContext, message->line);
-    JSRetainPtr<JSStringRef> urlString(Adopt, JSStringCreateWithCharacters(message->url.characters(), message->url.length()));
-    JSValueRef urlValue = JSValueMakeString(m_scriptContext, urlString.get());
+    JSValueRef urlValue = JSValueMakeString(m_scriptContext, jsStringRef(message->url).get());
 
     static const unsigned maximumMessageArguments = 256;
     JSValueRef arguments[maximumMessageArguments];
@@ -1606,17 +1551,15 @@ void InspectorController::addScriptConsoleMessage(const ConsoleMessage* message)
         for (unsigned i = 0; i < argumentsToAdd; ++i)
             arguments[argumentCount++] = toRef(message->wrappedArguments[i]);
     } else {
-        JSRetainPtr<JSStringRef> messageString(Adopt, JSStringCreateWithCharacters(message->message.characters(), message->message.length()));
-        JSValueRef messageValue = JSValueMakeString(m_scriptContext, messageString.get());
+        JSValueRef messageValue = JSValueMakeString(m_scriptContext, jsStringRef(message->message).get());
         arguments[argumentCount++] = messageValue;
     }
 
     JSObjectRef messageObject = JSObjectCallAsConstructor(m_scriptContext, messageConstructor, argumentCount, arguments, &exception);
-    if (HANDLE_EXCEPTION(exception))
+    if (HANDLE_EXCEPTION(m_scriptContext, exception))
         return;
 
-    JSObjectCallAsFunction(m_scriptContext, addMessage, m_scriptObject, 1, &messageObject, &exception);
-    HANDLE_EXCEPTION(exception);
+    callFunction(m_scriptContext, m_scriptObject, "addMessageToConsole", 1, &messageObject, exception);
 }
 
 void InspectorController::resetScriptObjects()
@@ -1930,6 +1873,19 @@ void InspectorController::moveWindowBy(float x, float y) const
     m_page->chrome()->setWindowRect(frameRect);
 }
 
+void InspectorController::startDebuggingAndReloadInspectedPage()
+{
+    JavaScriptDebugServer::shared().addListener(this, m_inspectedPage);
+    m_debuggerAttached = true;
+    m_inspectedPage->mainFrame()->loader()->reload();
+}
+
+void InspectorController::stopDebugging()
+{
+    JavaScriptDebugServer::shared().removeListener(this, m_inspectedPage);
+    m_debuggerAttached = false;
+}
+
 static void drawOutlinedRect(GraphicsContext& context, const IntRect& rect, const Color& fillColor)
 {
     static const int outlineThickness = 1;
@@ -2018,7 +1974,7 @@ void InspectorController::drawNodeHighlight(GraphicsContext& context) const
     drawHighlightForBoxes(context, lineBoxRects, contentBox, paddingBox, borderBox, marginBox);
 }
 
-bool InspectorController::handleException(JSValueRef exception, unsigned lineNumber) const
+bool InspectorController::handleException(JSContextRef context, JSValueRef exception, unsigned lineNumber) const
 {
     if (!exception)
         return false;
@@ -2026,11 +1982,48 @@ bool InspectorController::handleException(JSValueRef exception, unsigned lineNum
     if (!m_page)
         return true;
 
-    JSRetainPtr<JSStringRef> messageString(Adopt, JSValueToStringCopy(m_scriptContext, exception, 0));
-    String message(JSStringGetCharactersPtr(messageString.get()), JSStringGetLength(messageString.get()));
+    String message = toString(context, exception, 0);
+    String file(__FILE__);
 
-    m_page->mainFrame()->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, message, lineNumber, __FILE__);
+    if (JSObjectRef exceptionObject = JSValueToObject(context, exception, 0)) {
+        JSValueRef lineValue = JSObjectGetProperty(context, exceptionObject, jsStringRef("line").get(), NULL);
+        if (lineValue)
+            lineNumber = static_cast<unsigned>(JSValueToNumber(context, lineValue, 0));
+
+        JSValueRef fileValue = JSObjectGetProperty(context, exceptionObject, jsStringRef("sourceURL").get(), NULL);
+        if (fileValue)
+            file = toString(context, fileValue, 0);
+    }
+
+    m_page->mainFrame()->domWindow()->console()->addMessage(JSMessageSource, ErrorMessageLevel, message, lineNumber, file);
     return true;
+}
+
+#pragma mark -
+#pragma mark JavaScriptDebugListener functions
+
+void InspectorController::didParseSource(ExecState*, const UString& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
+{
+}
+
+void InspectorController::failedToParseSource(ExecState*, const UString& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
+{
+}
+
+void InspectorController::didEnterCallFrame(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+{
+}
+
+void InspectorController::willExecuteStatement(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+{
+}
+
+void InspectorController::willLeaveCallFrame(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+{
+}
+
+void InspectorController::exceptionWasRaised(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+{
 }
 
 } // namespace WebCore

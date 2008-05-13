@@ -1,18 +1,434 @@
-2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+2008-05-12  Mark Rowe  <mrowe@apple.com>
 
-        Reviewed by Oliver.
+        Reviewed by Sam Weinig.
+
+        Minor cleanup of the DRT Xcode project.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj:  Use GCC_OPTIMIZATION_LEVEL rather than
+        OPTIMIZATION_CFLAGS.  Don't include Info.plist in the "Copy Bundle Resources" build phase as it does
+        not need to be there.
+
+2008-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add support for testing application caches.
         
-        - added support for --ubench mode
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (dumpRenderTree):
+        Empty the cache.
+        
+        (resetWebViewToConsistentStateBeforeTesting):
+        Turn on support for the application cache.
 
-        * Scripts/run-sunspider:
+2008-05-09  Mark Rowe  <mrowe@apple.com>
 
-2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+        Reviewed by Anders Carlsson.
 
-        Reviewed by Oliver Hunt.
+        Update TestNetscapePlugIn to build 64-bit using the Cocoa event model.
 
-        --squirrelfish mode: pared down tests for squirrelfish to chew on.
+        It currently does not attempt to print events which means that plugins/mouse-events.html
+        will fail when run 64-bit.  All other tests that use this plugin pass.
 
-        * Scripts/run-sunspider:
+        * DumpRenderTree/TestNetscapePlugIn.subproj/PluginObject.cpp:
+        (testGetIntIdentifier):
+        * DumpRenderTree/TestNetscapePlugIn.subproj/main.cpp:
+        (NPP_New):
+        (NPP_HandleEvent):
+
+2008-05-09  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Adam Roben
+
+        Explicitly call shutDownWebKit() before quitting.
+
+        * Drosera/win/Drosera.cpp:
+        (_tWinMain):
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (main):
+
+2008-05-09  Mark Rowe  <mrowe@apple.com>
+
+        Fix the Tiger build of Drosera.
+
+        * Drosera/config.h: Define BUILDING_ON_TIGER when building on Tiger.
+
+2008-05-09  Sam Weinig  <sam@webkit.org>
+
+        Rubber-stamped by Mark Rowe.
+
+        Remove the ENABLE_CROSS_DOCUMENT_MESSAGING #ifdefs.
+
+        * Scripts/build-webkit:
+
+2008-05-08  Mark Rowe  <mrowe@apple.com>
+
+        Another attempt at a Tiger build fix.
+
+        Use DumpRenderTreeMac.h rather than DumpRenderTree.h as DumpRenderTreePasteboard is not an Obj-C++ file.
+
+        * DumpRenderTree/mac/DumpRenderTreePasteboard.m:
+
+2008-05-08  Mark Rowe  <mrowe@apple.com>
+
+        Tiger build fix.  Include DumpRenderTree.h so that BUILDING_ON_TIGER will be defined.
+
+        * DumpRenderTree/mac/DumpRenderTreePasteboard.m:
+
+2008-05-08  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Oliver Hunt and Dan Bernstein.
+
+        Update DumpRenderTree to build 64-bit.
+
+        The three major changes here are:
+        1) Use NSInteger in the appropriate places.
+        2) Use ColorSync API that is available in 64-bit to switch display profiles.
+        3) Use method-swizzling to achieve similar results to class posing when using the Obj-C 2.0 runtime.
+
+        The build of DumpRenderTree will still fail in 64-bit for now as the TestNetscapePlugIn target also
+        needs updated to successfully build.
+
+        * DumpRenderTree/mac/Configurations/Base.xcconfig: Don't prevent Xcode from building 64-bit.
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (swizzleAllMethods):
+        (poseAsClass):
+        (prepareConsistentTestingEnvironment):
+        * DumpRenderTree/mac/DumpRenderTreeMac.h:
+        * DumpRenderTree/mac/DumpRenderTreePasteboard.h:
+        * DumpRenderTree/mac/DumpRenderTreePasteboard.m:
+        * DumpRenderTree/mac/DumpRenderTreeWindow.mm:
+        * DumpRenderTree/mac/PixelDumpSupportMac.mm:
+        (restoreColorSpace):
+        (failedGettingCurrentProfile):
+        (setDefaultColorProfileToRGB):
+
+2008-05-08  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Darin Adler.
+
+        Clean up Drosera so that it will build 64-bit.
+
+        * Drosera/mac/DebuggerApplication.mm:
+        (-[DebuggerApplication numberOfRowsInTableView:]): Use NSInteger rather than int.
+        (-[DebuggerApplication tableView:objectValueForTableColumn:row:]): Ditto.
+        * Drosera/mac/Drosera.xcodeproj/project.pbxproj: Use the default value for VALID_ARCHS.
+
+2008-05-07  David Kilzer  <ddkilzer@apple.com>
+
+        Use File::Find and Getopt::Long in make-js-test-wrappers
+
+        Reviewed by Darin.
+
+        * Scripts/make-js-test-wrappers:
+        - Updated Apple copyright statement.
+        - Added command-line switch parsing and -h|--help switch.
+        - Allowed user to pass list of files/directories on which to do
+          a restricted search for TEMPLATE.html files.  The default
+          behavior is still to search the entire LayoutTests directory.
+        - Removed duplicate 'use strict' statement.
+        - Replaced use of `find` statements with File::Find::find().
+        - Remove unneeded chomp() calls now that we use File::Find.
+        (directoryFilter): Added.  Filters .svn directories when used
+        with File::Find::find().
+        (findTemplateFiles): Added.  Returns a list of TEMPLATE.html
+        files found.
+
+2008-05-05  Steve Falkenburg  <sfalken@apple.com>
+
+        Copy dependencies of ImageDiff, DumpRenderTree in post-build step.
+
+        * DumpRenderTree/win/DumpRenderTree.vcproj:
+        * DumpRenderTree/win/ImageDiff.vcproj:
+
+2008-05-05  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Adam.
+
+        Look for the right ImageDiff executable for debug builds.
+
+        * Scripts/run-webkit-tests:
+
+2008-05-05  Darin Adler  <darin@apple.com>
+
+        * Scripts/run-webkit-tests: Ignore a Java leak showing up in the WebKit
+        leak tests.
+
+2008-05-05  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        In the Qt's DumpRenderTree, adjust the web view properly (because W3C SVG 
+        tests expect to be 480x360)
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::open):
+
+2008-05-02  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Adam Roben.
+
+        - add an option to svn-apply to set the reviewer name in change logs
+
+        * Scripts/svn-apply: Added a [-r|--reviewer name] option.
+
+2008-05-01  David Kilzer  <ddkilzer@apple.com>
+
+        Clean up configuration usage in run-webkit-tests
+
+        Reviewed by Adam.
+
+        * Scripts/run-webkit-tests: Parse configuration switches using
+        passedConfiguration() from webkitdirs.pm like every other script.
+        Note that we must still call setConfiguration() afterwards in
+        case the --configuration switch was used.  Use $configurationOption
+        when running build-dumprendertree instead of recreating the switch.
+
+2008-04-29  Adam Roben  <aroben@apple.com>
+
+        Restore the beloved COMPtr::operator&
+
+2008-04-29  Adam Roben  <aroben@apple.com>
+
+        Windows build fixes
+
+        Replace COMPtr::operator& with COMPtr::adoptionPointer.
+
+2008-04-25  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Fix run-webkit-tests --threading
+        and provisionally fix <https://bugs.webkit.org/show_bug.cgi?id=18661>
+        Proxy server issue in Sunday's Nightly
+
+        * DumpRenderTree/pthreads/JavaScriptThreadingPthreads.cpp:
+        (runJavaScriptThread):
+        (startJavaScriptThreads):
+        (stopJavaScriptThreads):
+        Spawned threads were immediately detached, unlike the original ones, so joining them
+        made no sense. Now, all threads are created detached, and stopJavaScriptThreads() just
+        waits for them all to exit.
+
+2008-04-28  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Simon.
+
+        Reset dumping resource load callbacks to false for the next test
+        
+
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::reset):
+
+2008-04-28  Tor Arne Vestbø  <tavestbo@trolltech.com>
+
+        Reviewed by Simon.
+
+        Adapt to the latest API changes in WebKit/qt/Api.
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        * DumpRenderTree/qt/jsobjects.cpp:
+
+2008-04-26  Robin Dunn  <robin@alldunn.com>
+
+        Reviewed by Kevin Ollivier.
+        
+        Delete the DerivedSources after make clean has been done so that the DerivedSources
+        don't get re-created. Also, use the proper extension for the Win wxPython extension.
+        
+        https://bugs.webkit.org/show_bug.cgi?id=18756
+
+        * wx/build-wxwebkit:
+
+2008-04-26  Adam Barth <hk9565@gmail.com>
+
+        Reviewed by Adam Roben and Sam Weinig.
+
+        Updates LayoutTestController to use host instead of domain.
+
+        Collin Jackson <collinj-webkit@collinjackson.com> also contributed to this patch.
+
+        * DumpRenderTree/mac/LayoutTestControllerMac.mm:
+        (LayoutTestController::setDatabaseQuota):
+        * DumpRenderTree/mac/UIDelegate.mm:
+        (-[UIDelegate webView:frame:exceededDatabaseQuotaForSecurityOrigin:database:]):
+
+2008-04-26  Kevin Ollivier  <kevino@theolliviers.com>
+
+        wx build fix. Need the latest libpng. (Somehow my initial test passed without it.)
+
+        * wx/install-unix-extras:
+
+2008-04-26  Robin Dunn  <robin@alldunn.com>
+
+        Reviewed by Kevin Ollivier.
+        
+        Allow the user to set the path to SWIG using an environment variable.
+        
+        https://bugs.webkit.org/show_bug.cgi?id=18660
+
+        * wx/build-wxwebkit:
+
+2008-04-26  Kevin Ollivier  <kevino@theolliviers.com>
+
+        wx build fix. Download the latest libpng version for building the
+        dependencies.
+
+        * wx/install-unix-extras:
+
+2008-04-25  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Simon.
+
+        Implement dumping of resource load callbacks to pass http/tests/xmlhttprequest/abort-should-cancel-load.html
+        
+        Similar to Editing and Frameloading we do the dumping within WebCore
+        
+
+        * DumpRenderTree/qt/jsobjects.cpp:
+        (LayoutTestController::dumpResourceLoadCallbacks):
+        * DumpRenderTree/qt/jsobjects.h:
+
+2008-04-24  Jan Michael Alonzo  <jmalonzo@unpluggable.com>
+
+        Reviewed by Maciej Stachowiak.
+
+        http://bugs.webkit.org/show_bug.cgi?id=18485
+        Typo and documentation fix for build-webkit
+
+        * Scripts/build-webkit:
+
+2008-04-24  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Don't call fprintf from the signal handler.
+        
+        * DumpRenderTree/mac/DumpRenderTree.mm:
+        (crashHandler):
+
+2008-04-23  Adam Roben  <aroben@apple.com>
+
+        Make crashes be reported as crashes, not hangs
+
+        Reviewed by David Kilzer.
+
+        * Scripts/run-webkit-tests:
+        (top level): Use the new status field of the output from
+        readFromDumpToolWithTimer to determine if the test crashed or hung.
+        (sub readFromDumpToolWithTimer):
+          - If we fail to read a line and $! is not EAGAIN, then we've crashed
+            and should not try to read any more.
+          - Changed the timedout field to a more general status field.
+
+2008-04-22  David Kilzer  <ddkilzer@apple.com>
+
+        Bug 18683: update-webkit returns 0 even if it fails
+
+        <https://bugs.webkit.org/show_bug.cgi?id=18683>
+
+        Reviewed by Mitz Pettel.
+
+        * Scripts/update-webkit:
+        (runSvnUpdate): Die if close() fails.
+
+2008-04-21  Adam Roben  <aroben@apple.com>
+
+        Flush stdout/stderr after printing every #EOF separator
+
+        This fixes a hang when running the pixel tests on Windows
+
+        Reviewed by Mitz Pettel.
+
+        * DumpRenderTree/win/DumpRenderTree.cpp:
+        (dump):
+        (main): We don't have to flush stdout/stderr in the arguments loop
+        anymore, as runTest flushes for us.
+
+2008-04-21  Adam Roben  <aroben@apple.com>
+
+        Fix pixel tests
+
+        * Scripts/run-webkit-tests:
+        (sub readFromDumpToolWithTimer): Use readline instead of read to
+        ensure that we don't read past the #EOF marker.
+
+2008-04-21  Holger Hans Peter Freyther  <holger.freyther@trolltech.com>
+
+        Reviewed by Simon.
+
+        Build fix for Qt 4.3
+
+        * When building WebCore/internal make sure the QT_[BEGIN,END]_NAMESPACE is
+        always defined. Do this by adding defines to the compiler line
+
+        * DumpRenderTree/qt/DumpRenderTree.pro:
+
+2008-04-19  Mike Hommey  <glandium@debian.org>
+
+        Reviewed by Alp Toker.
+
+        Don't build GtkLauncher and DumpRenderTree with rpath.
+
+        * GNUmakefile.am:
+
+2008-04-18  Jan Michael Alonzo  <jmalonzo@unpluggable.com>
+
+        Reviewed by Alp Toker.
+
+        http://bugs.webkit.org/show_bug.cgi?id=16620
+        [GTK] Autotools make dist and make check support
+
+        Cleanups.
+
+        * GNUmakefile.am:
+
+2008-04-18  Adam Roben  <aroben@apple.com>
+
+        Drop the hang timer to 30 seconds
+
+        This matches what DRT/mac was using.
+
+        Reviewed by Mitz Pettel.
+
+        * Scripts/run-webkit-tests:
+
+2008-04-18  Adam Roben  <aroben@apple.com>
+
+        Get rid of DRT's Watchdog
+
+        run-webkit-tests now detects hangs and samples DRT as needed.
+
+        Reviewed by Mitz Pettel.
+
+        * DumpRenderTree/DumpRenderTree.xcodeproj/project.pbxproj: Removed
+        Watchdog* files from the project.
+        * DumpRenderTree/Watchdog.cpp: Removed.
+        * DumpRenderTree/Watchdog.h: Removed.
+        * DumpRenderTree/mac/DumpRenderTree.mm: Removed uses of Watchdog
+        (dumpRenderTree):
+        (runTest):
+        * DumpRenderTree/mac/WatchdogMac.h: Removed.
+        * DumpRenderTree/mac/WatchdogMac.mm: Removed.
+        * Scripts/run-webkit-tests:
+        (sub testCrashedOrTimedOut): Call sampleDumpTool() if we timed out.
+        (sub sampleDumpTool): Added. Writes a sample report to
+        ~/Library/Logs/DumpRenderTree/HangReport.txt.
+
+2008-04-18  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Adapt to the API changes in WebKit/qt
+
+        * DumpRenderTree/qt/DumpRenderTree.cpp:
+        (WebCore::WebPage::WebPage):
+        (WebCore::DumpRenderTree::DumpRenderTree):
+        (WebCore::DumpRenderTree::initJSObjects):
+        (WebCore::DumpRenderTree::dumpFramesAsText):
+        (WebCore::DumpRenderTree::dump):
 
 2008-04-17  Adam Roben  <aroben@apple.com>
 

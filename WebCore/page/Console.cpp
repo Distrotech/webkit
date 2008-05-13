@@ -32,10 +32,13 @@
 #include "ChromeClient.h"
 #include "Frame.h"
 #include "FrameLoader.h"
+#include "FrameTree.h"
 #include "InspectorController.h"
 #include "Page.h"
+#include "PageGroup.h"
 #include "PlatformString.h"
 #include <kjs/list.h>
+#include <profiler/Profiler.h>
 
 using namespace KJS;
 
@@ -121,6 +124,25 @@ void Console::log(ExecState* exec, const List& arguments)
 
     page->chrome()->client()->addMessageToConsole(message, 0, url);
     page->inspectorController()->addMessageToConsole(JSMessageSource, LogMessageLevel, exec, arguments, 0, url);
+}
+
+void Console::profile(const String& title) const
+{
+    // FIXME: Figure out something to do with the title passed in so that it can
+    // be displayed by the inspector.
+    Page* page = m_frame->page();
+    if (!page)
+        return;
+
+    Profiler::profiler()->startProfiling(page->group().identifier(), title);
+}
+
+void Console::profileEnd() const
+{
+    Profiler::profiler()->stopProfiling();
+    // FIXME: We need to hook into the WebInspector here so that it can process over the data
+    // that is in the profiler and display it in some new cool way, as opposed to just printing
+    // it or dumping it to the console.
 }
 
 void Console::warn(ExecState* exec, const List& arguments)

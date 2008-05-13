@@ -38,6 +38,7 @@
 #include "RenderArena.h"
 #include "RenderFlexibleBox.h"
 #include "RenderLayer.h"
+#include "RenderReplica.h"
 #include "RenderTableCell.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
@@ -116,6 +117,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
     }
 
     setHasTransform(newStyle->hasTransform());
+    setHasReflection(newStyle->boxReflect());
 
     if (requiresLayer()) {
         if (!m_layer) {
@@ -133,6 +135,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
         m_layer = 0;
         setHasLayer(false);
         setHasTransform(false); // Either a transform wasn't specified or the object doesn't support transforms, so just null out the bit.
+        setHasReflection(false);
         layer->removeOnlyThisLayer();
         if (wasFloating && isFloating())
             setChildNeedsLayout(true);
@@ -154,7 +157,7 @@ void RenderBox::setStyle(RenderStyle* newStyle)
     }
 
     if (m_layer)
-        m_layer->styleChanged();
+        m_layer->styleChanged(oldStyle);
 
     // Set the text color if we're the body.
     if (isBody())
@@ -318,7 +321,7 @@ void RenderBox::paint(PaintInfo& paintInfo, int tx, int ty)
 
 void RenderBox::paintRootBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
 {
-    const BackgroundLayer* bgLayer = style()->backgroundLayers();
+    const FillLayer* bgLayer = style()->backgroundLayers();
     Color bgColor = style()->backgroundColor();
     if (document()->isHTMLDocument() && !style()->hasBackground()) {
         // Locate the <body> element using the DOM.  This is easier than trying
@@ -356,7 +359,7 @@ void RenderBox::paintRootBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
 
     int my = max(by, paintInfo.rect.y());
 
-    paintBackgrounds(paintInfo, bgColor, bgLayer, my, paintInfo.rect.height(), bx, by, bw, bh);
+    paintFillLayers(paintInfo, bgColor, bgLayer, my, paintInfo.rect.height(), bx, by, bw, bh);
 
     if (style()->hasBorder() && style()->display() != INLINE)
         paintBorder(paintInfo.context, tx, ty, w, h, style());
@@ -399,7 +402,7 @@ void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
         // independent of the body.  Go through the DOM to get to the root element's render object,
         // since the root could be inline and wrapped in an anonymous block.
         if (!isBody() || !document()->isHTMLDocument() || document()->documentElement()->renderer()->style()->hasBackground())
-            paintBackgrounds(paintInfo, style()->backgroundColor(), style()->backgroundLayers(), my, mh, tx, ty, w, h);
+            paintFillLayers(paintInfo, style()->backgroundColor(), style()->backgroundLayers(), my, mh, tx, ty, w, h);
         if (style()->hasAppearance())
             theme()->paintDecorations(this, paintInfo, IntRect(tx, ty, w, h));
     }
@@ -409,32 +412,101 @@ void RenderBox::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
         paintBorder(paintInfo.context, tx, ty, w, h, style());
 }
 
-void RenderBox::paintBackgrounds(const PaintInfo& paintInfo, const Color& c, const BackgroundLayer* bgLayer,
-                                 int clipY, int clipH, int tx, int ty, int width, int height)
+void RenderBox::paintMask(PaintInfo& paintInfo, int tx, int ty)
 {
-    if (!bgLayer)
+    if (!shouldPaintWithinRoot(paintInfo) || style()->visibility() != VISIBLE || paintInfo.phase != PaintPhaseMask)
         return;
 
-    paintBackgrounds(paintInfo, c, bgLayer->next(), clipY, clipH, tx, ty, width, height);
-    paintBackground(paintInfo, c, bgLayer, clipY, clipH, tx, ty, width, height);
+    int w = width();
+    int h = height() + borderTopExtra() + borderBottomExtra();
+    ty -= borderTopExtra();
+
+    // border-fit can adjust where we paint our border and background.  If set, we snugly fit our line box descendants.  (The iChat
+    // balloon layout is an example of this).
+    borderFitAdjust(tx, w);
+
+    int my = max(ty, paintInfo.rect.y());
+    int mh;
+    if (ty < paintInfo.rect.y())
+        mh = max(0, h - (paintInfo.rect.y() - ty));
+    else
+        mh = min(paintInfo.rect.height(), h);
+
+    paintMaskImages(paintInfo, my, mh, tx, ty, w, h);
 }
 
-void RenderBox::paintBackground(const PaintInfo& paintInfo, const Color& c, const BackgroundLayer* bgLayer,
-                                int clipY, int clipH, int tx, int ty, int width, int height)
+void RenderBox::paintMaskImages(const PaintInfo& paintInfo, int my, int mh, int tx, int ty, int w, int h)
 {
-    paintBackgroundExtended(paintInfo, c, bgLayer, clipY, clipH, tx, ty, width, height);
+    // Figure out if we need to push a transparency layer to render our mask.
+    bool pushTransparencyLayer = false;
+    StyleImage* maskBoxImage = style()->maskBoxImage().image();
+    if ((maskBoxImage && style()->maskLayers()->hasImage()) || style()->maskLayers()->next())
+        // We have to use an extra image buffer to hold the mask. Multiple mask images need
+        // to composite together using source-over so that they can then combine into a single unified mask that
+        // can be composited with the content using destination-in.  SVG images need to be able to set compositing modes
+        // as they draw images contained inside their sub-document, so we paint all our images into a separate buffer
+        // and composite that buffer as the mask.
+        pushTransparencyLayer = true;
+    
+    CompositeOperator compositeOp = CompositeDestinationIn;
+    if (pushTransparencyLayer) {
+        paintInfo.context->setCompositeOperation(CompositeDestinationIn);
+        paintInfo.context->beginTransparencyLayer(1.0f);
+        compositeOp = CompositeSourceOver;
+    }
+
+    paintFillLayers(paintInfo, Color(), style()->maskLayers(), my, mh, tx, ty, w, h, compositeOp);
+    paintNinePieceImage(paintInfo.context, tx, ty, w, h, style(), style()->maskBoxImage(), compositeOp);
+    
+    if (pushTransparencyLayer)
+        paintInfo.context->endTransparencyLayer();
 }
 
-IntSize RenderBox::calculateBackgroundSize(const BackgroundLayer* bgLayer, int scaledWidth, int scaledHeight) const
+IntRect RenderBox::maskClipRect()
 {
-    StyleImage* bg = bgLayer->backgroundImage();
+    IntRect bbox = borderBox();
+    if (style()->maskBoxImage().image())
+        return bbox;
+    
+    IntRect result;
+    for (const FillLayer* maskLayer = style()->maskLayers(); maskLayer; maskLayer = maskLayer->next()) {
+        if (maskLayer->image()) {
+            IntRect maskRect;
+            IntPoint phase;
+            IntSize tileSize;
+            calculateBackgroundImageGeometry(maskLayer, bbox.x(), bbox.y(), bbox.width(), bbox.height(), maskRect, phase, tileSize);
+            result.unite(maskRect);
+        }
+    }
+    return result;
+}
+
+void RenderBox::paintFillLayers(const PaintInfo& paintInfo, const Color& c, const FillLayer* fillLayer,
+                                int clipY, int clipH, int tx, int ty, int width, int height, CompositeOperator op)
+{
+    if (!fillLayer)
+        return;
+
+    paintFillLayers(paintInfo, c, fillLayer->next(), clipY, clipH, tx, ty, width, height, op);
+    paintFillLayer(paintInfo, c, fillLayer, clipY, clipH, tx, ty, width, height, op);
+}
+
+void RenderBox::paintFillLayer(const PaintInfo& paintInfo, const Color& c, const FillLayer* fillLayer,
+                               int clipY, int clipH, int tx, int ty, int width, int height, CompositeOperator op)
+{
+    paintFillLayerExtended(paintInfo, c, fillLayer, clipY, clipH, tx, ty, width, height, 0, op);
+}
+
+IntSize RenderBox::calculateBackgroundSize(const FillLayer* bgLayer, int scaledWidth, int scaledHeight) const
+{
+    StyleImage* bg = bgLayer->image();
     bg->setImageContainerSize(IntSize(scaledWidth, scaledHeight)); // Use the box established by background-origin.
 
-    if (bgLayer->isBackgroundSizeSet()) {
+    if (bgLayer->isSizeSet()) {
         int w = scaledWidth;
         int h = scaledHeight;
-        Length bgWidth = bgLayer->backgroundSize().width;
-        Length bgHeight = bgLayer->backgroundSize().height;
+        Length bgWidth = bgLayer->size().width;
+        Length bgHeight = bgLayer->size().height;
 
         if (bgWidth.isFixed())
             w = bgWidth.value();
@@ -466,7 +538,8 @@ IntSize RenderBox::calculateBackgroundSize(const BackgroundLayer* bgLayer, int s
 
 void RenderBox::imageChanged(WrappedImagePtr image)
 {
-    if (isInlineFlow() || style()->borderImage().image() && style()->borderImage().image()->data() == image) {
+    if (isInlineFlow() || style()->borderImage().image() && style()->borderImage().image()->data() == image ||
+        style()->maskBoxImage().image() && style()->maskBoxImage().image()->data() == image) {
         repaint();
         return;
     }
@@ -500,8 +573,8 @@ void RenderBox::imageChanged(WrappedImagePtr image)
 
     backgroundRenderer->computeAbsoluteRepaintRect(absoluteRect);
 
-    for (const BackgroundLayer* bgLayer = style()->backgroundLayers(); bgLayer && !didFullRepaint; bgLayer = bgLayer->next()) {
-        if (bgLayer->backgroundImage() && image == bgLayer->backgroundImage()->data()) {
+    for (const FillLayer* bgLayer = style()->backgroundLayers(); bgLayer && !didFullRepaint; bgLayer = bgLayer->next()) {
+        if (bgLayer->image() && image == bgLayer->image()->data()) {
             IntRect repaintRect;
             IntPoint phase;
             IntSize tileSize;
@@ -513,7 +586,7 @@ void RenderBox::imageChanged(WrappedImagePtr image)
     }
 }
 
-void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer, int tx, int ty, int w, int h, IntRect& destRect, IntPoint& phase, IntSize& tileSize)
+void RenderBox::calculateBackgroundImageGeometry(const FillLayer* bgLayer, int tx, int ty, int w, int h, IntRect& destRect, IntPoint& phase, IntSize& tileSize)
 {
     int pw;
     int ph;
@@ -528,14 +601,14 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
 
     // CSS2 chapter 14.2.1
 
-    if (bgLayer->backgroundAttachment()) {
+    if (bgLayer->attachment()) {
         // Scroll
-        if (bgLayer->backgroundOrigin() != BGBORDER) {
+        if (bgLayer->origin() != BorderFillBox) {
             left = borderLeft();
             right = borderRight();
             top = borderTop();
             bottom = borderBottom();
-            if (bgLayer->backgroundOrigin() == BGCONTENT) {
+            if (bgLayer->origin() == ContentFillBox) {
                 left += paddingLeft();
                 right += paddingRight();
                 top += paddingTop();
@@ -573,7 +646,7 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
     int ch;
 
     IntSize scaledImageSize;
-    if (isRoot() && bgLayer->backgroundAttachment())
+    if (isRoot() && bgLayer->attachment())
         scaledImageSize = calculateBackgroundSize(bgLayer, rw, rh);
     else
         scaledImageSize = calculateBackgroundSize(bgLayer, pw, ph);
@@ -581,14 +654,14 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
     int scaledImageWidth = scaledImageSize.width();
     int scaledImageHeight = scaledImageSize.height();
 
-    EBackgroundRepeat backgroundRepeat = bgLayer->backgroundRepeat();
+    EFillRepeat backgroundRepeat = bgLayer->repeat();
     
     int xPosition;
-    if (isRoot() && bgLayer->backgroundAttachment())
-        xPosition = bgLayer->backgroundXPosition().calcMinValue(rw - scaledImageWidth, true);
+    if (isRoot() && bgLayer->attachment())
+        xPosition = bgLayer->xPosition().calcMinValue(rw - scaledImageWidth, true);
     else
-        xPosition = bgLayer->backgroundXPosition().calcMinValue(pw - scaledImageWidth, true);
-    if (backgroundRepeat == REPEAT || backgroundRepeat == REPEAT_X) {
+        xPosition = bgLayer->xPosition().calcMinValue(pw - scaledImageWidth, true);
+    if (backgroundRepeat == RepeatFill || backgroundRepeat == RepeatXFill) {
         cw = pw + left + right;
         sx = scaledImageWidth ? scaledImageWidth - (xPosition + left) % scaledImageWidth : 0;
     } else {
@@ -598,11 +671,11 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
     }
     
     int yPosition;
-    if (isRoot() && bgLayer->backgroundAttachment())
-        yPosition = bgLayer->backgroundYPosition().calcMinValue(rh - scaledImageHeight, true);
+    if (isRoot() && bgLayer->attachment())
+        yPosition = bgLayer->yPosition().calcMinValue(rh - scaledImageHeight, true);
     else 
-        yPosition = bgLayer->backgroundYPosition().calcMinValue(ph - scaledImageHeight, true);
-    if (backgroundRepeat == REPEAT || backgroundRepeat == REPEAT_Y) {
+        yPosition = bgLayer->yPosition().calcMinValue(ph - scaledImageHeight, true);
+    if (backgroundRepeat == RepeatFill || backgroundRepeat == RepeatYFill) {
         ch = ph + top + bottom;
         sy = scaledImageHeight ? scaledImageHeight - (yPosition + top) % scaledImageHeight : 0;
     } else {
@@ -611,7 +684,7 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
         ch = scaledImageHeight + min(yPosition + top, 0);
     }
 
-    if (!bgLayer->backgroundAttachment()) {
+    if (!bgLayer->attachment()) {
         sx += max(tx - cx, 0);
         sy += max(ty - cy, 0);
     }
@@ -622,8 +695,8 @@ void RenderBox::calculateBackgroundImageGeometry(const BackgroundLayer* bgLayer,
     tileSize = IntSize(scaledImageWidth, scaledImageHeight);
 }
 
-void RenderBox::paintBackgroundExtended(const PaintInfo& paintInfo, const Color& c, const BackgroundLayer* bgLayer, int clipY, int clipH,
-                                        int tx, int ty, int w, int h, InlineFlowBox* box)
+void RenderBox::paintFillLayerExtended(const PaintInfo& paintInfo, const Color& c, const FillLayer* bgLayer, int clipY, int clipH,
+                                       int tx, int ty, int w, int h, InlineFlowBox* box, CompositeOperator op)
 {
     GraphicsContext* context = paintInfo.context;
     bool includeLeftEdge = box ? box->includeLeftEdge() : true;
@@ -644,16 +717,16 @@ void RenderBox::paintBackgroundExtended(const PaintInfo& paintInfo, const Color&
         clippedToBorderRadius = true;
     }
 
-    if (bgLayer->backgroundClip() == BGPADDING || bgLayer->backgroundClip() == BGCONTENT) {
+    if (bgLayer->clip() == PaddingFillBox || bgLayer->clip() == ContentFillBox) {
         // Clip to the padding or content boxes as necessary.
-        bool includePadding = bgLayer->backgroundClip() == BGCONTENT;
+        bool includePadding = bgLayer->clip() == ContentFillBox;
         int x = tx + bLeft + (includePadding ? pLeft : 0);
         int y = ty + borderTop() + (includePadding ? paddingTop() : 0);
         int width = w - bLeft - bRight - (includePadding ? pLeft + pRight : 0);
         int height = h - borderTop() - borderBottom() - (includePadding ? paddingTop() + paddingBottom() : 0);
         context->save();
         context->clip(IntRect(x, y, width, height));
-    } else if (bgLayer->backgroundClip() == BGTEXT) {
+    } else if (bgLayer->clip() == TextFillBox) {
         // We have to draw our text into a mask that can then be used to clip background drawing.
         // First figure out how big the mask has to be.  It should be no bigger than what we need
         // to actually render, so we should intersect the dirty rect with the border box of the background.
@@ -681,7 +754,7 @@ void RenderBox::paintBackgroundExtended(const PaintInfo& paintInfo, const Color&
         context->clipToImageBuffer(maskRect, maskImage.get());
     }
     
-    StyleImage* bg = bgLayer->backgroundImage();
+    StyleImage* bg = bgLayer->image();
     bool shouldPaintBackgroundImage = bg && bg->canRender(style()->effectiveZoom());
     Color bgColor = c;
 
@@ -747,11 +820,13 @@ void RenderBox::paintBackgroundExtended(const PaintInfo& paintInfo, const Color&
         IntSize tileSize;
 
         calculateBackgroundImageGeometry(bgLayer, tx, ty, w, h, destRect, phase, tileSize);
-        if (!destRect.isEmpty())
-            context->drawTiledImage(bg->image(this, tileSize), destRect, phase, tileSize, bgLayer->backgroundComposite());
+        if (!destRect.isEmpty()) {
+            CompositeOperator compositeOp = op == CompositeSourceOver ? bgLayer->composite() : op;
+            context->drawTiledImage(bg->image(this, tileSize), destRect, phase, tileSize, compositeOp);
+        }
     }
 
-    if (bgLayer->backgroundClip() != BGBORDER)
+    if (bgLayer->clip() != BorderFillBox)
         // Undo the background clip
         context->restore();
 
@@ -1021,6 +1096,15 @@ void RenderBox::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
         }
     }
 
+    // FIXME: This is really a hack.  If the reflection caused the repaint, we don't have to 
+    // do this (and yet we do).  If there are nested reflections, then the single static is insufficient.
+    static bool invalidatingReflection;
+    if (hasReflection() && !invalidatingReflection) {
+        invalidatingReflection = true;
+        layer()->reflection()->repaintRectangle(rect);
+        invalidatingReflection = false;
+    }
+
     int x = rect.x() + m_x;
     int y = rect.y() + m_y;
 
@@ -1033,7 +1117,7 @@ void RenderBox::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
 
     if (style()->position() == FixedPosition)
         fixed = true;
-
+        
     RenderObject* o = container();
     if (o) {
         if (o->isBlockFlow() && style()->position() != AbsolutePosition && style()->position() != FixedPosition) {
@@ -1052,7 +1136,7 @@ void RenderBox::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
             x += offset.width();
             y += offset.height();
         }
-
+        
         // We are now in our parent container's coordinate space.  Apply our transform to obtain a bounding box
         // in the parent's coordinate space that encloses us.
         if (m_layer && m_layer->transform()) {
@@ -1488,7 +1572,7 @@ int RenderBox::calcReplacedWidthUsing(Length width) const
         case Fixed:
             return calcContentBoxWidth(width.value());
         case Percent: {
-            const int cw = containingBlockWidth();
+            const int cw = isPositioned() ? containingBlockWidthForPositioned(container()) : containingBlockWidth();
             if (cw > 0)
                 return calcContentBoxWidth(width.calcMinValue(cw));
         }
@@ -2498,7 +2582,7 @@ void RenderBox::calcAbsoluteVerticalReplaced()
     m_y = topValue + m_marginTop + containerBlock->borderTop();
 }
 
-IntRect RenderBox::caretRect(int offset, EAffinity affinity, int* extraWidthToEndOfLine)
+IntRect RenderBox::caretRect(InlineBox* box, int caretOffset, int* extraWidthToEndOfLine)
 {
     // VisiblePositions at offsets inside containers either a) refer to the positions before/after
     // those containers (tables and select elements) or b) refer to the position inside an empty block.
@@ -2508,9 +2592,12 @@ IntRect RenderBox::caretRect(int offset, EAffinity affinity, int* extraWidthToEn
     // FIXME: What about border and padding?
     const int caretWidth = 1;
     IntRect rect(xPos(), yPos(), caretWidth, m_height);
-    if (offset)
+    TextDirection direction = box ? box->direction() : style()->direction();
+
+    if ((!caretOffset) ^ (direction == LTR))
         rect.move(IntSize(m_width - caretWidth, 0));
-    if (InlineBox* box = inlineBoxWrapper()) {
+
+    if (box) {
         RootInlineBox* rootBox = box->root();
         int top = rootBox->topOverflow();
         rect.setY(top);

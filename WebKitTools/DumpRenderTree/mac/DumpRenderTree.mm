@@ -44,7 +44,6 @@
 #import "PolicyDelegate.h"
 #import "ResourceLoadDelegate.h"
 #import "UIDelegate.h"
-#import "WatchdogMac.h"
 #import "WorkQueue.h"
 #import "WorkQueueItem.h"
 #import <CoreFoundation/CoreFoundation.h>
@@ -52,6 +51,7 @@
 #import <WebKit/DOMExtensions.h>
 #import <WebKit/DOMRange.h>
 #import <WebKit/WebBackForwardList.h>
+#import <WebKit/WebCache.h>
 #import <WebKit/WebCoreStatistics.h>
 #import <WebKit/WebDataSourcePrivate.h>
 #import <WebKit/WebDatabaseManagerPrivate.h>
@@ -100,7 +100,6 @@ WebFrame *topLoadingFrame = nil;     // !nil iff a load is in progress
 
 CFMutableSetRef disallowedURLs = 0;
 CFRunLoopTimerRef waitToDumpWatchdog = 0;
-OwnPtr<Watchdog> watchdog;
 
 // Delegates
 static FrameLoadDelegate *frameLoadDelegate;
@@ -123,6 +122,56 @@ static WebHistoryItem *prevTestBFItem = nil;  // current b/f item at the end of 
 
 const unsigned maxViewHeight = 600;
 const unsigned maxViewWidth = 800;
+
+#if __OBJC2__
+static void swizzleAllMethods(Class imposter, Class original)
+{
+    unsigned int imposterMethodCount;
+    Method* imposterMethods = class_copyMethodList(imposter, &imposterMethodCount);
+
+    unsigned int originalMethodCount;
+    Method* originalMethods = class_copyMethodList(original, &originalMethodCount);
+
+    for (unsigned int i = 0; i < imposterMethodCount; i++) {
+        SEL imposterMethodName = method_getName(imposterMethods[i]);
+
+        // Attempt to add the method to the original class.  If it fails, the method already exists and we should
+        // instead exchange the implementations.
+        if (class_addMethod(original, imposterMethodName, method_getImplementation(originalMethods[i]), method_getTypeEncoding(originalMethods[i])))
+            continue;
+
+        unsigned int j = 0;
+        for (; j < originalMethodCount; j++) {
+            SEL originalMethodName = method_getName(originalMethods[j]);
+            if (sel_isEqual(imposterMethodName, originalMethodName))
+                break;
+        }
+
+        // If class_addMethod failed above then the method must exist on the original class.
+        ASSERT(j < originalMethodCount);
+        method_exchangeImplementations(imposterMethods[i], originalMethods[j]);
+    }
+
+    free(imposterMethods);
+    free(originalMethods);
+}
+#endif
+
+static void poseAsClass(const char* imposter, const char* original)
+{
+    Class imposterClass = objc_getClass(imposter);
+    Class originalClass = objc_getClass(original);
+
+#if !__OBJC2__
+    class_poseAs(imposterClass, originalClass);
+#else
+
+    // Swizzle instance methods
+    swizzleAllMethods(imposterClass, originalClass);
+    // and then class methods
+    swizzleAllMethods(object_getClass(imposterClass), object_getClass(originalClass));
+#endif
+}
 
 void setPersistentUserStyleSheetLocation(CFStringRef url)
 {
@@ -277,7 +326,9 @@ static void setDefaultsToConsistentValuesForTesting()
 
 static void crashHandler(int sig)
 {
-    fprintf(stderr, "%s\n", strsignal(sig));
+    char *signalName = strsignal(sig);
+    write(STDERR_FILENO, signalName, strlen(signalName));
+    write(STDERR_FILENO, "\n", 1);
     restoreColorSpace(0);
     exit(128 + sig);
 }
@@ -380,8 +431,8 @@ static void runTestingServerLoop()
 
 static void prepareConsistentTestingEnvironment()
 {
-    class_poseAs(objc_getClass("DumpRenderTreePasteboard"), objc_getClass("NSPasteboard"));
-    class_poseAs(objc_getClass("DumpRenderTreeEvent"), objc_getClass("NSEvent"));
+    poseAsClass("DumpRenderTreePasteboard", "NSPasteboard");
+    poseAsClass("DumpRenderTreeEvent", "NSEvent");
 
     setDefaultsToConsistentValuesForTesting();
     activateAhemFont();
@@ -406,14 +457,13 @@ void dumpRenderTree(int argc, const char *argv[])
 
     [[NSURLCache sharedURLCache] removeAllCachedResponses];
 
+    [WebCache empty];
+     
     // <rdar://problem/5222911>
     testStringByEvaluatingJavaScriptFromString();
 
     if (threaded)
         startJavaScriptThreads();
-
-    watchdog.set(new WatchdogMac());
-    watchdog->start();
 
     if (useLongRunningServerMode(argc, argv)) {
         printSeparators = YES;
@@ -423,8 +473,6 @@ void dumpRenderTree(int argc, const char *argv[])
         for (int i = optind; i != argc; ++i)
             runTest(argv[i]);
     }
-    watchdog->stop();
-    watchdog.clear();
 
     if (threaded)
         stopJavaScriptThreads();
@@ -467,7 +515,7 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-static int compareHistoryItems(id item1, id item2, void *context)
+static NSInteger compareHistoryItems(id item1, id item2, void *context)
 {
     return [[item1 target] caseInsensitiveCompare:[item2 target]];
 }
@@ -561,7 +609,7 @@ static void convertWebResourceDataToString(NSMutableDictionary *resource)
 
 static void normalizeWebResourceURL(NSMutableString *webResourceURL)
 {
-    static int fileUrlLength = [@"file://" length];
+    static int fileUrlLength = [(NSString *)@"file://" length];
     NSRange layoutTestsWebArchivePathRange = [webResourceURL rangeOfString:@"/LayoutTests/" options:NSBackwardsSearch];
     if (layoutTestsWebArchivePathRange.location == NSNotFound)
         return;
@@ -833,7 +881,8 @@ static void resetWebViewToConsistentStateBeforeTesting()
     [preferences setPrivateBrowsingEnabled:NO];
     [preferences setAuthorAndUserStylesEnabled:YES];
     [preferences setJavaScriptCanOpenWindowsAutomatically:YES];
-
+    [preferences setOfflineWebApplicationCacheEnabled:YES];
+    
     if (persistentUserStyleSheetLocation) {
         [preferences setUserStyleSheetLocation:[NSURL URLWithString:(NSString *)(persistentUserStyleSheetLocation.get())]];
         [preferences setUserStyleSheetEnabled:YES];
@@ -934,9 +983,6 @@ static void runTest(const char *pathOrURL)
 
     if (_shouldIgnoreWebCoreNodeLeaks)
         [WebCoreStatistics stopIgnoringWebCoreNodeLeaks];
-        
-    // Check-in with the watchdog after every test is complete
-    watchdog->checkIn();
 }
 
 void displayWebView()

@@ -298,8 +298,7 @@ JSValueRef JSObjectCallAsFunction(JSContextRef ctx, JSObjectRef object, JSObject
 bool JSObjectIsConstructor(JSContextRef, JSObjectRef object)
 {
     JSObject* jsObject = toJS(object);
-    ConstructData constructData;
-    return jsObject->getConstructData(constructData) != ConstructTypeNone;
+    return jsObject->implementsConstruct();
 }
 
 JSObjectRef JSObjectCallAsConstructor(JSContextRef ctx, JSObjectRef object, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -373,6 +372,5 @@ void JSPropertyNameAccumulatorAddName(JSPropertyNameAccumulatorRef array, JSStri
     JSLock lock;
     PropertyNameArray* propertyNames = toJS(array);
     UString::Rep* rep = toJS(propertyName);
-    
-    propertyNames->add(Identifier(rep));
+    propertyNames->add(rep);
 }

@@ -16,10 +16,8 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
 */
+
 #ifndef QWEBFRAME_P_H
 #define QWEBFRAME_P_H
 
@@ -80,6 +78,8 @@ public:
     Qt::ScrollBarPolicy horizontalScrollBarPolicy;
     Qt::ScrollBarPolicy verticalScrollBarPolicy; 
 
+    void updateBackground();
+
     static WebCore::Frame* core(QWebFrame*);
     static QWebFrame* kit(WebCore::Frame*);
 
@@ -91,6 +91,27 @@ public:
     bool allowsScrolling;
     int marginWidth;
     int marginHeight;
+};
+
+class QWebHitTestResultPrivate
+{
+public:
+    QWebHitTestResultPrivate() : isContentEditable(false), isContentSelected(false) {}
+    QWebHitTestResultPrivate(const WebCore::HitTestResult &hitTest);
+
+    QPoint pos;
+    QString title;
+    QString linkText;
+    QUrl linkUrl;
+    QString linkTitle;
+    QPointer<QWebFrame> linkTargetFrame;
+    QString alternateText;
+    QUrl imageUrl;
+    QPixmap pixmap;
+    bool isContentEditable;
+    bool isContentSelected;
+    QPointer<QWebFrame> frame;
+    RefPtr<WebCore::Node> innerNonSharedNode;
 };
 
 #endif

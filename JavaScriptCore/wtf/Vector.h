@@ -260,7 +260,6 @@ namespace WTF {
 
         T* buffer() { return m_buffer; }
         const T* buffer() const { return m_buffer; }
-        T** bufferSlot() { return &m_buffer; }
         size_t capacity() const { return m_capacity; }
 
         T* releaseBuffer()
@@ -325,7 +324,6 @@ namespace WTF {
         using Base::deallocateBuffer;
 
         using Base::buffer;
-        using Base::bufferSlot;
         using Base::capacity;
 
         using Base::releaseBuffer;
@@ -369,7 +367,6 @@ namespace WTF {
         }
 
         using Base::buffer;
-        using Base::bufferSlot;
         using Base::capacity;
 
         T* releaseBuffer()
@@ -447,7 +444,6 @@ namespace WTF {
 
         T* data() { return m_buffer.buffer(); }
         const T* data() const { return m_buffer.buffer(); }
-        T** dataSlot() { return m_buffer.bufferSlot(); }
 
         iterator begin() { return data(); }
         iterator end() { return begin() + m_size; }

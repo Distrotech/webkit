@@ -30,8 +30,8 @@
 #import <WebKit/WebBaseNetscapePluginView.h>
 
 @interface WebBaseNetscapePluginView (WebInternal)
-- (void)restartNullEvents;
-- (void)stopNullEvents;
+- (BOOL)sendEvent:(void*)event isDrawRect:(BOOL)eventIsDrawRect;
+- (NPEventModel)eventModel;
 @end
 #endif
 

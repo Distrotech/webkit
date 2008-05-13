@@ -57,12 +57,41 @@ namespace KJS {
     virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
     virtual bool toBoolean(ExecState *exec) const;
     virtual double toNumber(ExecState *exec) const;
-    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     virtual JSObject *toObject(ExecState *exec) const;
     virtual UString toString(ExecState*) const;
     
     UString val;
   };
+
+  class NumberImp : public JSCell {
+    friend class ConstantValues;
+    friend JSValue *jsNumberCell(double);
+  public:
+    double value() const { return val; }
+
+    virtual JSType type() const { return NumberType; }
+
+    virtual JSValue* toPrimitive(ExecState*, JSType preferred = UnspecifiedType) const;
+    virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
+    virtual bool toBoolean(ExecState *exec) const;
+    virtual double toNumber(ExecState *exec) const;
+    virtual UString toString(ExecState *exec) const;
+    virtual JSObject *toObject(ExecState *exec) const;
+    
+    void* operator new(size_t size)
+    {
+        return Collector::allocateNumber(size);
+    }
+  private:
+    NumberImp(double v) : val(v) { }
+
+    virtual bool getUInt32(uint32_t&) const;
+    virtual bool getTruncatedInt32(int32_t&) const;
+    virtual bool getTruncatedUInt32(uint32_t&) const;
+
+    double val;
+  };
+
 
   // ---------------------------------------------------------------------------
   //                            Evaluation
@@ -78,10 +107,6 @@ namespace KJS {
 
     AttachedGlobalObject* globalObjects;
   };
-
-#ifndef NDEBUG
-  void printInfo(ExecState *exec, const char *s, JSValue *, int lineno = -1);
-#endif
 
 } // namespace
 

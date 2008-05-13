@@ -122,8 +122,6 @@ public:
     static JSValue* falseImmediate();
     static JSValue* undefinedImmediate();
     static JSValue* nullImmediate();
-
-    static JSValue* impossibleValue();
     
 private:
     static const uintptr_t TagMask = 3; // type tags are 2 bits long
@@ -153,9 +151,6 @@ ALWAYS_INLINE JSValue* JSImmediate::trueImmediate() { return tag(1 << 2, Boolean
 ALWAYS_INLINE JSValue* JSImmediate::falseImmediate() { return tag(0, BooleanType); }
 ALWAYS_INLINE JSValue* JSImmediate::undefinedImmediate() { return tag(1 << 2, UndefinedType); }
 ALWAYS_INLINE JSValue* JSImmediate::nullImmediate() { return tag(0, UndefinedType); }
-
-// This value is impossible because 0x4 is not a valid pointer but a tag of 0 would indicate non-immediate
-ALWAYS_INLINE JSValue* JSImmediate::impossibleValue() { return tag(1 << 2, 0); }
 
 ALWAYS_INLINE bool JSImmediate::toBoolean(const JSValue* v)
 {
@@ -276,16 +271,6 @@ ALWAYS_INLINE bool JSImmediate::getTruncatedInt32(const JSValue* v, int32_t& i)
 ALWAYS_INLINE bool JSImmediate::getTruncatedUInt32(const JSValue* v, uint32_t& i)
 {
     return getUInt32(v, i);
-}
-
-ALWAYS_INLINE JSType JSImmediate::type(const JSValue* v)
-{
-    ASSERT(isImmediate(v));
-    
-    uintptr_t tag = getTag(v);
-    if (tag == UndefinedType)
-        return v == undefinedImmediate() ? UndefinedType : NullType;
-    return static_cast<JSType>(tag);
 }
 
 } // namespace KJS

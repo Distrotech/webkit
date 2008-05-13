@@ -1,281 +1,1739 @@
-2008-05-12  Oliver Hunt  <oliver@apple.com>
+2008-05-12  Anders Carlsson  <andersca@apple.com>
 
-        Reviewed by Geoff.
+        Reviewed by Adam.
 
-        Bug 18934: SQUIRRELFISH: ASSERT @ nytimes.com due to RegisterFile being clobbered
-        <https://bugs.webkit.org/show_bug.cgi?id=18934>
+        * http/tests/appcache/empty-manifest-expected.txt: Added.
+        * http/tests/appcache/empty-manifest.html: Added.
+        * http/tests/appcache/resources/empty.manifest: Added.
 
-        Add testcases to cover global reentry from an implicit call.
+2008-05-12  Anders Carlsson  <andersca@apple.com>
 
-        * fast/js/implicit-call-with-global-reentry-expected.txt: Added.
-        * fast/js/implicit-call-with-global-reentry.html: Added.
-        * fast/js/resources/implicit-call-with-global-reentry.js: Added.
+        Update the expected result.
+        
+        * http/tests/appcache/simple-expected.txt:
 
-2008-05-12  Geoffrey Garen  <ggaren@apple.com>
+2008-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add simple appcache test.
+
+        * http/conf/mime.types:
+        * http/tests/appcache: Added.
+        * http/tests/appcache/resources: Added.
+        * http/tests/appcache/resources/not-in-cache.txt: Added.
+        * http/tests/appcache/resources/simple.manifest: Added.
+        * http/tests/appcache/resources/simple.txt: Added.
+        * http/tests/appcache/simple-expected.txt: Added.
+        * http/tests/appcache/simple.html: Added.
+        * platform/gtk/Skipped:
+        * platform/qt/Skipped:
+        * platform/win/Skipped:
+
+2008-05-09  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        Test for https://bugs.webkit.org/show_bug.cgi?id=18958
+        NULL pointer dereference in NamedAttrMap::setNamedItem
+
+        * fast/dom/NamedNodeMap-setNamedItem-crash-expected.txt: Added.
+        * fast/dom/NamedNodeMap-setNamedItem-crash.html: Added.
+
+2008-05-09  Adam Barth  <abarth-webkit@adambarth.com>
+
+        Reviewed by Sam Weinig.
+
+        Update tests to listen for message events on the window instead of
+        the document.  Also, added a test that the event is sent to the
+        window and not to the document.
+
+        * http/tests/messaging/cross-domain-message-event-dispatch-expected.txt: Added.
+        * http/tests/messaging/cross-domain-message-event-dispatch.html: Added.
+        * http/tests/messaging/cross-domain-message-send.html:
+        * http/tests/messaging/resources/cross-domain-message-receive.html:
+        * http/tests/security/cross-frame-access-delete.html:
+        * http/tests/security/cross-frame-access-history-put.html:
+        * http/tests/security/cross-frame-access-location-put.html:
+        * http/tests/security/postMessage/delivery-order.html:
+        * http/tests/security/postMessage/invalid-origin-throws-exception.html:
+        * http/tests/security/postMessage/javascript-page-still-sends-origin.html:
+        * http/tests/security/postMessage/origin-unaffected-by-base-tag.html:
+        * http/tests/security/postMessage/origin-unaffected-by-document-domain.html:
+        * http/tests/security/postMessage/resources/post-message-listener.html:
+        * http/tests/security/postMessage/target-origin.html:
+        * http/tests/security/resources/cross-frame-iframe-for-delete-test.html:
+        * http/tests/security/resources/cross-frame-iframe-for-history-put-test.html:
+        * http/tests/security/resources/cross-frame-iframe-for-location-put-test.html:
+        * http/tests/security/xss-eval.html:
+
+2008-05-08  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        - test and updated results for https://bugs.webkit.org/show_bug.cgi?id=18818
+          <rdar://problem/5901544> REGRESSION (3.1.1-TOT): Character order (float:left ordered after the first letter)
+
+        * ChangeLog:
+        * fast/css/first-letter-float-after-float.html: Added.
+        * platform/mac-leopard/fast/css/first-letter-skip-out-of-flow-expected.checksum:
+        * platform/mac-leopard/fast/css/first-letter-skip-out-of-flow-expected.png:
+        * platform/mac/fast/css/first-letter-float-after-float-expected.checksum: Added.
+        * platform/mac/fast/css/first-letter-float-after-float-expected.png: Added.
+        * platform/mac/fast/css/first-letter-float-after-float-expected.txt: Added.
+        * platform/mac/fast/css/first-letter-skip-out-of-flow-expected.txt:
+
+2008-05-08  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Holger.
+
+        Don't skip fast/loader/local-css-allowed-in-strict-mode.html, it
+        passes now.
+
+        * platform/qt/Skipped:
+
+2008-05-07  Stephanie Lewis  <slewis@apple.com>
+        
+        fix messed up result
+
+        * fast/events/onunload-not-on-body-expected.txt:
+
+2008-05-07  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Maciej.
+
+        Test onunload attr on a frame does not call onunload, but that an onunload attr on the body of
+        a frame does.  Also test that onunloads on object elements are not called.
+
+        * fast/events/onunload-not-on-body-expected.txt: Added.
+        * fast/events/onunload-not-on-body.html: Added.
+
+2008-05-07  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - test for https://bugs.webkit.org/show_bug.cgi?id=18909
+          <rdar://problem/5914165> REGRESSION (r31872-r31878): Viewed photos not closing completely at indycar.com
+
+        * fast/dynamic/positioned-movement-with-positioned-children.html: Added.
+        * platform/mac/fast/dynamic/positioned-movement-with-positioned-children-expected.checksum: Added.
+        * platform/mac/fast/dynamic/positioned-movement-with-positioned-children-expected.png: Added.
+        * platform/mac/fast/dynamic/positioned-movement-with-positioned-children-expected.txt: Added.
+
+2008-05-07  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by John Sullivan.
+
+        <rdar://problem/5666354> Crashes in Mail at WebCore::RemoveNodeCommand::doApply
+
+        * editing/pasteboard/5761530-1-expected.txt: Added.
+        * editing/pasteboard/5761530-1.html: Added.
+        * editing/pasteboard/5761530-2-expected.txt: Added.
+        * editing/pasteboard/5761530-2.html: Added.
+
+2008-05-07  David Kilzer  <ddkilzer@apple.com>
+
+        Bug 18900: Password field has focus but can't type text (i.rememberthemilk.com)
+        <https://bugs.webkit.org/show_bug.cgi?id=18900>
+        <rdar://problem/5912383>
+
+        Reviewed by Adele.
+
+        * fast/forms/textfield-to-password-on-focus-expected.txt: Added.
+        * fast/forms/textfield-to-password-on-focus.html: Added.
+
+2008-05-07  Tor Arne Vestbø  <tavestbo@trolltech.com>
+
+        Reviewed by Simon
+
+        Add ~250 tests that fail to the skipped list so we have a sane baseline.
+
+        * platform/qt/Skipped:
+
+2008-05-06  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - test for <rdar://problem/5914544> Crash in layoutInlineChildren()
+
+        * fast/block/float/float-on-zero-height-line.html: Added.
+        * platform/mac/fast/block/float/float-on-zero-height-line-expected.checksum: Added.
+        * platform/mac/fast/block/float/float-on-zero-height-line-expected.png: Added.
+        * platform/mac/fast/block/float/float-on-zero-height-line-expected.txt: Added.
+
+2008-05-06  Adam Barth  <abarth-webkit@adambarth.com>
+
+        Reviewed by Sam Weinig.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18725
+        Update tests for asynchronous postMessage.
+
+        Collin Jackson <collinj-webkit@collinjackson.com> also contributed to this patch.
+
+        * http/tests/messaging/cross-domain-message-send.html:
+        * http/tests/messaging/resources/cross-domain-message-receive.html:
+        * http/tests/security/cross-frame-access-delete.html:
+        * http/tests/security/cross-frame-access-history-put.html:
+        * http/tests/security/cross-frame-access-location-put.html:
+        * http/tests/security/postMessage/delivery-order-expected.txt: Added.
+        * http/tests/security/postMessage/delivery-order.html: Added.
+        * http/tests/security/postMessage/invalid-origin-throws-exception-expected.txt:
+        * http/tests/security/postMessage/invalid-origin-throws-exception.html:
+        * http/tests/security/postMessage/origin-unaffected-by-base-tag-expected.txt:
+        * http/tests/security/postMessage/origin-unaffected-by-base-tag.html:
+        * http/tests/security/postMessage/origin-unaffected-by-document-domain-expected.txt:
+        * http/tests/security/postMessage/origin-unaffected-by-document-domain.html:
+        * http/tests/security/postMessage/resources/javascript-post-message-sender.html:
+        * http/tests/security/postMessage/resources/post-message-listener.html:
+        * http/tests/security/postMessage/resources/recv.js: Added.
+        * http/tests/security/postMessage/target-origin-expected.txt:
+        * http/tests/security/postMessage/target-origin.html:
+        * http/tests/security/resources/cross-frame-iframe-for-delete-test.html:
+        * http/tests/security/resources/cross-frame-iframe-for-history-put-test.html:
+        * http/tests/security/resources/cross-frame-iframe-for-location-put-test.html:
+        * http/tests/security/resources/xss-eval3.html:
+        * http/tests/security/xss-eval.html:
+
+2008-05-05  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        https://bugs.webkit.org/show_bug.cgi?id=11947
+        nbsps should be converted to entities in innerHTML
+
+        https://bugs.webkit.org/show_bug.cgi?id=18769
+        replacing &nbsp; with spaces using regexp creates inconsistent result
+
+        * fast/dom/innerHTML-nbsp-expected.txt: Added.
+        * fast/dom/innerHTML-nbsp.html: Added.
+        * fast/dom/innerHTML-escaping-attribute-expected.txt: Added.
+        * fast/dom/innerHTML-escaping-attribute.html: Added.
+
+        * editing/inserting/edited-whitespace-1.html: Updated expected results.
+
+2008-05-05  David Hyatt  <hyatt@apple.com>
+
+        Fix for https://bugs.webkit.org/show_bug.cgi?id=18821, putImageData incorrect when data has alpha.
+
+        Reviewed by Eric
+
+        * fast/canvas/canvas-alphaImageData-behavior-expected.txt: Added.
+        * fast/canvas/canvas-alphaImageData-behavior.html: Added.
+        * fast/canvas/canvas-alphaImageData-behavior.js: Added.
+
+2008-05-05  Dan Bernstein  <mitz@apple.com>
+
+        Rubber-stamped by Adam Roben.
+
+        - fix test failure due to Windows' preference for Mac results over
+          generic results
+
+        * platform/win/editing/selection/move-left-right-expected.txt: Copied from LayoutTests/editing/selection/move-left-right-expected.txt.
+
+2008-05-05  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - test, updated test and updated results for https://bugs.webkit.org/show_bug.cgi?id=18809
+          Forms with block level generated content and absolutely positioned labels break inline layout (fixed on reflow)
+
+        * fast/block/basic/adding-near-anonymous-block.html: Added.
+        * media/video-controls-rendering.html: Changed to work around
+        https://bugs.webkit.org/show_bug.cgi?id=18857 which now affects this
+        test in its original form.
+        * platform/mac/css1/box_properties/clear-expected.txt:
+        * platform/mac/fast/block/basic/adding-near-anonymous-block-expected.checksum: Added.
+        * platform/mac/fast/block/basic/adding-near-anonymous-block-expected.png: Added.
+        * platform/mac/fast/block/basic/adding-near-anonymous-block-expected.txt: Added.
+        * platform/mac/fast/forms/input-align-image-expected.txt:
+        * platform/mac/media/audio-controls-rendering-expected.txt:
+        * platform/mac/media/video-controls-rendering-expected.txt:
+        * platform/mac/tables/mozilla/bugs/bug51140-expected.txt:
+
+2008-05-02  Antti Koivisto  <antti@apple.com>
+
+        Reviewed by Mitz.
+        
+        Test for <rdar://problem/5840475>
+        CrashTracer: [USER] 2 crashes in Safari at com.apple.WebCore: WebCore::RenderBlock::insertPositionedObject
+
+        * fast/transforms/container-transform-crash-expected.txt: Added.
+        * fast/transforms/container-transform-crash.html: Added.
+
+2008-05-04  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        - test for https://bugs.webkit.org/show_bug.cgi?id=18879
+          <rdar://problem/5909481> Reproducible crash when removing a gradient
+
+        * fast/gradients/crash-on-remove-expected.txt: Added.
+        * fast/gradients/crash-on-remove.html: Added.
+
+2008-05-04  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Maciej Stachowiak.
-        
-        Layout test for function.arguments and function.caller in interesting
-        scopes.
 
-        * fast/js/function-dot-arguments-and-caller-expected.txt: Added.
-        * fast/js/function-dot-arguments-and-caller.html: Added.
+        Don't print out the full url.
 
-2008-05-11  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+        * fast/dom/Window/dom-access-from-closure-iframe-expected.txt:
+        * fast/dom/Window/dom-access-from-closure-window-expected.txt:
+        * fast/dom/Window/resources/dom-access-from-closure-iframe-child.html:
+        * fast/dom/Window/resources/dom-access-from-closure-window-child.html:
 
-        Reviewed by Oliver.
+2008-05-03  Rob Buis  <buis@kde.org>
 
-        Add tests for:
+        Reviewed by Sam.
 
-        Bug 18961: SQUIRRELFISH: Gmail doesn't load
-        <https://bugs.webkit.org/show_bug.cgi?id=18961>
+        Extended testcase for:
+        https://bugs.webkit.org/show_bug.cgi?id=18652
+        onchange events don't seem to fire for input[type=range] controls.
 
-        * fast/js/codegen-temporaries-expected.txt: Added.
-        * fast/js/codegen-temporaries.html: Added.
-        * fast/js/resources/codegen-temporaries.js: Added.
+        * fast/forms/slider-onchange-event-expected.txt:
+        * fast/forms/slider-onchange-event.html:
 
-2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+2008-05-03  Sam Weinig  <sam@webkit.org>
 
-        Reviewed by Oliver.
+        Reviewed by Dan Bernstein.
 
-        - test changes for: "SQUIRRELFISH: function toString broken after calling"
-        https://bugs.webkit.org/show_bug.cgi?id=18869
+        Add tests that show our behavior when using closures from a global object
+        whose frame has been navigated.
 
-        All of these tests expected function.toString to somewhat change
-        things from the raw original source. They are now prepared for the
-        fact that this does not happen.
-        
-        * fast/js/function-decompilation-operators.html:
-        * fast/js/function-names-expected.txt:
-        * fast/js/function-prototype-expected.txt:
-        * fast/js/function-prototype.html:
-        * fast/js/function-toString-object-literals-expected.txt:
-        * fast/js/function-toString-parentheses-expected.txt:
-        * fast/js/kde/lval-exceptions-expected.txt:
-        * fast/js/modify-non-references-expected.txt:
-        * fast/js/resources/function-names.js:
-        * fast/js/resources/function-toString-object-literals.js:
-        * fast/js/resources/function-toString-parentheses.js:
-        * fast/js/resources/modify-non-references.js:
-        * fast/js/resources/toString-prefix-postfix-preserve-parens.js:
-        * fast/js/toString-prefix-postfix-preserve-parens-expected.txt:
+        Related to https://bugs.webkit.org/show_bug.cgi?id=17249.
 
-2008-05-09  Geoffrey Garen  <ggaren@apple.com>
+        * fast/dom/Window/closure-access-after-navigation-iframe-expected.txt: Added.
+        * fast/dom/Window/closure-access-after-navigation-iframe.html: Added.
+        * fast/dom/Window/closure-access-after-navigation-window-expected.txt: Added.
+        * fast/dom/Window/closure-access-after-navigation-window.html: Added.
+        * fast/dom/Window/dom-access-from-closure-iframe-expected.txt: Added.
+        * fast/dom/Window/dom-access-from-closure-iframe.html: Added.
+        * fast/dom/Window/dom-access-from-closure-window-expected.txt: Added.
+        * fast/dom/Window/dom-access-from-closure-window.html: Added.
+        * fast/dom/Window/resources/closure-access-after-navigation-iframe-child-1.html: Added.
+        * fast/dom/Window/resources/closure-access-after-navigation-iframe-child-2.html: Added.
+        * fast/dom/Window/resources/closure-access-after-navigation-window-child-1.html: Added.
+        * fast/dom/Window/resources/closure-access-after-navigation-window-child-2.html: Added.
+        * fast/dom/Window/resources/dom-access-from-closure-iframe-child.html: Added.
+        * fast/dom/Window/resources/dom-access-from-closure-window-child.html: Added.
+        * fast/dom/Window/resources/notify-opener-done.html: Added.
+        * fast/dom/Window/resources/notify-parent-done.html: Added.
 
-        Reviewed by Sam Weinig.
-        
-        Restored the expected results for viewsource-empty-attribute-value.html
-        to what they were prior to r31100. These results expect that the
-        top-level name in the frame path is "" instead of "1".
-        
-        It's not clear how r31100 changed the top-level frame in the frame path
-        to be named "1". The change definitely wasn't related to any expected
-        behavior in r31100, which was about default margin-bottom for form
-        elements in quirks mode.
-        
-        It's also not clear how squirrelfish changes things back.
-        
-        Sam mentioned that the test result changes intermittently on trunk.
-        
-        For now, I don't think we need to think deeply about this issue,
-        since the "" result seems more correct than the "1" result.
+2008-05-01  Rob Buis  <buis@kde.org>
 
-        * fast/frames/viewsource-empty-attribute-value-expected.txt:
+        Reviewed by Eric.
 
-2008-05-09  Geoffrey Garen  <ggaren@apple.com>
+        Testcase for:
+        https://bugs.webkit.org/show_bug.cgi?id=18568
+        background: currentColor fails
 
-        Added expected results for this test.
+        * fast/css/background-currentcolor-expected.txt: Added.
+        * fast/css/background-currentcolor.html: Added.
 
-        * fast/js/closure-inside-extra-arg-call-expected.txt: Added.
+2008-05-02  Dan Bernstein  <mitz@apple.com>
 
-2008-05-08  Maciej Stachowiak  <mjs@apple.com>
+        Reviewed by John Sullivan.
 
-        Reviewed by Geoff.
-        
-        Add test cases for failures similar to the SquirrelFish failure on 
-        fast/dom/SelectorAPI/bug-17313.html
-        
-        * fast/js/closure-inside-extra-arg-call.html: Added.
-        * fast/js/resources/closure-inside-extra-arg-call.js: Added.
+        - add pixel test for text shadows with zero blur and various offsets,
+          including zero offset
 
-2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+        * fast/text/shadow-no-blur.html: Added.
+        * platform/mac/fast/text/shadow-no-blur-expected.checksum: Added.
+        * platform/mac/fast/text/shadow-no-blur-expected.png: Added.
+        * platform/mac/fast/text/shadow-no-blur-expected.txt: Added.
 
-        Reviewed by Oliver Hunt.
-        
-        Added specific test cases for the root cause of squirrelfish's failure
-        in fast/canvas/canvas-pattern-behaviour.html.
+2008-05-02  Tor Arne Vestbø  <tavestbo@trolltech.com>
 
-        * fast/js/exception-thrown-from-eval-inside-closure-expected.txt: Added.
-        * fast/js/exception-thrown-from-eval-inside-closure.html: Added.
-        * fast/js/exception-thrown-from-function-with-lazy-activation-expected.txt: Added.
-        * fast/js/exception-thrown-from-function-with-lazy-activation.html: Added.
+        Rubber-stamped by Simon.
 
-2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+        Updated Qt layout-tests to match changes in font metrics.
 
-        Reviewed by Sam Weinig.
-        
-        Updated test results to reflect correct behavior: The line number in
-        the old results was off by 2.
+        * platform/qt/editing/deleting/merge-whitespace-pre-expected.txt:
+        * platform/qt/editing/deleting/paragraph-in-preserveNewline-expected.txt:
+        * platform/qt/editing/deleting/table-cells-expected.txt:
+        * platform/qt/editing/execCommand/format-block-expected.txt:
+        * platform/qt/editing/execCommand/format-block-with-trailing-br-expected.txt:
+        * platform/qt/editing/inserting/5803706-1-expected.txt: Added.
+        * platform/qt/editing/inserting/paragraph-separator-03-expected.txt:
+        * platform/qt/editing/pasteboard/4631972-expected.txt:
+        * platform/qt/editing/pasteboard/5027857-expected.txt:
+        * platform/qt/editing/pasteboard/innerText-inline-table-expected.txt:
+        * platform/qt/editing/pasteboard/paste-pre-002-expected.txt:
+        * platform/qt/editing/style/smoosh-styles-002-expected.txt:
+        * platform/qt/fast/block/basic/015-expected.txt:
+        * platform/qt/fast/canvas/canvas-transform-identity-expected.txt: Added.
+        * platform/qt/fast/canvas/canvas-transform-infinity-expected.txt: Added.
+        * platform/qt/fast/canvas/canvas-transform-multiply-expected.txt: Added.
+        * platform/qt/fast/canvas/canvas-transform-nan-expected.txt: Added.
+        * platform/qt/fast/canvas/canvas-transform-non-invertible-expected.txt: Added.
+        * platform/qt/fast/canvas/canvas-transform-skewed-expected.txt: Added.
+        * platform/qt/fast/css-generated-content/014-expected.txt:
+        * platform/qt/fast/css/beforeSelectorOnCodeElement-expected.txt:
+        * platform/qt/fast/css/hover-subselector-expected.txt:
+        * platform/qt/fast/css/invalid-percentage-property-expected.txt: Added.
+        * platform/qt/fast/css/line-height-font-order-expected.txt:
+        * platform/qt/fast/css/outline-auto-empty-rects-expected.txt:
+        * platform/qt/fast/css/text-align-expected.txt: Added.
+        * platform/qt/fast/css/universal-hover-quirk-expected.txt:
+        * platform/qt/fast/dom/attr_dead_doc-expected.txt:
+        * platform/qt/fast/dom/dom-parse-serialize-display-expected.txt:
+        * platform/qt/fast/dom/dom-parse-serialize-expected.txt:
+        * platform/qt/fast/dom/row-inner-text-expected.txt:
+        * platform/qt/fast/dom/stripNullFromTextNodes-expected.txt:
+        * platform/qt/fast/dynamic/insertAdjacentElement-expected.txt:
+        * platform/qt/fast/encoding/preload-encoding-expected.txt: Added.
+        * platform/qt/fast/flexbox/016-expected.txt:
+        * platform/qt/fast/flexbox/023-expected.txt:
+        * platform/qt/fast/flexbox/024-expected.txt:
+        * platform/qt/fast/forms/menulist-option-wrap-expected.txt:
+        * platform/qt/fast/forms/targeted-frame-submission-expected.txt:
+        * platform/qt/fast/frames/001-expected.txt:
+        * platform/qt/fast/frames/002-expected.txt:
+        * platform/qt/fast/frames/calculate-fixed-expected.txt:
+        * platform/qt/fast/frames/calculate-order-expected.txt:
+        * platform/qt/fast/frames/calculate-percentage-expected.txt:
+        * platform/qt/fast/frames/calculate-relative-expected.txt:
+        * platform/qt/fast/frames/calculate-round-expected.txt:
+        * platform/qt/fast/frames/contentWindow_Frame-expected.txt:
+        * platform/qt/fast/frames/contentWindow_iFrame-expected.txt:
+        * platform/qt/fast/frames/empty-frame-src-expected.txt:
+        * platform/qt/fast/frames/iframe-option-crash-expected.txt:
+        * platform/qt/fast/frames/iframe-with-frameborder-expected.txt:
+        * platform/qt/fast/frames/invalid-expected.txt:
+        * platform/qt/fast/frames/no-frame-borders-expected.txt:
+        * platform/qt/fast/frames/valid-expected.txt:
+        * platform/qt/fast/frames/viewsource-attribute-expected.txt:
+        * platform/qt/fast/html/listing-expected.txt:
+        * platform/qt/fast/inline-block/002-expected.txt:
+        * platform/qt/fast/innerHTML/006-expected.txt:
+        * platform/qt/fast/invalid/019-expected.txt:
+        * platform/qt/fast/lists/inlineBoxWrapperNullCheck-expected.txt:
+        * platform/qt/fast/lists/ordered-list-with-no-ol-tag-expected.txt:
+        * platform/qt/fast/overflow/overflow-auto-table-expected.txt:
+        * platform/qt/fast/overflow/unreachable-overflow-rtl-bug-expected.txt:
+        * platform/qt/fast/replaced/replaced-breaking-expected.txt:
+        * platform/qt/fast/replaced/width100percent-image-expected.txt:
+        * platform/qt/fast/selectors/lang-inheritance-expected.txt: Added.
+        * platform/qt/fast/selectors/lang-inheritance2-expected.txt: Added.
+        * platform/qt/fast/selectors/lang-vs-xml-lang-expected.txt: Added.
+        * platform/qt/fast/selectors/lang-vs-xml-lang-xhtml-expected.txt: Added.
+        * platform/qt/fast/table/018-expected.txt:
+        * platform/qt/fast/table/border-collapsing/004-expected.txt:
+        * platform/qt/fast/table/frame-and-rules-expected.txt:
+        * platform/qt/fast/table/invisible-cell-background-expected.txt:
+        * platform/qt/fast/text/atsui-spacing-features-expected.txt:
+        * platform/qt/fast/text/basic/009-expected.txt:
+        * platform/qt/fast/text/basic/generic-family-changes-expected.txt:
+        * platform/qt/fast/text/basic/generic-family-reset-expected.txt:
+        * platform/qt/fast/text/selection-hard-linebreak-expected.txt:
+        * platform/qt/fast/text/wbr-pre-expected.txt:
+        * platform/qt/fast/text/whitespace/019-expected.txt:
+        * platform/qt/fast/text/whitespace/022-expected.txt:
+        * platform/qt/fast/text/whitespace/023-expected.txt:
+        * platform/qt/fast/text/whitespace/029-expected.txt:
+        * platform/qt/fast/text/whitespace/030-expected.txt:
+        * platform/qt/fast/text/whitespace/pre-newline-box-test-expected.txt:
+        * platform/qt/fast/text/whitespace/pre-wrap-last-char-expected.txt:
+        * platform/qt/fast/text/whitespace/pre-wrap-spaces-after-newline-expected.txt:
+        * platform/qt/tables/mozilla/bugs/45621-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug101674-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug10269-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug10296-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug13105-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug137388-3-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug139524-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug157890-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug19061-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug19061-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug20579-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug22019-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug23235-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2886-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2973-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug30418-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug38916-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug57828-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug7121-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug83786-expected.txt:
+        * platform/qt/tables/mozilla/collapsing_borders/bug41262-3-expected.txt:
+        * platform/qt/tables/mozilla/core/col_widths_fix_autoFixPer-expected.txt:
+        * platform/qt/tables/mozilla/other/test6-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/97619-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug1055-2-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug1128-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug21518-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug22122-expected.txt:
 
-        * fast/js/recursion-limit-equal-expected.txt:
+2008-05-01  Sam Weinig  <sam@webkit.org>
 
-2008-05-08  Maciej Stachowiak  <mjs@apple.com>
+        Add missing result.
 
-        Reviewed by Oliver.
-        
-        - move frame.xhtml and iframe.xhtml into a resources dir, as they were never meant to be tests
+        * fast/canvas/canvas-path-with-inf-nan-dimensions-expected.txt: Added.
 
-        * dom/xhtml/level2/html/HTMLFrameElement09.xhtml-disabled:
-        * dom/xhtml/level2/html/frame.xhtml: Removed.
-        * dom/xhtml/level2/html/iframe.xhtml: Removed.
-        * dom/xhtml/level2/html/resources/frame.xhtml: Copied from dom/xhtml/level2/html/frame.xhtml.
-        * dom/xhtml/level2/html/resources/iframe.xhtml: Copied from dom/xhtml/level2/html/iframe.xhtml.
-        * platform/mac/dom/xhtml/level2/html/frame-expected.checksum: Removed.
-        * platform/mac/dom/xhtml/level2/html/frame-expected.png: Removed.
-        * platform/mac/dom/xhtml/level2/html/frame-expected.txt: Removed.
-        * platform/mac/dom/xhtml/level2/html/iframe-expected.checksum: Removed.
-        * platform/mac/dom/xhtml/level2/html/iframe-expected.png: Removed.
-        * platform/mac/dom/xhtml/level2/html/iframe-expected.txt: Removed.
+2008-05-01  Sam Weinig  <sam@webkit.org>
 
-o2008-05-07  Geoffrey Garen  <ggaren@apple.com>
+        Reviewed by Geoffrey Garen.
 
-        Reviewed by Oliver Hunt.
-
-        Added this test to demonstrate that, for "f(x)", it is correct to evaluate
-        "x" even if "f" is not a function, and therefore "f(x)" will throw an exception.
-
-        * fast/js/function-argument-evaluation-before-exception-expected.txt: Added.
-        * fast/js/function-argument-evaluation-before-exception.html: Added.
-        
-        These tests now have an extra "access denied" message in them, because
-        of the behavior change mentioned above.
-        
-        I also added try/catch clauses to eliminate the "is not object"
-        exception messages from the test output.
-        
-        * http/tests/security/listener/resources/targetChild-JSTargetNode-onclick-addEventListener.html:
-        * http/tests/security/listener/resources/targetChild-JSTargetNode-onclick-shortcut.html:
-        * http/tests/security/listener/resources/targetChild-XMLHttpRequest-addEventListener.html:
-        * http/tests/security/listener/resources/targetChild-XMLHttpRequest-shortcut.html:
-        * http/tests/security/listener/resources/targetChild-window-onclick-addEventListener.html:
-        * http/tests/security/listener/resources/targetChild-window-onclick-shortcut.html:
         * http/tests/security/listener/xss-JSTargetNode-onclick-addEventListener-expected.txt:
         * http/tests/security/listener/xss-JSTargetNode-onclick-shortcut-expected.txt:
         * http/tests/security/listener/xss-XMLHttpRequest-addEventListener-expected.txt:
         * http/tests/security/listener/xss-XMLHttpRequest-shortcut-expected.txt:
         * http/tests/security/listener/xss-window-onclick-addEventListener-expected.txt:
         * http/tests/security/listener/xss-window-onclick-shortcut-expected.txt:
+        * http/tests/security/xss-eval-expected.txt:
 
-2008-05-07  Geoffrey Garen  <ggaren@apple.com>
+2008-05-01  Anders Carlsson  <andersca@apple.com>
 
-        Reviewed by Oliver Hunt.
+        Reviewed by Mitz.
+
+        Disable an SVG font test that crashes. 
         
-        Fixed up a few more tests that depended on the exact text of exception
-        messages.
+        http://bugs.webkit.org/show_bug.cgi?id=18830 tracks fixing the crash.
         
-        - In these tests, I fixed a bug in frame.html and iframe.html that
-        caused a function to execute too many times.
+        * svg/W3C-SVG-1.1/fonts-glyph-02-t.svg: Removed.
+        * svg/W3C-SVG-1.1/fonts-glyph-02-t.svg-disabled: Copied from svg/W3C-SVG-1.1/fonts-glyph-02-t.svg.
 
-        * dom/html/level2/html/HTMLFrameElement09-expected.txt:
-        * dom/html/level2/html/HTMLIFrameElement11-expected.txt:
-        * dom/html/level2/html/resources/frame.html:
-        * dom/html/level2/html/resources/iframe.html:
+2008-05-01  Anatoli Papirovski  <apapirovski@mac.com>
 
-        - I changed these tests to explicitly report exceptions, so their results
-        don't depend on how the engine constructs messages for implicit exceptions:
+        Reviewed by Dave Hyatt.
 
-        * dom/xhtml/level2/html/HTMLDocument17-expected.txt:
-        * dom/xhtml/level2/html/HTMLDocument18-expected.txt:
-        * dom/xhtml/level2/html/HTMLDocument19-expected.txt:
-        * dom/xhtml/level2/html/HTMLDocument20-expected.txt:
-        * dom/xhtml/level2/html/HTMLDocument21-expected.txt:
-        * dom/xhtml/level2/html/selfxhtml.js:
+        - added a test case for https://bugs.webkit.org/show_bug.cgi?id=18347
+          Absolutely positioned image percentage width does not respect container's padding
 
-2008-05-06  Geoffrey Garen  <ggaren@apple.com>
+        * fast/replaced/absolute-position-percentage-width.html: Added.
+        * platform/mac/fast/replaced/absolute-position-percentage-width-expected.checksum: Added.
+        * platform/mac/fast/replaced/absolute-position-percentage-width-expected.png: Added.
+        * platform/mac/fast/replaced/absolute-position-percentage-width-expected.txt: Added.
 
-        Reviewed by Oliver Hunt.
+2008-04-29  Eric Seidel  <eric@webkit.org>
 
-        To facilitate merging between the squirrelfish branch and trunk, I
-        edited a bunch of layout tests to make sure their results don't depend
-        on the exact text of an exception message generated by the JavaScript engine.
-
-        (We do want to test JavaScript exception messages -- we just don't want
-        to test them 300 times over, in tests that aren't supposed to be about
-        JavaScript at all.)
-
-        - I fixed bugs that were causing these tests to throw exceptions by accident,
-        and updated results to reflect correct behavior:
+        Rubber-stamped by Sam Weinig.
         
-        * editing/selection/contenteditable-click-inside.html:
-        * platform/mac/editing/selection/contenteditable-click-inside-expected.checksum:
-        * platform/mac/editing/selection/contenteditable-click-inside-expected.png:
-        * platform/mac/editing/selection/contenteditable-click-inside-expected.txt:
+        Mark a couple UTF16 files as binary so windows-svn doesn't mutilate them on checkout.
 
-        * editing/selection/contenteditable-click-outside.html:
-        * platform/mac/editing/selection/contenteditable-click-outside-expected.checksum:
-        * platform/mac/editing/selection/contenteditable-click-outside-expected.png:
-        * platform/mac/editing/selection/contenteditable-click-outside-expected.txt:
+        * fast/xsl/xslt-enc16.xml: add svn:mime-type application/octet-stream
+        * fast/xsl/xslt-enc16to16.xml: add svn:mime-type application/octet-stream
 
-        * fast/forms/selected-index-assert.html:
-        * fast/forms/selected-index-assert-expected.txt:
+2008-05-01  Alice Liu  <alice.liu@apple.com>
 
-        * tables/mozilla_expected_failures/core/captions1.html:
-        * platform/mac/tables/mozilla_expected_failures/core/captions1-expected.txt:
+        Rubber-stamped by Sam Weinig.
 
-        - I changed these tests to explicitly throw/report exceptions, so their results
-        don't depend on how the engine constructs messages for implicit exceptions:
+        fast/events/tabindex-focus-blur-all.html was timing out on some machines
+        Make this test faster by not doing += on innerHTML. 
 
-        * fast/xpath/nsresolver-exception.xhtml:
-        * fast/xpath/nsresolver-exception-expected.txt:
+        * fast/events/resources/tabindex-focus-blur-all.js:
 
-        * platform/mac/fast/AppleScript/001.html:
-        * platform/mac/fast/AppleScript/001-expected.txt:
-        
-        * dom/xhtml/level3/core/selfxhtml.js
-        * dom/xhtml/level3/core/*expected.txt (about 280 of these changed)
+2008-05-01  Sam Weinig  <sam@webkit.org>
 
-2008-05-05  Geoffrey Garen  <ggaren@apple.com>
+        Update results with -webkit-box-reflect values.
+
+        * fast/css/computed-style-expected.txt:
+        * fast/css/computed-style-without-renderer-expected.txt:
+        * svg/css/getComputedStyle-basic-expected.txt:
+
+2008-04-30  Rob Buis  <buis@kde.org>
+
+        Reviewed by Nikolas.
+
+        Testcases for:
+        https://bugs.webkit.org/show_bug.cgi?id=16447
+        onload called too many times for <svg:image>
+        https://bugs.webkit.org/show_bug.cgi?id=12282
+        SVG wastes time in malloc to send loadEvents to non-existent listeners
+
+        * svg/custom/loadevents-capturing-expected.txt: Added.
+        * svg/custom/loadevents-capturing.svg: Added.
+        * svg/custom/loadevents-externalresourcesrequired-displaynone-expected.txt: Added.
+        * svg/custom/loadevents-externalresourcesrequired-displaynone.svg: Added.
+        * svg/custom/loadevents-externalresourcesrequired-expected.txt: Added.
+        * svg/custom/loadevents-externalresourcesrequired.svg: Added.
+        * svg/custom/loadevents-normal-displaynone-expected.txt: Added.
+        * svg/custom/loadevents-normal-displaynone.svg: Added.
+        * svg/custom/loadevents-normal-expected.txt: Added.
+        * svg/custom/loadevents-normal.svg: Added.
+
+2008-04-30  David Hyatt  <hyatt@apple.com>
+
+        Add test for video crasher.
+
+        Reviewed by Dan Bernstein
+
+        * media/video-layer-crash.html: Added.
+        * platform/mac/media/video-layer-crash-expected.checksum: Added.
+        * platform/mac/media/video-layer-crash-expected.png: Added.
+        * platform/mac/media/video-layer-crash-expected.txt: Added.
+
+2008-04-30  Tor Arne Vestbø  <tavestbo@trolltech.com>
+
+        Rubber-stamped by Simon
+
+        Updated the expected test results to reflect the fact that most render objects now are anonymous.
+
+        * platform/qt/editing/pasteboard/paste-pre-001-expected.txt:
+        * platform/qt/editing/pasteboard/paste-text-019-expected.txt:
+        * platform/qt/editing/selection/display-table-text-expected.txt:
+        * platform/qt/fast/backgrounds/background-inherit-color-bug-expected.txt:
+        * platform/qt/fast/block/basic/011-expected.txt:
+        * platform/qt/fast/css-generated-content/015-expected.txt:
+        * platform/qt/fast/css-generated-content/inline-display-types-expected.txt:
+        * platform/qt/fast/css-generated-content/table-cell-before-content-expected.txt:
+        * platform/qt/fast/css/word-space-extra-expected.txt:
+        * platform/qt/fast/forms/001-expected.txt:
+        * platform/qt/fast/forms/form-hides-table-expected.txt:
+        * platform/qt/fast/forms/input-text-word-wrap-expected.txt:
+        * platform/qt/fast/forms/menulist-width-change-expected.txt:
+        * platform/qt/fast/parser/001-expected.txt:
+        * platform/qt/fast/table/037-expected.txt:
+        * platform/qt/fast/table/add-before-anonymous-child-expected.txt:
+        * platform/qt/fast/table/border-collapsing/003-expected.txt:
+        * platform/qt/fast/table/cell-absolute-child-expected.txt:
+        * platform/qt/fast/table/click-near-anonymous-table-expected.txt:
+        * platform/qt/fast/table/form-with-table-style-expected.txt:
+        * platform/qt/fast/table/overflowHidden-expected.txt:
+        * platform/qt/fast/table/text-field-baseline-expected.txt:
+        * platform/qt/fast/table/vertical-align-baseline-readjust-expected.txt:
+        * platform/qt/fast/text/font-initial-expected.txt:
+        * platform/qt/fast/text/whitespace/024-expected.txt:
+        * platform/qt/fast/text/word-break-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug1055-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug11321-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug13118-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2479-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2479-3-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2479-4-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug269566-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug275625-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug3037-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug3037-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug30985-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug7112-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug7112-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug72359-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug8032-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug8950-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_caption_align_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_caption_align_top-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_caption_class-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_caption_id-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_caption_style-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_align_char-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_align_justify-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_span-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_valign_baseline-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_valign_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_valign_middle-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_valign_top-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_width_pct-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_width_px-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_col_width_rel-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_align_char-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_align_justify-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_span-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_valign_baseline-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_valign_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_valign_middle-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_valign_top-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_width_pct-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_colgroup_width_rel-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_bgcolor_name-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_bgcolor_rgb-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_cellpadding-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_cellpadding_pct-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_cellspacing-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_cellspacing_pct-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_class-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_id-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_style-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_width_pct-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_table_width_px-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_align_char-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_align_justify-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_bgcolor_name-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_bgcolor_rgb-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_class-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_colspan-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_height-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_id-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_nowrap-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_rowspan-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_style-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_valign_baseline-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_valign_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_valign_middle-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_valign_top-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_td_width-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_align_char-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_align_justify-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_bgcolor_name-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_bgcolor_rgb-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_class-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_colspan-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_height-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_id-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_nowrap-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_rowspan-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_style-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_valign_baseline-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_valign_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_valign_middle-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_valign_top-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_th_width-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_align_center-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_align_char-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_align_justify-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_align_left-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_align_right-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_bgcolor_name-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_bgcolor_rgb-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_class-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_id-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_style-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_valign_baseline-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_valign_bottom-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_valign_middle-expected.txt:
+        * platform/qt/tables/mozilla/marvin/x_tr_valign_top-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug178855-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug2479-5-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug278266-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/marvin/x_caption_align_left-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/marvin/x_caption_align_right-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/marvin/x_colgroup_width_px-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/other/test4-expected.txt:
+
+2008-04-30  Tor Arne Vestbø  <tavestbo@trolltech.com>
+
+        Rubber-stamped by Simon.
+
+        Updated the expected test results to the current font metrics.
+
+        * platform/qt/css1/basic/class_as_selector-expected.txt:
+        * platform/qt/css1/basic/comments-expected.txt:
+        * platform/qt/css1/basic/containment-expected.txt:
+        * platform/qt/css1/basic/contextual_selectors-expected.txt:
+        * platform/qt/css1/basic/grouping-expected.txt:
+        * platform/qt/css1/basic/id_as_selector-expected.txt:
+        * platform/qt/css1/basic/inheritance-expected.txt:
+        * platform/qt/css1/box_properties/acid_test-expected.txt:
+        * platform/qt/css1/box_properties/border-expected.txt:
+        * platform/qt/css1/box_properties/border_bottom-expected.txt:
+        * platform/qt/css1/box_properties/border_bottom_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_bottom_width-expected.txt:
+        * platform/qt/css1/box_properties/border_bottom_width_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_color-expected.txt:
+        * platform/qt/css1/box_properties/border_color_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_left-expected.txt:
+        * platform/qt/css1/box_properties/border_left_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_left_width-expected.txt:
+        * platform/qt/css1/box_properties/border_left_width_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_right-expected.txt:
+        * platform/qt/css1/box_properties/border_right_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_right_width-expected.txt:
+        * platform/qt/css1/box_properties/border_right_width_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_style-expected.txt:
+        * platform/qt/css1/box_properties/border_style_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_top-expected.txt:
+        * platform/qt/css1/box_properties/border_top_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_top_width-expected.txt:
+        * platform/qt/css1/box_properties/border_top_width_inline-expected.txt:
+        * platform/qt/css1/box_properties/border_width-expected.txt:
+        * platform/qt/css1/box_properties/border_width_inline-expected.txt:
+        * platform/qt/css1/box_properties/clear-expected.txt:
+        * platform/qt/css1/box_properties/clear_float-expected.txt:
+        * platform/qt/css1/box_properties/float-expected.txt:
+        * platform/qt/css1/box_properties/float_elements_in_series-expected.txt:
+        * platform/qt/css1/box_properties/float_margin-expected.txt:
+        * platform/qt/css1/box_properties/height-expected.txt:
+        * platform/qt/css1/box_properties/margin-expected.txt:
+        * platform/qt/css1/box_properties/margin_bottom-expected.txt:
+        * platform/qt/css1/box_properties/margin_bottom_inline-expected.txt:
+        * platform/qt/css1/box_properties/margin_inline-expected.txt:
+        * platform/qt/css1/box_properties/margin_left-expected.txt:
+        * platform/qt/css1/box_properties/margin_left_inline-expected.txt:
+        * platform/qt/css1/box_properties/margin_right-expected.txt:
+        * platform/qt/css1/box_properties/margin_right_inline-expected.txt:
+        * platform/qt/css1/box_properties/margin_top-expected.txt:
+        * platform/qt/css1/box_properties/margin_top_inline-expected.txt:
+        * platform/qt/css1/box_properties/padding-expected.txt:
+        * platform/qt/css1/box_properties/padding_bottom-expected.txt:
+        * platform/qt/css1/box_properties/padding_bottom_inline-expected.txt:
+        * platform/qt/css1/box_properties/padding_inline-expected.txt:
+        * platform/qt/css1/box_properties/padding_left-expected.txt:
+        * platform/qt/css1/box_properties/padding_left_inline-expected.txt:
+        * platform/qt/css1/box_properties/padding_right-expected.txt:
+        * platform/qt/css1/box_properties/padding_right_inline-expected.txt:
+        * platform/qt/css1/box_properties/padding_top-expected.txt:
+        * platform/qt/css1/box_properties/padding_top_inline-expected.txt:
+        * platform/qt/css1/box_properties/width-expected.txt:
+        * platform/qt/css1/cascade/cascade_order-expected.txt:
+        * platform/qt/css1/cascade/important-expected.txt:
+        * platform/qt/css1/classification/display-expected.txt:
+        * platform/qt/css1/classification/list_style-expected.txt:
+        * platform/qt/css1/classification/list_style_image-expected.txt:
+        * platform/qt/css1/classification/list_style_position-expected.txt:
+        * platform/qt/css1/classification/list_style_type-expected.txt:
+        * platform/qt/css1/classification/white_space-expected.txt:
+        * platform/qt/css1/color_and_background/background-expected.txt:
+        * platform/qt/css1/color_and_background/background_attachment-expected.txt:
+        * platform/qt/css1/color_and_background/background_color-expected.txt:
+        * platform/qt/css1/color_and_background/background_image-expected.txt:
+        * platform/qt/css1/color_and_background/background_position-expected.txt:
+        * platform/qt/css1/color_and_background/background_repeat-expected.txt:
+        * platform/qt/css1/color_and_background/color-expected.txt:
+        * platform/qt/css1/conformance/forward_compatible_parsing-expected.txt:
+        * platform/qt/css1/font_properties/font-expected.txt:
+        * platform/qt/css1/font_properties/font_family-expected.txt:
+        * platform/qt/css1/font_properties/font_size-expected.txt:
+        * platform/qt/css1/font_properties/font_style-expected.txt:
+        * platform/qt/css1/font_properties/font_variant-expected.txt:
+        * platform/qt/css1/font_properties/font_weight-expected.txt:
+        * platform/qt/css1/formatting_model/canvas-expected.txt:
+        * platform/qt/css1/formatting_model/floating_elements-expected.txt:
+        * platform/qt/css1/formatting_model/height_of_lines-expected.txt:
+        * platform/qt/css1/formatting_model/horizontal_formatting-expected.txt:
+        * platform/qt/css1/formatting_model/inline_elements-expected.txt:
+        * platform/qt/css1/formatting_model/replaced_elements-expected.txt:
+        * platform/qt/css1/formatting_model/vertical_formatting-expected.txt:
+        * platform/qt/css1/pseudo/anchor-expected.txt:
+        * platform/qt/css1/pseudo/firstletter-expected.txt:
+        * platform/qt/css1/pseudo/firstline-expected.txt:
+        * platform/qt/css1/pseudo/multiple_pseudo_elements-expected.txt:
+        * platform/qt/css1/pseudo/pseudo_elements_in_selectors-expected.txt:
+        * platform/qt/css1/text_properties/letter_spacing-expected.txt:
+        * platform/qt/css1/text_properties/line_height-expected.txt:
+        * platform/qt/css1/text_properties/text_align-expected.txt:
+        * platform/qt/css1/text_properties/text_decoration-expected.txt:
+        * platform/qt/css1/text_properties/text_indent-expected.txt:
+        * platform/qt/css1/text_properties/text_transform-expected.txt:
+        * platform/qt/css1/text_properties/vertical_align-expected.txt:
+        * platform/qt/css1/text_properties/word_spacing-expected.txt:
+        * platform/qt/css1/units/color_units-expected.txt:
+        * platform/qt/css1/units/length_units-expected.txt:
+        * platform/qt/css1/units/percentage_units-expected.txt:
+        * platform/qt/css1/units/urls-expected.txt:
+        * platform/qt/css2.1/t010403-shand-font-00-b-expected.txt:
+        * platform/qt/css2.1/t010403-shand-font-01-b-expected.txt:
+        * platform/qt/css2.1/t010403-shand-font-02-b-expected.txt:
+        * platform/qt/css2.1/t010403-shand-font-03-b-expected.txt:
+        * platform/qt/css2.1/t040103-escapes-01-b-expected.txt:
+        * platform/qt/css2.1/t040105-atkeyw-00-b-expected.txt:
+        * platform/qt/css2.1/t040304-c64-uri-00-a-g-expected.txt:
+        * platform/qt/css2.1/t050803-c14-classes-00-e-expected.txt:
+        * platform/qt/css2.1/t0509-c15-ids-01-e-expected.txt:
+        * platform/qt/css2.1/t0602-c13-inh-underlin-00-e-expected.txt:
+        * platform/qt/css2.1/t0603-c11-import-00-b-expected.txt:
+        * platform/qt/css2.1/t09-c5526c-display-00-e-expected.txt:
+        * platform/qt/css2.1/t0905-c414-flt-wrap-01-d-g-expected.txt:
+        * platform/qt/css2.1/t090501-c414-flt-ln-00-d-expected.txt:
+        * platform/qt/css2.1/t090501-c414-flt-ln-01-d-g-expected.txt:
+        * platform/qt/css2.1/t090501-c414-flt-ln-02-d-expected.txt:
+        * platform/qt/css2.1/t090501-c414-flt-ln-03-d-expected.txt:
+        * platform/qt/css2.1/t100801-c548-ln-ht-02-b-ag-expected.txt:
+        * platform/qt/css2.1/t1503-c522-font-family-00-b-expected.txt:
+        * platform/qt/css2.1/t1508-c527-font-01-b-expected.txt:
+        * platform/qt/css2.1/t1508-c527-font-06-b-expected.txt:
+        * platform/qt/css3/css3-modsel-33-expected.txt:
+
+2008-04-30  Simon Hausmann  <hausmann@webkit.org>
+
+        Rubber-stamped by Holger.
+
+        Updated the skip list for the Qt port to exclude features currently
+        not implemented.
+
+        * platform/qt/Skipped:
+
+2008-04-30  Rob Buis  <buis@kde.org>
+
+        Reviewed by Eric.
+
+        Testcase for:
+        https://bugs.webkit.org/show_bug.cgi?id=11939
+        Quirksmode: Ignores media types in stylesheet PIs
+
+        * fast/css/resources/xml-stylesheet-media-print.css: Added.
+        * fast/css/resources/xml-stylesheet-media-screen.css: Added.
+        * fast/css/xml-stylesheet-media-processing-expected.txt: Added.
+        * fast/css/xml-stylesheet-media-processing.xhtml: Added.
+
+2008-04-29  Anatoli Papirovski  <apapirovski@mac.com>
+
+        Reviewed by Dan Bernstein.
+
+        Modified the SVG test case for RGB and RGBA parsing - mixing percentage and 
+        numerical values is illegal.
+
+        * svg/custom/rgbcolor-syntax.svg:
+
+2008-04-29  David Hyatt  <hyatt@apple.com>
+
+        Implement support for the new box-reflect property.  Tests of the new property.
+
+        Reviewed by Dan Bernstein
+
+        * fast/reflections: Added.
+        * fast/reflections/reflection-computed-style-expected.txt: Added.
+        * fast/reflections/reflection-computed-style.html: Added.
+        * fast/reflections/reflection-direction.html: Added.
+        * fast/reflections/reflection-masks.html: Added.
+        * fast/reflections/reflection-nesting.html: Added.
+        * fast/reflections/resources: Added.
+        * fast/reflections/resources/kate.png: Added.
+        * fast/reflections/resources/vignette-mask.png: Added.
+
+2008-04-29  Anatoli Papirovski  <apapirovski@mac.com>
+
+        Reviewed by Darin Adler.
+
+        Fix for https://bugs.webkit.org/show_bug.cgi?id=18355
+        Updated the results of the layout test for "RGB color syntax error handling".
+
+        * platform/mac/css2.1/t040306-syntax-01-f-expected.checksum:
+        * platform/mac/css2.1/t040306-syntax-01-f-expected.png:
+        * platform/mac/css2.1/t040306-syntax-01-f-expected.txt:
+
+2008-04-29  Simon Hausmann  <hausmann@webkit.org>
+
+        Rubber-stamped by Holger.
+
+        Updated the layout tests after the latest submits to the Qt port
+        to our new baseline, after numerous fixes in RenderThemeQt
+        and assorted.
+
+        Updated the Skipped file with new expected failures that need
+        fixing.
+
+        * platform/qt/Skipped:
+        * platform/qt/css1/box_properties/acid_test-expected.txt:
+        * platform/qt/css1/font_properties/font_family-expected.txt:
+        * platform/qt/css2.1/t09-c5526c-display-00-e-expected.txt:
+        * platform/qt/css2.1/t1503-c522-font-family-00-b-expected.txt:
+        * platform/qt/editing/deleting/5168598-expected.txt:
+        * platform/qt/editing/execCommand/4920488-expected.txt:
+        * platform/qt/editing/execCommand/insertImage-expected.txt:
+        * platform/qt/editing/inserting/4960120-1-expected.txt:
+        * platform/qt/editing/inserting/before-after-input-element-expected.txt:
+        * platform/qt/editing/pasteboard/4641033-expected.txt:
+        * platform/qt/editing/pasteboard/4806874-expected.txt:
+        * platform/qt/editing/pasteboard/4944770-1-expected.txt:
+        * platform/qt/editing/pasteboard/nested-blocks-with-text-area-expected.txt:
+        * platform/qt/editing/pasteboard/nested-blocks-with-text-field-expected.txt:
+        * platform/qt/editing/pasteboard/pasting-tabs-expected.txt:
+        * platform/qt/editing/selection/3690703-2-expected.txt:
+        * platform/qt/editing/selection/3690703-expected.txt:
+        * platform/qt/editing/selection/3690719-expected.txt:
+        * platform/qt/editing/selection/4397952-expected.txt:
+        * platform/qt/editing/selection/4895428-3-expected.txt:
+        * platform/qt/editing/selection/5136696-expected.txt:
+        * platform/qt/editing/selection/5213963-expected.txt:
+        * platform/qt/editing/selection/5240265-expected.txt:
+        * platform/qt/editing/selection/caret-before-select-expected.txt:
+        * platform/qt/editing/selection/replaced-boundaries-3-expected.txt:
+        * platform/qt/editing/selection/select-box-expected.txt:
+        * platform/qt/editing/selection/select-element-paragraph-boundary-expected.txt:
+        * platform/qt/fast/block/basic/011-expected.txt:
+        * platform/qt/fast/block/float/032-expected.txt:
+        * platform/qt/fast/block/float/float-avoidance-expected.txt:
+        * platform/qt/fast/block/positioning/inline-block-relposition-expected.txt:
+        * platform/qt/fast/css/continuationCrash-expected.txt:
+        * platform/qt/fast/css/line-height-expected.txt:
+        * platform/qt/fast/css/margin-top-bottom-dynamic-expected.txt:
+        * platform/qt/fast/css/resize-corner-tracking-expected.txt:
+        * platform/qt/fast/css/rtl-ordering-expected.txt:
+        * platform/qt/fast/dom/HTMLTextAreaElement/reset-textarea-expected.txt:
+        * platform/qt/fast/dom/inner-text-expected.txt:
+        * platform/qt/fast/dynamic/008-expected.txt:
+        * platform/qt/fast/encoding/utf-16-big-endian-expected.txt:
+        * platform/qt/fast/encoding/utf-16-little-endian-expected.txt:
+        * platform/qt/fast/events/label-focus-expected.txt:
+        * platform/qt/fast/forms/001-expected.txt:
+        * platform/qt/fast/forms/003-expected.txt:
+        * platform/qt/fast/forms/004-expected.txt:
+        * platform/qt/fast/forms/8250-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label01-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label02-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label03-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label04-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label06-expected.txt:
+        * platform/qt/fast/forms/HTMLOptionElement_label07-expected.txt:
+        * platform/qt/fast/forms/blankbuttons-expected.txt:
+        * platform/qt/fast/forms/box-shadow-override-expected.txt:
+        * platform/qt/fast/forms/button-align-expected.txt:
+        * platform/qt/fast/forms/button-generated-content-expected.txt:
+        * platform/qt/fast/forms/button-inner-block-reuse-expected.txt:
+        * platform/qt/fast/forms/button-positioned-expected.txt:
+        * platform/qt/fast/forms/button-sizes-expected.txt:
+        * platform/qt/fast/forms/button-table-styles-expected.txt:
+        * platform/qt/fast/forms/button-white-space-expected.txt:
+        * platform/qt/fast/forms/checkbox-radio-onchange-expected.txt:
+        * platform/qt/fast/forms/disabled-select-change-index-expected.txt:
+        * platform/qt/fast/forms/encoding-test-expected.txt:
+        * platform/qt/fast/forms/fieldset-align-expected.txt:
+        * platform/qt/fast/forms/file-input-direction-expected.txt:
+        * platform/qt/fast/forms/file-input-disabled-expected.txt:
+        * platform/qt/fast/forms/floating-textfield-relayout-expected.txt:
+        * platform/qt/fast/forms/form-element-geometry-expected.txt:
+        * platform/qt/fast/forms/formmove-expected.txt:
+        * platform/qt/fast/forms/formmove2-expected.txt:
+        * platform/qt/fast/forms/formmove3-expected.txt:
+        * platform/qt/fast/forms/hidden-input-file-expected.txt:
+        * platform/qt/fast/forms/input-align-expected.txt:
+        * platform/qt/fast/forms/input-appearance-bkcolor-expected.txt:
+        * platform/qt/fast/forms/input-appearance-default-bkcolor-expected.txt:
+        * platform/qt/fast/forms/input-appearance-disabled-expected.txt:
+        * platform/qt/fast/forms/input-appearance-focus-expected.txt:
+        * platform/qt/fast/forms/input-appearance-height-expected.txt:
+        * platform/qt/fast/forms/input-appearance-preventDefault-expected.txt:
+        * platform/qt/fast/forms/input-appearance-readonly-expected.txt:
+        * platform/qt/fast/forms/input-appearance-selection-expected.txt:
+        * platform/qt/fast/forms/input-appearance-visibility-expected.txt:
+        * platform/qt/fast/forms/input-appearance-width-expected.txt:
+        * platform/qt/fast/forms/input-baseline-expected.txt:
+        * platform/qt/fast/forms/input-disabled-color-expected.txt:
+        * platform/qt/fast/forms/input-double-click-selection-gap-bug-expected.txt:
+        * platform/qt/fast/forms/input-paste-undo-expected.txt:
+        * platform/qt/fast/forms/input-readonly-dimmed-expected.txt:
+        * platform/qt/fast/forms/input-readonly-empty-expected.txt:
+        * platform/qt/fast/forms/input-spaces-expected.txt:
+        * platform/qt/fast/forms/input-table-expected.txt:
+        * platform/qt/fast/forms/input-text-click-inside-expected.txt:
+        * platform/qt/fast/forms/input-text-maxlength-expected.txt:
+        * platform/qt/fast/forms/input-text-option-delete-expected.txt:
+        * platform/qt/fast/forms/input-text-paste-maxlength-expected.txt:
+        * platform/qt/fast/forms/input-text-self-emptying-click-expected.txt:
+        * platform/qt/fast/forms/input-text-word-wrap-expected.txt:
+        * platform/qt/fast/forms/input-type-change2-expected.txt:
+        * platform/qt/fast/forms/input-value-expected.txt:
+        * platform/qt/fast/forms/input-width-expected.txt:
+        * platform/qt/fast/forms/listbox-width-change-expected.txt:
+        * platform/qt/fast/forms/menulist-deselect-update-expected.txt:
+        * platform/qt/fast/forms/menulist-narrow-width-expected.txt:
+        * platform/qt/fast/forms/menulist-restrict-line-height-expected.txt:
+        * platform/qt/fast/forms/menulist-separator-painting-expected.txt:
+        * platform/qt/fast/forms/menulist-width-change-expected.txt:
+        * platform/qt/fast/forms/minWidthPercent-expected.txt:
+        * platform/qt/fast/forms/option-script-expected.txt:
+        * platform/qt/fast/forms/option-strip-whitespace-expected.txt:
+        * platform/qt/fast/forms/option-text-clip-expected.txt:
+        * platform/qt/fast/forms/password-placeholder-expected.txt:
+        * platform/qt/fast/forms/placeholder-set-attribute-expected.txt:
+        * platform/qt/fast/forms/plaintext-mode-2-expected.txt:
+        * platform/qt/fast/forms/radio-attr-order-expected.txt:
+        * platform/qt/fast/forms/radio-nested-labels-expected.txt:
+        * platform/qt/fast/forms/radio_checked-expected.txt:
+        * platform/qt/fast/forms/radio_checked_dynamic-expected.txt:
+        * platform/qt/fast/forms/select-align-expected.txt:
+        * platform/qt/fast/forms/select-baseline-expected.txt:
+        * platform/qt/fast/forms/select-change-listbox-to-popup-expected.txt:
+        * platform/qt/fast/forms/select-disabled-appearance-expected.txt:
+        * platform/qt/fast/forms/select-initial-position-expected.txt:
+        * platform/qt/fast/forms/select-selected-expected.txt:
+        * platform/qt/fast/forms/select-size-expected.txt:
+        * platform/qt/fast/forms/select-style-expected.txt:
+        * platform/qt/fast/forms/select-visual-hebrew-expected.txt:
+        * platform/qt/fast/forms/stuff-on-my-optgroup-expected.txt:
+        * platform/qt/fast/forms/targeted-frame-submission-expected.txt:
+        * platform/qt/fast/forms/textarea-align-expected.txt:
+        * platform/qt/fast/forms/textarea-rows-cols-expected.txt:
+        * platform/qt/fast/forms/textarea-setinnerhtml-expected.txt:
+        * platform/qt/fast/forms/textfield-drag-into-disabled-expected.txt:
+        * platform/qt/fast/forms/textfield-overflow-expected.txt:
+        * platform/qt/fast/forms/visual-hebrew-text-field-expected.txt:
+        * platform/qt/fast/images/pdf-as-image-expected.txt:
+        * platform/qt/fast/images/pdf-as-image-landscape-expected.txt:
+        * platform/qt/fast/images/svg-as-image-expected.txt:
+        * platform/qt/fast/inline/positionedLifetime-expected.txt:
+        * platform/qt/fast/invalid/014-expected.txt:
+        * platform/qt/fast/lists/dynamic-marker-crash-expected.txt:
+        * platform/qt/fast/lists/inlineBoxWrapperNullCheck-expected.txt:
+        * platform/qt/fast/loader/start-load-in-unload-expected.txt:
+        * platform/qt/fast/parser/document-write-option-expected.txt:
+        * platform/qt/fast/repaint/control-clip-expected.txt:
+        * platform/qt/fast/replaced/pdf-as-image-expected.txt:
+        * platform/qt/fast/replaced/replaced-breaking-expected.txt:
+        * platform/qt/fast/replaced/replaced-breaking-mixture-expected.txt:
+        * platform/qt/fast/replaced/three-selects-break-expected.txt:
+        * platform/qt/fast/replaced/width100percent-button-expected.txt:
+        * platform/qt/fast/replaced/width100percent-menulist-expected.txt:
+        * platform/qt/fast/replaced/width100percent-radio-expected.txt:
+        * platform/qt/fast/replaced/width100percent-textfield-expected.txt:
+        * platform/qt/fast/selectors/064-expected.txt:
+        * platform/qt/fast/table/003-expected.txt:
+        * platform/qt/fast/table/append-cells2-expected.txt:
+        * platform/qt/fast/table/colspanMinWidth-expected.txt:
+        * platform/qt/fast/table/remove-td-display-none-expected.txt:
+        * platform/qt/fast/table/spanOverlapRepaint-expected.txt:
+        * platform/qt/fast/table/text-field-baseline-expected.txt:
+        * platform/qt/fast/text/international/rtl-white-space-pre-wrap-expected.txt:
+        * platform/qt/tables/mozilla/bugs/45621-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug1188-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug12384-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug1318-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug138725-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug18359-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug194024-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug24200-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2479-3-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2479-4-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug26178-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug28928-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug29326-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug2962-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug30559-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug30692-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug33855-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug39209-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug4382-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug4429-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug4527-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug46368-1-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug46368-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug51037-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug55545-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug56201-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug59354-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug60749-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug68912-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug7342-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug92647-2-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug96334-expected.txt:
+        * platform/qt/tables/mozilla/bugs/bug99948-expected.txt:
+        * platform/qt/tables/mozilla/collapsing_borders/bug41262-3-expected.txt:
+        * platform/qt/tables/mozilla/collapsing_borders/bug41262-4-expected.txt:
+        * platform/qt/tables/mozilla/core/margins-expected.txt:
+        * platform/qt/tables/mozilla/dom/tableDom-expected.txt:
+        * platform/qt/tables/mozilla/other/move_row-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug1725-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug2479-5-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug58402-2-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/bugs/bug92647-1-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/collapsing_borders/bug41262-5-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/collapsing_borders/bug41262-6-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/core/captions1-expected.txt:
+        * platform/qt/tables/mozilla_expected_failures/core/captions2-expected.txt:
+
+2008-04-29  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Beth Dakin.
+
+        Comply with HTML5 spec about parsing tabindex property according to
+        integer parsing rules
+
+        * fast/parser/tabindex-parsing-expected.txt: Added.
+        * fast/parser/tabindex-parsing.html: Added.
+
+2008-04-28  Dan Bernstein  <mitz@apple.com>
 
         Reviewed by Maciej Stachowiak.
+
+        - updated results for https://bugs.webkit.org/show_bug.cgi?id=18795
+          REGRESSION (r32660): Text heavier with text-shadow
+
+        * platform/mac/fast/css/shadow-multiple-expected.checksum:
+        * platform/mac/fast/css/shadow-multiple-expected.png:
+        * platform/mac/fast/repaint/shadow-multiple-horizontal-expected.checksum:
+        * platform/mac/fast/repaint/shadow-multiple-horizontal-expected.png:
+        * platform/mac/fast/repaint/shadow-multiple-strict-horizontal-expected.checksum:
+        * platform/mac/fast/repaint/shadow-multiple-strict-horizontal-expected.png:
+        * platform/mac/fast/repaint/shadow-multiple-strict-vertical-expected.checksum:
+        * platform/mac/fast/repaint/shadow-multiple-strict-vertical-expected.png:
+        * platform/mac/fast/repaint/shadow-multiple-vertical-expected.checksum:
+        * platform/mac/fast/repaint/shadow-multiple-vertical-expected.png:
+
+2008-04-28  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Add Storage.clear(), per updates to HTML5
+
+        * storage/domstorage/localstorage/clear-expected.txt: Added.
+        * storage/domstorage/localstorage/clear.html: Added.
+        * storage/domstorage/sessionstorage/clear-expected.txt: Added.
+        * storage/domstorage/sessionstorage/clear.html: Added.
+
+2008-04-28  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Fix <rdar://problem/4911289> Add tabindex property to all children 
+        of HTMLElement (7138)
+        http://bugs.webkit.org/show_bug.cgi?id=7138
+
+        minor updates to these existing tests:
+        * fast/dom/domListEnumeration-expected.txt:
+        * fast/dom/plugin-attributes-enumeration-expected.txt:
+        * fast/dom/resources/domListEnumeration.js:
+
+        * fast/events/resources/abe.png: Added.
+        * fast/events/resources/tabindex-focus-blur-all-frame1.html: Added.
+        * fast/events/resources/tabindex-focus-blur-all-frame2.html: Added.
+        * fast/events/resources/tabindex-focus-blur-all-iframe1.html: Added.
+        * fast/events/resources/tabindex-focus-blur-all-iframe2.html: Added.
+        * fast/events/resources/tabindex-focus-blur-all.js: Added.
+        * fast/events/tabindex-focus-blur-all-expected.txt: Added.
+        * fast/events/tabindex-focus-blur-all.html: Added.
+
+2008-04-28  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - add rendering and invalidation tests for multiple shadows
+
+        * fast/css/shadow-multiple.html: Added.
+        * fast/repaint/shadow-multiple-horizontal.html: Added.
+        * fast/repaint/shadow-multiple-strict-horizontal.html: Added.
+        * fast/repaint/shadow-multiple-strict-vertical.html: Added.
+        * fast/repaint/shadow-multiple-vertical.html: Added.
+        * platform/mac/fast/css/shadow-multiple-expected.checksum: Added.
+        * platform/mac/fast/css/shadow-multiple-expected.png: Added.
+        * platform/mac/fast/css/shadow-multiple-expected.txt: Added.
+        * platform/mac/fast/repaint/shadow-multiple-horizontal-expected.checksum: Added.
+        * platform/mac/fast/repaint/shadow-multiple-horizontal-expected.png: Added.
+        * platform/mac/fast/repaint/shadow-multiple-horizontal-expected.txt: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-horizontal-expected.checksum: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-horizontal-expected.png: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-horizontal-expected.txt: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-vertical-expected.checksum: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-vertical-expected.png: Added.
+        * platform/mac/fast/repaint/shadow-multiple-strict-vertical-expected.txt: Added.
+        * platform/mac/fast/repaint/shadow-multiple-vertical-expected.checksum: Added.
+        * platform/mac/fast/repaint/shadow-multiple-vertical-expected.png: Added.
+        * platform/mac/fast/repaint/shadow-multiple-vertical-expected.txt: Added.
+
+2008-04-28  David Hyatt  <hyatt@apple.com>
+
+        Add layout test for canvas self-drawing bug.
+
+        Reviewed by Dan Bernstein
+
+        * fast/canvas/canvasDrawingIntoSelf.html: Added.
+        * platform/mac/fast/canvas/canvasDrawingIntoSelf-expected.checksum: Added.
+        * platform/mac/fast/canvas/canvasDrawingIntoSelf-expected.png: Added.
+        * platform/mac/fast/canvas/canvasDrawingIntoSelf-expected.txt: Added.
+
+2008-04-28  David Hyatt  <hyatt@apple.com>
+
+        Add layout test for canvas.
+
+        Reviewed by Tim Hatcher
+
+        * fast/canvas/drawImage.html: Added.
+        * platform/mac/fast/canvas/drawImage-expected.checksum: Added.
+        * platform/mac/fast/canvas/drawImage-expected.png: Added.
+        * platform/mac/fast/canvas/drawImage-expected.txt: Added.
+
+2008-04-28  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Simon.
+
+        Fix the crash on http://www.orad.pl. We called end too early.
         
-        Layout test for exceptions thrown from equality comparisons.
+        1. we need a ::write that will pause the parser due a pending
+        script
+        2. we need a second write to queue data (tricky part)
+        3. we need to get a finish call (document loaded)
+        4. we resume the script and parse, schedule loading of a new script
+        and have called end
+        5. we resume the new script and we get a crash
+        
+        This bug is hard to trigger, e.g. if the web server is only allowing
+        one connection per client/IP. This is why we need to sleep in the scripts. We
+        want to make sure that the page is first fully received before serving the
+        scripts.
+        
 
-        * fast/js/exception-thrown-from-equal-expected.txt: Added.
-        * fast/js/exception-thrown-from-equal.html: Added.
+        * http/tests/misc/resources/script-slow1.pl: Added.
+        * http/tests/misc/resources/script-slow2.pl: Added.
+        * http/tests/misc/xmltokenizer-do-not-crash-expected.txt: Added.
+        * http/tests/misc/xmltokenizer-do-not-crash.pl: Added.
 
-2008-05-04  Oliver Hunt  <oliver@apple.com>
+2008-04-28  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Reviewed by Simon.
+
+        Update the Skipped list, we pass most of the http/tests/misc
+        
+
+        * platform/qt/Skipped:
+
+2008-04-27  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
 
-        Testcases for accessing the arguments object with too few, and too many 
-        arguments provided to the function.
+        Bug 17173: HTML5 Canvas API requires us to ignore certain operations
+        <https://bugs.webkit.org/show_bug.cgi?id=17173>
 
-        * fast/js/resources/unmatching-argument-count.js: Added.
-        * fast/js/unmatching-argument-count-expected.txt: Added.
-        * fast/js/unmatching-argument-count.html: Added.
+        Correct old test case now that undefined behaviour is defined.  Add
+        additional tests for non-path related cases that are also now defined.
 
-2008-05-01  Maciej Stachowiak  <mjs@apple.com>
+        * fast/canvas/canvas-path-with-inf-nan-dimensions.html: Added.
+        * fast/canvas/canvas-with-incorrect-args-expected.txt:
+        * fast/canvas/canvas-with-incorrect-args.html:
 
-        Reviewed by Oliver.
+2008-04-27  Rob Buis  <buis@kde.org>
+
+        Reviewed by Adele.
+
+        Testcase for:
+        https://bugs.webkit.org/show_bug.cgi?id=18652
+        onchange events don't seem to fire for input[type=range] controls.
+
+        * fast/forms/slider-onchange-event-expected.txt: Added.
+        * fast/forms/slider-onchange-event.html: Added.
+
+2008-04-27  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - test for https://bugs.webkit.org/show_bug.cgi?id=3729
+          <rdar://problem/4036353> REGRESSION: arrow keys move insertion bar backwards in RTL text
+
+        * editing/selection/move-left-right-expected.txt: Added.
+        * editing/selection/move-left-right.html: Added.
+        * platform/mac/editing/selection/move-left-right-expected.txt: Added.
+
+2008-04-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Maciej Stachowiak.
+
+        Update test to reflect add the CanvasRenderingContext2d constructor.
+
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-26  Adam Barth  <hk9565@gmail.com>
+
+        Reviewed by Adam Roben and Sam Weinig.
+
+        Update LayoutTests for new postMessage API.
+
+        Collin Jackson <collinj-webkit@collinjackson.com> also contributed to this patch.
+
+        * http/tests/security/postMessage/domain-and-uri-unaffected-by-base-tag-expected.txt: Removed.
+        * http/tests/security/postMessage/domain-and-uri-unaffected-by-base-tag.html: Removed.
+        * http/tests/security/postMessage/domain-unaffected-by-document-domain-expected.txt: Removed.
+        * http/tests/security/postMessage/domain-unaffected-by-document-domain.html: Removed.
+        * http/tests/security/postMessage/invalid-origin-throws-exception-expected.txt: Added.
+        * http/tests/security/postMessage/invalid-origin-throws-exception.html: Added.
+        * http/tests/security/postMessage/javascript-page-still-sends-domain-expected.txt: Removed.
+        * http/tests/security/postMessage/javascript-page-still-sends-domain.html: Removed.
+        * http/tests/security/postMessage/javascript-page-still-sends-origin-expected.txt: Copied from LayoutTests/http/tests/security/postMessage/javascript-page-still-sends-domain-expected.txt.
+        * http/tests/security/postMessage/javascript-page-still-sends-origin.html: Copied from LayoutTests/http/tests/security/postMessage/javascript-page-still-sends-domain.html.
+        * http/tests/security/postMessage/origin-unaffected-by-base-tag-expected.txt: Copied from LayoutTests/http/tests/security/postMessage/domain-and-uri-unaffected-by-base-tag-expected.txt.
+        * http/tests/security/postMessage/origin-unaffected-by-base-tag.html: Copied from LayoutTests/http/tests/security/postMessage/domain-and-uri-unaffected-by-base-tag.html.
+        * http/tests/security/postMessage/origin-unaffected-by-document-domain-expected.txt: Copied from LayoutTests/http/tests/security/postMessage/domain-unaffected-by-document-domain-expected.txt.
+        * http/tests/security/postMessage/origin-unaffected-by-document-domain.html: Copied from LayoutTests/http/tests/security/postMessage/domain-unaffected-by-document-domain.html.
+        * http/tests/security/postMessage/target-origin-expected.txt: Added.
+        * http/tests/security/postMessage/target-origin.html: Added.
+
+2008-04-26  Anatoli Papirovski  <apapirovski@mac.com>
+
+        Reviewed by Dave Hyatt.
+
+        Test for https://bugs.webkit.org/show_bug.cgi?id=18583
+        Negative values are invalid for font-size and line-height,
+        including in the shorthand "font".
+
+        * fast/css/font-size-negative.html: Added.
+        * fast/css/line-height-negative.html: Added.
+        * platform/mac/css2.1/t100801-c548-ln-ht-02-b-ag-expected.checksum:
+        * platform/mac/css2.1/t100801-c548-ln-ht-02-b-ag-expected.png:
+        * platform/mac/css2.1/t100801-c548-ln-ht-02-b-ag-expected.txt:
+        * platform/mac/fast/css/font-size-negative-expected.checksum: Added.
+        * platform/mac/fast/css/font-size-negative-expected.png: Added.
+        * platform/mac/fast/css/font-size-negative-expected.txt: Added.
+        * platform/mac/fast/css/line-height-negative-expected.checksum: Added.
+        * platform/mac/fast/css/line-height-negative-expected.png: Added.
+        * platform/mac/fast/css/line-height-negative-expected.txt: Added.
+
+2008-04-25  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber stamped by Simon
+
+        Do not execute most of the http tests as they hang or crash.
+
+        * platform/qt/Skipped:
+
+2008-04-24  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - test for https://bugs.webkit.org/show_bug.cgi?id=18722
+          <rdar://problem/5888360> REGRESSION (3.1 -> TOT): Webkit Nightly Build crashes when visiting i has a hotdog
+
+        * fast/dynamic/float-remove-above-line-expected.txt: Added.
+        * fast/dynamic/float-remove-above-line.html: Added.
+
+2008-04-24  Cameron McCormack  <cam@mcc.id.au>
+
+        Reviewed by Maciej Stachowiak.
+
+        Test for:
+        http://bugs.webkit.org/show_bug.cgi?id=18328
+        Modifying rx="" or ry="" on a <rect> doesn't relayout
+
+        * svg/dom/SVGRectElement: Added.
+        * svg/dom/SVGRectElement/rect-modify-rx-expected.txt: Added.
+        * svg/dom/SVGRectElement/rect-modify-rx.svg: Added.
+
+2008-04-24  Adam Barth  <hk9565@gmail.com>
+
+        Reviewed by Sam Weinig.
+
+        Test that we block headers beginning with "Sec-" as per spec.
+
+        * http/tests/xmlhttprequest/set-dangerous-headers-expected.txt:
+        * http/tests/xmlhttprequest/set-dangerous-headers.html:
+
+2008-04-22  Feng Qian  <ian.eng.webkit@gmail.com>
+
+        Reviewed by Geoff Garen.
+
+        Test for nested event handlers.
+
+        * fast/events/nested-window-event-expected.txt: Added.
+        * fast/events/nested-window-event.html: Added.
+
+2008-04-24  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - test the visual position of the primary caret in bidirectional text
+
+        * platform/mac/editing/input/caret-primary-bidi-expected.txt: Added.
+        * platform/mac/editing/input/caret-primary-bidi.html: Added.
+
+2008-04-24  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Darin Adler.
+
+        <rdar://problem/5604313> FormatBlock leaves first letter incorrectly styled (16004)
+
+        * editing/execCommand/5604313-expected.txt: Added.
+        * editing/execCommand/5604313.html: Added.
+
+r2008-04-23  Dan Bernstein  <mitz@apple.com>
+
+        Rubber-stamped by Dave Hyatt.
+
+        - update computed style results for border-image and mask-image
+
+        * fast/css/computed-style-expected.txt:
+        * fast/css/computed-style-without-renderer-expected.txt:
+        * svg/css/getComputedStyle-basic-expected.txt:
+
+2008-04-23  David Hyatt  <hyatt@apple.com>
+
+        Implement getComputedStyle for -webkit-border-image.
+
+        Reviewed by Dan Bernstein
+
+        * fast/css/getComputedStyle-border-image-expected.txt: Added.
+        * fast/css/getComputedStyle-border-image.html: Added.
+
+2008-04-23  David Hyatt  <hyatt@apple.com>
+
+        Add support for a new mask-box-image property that is analogous to border-image.
+
+        Reviewed by Dan Bernstein
+
+        * fast/borders/block-mask-overlay-image.html: Added.
+        * fast/borders/inline-mask-overlay-image.html: Added.
+        * fast/borders/resources/mask.png: Added.
+        * platform/mac/fast/borders/block-mask-overlay-image-expected.checksum: Added.
+        * platform/mac/fast/borders/block-mask-overlay-image-expected.png: Added.
+        * platform/mac/fast/borders/block-mask-overlay-image-expected.txt: Added.
+        * platform/mac/fast/borders/inline-mask-overlay-image-expected.checksum: Added.
+        * platform/mac/fast/borders/inline-mask-overlay-image-expected.png: Added.
+        * platform/mac/fast/borders/inline-mask-overlay-image-expected.txt: Added.
+
+2008-04-23  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Darin Adler.
+
+        <rdar://problem/5825350> OWA: Caret disappears when navigating with arrows keys in contenteditable div
+
+        * editing/selection/5825350-1-expected.txt: Added.
+        * editing/selection/5825350-1.html: Added.
+        * editing/selection/5825350-2-expected.txt: Added.
+        * editing/selection/5825350-2.html: Added.
+
+2008-04-23  Darin Adler  <darin@apple.com>
+
+        - updated a test affected by the addition of mask-composite
+
+        * svg/css/getComputedStyle-basic-expected.txt: Updated.
+
+2008-04-23  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - test that moving forward through bidirectional text does not skip the
+          position after the last character on the line
+
+        * editing/selection/move-past-trailing-space.html: Added.
+        * platform/mac/editing/selection/move-past-trailing-space-expected.checksum: Added.
+        * platform/mac/editing/selection/move-past-trailing-space-expected.png: Added.
+        * platform/mac/editing/selection/move-past-trailing-space-expected.txt: Added.
+
+2008-04-22  Anatoli Papirovski  <apapirovski@mac.com>
+
+        Reviewed by Dan Bernstein.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18584
+        Add a test case for border-color inheritance.
+
+        * fast/borders/border-color-inherit.html: Added.
+        * platform/mac/fast/borders/border-color-inherit-expected.checksum: Added.
+        * platform/mac/fast/borders/border-color-inherit-expected.png: Added.
+        * platform/mac/fast/borders/border-color-inherit-expected.txt: Added.
+
+2008-04-22  David Hyatt  <hyatt@apple.com>
+
+        Add support for mask-composite.
+
+        Reviewed by Sam Weinig
+
+        * fast/backgrounds/mask-composite.html: Added.
+        * fast/backgrounds/resources/mask-bottom-left.png: Added.
+        * fast/backgrounds/resources/mask-bottom-right.png: Added.
+        * fast/backgrounds/resources/mask-bottom.png: Added.
+        * fast/backgrounds/resources/mask-center.png: Added.
+        * fast/backgrounds/resources/mask-left.png: Added.
+        * fast/backgrounds/resources/mask-right.png: Added.
+        * fast/backgrounds/resources/mask-top-left.png: Added.
+        * fast/backgrounds/resources/mask-top-right.png: Added.
+        * fast/backgrounds/resources/mask-top.png: Added.
+        * platform/mac/fast/backgrounds/mask-composite-expected.checksum: Added.
+        * platform/mac/fast/backgrounds/mask-composite-expected.png: Added.
+        * platform/mac/fast/backgrounds/mask-composite-expected.txt: Added.
+
+2008-04-22  Antti Koivisto  <antti@apple.com>
+
+        Update SVG animation test results.
+
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-33-t-expected.txt:
+
+2008-04-22  David Hyatt  <hyatt@apple.com>
+
+        Add support for CSS alpha masks.  Test cases.
+
+        Reviewed by Dan
+
+        * fast/backgrounds/repeat/mask-negative-offset-repeat.html: Added.
+        * fast/backgrounds/repeat/resources/white.gif: Added.
+        * fast/backgrounds/svg-as-mask.html: Added.
+
+2008-04-22  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        - updated results with the trailing space having the right directionality
+
+        * platform/mac/fast/text/trailing-white-space-2-expected.txt:
+
+2008-04-22  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by John Sullivan and Adam Roben.
+
+        Test for new behavior when advancing focus from a focusable-by-script node, which now
+        matches Firefox 2 and 3
+
+        * fast/events/tabindex-focus-chain-expected.txt: Added.
+        * fast/events/tabindex-focus-chain.html: Added.
+
+2008-04-21  Mark Rowe  <mrowe@apple.com>
+
+        Fix the case on the file names of test results for svg/custom/altglyph.svg, and remove an extra -expected.txt that was checked in with incorrect
+        case.
+
+        * platform/mac/svg/custom/altGlyph-expected.checksum: Removed.
+        * platform/mac/svg/custom/altGlyph-expected.png: Removed.
+        * platform/mac/svg/custom/altGlyph-expected.txt: Removed.
+        * platform/mac/svg/custom/altglyph-expected.checksum: Copied from LayoutTests/platform/mac/svg/custom/altGlyph-expected.checksum.
+        * platform/mac/svg/custom/altglyph-expected.png: Copied from LayoutTests/platform/mac/svg/custom/altGlyph-expected.png.
+
+2008-04-21  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - update acid3.html to reflect the updated test.
+        - test for implicit "all" media in media queries
+        - test that the value of the monochrome media feature is 0 on color displays
+
+        * http/tests/misc/acid3.html:
+        * fast/media/implicit-media-all.html: Added.
+        * fast/media/monochrome.html: Added.
+        * platform/mac/fast/media/implicit-media-all-expected.checksum: Added.
+        * platform/mac/fast/media/implicit-media-all-expected.png: Added.
+        * platform/mac/fast/media/implicit-media-all-expected.txt: Added.
+        * platform/mac/fast/media/monochrome-expected.checksum: Added.
+        * platform/mac/fast/media/monochrome-expected.png: Added.
+        * platform/mac/fast/media/monochrome-expected.txt: Added.
+
+2008-04-21  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by John Sullivan.
+
+        <rdar://problem/5803706> Pressing return at the end of a header doesn't break out of header (17460)
+
+        * editing/inserting/5803706-1-expected.txt: Added.
+        * editing/inserting/5803706-1.html: Added.
+        * editing/inserting/5803706-2-expected.txt: Added.
+        * editing/inserting/5803706-2.html: Added.
+
+2008-04-21  Mark Rowe  <mrowe@apple.com>
+
+        Land updated results for three tests and disable three more on Tiger.
+
+        * http/tests/xmlhttprequest/infoOnProgressEvent-expected.txt:
+        * platform/mac-tiger/Skipped:  Disable three tests using font-face that fail intermittently on Tiger bots.
+        * platform/mac-tiger/svg/W3C-SVG-1.1/animate-elem-06-t-expected.txt:  Update Tiger results following r32247.
+        * platform/mac-tiger/svg/W3C-SVG-1.1/animate-elem-07-t-expected.txt:  Ditto.
+
+2008-04-21  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Not reviewed, add missing files in my previous commit.
+
+        * http/tests/xmlhttprequest/infoOnProgressEvent-expected.txt: Added.
+        * http/tests/xmlhttprequest/infoOnProgressEvent.html: Added.
+
+2008-04-21  Eric Seidel  <eric@webkit.org>
+
+        Stamped by Anders.
         
-        - bump up the numbers in this test to account for our now much
-        higher recursion capability.
+        Make test work in Opera.  Fix bug in results serialization.
 
-        * fast/js/deep-recursion-test.html:
+        * fast/js/resources/function-toString-parentheses.js:
 
-2008-04-26  Oliver Hunt  <oliver@apple.com>
+2008-04-21  Julien Chaffraix  <jchaffraix@webkit.org>
 
-        Reviewed by Maciej.
+        Reviewed by Ap.
 
-        Bug 18628: SQUIRRELFISH: need to support recursion limit
-        <https://bugs.webkit.org/show_bug.cgi?id=18628>
+        Bug 13596: Implement .onprogress handler on XMLHttpRequest objects to support progressive download content length information.
 
-        Test to ensure we don't crash when re-entering global code
-        with a full register file, and that we don't allow unbounded
-        recursion by re-entering on a new register file..
+        * http/tests/xmlhttprequest/infoOnProgressEvent-expected.txt: Added.
+        * http/tests/xmlhttprequest/infoOnProgressEvent.html: Added.
 
-        * fast/js/global-recursion-on-full-stack-expected.txt: Added.
-        * fast/js/global-recursion-on-full-stack.html: Added.
+2008-04-19  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Dave Hyatt.
+
+        - more test cases for https://bugs.webkit.org/show_bug.cgi?id=17921
+          in which the trailing white space is already in a separate
+          run but still needs to be re-ordered.
+
+        * fast/text/trailing-white-space-2.html: Copied from LayoutTests/fast/text/trailing-white-space.html.
+        * platform/mac/fast/text/trailing-white-space-2-expected.checksum: Added.
+        * platform/mac/fast/text/trailing-white-space-2-expected.png: Added.
+        * platform/mac/fast/text/trailing-white-space-2-expected.txt: Added.
+
+2008-04-19  Brady Eidson  <beidson@apple.com>
+
+        Update window-properties to add the profiler and fix a layout test
+
+        * fast/dom/Window/window-properties-expected.txt:
+
+2008-04-18  Antti Koivisto  <antti@apple.com>
+
+        Update test results.
+
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-06-t-expected.txt:
+        * platform/mac-leopard/svg/W3C-SVG-1.1/animate-elem-07-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-08-t-expected.txt:
+        * platform/mac/svg/W3C-SVG-1.1/animate-elem-33-t-expected.txt:
+
+2008-04-18  Sam Weinig  <sam@webkit.org>
+
+        Disable this test until we can figure out why it is failing on some systems.
+
+        * fast/canvas/toDataURL-supportedTypes.html: Removed.
+        * fast/canvas/toDataURL-supportedTypes.html-disabled: Copied from fast/canvas/toDataURL-supportedTypes.html.
+
+2008-04-18  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Brady Eidson.
+
+        - test for <rdar://problem/5872671> REGRESSION (3.1.1-TOT): Repro crash going to Ortega Park home page
+
+        * fast/dynamic/5872671-expected.txt: Added.
+        * fast/dynamic/5872671.html: Added.
+
+2008-04-18  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - test and updated results for https://bugs.webkit.org/show_bug.cgi?id=17921
+          Extra white space at the end of right-aligned or justified text with -webkit-line-break: after-white-space
+
+        * fast/text/trailing-white-space.html: Added.
+        * http/tests/misc/acid3-expected.txt:
+        * platform/mac/editing/deleting/delete-block-table-expected.txt:
+        * platform/mac/editing/deleting/delete-to-select-table-expected.txt:
+        * platform/mac/editing/deleting/deletionUI-single-instance-expected.txt:
+        * platform/mac/editing/execCommand/5482023-expected.txt:
+        * platform/mac/editing/execCommand/boldSelection-expected.txt:
+        * platform/mac/editing/execCommand/italicizeByCharacter-expected.txt:
+        * platform/mac/editing/execCommand/modifyForeColorByCharacter-expected.txt:
+        * platform/mac/editing/execCommand/print-expected.txt:
+        * platform/mac/editing/execCommand/selectAll-expected.txt:
+        * platform/mac/editing/execCommand/strikethroughSelection-expected.txt:
+        * platform/mac/editing/inserting/editable-html-element-expected.txt:
+        * platform/mac/editing/inserting/insert-div-027-expected.txt:
+        * platform/mac/editing/pasteboard/5028447-expected.txt:
+        * platform/mac/editing/pasteboard/block-wrappers-necessary-expected.checksum:
+        * platform/mac/editing/pasteboard/block-wrappers-necessary-expected.png:
+        * platform/mac/editing/pasteboard/block-wrappers-necessary-expected.txt:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-area-expected.checksum:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-area-expected.png:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-area-expected.txt:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-field-expected.checksum:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-field-expected.png:
+        * platform/mac/editing/pasteboard/nested-blocks-with-text-field-expected.txt:
+        * platform/mac/editing/selection/5081257-1-expected.txt:
+        * platform/mac/editing/selection/after-line-wrap-expected.txt:
+        * platform/mac/editing/selection/mixed-editability-1-expected.txt:
+        * platform/mac/editing/selection/select-all-001-expected.txt:
+        * platform/mac/editing/selection/select-all-002-expected.txt:
+        * platform/mac/editing/selection/select-all-003-expected.txt:
+        * platform/mac/editing/style/apple-style-editable-mix-expected.txt:
+        * platform/mac/editing/style/create-block-for-style-012-expected.checksum:
+        * platform/mac/editing/style/create-block-for-style-012-expected.png:
+        * platform/mac/editing/style/create-block-for-style-012-expected.txt:
+        * platform/mac/fast/clip/outline-overflowClip-expected.txt:
+        * platform/mac/fast/forms/textarea-rows-cols-expected.txt:
+        * platform/mac/fast/replaced/width100percent-textarea-expected.txt:
+        * platform/mac/fast/text/embed-at-end-of-pre-wrap-line-expected.txt:
+        * platform/mac/fast/text/justified-text-rect-expected.txt:
+        * platform/mac/fast/text/trailing-white-space-expected.checksum: Added.
+        * platform/mac/fast/text/trailing-white-space-expected.png: Added.
+        * platform/mac/fast/text/trailing-white-space-expected.txt: Added.
+        * platform/mac/fast/text/whitespace/pre-wrap-last-char-expected.txt:
+        * platform/mac/fast/text/whitespace/pre-wrap-overflow-selection-expected.txt:
+        * platform/mac/fast/text/whitespace/pre-wrap-spaces-after-newline-expected.txt:
+
+2008-04-18  Dan Bernstein  <mitz@apple.com>
+
+        - add css2.1/t1506-c525-font-wt-00-b.html to the Windows skipped list
+
+        * platform/win/Skipped:
+
+2008-04-18  Adam Roben  <aroben@apple.com>
+
+        * platform/win/Skipped: Added another failing test.
 
 2008-04-17  Antti Koivisto  <antti@apple.com>
 

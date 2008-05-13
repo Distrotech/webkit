@@ -103,25 +103,14 @@ namespace WebCore {
     };
 
     struct PluginPackageHash {
-        static unsigned hash(const int key) { return reinterpret_cast<PluginPackage*>(key)->hash(); }
+        static unsigned hash(const uintptr_t key) { return reinterpret_cast<PluginPackage*>(key)->hash(); }
         static unsigned hash(const RefPtr<PluginPackage>& key) { return key->hash(); }
 
-        static bool equal(const int a, const int b) { return equal(reinterpret_cast<PluginPackage*>(a), reinterpret_cast<PluginPackage*>(b)); }
+        static bool equal(const uintptr_t a, const uintptr_t b) { return equal(reinterpret_cast<PluginPackage*>(a), reinterpret_cast<PluginPackage*>(b)); }
         static bool equal(const RefPtr<PluginPackage>& a, const RefPtr<PluginPackage>& b) { return PluginPackage::equal(*a.get(), *b.get()); }
         static const bool safeToCompareToEmptyOrDeleted = false;
     };
 
 } // namespace WebCore
-
-// FIXME: This is a workaround for a bug in WTF, where it's impossible to use a custom Hash function but with default traits.
-// It should be possible to do this without a StorageTraits specialization.
-namespace WTF {
-    template<> struct HashKeyStorageTraits<WebCore::PluginPackageHash, HashTraits<RefPtr<WebCore::PluginPackage> > > {
-        typedef IntTypes<sizeof(RefPtr<WebCore::PluginPackage>)>::SignedType IntType;
-        typedef WebCore::PluginPackageHash Hash;
-        typedef HashTraits<IntType> Traits;
-    };
-}
-
 
 #endif

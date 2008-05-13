@@ -62,9 +62,9 @@ Class *CInstance::getClass() const
     return _class;
 }
 
-CallType CInstance::getCallData(CallData&)
+bool CInstance::implementsCall() const
 {
-    return _object->_class->invokeDefault ? CallTypeNative : CallTypeNone;
+    return (_object->_class->invokeDefault != 0);
 }
 
 JSValue* CInstance::invokeMethod(ExecState* exec, const MethodList& methodList, const List& args)

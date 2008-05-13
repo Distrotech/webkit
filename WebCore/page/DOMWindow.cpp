@@ -30,14 +30,13 @@
 #include "CSSComputedStyleDeclaration.h"
 #include "CSSRuleList.h"
 #include "CSSStyleSelector.h"
+#include "CString.h"
 #include "Chrome.h"
 #include "Console.h"
-#if ENABLE(OFFLINE_WEB_APPLICATIONS)
-#include "DOMApplicationCache.h"
-#endif
 #include "DOMSelection.h"
 #include "Document.h"
 #include "Element.h"
+#include "ExceptionCode.h"
 #include "FloatRect.h"
 #include "Frame.h"
 #include "FrameLoader.h"
@@ -45,35 +44,60 @@
 #include "FrameView.h"
 #include "HTMLFrameOwnerElement.h"
 #include "History.h"
-#include "LocalStorage.h"
 #include "Location.h"
+#include "MessageEvent.h"
 #include "Navigator.h"
 #include "Page.h"
 #include "PageGroup.h"
 #include "PlatformScreen.h"
 #include "PlatformString.h"
 #include "Screen.h"
+#include "SecurityOrigin.h"
 #include <algorithm>
 #include <wtf/MathExtras.h>
-
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-#include "MessageEvent.h"
-#endif
 
 #if ENABLE(DATABASE)
 #include "Database.h"
 #endif
 
 #if ENABLE(DOM_STORAGE)
+#include "LocalStorage.h"
 #include "SessionStorage.h"
 #include "Storage.h"
 #include "StorageArea.h"
+#endif
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+#include "DOMApplicationCache.h"
 #endif
 
 using std::min;
 using std::max;
 
 namespace WebCore {
+
+class PostMessageTimer : public TimerBase {
+public:
+    PostMessageTimer(DOMWindow* window, MessageEvent* event, SecurityOrigin* targetOrigin)
+        : m_window(window)
+        , m_event(event)
+        , m_targetOrigin(targetOrigin)
+    {
+    }
+
+    MessageEvent* event() const { return m_event.get(); }
+    SecurityOrigin* targetOrigin() const { return m_targetOrigin.get(); }
+
+private:
+    virtual void fired() 
+    {
+        m_window->postMessageTimerFired(this);
+    }
+
+    RefPtr<DOMWindow> m_window;
+    RefPtr<MessageEvent> m_event;
+    RefPtr<SecurityOrigin> m_targetOrigin;
+};
 
 // This function:
 // 1) Validates the pending changes are not changing to NaN
@@ -312,19 +336,61 @@ Storage* DOMWindow::localStorage() const
     if (!page)
         return 0;
     
-    RefPtr<StorageArea> storageArea = page->group().localStorage()->storageArea(document->securityOrigin());
-    m_localStorage = Storage::create(m_frame, storageArea.release());
+    RefPtr<StorageArea> storageArea = page->group().localStorage()->storageArea(m_frame, document->securityOrigin());
+    if (storageArea)
+        m_localStorage = Storage::create(m_frame, storageArea.release());
+
     return m_localStorage.get();
 }
 #endif
 
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-void DOMWindow::postMessage(const String& message, const String& domain, const String& uri, DOMWindow* source) const
+void DOMWindow::postMessage(const String& message, const String& targetOrigin, DOMWindow* source, ExceptionCode& ec)
 {
-   ExceptionCode ec;
-   document()->dispatchEvent(new MessageEvent(message, domain, uri, source), ec, true);
+    if (!m_frame)
+        return;
+
+    // Compute the target origin.  We need to do this synchronously in order
+    // to generate the SYNTAX_ERR exception correctly.
+    RefPtr<SecurityOrigin> target;
+    if (targetOrigin != "*") {
+        target = SecurityOrigin::create(KURL(targetOrigin));
+        if (target->isEmpty()) {
+            ec = SYNTAX_ERR;
+            return;
+        }
+    }
+
+    // Capture the source of the message.  We need to do this synchronously
+    // in order to capture the source of the message correctly.
+    Document* sourceDocument = source->document();
+    if (!sourceDocument)
+        return;
+    String sourceOrigin = sourceDocument->securityOrigin()->toString();
+
+    // Schedule the message.
+    PostMessageTimer* timer = new PostMessageTimer(this, new MessageEvent(message, sourceOrigin, "", source), target.get());
+    timer->startOneShot(0);
 }
-#endif
+
+void DOMWindow::postMessageTimerFired(PostMessageTimer* t)
+{
+    OwnPtr<PostMessageTimer> timer(t);
+
+    if (!document())
+        return;
+
+    if (timer->targetOrigin()) {
+        // Check target origin now since the target document may have changed since the simer was scheduled.
+        if (!timer->targetOrigin()->isSameSchemeHostPort(document()->securityOrigin())) {
+            String message = String::format("Unable to post message to %s. Recipient has origin %s.\n", 
+                timer->targetOrigin()->toString().utf8().data(), document()->securityOrigin()->toString().utf8().data());
+            console()->addMessage(JSMessageSource, ErrorMessageLevel, message, 0, String());
+            return;
+        }
+    }
+
+    document()->dispatchWindowEvent(timer->event());
+}
 
 DOMSelection* DOMWindow::getSelection()
 {

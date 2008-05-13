@@ -1,9 +1,8 @@
 // -*- c-basic-offset: 2 -*-
 /*
- *  This file is part of the KDE libraries
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
- *  Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2003, 2004, 2005, 2006, 2008 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Eric Seidel (eric@webkit.org)
  *
  *  This library is free software; you can redistribute it and/or
@@ -28,7 +27,6 @@
 
 #include "date_object.h"
 #include "error_object.h"
-#include "lookup.h"
 #include "nodes.h"
 #include "operations.h"
 #include "PropertyNameArray.h"
@@ -166,6 +164,43 @@ UString JSObject::className() const
   return "Object";
 }
 
+JSValue *JSObject::get(ExecState *exec, const Identifier &propertyName) const
+{
+  PropertySlot slot;
+
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
+JSValue *JSObject::get(ExecState *exec, unsigned propertyName) const
+{
+  PropertySlot slot;
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
+bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
+{
+  JSObject *imp = this;
+  
+  while (true) {
+    if (imp->getOwnPropertySlot(exec, propertyName, slot))
+      return true;
+    
+    JSValue *proto = imp->_proto;
+    if (!proto->isObject())
+      break;
+    
+    imp = static_cast<JSObject *>(proto);
+  }
+  
+  return false;
+}
+
 bool JSObject::getOwnPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
 {
   return getOwnPropertySlot(exec, Identifier::from(propertyName), slot);
@@ -268,6 +303,7 @@ void JSObject::putWithAttributes(ExecState* exec, unsigned propertyName, JSValue
     putWithAttributes(exec, Identifier::from(propertyName), value, attributes);
 }
 
+// ECMA 8.6.2.4
 bool JSObject::hasProperty(ExecState *exec, const Identifier &propertyName) const
 {
   PropertySlot slot;
@@ -281,7 +317,7 @@ bool JSObject::hasProperty(ExecState *exec, unsigned propertyName) const
 }
 
 // ECMA 8.6.2.5
-bool JSObject::deleteProperty(ExecState* /*exec*/, const Identifier &propertyName)
+bool JSObject::deleteProperty(ExecState* exec, const Identifier &propertyName)
 {
   unsigned attributes;
   JSValue *v = _prop.get(propertyName, attributes);
@@ -295,7 +331,7 @@ bool JSObject::deleteProperty(ExecState* /*exec*/, const Identifier &propertyNam
   }
 
   // Look in the static hashtable of properties
-  const HashEntry* entry = findPropertyHashEntry(propertyName);
+  const HashEntry* entry = findPropertyHashEntry(exec, propertyName);
   if (entry && entry->attributes & DontDelete)
     return false; // this builtin property can't be deleted
   // FIXME: Should the code here actually do some deletion?
@@ -314,19 +350,16 @@ bool JSObject::deleteProperty(ExecState *exec, unsigned propertyName)
 }
 
 static ALWAYS_INLINE JSValue *tryGetAndCallProperty(ExecState *exec, const JSObject *object, const Identifier &propertyName) {
-  JSValue* v = object->get(exec, propertyName);
+  JSValue *v = object->get(exec, propertyName);
   if (v->isObject()) {
-      JSObject* o = static_cast<JSObject*>(v);
-      CallData data;
-      CallType callType = o->getCallData(data);
-      // spec says "not primitive type" but ...
-      if (callType != CallTypeNone) {
-          JSObject* thisObj = const_cast<JSObject*>(object);
-          JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
-          JSType defType = def->type();
-          ASSERT(defType != GetterSetterType);
-          if (defType != ObjectType)
-              return def;
+    JSObject *o = static_cast<JSObject*>(v);
+    if (o->implementsCall()) { // spec says "not primitive type" but ...
+      JSObject *thisObj = const_cast<JSObject*>(object);
+      JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
+      JSType defType = def->type();
+      ASSERT(defType != GetterSetterType);
+      if (defType != ObjectType)
+        return def;
     }
   }
   return NULL;
@@ -361,10 +394,10 @@ JSValue* JSObject::defaultValue(ExecState* exec, JSType hint) const
   return throwError(exec, TypeError, "No default value");
 }
 
-const HashEntry* JSObject::findPropertyHashEntry(const Identifier& propertyName) const
+const HashEntry* JSObject::findPropertyHashEntry(ExecState* exec, const Identifier& propertyName) const
 {
     for (const ClassInfo* info = classInfo(); info; info = info->parentClass) {
-        if (const HashTable* propHashTable = info->propHashTable) {
+        if (const HashTable* propHashTable = info->propHashTable(exec)) {
             if (const HashEntry* e = propHashTable->entry(propertyName))
                 return e;
         }
@@ -444,6 +477,11 @@ JSValue* JSObject::lookupSetter(ExecState*, const Identifier& propertyName)
     }
 }
 
+bool JSObject::implementsConstruct() const
+{
+  return false;
+}
+
 JSObject* JSObject::construct(ExecState*, const List& /*args*/)
 {
   ASSERT(false);
@@ -455,10 +493,9 @@ JSObject* JSObject::construct(ExecState* exec, const List& args, const Identifie
   return construct(exec, args);
 }
 
-bool JSObject::implementsCall()
+bool JSObject::implementsCall() const
 {
-    CallData callData;
-    return getCallData(callData) != CallTypeNone;
+  return false;
 }
 
 JSValue *JSObject::callAsFunction(ExecState* /*exec*/, JSObject* /*thisObj*/, const List &/*args*/)
@@ -491,23 +528,23 @@ bool JSObject::hasInstance(ExecState* exec, JSValue* value)
     return false;
 }
 
-bool JSObject::propertyIsEnumerable(ExecState*, const Identifier& propertyName) const
+bool JSObject::propertyIsEnumerable(ExecState* exec, const Identifier& propertyName) const
 {
   unsigned attributes;
  
-  if (!getPropertyAttributes(propertyName, attributes))
+  if (!getPropertyAttributes(exec, propertyName, attributes))
     return false;
   else
     return !(attributes & DontEnum);
 }
 
-bool JSObject::getPropertyAttributes(const Identifier& propertyName, unsigned& attributes) const
+bool JSObject::getPropertyAttributes(ExecState* exec, const Identifier& propertyName, unsigned& attributes) const
 {
   if (_prop.get(propertyName, attributes))
     return true;
     
   // Look in the static hashtable of properties
-  const HashEntry* e = findPropertyHashEntry(propertyName);
+  const HashEntry* e = findPropertyHashEntry(exec, propertyName);
   if (e) {
     attributes = e->attributes;
     return true;
@@ -522,7 +559,7 @@ void JSObject::getPropertyNames(ExecState* exec, PropertyNameArray& propertyName
 
     // Add properties from the static hashtables of properties
     for (const ClassInfo* info = classInfo(); info; info = info->parentClass) {
-        const HashTable* table = info->propHashTable;
+        const HashTable* table = info->propHashTable(exec);
         if (!table)
             continue;
         if (!table->table)
@@ -532,7 +569,7 @@ void JSObject::getPropertyNames(ExecState* exec, PropertyNameArray& propertyName
         const HashEntry* e = table->table;
         for (int i = 0; i <= hashSizeMask; ++i, ++e) {
             if (e->key && !(e->attributes & DontEnum))
-                propertyNames.add(Identifier(e->key));
+                propertyNames.add(e->key);
         }
     }
 
@@ -551,23 +588,6 @@ double JSObject::toNumber(ExecState *exec) const
   if (exec->hadException()) // should be picked up soon in nodes.cpp
     return 0.0;
   return prim->toNumber(exec);
-}
-
-double JSObject::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    if (normalExitPC == exceptionExitPC) {
-        resultPC = normalExitPC;
-        return NaN;
-    }
-
-    JSValue *prim = toPrimitive(exec,NumberType);
-    if (exec->hadException()) {
-        exec->setExceptionSource(normalExitPC);
-        resultPC = exceptionExitPC;
-        return NaN;
-    }
-    resultPC = normalExitPC;
-    return prim->toNumber(exec);
 }
 
 UString JSObject::toString(ExecState *exec) const
@@ -591,6 +611,16 @@ JSObject* JSObject::toThisObject(ExecState*) const
 JSGlobalObject* JSObject::toGlobalObject(ExecState*) const
 {
     return 0;
+}
+
+void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
+{
+    _prop.put(propertyName, value, attr);
+}
+
+void JSObject::putDirect(const Identifier &propertyName, int value, int attr)
+{
+    _prop.put(propertyName, jsNumber(value), attr);
 }
 
 void JSObject::removeDirect(const Identifier &propertyName)

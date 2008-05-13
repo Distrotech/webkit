@@ -101,7 +101,7 @@ WebInspector.StylesSidebarPane.prototype = {
                 // Add rules in reverse order to match the cascade order.
                 for (var i = (matchedStyleRules.length - 1); i >= 0; --i) {
                     var rule = matchedStyleRules[i];
-                    styleRules.push({ style: rule.style, selectorText: rule.selectorText });
+                    styleRules.push({ style: rule.style, selectorText: rule.selectorText, parentStyleSheet: rule.parentStyleSheet });
                 }
             }
         }
@@ -250,7 +250,7 @@ WebInspector.StylePropertiesSection = function(styleRule, subtitle, computedStyl
         showInheritedLabel.addEventListener("click", showInheritedToggleFunction, false);
 
         showInheritedLabel.appendChild(showInheritedInput);
-        showInheritedLabel.appendChild(document.createTextNode(WebInspector.UIString("Show inherited properties")));
+        showInheritedLabel.appendChild(document.createTextNode(WebInspector.UIString("Show inherited")));
         this.subtitleElement.appendChild(showInheritedLabel);
     } else {
         if (!subtitle) {

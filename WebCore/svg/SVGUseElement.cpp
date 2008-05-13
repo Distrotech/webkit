@@ -355,7 +355,8 @@ void SVGUseElement::buildPendingResource()
     // Eventually dump shadow tree
 #ifdef DUMP_SHADOW_TREE
     ExceptionCode ec = 0;
-    OwnPtr<XMLSerializer> serializer(new XMLSerializer());
+
+    PassRefPtr<XMLSerializer> serializer = XMLSerializer::create();
 
     String markup = serializer->serializeToString(m_shadowTreeRootElement.get(), ec);
     ASSERT(ec == 0);
@@ -744,7 +745,9 @@ void SVGUseElement::associateInstancesWithShadowTreeElements(Node* target, SVGEl
 #endif
     } else if (originalElement->hasTagName(SVGNames::symbolTag)) {
         // <symbol> gets replaced by <svg>
+#if ENABLE(SVG) && ENABLE(SVG_USE) && ENABLE(SVG_FOREIGN_OBJECT)
         ASSERT(target->nodeName() == SVGNames::svgTag);
+#endif
     } else
         ASSERT(target->nodeName() == originalElement->nodeName());
 

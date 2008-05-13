@@ -104,6 +104,9 @@ public:
     static void setDidExecuteFunction(KJSDidExecuteFunctionPtr func);
     static KJSDidExecuteFunctionPtr didExecuteFunction();
 
+    static void setCurrentGlobalObject(JSGlobalObject*);
+    static JSGlobalObject* currentGlobalObject();
+
     static JSObject* createRuntimeObject(PassRefPtr<Instance>);
     static Instance* getInstance(JSObject*, BindingLanguage);
 
@@ -121,7 +124,7 @@ public:
     virtual bool supportsSetValueOfUndefinedField() { return false; }
     virtual void setValueOfUndefinedField(ExecState*, const Identifier&, JSValue*) {}
 
-    virtual CallType getCallData(CallData&) { return CallTypeNone; }
+    virtual bool implementsCall() const { return false; }
     
     virtual JSValue* invokeMethod(ExecState*, const MethodList&, const List& args) = 0;
     virtual JSValue* invokeDefaultMethod(ExecState*, const List&) { return jsUndefined(); }

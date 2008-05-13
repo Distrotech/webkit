@@ -64,6 +64,9 @@ ResourceLoader::ResourceLoader(Frame* frame, bool sendResourceLoadCallbacks, boo
     , m_shouldContentSniff(shouldContentSniff)
     , m_shouldBufferData(true)
     , m_defersLoading(frame->page()->defersLoading())
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    , m_wasLoadedFromApplicationCache(false)
+#endif
 {
 }
 
@@ -118,6 +121,13 @@ bool ResourceLoader::load(const ResourceRequest& r)
     if (m_documentLoader->scheduleArchiveLoad(this, clientRequest, r.url()))
         return true;
     
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    if (m_documentLoader->scheduleApplicationCacheLoad(this, clientRequest, r.url())) {
+        m_wasLoadedFromApplicationCache = true;
+        return true;
+    }
+#endif
+
     if (m_defersLoading) {
         m_deferredRequest = clientRequest;
         return true;
@@ -215,6 +225,9 @@ void ResourceLoader::didReceiveResponse(const ResourceResponse& r)
 
     m_response = r;
 
+    if (FormData* data = m_request.httpBody())
+        data->removeGeneratedFilesIfNeeded();
+        
     if (m_sendResourceLoadCallbacks)
         frameLoader()->didReceiveResponse(this, m_response);
 }
@@ -283,6 +296,9 @@ void ResourceLoader::didFail(const ResourceError& error)
     // anything including possibly derefing this; one example of this is Radar 3266216.
     RefPtr<ResourceLoader> protector(this);
 
+    if (FormData* data = m_request.httpBody())
+        data->removeGeneratedFilesIfNeeded();
+
     if (m_sendResourceLoadCallbacks && !m_calledDidFinishLoad)
         frameLoader()->didFailToLoad(this, error);
 
@@ -293,6 +309,9 @@ void ResourceLoader::didCancel(const ResourceError& error)
 {
     ASSERT(!m_cancelled);
     ASSERT(!m_reachedTerminalState);
+
+    if (FormData* data = m_request.httpBody())
+        data->removeGeneratedFilesIfNeeded();
 
     // This flag prevents bad behavior when loads that finish cause the
     // load itself to be cancelled (which could happen with a javascript that 

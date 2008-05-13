@@ -85,6 +85,7 @@ namespace WebCore {
     class HTMLInputElement;
     class HTMLMapElement;
     class IntPoint;
+    class JSNode;
     class MouseEventWithHitTestResults;
     class NodeFilter;
     class NodeIterator;
@@ -102,22 +103,26 @@ namespace WebCore {
     class TextResourceDecoder;
     class Tokenizer;
     class TreeWalker;
+
+#if ENABLE(SVG)
+    class SVGDocumentExtensions;
+#endif
+    
 #if ENABLE(XBL)
     class XBLBindingManager;
 #endif
+
 #if ENABLE(XPATH)
     class XPathEvaluator;
     class XPathExpression;
     class XPathNSResolver;
     class XPathResult;
 #endif
-    
-    struct DashboardRegionValue;
-    struct HitTestRequest;
 
-#if ENABLE(SVG)
-    class SVGDocumentExtensions;
+#if ENABLE(DASHBOARD_SUPPORT)
+    struct DashboardRegionValue;
 #endif
+    struct HitTestRequest;
 
     typedef int ExceptionCode;
 
@@ -127,17 +132,28 @@ public:
     ~FormElementKey();
     FormElementKey(const FormElementKey&);
     FormElementKey& operator=(const FormElementKey&);
+
     AtomicStringImpl* name() const { return m_name; }
     AtomicStringImpl* type() const { return m_type; }
+
+    // Hash table deleted values, which are only constructed and never copied or destroyed.
+    FormElementKey(WTF::HashTableDeletedValueType) : m_name(hashTableDeletedValue()) { }
+    bool isHashTableDeletedValue() const { return m_name == hashTableDeletedValue(); }
+
 private:
     void ref() const;
     void deref() const;
+
+    static AtomicStringImpl* const hashTableDeletedValue() { return reinterpret_cast<AtomicStringImpl*>(-1); }
+
     AtomicStringImpl* m_name;
     AtomicStringImpl* m_type;
 };
 
 inline bool operator==(const FormElementKey& a, const FormElementKey& b)
-    { return a.name() == b.name() && a.type() == b.type(); }
+{
+    return a.name() == b.name() && a.type() == b.type();
+}
 
 struct FormElementKeyHash {
     static unsigned hash(const FormElementKey&);
@@ -146,7 +162,8 @@ struct FormElementKeyHash {
 };
 
 struct FormElementKeyHashTraits : WTF::GenericHashTraits<FormElementKey> {
-    static FormElementKey deletedValue();
+    static void constructDeletedValue(FormElementKey* slot) { new (slot) FormElementKey(WTF::HashTableDeletedValue); }
+    static bool isDeletedValue(const FormElementKey& value) { return value.isHashTableDeletedValue(); }
 };
 
 class Document : public ContainerNode {
@@ -345,7 +362,6 @@ public:
     PassRefPtr<EditingText> createEditingTextNode(const String&);
 
     virtual void recalcStyle( StyleChange = NoChange );
-    static DeprecatedPtrList<Document>* changedDocuments;
     virtual void updateRendering();
     void updateLayout();
     void updateLayoutIgnorePendingStylesheets();
@@ -691,7 +707,7 @@ public:
     
     void setHasNodesWithPlaceholderStyle() { m_hasNodesWithPlaceholderStyle = true; }
 
-    String iconURL();
+    const String& iconURL() const { return m_iconURL; }
     void setIconURL(const String& iconURL, const String& type);
 
     bool isAllowedToLoadLocalResources() const { return m_isAllowedToLoadLocalResources; }
@@ -870,12 +886,14 @@ public:
 
     UChar backslashAsCurrencySymbol() const;
 
+#if ENABLE(DASHBOARD_SUPPORT)
     void setDashboardRegionsDirty(bool f) { m_dashboardRegionsDirty = f; }
     bool dashboardRegionsDirty() const { return m_dashboardRegionsDirty; }
     bool hasDashboardRegions () const { return m_hasDashboardRegions; }
     void setHasDashboardRegions (bool f) { m_hasDashboardRegions = f; }
     const Vector<DashboardRegionValue>& dashboardRegions() const;
     void setDashboardRegions(const Vector<DashboardRegionValue>&);
+#endif
 
     void removeAllEventListenersFromAllNodes();
 
@@ -951,9 +969,11 @@ private:
     SVGDocumentExtensions* m_svgExtensions;
 #endif
     
+#if ENABLE(DASHBOARD_SUPPORT)
     Vector<DashboardRegionValue> m_dashboardRegions;
     bool m_hasDashboardRegions;
     bool m_dashboardRegionsDirty;
+#endif
 
     HashMap<String, RefPtr<HTMLCanvasElement> > m_cssCanvasElements;
 
@@ -971,6 +991,12 @@ private:
     bool m_isXHTML;
 
     unsigned m_numNodeListCaches;
+
+public:
+    typedef HashMap<WebCore::Node*, JSNode*> JSWrapperCache;
+    JSWrapperCache& wrapperCache() { return m_wrapperCache; }
+private:
+    JSWrapperCache m_wrapperCache;
 
 #if ENABLE(DATABASE)
     RefPtr<DatabaseThread> m_databaseThread;

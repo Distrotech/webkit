@@ -143,7 +143,7 @@ bool EditorClientWx::shouldInsertNode(Node*, Range*,
     return true;
 }
 
-bool EditorClientWx::shouldInsertText(String, Range*,
+bool EditorClientWx::shouldInsertText(const String&, Range*,
                                        EditorInsertAction)
 {
     notImplemented();
@@ -246,7 +246,7 @@ void EditorClientWx::handleKeyboardEvent(KeyboardEvent* event)
         return;
 
     const PlatformKeyboardEvent* kevent = event->keyEvent();
-    if (!kevent->type() == PlatformKeyboardEvent::KeyUp) {
+    if (kevent->type() != PlatformKeyboardEvent::KeyUp) {
         Node* start = frame->selectionController()->start().node();
         if (!start || !start->isContentEditable())
             return; 

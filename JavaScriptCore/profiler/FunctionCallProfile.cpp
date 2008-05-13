@@ -32,11 +32,14 @@
 #include "Profiler.h"
 #include "DateMath.h"
 
+#include <stdio.h>
+
 namespace KJS {
 
 FunctionCallProfile::FunctionCallProfile(const UString& name)
     : m_functionName(name)
     , m_timeSum(0)
+    , m_numberOfCalls(0)
 {
     m_startTime = getCurrentUTCTime();
 }
@@ -54,12 +57,9 @@ void FunctionCallProfile::willExecute()
 
 void FunctionCallProfile::didExecute(Vector<UString> stackNames, unsigned int stackIndex)
 {
-    if (stackIndex == stackNames.size()) {
+    if (stackIndex && stackIndex == stackNames.size()) {
         ASSERT(stackNames[stackIndex - 1] == m_functionName);
-
-        m_timeSum += getCurrentUTCTime() - m_startTime;
-
-        ASSERT(m_timeSum > 0);
+        endAndRecordCall();
         return;
     }
 
@@ -94,38 +94,78 @@ FunctionCallProfile* FunctionCallProfile::findChild(const UString& name)
     return 0;
 }
 
-// print the profiled data in a format that matches the tool sample's output.
-double FunctionCallProfile::printDataSampleStyle(int indentLevel)
+void FunctionCallProfile::stopProfiling()
 {
-    printf("    ");
+    if (m_startTime)
+        endAndRecordCall();
 
+    StackIterator endOfChildren = m_children.end();
+    for (StackIterator it = m_children.begin(); it != endOfChildren; ++it)
+        (*it)->stopProfiling();
+}
+
+void FunctionCallProfile::printDataInspectorStyle(int indentLevel) const
+{
     // Print function names
     if (indentLevel) {
         for (int i = 0; i < indentLevel; ++i)
             printf("  ");
 
-        // We've previously asserted that m_timeSum will always be >= 1
-        printf("%f %s\n", m_timeSum, m_functionName.UTF8String().c_str());
+        printf("%.3fms %s\n", m_timeSum, m_functionName.UTF8String().c_str());
     } else
         printf("%s\n", m_functionName.UTF8String().c_str());
 
     ++indentLevel;
 
     // Print children's names and information
-    double sumOfChildrensTimes = 0.0;
     for (StackIterator currentChild = m_children.begin(); currentChild != m_children.end(); ++currentChild)
-        sumOfChildrensTimes += (*currentChild)->printDataSampleStyle(indentLevel);
+        (*currentChild)->printDataInspectorStyle(indentLevel);
+}
 
-    // Print remainder of time to match sample's output
-    if (sumOfChildrensTimes < m_timeSum) {
+// print the profiled data in a format that matches the tool sample's output.
+double FunctionCallProfile::printDataSampleStyle(int indentLevel, FunctionCallHashCount& countedFunctions) const
+{
+    printf("    ");
+
+    // Print function names
+    const char* name = m_functionName.UTF8String().c_str();
+    double sampleCount = m_timeSum * 1000;
+    if (indentLevel) {
+        for (int i = 0; i < indentLevel; ++i)
+            printf("  ");
+
+         countedFunctions.add(m_functionName.rep());
+
+        printf("%.0f %s\n", sampleCount ? sampleCount : 1, name);
+    } else
+        printf("%s\n", name);
+
+    ++indentLevel;
+
+    // Print children's names and information
+    double sumOfChildrensCount = 0.0;
+    for (StackIterator currentChild = m_children.begin(); currentChild != m_children.end(); ++currentChild)
+        sumOfChildrensCount += (*currentChild)->printDataSampleStyle(indentLevel, countedFunctions);
+
+    sumOfChildrensCount *= 1000;    //
+    // Print remainder of samples to match sample's output
+    if (sumOfChildrensCount < sampleCount) {
         printf("    ");
         while (indentLevel--)
             printf("  ");
 
-        printf("%f %s\n", m_timeSum - sumOfChildrensTimes, m_functionName.UTF8String().c_str());
+        printf("%.0f %s\n", sampleCount - sumOfChildrensCount, m_functionName.UTF8String().c_str());
     }
 
     return m_timeSum;
+}
+
+void FunctionCallProfile::endAndRecordCall()
+{
+    m_timeSum += getCurrentUTCTime() - m_startTime;
+    m_startTime = 0.0;
+
+    ++m_numberOfCalls;
 }
 
 }   // namespace KJS

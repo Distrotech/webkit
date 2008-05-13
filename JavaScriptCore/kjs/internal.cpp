@@ -73,12 +73,6 @@ double StringImp::toNumber(ExecState *) const
   return val.toDouble();
 }
 
-double StringImp::toNumber(ExecState *, Instruction* normalExitPC, Instruction*, Instruction*& resultPC) const
-{
-    resultPC = normalExitPC;
-    return val.toDouble();
-}
-
 UString StringImp::toString(ExecState *) const
 {
   return val;
@@ -90,11 +84,6 @@ JSObject* StringImp::toObject(ExecState *exec) const
 }
 
 // ------------------------------ NumberImp ------------------------------------
-
-JSType NumberImp::type() const
-{
-    return NumberType;
-}
 
 JSValue* NumberImp::toPrimitive(ExecState*, JSType) const
 {
@@ -116,12 +105,6 @@ bool NumberImp::toBoolean(ExecState *) const
 double NumberImp::toNumber(ExecState *) const
 {
   return val;
-}
-
-double NumberImp::toNumber(ExecState *, Instruction* normalExitPC, Instruction*, Instruction*& resultPC) const
-{
-    resultPC = normalExitPC;
-    return val;
 }
 
 UString NumberImp::toString(ExecState *) const
@@ -197,17 +180,6 @@ double GetterSetterImp::toNumber(ExecState *) const
     return 0.0;
 }
 
-double GetterSetterImp::toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    ASSERT_NOT_REACHED();
-    resultPC = normalExitPC;
-    if (normalExitPC != exceptionExitPC) {
-        exec->setExceptionSource(normalExitPC);
-        resultPC = exceptionExitPC;
-    }
-    return NaN;
-}
-
 UString GetterSetterImp::toString(ExecState *) const
 {
     ASSERT(false);
@@ -248,7 +220,7 @@ bool LabelStack::contains(const Identifier &id) const
 
 // ------------------------------ InternalFunctionImp --------------------------
 
-const ClassInfo InternalFunctionImp::info = { "Function", 0, 0 };
+const ClassInfo InternalFunctionImp::info = { "Function", 0, 0, 0 };
 
 InternalFunctionImp::InternalFunctionImp()
 {
@@ -260,71 +232,14 @@ InternalFunctionImp::InternalFunctionImp(FunctionPrototype* funcProto, const Ide
 {
 }
 
-CallType InternalFunctionImp::getCallData(CallData&)
+bool InternalFunctionImp::implementsCall() const
 {
-    return CallTypeNative;
+  return true;
 }
 
 bool InternalFunctionImp::implementsHasInstance() const
 {
   return true;
 }
-
-// ------------------------------ global functions -----------------------------
-
-#ifndef NDEBUG
-#include <stdio.h>
-void printInfo(ExecState *exec, const char *s, JSValue *o, int lineno)
-{
-  if (!o)
-    fprintf(stderr, "KJS: %s: (null)", s);
-  else {
-    JSValue *v = o;
-
-    UString name;
-    switch (v->type()) {
-    case UnspecifiedType:
-      name = "Unspecified";
-      break;
-    case UndefinedType:
-      name = "Undefined";
-      break;
-    case NullType:
-      name = "Null";
-      break;
-    case BooleanType:
-      name = "Boolean";
-      break;
-    case StringType:
-      name = "String";
-      break;
-    case NumberType:
-      name = "Number";
-      break;
-    case ObjectType:
-      name = static_cast<JSObject *>(v)->className();
-      if (name.isNull())
-        name = "(unknown class)";
-      break;
-    case GetterSetterType:
-      name = "GetterSetter";
-      break;
-    }
-    UString vString = v->toString(exec);
-    if ( vString.size() > 50 )
-      vString = vString.substr( 0, 50 ) + "...";
-    // Can't use two UString::ascii() in the same fprintf call
-    CString tempString( vString.cstring() );
-
-    fprintf(stderr, "KJS: %s: %s : %s (%p)",
-            s, tempString.c_str(), name.ascii(), (void*)v);
-
-    if (lineno >= 0)
-      fprintf(stderr, ", line %d\n",lineno);
-    else
-      fprintf(stderr, "\n");
-  }
-}
-#endif
 
 }

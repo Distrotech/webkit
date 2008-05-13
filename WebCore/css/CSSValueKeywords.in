@@ -155,6 +155,7 @@ window
 windowframe
 windowtext
 -webkit-focus-ring-color
+currentcolor
 #
 # colors in non strict mode
 grey
@@ -491,6 +492,7 @@ push-button
 square-button
 button
 button-bevel
+default-button
 listbox
 listitem
 media-fullscreen-button
@@ -561,6 +563,7 @@ lines
 #
 # CSS_PROP__WEBKIT_TRANSITION_TIMING_FUNCTION
 #
+ease
 linear
 ease-in
 ease-out

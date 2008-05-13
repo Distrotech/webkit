@@ -1162,7 +1162,11 @@ static xmlChar sharedXHTMLEntityResult[5] = {0,0,0,0,0};
 static xmlEntity sharedXHTMLEntity = {
     0, XML_ENTITY_DECL, 0, 0, 0, 0, 0, 0, 0, 
     sharedXHTMLEntityResult, sharedXHTMLEntityResult, 0,
-    XML_INTERNAL_PREDEFINED_ENTITY, 0, 0, 0, 0, 0
+    XML_INTERNAL_PREDEFINED_ENTITY, 0, 0, 0, 0, 0,
+#if LIBXML_VERSION >= 20627
+    // xmlEntity gained an extra member in 2.6.27.
+    1
+#endif
 };
 
 static xmlEntityPtr getXHTMLEntity(const xmlChar* name)
@@ -1586,6 +1590,7 @@ void XMLTokenizer::resumeParsing()
 #ifndef USE_QXMLSTREAM
         && m_pendingCallbacks->isEmpty())
 #else
+        && !m_parserPaused && !m_pendingScript
         )
 #endif
         end();
@@ -1689,7 +1694,7 @@ HashMap<String, String> parseAttributes(const String& string, bool& attrsOK)
     xmlFreeParserCtxt(parser);
 #else
     QXmlStreamReader stream;
-    QString dummy = QString("<?xml version=\"1.0\"?><attrs %1 />").arg(string);
+    QString dummy = QString(QLatin1String("<?xml version=\"1.0\"?><attrs %1 />")).arg(string);
     stream.addData(dummy);
     while (!stream.atEnd()) {
         stream.readNext();
@@ -2093,14 +2098,14 @@ void XMLTokenizer::parseDtd()
 #endif    
 
     //qDebug() << dtd << name << publicId << systemId;
-    if ((publicId == "-//W3C//DTD XHTML 1.0 Transitional//EN")
-        || (publicId == "-//W3C//DTD XHTML 1.1//EN")
-        || (publicId == "-//W3C//DTD XHTML 1.0 Strict//EN")
-        || (publicId == "-//W3C//DTD XHTML 1.0 Frameset//EN")
-        || (publicId == "-//W3C//DTD XHTML Basic 1.0//EN")
-        || (publicId == "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN")
-        || (publicId == "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN")
-        || (publicId == "-//WAPFORUM//DTD XHTML Mobile 1.0//EN")) {
+    if ((publicId == QLatin1String("-//W3C//DTD XHTML 1.0 Transitional//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML 1.1//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML 1.0 Strict//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML 1.0 Frameset//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML Basic 1.0//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN"))
+        || (publicId == QLatin1String("-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN"))
+        || (publicId == QLatin1String("-//WAPFORUM//DTD XHTML Mobile 1.0//EN"))) {
         setIsXHTMLDocument(true); // controls if we replace entities or not.
     }
     if (!m_parsingFragment)

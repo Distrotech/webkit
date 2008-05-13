@@ -124,9 +124,7 @@ all : \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLIsIndexElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLLIElement.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLLabelElement.h \
-    $(PRIVATE_HEADERS_DIR)/DOMHTMLLabelElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLLegendElement.h \
-    $(PRIVATE_HEADERS_DIR)/DOMHTMLLegendElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLLinkElement.h \
     $(PRIVATE_HEADERS_DIR)/DOMHTMLLinkElementPrivate.h \
     $(PUBLIC_HEADERS_DIR)/DOMHTMLMapElement.h \
@@ -210,6 +208,7 @@ all : \
     $(PRIVATE_HEADERS_DIR)/WebDashboardRegion.h \
     $(PUBLIC_HEADERS_DIR)/WebScriptObject.h \
     $(PUBLIC_HEADERS_DIR)/npapi.h \
+    $(PUBLIC_HEADERS_DIR)/npfunctions.h \
     $(PUBLIC_HEADERS_DIR)/npruntime.h \
 #
 

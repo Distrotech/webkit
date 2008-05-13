@@ -41,17 +41,15 @@ public:
     {
         return adoptRef(new ObjcInstance(instance, rootObject));
     }
-
-    static void setGlobalException(NSString*, JSGlobalObject* exceptionEnvironment = 0); // A null exceptionEnvironment means the exception should propogate to any execution environment.
-
+        
     ~ObjcInstance();
     
     virtual Class *getClass() const;
         
     virtual JSValue *valueOf() const;
     virtual JSValue *defaultValue(JSType hint) const;
-    
-    virtual CallType getCallData(CallData&);
+
+    virtual bool implementsCall() const;
     
     virtual JSValue *invokeMethod(ExecState *exec, const MethodList &method, const List &args);
     virtual JSValue *invokeDefaultMethod(ExecState *exec, const List &args);
@@ -74,8 +72,6 @@ protected:
     virtual void virtualEnd();
 
 private:
-    static void moveGlobalExceptionToExecState(ExecState*);
-
     ObjcInstance(ObjectStructPtr instance, PassRefPtr<RootObject>);
     
     RetainPtr<ObjectStructPtr> _instance;

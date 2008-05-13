@@ -29,13 +29,20 @@
 #include "config.h"
 #include "MainResourceLoader.h"
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+#include "ApplicationCache.h"
+#include "ApplicationCacheGroup.h"
+#include "ApplicationCacheResource.h"
+#endif
 #include "DocumentLoader.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "HTMLFormElement.h"
+#include "Page.h"
 #include "ResourceError.h"
 #include "ResourceHandle.h"
+#include "Settings.h"
 
 // FIXME: More that is in common with SubresourceLoader should move up into ResourceLoader.
 
@@ -202,7 +209,9 @@ void MainResourceLoader::continueAfterContentPolicy(PolicyAction contentPolicy, 
 
     case PolicyDownload:
         frameLoader()->client()->download(m_handle.get(), request(), m_handle.get()->request(), r);
-        receivedError(interruptionForPolicyChangeError());
+        // It might have gone missing
+        if (frameLoader())
+            receivedError(interruptionForPolicyChangeError());
         return;
 
     case PolicyIgnore:
@@ -304,8 +313,21 @@ void MainResourceLoader::didFinishLoading()
     // reference to this object.
     RefPtr<MainResourceLoader> protect(this);
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    RefPtr<DocumentLoader> dl = documentLoader();
+#endif
+
     frameLoader()->finishedLoading();
     ResourceLoader::didFinishLoading();
+    
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    ApplicationCacheGroup* group = dl->candidateApplicationCacheGroup();
+    if (!group && dl->applicationCache() && !dl->mainResourceApplicationCache())
+        group = dl->applicationCache()->group();
+    
+    if (group)
+        group->finishedLoadingMainResource(dl.get());
+#endif
 }
 
 void MainResourceLoader::didFail(const ResourceError& error)
@@ -382,11 +404,35 @@ bool MainResourceLoader::loadNow(ResourceRequest& r)
     return false;
 }
 
-bool MainResourceLoader::load(const ResourceRequest& r, const SubstituteData&  substituteData)
+bool MainResourceLoader::load(const ResourceRequest& r, const SubstituteData& substituteData)
 {
     ASSERT(!m_handle);
 
     m_substituteData = substituteData;
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    // Check if this request should be loaded from the application cache
+    if (!m_substituteData.isValid() && frameLoader()->frame()->settings() && frameLoader()->frame()->settings()->offlineWebApplicationCacheEnabled()) {
+        ASSERT(!m_applicationCache);
+
+        if (Page* page = frameLoader()->frame()->page()) {
+            if (frameLoader()->frame() == page->mainFrame())
+                m_applicationCache = ApplicationCacheGroup::cacheForMainRequest(r, m_documentLoader.get());
+            else
+                m_applicationCache = frameLoader()->documentLoader()->topLevelApplicationCache();
+        }
+            
+        if (m_applicationCache) {
+            // Get the resource from the application cache.
+            // FIXME: If the resource does not exist, the load should fail.
+            if (ApplicationCacheResource* resource = m_applicationCache->resourceForRequest(r)) {
+                m_substituteData = SubstituteData(resource->data(), 
+                                                  resource->response().mimeType(),
+                                                  resource->response().textEncodingName(), KURL());
+            }
+        }
+    }
+#endif
 
     ResourceRequest request(r);
     bool defer = defersLoading();

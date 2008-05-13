@@ -221,9 +221,7 @@
 #define ENABLE_MAC_JAVA_BRIDGE 1
 #endif
 
-#if PLATFORM(MAC) && defined(__LP64__)
-#define ENABLE_NETSCAPE_PLUGIN_API 0
-#elif PLATFORM(GTK) || PLATFORM(MAC) || PLATFORM(SYMBIAN) || PLATFORM(WIN)
+#if PLATFORM(MAC) || PLATFORM(GTK) || PLATFORM(MAC) || PLATFORM(SYMBIAN) || PLATFORM(WIN)
 #define ENABLE_NETSCAPE_PLUGIN_API 1
 #endif
 
@@ -236,16 +234,9 @@
 #define WTF_USE_PTHREADS 1
 #endif
 
-#if PLATFORM(QT)
-#define USE_SYSTEM_MALLOC 1
-#endif
-
 #if PLATFORM(MAC) || PLATFORM(WIN)
+#define ENABLE_DASHBOARD_SUPPORT 1
 #define HAVE_ACCESSIBILITY 1
-#endif
-
-#if COMPILER(GCC)
-#define HAVE_COMPUTED_GOTO 1
 #endif
 
 /* ENABLE macro defaults */
@@ -268,6 +259,10 @@
 
 #if !defined(ENABLE_NETSCAPE_PLUGIN_API)
 #define ENABLE_NETSCAPE_PLUGIN_API 0
+#endif
+
+#if !defined(ENABLE_DASHBOARD_SUPPORT)
+#define ENABLE_DASHBOARD_SUPPORT 0
 #endif
 
 #endif /* WTF_Platform_h */

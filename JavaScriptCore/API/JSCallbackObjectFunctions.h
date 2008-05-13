@@ -1,6 +1,6 @@
 // -*- mode: c++; c-basic-offset: 4 -*-
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Eric Seidel <eric@webkit.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -237,13 +237,13 @@ bool JSCallbackObject<Base>::deleteProperty(ExecState* exec, unsigned propertyNa
 }
 
 template <class Base>
-ConstructType JSCallbackObject<Base>::getConstructData(ConstructData&)
+bool JSCallbackObject<Base>::implementsConstruct() const
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsConstructor)
-            return ConstructTypeNative;
+            return true;
     
-    return ConstructTypeNone;
+    return false;
 }
 
 template <class Base>
@@ -263,7 +263,7 @@ JSObject* JSCallbackObject<Base>::construct(ExecState* exec, const List& args)
         }
     }
     
-    ASSERT(0); // getConstructData should prevent us from reaching here
+    ASSERT(0); // implementsConstruct should prevent us from reaching here
     return 0;
 }
 
@@ -293,14 +293,15 @@ bool JSCallbackObject<Base>::hasInstance(ExecState *exec, JSValue *value)
     return 0;
 }
 
+
 template <class Base>
-CallType JSCallbackObject<Base>::getCallData(CallData&)
+bool JSCallbackObject<Base>::implementsCall() const
 {
     for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
         if (jsClass->callAsFunction)
-            return CallTypeNative;
+            return true;
     
-    return CallTypeNone;
+    return false;
 }
 
 template <class Base>
@@ -321,7 +322,7 @@ JSValue* JSCallbackObject<Base>::callAsFunction(ExecState* exec, JSObject* thisO
         }
     }
     
-    ASSERT_NOT_REACHED(); // getCallData should prevent us from reaching here
+    ASSERT_NOT_REACHED(); // implementsCall should prevent us from reaching here
     return 0;
 }
 
@@ -344,7 +345,7 @@ void JSCallbackObject<Base>::getPropertyNames(ExecState* exec, PropertyNameArray
                 UString::Rep* name = it->first.get();
                 StaticValueEntry* entry = it->second;
                 if (entry->getProperty && !(entry->attributes & kJSPropertyAttributeDontEnum))
-                    propertyNames.add(Identifier(name));
+                    propertyNames.add(name);
             }
         }
         
@@ -355,7 +356,7 @@ void JSCallbackObject<Base>::getPropertyNames(ExecState* exec, PropertyNameArray
                 UString::Rep* name = it->first.get();
                 StaticFunctionEntry* entry = it->second;
                 if (!(entry->attributes & kJSPropertyAttributeDontEnum))
-                    propertyNames.add(Identifier(name));
+                    propertyNames.add(name);
             }
         }
     }
@@ -377,34 +378,6 @@ double JSCallbackObject<Base>::toNumber(ExecState* exec) const
         }
             
     return Base::toNumber(exec);
-}
-
-template <class Base>
-double JSCallbackObject<Base>::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    if (normalExitPC == exceptionExitPC) {
-        resultPC = normalExitPC;
-        return NaN;
-    }
-
-    JSContextRef ctx = toRef(exec);
-    JSObjectRef thisRef = toRef(this);
-    
-    for (JSClassRef jsClass = m_class; jsClass; jsClass = jsClass->parentClass)
-        if (JSObjectConvertToTypeCallback convertToType = jsClass->convertToType) {
-            JSLock::DropAllLocks dropAllLocks;
-            if (JSValueRef value = convertToType(ctx, thisRef, kJSTypeNumber, toRef(exec->exceptionSlot()))) {
-                resultPC = normalExitPC;
-                return toJS(value)->getNumber();
-            }
-            if (exec->hadException()) {
-                exec->setExceptionSource(normalExitPC);
-                resultPC = exceptionExitPC;
-                return NaN;
-            }
-        }
-    
-    return Base::toNumber(exec, normalExitPC, exceptionExitPC, resultPC);
 }
 
 template <class Base>

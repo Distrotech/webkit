@@ -35,21 +35,8 @@ namespace KJS {
 
   class Collector {
   public:
-    class Thread;
-    enum HeapType { PrimaryHeap, NumberHeap };
-
-#if PLATFORM(MAC)
-    // We can inline these functions on Mac because everything is compiled as
-    // one file, so the heapAllocate template definitions are available.
-    // FIXME: This should be enabled for all platforms using AllInOneFile.cpp
-    static void* allocate(size_t s) { return heapAllocate<PrimaryHeap>(s); }
-    static void* allocateNumber(size_t s) { return heapAllocate<NumberHeap>(s); }
-#else
     static void* allocate(size_t s);
-
     static void* allocateNumber(size_t s);
-#endif
-
     static bool collect();
     static bool isBusy(); // true if an allocation or collection is in progress
 
@@ -69,6 +56,7 @@ namespace KJS {
     static size_t protectedGlobalObjectCount();
     static HashCountedSet<const char*>* protectedObjectTypeCounts();
 
+    class Thread;
     static void registerThread();
     
     static void registerAsMainThread();
@@ -76,7 +64,7 @@ namespace KJS {
     static bool isCellMarked(const JSCell*);
     static void markCell(JSCell*);
 
-    static void markStackObjectsConservatively(void* start, void* end);
+    enum HeapType { PrimaryHeap, NumberHeap };
 
   private:
     template <Collector::HeapType heapType> static void* heapAllocate(size_t s);
@@ -94,9 +82,11 @@ namespace KJS {
     static void markCurrentThreadConservativelyInternal();
     static void markOtherThreadConservatively(Thread*);
     static void markStackObjectsConservatively();
+    static void markStackObjectsConservatively(void* start, void* end);
 
     static size_t mainThreadOnlyObjectCount;
     static bool memoryFull;
+    static void reportOutOfMemoryToAllExecStates();
   };
 
   // tunable parameters

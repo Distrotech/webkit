@@ -70,15 +70,23 @@ gtk-port: PKGCONFIG += gthread-2.0
 
 # Optional components (look for defs in config.h and included files!)
 !contains(DEFINES, ENABLE_CROSS_DOCUMENT_MESSAGING=.): DEFINES += ENABLE_CROSS_DOCUMENT_MESSAGING=1
+!contains(DEFINES, ENABLE_DASHBOARD_SUPPORT=.): DEFINES += ENABLE_DASHBOARD_SUPPORT=0
 !contains(DEFINES, ENABLE_DATABASE=.): DEFINES += ENABLE_DATABASE=1
 !contains(DEFINES, ENABLE_ICONDATABASE=.): DEFINES += ENABLE_ICONDATABASE=1
 !contains(DEFINES, ENABLE_XPATH=.): DEFINES += ENABLE_XPATH=1
 gtk-port:!contains(DEFINES, ENABLE_XSLT=.): DEFINES += ENABLE_XSLT=1
 #!contains(DEFINES, ENABLE_XBL=.): DEFINES += ENABLE_XBL=1
 qt-port: !contains(DEFINES, ENABLE_SVG=.): DEFINES += ENABLE_SVG=1
+qt-port: !contains(DEFINES, ENABLE_SVG_FOREIGN_OBJECT=.): DEFINES += ENABLE_SVG_FOREIGN_OBJECT=1
+qt-port: !contains(DEFINES, ENABLE_SVG_ANIMATION=.): DEFINES += ENABLE_SVG_ANIMATION=1
+#qt-port: !contains(DEFINES, ENABLE_SVG_AS_IMAGE=.): DEFINES += ENABLE_SVG_AS_IMAGE=1
+qt-port: !contains(DEFINES, ENABLE_SVG_USE=.): DEFINES += ENABLE_SVG_USE=1
 gtk-port:DEFINES += ENABLE_SVG=0
 qt-port:contains(QT_CONFIG, phonon):DEFINES += ENABLE_VIDEO=1
 else:DEFINES += ENABLE_VIDEO=0
+qt-port:unix:!mac: DEFINES += XP_UNIX ENABLE_NETSCAPE_PLUGIN_API=1
+gtk-port:x11:plugins: DEFINES += XP_UNIX ENABLE_NETSCAPE_PLUGIN_API=1
+qt-port: DEFINES += WTF_USE_JAVASCRIPTCORE_BINDINGS=1
 
 DEFINES += WTF_CHANGES=1
 
@@ -120,31 +128,29 @@ include($$PWD/../JavaScriptCore/JavaScriptCore.pri)
 #LIBS += -L$$OUTPUT_DIR/lib -lJavaScriptCore
 
 qt-port {
-RESOURCES += $$PWD/../WebCore/page/inspector/WebKit.qrc
-INCLUDEPATH += \
-                $$PWD/platform/qt \
-                $$PWD/platform/network/qt \
-                $$PWD/platform/graphics/qt \
-                $$PWD/svg/graphics/qt \
-                $$PWD/loader/qt \
-                $$PWD/page/qt \
-                $$PWD/../WebKit/qt/WebCoreSupport \
-                $$PWD/../WebKit/qt/Api \
-                $$PWD/bridge/qt
+    RESOURCES += \
+        $$PWD/../WebCore/page/inspector/WebKit.qrc \
+        $$PWD/../WebCore/Resources/WebKitResources.qrc
+    INCLUDEPATH += \
+        $$PWD/platform/qt \
+        $$PWD/platform/network/qt \
+        $$PWD/platform/graphics/qt \
+        $$PWD/svg/graphics/qt \
+        $$PWD/loader/qt \
+        $$PWD/page/qt \
+        $$PWD/../WebKit/qt/WebCoreSupport \
+        $$PWD/../WebKit/qt/Api \
+        $$PWD/bridge/qt
 
-DEPENDPATH += editing/qt history/qt loader/qt page/qt \
-    platform/graphics/qt ../WebKit/qt/Api ../WebKit/qt/WebCoreSupport
+    DEPENDPATH += editing/qt history/qt loader/qt page/qt \
+        platform/graphics/qt ../WebKit/qt/Api ../WebKit/qt/WebCoreSupport
 
-    DEFINES += WTF_USE_JAVASCRIPTCORE_BINDINGS=1
 }
 
 gtk-port {
     hildon {
         DEFINES += MAEMO_CHANGES
         PKGCONFIG += hildon-1
-    }
-    x11:plugins {
-        DEFINES += XP_UNIX
     }
 
     INCLUDEPATH += \
@@ -186,10 +192,14 @@ gtk-port {
     ../WebKit/gtk/webkit
 }
 
+# Make sure storage/ appears before JavaScriptCore/kjs. Both provide LocalStorage.h
+# but the header from the former include path is included across directories while
+# kjs/LocalStorage.h is included only from files within the same directory
+INCLUDEPATH = $$PWD/storage $$INCLUDEPATH
+
 INCLUDEPATH +=  $$PWD \
                 $$PWD/ForwardingHeaders \
                 $$PWD/.. \
-                $$PWD/../JavaScriptCore/VM \
                 $$PWD/../JavaScriptCore/kjs \
                 $$PWD/../JavaScriptCore/bindings \
                 $$PWD/../JavaScriptCore/wtf \
@@ -201,8 +211,8 @@ INCLUDEPATH +=  $$PWD \
                 $$PWD/svg/graphics/filters \
                 $$PWD/platform/sql \
                 $$PWD/platform/text \
-                $$PWD/storage \
                 $$PWD/loader \
+                $$PWD/loader/appcache \
                 $$PWD/loader/archive \
                 $$PWD/loader/icon \
                 $$PWD/css \
@@ -247,6 +257,8 @@ WALDOCSSPROPS = $$PWD/css/CSSPropertyNames.in
 
 WALDOCSSVALUES = $$PWD/css/CSSValueKeywords.in
 
+DASHBOARDSUPPORTCSSPROPERTIES = $$PWD/css/DashboardSupportCSSPropertyNames.in
+
 SVGCSSPROPERTIES = $$PWD/css/SVGCSSPropertyNames.in
 
 SVGCSSVALUES = $$PWD/css/SVGCSSValueKeywords.in
@@ -256,8 +268,7 @@ STYLESHEETS_EMBED = $$PWD/css/html4.css
 LUT_FILES += \
     bindings/js/JSDOMWindowBase.cpp \
     bindings/js/JSEventTargetBase.cpp \
-    bindings/js/JSRGBColor.cpp \
-    bindings/js/JSXSLTProcessor.cpp
+    bindings/js/JSRGBColor.cpp
 
 LUT_TABLE_FILES += \
     bindings/js/JSHTMLInputElementBase.cpp
@@ -397,7 +408,9 @@ IDL_BINDINGS += \
     xml/DOMParser.idl \
     xml/XMLHttpRequest.idl \
     xml/XMLHttpRequestException.idl \
-    xml/XMLSerializer.idl
+    xml/XMLHttpRequestProgressEvent.idl \
+    xml/XMLSerializer.idl \
+    xml/XSLTProcessor.idl
 
 
 SOURCES += \
@@ -415,7 +428,7 @@ SOURCES += \
     bindings/js/JSDocumentCustom.cpp \
     bindings/js/JSDOMWindowBase.cpp \
     bindings/js/JSDOMWindowCustom.cpp \
-    bindings/js/JSDOMWindowWrapper.cpp \
+    bindings/js/JSDOMWindowShell.cpp \
     bindings/js/JSElementCustom.cpp \
     bindings/js/JSEventCustom.cpp \
     bindings/js/JSEventTargetBase.cpp \
@@ -455,7 +468,8 @@ SOURCES += \
     bindings/js/JSTreeWalkerCustom.cpp \
     bindings/js/JSXMLHttpRequestConstructor.cpp \
     bindings/js/JSXMLHttpRequestCustom.cpp \
-    bindings/js/JSXSLTProcessor.cpp \
+    bindings/js/JSXSLTProcessorConstructor.cpp \
+    bindings/js/JSXSLTProcessorCustom.cpp \
     bindings/js/JSPluginCustom.cpp \
     bindings/js/JSPluginArrayCustom.cpp \
     bindings/js/JSMimeTypeArrayCustom.cpp \
@@ -499,6 +513,7 @@ SOURCES += \
     css/CSSParser.cpp \
     css/CSSPrimitiveValue.cpp \
     css/CSSProperty.cpp \
+    css/CSSReflectValue.cpp \
     css/CSSRule.cpp \
     css/CSSRuleList.cpp \
     css/CSSSelector.cpp \
@@ -752,6 +767,9 @@ SOURCES += \
     loader/TextDocument.cpp \
     loader/TextResourceDecoder.cpp \
     page/AccessibilityObject.cpp \    
+    page/AccessibilityListBox.cpp \    
+    page/AccessibilityListBoxOption.cpp \    
+    page/AccessibilityRenderObject.cpp \    
     page/AnimationController.cpp \    
     page/AXObjectCache.cpp \
     page/BarInfo.cpp \
@@ -774,6 +792,7 @@ SOURCES += \
     page/MouseEventWithHitTestResults.cpp \
     page/Page.cpp \
     page/PageGroup.cpp \
+    page/PrintContext.cpp \
     page/Screen.cpp \
     page/Settings.cpp \
     page/WindowFeatures.cpp \
@@ -890,6 +909,7 @@ SOURCES += \
     rendering/RenderPart.cpp \
     rendering/RenderPartObject.cpp \
     rendering/RenderReplaced.cpp \
+    rendering/RenderReplica.cpp \
     rendering/RenderSlider.cpp \
     rendering/RenderStyle.cpp \
     rendering/RenderTableCell.cpp \
@@ -907,9 +927,13 @@ SOURCES += \
     rendering/RenderWordBreak.cpp \
     rendering/RootInlineBox.cpp \
     rendering/SVGRenderTreeAsText.cpp \
+    xml/AccessControlList.cpp \
+    xml/AccessItem.cpp \
+    xml/AccessItemRule.cpp \
     xml/DOMParser.cpp \
     xml/NativeXPathNSResolver.cpp \
     xml/XMLHttpRequest.cpp \
+    xml/XMLHttpRequestProgressEvent.cpp \
     xml/XMLSerializer.cpp \
     xml/XPathEvaluator.cpp \
     xml/XPathExpression.cpp \
@@ -945,6 +969,7 @@ gtk-port {
 qt-port {
 
     HEADERS += \
+    $$PWD/platform/graphics/qt/StillImageQt.h \
     $$PWD/platform/qt/QWebPopup.h \
     $$PWD/platform/qt/MenuEventProxy.h \
     $$PWD/platform/qt/SharedTimerQt.h \
@@ -978,6 +1003,7 @@ qt-port {
     platform/graphics/qt/IntRectQt.cpp \
     platform/graphics/qt/IntSizeQt.cpp \
     platform/graphics/qt/PathQt.cpp \
+    platform/graphics/qt/StillImageQt.cpp \
     platform/network/qt/ResourceHandleQt.cpp \
     platform/network/qt/ResourceRequestQt.cpp \
     platform/network/qt/QNetworkReplyHandler.cpp \
@@ -1011,6 +1037,7 @@ qt-port {
     platform/qt/SearchPopupMenuQt.cpp \
     platform/qt/SharedTimerQt.cpp \
     platform/qt/SoundQt.cpp \
+    platform/qt/LoggingQt.cpp \
     platform/text/qt/StringQt.cpp \
     platform/qt/TemporaryLinkStubs.cpp \
     platform/text/qt/TextBoundaries.cpp \
@@ -1034,8 +1061,8 @@ qt-port {
     ../WebKit/qt/Api/qwebhistoryinterface.cpp \
     ../WebKit/qt/Api/qwebpluginfactory.cpp
 
-    unix: SOURCES += platform/qt/SystemTimeQt.cpp
-    else: SOURCES += platform/win/SystemTimeWin.cpp
+    win32-*: SOURCES += platform/win/SystemTimeWin.cpp
+    else: SOURCES += platform/qt/SystemTimeQt.cpp
 
     # Files belonging to the Qt 4.3 build
     lessThan(QT_MINOR_VERSION, 4) {
@@ -1153,6 +1180,22 @@ gtk-port {
         ../WebKit/gtk/WebCoreSupport/PasteboardHelperGtk.cpp
 }
 
+
+contains(DEFINES, ENABLE_NETSCAPE_PLUGIN_API=1) {
+    qt-port {
+        unix:!mac {
+            SOURCES += \
+                plugins/qt/PluginPackageQt.cpp \
+                plugins/qt/PluginDatabaseQt.cpp \
+                plugins/qt/PluginViewQt.cpp
+        }
+    }
+
+    gtk-port {
+        INCLUDEPATH += ../WebCore/plugins/gtk
+    }
+}
+
 contains(DEFINES, ENABLE_CROSS_DOCUMENT_MESSAGING=1) {
     FEATURE_DEFINES_JAVASCRIPT += ENABLE_CROSS_DOCUMENT_MESSAGING=1
 
@@ -1161,6 +1204,10 @@ contains(DEFINES, ENABLE_CROSS_DOCUMENT_MESSAGING=1) {
 
     IDL_BINDINGS += \
         dom/MessageEvent.idl
+}
+
+contains(DEFINES, ENABLE_DASHBOARD_SUPPORT=0) {
+    DASHBOARDSUPPORTCSSPROPERTIES -= $$PWD/css/DashboardSupportCSSPropertyNames.in
 }
 
 contains(DEFINES, ENABLE_DATABASE=1) {
@@ -1193,8 +1240,14 @@ contains(DEFINES, ENABLE_DATABASE=1) {
         storage/DatabaseTask.cpp \
         storage/DatabaseThread.cpp \
         storage/DatabaseTracker.cpp \
+        storage/LocalStorage.cpp \
+        storage/LocalStorageArea.cpp \
+        storage/LocalStorageTask.cpp \
+        storage/LocalStorageThread.cpp \
         storage/OriginQuotaManager.cpp \
         storage/OriginUsageRecord.cpp \
+        storage/StorageArea.cpp \
+        storage/StorageMap.cpp \
         storage/SQLResultSet.cpp \
         storage/SQLResultSetRowList.cpp \
         storage/SQLStatement.cpp \
@@ -1277,7 +1330,16 @@ contains(DEFINES, ENABLE_VIDEO=1) {
         SOURCES += \
             platform/graphics/qt/MediaPlayerPrivatePhonon.cpp
 
-        QT += phonon
+        # Add phonon manually to prevent it from coming first in
+        # the include paths, as Phonon's path.h conflicts with
+        # WebCore's Path.h on case-insensitive filesystems.
+        qtAddLibrary(phonon)
+        INCLUDEPATH -= $$QMAKE_INCDIR_QT/phonon
+        INCLUDEPATH += $$QMAKE_INCDIR_QT/phonon
+        mac {
+            INCLUDEPATH -= $$QMAKE_LIBDIR_QT/phonon.framework/Headers
+            INCLUDEPATH += $$QMAKE_LIBDIR_QT/phonon.framework/Headers
+        }
     }
 
     gtk-port {
@@ -1699,7 +1761,7 @@ gtk-port:SOURCES += \
 
         # GENERATOR 5-C:
         svgnames_a.output = $$GENERATED_SOURCES_DIR/SVGNames.cpp
-        svgnames_a.commands = perl $$PWD/dom/make_names.pl --tags $$PWD/svg/svgtags.in --attrs $$PWD/svg/svgattrs.in --namespace SVG --cppNamespace WebCore --namespaceURI 'http://www.w3.org/2000/svg' --factory --attrsNullNamespace --preprocessor \"$${QMAKE_MOC} -E\" --output $$GENERATED_SOURCES_DIR
+        svgnames_a.commands = perl $$PWD/dom/make_names.pl --tags $$PWD/svg/svgtags.in --attrs $$PWD/svg/svgattrs.in --extraDefines \"$${DEFINES}\" --namespace SVG --guardFactoryWith \"ENABLE(SVG)\" --cppNamespace WebCore --namespaceURI 'http://www.w3.org/2000/svg' --factory --attrsNullNamespace --preprocessor \"$${QMAKE_MOC} -E\" --output $$GENERATED_SOURCES_DIR
         svgnames_a.input = SVG_NAMES
         svgnames_a.dependency_type = TYPE_C
         svgnames_a.CONFIG = target_predeps
@@ -1728,9 +1790,9 @@ gtk-port:SOURCES += \
     # GENERATOR 6-A:
     cssprops.output = $$GENERATED_SOURCES_DIR/${QMAKE_FILE_BASE}.c
     cssprops.input = WALDOCSSPROPS
-    cssprops.commands = perl -ne \"print lc\" ${QMAKE_FILE_NAME} $$SVGCSSPROPERTIES > $$GENERATED_SOURCES_DIR/${QMAKE_FILE_BASE}.in && cd $$GENERATED_SOURCES_DIR && perl $$PWD/css/makeprop.pl && $(DEL_FILE) ${QMAKE_FILE_BASE}.strip ${QMAKE_FILE_BASE}.in ${QMAKE_FILE_BASE}.gperf
+    cssprops.commands = perl -ne \"print lc\" ${QMAKE_FILE_NAME} $$DASHBOARDSUPPORTCSSPROPERTIES $$SVGCSSPROPERTIES > $$GENERATED_SOURCES_DIR/${QMAKE_FILE_BASE}.in && cd $$GENERATED_SOURCES_DIR && perl $$PWD/css/makeprop.pl && $(DEL_FILE) ${QMAKE_FILE_BASE}.strip ${QMAKE_FILE_BASE}.in ${QMAKE_FILE_BASE}.gperf
     cssprops.CONFIG = target_predeps no_link
-    cssprops.depend = ${QMAKE_FILE_NAME} SVGCSSPROPERTIES
+    cssprops.depend = ${QMAKE_FILE_NAME} DASHBOARDSUPPORTCSSPROPERTIES SVGCSSPROPERTIES
     cssprops.clean = ${QMAKE_FILE_OUT} ${QMAKE_VAR_GENERATED_SOURCES_DIR_SLASH}${QMAKE_FILE_BASE}.h
     addExtraCompiler(cssprops)
 
@@ -1746,8 +1808,9 @@ gtk-port:SOURCES += \
     # GENERATOR 6-A:
     cssprops.output = $$GENERATED_SOURCES_DIR/${QMAKE_FILE_BASE}.c
     cssprops.input = WALDOCSSPROPS
-    cssprops.commands = $(COPY_FILE) ${QMAKE_FILE_NAME} $$GENERATED_SOURCES_DIR && cd $$GENERATED_SOURCES_DIR && perl $$PWD/css/makeprop.pl && $(DEL_FILE) ${QMAKE_FILE_BASE}.strip ${QMAKE_FILE_BASE}.in ${QMAKE_FILE_BASE}.gperf
+    cssprops.commands = perl -ne \"print lc\" ${QMAKE_FILE_NAME} $$DASHBOARDSUPPORTCSSPROPERTIES > $$GENERATED_SOURCES_DIR/${QMAKE_FILE_BASE}.in && cd $$GENERATED_SOURCES_DIR && perl $$PWD/css/makeprop.pl && $(DEL_FILE) ${QMAKE_FILE_BASE}.strip ${QMAKE_FILE_BASE}.in ${QMAKE_FILE_BASE}.gperf
     cssprops.CONFIG = target_predeps no_link
+    cssprops.depend = ${QMAKE_FILE_NAME} DASHBOARDSUPPORTCSSPROPERTIES
     cssprops.clean = ${QMAKE_FILE_OUT} ${QMAKE_VAR_GENERATED_SOURCES_DIR_SLASH}${QMAKE_FILE_BASE}.h
     addExtraCompiler(cssprops)
 
@@ -1955,3 +2018,5 @@ gtk-port {
     glib-genmarshalh.name = GENMARSHALS
     QMAKE_EXTRA_UNIX_COMPILERS += glib-genmarshalh
 }
+
+linux-icc*:QMAKE_CXXFLAGS_RELEASE ~= s/-O2/-O0/

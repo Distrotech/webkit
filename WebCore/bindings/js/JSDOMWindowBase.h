@@ -21,7 +21,6 @@
 #define JSDOMWindowBase_h
 
 #include "PlatformString.h"
-#include "SecurityOrigin.h"
 #include "kjs_binding.h"
 #include <kjs/protect.h>
 #include <wtf/HashMap.h>
@@ -34,12 +33,13 @@ namespace WebCore {
     class DOMWindowTimer;
     class Frame;
     class JSDOMWindow;
-    class JSDOMWindowWrapper;
+    class JSDOMWindowShell;
     class JSEventListener;
     class JSLocation;
     class JSUnprotectedEventListener;
     class PausedTimeouts;
     class ScheduledAction;
+    class SecurityOrigin;
 
     class JSDOMWindowBasePrivate;
 
@@ -49,7 +49,7 @@ namespace WebCore {
 
         friend class ScheduledAction;
     protected:
-        JSDOMWindowBase(KJS::JSObject* prototype, DOMWindow*, JSDOMWindowWrapper*);
+        JSDOMWindowBase(KJS::JSObject* prototype, DOMWindow*, JSDOMWindowShell*);
 
     public:
         virtual ~JSDOMWindowBase();
@@ -115,12 +115,11 @@ namespace WebCore {
         virtual bool allowsAccessFrom(const KJS::JSGlobalObject*) const;
 
         virtual KJS::JSObject* toThisObject(KJS::ExecState*) const;
-        JSDOMWindowWrapper* wrapper() const;
+        JSDOMWindowShell* shell() const;
 
         enum {
             // Attributes
-            Crypto, Event_, Location_, Navigator_,
-            ClientInformation,
+            Crypto, Event_,
 
             // Event Listeners
             Onabort, Onblur, Onchange, Onclick,
@@ -132,8 +131,8 @@ namespace WebCore {
             Onbeforeunload,
 
             // Constructors
-            DOMException, Audio, Image, Option, XMLHttpRequest,
-            XSLTProcessor_
+            Audio, Image, Option, XMLHttpRequest,
+            XSLTProcessor
         };
 
     private:
@@ -148,9 +147,8 @@ namespace WebCore {
         void clearAllTimeouts();
         int installTimeout(ScheduledAction*, int interval, bool singleShot);
 
-        bool allowsAccessFromPrivate(const KJS::JSGlobalObject*, SecurityOrigin::Reason&) const;
-        bool allowsAccessFromPrivate(const KJS::ExecState*, SecurityOrigin::Reason&) const;
-        String crossDomainAccessErrorMessage(const KJS::JSGlobalObject*, SecurityOrigin::Reason) const;
+        bool allowsAccessFromPrivate(const KJS::JSGlobalObject*) const;
+        String crossDomainAccessErrorMessage(const KJS::JSGlobalObject*) const;
 
         RefPtr<DOMWindow> m_impl;
         OwnPtr<JSDOMWindowBasePrivate> d;
@@ -173,7 +171,9 @@ namespace WebCore {
 
     // Returns JSDOMWindow or 0
     JSDOMWindow* toJSDOMWindow(Frame*);
-    JSDOMWindow* toJSDOMWindow(KJS::JSGlobalObject*);
+
+    JSDOMWindow* asJSDOMWindow(KJS::JSGlobalObject*);
+    const JSDOMWindow* asJSDOMWindow(const KJS::JSGlobalObject*);
 
 } // namespace WebCore
 

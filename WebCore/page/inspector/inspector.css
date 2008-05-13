@@ -62,13 +62,15 @@ img {
     height: 56px;
     display: -webkit-box;
     padding: 0 5px;
-    background-color: rgb(171, 171, 171);
-    background-image: url(Images/toolbarBackground.png);
-    background-repeat: repeat-x;
-    background-position: top;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(191, 191, 191)), to(rgb(151, 151, 151)));
     border-bottom: 1px solid rgb(80, 80, 80);
-    -webkit-background-size: auto 135%;
     -webkit-box-orient: horizontal;
+    -webkit-background-origin: padding;
+    -webkit-background-clip: padding;
+}
+
+body.inactive #toolbar {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(233, 233, 233)), to(rgb(207, 207, 207)));
 }
 
 body.detached.platform-mac-leopard #toolbar {
@@ -128,6 +130,10 @@ body.detached.platform-mac-leopard #toolbar {
 
 .toolbar-item.databases .toolbar-icon {
     content: url(Images/databasesIcon.png);
+}
+
+.toolbar-item.profiles .toolbar-icon {
+    content: url(Images/profilesIcon.png);
 }
 
 #searchResults {
@@ -251,6 +257,7 @@ body.console-visible #main-panels {
     height: 24px;
     padding: 0;
     margin-left: -1px;
+    margin-right: 0;
     vertical-align: top;
     border: 0 transparent none;
     background-color: transparent;
@@ -270,6 +277,10 @@ button.status-bar-item {
 
 button.status-bar-item:active {
     background-position: 32px 0;
+}
+
+button.status-bar-item:disabled {
+    background-position: 0 0 !important;
 }
 
 select.status-bar-item {
@@ -399,6 +410,10 @@ body.console-visible #console {
     height: 10px;
     margin-top: -5px;
     -webkit-user-select: none;
+}
+
+.console-message-text {
+    white-space: pre-wrap;
 }
 
 .console-error-level .console-message-text {
@@ -808,37 +823,35 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
 }
 
 .section {
-    display: block;
-    -webkit-box-shadow: rgba(0, 0, 0, .5) 2px 2px 5px;
-    -webkit-border-radius: 8px;
-    background-color: white;
-    font-size: 11px;
-    margin-bottom: 8px;
+    position: relative;
+    margin-top: 1px;
 }
 
 .section .header {
-    padding: 2px 8px 4px;
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    background-color: rgb(214, 221, 229);
-    background-image: url(Images/gradient.png);
-    background-repeat: repeat-x;
-    background-position: bottom;
-    -webkit-background-size: auto 100%;
-    -webkit-border-radius: 8px;
-    text-shadow: rgba(255, 255, 255, 0.75) 0 1px 0;
+    padding: 3px 8px 4px 16px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(160, 172, 205)), to(rgb(132, 146, 190)));
+    min-height: 18px;
+    white-space: nowrap;
 }
 
-.section.expanded .header {
-    border-bottom: 2px ridge rgba(214, 221, 229, 0.5);
-    -webkit-border-top-right-radius: 8px;
-    -webkit-border-top-left-radius: 8px;
-    -webkit-border-bottom-right-radius: 0;
-    -webkit-border-bottom-left-radius: 0;
+.section .header::before {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    width: 8px;
+    height: 8px;
+    content: url(Images/treeRightTriangleWhite.png);
+}
+
+.section.expanded .header::before {
+    content: url(Images/treeDownTriangleWhite.png);
 }
 
 .section .header .title {
+    color: white;
     font-weight: bold;
     word-wrap: break-word;
+    white-space: normal;
 }
 
 .section .header label {
@@ -850,18 +863,22 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
 }
 
 .section .header input[type=checkbox] {
-    height: 1em;
-    width: 1em;
+    height: 10px;
+    width: 10px;
     margin-left: 0;
     margin-top: 0;
     margin-bottom: 0;
-    vertical-align: top;
+    vertical-align: 2px;
 }
 
 .section .header .subtitle {
-    margin-top: 2px;
+    float: right;
     font-size: 10px;
-    word-wrap: break-word;
+    margin-left: 5px;
+    max-width: 55%;
+    color: rgba(255, 255, 255, 0.7);
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .section .header .subtitle a {
@@ -873,6 +890,7 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
     margin: 0;
     padding: 2px 6px 5px;
     list-style: none;
+    background-color: white;
 }
 
 .section.expanded .properties {
@@ -986,10 +1004,11 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
 
 .swatch {
     display: inline-block;
-    vertical-align: middle;
+    vertical-align: baseline;
     margin-left: 4px;
-    width: 0.75em;
-    height: 0.75em;
+    margin-bottom: -1px;
+    width: 1em;
+    height: 1em;
     border: 1px solid rgb(180, 180, 180);
 }
 
@@ -998,21 +1017,20 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
 }
 
 .pane > .title {
-    background-image: url(Images/paneHeader.png);
-    background-repeat: repeat-x;
-    background-position: bottom;
-    -webkit-background-size: auto 100%;
-    height: 14px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(221, 226, 239)), color-stop(0.5, rgb(220, 225, 238)), color-stop(0.5, rgb(194, 203, 219)), to(rgb(217, 222, 234)));
+    height: 16px;
     padding: 0 6px;
     border-top: 1px solid rgb(129, 129, 129);
     border-bottom: 1px solid rgb(129, 129, 129);
     font-weight: bold;
     font-size: 11px;
     color: rgb(85, 85, 85);
+    -webkit-background-origin: padding;
+    -webkit-background-clip: padding;
 }
 
 .pane > .title:active {
-    background-image: url(Images/paneHeaderActive.png);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(186, 191, 202)), color-stop(0.5, rgb(185, 190, 201)), color-stop(0.5, rgb(163, 171, 185)), to(rgb(183, 187, 197)));
 }
 
 .pane > .title::before {
@@ -1032,9 +1050,9 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
 
 .pane > .body {
     position: relative;
-    padding: 8px;
     display: none;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .pane.expanded > .body, .pane.expanded > .growbar {
@@ -1046,11 +1064,11 @@ body:not(.inactive) .focused .outline-disclosure li.selected * {
     background-image: url(Images/paneGrowHandleLine.png), url(Images/paneBottomGrow.png);
     background-repeat: no-repeat, repeat-x;
     background-position: center center, bottom;
-    -webkit-background-size: auto 100%, auto 100%;
     height: 5px;
 }
 
 .metrics {
+    padding: 8px;
     font-size: 10px;
     text-align: center;
     white-space: nowrap;
@@ -1174,7 +1192,7 @@ body.inactive .sidebar {
     overflow-x: hidden;
 }
 
-.database-view.table .database-result-table {
+.database-view.table .data-grid {
     border: none;
     height: 100%;
 }
@@ -1201,19 +1219,22 @@ body.inactive .sidebar {
     color: rgb(66%, 33%, 33%);
 }
 
-.database-result-table .database-result-filler-row {
+.data-grid .database-result-filler-row {
     height: auto;
 }
 
-.database-result-table .database-result-filler-row.alternate td {
+.data-grid .database-result-filler-row.alternate td {
     background-position-y: 16px;
 }
 
 .database-result-filler-row td {
-    background-image: url(Images/alternateTableRows.png);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(white), color-stop(0.5, white), color-stop(0.5, rgb(234, 243, 255)), to(rgb(234, 243, 255)));
+    -webkit-background-size: auto 32px;
+    -webkit-background-origin: padding;
+    -webkit-background-clip: padding;
 }
 
-.database-result-table {
+.data-grid {
     border: 1px solid #aaa;
     table-layout: fixed;
     border-spacing: 0;
@@ -1221,7 +1242,7 @@ body.inactive .sidebar {
     width: 100%;
 }
 
-.database-result-table th {
+.data-grid th {
     text-align: left;
     background: url(Images/glossyHeader.png) repeat-x;
     border-right: 1px solid #aaa;
@@ -1233,15 +1254,15 @@ body.inactive .sidebar {
     white-space: nowrap;
 }
 
-.database-result-table tr {
+.data-grid tr {
     height: 16px;
 }
 
-.database-result-table tr.alternate {
+.data-grid tr.alternate {
     background-color: rgb(236, 243, 254);
 }
 
-.database-result-table td {
+.data-grid td {
     vertical-align: top;
     padding: 2px 4px;
     white-space: nowrap;
@@ -1249,10 +1270,46 @@ body.inactive .sidebar {
     -webkit-user-select: text;
 }
 
-.database-result-table td > div, .database-result-table th > div {
+.data-grid td > div, .data-grid th > div {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+.data-grid th.narrow {
+    width: 75px;
+}
+
+.data-grid th.selected {
+    border-top: 1px solid rgb(156, 168, 207);
+    border-bottom: 1px solid rgb(107, 139, 195);
+    border-left: url(Images/glossySelected.png);
+    border-right: url(Images/glossySelected.png);
+    background: url(Images/glossySelected.png) repeat-x;
+}
+
+.data-grid th.sort-ascending::before {
+    float: right;
+    display: inline-block;
+    margin-bottom: 2px;
+    margin-right: 3px;
+    width: 8px;
+    height: 8px;
+    content: url(Images/treeUpTriangleBlack.png);
+}
+
+.data-grid th.sort-descending::before {
+    float: right;
+    display: inline-block;
+    margin-top: 2px;
+    margin-right: 3px;
+    width: 8px;
+    height: 8px;
+    content: url(Images/treeDownTriangleBlack.png);
+}
+
+body.inactive .data-grid th.sort-ascending, body.inactive .data-grid th.sort-descending {
+    background: url(Images/glossyHeader.png) repeat-x;
 }
 
 .database-view.query {
@@ -1323,6 +1380,118 @@ body.inactive .sidebar {
     background-image: url(Images/errorIcon.png);
 }
 
+#scripts-debugging-status-bar-item {
+    background-image: url(Images/debuggingButtons.png);
+}
+
+#scripts-debugging-status-bar-item:active {
+    background-position: 32px 0;
+}
+
+#scripts-debugging-status-bar-item.toggled-on {
+    background-position: 0 24px;
+}
+
+#scripts-debugging-status-bar-item.toggled-on:active {
+    background-position: 32px 24px;
+}
+
+#scripts-status-bar {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 24px;
+}
+
+#scripts-status-bar .status-bar-item img {
+    margin-top: 2px;
+}
+
+#scripts-status-bar .status-bar-item:disabled img {
+    opacity: 0.5;
+}
+
+#scripts-back img {
+    content: url(Images/back.png);
+}
+
+#scripts-forward img {
+    content: url(Images/forward.png);
+}
+
+#scripts-pause img {
+    content: url(Images/debuggerPause.png);
+}
+
+#scripts-step-over img {
+    content: url(Images/debuggerStepOver.png);
+}
+
+#scripts-step-into img {
+    content: url(Images/debuggerStepInto.png);
+}
+
+#scripts-step-out img {
+    content: url(Images/debuggerStepOut.png);
+}
+
+#scripts-debugger-status {
+    position: absolute;
+    line-height: 24px;
+    top: 0;
+    right: 8px;
+}
+
+#scripts-debugger-status:empty {
+    display: none;
+}
+
+#scripts-sidebar-resizer-widget {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 225px;
+    width: 16px;
+    cursor: col-resize;
+    background-image: url(Images/statusbarResizerHorizontal.png);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#scripts-sidebar-buttons {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 225px;
+    overflow: hidden;
+    border-left: 1px solid rgb(64%, 64%, 64%);
+}
+
+#script-resource-views {
+    display: block;
+    overflow: auto;
+    padding: 0;
+    position: absolute;
+    top: 23px;
+    left: 0;
+    right: 225px;
+    bottom: 0;
+}
+
+#scripts-sidebar {
+    position: absolute;
+    top: 23px;
+    right: 0;
+    bottom: 0;
+    width: 225px;
+    background-color: rgb(232, 232, 232);
+    border-left: 1px solid rgb(64%, 64%, 64%);
+    cursor: default;
+    overflow: auto;
+}
+
 #resources-larger-resources-status-bar-item {
     background-image: url(Images/largerResourcesButtons.png);
 }
@@ -1389,13 +1558,16 @@ body.inactive .sidebar {
     margin-left: -1px;
     border-left: 1px solid rgb(102, 102, 102);
     background-color: rgb(101, 111, 130);
-    background-image: url(Images/darkShadow.png);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0)), to(rgba(0, 0, 0, 0.5)));
     background-repeat: repeat-x;
     background-position: bottom;
     text-align: center;
     text-shadow: black 0 1px 1px;
     white-space: nowrap;
     color: white;
+    -webkit-background-size: 1px 6px;
+    -webkit-background-origin: padding;
+    -webkit-background-clip: padding;
 }
 
 #resources-graph-legend {
@@ -1612,6 +1784,7 @@ body.inactive .sidebar {
     white-space: nowrap;
     margin-top: 1px;
     line-height: 34px;
+    border-top: 1px solid transparent;
 }
 
 .sidebar-tree .children {
@@ -1698,14 +1871,14 @@ body.inactive .sidebar-tree-item .disclosure-button:active {
     float: left;
     width: 32px;
     height: 32px;
-    margin-top: 2px;
+    margin-top: 1px;
     margin-right: 3px;
 }
 
 .sidebar-tree-item .status {
     float: right;
     height: 16px;
-    margin-top: 10px;
+    margin-top: 9px;
     margin-left: 4px;
     line-height: 1em;
 }
@@ -1760,44 +1933,32 @@ body.inactive .sidebar-tree-item.selected .status .bubble {
 }
 
 .sidebar-tree.small .sidebar-tree-item .status, .sidebar-tree .children.small .sidebar-tree-item .status, .sidebar-tree-item.small .status {
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .sidebar-tree-item.selected {
     color: white;
-    background-image: url(Images/sidebarSelectionBackground.png);
-    background-repeat: repeat-x;
-    background-position: center;
-    background-color: rgb(143, 160, 193);
+    border-top: 1px solid rgb(145, 160, 192);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(162, 177, 207)), to(rgb(120, 138, 177)));
     text-shadow: rgba(0, 0, 0, 0.33) 0 1px 0;
     font-weight: bold;
-}
-
-.sidebar-tree.small .sidebar-tree-item.selected, .sidebar-tree .children.small .sidebar-tree-item.selected, .sidebar-tree-item.small.selected {
-    background-image: url(Images/sidebarSmallSelectionBackground.png);
+    -webkit-background-origin: padding;
+    -webkit-background-clip: padding;
 }
 
 .focused .sidebar-tree-item.selected {
-    background-image: url(Images/sidebarSelectionBackgroundFocused.png);
-    background-color: rgb(61, 118, 194);
-}
-
-.focused .sidebar-tree.small .sidebar-tree-item.selected, .focused .sidebar-tree .children.small .sidebar-tree-item.selected, .focused .sidebar-tree-item.small.selected {
-    background-image: url(Images/sidebarSmallSelectionBackgroundFocused.png);
+    border-top: 1px solid rgb(68, 128, 200);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(92, 147, 213)), to(rgb(21, 83, 170)));
 }
 
 body.inactive .sidebar-tree-item.selected {
-    background-image: url(Images/sidebarSelectionBackgroundInactive.png);
-    background-color: rgb(154, 154, 154);
-}
-
-body.inactive .sidebar-tree.small .sidebar-tree-item.selected, body.inactive .sidebar-tree .children.small .sidebar-tree-item.selected, body.inactive .sidebar-tree-item.small.selected {
-    background-image: url(Images/sidebarSmallSelectionBackgroundInactive.png);
+    border-top: 1px solid rgb(151, 151, 151);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgb(180, 180, 180)), to(rgb(138, 138, 138)));
 }
 
 .sidebar-tree-item .titles {
     position: relative;
-    top: 6px;
+    top: 5px;
     line-height: 11px;
     padding-bottom: 1px;
     text-overflow: ellipsis;
@@ -1806,11 +1967,11 @@ body.inactive .sidebar-tree.small .sidebar-tree-item.selected, body.inactive .si
 }
 
 .sidebar-tree-item .titles.no-subtitle {
-    top: 11px;
+    top: 10px;
 }
 
 .sidebar-tree.small .sidebar-tree-item .titles, .sidebar-tree .children.small .sidebar-tree-item .titles, .sidebar-tree-item.small .titles {
-    top: 3px;
+    top: 2px;
     line-height: normal;
 }
 
@@ -1933,4 +2094,32 @@ body.inactive .sidebar-tree.small .sidebar-tree-item.selected, body.inactive .si
 
 .resource-sidebar-tree-item .bubble.error {
     background-color: rgb(216, 35, 35);
+}
+
+/* Profiler Style */
+
+#profile-views {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 200px;
+    bottom: 0;
+}
+
+.profile-view {
+    display: none;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.profile-view.visible {
+    display: block;
+}
+
+.profile-view .data-grid {
+    border: none;
 }

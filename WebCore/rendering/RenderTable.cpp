@@ -408,11 +408,19 @@ void RenderTable::layout()
     layoutPositionedObjects(true);
 
     if (!hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow()) {
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next) {
             m_overflowLeft = min(m_overflowLeft, boxShadow->x - boxShadow->blur);
             m_overflowWidth = max(m_overflowWidth, m_width + boxShadow->x + boxShadow->blur);
             m_overflowTop = min(m_overflowTop, boxShadow->y - boxShadow->blur);
             m_overflowHeight = max(m_overflowHeight, m_height + boxShadow->y + boxShadow->blur);
+        }
+        
+        if (hasReflection()) {
+            IntRect reflection(reflectionBox());
+            m_overflowTop = min(m_overflowTop, reflection.y());
+            m_overflowHeight = max(m_overflowHeight, reflection.bottom());
+            m_overflowLeft = min(m_overflowLeft, reflection.x());
+            m_overflowHeight = max(m_overflowWidth, reflection.right());
         }
     }
 
@@ -451,6 +459,11 @@ void RenderTable::paint(PaintInfo& paintInfo, int tx, int ty)
 
     if ((paintPhase == PaintPhaseBlockBackground || paintPhase == PaintPhaseChildBlockBackground) && hasBoxDecorations() && style()->visibility() == VISIBLE)
         paintBoxDecorations(paintInfo, tx, ty);
+
+    if (paintPhase == PaintPhaseMask) {
+        paintMask(paintInfo, tx, ty);
+        return;
+    }
 
     // We're done.  We don't bother painting any children.
     if (paintPhase == PaintPhaseBlockBackground)
@@ -512,10 +525,36 @@ void RenderTable::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
 
     paintBoxShadow(paintInfo.context, tx, ty, w, h, style());
     
-    paintBackground(paintInfo, style()->backgroundColor(), style()->backgroundLayers(), my, mh, tx, ty, w, h);
+    paintFillLayers(paintInfo, style()->backgroundColor(), style()->backgroundLayers(), my, mh, tx, ty, w, h);
 
     if (style()->hasBorder() && !collapseBorders())
         paintBorder(paintInfo.context, tx, ty, w, h, style());
+}
+
+void RenderTable::paintMask(PaintInfo& paintInfo, int tx, int ty)
+{
+    if (style()->visibility() != VISIBLE || paintInfo.phase != PaintPhaseMask)
+        return;
+
+    int w = width();
+    int h = height();
+
+    // Account for the caption.
+    if (m_caption) {
+        int captionHeight = (m_caption->height() + m_caption->marginBottom() +  m_caption->marginTop());
+        h -= captionHeight;
+        if (m_caption->style()->captionSide() != CAPBOTTOM)
+            ty += captionHeight;
+    }
+
+    int my = max(ty, paintInfo.rect.y());
+    int mh;
+    if (ty < paintInfo.rect.y())
+        mh = max(0, h - (paintInfo.rect.y() - ty));
+    else
+        mh = min(paintInfo.rect.height(), h);
+    
+    paintMaskImages(paintInfo, my, mh, tx, ty, w, h);
 }
 
 void RenderTable::calcPrefWidths()

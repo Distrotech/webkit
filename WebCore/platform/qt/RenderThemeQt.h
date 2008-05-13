@@ -24,11 +24,11 @@
 
 #include "RenderTheme.h"
 
+#include <QStyle>
+
 QT_BEGIN_NAMESPACE
-class QStyle;
 class QPainter;
 class QWidget;
-class QStyleOption;
 QT_END_NAMESPACE
 
 namespace WebCore {
@@ -39,6 +39,7 @@ class RenderThemeQt : public RenderTheme
 {
 public:
     RenderThemeQt();
+    virtual ~RenderThemeQt();
 
     virtual bool supportsHover(const RenderStyle*) const;
     virtual bool supportsFocusRing(const RenderStyle* style) const;
@@ -54,7 +55,7 @@ public:
     virtual void adjustRepaintRect(const RenderObject* o, IntRect& r);
 
     virtual bool isControlStyled(const RenderStyle*, const BorderData&,
-                                 const BackgroundLayer&, const Color&) const;
+                                 const FillLayer&, const Color&) const;
 
     // The platform selection color.
     virtual Color platformActiveSelectionBackgroundColor() const;
@@ -82,6 +83,9 @@ protected:
     virtual bool paintTextField(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
     virtual void adjustTextFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
 
+    virtual bool paintTextArea(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual void adjustTextAreaStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+
     virtual bool paintMenuList(RenderObject* o, const RenderObject::PaintInfo& i, const IntRect& r);
     virtual void adjustMenuListStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
 
@@ -105,14 +109,41 @@ protected:
 private:
     bool supportsFocus(EAppearance) const;
 
-    bool getStylePainterAndWidgetFromPaintInfo(const RenderObject::PaintInfo&, QStyle*&, QPainter*&, QWidget*&) const;
     EAppearance applyTheme(QStyleOption&, RenderObject*) const;
 
-    void setSizeFromFont(RenderStyle*) const;
-    IntSize sizeForFont(RenderStyle*) const;
     void setButtonPadding(RenderStyle*) const;
     void setPopupPadding(RenderStyle*) const;
-    void setPrimitiveSize(RenderStyle*) const;
+
+    int m_buttonFontPixelSize;
+    QString m_buttonFontFamily;
+
+    QStyle* m_fallbackStyle;
+    QStyle* fallbackStyle();
+};
+
+class StylePainter
+{
+public:
+    explicit StylePainter(const RenderObject::PaintInfo& paintInfo);
+    ~StylePainter();
+
+    bool isValid() const { return painter && style; }
+
+    QPainter* painter;
+    QWidget* widget;
+    QStyle* style;
+
+    void drawPrimitive(QStyle::PrimitiveElement pe, const QStyleOption& opt)
+    { style->drawPrimitive(pe, &opt, painter, widget); }
+    void drawControl(QStyle::ControlElement ce, const QStyleOption& opt)
+    { style->drawControl(ce, &opt, painter, widget); }
+    void drawComplexControl(QStyle::ComplexControl cc, const QStyleOptionComplex& opt)
+    { style->drawComplexControl(cc, &opt, painter, widget); }
+
+private:
+    QBrush oldBrush;
+
+    Q_DISABLE_COPY(StylePainter)
 };
 
 }

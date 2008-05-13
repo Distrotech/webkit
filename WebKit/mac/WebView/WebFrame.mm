@@ -42,6 +42,7 @@
 #import "WebFrameLoaderClient.h"
 #import "WebFrameViewInternal.h"
 #import "WebHTMLView.h"
+#import "WebHTMLViewInternal.h"
 #import "WebKitStatisticsPrivate.h"
 #import "WebNSURLExtras.h"
 #import "WebScriptDebugger.h"
@@ -470,6 +471,30 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
     return dataSource(_private->coreFrame->loader()->documentLoader());
 }
 
+#if ENABLE(NETSCAPE_PLUGIN_API) 
+- (void)_recursive_resumeNullEventsForAllNetscapePlugins
+{
+    Frame* coreFrame = core(self);
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+        NSView <WebDocumentView> *documentView = [[kit(frame) frameView] documentView];
+        if ([documentView isKindOfClass:[WebHTMLView class]])
+            [(WebHTMLView *)documentView _resumeNullEventsForAllNetscapePlugins];
+    }
+}
+#endif
+
+#if ENABLE(NETSCAPE_PLUGIN_API) 
+- (void)_recursive_pauseNullEventsForAllNetscapePlugins
+{
+    Frame* coreFrame = core(self);
+    for (Frame* frame = coreFrame; frame; frame = frame->tree()->traverseNext(coreFrame)) {
+        NSView <WebDocumentView> *documentView = [[kit(frame) frameView] documentView];
+        if ([documentView isKindOfClass:[WebHTMLView class]])
+            [(WebHTMLView *)documentView _pauseNullEventsForAllNetscapePlugins];
+    }
+}
+#endif
+
 - (void)_addData:(NSData *)data
 {
     Document* document = _private->coreFrame->document();
@@ -616,7 +641,8 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 
 - (NSRect)_caretRectAtNode:(DOMNode *)node offset:(int)offset affinity:(NSSelectionAffinity)affinity
 {
-    return [node _node]->renderer()->caretRect(offset, static_cast<EAffinity>(affinity));
+    VisiblePosition visiblePosition([node _node], offset, static_cast<EAffinity>(affinity));
+    return visiblePosition.caretRect();
 }
 
 - (NSRect)_firstRectForDOMRange:(DOMRange *)range

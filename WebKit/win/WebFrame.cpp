@@ -83,7 +83,7 @@
 #include <WebCore/ResourceHandle.h>
 #include <WebCore/ResourceHandleWin.h>
 #include <WebCore/ResourceRequest.h>
-#include <WebCore/RenderFrame.h>
+#include <WebCore/RenderView.h>
 #include <WebCore/RenderTreeAsText.h>
 #include <WebCore/Settings.h>
 #include <WebCore/TextIterator.h>
@@ -709,7 +709,7 @@ HRESULT STDMETHODCALLTYPE WebFrame::renderTreeAsExternalRepresentation(
     if (!coreFrame)
         return E_FAIL;
 
-    *result = BString(externalRepresentation(coreFrame->renderer())).release();
+    *result = BString(externalRepresentation(coreFrame->contentRenderer())).release();
     return S_OK;
 }
 
@@ -1906,3 +1906,22 @@ WebView* WebFrame::webView() const
 {
     return d->webView;
 }
+
+COMPtr<IAccessible> WebFrame::accessible() const
+{
+    Frame* coreFrame = core(this);
+    ASSERT(coreFrame);
+
+    Document* currentDocument = coreFrame->document();
+    if (!currentDocument)
+        m_accessible = 0;
+    else if (!m_accessible || m_accessible->document() != currentDocument) {
+        // Either we've never had a wrapper for this frame's top-level Document,
+        // the Document renderer was destroyed and its wrapper was detached, or
+        // the previous Document is in the page cache, and the current document
+        // needs to be wrapped.
+        m_accessible = new AccessibleDocument(currentDocument);
+    }
+    return m_accessible.get();
+}
+

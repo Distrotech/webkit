@@ -39,6 +39,7 @@
 #include "ImageObserver.h"
 #include "NotImplemented.h"
 #include "Page.h"
+#include "RenderView.h"
 #include "ResourceError.h"
 #include "SVGDocument.h"
 #include "SVGLength.h"
@@ -144,13 +145,19 @@ void SVGImage::draw(GraphicsContext* context, const FloatRect& dstRect, const Fl
         return;
     
     context->save();
+    context->setCompositeOperation(compositeOp);
     context->clip(enclosingIntRect(dstRect));
+    if (compositeOp != CompositeSourceOver)
+        context->beginTransparencyLayer(1.0f);
     context->translate(dstRect.location().x(), dstRect.location().y());
     context->scale(FloatSize(dstRect.width()/srcRect.width(), dstRect.height()/srcRect.height()));
     
     if (m_frame->view()->needsLayout())
         m_frame->view()->layout();
     m_frame->paint(context, enclosingIntRect(srcRect));
+
+    if (compositeOp != CompositeSourceOver)
+        context->endTransparencyLayer();
 
     context->restore();
 
@@ -167,7 +174,7 @@ NativeImagePtr SVGImage::nativeImageForCurrentFrame()
         m_frameCache.set(ImageBuffer::create(size(), false).release());
         if (!m_frameCache) // failed to allocate image
             return 0;
-        renderSubtreeToImage(m_frameCache.get(), m_frame->renderer());
+        renderSubtreeToImage(m_frameCache.get(), m_frame->contentRenderer());
     }
 #if PLATFORM(CG)
     return m_frameCache->cgImage();
@@ -213,6 +220,7 @@ bool SVGImage::dataChanged(bool allDataReceived)
         m_frame->loader()->begin(KURL()); // create the empty document
         m_frame->loader()->write(m_data->data(), m_data->size());
         m_frame->loader()->end();
+        m_frameView->setTransparent(true); // SVG Images are transparent.
     }
     return m_frameView;
 }

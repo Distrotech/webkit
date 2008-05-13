@@ -38,8 +38,12 @@ namespace WebCore {
 
     class PageGroup : Noncopyable {
     public:
+        PageGroup(const String& name);
         PageGroup(Page*);
 
+        static PageGroup* pageGroup(const String& groupName);
+        static void closeLocalStorage();
+        
         const HashSet<Page*>& pages() const { return m_pages; }
 
         void addPage(Page*);
@@ -53,16 +57,27 @@ namespace WebCore {
 
         static void setShouldTrackVisitedLinks(bool);
         static void removeAllVisitedLinks();
-        
+
+        const String& name() { return m_name; }
+        unsigned identifier() { return m_identifier; }
+
+#if ENABLE(DOM_STORAGE)
         LocalStorage* localStorage();
+#endif
 
     private:
         void addVisitedLink(unsigned stringHash);
 
+        String m_name;
+
         HashSet<Page*> m_pages;
         HashSet<unsigned, AlreadyHashed> m_visitedLinkHashes;
         bool m_visitedLinksPopulated;
+
+        unsigned m_identifier;
+#if ENABLE(DOM_STORAGE)
         RefPtr<LocalStorage> m_localStorage;
+#endif
     };
 
 } // namespace WebCore

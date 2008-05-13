@@ -89,10 +89,21 @@ bool getFileSize(const String& path, long long& resultSize)
     return true;
 }
 
-bool getFileModificationTime(const String&, time_t&)
+bool getFileModificationTime(const String& path, time_t& modifiedTime)
 {
-    notImplemented();
-    return false;
+    gchar* filename = g_filename_from_utf8(path.utf8().data(), -1, 0, 0, 0);
+    if (!filename)
+        return false;
+
+    struct stat statResult;
+    gint result = g_stat(filename, &statResult);
+    g_free(filename);
+    if (result != 0)
+        return false;
+
+    modifiedTime = statResult.st_mtime;
+    return true;
+
 }
 
 String pathByAppendingComponent(const String& path, const String& component)
@@ -127,6 +138,12 @@ String pathGetFileName(const String& pathName)
     g_free(baseName);
 
     return fileName;
+}
+
+String directoryName(const String& path)
+{
+    notImplemented();
+    return String();
 }
 
 CString openTemporaryFile(const char* prefix, PlatformFileHandle& handle)

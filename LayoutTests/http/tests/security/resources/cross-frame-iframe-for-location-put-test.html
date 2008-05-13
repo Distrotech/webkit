@@ -13,7 +13,7 @@
             if (e.data == "settingValuesComplete")
                 setCheck();
         }
-        document.addEventListener('message', receiver, false);
+        addEventListener('message', receiver, false);
 
         window.onload = function()
         {
@@ -34,7 +34,7 @@
             customAttributeOld = window.location.customAttribute;
 
             if (window.postMessage)
-                window.parent.postMessage("storedOldValuesComplete");
+                window.parent.postMessage("storedOldValuesComplete", "*");
         }
 
         setCheck = function()

@@ -30,20 +30,29 @@
 
 #include "ApplicationCacheGroup.h"
 #include "ApplicationCacheResource.h"
+#include "ApplicationCacheStorage.h"
 #include "ResourceRequest.h"
+#include <stdio.h>
 
 namespace WebCore {
  
-ApplicationCache::ApplicationCache(ApplicationCacheGroup* group)
-    : m_group(group)
+ApplicationCache::ApplicationCache()
+    : m_group(0)
     , m_manifest(0)
+    , m_storageID(0)
 {
-    ASSERT(group);
 }
 
 ApplicationCache::~ApplicationCache()
 {
-    m_group->cacheDestroyed(this);
+    if (m_group)
+        m_group->cacheDestroyed(this);
+}
+    
+void ApplicationCache::setGroup(ApplicationCacheGroup* group)
+{
+    ASSERT(!m_group);
+    m_group = group;
 }
 
 void ApplicationCache::setManifestResource(PassRefPtr<ApplicationCacheResource> manifest)
@@ -64,6 +73,13 @@ void ApplicationCache::addResource(PassRefPtr<ApplicationCacheResource> resource
     const String& url = resource->url();
     
     ASSERT(!m_resources.contains(url));
+    
+    if (m_storageID) {
+        ASSERT(!resource->storageID());
+        
+        // Add the resource to the storage.
+        cacheStorage().store(resource.get(), this);
+    }
     
     m_resources.set(url, resource);
 }
@@ -87,13 +103,21 @@ ApplicationCacheResource* ApplicationCache::resourceForURL(const String& url)
     return m_resources.get(url).get();
 }    
 
-ApplicationCacheResource* ApplicationCache::resourceForRequest(const ResourceRequest& request)
+bool ApplicationCache::requestIsHTTPOrHTTPSGet(const ResourceRequest& request)
 {
-    // We only care about HTTP/HTTPS GET requests.
     if (!request.url().protocolIs("http") && !request.url().protocolIs("https"))
         return false;
     
-    if (!equalIgnoringCase(request.httpMethod(), "get"))
+    if (!equalIgnoringCase(request.httpMethod(), "GET"))
+        return false;
+
+    return true;
+}    
+
+ApplicationCacheResource* ApplicationCache::resourceForRequest(const ResourceRequest& request)
+{
+    // We only care about HTTP/HTTPS GET requests.
+    if (!requestIsHTTPOrHTTPSGet(request))
         return false;
     
     return resourceForURL(request.url());
@@ -141,6 +165,15 @@ bool ApplicationCache::isURLInOnlineWhitelist(const KURL& url)
     copy.setRef(String());
     return m_onlineWhitelist.contains(copy);
 }
+    
+void ApplicationCache::clearStorageID()
+{
+    m_storageID = 0;
+    
+    ResourceMap::const_iterator end = m_resources.end();
+    for (ResourceMap::const_iterator it = m_resources.begin(); it != end; ++it)
+        it->second->clearStorageID();
+}    
     
 #ifndef NDEBUG
 void ApplicationCache::dump()

@@ -1,29 +1,918 @@
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+2008-05-12  Dan Bernstein  <mitz@apple.com>
 
-        Build fix: #ifdef'd out some code that doesn't work anymore.
+        Reviewed by Ada Chan.
 
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+        - WebKit/mac changes for https://bugs.webkit.org/show_bug.cgi?id=17097
+          <rdar://problem/5715471> CGFontRefs (and HFONTs on Windows) leak because FontCache grows without bound
 
-        Reviewed by Oliver Hunt.
+        Added font cache statistics and a function to purge inactive font data.
+
+        * Misc/WebCoreStatistics.h:
+        * Misc/WebCoreStatistics.mm:
+        (+[WebCoreStatistics cachedFontDataCount]):
+        (+[WebCoreStatistics cachedFontDataInactiveCount]):
+        (+[WebCoreStatistics purgeInactiveFontData]):
+        (+[WebCoreStatistics glyphPageCount]):
+
+2008-05-12  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        Decorate some deprecated delegate methods with the availability macros.
+
+        The compiler doesn't appear to warn if a delegate implements these methods, but using the availability
+        macros is good for consistency and documentation.
+
+        * WebView/WebFrameLoadDelegate.h:
+        * WebView/WebUIDelegate.h:
+
+2008-05-12  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        <rdar://problem/5835604> Deprecate HIWebView
+
+        Use of HIWebView is deprecated in favor of embedding a WebView in a HICocoaView.
+
+        * Carbon/CarbonUtils.h: Include the availability macro header and decorate the functions appropriately.
+        * Carbon/HIWebView.h: Ditto.
+
+2008-05-12  Kevin Decker  <kdecker@apple.com>
+
+        Reviewed by Anders.
+
+        Fixed: <rdar://problem/5840884>_recursive_resumeNullEventsForAllNetscapePlugins and _pauseNullEvents not defined
         
-        #ifdef'd out some debugger code that doesn't work anymore.
+        Re-added these SPI methods because they are needed by some clients. They were accidentally removed
+        in changeset <http://trac.webkit.org/changeset/31028>
+        
+        * Plugins/WebBaseNetscapePluginView.h: Added stopTimers, restartTimers to the header.
+        * WebView/WebFrame.mm:
+        (-[WebFrame _recursive_resumeNullEventsForAllNetscapePlugins]): Re-addd.
+        (-[WebFrame _recursive_pauseNullEventsForAllNetscapePlugins]): Ditto.
+        * WebView/WebFrameInternal.h: Ditto.
+        * WebView/WebHTMLView.mm: Ditto.
+        (-[WebHTMLView _pauseNullEventsForAllNetscapePlugins]): Ditto.
+        (-[WebHTMLView _resumeNullEventsForAllNetscapePlugins]): Ditto.
+        * WebView/WebHTMLViewInternal.h: Ditto.
+        * WebView/WebHTMLViewPrivate.h: Ditto.
+
+2008-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Alexey.
+
+        Empty the application cache when changing the cache model.
+        
+        * WebView/WebView.mm:
+        (+[WebView _setCacheModel:]):
+
+2008-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Oliver.
+
+        <rdar://problem/5774495> Make Unicode text input possible in Netscape-style plug-ins
+        
+        * Plugins/WebBaseNetscapePluginView.h:
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView start]):
+        Get the plug-in text input vtable pointer.
+        
+        (-[WebBaseNetscapePluginView stop]):
+        Set the plug-in text input vtable pointer to 0.
+        
+        (-[WebBaseNetscapePluginView inputContext]):
+        Return 0 for Carbon plug-ins since we don't want Cocoa to handle text input for them.
+        
+        (-[WebBaseNetscapePluginView hasMarkedText]):        
+        (-[WebBaseNetscapePluginView insertText:]):
+        (-[WebBaseNetscapePluginView markedRange]):
+        (-[WebBaseNetscapePluginView selectedRange]):
+        (-[WebBaseNetscapePluginView setMarkedText:selectedRange:]):
+        (-[WebBaseNetscapePluginView unmarkText]):
+        (-[WebBaseNetscapePluginView validAttributesForMarkedText]):
+        (-[WebBaseNetscapePluginView attributedSubstringFromRange:]):
+        (-[WebBaseNetscapePluginView characterIndexForPoint:]):
+        (-[WebBaseNetscapePluginView doCommandBySelector:]):
+        (-[WebBaseNetscapePluginView firstRectForCharacterRange:]):
+        (-[WebBaseNetscapePluginView conversationIdentifier]):
+        Implement NSTextInput and call into the plug-in text input vtable.
+        
+        (browserTextInputFuncs):
+        New method which returns the browser input vtable.
+        
+        (-[WebBaseNetscapePluginView getVariable:value:]):
+        Support getting the browser input vtable pointer.
+        
+        * Plugins/WebNetscapePluginEventHandlerCocoa.h:
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        (WebNetscapePluginEventHandlerCocoa::keyDown):
+        (WebNetscapePluginEventHandlerCocoa::sendKeyEvent):
+        If the plug-in returns 0 when a NPCocoaEventKeyDown is passed to NPP_HandleEvent,
+        it means that the event should be passed on to the input manager.
+         
+        * Plugins/npapi.mm:
+        (NPN_MarkedTextAbandoned):
+        (NPN_MarkedTextSelectionChanged):
+        Add implementations of browser input method methods.
+        
+        * Plugins/nptextinput.h: Added.
+        Add file with new text input API.
+
+2008-05-12  Alexey Proskuryakov  <ap@webkit.org>
+
+        Roll out recent  threading changes (r32807, r32810, r32819, r32822) to simplify
+        SquirrelFish merging.
+
+        * Misc/WebCoreStatistics.mm:
+        (+[WebCoreStatistics javaScriptObjectsCount]):
+        (+[WebCoreStatistics javaScriptGlobalObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedGlobalObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedObjectTypeCounts]):
+        (+[WebCoreStatistics javaScriptReferencedObjectsCount]):
+        * WebView/WebScriptDebugDelegate.mm:
+        (-[WebScriptCallFrame evaluateWebScript:]):
+
+2008-05-07  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        REGRESSION (3.1.1-TOT): Arrow keys are sticky in Google Maps street view
+        https://bugs.webkit.org/show_bug.cgi?id=18880
+        <rdar://problem/5909513>
+
+        Stop suspending key up events before calling handleEvent.
+        
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm:
+        (WebNetscapePluginEventHandlerCarbon::sendEvent):
+
+2008-05-06  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Andersca.
+
+        prepare for plugin fast teardown work - make WebPluginDatabase a objective C++ file.
+
+        * Plugins/WebPluginDatabase.m: Removed.
+        * Plugins/WebPluginDatabase.mm: Copied from WebKit/mac/Plugins/WebPluginDatabase.m.
+        * Plugins/npapi.m: Removed.
+        * Plugins/npapi.mm: Copied from WebKit/mac/Plugins/npapi.m.
+
+2008-05-06  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        Initialize numArchs to 0.
+        
+        * Plugins/WebBasePluginPackage.m:
+        (-[WebBasePluginPackage isNativeLibraryData:]):
+
+2008-05-06  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        Add implementation of NPN_PopUpContextMenu.
+        
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView popUpContextMenu:]):
+        * Plugins/WebBaseNetscapePluginViewPrivate.h:
+        * Plugins/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage load]):
+        * Plugins/npapi.m:
+        (NPN_PopUpContextMenu):
+
+2008-05-06  Anders Carlsson  <andersca@apple.com>
+
+        Fix typo (don't read random memory).
+        
+        * Plugins/WebBasePluginPackage.m:
+        (-[WebBasePluginPackage isNativeLibraryData:]):
+
+2008-05-05  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        Change the isNativeLibraryData: method to handle universal binaries.
+        
+        * Plugins/WebBasePluginPackage.m:
+        (swapIntsInHeader):
+        (-[WebBasePluginPackage isNativeLibraryData:]):
+
+2008-05-06  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin Adler
+
+        Preparation for upcoming work making LocalStorage persistent.
+
+        When the application terminates, all LocalStorage areas must be sync'ed out to disk first.
+
+        * WebView/WebView.mm:
+        (+[WebView _applicationWillTerminate]):  Close all LocalStorage areas before quitting.
+
+2008-05-05  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Darin Adler.
+
+        Fix for <rdar://problem/5884383>
+        Escape look-a-like characters from the the entire url.
+
+        * Misc/WebNSURLExtras.mm:
+        (escapeUnsafeCharacters):
+        (-[NSURL _web_userVisibleString]):
+
+2008-05-05  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Darin.
+        
+        <rdar://problem/5865171> REGRESSION: Creating a new quote places caret at beginning of quote instead of the end
+
+        * WebView/WebView.mm:
+        (-[WebView _updateSettingsFromPreferences:]): Disable Range mutation on changes to
+        the document for Tiger and Leopard Mail.  There is code in Mail that does it, and
+        the two interfere.
+
+2008-05-05  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Tim Hatcher.
+
+        Make the Inspector's localizable strings file match the format used by Dashboard widgets.
+
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorClient::localizedStringsURL):
+
+2008-05-05  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Jess.
+
+        Apparently preflighting can cause hangs for some reason. Revert this for now.
+        
+        * Plugins/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage _initWithPath:]):
+        * Plugins/WebPluginPackage.m:
+        (-[WebPluginPackage initWithPath:]):
+
+2008-05-05  Darin Adler  <darin@apple.com>
+
+        Reviewed by Mitz.
+
+        - https://bugs.webkit.org/show_bug.cgi?id=18789
+          fix some shouldCloseWithWindow edge cases
+
+        * WebView/WebView.mm:
+        (-[WebView viewWillMoveToWindow:]): Fix bug where we would stop observing the
+        NSWindowWillCloseNotification if the view was moved out of the window but still
+        had that window set as the host window. Also make sure this function doesn't do
+        anything if the WebView is already closed.
+        (-[WebView setHostWindow:]): Ditto.
+
+2008-05-04  David Kilzer  <ddkilzer@apple.com>
+
+        Make parameters match for WebChromeClient::addMessageToConsole()
+
+        Reviewed by John.
+
+        * WebCoreSupport/WebChromeClient.h:
+        (WebChromeClient::addMessageToConsole): Renamed sourceID parameter
+        to sourceURL to match implementation in WebChromeClient.mm.
+
+2008-05-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mark.
+
+        Various Cocoa event model and 64-bit plug-in fixes.
+        
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        (WebNetscapePluginEventHandlerCocoa::sendMouseEvent):
+        Set click count.
+        
+        (WebNetscapePluginEventHandlerCocoa::flagsChanged):
+        (WebNetscapePluginEventHandlerCocoa::sendKeyEvent):
+        Don't try to get the mouse location for keyboard events.
+        
+        * Plugins/WebPluginPackage.m:
+        (-[WebPluginPackage initWithPath:]):
+        Preflight the bundle so we won't show 32-bit WebKit plug-ins when running as 64-bit.
+
+2008-05-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        The event union is now named.
+        
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        (WebNetscapePluginEventHandlerCocoa::drawRect):
+        (WebNetscapePluginEventHandlerCocoa::sendMouseEvent):
+        (WebNetscapePluginEventHandlerCocoa::flagsChanged):
+        (WebNetscapePluginEventHandlerCocoa::sendKeyEvent):
+        (WebNetscapePluginEventHandlerCocoa::windowFocusChanged):
+        (WebNetscapePluginEventHandlerCocoa::focusChanged):
+
+2008-05-02  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mark.
+
+        Make sure that 32-bit only plug-ins aren't shown when running as 64-bit.
+        
+        Call preflightAndReturnError on the bundle, which will check if any of the architectures
+        in the bundle match the current architecture.
+        
+        * Plugins/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage _initWithPath:]):
+
+2008-05-02  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18826
+        Make JavaScript heap per-thread
+
+        * Misc/WebCoreStatistics.mm:
+        (+[WebCoreStatistics javaScriptObjectsCount]):
+        (+[WebCoreStatistics javaScriptGlobalObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedGlobalObjectsCount]):
+        (+[WebCoreStatistics javaScriptProtectedObjectTypeCounts]):
+        (+[WebCoreStatistics javaScriptReferencedObjectsCount]):
+        Replaced static Collector calls with calls to a current thread's instance.
 
         * WebView/WebScriptDebugDelegate.mm:
-        (-[WebScriptCallFrame scopeChain]):
+        (-[WebScriptCallFrame evaluateWebScript:]):
+        Pass ExecState to jsString().
 
-2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+2008-05-01  Anders Carlsson  <andersca@apple.com>
 
-        Build fix.
+        Reviewed by Mark.
 
-        * ChangeLog:
-        * WebView/WebScriptDebugDelegate.mm:
-        (-[WebScriptCallFrame scopeChain]):
-
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
+        64-bit NPAPI plugin build fixes.
         
-        Build fix.
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+        (-[WebBaseNetscapePluginView updateAndSetWindow]):
+        (-[WebBaseNetscapePluginView start]):
+        (-[WebBaseNetscapePluginView windowBecameKey:]):
+        * Plugins/WebNetscapeDeprecatedFunctions.c:
+        * Plugins/WebNetscapeDeprecatedFunctions.h:
+        * Plugins/WebNetscapePluginEventHandler.mm:
+        (WebNetscapePluginEventHandler::create):
+        * Plugins/WebNetscapePluginEventHandlerCarbon.h:
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm:
+        * Plugins/WebPluginDatabase.m:
+        (-[WebPluginDatabase pluginForKey:withEnumeratorSelector:]):
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Tim.
+
+        Remove duplicate npfunctions.h header from WebKit.
+
+        * MigrateHeaders.make:
+        Migrate npfunctions.h
+        
+        * Plugins/npfunctions.h: Removed.
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+        
+        Add null checks for the event handler.
+        
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView stopTimers]):
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:sendNotification:]):
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Fix 64-bit build.
+        
+        * Plugins/WebNetscapePluginEventHandlerCocoa.h:
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Fix build.
+        
+        * Plugins/npfunctions.h:
+
+2008-05-01  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Forward mouse move events to the Netscape plug-in view.
+        
+        * Plugins/WebBaseNetscapePluginView.h:
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView handleMouseMoved:]):
+        New method that just calls the current event handler.
+        
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm:
+        (WebNetscapePluginEventHandlerCocoa::flagsChanged):
+        NSFlagsChanged is not a regular keyboard event and some of the NSEvent accessors
+        don't work on it so don't call them.
+        
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (NetscapePluginWidget::NetscapePluginWidget):
+        New Widget subclass to be used for Netscape plug-ins.
+        
+        (NetscapePluginWidget::handleEvent):
+        Forward NSMouseMoved events to the plug-in.
+        
+        (WebFrameLoaderClient::createPlugin):
+        Wrap the plug-in view in a NetscapePluginWidget.
+
+2008-05-01  Alp Toker  <alp@nuanti.com>
+
+        Rubber-stamped by Anders.
+
+        GTK+ build fix for changes in r32752. Use int32, not int32_t types in
+        npapi.h.
+
+        Additional fix to use same signedness in npapi.h and Mac for the
+        interval parameter.
+
+        * Plugins/WebBaseNetscapePluginView.h:
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (PluginTimer::PluginTimer):
+        (-[WebBaseNetscapePluginView stopTimers]):
+        (-[WebBaseNetscapePluginView restartTimers]):
+        (-[WebBaseNetscapePluginView scheduleTimerWithInterval:repeat:timerFunc:]):
+        (-[WebBaseNetscapePluginView unscheduleTimer:]):
+        * Plugins/WebBaseNetscapePluginViewPrivate.h:
+        * Plugins/npapi.m:
+        (NPN_ScheduleTimer):
+        (NPN_UnscheduleTimer):
+        * Plugins/npfunctions.h:
+
+2008-04-30  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Add new Cocoa event model and the NPN_ScheduleTimer/NPN_UnscheduleTimer methods.
+        
+        * Plugins/WebBaseNetscapePluginView.h:
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (PluginTimer::PluginTimer):
+        (PluginTimer::start):
+        (PluginTimer::fired):
+        (-[WebBaseNetscapePluginView saveAndSetNewPortStateForUpdate:]):
+        (-[WebBaseNetscapePluginView stopTimers]):
+        (-[WebBaseNetscapePluginView restartTimers]):
+        (-[WebBaseNetscapePluginView scrollWheel:]):
+        (-[WebBaseNetscapePluginView flagsChanged:]):
+        (-[WebBaseNetscapePluginView start]):
+        (-[WebBaseNetscapePluginView eventModel]):
+        (-[WebBaseNetscapePluginView fini]):
+        (-[WebBaseNetscapePluginView getVariable:value:]):
+        (-[WebBaseNetscapePluginView setVariable:value:]):
+        (-[WebBaseNetscapePluginView scheduleTimerWithInterval:repeat:timerFunc:]):
+        (-[WebBaseNetscapePluginView unscheduleTimer:]):
+        * Plugins/WebBaseNetscapePluginViewInternal.h:
+        * Plugins/WebBaseNetscapePluginViewPrivate.h:
+        * Plugins/WebNetscapePluginEventHandler.h:
+        * Plugins/WebNetscapePluginEventHandler.mm:
+        (WebNetscapePluginEventHandler::create):
+        * Plugins/WebNetscapePluginEventHandlerCarbon.h:
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm:
+        (WebNetscapePluginEventHandlerCarbon::scrollWheel):
+        (WebNetscapePluginEventHandlerCarbon::flagsChanged):
+        (WebNetscapePluginEventHandlerCarbon::platformWindow):
+        * Plugins/WebNetscapePluginEventHandlerCocoa.h: Added.
+        (WebNetscapePluginEventHandlerCocoa::startTimers):
+        (WebNetscapePluginEventHandlerCocoa::stopTimers):
+        * Plugins/WebNetscapePluginEventHandlerCocoa.mm: Added.
+        (WebNetscapePluginEventHandlerCocoa::WebNetscapePluginEventHandlerCocoa):
+        (WebNetscapePluginEventHandlerCocoa::drawRect):
+        (WebNetscapePluginEventHandlerCocoa::mouseDown):
+        (WebNetscapePluginEventHandlerCocoa::mouseDragged):
+        (WebNetscapePluginEventHandlerCocoa::mouseEntered):
+        (WebNetscapePluginEventHandlerCocoa::mouseExited):
+        (WebNetscapePluginEventHandlerCocoa::mouseMoved):
+        (WebNetscapePluginEventHandlerCocoa::mouseUp):
+        (WebNetscapePluginEventHandlerCocoa::scrollWheel):
+        (WebNetscapePluginEventHandlerCocoa::sendMouseEvent):
+        (WebNetscapePluginEventHandlerCocoa::keyDown):
+        (WebNetscapePluginEventHandlerCocoa::keyUp):
+        (WebNetscapePluginEventHandlerCocoa::flagsChanged):
+        (WebNetscapePluginEventHandlerCocoa::sendKeyEvent):
+        (WebNetscapePluginEventHandlerCocoa::windowFocusChanged):
+        (WebNetscapePluginEventHandlerCocoa::focusChanged):
+        (WebNetscapePluginEventHandlerCocoa::platformWindow):
+        (WebNetscapePluginEventHandlerCocoa::sendEvent):
+        * Plugins/WebNetscapePluginPackage.m:
+        (-[WebNetscapePluginPackage load]):
+        * Plugins/npapi.m:
+        (NPN_ScheduleTimer):
+        (NPN_UnscheduleTimer):
+        * Plugins/npfunctions.h:
+
+2008-04-30  Brady Eidson  <beidson@apple.com>
+
+        Fix my WebPreferences revert check-in
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChangedNotification:]):
+
+2008-04-30  Brady Eidson  <beidson@apple.com>
+
+        Rubberstamped by John Sullivan
+
+        Revert the remainder of my original preferences changes from last week.
+        They caused a massive PLT regression (too many notifications being sent out
+        or listened to that weren't previously) and it's not in my schedule to refine
+        the preferences code instead of working on my feature!
+
+        * WebView/WebView.mm:
+        (-[WebView _updateSettingsFromPreferences:]):
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+
+2008-04-30  Anders Carlsson  <andersca@apple.com>
+
+        Fix the 64-bit build.
+        
+        * Plugins/WebNetscapePluginEventHandler.h:
+        * Plugins/WebNetscapePluginEventHandler.mm:
+        * Plugins/WebNetscapePluginEventHandlerCarbon.h:
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm:
+
+2008-04-29  David D. Kilzer  <ddkilzer@apple.com>
+
+        BUILD FIX for Release build.
+
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm:
+        (WebNetscapePluginEventHandlerCarbon::drawRect): Declare acceptedEvent
+        separately so the compiler doesn't complain about an unused variable.
+        (WebNetscapePluginEventHandlerCarbon::TSMEventHandler): Ditto.
+
+2008-04-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Refactor the Carbon event handling code out into a separate class in preparation for adding
+        the Cocoa event handling code.
+        
+        * Plugins/WebBaseNetscapePluginView.h:
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView sendEvent:isDrawRect:]):
+        (-[WebBaseNetscapePluginView sendActivateEvent:]):
+        (-[WebBaseNetscapePluginView sendDrawRectEvent:]):
+        (-[WebBaseNetscapePluginView stopTimers]):
+        (-[WebBaseNetscapePluginView restartTimers]):
+        (-[WebBaseNetscapePluginView setHasFocus:]):
+        (-[WebBaseNetscapePluginView mouseDown:]):
+        (-[WebBaseNetscapePluginView mouseUp:]):
+        (-[WebBaseNetscapePluginView mouseEntered:]):
+        (-[WebBaseNetscapePluginView mouseExited:]):
+        (-[WebBaseNetscapePluginView mouseDragged:]):
+        (-[WebBaseNetscapePluginView keyUp:]):
+        (-[WebBaseNetscapePluginView keyDown:]):
+        (-[WebBaseNetscapePluginView cut:]):
+        (-[WebBaseNetscapePluginView copy:]):
+        (-[WebBaseNetscapePluginView paste:]):
+        (-[WebBaseNetscapePluginView selectAll:]):
+        (-[WebBaseNetscapePluginView start]):
+        (-[WebBaseNetscapePluginView stop]):
+        (-[WebBaseNetscapePluginView fini]):
+        (-[WebBaseNetscapePluginView drawRect:]):
+        (-[WebBaseNetscapePluginView viewWillMoveToWindow:]):
+        (-[WebBaseNetscapePluginView viewDidMoveToWindow]):
+        (-[WebBaseNetscapePluginView windowBecameKey:]):
+        (-[WebBaseNetscapePluginView windowResignedKey:]):
+        (-[WebBaseNetscapePluginView windowDidMiniaturize:]):
+        (-[WebBaseNetscapePluginView windowDidDeminiaturize:]):
+        (-[WebBaseNetscapePluginView loginWindowDidSwitchFromUser:]):
+        (-[WebBaseNetscapePluginView loginWindowDidSwitchToUser:]):
+        (-[WebBaseNetscapePluginView loadRequest:inTarget:withNotifyData:sendNotification:]):
+        (-[WebBaseNetscapePluginView _viewHasMoved]):
+        * Plugins/WebBaseNetscapePluginViewInternal.h:
+        * Plugins/WebNetscapePluginEmbeddedView.h:
+        * Plugins/WebNetscapePluginEventHandler.h: Added.
+        (WebNetscapePluginEventHandler::~WebNetscapePluginEventHandler):
+        (WebNetscapePluginEventHandler::currentEventIsUserGesture):
+        (WebNetscapePluginEventHandler::WebNetscapePluginEventHandler):
+        * Plugins/WebNetscapePluginEventHandler.mm: Added.
+        (WebNetscapePluginEventHandler::create):
+        * Plugins/WebNetscapePluginEventHandlerCarbon.h: Added.
+        * Plugins/WebNetscapePluginEventHandlerCarbon.mm: Added.
+        (WebNetscapePluginEventHandlerCarbon::WebNetscapePluginEventHandlerCarbon):
+        (getCarbonEvent):
+        (modifiersForEvent):
+        (WebNetscapePluginEventHandlerCarbon::sendNullEvent):
+        (WebNetscapePluginEventHandlerCarbon::drawRect):
+        (WebNetscapePluginEventHandlerCarbon::mouseDown):
+        (WebNetscapePluginEventHandlerCarbon::mouseUp):
+        (WebNetscapePluginEventHandlerCarbon::mouseEntered):
+        (WebNetscapePluginEventHandlerCarbon::mouseExited):
+        (WebNetscapePluginEventHandlerCarbon::mouseDragged):
+        (WebNetscapePluginEventHandlerCarbon::mouseMoved):
+        (WebNetscapePluginEventHandlerCarbon::keyDown):
+        (keyMessageForEvent):
+        (WebNetscapePluginEventHandlerCarbon::keyUp):
+        (WebNetscapePluginEventHandlerCarbon::focusChanged):
+        (WebNetscapePluginEventHandlerCarbon::windowFocusChanged):
+        (WebNetscapePluginEventHandlerCarbon::TSMEventHandler):
+        (WebNetscapePluginEventHandlerCarbon::installKeyEventHandler):
+        (WebNetscapePluginEventHandlerCarbon::removeKeyEventHandler):
+        (WebNetscapePluginEventHandlerCarbon::nullEventTimerFired):
+        (WebNetscapePluginEventHandlerCarbon::startTimers):
+        (WebNetscapePluginEventHandlerCarbon::stopTimers):
+        (WebNetscapePluginEventHandlerCarbon::sendEvent):
+
+2008-04-29  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by David Harrison.
+
+        Ensure that WebDynamicScrollBarsView defines WebCoreScrollbarAlwaysOn to keep Mail building.
+
+        * WebKit.exp:
+        * WebView/WebDynamicScrollBarsView.h:
+        * WebView/WebDynamicScrollBarsView.m:
+
+2008-04-29  Greg Bolsinga  <bolsinga@apple.com>
+
+        Reviewed by Darin.
+
+        Wrapped Dashboard code with ENABLE(DASHBOARD_SUPPORT)
+
+        * WebCoreSupport/WebChromeClient.h:
+        * WebCoreSupport/WebChromeClient.mm:
+        * WebView/WebClipView.m:
+        (-[WebClipView scrollWheel:]):
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView addMouseMovedObserver]):
+        (-[WebHTMLView removeMouseMovedObserver]):
+        (-[WebHTMLView acceptsFirstMouse:]):
+        * WebView/WebUIDelegatePrivate.h:
+        * WebView/WebView.mm:
+        (-[WebViewPrivate init]):
+        * WebView/WebViewPrivate.h:
+
+2008-04-28  Rob Buis  <buis@kde.org>
+
+        Reviewed by Maciej.
+
+        Build fix for Tiger.
+
+        * WebView/WebView.mm:
+        (WebKitInitializeApplicationCachePathIfNecessary):
+
+2008-04-28  Adele Peterson  <adele@apple.com>
+
+        Reviewed by Dan Bernstein, Tim Hatcher, Anders Carlsson, and Darin Adler.
+
+        WebKit part of fix for <rdar://problem/3709505>
+        Safari should have a way to upload bundles from the file upload control (as zip)
+
+        Added UIDelegate methods to let the application handle generating replacement files for uploads.
+        In this case, Safari will create archived files for bundles so they can be uploaded properly.
+
+        * DefaultDelegates/WebDefaultUIDelegate.m:
+        (-[WebDefaultUIDelegate webView:shouldReplaceUploadFile:usingGeneratedFilename:]):
+        (-[WebDefaultUIDelegate webView:generateReplacementFile:]):
+        * WebCoreSupport/WebChromeClient.h:
+        * WebCoreSupport/WebChromeClient.mm:
+        (WebChromeClient::shouldReplaceWithGeneratedFileForUpload):
+        (WebChromeClient::generateReplacementFile):
+        * WebView/WebUIDelegatePrivate.h:
+
+2008-04-28  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam, Mark, Adele and Darin.
+
+        Initialize the application cache path.
+        
+        * WebView/WebView.mm:
+        (WebKitInitializeApplicationCachePathIfNecessary):
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+
+2008-04-28  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Darin.
+
+        Fix <rdar://problem/4911289> Add tabindex property to all children 
+        of HTMLElement (7138)
+        http://bugs.webkit.org/show_bug.cgi?id=7138
+
+        * MigrateHeaders.make:
+        Removing DOMHTMLLabelElementPrivate.h and DOMHTMLLegendElementPrivate.h
+        because now that focus() has been moved to DOMHTMLElement.h, these
+        files are no longer needed.
+
+2008-04-25  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        Fix run-webkit-tests --threading
+        and provisionally fix <https://bugs.webkit.org/show_bug.cgi?id=18661>
+        Proxy server issue in Sunday's Nightly
+
+        * WebView/WebView.mm: (-[WebViewPrivate init]): Initialize threading. Previously, this was
+        only done from icon database code, which is not robust enough.
+
+2008-04-20 Adam Barth <hk9565@gmail.com>
+
+        Reviewed by Adam Roben and Sam Weinig.
+
+        Updated WebSecurityOrigin to match new SecurityOrigin API.
+
+        Collin Jackson <collinj-webkit@collinjackson.com> also contributed to this patch.
+
+        * Storage/WebSecurityOrigin.mm:
+        (-[WebSecurityOrigin host]):
+        (-[WebSecurityOrigin domain]):
+        * Storage/WebSecurityOriginPrivate.h:
+
+2008-04-25  Mark Rowe  <mrowe@apple.com>
+
+        Rubber-stamped by Sam Weinig.
+
+        Add some content to an empty ICU header file to prevent verification errors.
+
+        * icu/unicode/utf_old.h:
+
+2008-04-25  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Add offlineWebApplicationCacheEnabled preference.
+        
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.m:
+        (+[WebPreferences initialize]):
+        (-[WebPreferences offlineWebApplicationCacheEnabled]):
+        (-[WebPreferences setOfflineWebApplicationCacheEnabled:]):
+        * WebView/WebPreferencesPrivate.h:
+        * WebView/WebView.mm:
+        (-[WebView _updateSettingsFromPreferences:]):
+
+2008-04-24  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Remove code for calculating the glyph cache size.
+
+        * WebCoreSupport/WebSystemInterface.m:
+        (InitWebCoreSystemInterface): Remove unused symbol.
+
+2008-04-24  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Add a definition of BUILDING_ON_LEOPARD to complement BUILDING_ON_TIGER.
+
+        * WebKitPrefix.h:
+
+2008-04-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Fix layout test regressions from my earlier preferences/settings tweak.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]): Even if we're not posting
+          the notification to update the settings, each WebView still needs to register for the
+          notification - restore that behavior.
+
+2008-04-24  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Darin Adler.
+
+        - preparation for https://bugs.webkit.org/show_bug.cgi?id=3729
+          <rdar://problem/4036353> REGRESSION: arrow keys move insertion bar backwards in RTL text
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _caretRectAtNode:offset:affinity:]): Changed to use
+        VisiblePosition::caretRect() instead of the RenderObject method which
+        was removed.
+
+2008-04-24  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Darin
+
+        Rework the Settings population again.
+
+        * WebView/WebView.mm:
+        (-[WebView _updateSettingsFromPreferences:]): This method is called both from _preferencesChangedNotification
+          and directly from WebView's common init function.
+        (-[WebView _preferencesChangedNotification:]):
+        (-[WebView _commonInitializationWithFrameName:groupName:]): Call _updateSettingsFromPreferences immediately
+          after creating the new Page
+
+2008-04-24  Darin Adler  <darin@apple.com>
+
+        Reviewed by Geoff.
+
+        - fix crash in regression test where we'd ask a frame for a user agent string
+          after the WebView was already closed
+
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::userAgent): Assert that the WebView is not nil. Also
+        added some code to prevent the crash in release builds if this problem happens
+        again.
+
+2008-04-24  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Change some String arguments to be const references instead.
+
+        * WebCoreSupport/WebEditorClient.h:
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::shouldInsertText):
+
+2008-04-24  John Sullivan  <sullivan@apple.com>
+
+        Mac build fix
+        
+        * WebCoreSupport/WebViewFactory.mm:
+        (-[WebViewFactory AXButtonActionVerb]):
+        implement this method using the text in WebCoreLocalizedStrings.cpp
+        (-[WebViewFactory AXRadioButtonActionVerb]):
+        ditto
+        (-[WebViewFactory AXTextFieldActionVerb]):
+        ditto
+        (-[WebViewFactory AXCheckedCheckBoxActionVerb]):
+        ditto
+        (-[WebViewFactory AXUncheckedCheckBoxActionVerb]):
+        ditto
+        (-[WebViewFactory AXLinkActionVerb]):
+        ditto
+
+2008-04-23  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        In some current work I noticed that when a new Page is created, it is possible that it requires info from its Settings
+        object before the Settings object is initialized.  It seems quite prudent to post the preferences changed notification,
+        thereby populating the Settings object, immediately after the Page is created.
+
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]): Post the notification right after the Page is created
+
+2008-04-24  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Jess
+        
+        - fixed <rdar://problem/5886655> JavaScript input panel automatic resizing doesn't work right with HiDPI
+
+        * Misc/WebNSControlExtras.m:
+        (-[NSControl sizeToFitAndAdjustWindowHeight]):
+        deploy userSpaceScaleFactor when using view distances on the window
+
+2008-04-22  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        Add NPN_Construct and NPN_PluginThreadAsyncCall declarations.
+        
+        * Plugins/npfunctions.h:
+
+2008-04-20  Matt Lilek  <webkit@mattlilek.com>
+
+        Mysteriously reviewed by mitz|away.
+
+        Bug 18111: Closing a tab while dragging crashes Safari
+        https://bugs.webkit.org/show_bug.cgi?id=18111
+
+        Null check the page before handling drag events.
+
+        * WebView/WebView.mm:
+        (-[WebView draggingUpdated:]):
+        (-[WebView draggingExited:]):
+
+2008-04-19  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Tim Hatcher
+
+        Add a WebPreference for the path of the local storage persistent store.
+
+        * WebView/WebPreferenceKeysPrivate.h:
+
+        * WebView/WebPreferences.m:
+        (-[WebPreferences _localStorageDatabasePath]):
+        (-[WebPreferences _setLocalStorageDatabasePath:]):
+        * WebView/WebPreferencesPrivate.h:
+
+        * WebView/WebView.mm:
+        (-[WebView _preferencesChangedNotification:]):
+
+2008-04-18  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Don't clear the PageGroup on _close, as the WebCore::Page destructor already does this.
+        No reason to do the work twice...
+
+        * WebView/WebView.mm:
+        (-[WebView _close]):
+
+2008-04-17  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by beth.
+
+        Rename Frame::renderer() to contentRenderer() and fix uses.
+
+        * Misc/WebCoreStatistics.mm:
+        * WebView/WebRenderNode.mm:
+        (-[WebRenderNode initWithWebFrameView:]):
 
 2008-04-17  Jon Honeycutt  <jhoneycutt@apple.com>
 

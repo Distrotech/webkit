@@ -114,7 +114,7 @@ namespace WebCore {
 
         bool scroll(ScrollDirection, ScrollGranularity);
 
-#if PLATFORM(MAC)
+#if HAVE(ACCESSIBILITY)
         IntRect contentsToScreen(const IntRect&) const;
         IntPoint screenToContents(const IntPoint&) const;
 #endif
@@ -184,6 +184,11 @@ namespace WebCore {
     public:
         PlatformScrollbar* horizontalScrollBar() const;
         PlatformScrollbar* verticalScrollBar() const;
+    private:
+        void incrementNativeWidgetCount();
+        void decrementNativeWidgetCount();
+        bool hasNativeWidgets() const;
+        void invalidateScrollbars();
 #endif
 
 #if PLATFORM(GTK)

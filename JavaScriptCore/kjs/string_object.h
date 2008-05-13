@@ -126,12 +126,13 @@ namespace KJS {
    */
   class StringObjectImp : public InternalFunctionImp {
   public:
-    StringObjectImp(ExecState*, FunctionPrototype*, StringPrototype*);
+    StringObjectImp(ExecState *exec,
+                    FunctionPrototype *funcProto,
+                    StringPrototype *stringProto);
 
-    virtual ConstructType getConstructData(ConstructData&);
-    virtual JSObject* construct(ExecState*, const List&);
-
-    virtual JSValue* callAsFunction(ExecState*, JSObject* thisObj, const List& args);
+    virtual bool implementsConstruct() const;
+    virtual JSObject *construct(ExecState *exec, const List &args);
+    virtual JSValue *callAsFunction(ExecState *exec, JSObject *thisObj, const List &args);
   };
 
   /**

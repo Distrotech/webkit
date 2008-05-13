@@ -1,3 +1,112 @@
+2008-05-06  Christian Dywan  <christian@twotoasts.de>
+
+        Rubber stamped by Alp.
+
+        Back out 17626. It wasn't ready for commit.
+
+        * webkit/webkitprivate.h:
+        * webkit/webkitwebview.cpp:
+        * webkit/webkitwebview.h:
+
+2008-05-01  Marc Ordinas i Llopis  <marc.ordinasillopis@collabora.co.uk>
+
+        Reviewed by Alp Toker.
+
+        https://bugs.webkit.org/show_bug.cgi?id=14750
+        Added support for NPAPI plugins on Gtk and Qt-x11 ports.
+
+        * WebCoreSupport/FrameLoaderClientGtk.cpp:
+        (WebKit::FrameLoaderClient::FrameLoaderClient):
+        (WebKit::FrameLoaderClient::committedLoad):
+        (WebKit::FrameLoaderClient::createPlugin):
+        (WebKit::FrameLoaderClient::redirectDataToPlugin):
+        (WebKit::FrameLoaderClient::finishedLoading):
+        (WebKit::FrameLoaderClient::setMainDocumentError):
+        * WebCoreSupport/FrameLoaderClientGtk.h:
+
+2008-04-30  Sean Egan  <seanegan@gmail.com>
+
+        Reviewed and modified by Holger.
+
+        https://bugs.webkit.org/show_bug.cgi?id=17626
+        Support setting background color and a 16-bit alpha channel.
+
+        * webkit/webkitprivate.h:
+        * webkit/webkitwebview.cpp:
+        * webkit/webkitwebview.h:
+
+2008-04-24  Dan Bernstein  <mitz@apple.com>
+
+        - build fix
+
+        * webkit/webkitwebview.cpp:
+
+2008-04-24  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Change some String arguments to be const references instead.
+
+        * WebCoreSupport/EditorClientGtk.cpp:
+        (WebKit::EditorClient::shouldInsertText):
+        * WebCoreSupport/EditorClientGtk.h:
+
+2008-04-23  Christian Dywan  <christian@twotoasts.de>
+
+        Reviewed by Alp Toker.
+
+        Emit a warning about an unknown setting only if it is
+        not a valid property. Otherwise applications can't
+        subclass WebKitWebSettings to add new properties.
+
+        * webkit/webkitwebview.cpp:
+
+2008-04-20  Simon Hausmann  <hausmann@webkit.org>
+
+        Reviewed by Alp Toker.
+
+        http://bugs.webkit.org/show_bug.cgi?id=18578
+        Share the printing code between the Gtk and the Qt port
+
+        Share the printing code between the Gtk and the Qt port
+        and added printing to the Qt WebKit API.
+
+        * webkit/webkitwebframe.cpp: Removed PrintContext in favour of
+        page/Printcontext.cpp/h
+
+2008-04-19  Alp Toker  <alp@nuanti.com>
+
+        Reviewed by Maciej.
+
+        Enable visited link tracking by default at startup.
+
+        With this patch, the GTK+ port rendering of Acid3 now matches the
+        reference page.
+
+        * webkit/webkitprivate.cpp:
+        (WebKit::core):
+        (webkit_init):
+
+2008-04-11  Mark Rowe  <mrowe@apple.com>
+
+        Gtk build fix after r32231.
+
+        * webkit/webkitwebview.cpp: Update to use contentRenderer.
+
+2008-04-18  Alp Toker  <alp@atoker.com>
+
+        Rubber-stamped by Holger Freyther.
+
+        http://bugs.webkit.org/show_bug.cgi?id=18218
+        [Gtk] segfault when clicking on a disabled button
+
+        Always use the main frame for mouse events (not the focused frame)
+        since it knows best how to get the event through to the right target.
+
+        This also fixes a null crasher.
+
+        * webkit/webkitwebview.cpp:
+
 2008-04-17  Alp Toker  <alp@atoker.com>
 
         Rubber-stamped by Holger Freyther.

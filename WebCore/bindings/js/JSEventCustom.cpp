@@ -33,6 +33,7 @@
 #include "Event.h"
 #include "JSClipboard.h"
 #include "JSKeyboardEvent.h"
+#include "JSMessageEvent.h"
 #include "JSMouseEvent.h"
 #include "JSMutationEvent.h"
 #include "JSOverflowEvent.h"
@@ -40,7 +41,9 @@
 #include "JSTextEvent.h"
 #include "JSUIEvent.h"
 #include "JSWheelEvent.h"
+#include "JSXMLHttpRequestProgressEvent.h"
 #include "KeyboardEvent.h"
+#include "MessageEvent.h"
 #include "MouseEvent.h"
 #include "MutationEvent.h"
 #include "OverflowEvent.h"
@@ -48,16 +51,12 @@
 #include "TextEvent.h"
 #include "UIEvent.h"
 #include "WheelEvent.h"
+#include "XMLHttpRequestProgressEvent.h"
 #include "kjs_events.h"
 
 #if ENABLE(DOM_STORAGE)
 #include "JSStorageEvent.h"
 #include "StorageEvent.h"
-#endif
-
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-#include "JSMessageEvent.h"
-#include "MessageEvent.h"
 #endif
 
 #if ENABLE(SVG)
@@ -104,12 +103,14 @@ JSValue* toJS(ExecState* exec, Event* event)
         ret = new JSMutationEvent(JSMutationEventPrototype::self(exec), static_cast<MutationEvent*>(event));
     else if (event->isOverflowEvent())
         ret = new JSOverflowEvent(JSOverflowEventPrototype::self(exec), static_cast<OverflowEvent*>(event));
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
     else if (event->isMessageEvent())
         ret = new JSMessageEvent(JSMessageEventPrototype::self(exec), static_cast<MessageEvent*>(event));
-#endif
-    else if (event->isProgressEvent())
-        ret = new JSProgressEvent(JSProgressEventPrototype::self(exec), static_cast<ProgressEvent*>(event));
+    else if (event->isProgressEvent()) {
+        if (event->isXMLHttpRequestProgressEvent())
+            ret = new JSXMLHttpRequestProgressEvent(JSXMLHttpRequestProgressEventPrototype::self(exec), static_cast<XMLHttpRequestProgressEvent*>(event));
+        else
+            ret = new JSProgressEvent(JSProgressEventPrototype::self(exec), static_cast<ProgressEvent*>(event));
+    }
 #if ENABLE(DOM_STORAGE)
     else if (event->isStorageEvent())
         ret = new JSStorageEvent(JSStorageEventPrototype::self(exec), static_cast<StorageEvent*>(event));

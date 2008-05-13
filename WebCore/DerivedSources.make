@@ -32,7 +32,7 @@ VPATH = \
     $(WebCore)/css \
     $(WebCore)/dom \
     $(WebCore)/html \
-	$(WebCore)/loader/appcache \
+    $(WebCore)/loader/appcache \
     $(WebCore)/page \
     $(WebCore)/plugins \
     $(WebCore)/storage \
@@ -68,7 +68,7 @@ DOM_CLASSES = \
     Comment \
     Console \
     Counter \
-	DOMApplicationCache \
+    DOMApplicationCache \
     DOMCoreException \
     DOMImplementation \
     DOMParser \
@@ -340,12 +340,14 @@ DOM_CLASSES = \
     WheelEvent \
     XMLHttpRequest \
     XMLHttpRequestException \
+    XMLHttpRequestProgressEvent \
     XMLSerializer \
     XPathEvaluator \
     XPathException \
     XPathExpression \
     XPathNSResolver \
     XPathResult \
+    XSLTProcessor \
 #
 
 .PHONY : all
@@ -356,7 +358,6 @@ all : \
     JSDOMWindowBase.lut.h \
     JSEventTargetBase.lut.h \
     JSRGBColor.lut.h \
-    JSXSLTProcessor.lut.h \
     \
     JSHTMLInputElementBaseTable.cpp \
     \
@@ -378,33 +379,46 @@ all : \
 
 # --------
 
-# CSS property names and value keywords
+ifeq ($(OS),MACOS)
 
-ifeq ($(findstring ENABLE_SVG,$(FEATURE_DEFINES)), ENABLE_SVG)
+FRAMEWORK_FLAGS = $(shell echo $(FRAMEWORK_SEARCH_PATHS) | perl -e 'print "-F " . join(" -F ", split(" ", <>));')
 
-CSSPropertyNames.h : css/CSSPropertyNames.in css/SVGCSSPropertyNames.in css/makeprop.pl
-	if sort $< $(WebCore)/css/SVGCSSPropertyNames.in | uniq -d | grep -E '^[^#]'; then echo 'Duplicate value!'; exit 1; fi
-	cat $< $(WebCore)/css/SVGCSSPropertyNames.in > CSSPropertyNames.in
-	perl "$(WebCore)/css/makeprop.pl"
-
-CSSValueKeywords.h : css/CSSValueKeywords.in css/SVGCSSValueKeywords.in css/makevalues.pl
-	# Lower case all the values, as CSS values are case-insensitive
-	perl -ne 'print lc' $(WebCore)/css/SVGCSSValueKeywords.in > SVGCSSValueKeywords.in
-	if sort $< SVGCSSValueKeywords.in | uniq -d | grep -E '^[^#]'; then echo 'Duplicate value!'; exit 1; fi
-	cat $< SVGCSSValueKeywords.in > CSSValueKeywords.in
-	perl "$(WebCore)/css/makevalues.pl"
+ifeq ($(shell gcc -E -P -dM -F $(BUILT_PRODUCTS_DIR) $(FRAMEWORK_FLAGS) WebCore/ForwardingHeaders/wtf/Platform.h | grep ENABLE_DASHBOARD_SUPPORT | cut -d' ' -f3), 1)
+    ENABLE_DASHBOARD_SUPPORT = 1
+else
+    ENABLE_DASHBOARD_SUPPORT = 0
+endif
 
 else
 
-CSSPropertyNames.h : css/CSSPropertyNames.in css/makeprop.pl
-	cp $< CSSPropertyNames.in
+ENABLE_DASHBOARD_SUPPORT = 1
+
+endif
+
+# CSS property names and value keywords
+
+WEBCORE_CSS_PROPERTY_NAMES := $(WebCore)/css/CSSPropertyNames.in
+WEBCORE_CSS_VALUE_KEYWORDS := $(WebCore)/css/CSSValueKeywords.in
+
+ifeq ($(findstring ENABLE_SVG,$(FEATURE_DEFINES)), ENABLE_SVG)
+    WEBCORE_CSS_PROPERTY_NAMES := $(WEBCORE_CSS_PROPERTY_NAMES) $(WebCore)/css/SVGCSSPropertyNames.in
+    WEBCORE_CSS_VALUE_KEYWORDS := $(WEBCORE_CSS_VALUE_KEYWORDS) $(WebCore)/css/SVGCSSValueKeywords.in
+endif
+
+ifeq ($(ENABLE_DASHBOARD_SUPPORT), 1)
+    WEBCORE_CSS_PROPERTY_NAMES := $(WEBCORE_CSS_PROPERTY_NAMES) $(WebCore)/css/DashboardSupportCSSPropertyNames.in
+endif
+
+CSSPropertyNames.h : $(WEBCORE_CSS_PROPERTY_NAMES) css/makeprop.pl
+	if sort $(WEBCORE_CSS_PROPERTY_NAMES) | uniq -d | grep -E '^[^#]'; then echo 'Duplicate value!'; exit 1; fi
+	cat $(WEBCORE_CSS_PROPERTY_NAMES) > CSSPropertyNames.in
 	perl "$(WebCore)/css/makeprop.pl"
 
-CSSValueKeywords.h : css/CSSValueKeywords.in css/makevalues.pl
-	cp $< CSSValueKeywords.in
+CSSValueKeywords.h : $(WEBCORE_CSS_VALUE_KEYWORDS) css/makevalues.pl
+	# Lower case all the values, as CSS values are case-insensitive
+	perl -ne 'print lc' $(WEBCORE_CSS_VALUE_KEYWORDS) > CSSValueKeywords.in
+	if sort CSSValueKeywords.in | uniq -d | grep -E '^[^#]'; then echo 'Duplicate value!'; exit 1; fi
 	perl "$(WebCore)/css/makevalues.pl"
-
-endif 
 
 # --------
 
@@ -532,12 +546,12 @@ ifdef SVG_FLAGS
 
 SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl svg/svgtags.in svg/svgattrs.in
 	perl $< --tags $(WebCore)/svg/svgtags.in --attrs $(WebCore)/svg/svgattrs.in --extraDefines "$(SVG_FLAGS)" \
-            --namespace SVG --cppNamespace WebCore --namespaceURI "http://www.w3.org/2000/svg" --factory --attrsNullNamespace --output .
+            --namespace SVG --guardFactoryWith "ENABLE(SVG)" --cppNamespace WebCore --namespaceURI "http://www.w3.org/2000/svg" --factory --attrsNullNamespace --output .
 else
 
 SVGElementFactory.cpp SVGNames.cpp : dom/make_names.pl svg/svgtags.in svg/svgattrs.in
 	perl $< --tags $(WebCore)/svg/svgtags.in --attrs $(WebCore)/svg/svgattrs.in \
-            --namespace SVG --cppNamespace WebCore --namespaceURI "http://www.w3.org/2000/svg" --factory --attrsNullNamespace --output .
+            --namespace SVG --guardFactoryWith "ENABLE(SVG)" --cppNamespace WebCore --namespaceURI "http://www.w3.org/2000/svg" --factory --attrsNullNamespace --output .
 
 endif
 
@@ -596,8 +610,6 @@ CharsetData.cpp : platform/text/mac/make-charset-table.pl platform/text/mac/char
 
 # export file
 
-FRAMEWORK_FLAGS = $(shell echo $(FRAMEWORK_SEARCH_PATHS) | perl -e 'print "-F " . join(" -F ", split(" ", <>));')
-
 ifeq ($(shell gcc -E -P -dM -F $(BUILT_PRODUCTS_DIR) $(FRAMEWORK_FLAGS) WebCore/ForwardingHeaders/wtf/Platform.h | grep ENABLE_MAC_JAVA_BRIDGE | cut -d' ' -f3), 1)
     WEBCORE_EXPORT_DEPENDENCIES := $(WEBCORE_EXPORT_DEPENDENCIES) WebCore.JNI.exp
 endif
@@ -605,6 +617,10 @@ endif
 # See also "Generate 64-bit Export File" build phase script in WebCore.xcodeproj/project.pbxproj
 ifeq ($(shell gcc -E -P -dM -F $(BUILT_PRODUCTS_DIR) $(FRAMEWORK_FLAGS) WebCore/ForwardingHeaders/wtf/Platform.h | grep ENABLE_NETSCAPE_PLUGIN_API | cut -d' ' -f3), 1)
     WEBCORE_EXPORT_DEPENDENCIES := $(WEBCORE_EXPORT_DEPENDENCIES) WebCore.NPAPI.exp
+endif
+
+ifeq ($(ENABLE_DASHBOARD_SUPPORT), 1)
+    WEBCORE_EXPORT_DEPENDENCIES := $(WEBCORE_EXPORT_DEPENDENCIES) WebCore.DashboardSupport.exp
 endif
 
 ifeq ($(findstring 10.4,$(MACOSX_DEPLOYMENT_TARGET)), 10.4)

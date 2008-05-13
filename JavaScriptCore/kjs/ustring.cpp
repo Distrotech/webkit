@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 2 -*-
 /*
  *  Copyright (C) 1999-2000 Harri Porten (porten@kde.org)
- *  Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ *  Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *  Copyright (C) 2007 Cameron Zwarich (cwzwarich@uwaterloo.ca)
  *
  *  This library is free software; you can redistribute it and/or
@@ -173,8 +173,8 @@ bool operator==(const CString& c1, const CString& c2)
 
 // These static strings are immutable, except for rc, whose initial value is chosen to reduce the possibility of it becoming zero due to ref/deref not being thread-safe.
 static UChar sharedEmptyChar;
-UString::Rep UString::Rep::null = { 0, 0, INT_MAX / 2, 0, false, true, &UString::Rep::null, 0, 0, 0, 0, 0, 0 };
-UString::Rep UString::Rep::empty = { 0, 0, INT_MAX / 2, 0, false, true, &UString::Rep::empty, 0, &sharedEmptyChar, 0, 0, 0, 0 };
+UString::Rep UString::Rep::null = { 0, 0, INT_MAX / 2, 0, 0, &UString::Rep::null, true, 0, 0, 0, 0, 0, 0 };
+UString::Rep UString::Rep::empty = { 0, 0, INT_MAX / 2, 0, 0, &UString::Rep::empty, true, 0, &sharedEmptyChar, 0, 0, 0, 0 };
 
 static char* statBuffer = 0; // Only used for debugging via UString::ascii().
 
@@ -194,9 +194,9 @@ PassRefPtr<UString::Rep> UString::Rep::create(UChar *d, int l)
   r->len = l;
   r->rc = 1;
   r->_hash = 0;
-  r->isIdentifier = false;
-  r->isStatic = false;
+  r->identifierTable = 0;
   r->baseString = r;
+  r->isStatic = false;
   r->reportedCost = 0;
   r->buf = d;
   r->usedCapacity = l;
@@ -224,9 +224,9 @@ PassRefPtr<UString::Rep> UString::Rep::create(PassRefPtr<Rep> base, int offset, 
   r->len = length;
   r->rc = 1;
   r->_hash = 0;
-  r->isIdentifier = false;
-  r->isStatic = false;
+  r->identifierTable = 0;
   r->baseString = base.releaseRef();
+  r->isStatic = false;
   r->reportedCost = 0;
   r->buf = 0;
   r->usedCapacity = 0;
@@ -242,7 +242,7 @@ void UString::Rep::destroy()
 {
   // Static null and empty strings can never be destroyed, but we cannot rely on reference counting, because ref/deref are not thread-safe.
   if (!isStatic) {
-    if (isIdentifier)
+    if (identifierTable)
       Identifier::remove(this);
     if (baseString == this)
       fastFree(buf);
@@ -861,23 +861,27 @@ UString& UString::append(UChar c)
   return *this;
 }
 
-CString UString::cstring() const
+bool UString::getCString(CStringBuffer& buffer) const
 {
-  int length = size();
-  int neededSize = length + 1;
-  char* buf = new char[neededSize];
+    int length = size();
+    int neededSize = length + 1;
+    buffer.resize(neededSize);
+    char* buf = buffer.data();
   
-  const UChar* p = data();
-  char* q = buf;
-  const UChar* limit = p + length;
-  while (p != limit) {
-    *q = static_cast<char>(p[0]);
-    ++p;
-    ++q;
-  }
-  *q = '\0';
+    UChar ored = 0;
+    const UChar* p = data();
+    char* q = buf;
+    const UChar* limit = p + length;
+    while (p != limit) {
+        UChar c = p[0];
+        ored |= c;
+        *q = static_cast<char>(c);
+        ++p;
+        ++q;
+    }
+    *q = '\0';
   
-  return CString::adopt(buf, length);
+    return !(ored & 0xFF00);
 }
 
 char *UString::ascii() const
@@ -945,7 +949,7 @@ bool UString::is8Bit() const
   return true;
 }
 
-const UChar UString::operator[](int pos) const
+UChar UString::operator[](int pos) const
 {
   if (pos >= size())
     return '\0';
@@ -957,12 +961,11 @@ double UString::toDouble(bool tolerateTrailingJunk, bool tolerateEmptyString) co
   double d;
 
   // FIXME: If tolerateTrailingJunk is true, then we want to tolerate non-8-bit junk
-  // after the number, so is8Bit is too strict a check.
-  if (!is8Bit())
+  // after the number, so this is too strict a check.
+  CStringBuffer s;
+  if (!getCString(s))
     return NaN;
-
-  CString s = cstring();
-  const char* c = s.c_str();
+  const char* c = s.data();
 
   // skip leading white space
   while (isASCIISpace(*c))

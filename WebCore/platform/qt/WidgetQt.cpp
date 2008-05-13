@@ -3,6 +3,7 @@
  * Copyright (C) 2006 George Stiakos <staikos@kde.org>
  * Copyright (C) 2006 Zack Rusin <zack@kde.org>
  * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2008 Holger Hans Peter Freyther
  *
  * All rights reserved.
  *
@@ -45,6 +46,8 @@
 #include "qwebframe.h"
 #include "qwebframe_p.h"
 #include "qwebpage.h"
+
+#include <QCoreApplication>
 #include <QPainter>
 #include <QPaintEngine>
 
@@ -59,6 +62,7 @@ struct WidgetPrivate
         , enabled(true)
         , suppressInvalidation(false)
         , m_widget(0)
+        , isNPAPIPlugin(0)
         , m_parentScrollView(0) { }
     ~WidgetPrivate() {}
 
@@ -66,7 +70,8 @@ struct WidgetPrivate
 
     bool enabled;
     bool suppressInvalidation;
-    QRect m_geometry;
+    bool isNPAPIPlugin;
+    IntRect m_geometry;
     QWidget *m_widget; //for plugins
     ScrollView *m_parentScrollView;
 };
@@ -95,16 +100,14 @@ WidgetClient* Widget::client() const
 
 IntRect Widget::frameGeometry() const
 {
-    if (data->m_widget)
-        data->m_widget->geometry();
     return data->m_geometry;
 }
 
 void Widget::setFrameGeometry(const IntRect& r)
 {
-    if (data->m_widget)
-        data->m_widget->setGeometry(r);
     data->m_geometry = r;
+    if (data->m_widget)
+        data->m_widget->setGeometry(convertToContainingWindow(IntRect(0, 0, r.width(), r.height())));
 }
 
 void Widget::setFocus()
@@ -115,7 +118,7 @@ void Widget::setCursor(const Cursor& cursor)
 {
 #ifndef QT_NO_CURSOR
     if (QWidget* widget = containingWindow())
-        widget->setCursor(cursor.impl());
+        QCoreApplication::postEvent(widget, new SetCursorEvent(cursor.impl()));
 #endif
 }
 
@@ -139,6 +142,16 @@ QWidget* Widget::nativeWidget() const
 void Widget::setNativeWidget(QWidget *widget)
 {
     data->m_widget = widget;
+}
+
+bool Widget::isNPAPIPlugin() const
+{
+    return data->isNPAPIPlugin;
+}
+
+void Widget::setIsNPAPIPlugin(bool is)
+{
+    data->isNPAPIPlugin = is;
 }
 
 void Widget::paint(GraphicsContext *, const IntRect &rect)

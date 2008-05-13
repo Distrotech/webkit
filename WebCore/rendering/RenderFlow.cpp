@@ -377,7 +377,8 @@ void RenderFlow::paintLines(PaintInfo& paintInfo, int tx, int ty)
 {
     // Only paint during the foreground/selection phases.
     if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection && paintInfo.phase != PaintPhaseOutline 
-        && paintInfo.phase != PaintPhaseSelfOutline && paintInfo.phase != PaintPhaseChildOutlines && paintInfo.phase != PaintPhaseTextClip)
+        && paintInfo.phase != PaintPhaseSelfOutline && paintInfo.phase != PaintPhaseChildOutlines && paintInfo.phase != PaintPhaseTextClip
+        && paintInfo.phase != PaintPhaseMask)
         return;
 
     bool inlineFlow = isInlineFlow();
@@ -619,11 +620,11 @@ int RenderFlow::leftmostPosition(bool includeOverflowInterior, bool includeSelf)
     return left;
 }
 
-IntRect RenderFlow::caretRect(int offset, EAffinity affinity, int* extraWidthToEndOfLine)
+IntRect RenderFlow::caretRect(InlineBox* inlineBox, int caretOffset, int* extraWidthToEndOfLine)
 {
     // Do the normal calculation in most cases.
     if (firstChild() || style()->display() == INLINE)
-        return RenderContainer::caretRect(offset, affinity, extraWidthToEndOfLine);
+        return RenderContainer::caretRect(inlineBox, caretOffset, extraWidthToEndOfLine);
 
     // This is a special case:
     // The element is not an inline element, and it's empty. So we have to

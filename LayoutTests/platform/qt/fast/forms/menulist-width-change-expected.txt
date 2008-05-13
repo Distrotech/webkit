@@ -11,7 +11,7 @@ layer at (0,0) size 800x600
           text run at (0,19) width 369: "that the select automatically recalculates the correct width."
         RenderBR {BR} at (369,33) size 0x0
         RenderMenuList {SELECT} at (2,40) size 159x25 [bgcolor=#FFFFFF]
-          RenderBlock (anonymous) at (8,3) size 127x19
+          RenderBlock (anonymous) at (8,4) size 127x19
             RenderText at (0,0) size 34x19
               text run at (0,0) width 34: "Short"
         RenderText {#text} at (0,0) size 0x0

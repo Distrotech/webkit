@@ -450,6 +450,7 @@ void WebChromeClient::populateVisitedLinks()
     END_BLOCK_OBJC_EXCEPTIONS;
 }
 
+#if ENABLE(DASHBOARD_SUPPORT)
 void WebChromeClient::dashboardRegionsChanged()
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
@@ -461,6 +462,7 @@ void WebChromeClient::dashboardRegionsChanged()
 
     END_BLOCK_OBJC_EXCEPTIONS;
 }
+#endif
 
 FloatRect WebChromeClient::customHighlightRect(Node* node, const AtomicString& type, const FloatRect& lineRect)
 {
@@ -539,6 +541,20 @@ void WebChromeClient::willPopUpMenu(NSMenu *menu)
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
     CallUIDelegate(m_webView, @selector(webView:willPopupMenu:), menu);
     END_BLOCK_OBJC_EXCEPTIONS;
+}
+
+bool WebChromeClient::shouldReplaceWithGeneratedFileForUpload(const String& path, String& generatedFilename)
+{
+    NSString* filename;
+    if (![[m_webView _UIDelegateForwarder] webView:m_webView shouldReplaceUploadFile:path usingGeneratedFilename:&filename])
+        return false;
+    generatedFilename = filename;
+    return true;
+}
+
+String WebChromeClient::generateReplacementFile(const String& path)
+{
+    return [[m_webView _UIDelegateForwarder] webView:m_webView generateReplacementFile:path];
 }
 
 @implementation WebOpenPanelResultListener

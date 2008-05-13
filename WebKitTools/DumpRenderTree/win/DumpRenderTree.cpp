@@ -47,6 +47,7 @@
 #include <pthread.h>
 #include <string>
 #include <tchar.h>
+#include <WebKit/ForEachCoClass.h>
 #include <WebKit/WebKit.h>
 #include <fcntl.h>
 #include <io.h>
@@ -590,6 +591,8 @@ void dump()
     if (printSeparators) {
         puts("#EOF");
         fputs("#EOF\n", stderr);
+        fflush(stdout);
+        fflush(stderr);
     }
 
     if (dumpPixels) {
@@ -597,6 +600,7 @@ void dump()
             printf("#EOF\n");
         else
             dumpWebViewAsPixelsAndCompareWithExpected(currentTest, dumpAllPixels);
+        fflush(stdout);
     }
 
 fail:
@@ -1058,8 +1062,6 @@ int main(int argc, char* argv[])
                 continue;
 
             runTest(filenameBuffer);
-            fflush(stdout);
-            fflush(stderr);
         }
     } else {
         printSeparators = tests.size() > 1;
@@ -1081,6 +1083,8 @@ int main(int argc, char* argv[])
         _CrtMemDumpAllObjectsSince(&entryToMainMemCheckpoint);
     }
 #endif
+
+    shutDownWebKit();
 
     return 0;
 }

@@ -349,9 +349,11 @@ void Chrome::print(Frame* frame)
 
 // --------
 
+#if ENABLE(DASHBOARD_SUPPORT)
 void ChromeClient::dashboardRegionsChanged()
 {
 }
+#endif
 
 void ChromeClient::populateVisitedLinks()
 {
@@ -364,6 +366,17 @@ FloatRect ChromeClient::customHighlightRect(Node*, const AtomicString&, const Fl
 
 void ChromeClient::paintCustomHighlight(Node*, const AtomicString&, const FloatRect&, const FloatRect&, bool, bool)
 {
+}
+
+bool ChromeClient::shouldReplaceWithGeneratedFileForUpload(const String&, String&)
+{
+    return false;
+}
+
+String ChromeClient::generateReplacementFile(const String&)
+{
+    ASSERT_NOT_REACHED();
+    return String(); 
 }
 
 // --------

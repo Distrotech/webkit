@@ -38,7 +38,7 @@ namespace WebCore {
 
 PassRefPtr<SessionStorageArea> SessionStorageArea::copy(SecurityOrigin* origin, Page* page)
 {
-    return adoptRef(new SessionStorageArea(origin, page, storageMap()));
+    return adoptRef(new SessionStorageArea(origin, page, this));
 }
 
 SessionStorageArea::SessionStorageArea(SecurityOrigin* origin, Page* page)
@@ -48,8 +48,8 @@ SessionStorageArea::SessionStorageArea(SecurityOrigin* origin, Page* page)
     ASSERT(page);
 }
 
-SessionStorageArea::SessionStorageArea(SecurityOrigin* origin, Page* page, PassRefPtr<StorageMap> map)
-    : StorageArea(origin, map)
+SessionStorageArea::SessionStorageArea(SecurityOrigin* origin, Page* page, SessionStorageArea* area)
+    : StorageArea(origin, area)
     , m_page(page)
 {
     ASSERT(page);
@@ -63,6 +63,11 @@ void SessionStorageArea::itemChanged(const String& key, const String& oldValue, 
 void SessionStorageArea::itemRemoved(const String& key, const String& oldValue, Frame* sourceFrame)
 {
     dispatchStorageEvent(key, oldValue, String(), sourceFrame);
+}
+
+void SessionStorageArea::areaCleared(Frame* sourceFrame)
+{
+    dispatchStorageEvent(String(), String(), String(), sourceFrame);
 }
 
 void SessionStorageArea::dispatchStorageEvent(const String& key, const String& oldValue, const String& newValue, Frame* sourceFrame)

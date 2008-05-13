@@ -31,7 +31,7 @@ namespace KJS {
 
 // ------------------------------ ErrorInstance ----------------------------
 
-const ClassInfo ErrorInstance::info = { "Error", 0, 0 };
+const ClassInfo ErrorInstance::info = { "Error", 0, 0, 0 };
 
 ErrorInstance::ErrorInstance(JSObject* prototype)
     : JSObject(prototype)
@@ -78,9 +78,9 @@ ErrorObjectImp::ErrorObjectImp(ExecState* exec, FunctionPrototype* funcProto, Er
     putDirect(exec->propertyNames().length, jsNumber(1), DontDelete|ReadOnly|DontEnum);
 }
 
-ConstructType ErrorObjectImp::getConstructData(ConstructData&)
+bool ErrorObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.9.3
@@ -114,7 +114,7 @@ NativeErrorPrototype::NativeErrorPrototype(ExecState* exec, ErrorPrototype* erro
 
 // ------------------------------ NativeErrorImp -------------------------------
 
-const ClassInfo NativeErrorImp::info = { "Function", &InternalFunctionImp::info, 0 };
+const ClassInfo NativeErrorImp::info = { "Function", &InternalFunctionImp::info, 0, 0 };
 
 NativeErrorImp::NativeErrorImp(ExecState* exec, FunctionPrototype* funcProto, NativeErrorPrototype* prot)
     : InternalFunctionImp(funcProto, Identifier(prot->getDirect(exec->propertyNames().name)->getString()))
@@ -124,9 +124,9 @@ NativeErrorImp::NativeErrorImp(ExecState* exec, FunctionPrototype* funcProto, Na
     putDirect(exec->propertyNames().prototype, proto, DontDelete|ReadOnly|DontEnum);
 }
 
-ConstructType NativeErrorImp::getConstructData(ConstructData&)
+bool NativeErrorImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* NativeErrorImp::construct(ExecState* exec, const List& args)

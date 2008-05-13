@@ -147,6 +147,7 @@ struct TransparencyLayer
         offset = rect.topLeft();
         pixmap.fill(Qt::transparent);
         painter.begin(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing, p->testRenderHint(QPainter::Antialiasing));
         painter.translate(-offset);
         painter.setPen(p->pen());
         painter.setBrush(p->brush());
@@ -205,7 +206,7 @@ public:
             return &layers.top()->painter;
     }
 
-    QPaintDevice* device;
+    bool antiAliasingForRectsAndLines;
 
     QStack<TransparencyLayer *> layers;
     QPainter* redirect;
@@ -223,12 +224,16 @@ private:
 GraphicsContextPlatformPrivate::GraphicsContextPlatformPrivate(QPainter* p)
 {
     painter = p;
-    device = painter ? painter->device() : 0;
     redirect = 0;
 
-    // FIXME: Maybe only enable in SVG mode?
-    if (painter)
-        painter->setRenderHint(QPainter::Antialiasing);
+    if (painter) {
+        // use the default the QPainter was constructed with
+        antiAliasingForRectsAndLines = painter->testRenderHint(QPainter::Antialiasing);
+        // FIXME: Maybe only enable in SVG mode?
+        painter->setRenderHint(QPainter::Antialiasing, true);
+    } else {
+        antiAliasingForRectsAndLines = false;
+    }
 }
 
 GraphicsContextPlatformPrivate::~GraphicsContextPlatformPrivate()
@@ -388,7 +393,13 @@ void GraphicsContext::drawRect(const IntRect& rect)
     if (paintingDisabled())
         return;
 
-    m_data->p()->drawRect(rect);
+    QPainter *p = m_data->p();
+    const bool antiAlias = p->testRenderHint(QPainter::Antialiasing);
+    p->setRenderHint(QPainter::Antialiasing, m_data->antiAliasingForRectsAndLines);
+
+    p->drawRect(rect);
+
+    p->setRenderHint(QPainter::Antialiasing, antiAlias);
 }
 
 // FIXME: Now that this is refactored, it should be shared by all contexts.
@@ -431,8 +442,14 @@ void GraphicsContext::drawLine(const IntPoint& point1, const IntPoint& point2)
     FloatPoint p1 = point1;
     FloatPoint p2 = point2;
 
+    QPainter *p = m_data->p();
+    const bool antiAlias = p->testRenderHint(QPainter::Antialiasing);
+    p->setRenderHint(QPainter::Antialiasing, m_data->antiAliasingForRectsAndLines);
+
     adjustLineToPixelBoundaries(p1, p2, strokeThickness(), strokeStyle());
-    m_data->p()->drawLine(p1, p2);
+    p->drawLine(p1, p2);
+
+    p->setRenderHint(QPainter::Antialiasing, antiAlias);
 }
 
 // This method is only used to draw the little circles used in lists.
@@ -449,7 +466,13 @@ void GraphicsContext::strokeArc(const IntRect& rect, int startAngle, int angleSp
     if (paintingDisabled() || strokeStyle() == NoStroke || strokeThickness() <= 0.0f || !strokeColor().alpha())
         return;
 
-    m_data->p()->drawArc(rect, startAngle * 16, angleSpan * 16);
+    QPainter *p = m_data->p();
+    const bool antiAlias = p->testRenderHint(QPainter::Antialiasing);
+    p->setRenderHint(QPainter::Antialiasing, m_data->antiAliasingForRectsAndLines);
+
+    p->drawArc(rect, startAngle * 16, angleSpan * 16);
+
+    p->setRenderHint(QPainter::Antialiasing, antiAlias);
 }
 
 void GraphicsContext::drawConvexPolygon(size_t npoints, const FloatPoint* points, bool shouldAntialias)
@@ -547,6 +570,8 @@ void GraphicsContext::drawFocusRing(const Color& color)
         return;
 
     QPainter *p = m_data->p();
+    const bool antiAlias = p->testRenderHint(QPainter::Antialiasing);
+    p->setRenderHint(QPainter::Antialiasing, m_data->antiAliasingForRectsAndLines);
 
     const QPen oldPen = p->pen();
     const QBrush oldBrush = p->brush();
@@ -570,6 +595,8 @@ void GraphicsContext::drawFocusRing(const Color& color)
 #endif
     p->setPen(oldPen);
     p->setBrush(oldBrush);
+
+    p->setRenderHint(QPainter::Antialiasing, antiAlias);
 }
 
 void GraphicsContext::drawLineForText(const IntPoint& origin, int width, bool printing)
@@ -625,20 +652,18 @@ void GraphicsContext::beginTransparencyLayer(float opacity)
 
     int x, y, w, h;
     x = y = 0;
-    w = m_data->device->width();
-    h = m_data->device->height();
-
     QPainter *p = m_data->p();
+    const QPaintDevice *device = p->device();
+    w = device->width();
+    h = device->height();
+
     QRectF clip = p->clipPath().boundingRect();
-    bool ok;
-    QTransform transform = p->transform().inverted(&ok);
-    if (ok) {
-        QRectF deviceClip = transform.mapRect(clip);
-        x = int(qBound(qreal(0), deviceClip.x(), (qreal)w));
-        y = int(qBound(qreal(0), deviceClip.y(), (qreal)h));
-        w = int(qBound(qreal(0), deviceClip.width(), (qreal)w) + 2);
-        h = int(qBound(qreal(0), deviceClip.height(), (qreal)h) + 2);
-    }
+    QRectF deviceClip = p->transform().mapRect(clip);
+    x = int(qBound(qreal(0), deviceClip.x(), (qreal)w));
+    y = int(qBound(qreal(0), deviceClip.y(), (qreal)h));
+    w = int(qBound(qreal(0), deviceClip.width(), (qreal)w) + 2);
+    h = int(qBound(qreal(0), deviceClip.height(), (qreal)h) + 2);
+
     TransparencyLayer * layer = new TransparencyLayer(m_data->p(), QRect(x, y, w, h));
 
     layer->opacity = opacity;
@@ -797,7 +822,7 @@ void GraphicsContext::clipOut(const IntRect& rect)
 {
     if (paintingDisabled())
         return;
-        
+
     QPainter *p = m_data->p();
     QRectF clipBounds = p->clipPath().boundingRect();
     QPainterPath newClip;
@@ -812,7 +837,7 @@ void GraphicsContext::clipOutEllipseInRect(const IntRect& rect)
 {
     if (paintingDisabled())
         return;
-    
+
     QPainter *p = m_data->p();
     QRectF clipBounds = p->clipPath().boundingRect();
     QPainterPath newClip;
@@ -874,7 +899,7 @@ void GraphicsContext::setPlatformStrokeColor(const Color& color)
 }
 
 void GraphicsContext::setPlatformStrokeStyle(const StrokeStyle& strokeStyle)
-{   
+{
     if (paintingDisabled())
         return;
     QPainter *p = m_data->p();

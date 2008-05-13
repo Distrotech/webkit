@@ -43,12 +43,10 @@ namespace WebCore {
     class RenderObject;
     class String;
     class VisiblePosition;
-
+    class AccessibilityObject;
+    class Node;
+    
     typedef unsigned AXID;
-
-    struct AXIDHashTraits : WTF::GenericHashTraits<unsigned> {
-        static TraitType deletedValue() { return UINT_MAX; }
-    };
 
     struct TextMarkerData  {
         AXID axID;
@@ -59,37 +57,44 @@ namespace WebCore {
 
     class AXObjectCache {
     public:
-
         ~AXObjectCache();
+        
+        // to be used with render objects
         AccessibilityObject* get(RenderObject*);
+        
+        // used for objects without backing elements
+        AccessibilityObject* get(AccessibilityRole);
+        
         void remove(RenderObject*);
+        void remove(AXID);
+
         void detachWrapper(AccessibilityObject*);
         void attachWrapper(AccessibilityObject*);
         void postNotification(RenderObject*, const String&);
         void postNotificationToElement(RenderObject*, const String&);
         void childrenChanged(RenderObject*);
+        void selectedChildrenChanged(RenderObject*);
         static void enableAccessibility() { gAccessibilityEnabled = true; }
         static bool accessibilityEnabled() { return gAccessibilityEnabled; }
         void handleFocusedUIElementChanged();
-
-#if PLATFORM(MAC)
-        AXID getAXID(AccessibilityObject*);
+        
         void removeAXID(AccessibilityObject*);
         bool isIDinUse(AXID id) const { return m_idsInUse.contains(id); }
-#endif
 
     private:
-        HashMap<RenderObject*, RefPtr<AccessibilityObject> > m_objects;
+        HashMap<AXID, RefPtr<AccessibilityObject> > m_objects;
+        HashMap<RenderObject*, AXID> m_renderObjectMapping;
         static bool gAccessibilityEnabled;
-#if PLATFORM(MAC)
-        HashSet<AXID, IntHash<AXID>, AXIDHashTraits> m_idsInUse;
-#endif
+        HashSet<AXID> m_idsInUse;
+        
+        AXID getAXID(AccessibilityObject*);
     };
 
 #if !HAVE(ACCESSIBILITY)
     inline void AXObjectCache::handleFocusedUIElementChanged() { }
     inline void AXObjectCache::detachWrapper(AccessibilityObject*) { }
     inline void AXObjectCache::attachWrapper(AccessibilityObject*) { }
+    inline void AXObjectCache::selectedChildrenChanged(RenderObject*) { }
     inline void AXObjectCache::postNotification(RenderObject*, const String&) { }
     inline void AXObjectCache::postNotificationToElement(RenderObject*, const String&) { }
 #endif

@@ -71,6 +71,7 @@
 #endif
 
 #define DEBUG_COLLECTOR 0
+#define COLLECT_ON_EVERY_ALLOCATION 0
 
 using std::max;
 
@@ -200,6 +201,10 @@ template <Collector::HeapType heapType> void* Collector::heapAllocate(size_t s)
   size_t usedBlocks = heap.usedBlocks;
   size_t i = heap.firstBlockWithPossibleSpace;
 
+#if COLLECT_ON_EVERY_ALLOCATION
+  collect();
+#endif
+
   // if we have a huge amount of extra cost, we'll try to collect even if we still have
   // free cells left.
   if (heapType == PrimaryHeap && heap.extraCost > ALLOCATIONS_PER_COLLECTION) {
@@ -286,17 +291,16 @@ collect:
 
   return newCell;
 }
-#if !PLATFORM(MAC)
-void* Collector::allocate(size_t s)
+
+void* Collector::allocate(size_t s) 
 {
     return heapAllocate<PrimaryHeap>(s);
 }
 
-void* Collector::allocateNumber(size_t s)
+void* Collector::allocateNumber(size_t s) 
 {
     return heapAllocate<NumberHeap>(s);
 }
-#endif
 
 static inline void* currentThreadStackBase()
 {
@@ -1045,6 +1049,20 @@ HashCountedSet<const char*>* Collector::protectedObjectTypeCounts()
 bool Collector::isBusy()
 {
     return (primaryHeap.operationInProgress != NoOperation) | (numberHeap.operationInProgress != NoOperation);
+}
+
+void Collector::reportOutOfMemoryToAllExecStates()
+{
+    if (!JSGlobalObject::head())
+        return;
+
+    JSGlobalObject* globalObject = JSGlobalObject::head();
+    do {
+        ExecStateStack::const_iterator end = globalObject->activeExecStates().end();
+        for (ExecStateStack::const_iterator it = globalObject->activeExecStates().begin(); it != end; ++it)
+            (*it)->setException(Error::create(*it, GeneralError, "Out of memory"));
+        globalObject = globalObject->next();
+    } while (globalObject != JSGlobalObject::head());
 }
 
 } // namespace KJS

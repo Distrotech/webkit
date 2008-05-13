@@ -88,6 +88,7 @@ Lexer::Lexer()
     , next1(0)
     , next2(0)
     , next3(0)
+    , mainTable(KJS::mainTable)
 {
     m_buffer8.reserveCapacity(initialReadBufferCapacity);
     m_buffer16.reserveCapacity(initialReadBufferCapacity);
@@ -95,7 +96,12 @@ Lexer::Lexer()
     m_identifiers.reserveCapacity(initialStringTableCapacity);
 }
 
-void Lexer::setCode(int startingLineNumber, PassRefPtr<SourceProvider> source)
+Lexer::~Lexer()
+{
+    delete[] mainTable.table;
+}
+
+void Lexer::setCode(int startingLineNumber, const UChar* c, unsigned int len)
 {
   yylineno = 1 + startingLineNumber;
   restrKeyword = false;
@@ -103,11 +109,9 @@ void Lexer::setCode(int startingLineNumber, PassRefPtr<SourceProvider> source)
   eatNextIdentifier = false;
   stackToken = -1;
   lastToken = -1;
-
   pos = 0;
-  m_source = source;
-  code = m_source->data();
-  length = m_source->length();
+  code = c;
+  length = len;
   skipLF = false;
   skipCR = false;
   error = false;
@@ -231,7 +235,7 @@ int Lexer::lex(void* p1, void* p2)
         shift(2);
         state = InSingleLineComment;
       } else {
-        token = matchPunctuator(lvalp->intValue, current, next1, next2, next3);
+        token = matchPunctuator(current, next1, next2, next3);
         if (token != -1) {
           setDone(Other);
         } else {
@@ -635,7 +639,7 @@ bool Lexer::isOctalDigit(int c)
   return (c >= '0' && c <= '7');
 }
 
-int Lexer::matchPunctuator(int& charPos, int c1, int c2, int c3, int c4)
+int Lexer::matchPunctuator(int c1, int c2, int c3, int c4)
 {
   if (c1 == '>' && c2 == '>' && c3 == '>' && c4 == '=') {
     shift(4);
@@ -737,19 +741,13 @@ int Lexer::matchPunctuator(int& charPos, int c1, int c2, int c3, int c4)
     case '%':
     case '(':
     case ')':
+    case '{':
+    case '}':
     case '[':
     case ']':
     case ';':
       shift(1);
       return static_cast<int>(c1);
-    case '{':
-      charPos = pos;
-      shift(1);
-      return OPENBRACE;
-    case '}':
-      charPos = pos;
-      shift(1);
-      return CLOSEBRACE;
     default:
       return -1;
   }

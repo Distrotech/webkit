@@ -27,7 +27,7 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameTree.h"
-#include "JSDOMWindowWrapper.h"
+#include "JSDOMWindowShell.h"
 #include "Settings.h"
 #include "kjs_proxy.h"
 #include <kjs/object.h>
@@ -82,12 +82,12 @@ bool JSDOMWindow::customGetOwnPropertySlot(ExecState* exec, const Identifier& pr
     if (!impl()->frame()) {
         // The following code is safe for cross-domain and same domain use.
         // It ignores any custom properties that might be set on the DOMWindow (including a custom prototype).
-        entry = s_info.propHashTable->entry(propertyName);
+        entry = s_info.propHashTable(exec)->entry(propertyName);
         if (entry && !(entry->attributes & Function) && entry->integerValue == ClosedAttrNum) {
             slot.setStaticEntry(this, entry, staticValueGetter<JSDOMWindow>);
             return true;
         }
-        entry = JSDOMWindowPrototype::s_info.propHashTable->entry(propertyName);
+        entry = JSDOMWindowPrototype::s_info.propHashTable(exec)->entry(propertyName);
         if (entry && (entry->attributes & Function) && entry->functionValue == jsDOMWindowPrototypeFunctionClose) {
             slot.setStaticEntry(this, entry, nonCachingStaticFunctionGetter);
             return true;
@@ -115,16 +115,13 @@ bool JSDOMWindow::customGetOwnPropertySlot(ExecState* exec, const Identifier& pr
     // prototype due to the blanket same origin (allowsAccessFrom) check at the end of getOwnPropertySlot.
     // Also, it's important to get the implementation straight out of the DOMWindow prototype regardless of
     // what prototype is actually set on this object.
-    entry = JSDOMWindowPrototype::s_info.propHashTable->entry(propertyName);
+    entry = JSDOMWindowPrototype::s_info.propHashTable(exec)->entry(propertyName);
     if (entry) {
         if ((entry->attributes & Function)
                 && (entry->functionValue == jsDOMWindowPrototypeFunctionBlur
                     || entry->functionValue == jsDOMWindowPrototypeFunctionClose
                     || entry->functionValue == jsDOMWindowPrototypeFunctionFocus
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
-                    || entry->functionValue == jsDOMWindowPrototypeFunctionPostMessage
-#endif
-                    )) {
+                    || entry->functionValue == jsDOMWindowPrototypeFunctionPostMessage)) {
             if (!allowsAccess) {
                 slot.setStaticEntry(this, entry, nonCachingStaticFunctionGetter);
                 return true;
@@ -177,10 +174,11 @@ bool JSDOMWindow::customGetPropertyNames(ExecState* exec, PropertyNameArray&)
 
 void JSDOMWindow::setLocation(ExecState* exec, JSValue* value)
 {
-    Frame* activeFrame = toJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
+    Frame* activeFrame = asJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
     if (!activeFrame)
         return;
 
+#if ENABLE(DASHBOARD_SUPPORT)
     // To avoid breaking old widgets, make "var location =" in a top-level frame create
     // a property named "location" instead of performing a navigation (<rdar://problem/5688039>).
     if (Settings* settings = activeFrame->settings()) {
@@ -190,6 +188,7 @@ void JSDOMWindow::setLocation(ExecState* exec, JSValue* value)
             return;
         }
     }
+#endif
 
     if (!activeFrame->loader()->shouldAllowNavigation(impl()->frame()))
         return;
@@ -201,31 +200,33 @@ void JSDOMWindow::setLocation(ExecState* exec, JSValue* value)
     }
 }
 
-#if ENABLE(CROSS_DOCUMENT_MESSAGING)
 JSValue* JSDOMWindow::postMessage(ExecState* exec, const List& args)
 {
     DOMWindow* window = impl();
 
-    DOMWindow* source = toJSDOMWindow(exec->dynamicGlobalObject())->impl();
-    String domain = source->frame()->loader()->url().host();
-    String uri = source->frame()->loader()->url().string();
+    DOMWindow* source = asJSDOMWindow(exec->dynamicGlobalObject())->impl();
     String message = args[0]->toString(exec);
 
     if (exec->hadException())
         return jsUndefined();
 
-    window->postMessage(message, domain, uri, source);
+    String targetOrigin = valueToStringWithUndefinedOrNullCheck(exec, args[1]);
+    if (exec->hadException())
+        return jsUndefined();
+
+    ExceptionCode ec = 0;
+    window->postMessage(message, targetOrigin, source, ec);
+    setDOMException(exec, ec);
 
     return jsUndefined();
 }
-#endif
 
 DOMWindow* toDOMWindow(JSValue* val)
 {
     if (val->isObject(&JSDOMWindow::s_info))
         return static_cast<JSDOMWindow*>(val)->impl();
-    if (val->isObject(&JSDOMWindowWrapper::s_info))
-        return static_cast<JSDOMWindowWrapper*>(val)->impl();
+    if (val->isObject(&JSDOMWindowShell::s_info))
+        return static_cast<JSDOMWindowShell*>(val)->impl();
     return 0;
 }
 

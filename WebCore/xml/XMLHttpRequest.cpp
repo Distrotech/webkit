@@ -1,7 +1,7 @@
 /*
  *  Copyright (C) 2004, 2006, 2008 Apple Inc. All rights reserved.
  *  Copyright (C) 2005-2007 Alexey Proskuryakov <ap@webkit.org>
- *  Copyright (C) 2007 Julien Chaffraix <julien.chaffraix@gmail.com>
+ *  Copyright (C) 2007, 2008 Julien Chaffraix <jchaffraix@webkit.org>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,7 @@
 #include "SubresourceLoader.h"
 #include "TextResourceDecoder.h"
 #include "XMLHttpRequestException.h"
+#include "XMLHttpRequestProgressEvent.h"
 #include "kjs_binding.h"
 
 namespace WebCore {
@@ -86,6 +87,7 @@ static bool isSafeRequestHeader(const String& name)
 {
     static HashSet<String, CaseFoldingHash> forbiddenHeaders;
     static String proxyString("proxy-");
+    static String secString("sec-");
     
     if (forbiddenHeaders.isEmpty()) {
         forbiddenHeaders.add("accept-charset");
@@ -105,7 +107,8 @@ static bool isSafeRequestHeader(const String& name)
         forbiddenHeaders.add("via");
     }
     
-    return !forbiddenHeaders.contains(name) && !name.startsWith(proxyString, false);
+    return !forbiddenHeaders.contains(name) && !name.startsWith(proxyString, false) &&
+           !name.startsWith(secString, false);
 }
 
 // Determines if a string is a valid token, as defined by
@@ -142,14 +145,14 @@ XMLHttpRequestState XMLHttpRequest::readyState() const
     return m_state;
 }
 
-const KJS::UString& XMLHttpRequest::responseText(ExceptionCode& ec) const
+const KJS::UString& XMLHttpRequest::responseText() const
 {
     return m_responseText;
 }
 
-Document* XMLHttpRequest::responseXML(ExceptionCode& ec) const
+Document* XMLHttpRequest::responseXML() const
 {
-    if (m_state != Loaded)
+    if (m_state != DONE)
         return 0;
 
     if (!m_createdDocument) {
@@ -189,9 +192,19 @@ EventListener* XMLHttpRequest::onLoadListener() const
     return m_onLoadListener.get();
 }
 
+EventListener* XMLHttpRequest::onProgressListener() const
+{
+    return m_onProgressListener.get();
+}
+
 void XMLHttpRequest::setOnLoadListener(EventListener* eventListener)
 {
     m_onLoadListener = eventListener;
+}
+
+void XMLHttpRequest::setOnProgressListener(EventListener* eventListener)
+{
+    m_onProgressListener = eventListener;
 }
 
 void XMLHttpRequest::addEventListener(const AtomicString& eventType, PassRefPtr<EventListener> eventListener, bool)
@@ -247,11 +260,12 @@ bool XMLHttpRequest::dispatchEvent(PassRefPtr<Event> evt, ExceptionCode& ec, boo
 XMLHttpRequest::XMLHttpRequest(Document* d)
     : m_doc(d)
     , m_async(true)
-    , m_state(Uninitialized)
+    , m_state(UNSENT)
     , m_identifier(-1)
     , m_responseText("")
     , m_createdDocument(false)
     , m_aborted(false)
+    , m_receivedLength(0)
 {
     ASSERT(m_doc);
     addToRequestsByDocument(m_doc, this);
@@ -287,7 +301,7 @@ void XMLHttpRequest::callReadyStateChangeListener()
     dispatchEvent(evt.release(), ec, false);
     ASSERT(!ec);
     
-    if (m_state == Loaded) {
+    if (m_state == DONE) {
         evt = new Event(loadEvent, false, false);
         if (m_onLoadListener) {
             evt->setTarget(this);
@@ -320,7 +334,7 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
 {
     internalAbort();
     XMLHttpRequestState previousState = m_state;
-    m_state = Uninitialized;
+    m_state = UNSENT;
     m_aborted = false;
 
     // clear stuff from possible previous load
@@ -333,7 +347,7 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
     m_createdDocument = false;
     m_responseXML = 0;
 
-    ASSERT(m_state == Uninitialized);
+    ASSERT(m_state == UNSENT);
 
     if (!urlMatchesDocumentDomain(url)) {
         ec = SECURITY_ERR;
@@ -369,10 +383,10 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
 
     // Check previous state to avoid dispatching readyState event
     // when calling open several times in a row.
-    if (previousState != Open)
-        changeState(Open);
+    if (previousState != OPENED)
+        changeState(OPENED);
     else
-        m_state = Open;
+        m_state = OPENED;
 }
 
 void XMLHttpRequest::open(const String& method, const KURL& url, bool async, const String& user, ExceptionCode& ec)
@@ -397,7 +411,7 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
     if (!m_doc)
         return;
 
-    if (m_state != Open || m_loader) {
+    if (m_state != OPENED || m_loader) {
         ec = INVALID_STATE_ERR;
         return;
     }
@@ -411,10 +425,12 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
             ExceptionCode ec = 0;
+#if ENABLE(DASHBOARD_SUPPORT)
             Settings* settings = m_doc->settings();
             if (settings && settings->usesDashboardBackwardCompatibilityMode())
                 setRequestHeader("Content-Type", "application/x-www-form-urlencoded", ec);
             else
+#endif
                 setRequestHeader("Content-Type", "application/xml", ec);
             ASSERT(ec == 0);
         }
@@ -483,12 +499,12 @@ void XMLHttpRequest::abort()
     // Clear headers as required by the spec
     m_requestHeaders.clear();
 
-    if ((m_state <= Open && !sendFlag) || m_state == Loaded)
-        m_state = Uninitialized;
+    if ((m_state <= OPENED && !sendFlag) || m_state == DONE)
+        m_state = UNSENT;
      else {
         ASSERT(!m_loader);
-        changeState(Loaded);
-        m_state = Uninitialized;
+        changeState(DONE);
+        m_state = UNSENT;
     }
 }
 
@@ -497,6 +513,9 @@ void XMLHttpRequest::internalAbort()
     bool hadLoader = m_loader;
 
     m_aborted = true;
+
+    // FIXME: when we add the support for multi-part XHR, we will have to think be careful with this initialization.
+    m_receivedLength = 0;
 
     if (hadLoader) {
         m_loader->cancel();
@@ -537,10 +556,12 @@ void XMLHttpRequest::overrideMimeType(const String& override)
     
 void XMLHttpRequest::setRequestHeader(const String& name, const String& value, ExceptionCode& ec)
 {
-    if (m_state != Open || m_loader) {
+    if (m_state != OPENED || m_loader) {
+#if ENABLE(DASHBOARD_SUPPORT)
         Settings* settings = m_doc ? m_doc->settings() : 0;
         if (settings && settings->usesDashboardBackwardCompatibilityMode())
             return;
+#endif
 
         ec = INVALID_STATE_ERR;
         return;
@@ -574,7 +595,7 @@ String XMLHttpRequest::getRequestHeader(const String& name) const
 
 String XMLHttpRequest::getAllResponseHeaders(ExceptionCode& ec) const
 {
-    if (m_state < Receiving) {
+    if (m_state < LOADING) {
         ec = INVALID_STATE_ERR;
         return "";
     }
@@ -596,7 +617,7 @@ String XMLHttpRequest::getAllResponseHeaders(ExceptionCode& ec) const
 
 String XMLHttpRequest::getResponseHeader(const String& name, ExceptionCode& ec) const
 {
-    if (m_state < Receiving) {
+    if (m_state < LOADING) {
         ec = INVALID_STATE_ERR;
         return "";
     }
@@ -632,7 +653,7 @@ int XMLHttpRequest::status(ExceptionCode& ec) const
     if (m_response.httpStatusCode())
         return m_response.httpStatusCode();
 
-    if (m_state == Open) {
+    if (m_state == OPENED) {
         // Firefox only raises an exception in this state; we match it.
         // Note the case of local file requests, where we have no HTTP response code! Firefox never raises an exception for those, but we match HTTP case for consistency.
         ec = INVALID_STATE_ERR;
@@ -647,7 +668,7 @@ String XMLHttpRequest::statusText(ExceptionCode& ec) const
     if (m_response.httpStatusCode())
         return "OK";
 
-    if (m_state == Open) {
+    if (m_state == OPENED) {
         // See comments in getStatus() above.
         ec = INVALID_STATE_ERR;
     }
@@ -663,7 +684,7 @@ void XMLHttpRequest::processSyncLoadResults(const Vector<char>& data, const Reso
     }
 
     didReceiveResponse(0, response);
-    changeState(Sent);
+    changeState(HEADERS_RECEIVED);
     if (m_aborted)
         return;
 
@@ -689,8 +710,8 @@ void XMLHttpRequest::didFinishLoading(SubresourceLoader* loader)
         
     ASSERT(loader == m_loader);
 
-    if (m_state < Sent)
-        changeState(Sent);
+    if (m_state < HEADERS_RECEIVED)
+        changeState(HEADERS_RECEIVED);
 
     {
         KJS::JSLock lock;
@@ -706,7 +727,7 @@ void XMLHttpRequest::didFinishLoading(SubresourceLoader* loader)
     bool hadLoader = m_loader;
     m_loader = 0;
 
-    changeState(Loaded);
+    changeState(DONE);
     m_decoder = 0;
 
     if (hadLoader)
@@ -735,8 +756,8 @@ void XMLHttpRequest::receivedCancellation(SubresourceLoader*, const Authenticati
 
 void XMLHttpRequest::didReceiveData(SubresourceLoader*, const char* data, int len)
 {
-    if (m_state < Sent)
-        changeState(Sent);
+    if (m_state < HEADERS_RECEIVED)
+        changeState(HEADERS_RECEIVED);
   
     if (!m_decoder) {
         if (!m_responseEncoding.isEmpty())
@@ -763,12 +784,43 @@ void XMLHttpRequest::didReceiveData(SubresourceLoader*, const char* data, int le
     }
 
     if (!m_aborted) {
-        if (m_state != Receiving)
-            changeState(Receiving);
+        updateAndDispatchOnProgress(len);
+
+        if (m_state != LOADING)
+            changeState(LOADING);
         else
             // Firefox calls readyStateChanged every time it receives data, 4449442
             callReadyStateChangeListener();
     }
+}
+
+void XMLHttpRequest::updateAndDispatchOnProgress(unsigned int len)
+{
+    long long expectedLength = m_response.expectedContentLength();
+
+    m_receivedLength += len;
+
+    // FIXME: the spec requires that we dispatch the event according to the least
+    // frequent method between every 350ms (+/-200ms) and for every byte received.
+    dispatchProgressEvent(expectedLength);
+}
+
+void XMLHttpRequest::dispatchProgressEvent(long long expectedLength)
+{
+    RefPtr<XMLHttpRequestProgressEvent> evt;
+
+    // If we do not have the information or it is odd, set lengthComputable to false.
+    evt = new XMLHttpRequestProgressEvent(progressEvent, expectedLength && m_receivedLength <= expectedLength, static_cast<unsigned>(m_receivedLength), static_cast<unsigned>(expectedLength));
+
+    if (m_onProgressListener) {
+        evt->setTarget(this);
+        evt->setCurrentTarget(this);
+        m_onProgressListener->handleEvent(evt.get(), false);
+    }
+
+    ExceptionCode ec = 0;
+    dispatchEvent(evt, ec, false);
+    ASSERT(!ec);
 }
 
 void XMLHttpRequest::cancelRequests(Document* m_doc)

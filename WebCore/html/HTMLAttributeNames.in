@@ -7,6 +7,9 @@ align
 alink
 alt
 archive
+aria-labeledby
+aria-labelledby
+aria-describedby
 autocomplete
 autoplay
 autosave
@@ -77,6 +80,7 @@ playcount
 loopend
 loopstart
 lowsrc
+manifest
 marginheight
 marginwidth
 max
@@ -149,6 +153,7 @@ readonly
 rel
 results
 rev
+role
 rows
 rowspan
 rules

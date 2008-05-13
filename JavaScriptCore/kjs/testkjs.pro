@@ -4,12 +4,7 @@ DESTDIR = ..
 SOURCES = testkjs.cpp
 QT -= gui
 DEFINES -= KJS_IDENTIFIER_HIDE_GLOBALS 
-INCLUDEPATH += $$PWD/.. \
-    $$PWD \
-    $$PWD/../bindings \
-    $$PWD/../bindings/c \
-    $$PWD/../wtf \
-    $$PWD/../VM
+INCLUDEPATH += $$PWD/.. $$PWD $$PWD/../bindings $$PWD/../bindings/c $$PWD/../wtf
 CONFIG -= app_bundle
 qt-port:DEFINES += BUILDING_QT__
 #qt-port:LIBS += -L$$OUTPUT_DIR/lib -lQtWebKit
@@ -41,3 +36,6 @@ SOURCES -= API/JSBase.cpp \
     API/JSStringRef.cpp \
     API/JSValueRef.cpp
 
+qt-port:lessThan(QT_MINOR_VERSION, 4) {
+    DEFINES += QT_BEGIN_NAMESPACE="" QT_END_NAMESPACE=""
+}

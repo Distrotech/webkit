@@ -289,10 +289,6 @@ sub GenerateHeader
         push(@headerContent, "#include \"EventTargetNode.h\"\n");
     }
 
-    if ($dataNode->extendedAttributes->{"CustomCall"}) {
-        push(@headerContent, "#include <kjs/CallData.h>\n");
-    }
-
     # Get correct pass/store types respecting PODType flag
     my $podType = $dataNode->extendedAttributes->{"PODType"};
     my $passType = $podType ? "JSSVGPODTypeWrapper<$podType>*" : "$implClassName*";
@@ -308,7 +304,7 @@ sub GenerateHeader
 
     # Implementation class forward declaration
     AddClassForwardIfNeeded($implClassName) unless $podType;
-    AddClassForwardIfNeeded("JSDOMWindowWrapper") if $interfaceName eq "DOMWindow";
+    AddClassForwardIfNeeded("JSDOMWindowShell") if $interfaceName eq "DOMWindow";
 
     # Class declaration
     push(@headerContent, "class $className : public $parentClassName {\n");
@@ -317,7 +313,7 @@ sub GenerateHeader
 
     # Constructor
     if ($interfaceName eq "DOMWindow") {
-        push(@headerContent, "    $className($passType, JSDOMWindowWrapper*);\n");
+        push(@headerContent, "    $className($passType, JSDOMWindowShell*);\n");
     } else {
         push(@headerContent, "    $className(KJS::JSObject* prototype, $passType" . (IsSVGTypeNeedingContextParameter($implClassName) ? ", SVGElement* context" : "") .");\n");
     }
@@ -374,7 +370,7 @@ sub GenerateHeader
     # Custom call functions
     if ($dataNode->extendedAttributes->{"CustomCall"}) {
         push(@headerContent, "    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);\n");
-        push(@headerContent, "    virtual KJS::CallType getCallData(KJS::CallData&);\n\n");
+        push(@headerContent, "    virtual bool implementsCall() const;\n\n");
     }
 
     # Custom deleteProperty function
@@ -734,7 +730,7 @@ sub GenerateImplementation
                                \@hashKeys, \@hashValues,
                                \@hashSpecials, \@hashParameters);
 
-    push(@implContent, "const ClassInfo ${className}Prototype::s_info = { \"${visibleClassName}Prototype\", 0, &${className}PrototypeTable };\n\n");
+    push(@implContent, "const ClassInfo ${className}Prototype::s_info = { \"${visibleClassName}Prototype\", 0, &${className}PrototypeTable, 0 };\n\n");
     if ($dataNode->extendedAttributes->{"DoNotCache"}) {
         push(@implContent, "JSObject* ${className}Prototype::self()\n");
         push(@implContent, "{\n");
@@ -776,8 +772,9 @@ sub GenerateImplementation
     if ($numAttributes > 0) {
         push(@implContent, "&${className}Table ");
     } else {
-        push(@implContent, "0 ")
+        push(@implContent, "0 ");
     }
+    push(@implContent, ", 0 ");
     push(@implContent, "};\n\n");
 
     # Get correct pass/store types respecting PODType flag
@@ -789,9 +786,9 @@ sub GenerateImplementation
 
     # Constructor
     if ($interfaceName eq "DOMWindow") {
-        AddIncludesForType("JSDOMWindowWrapper");
-        push(@implContent, "${className}::$className($passType impl, JSDOMWindowWrapper* wrapper)\n");
-        push(@implContent, "    : $parentClassName(${className}Prototype::self(), impl, wrapper)\n");
+        AddIncludesForType("JSDOMWindowShell");
+        push(@implContent, "${className}::$className($passType impl, JSDOMWindowShell* shell)\n");
+        push(@implContent, "    : $parentClassName(${className}Prototype::self(), impl, shell)\n");
     } else {
         push(@implContent, "${className}::$className(JSObject* prototype, $passType impl" . ($needsSVGContext ? ", SVGElement* context" : "") . ")\n");
         if ($hasParent) {
@@ -1139,11 +1136,11 @@ sub GenerateImplementation
             push(@implContent, "{\n");
 
             if ($interfaceName eq "DOMWindow") {
-                AddIncludesForType("JSDOMWindowWrapper");
+                AddIncludesForType("JSDOMWindowShell");
                 push(@implContent, "    ASSERT(!thisObj->inherits(&JSDOMWindow::s_info));\n");
-                push(@implContent, "    if (!thisObj->inherits(&JSDOMWindowWrapper::s_info))\n");
+                push(@implContent, "    if (!thisObj->inherits(&JSDOMWindowShell::s_info))\n");
                 push(@implContent, "        return throwError(exec, TypeError);\n");
-                push(@implContent, "    $className* castedThisObj = static_cast<JSDOMWindowWrapper*>(thisObj)->window();\n");
+                push(@implContent, "    $className* castedThisObj = static_cast<JSDOMWindowShell*>(thisObj)->window();\n");
             } else {
                 push(@implContent, "    if (!thisObj->inherits(&${className}::s_info))\n");
                 push(@implContent, "        return throwError(exec, TypeError);\n");
@@ -1774,7 +1771,7 @@ EOF
 
     if ($canConstruct) {
 $implContent .= << "EOF";
-    virtual ConstructType getConstructData(ConstructData&) { return ConstructTypeNative; }
+    virtual bool implementsConstruct() const { return true; }
     virtual JSObject* construct(ExecState* exec, const List& args) { return static_cast<JSObject*>(toJS(exec, ${interfaceName}::create())); }
 EOF
     }
@@ -1782,7 +1779,7 @@ EOF
 $implContent .= << "EOF";
 };
 
-const ClassInfo ${className}Constructor::s_info = { "${visibleClassName}Constructor", 0, &${className}ConstructorTable };
+const ClassInfo ${className}Constructor::s_info = { "${visibleClassName}Constructor", 0, &${className}ConstructorTable, 0 };
 
 bool ${className}Constructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {

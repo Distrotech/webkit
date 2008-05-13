@@ -15,10 +15,8 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
 */
+
 #ifndef QWEBHISTORY_H
 #define QWEBHISTORY_H
 
@@ -41,12 +39,12 @@ public:
     ~QWebHistoryItem();
 
     QUrl originalUrl() const;
-    QUrl currentUrl() const;
+    QUrl url() const;
 
     QString title() const;
     QDateTime lastVisited() const;
 
-    QPixmap icon() const;
+    QIcon icon() const;
 
 private:
     QWebHistoryItem(QWebHistoryItemPrivate *priv);
@@ -68,14 +66,16 @@ public:
     bool canGoBack() const;
     bool canGoForward() const;
 
-    void goBack();
-    void goForward();
+    void back();
+    void forward();
     void goToItem(const QWebHistoryItem &item);
 
     QWebHistoryItem backItem() const;
     QWebHistoryItem currentItem() const;
     QWebHistoryItem forwardItem() const;
-    QWebHistoryItem itemAtIndex(int i) const;
+    QWebHistoryItem itemAt(int i) const;
+
+    int count() const;
 
 private:
     QWebHistory();

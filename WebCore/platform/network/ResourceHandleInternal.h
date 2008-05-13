@@ -43,6 +43,7 @@
 
 #if USE(CURL)
 #include <curl/curl.h>
+#include "FormDataStreamCurl.h"
 #endif
 
 #if USE(SOUP)
@@ -103,13 +104,17 @@ namespace WebCore {
             , m_url(0)
             , m_customHeaders(0)
             , m_cancelled(false)
-            , m_file(0)
-            , m_formDataElementIndex(0)
-            , m_formDataElementDataOffset(0)
+            , m_formDataStream(loader)
 #endif
 #if USE(SOUP)
             , m_msg(0)
             , m_cancelled(false)
+            , m_gfile(0)
+            , m_input_stream(0)
+            , m_cancellable(0)
+            , m_buffer(0)
+            , m_bufsize(0)
+            , m_total(0)
 #endif
 #if PLATFORM(QT)
             , m_job(0)
@@ -167,15 +172,18 @@ namespace WebCore {
         ResourceResponse m_response;
         bool m_cancelled;
 
-        FILE* m_file;
-        size_t m_formDataElementIndex;
-        size_t m_formDataElementDataOffset;
+        FormDataStream m_formDataStream;
         Vector<char> m_postBytes;
 #endif
 #if USE(SOUP)
         SoupMessage* m_msg;
         ResourceResponse m_response;
         bool m_cancelled;
+        GFile* m_gfile;
+        GInputStream* m_input_stream;
+        GCancellable* m_cancellable;
+        char* m_buffer;
+        gsize m_bufsize, m_total;
 #endif
 #if PLATFORM(QT)
 #if QT_VERSION < 0x040400

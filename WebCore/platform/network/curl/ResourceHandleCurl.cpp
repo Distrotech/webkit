@@ -90,8 +90,6 @@ ResourceHandleInternal::~ResourceHandleInternal()
     free(m_url);
     if (m_customHeaders)
         curl_slist_free_all(m_customHeaders);
-    if (m_file)
-        fclose(m_file);
 }
 
 ResourceHandle::~ResourceHandle()
@@ -174,6 +172,27 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
     error = syncLoader.resourceError();
     data = syncLoader.data();
     response = syncLoader.resourceResponse();
+}
+
+//stubs needed for windows version
+void ResourceHandle::didReceiveAuthenticationChallenge(const AuthenticationChallenge&) 
+{
+    notImplemented();
+}
+
+void ResourceHandle::receivedCredential(const AuthenticationChallenge&, const Credential&) 
+{
+    notImplemented();
+}
+
+void ResourceHandle::receivedRequestToContinueWithoutCredential(const AuthenticationChallenge&) 
+{
+    notImplemented();
+}
+
+void ResourceHandle::receivedCancellation(const AuthenticationChallenge&)
+{
+    notImplemented();
 }
 
 } // namespace WebCore

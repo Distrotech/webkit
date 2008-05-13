@@ -35,6 +35,7 @@ var Preferences = {
     minConsoleHeight: 75,
     minSidebarWidth: 100,
     minElementsSidebarWidth: 200,
+    minScriptsSidebarWidth: 200,
     showInheritedComputedStyleProperties: false,
     showMissingLocalizedStrings: false
 }
@@ -43,7 +44,6 @@ var WebInspector = {
     resources: [],
     resourceURLMap: {},
     searchResultsHeight: 100,
-    localizedStrings: {},
     missingLocalizedStrings: {},
 
     get currentFocusElement()
@@ -922,8 +922,8 @@ WebInspector.performSearch = function(query)
 
 WebInspector.UIString = function(string)
 {
-    if (string in this.localizedStrings)
-        string = this.localizedStrings[string];
+    if (window.localizedStrings && string in window.localizedStrings)
+        string = window.localizedStrings[string];
     else {
         if (!(string in this.missingLocalizedStrings)) {
             console.error("Localized string \"" + string + "\" not found.");

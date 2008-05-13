@@ -1,7 +1,4 @@
-EDITING DELEGATE: shouldChangeSelectedDOMRange:(null) toDOMRange:range from 0 of DIV > DIV > BODY > HTML > #document to 0 of DIV > DIV > BODY > HTML > #document affinity:NSSelectionAffinityDownstream stillSelecting:FALSE
-EDITING DELEGATE: shouldBeginEditingInDOMRange:range from 0 of DIV > DIV > BODY > HTML > #document to 0 of DIV > DIV > BODY > HTML > #document
-EDITING DELEGATE: webViewDidBeginEditing:WebViewDidBeginEditingNotification
-EDITING DELEGATE: webViewDidChangeSelection:WebViewDidChangeSelectionNotification
+CONSOLE MESSAGE: line 9: TypeError: Value undefined (result of expression eventSender.moveTo) is not object.
 layer at (0,0) size 800x600
   RenderView at (0,0) size 800x600
 layer at (0,0) size 800x600
@@ -13,4 +10,3 @@ layer at (0,0) size 800x600
         RenderText {#text} at (0,0) size 759x36
           text run at (0,0) width 759: "This test clicks outside an editable div element, and must not result in the element receiving focus. If the test succeeds the"
           text run at (0,18) width 235: "element should not have a focus ring."
-caret: position 0 of child 0 {DIV} of child 0 {DIV} of child 1 {BODY} of child 0 {HTML} of document

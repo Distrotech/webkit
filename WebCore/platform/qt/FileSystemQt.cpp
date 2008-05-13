@@ -38,7 +38,9 @@
 
 #include <QDateTime>
 #include <QFile>
+#include <QTemporaryFile>
 #include <QFileInfo>
+#include <QDateTime>
 #include <QDir>
 
 namespace WebCore {
@@ -83,16 +85,66 @@ String pathByAppendingComponent(const String& path, const String& component)
     return QDir(path).filePath(component);
 }
 
+String homeDirectoryPath()
+{
+    return QDir::homePath();
+}
+
 String pathGetFileName(const String& path)
 {
     return QFileInfo(path).fileName();
 }
 
-bool unloadModule(PlatformModule)
+String directoryName(const String& path)
 {
-    notImplemented();
+    return String(QFileInfo(path).baseName());
+}
+
+CString openTemporaryFile(const char* prefix, PlatformFileHandle& handle)
+{
+    QFile *temp = new QTemporaryFile(QString(prefix));
+    if (temp->open(QIODevice::ReadWrite)) {
+        handle = temp;
+        return String(temp->fileName()).utf8();
+    }
+    handle = invalidPlatformFileHandle;
+    return 0;
+}
+
+void closeFile(PlatformFileHandle& handle)
+{
+    if (handle) {
+        handle->close();
+        delete handle;
+    }
+}
+
+int writeToFile(PlatformFileHandle handle, const char* data, int length)
+{
+    if (handle && handle->exists() && handle->isWritable())
+        return handle->write(data, length);
+
+    return 0;
+}
+
+#if defined(Q_WS_X11) || defined(Q_WS_MAC)
+bool unloadModule(PlatformModule module)
+{
+    if (module->unload()) {
+        delete module;
+        return true;
+    }
+
     return false;
 }
+#endif
+
+#if defined(Q_OS_WIN32)
+bool unloadModule(PlatformModule module)
+{
+    return ::FreeLibrary(module);
+}
+#endif
 
 }
 

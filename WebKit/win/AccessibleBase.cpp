@@ -32,15 +32,16 @@
 #include <WebCore/AXObjectCache.h>
 #include <WebCore/BString.h>
 #include <WebCore/Element.h>
+#include <WebCore/EventHandler.h>
+#include <WebCore/FrameView.h>
 #include <WebCore/HTMLNames.h>
 #include <WebCore/HTMLFrameElementBase.h>
 #include <WebCore/HTMLInputElement.h>
-#include <WebCore/RenderFrame.h>
-#include <WebCore/RenderView.h>
-#include <WebCore/FrameView.h>
 #include <WebCore/IntRect.h>
-#include <WebCore/PlatformString.h>
+#include <WebCore/PlatformKeyboardEvent.h>
+#include <WebCore/RenderFrame.h>
 #include <WebCore/RenderObject.h>
+#include <WebCore/RenderView.h>
 #include "WebView.h"
 #include <wtf/RefPtr.h>
 
@@ -94,62 +95,235 @@ ULONG STDMETHODCALLTYPE AccessibleBase::Release(void)
 }
 
 // IAccessible
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accParent(IDispatch**)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accParent(IDispatch** parent)
 {
-    return E_NOTIMPL;
+    *parent = 0;
+
+    if (!m_object)
+        return E_FAIL;
+
+    return WebView::AccessibleObjectFromWindow(m_object->topDocumentFrameView()->containingWindow(),
+        OBJID_WINDOW, __uuidof(IAccessible), reinterpret_cast<void**>(parent));
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accChildCount(long*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accChildCount(long* count)
 {
-    return E_NOTIMPL;
+    if (!m_object)
+        return E_FAIL;
+    if (!count)
+        return E_POINTER;
+    *count = static_cast<long>(m_object->children().size());
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accChild(VARIANT, IDispatch**)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accChild(VARIANT vChild, IDispatch** ppChild)
 {
-    return E_NOTIMPL;
+    if (!ppChild)
+        return E_POINTER;
+
+    *ppChild = 0;
+
+    AccessibilityObject* childObj;
+
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+    if (FAILED(hr))
+        return hr;
+
+    *ppChild = static_cast<IDispatch*>(wrapper(childObj));
+    (*ppChild)->AddRef();
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accName(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accName(VARIANT vChild, BSTR* name)
 {
-    return E_NOTIMPL;
+    if (!name)
+        return E_POINTER;
+
+    *name = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (*name = BString(wrapper(childObj)->name()).release())
+        return S_OK;
+    return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accValue(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accValue(VARIANT vChild, BSTR* value)
 {
-    return E_NOTIMPL;
+    if (!value)
+        return E_POINTER;
+
+    *value = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (*value = BString(wrapper(childObj)->value()).release())
+        return S_OK;
+    return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accDescription(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accDescription(VARIANT vChild, BSTR* description)
 {
-    return E_NOTIMPL;
+    if (!description)
+        return E_POINTER;
+
+    *description = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    // TODO: Description, for SELECT subitems, should be a string describing
+    // the position of the item in its group and of the group in the list (see
+    // Firefox).
+    if (*description = BString(wrapper(childObj)->description()).release())
+        return S_OK;
+    return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accRole(VARIANT, VARIANT*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accRole(VARIANT vChild, VARIANT* pvRole)
 {
-    return E_NOTIMPL;
+    if (!pvRole)
+        return E_POINTER;
+
+    ::VariantInit(pvRole);
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    pvRole->vt = VT_I4;
+    pvRole->lVal = wrapper(childObj)->role();
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accState(VARIANT, VARIANT*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accState(VARIANT vChild, VARIANT* pvState)
 {
-    return E_NOTIMPL;
+    if (!pvState)
+        return E_POINTER;
+
+    ::VariantInit(pvState);
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    pvState->vt = VT_I4;
+    pvState->lVal = 0;
+
+    if (m_object->isAnchor())
+        pvState->lVal |= STATE_SYSTEM_LINKED;
+
+    if (m_object->isHovered())
+        pvState->lVal |= STATE_SYSTEM_HOTTRACKED;
+
+    if (!m_object->isEnabled())
+        pvState->lVal |= STATE_SYSTEM_UNAVAILABLE;
+
+    if (m_object->isReadOnly())
+        pvState->lVal |= STATE_SYSTEM_READONLY;
+
+    if (m_object->isOffScreen())
+        pvState->lVal |= STATE_SYSTEM_OFFSCREEN;
+
+    if (m_object->isMultiSelect())
+        pvState->lVal |= STATE_SYSTEM_MULTISELECTABLE;
+
+    if (m_object->isPasswordField())
+        pvState->lVal |= STATE_SYSTEM_PROTECTED;
+
+    if (m_object->isIndeterminate())
+        pvState->lVal |= STATE_SYSTEM_INDETERMINATE;
+
+    if (m_object->isChecked())
+        pvState->lVal |= STATE_SYSTEM_CHECKED;
+
+    if (m_object->isPressed())
+        pvState->lVal |= STATE_SYSTEM_PRESSED;
+
+    if (m_object->isFocused())
+        pvState->lVal |= STATE_SYSTEM_FOCUSED;
+
+    if (m_object->isVisited())
+        pvState->lVal |= STATE_SYSTEM_TRAVERSED;
+
+    if (m_object->canSetFocusAttribute())
+        pvState->lVal |= STATE_SYSTEM_FOCUSABLE;
+
+    // TODO: Add selected and selectable states.
+
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accHelp(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accHelp(VARIANT vChild, BSTR* helpText)
 {
-    return E_NOTIMPL;
+    if (!helpText)
+        return E_POINTER;
+
+    *helpText = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (*helpText = BString(childObj->helpText()).release())
+        return S_OK;
+    return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accKeyboardShortcut(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accKeyboardShortcut(VARIANT vChild, BSTR* shortcut)
 {
-    return E_NOTIMPL;
+    if (!shortcut)
+        return E_POINTER;
+
+    *shortcut = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    String accessKey = childObj->accessKey();
+    if (accessKey.isNull())
+        return S_FALSE;
+
+    static String accessKeyModifiers;
+    if (accessKeyModifiers.isNull()) {
+        unsigned modifiers = EventHandler::accessKeyModifiers();
+        // Follow the same order as Mozilla MSAA implementation:
+        // Ctrl+Alt+Shift+Meta+key. MSDN states that keyboard shortcut strings
+        // should not be localized and defines the separator as "+".
+        if (modifiers & PlatformKeyboardEvent::CtrlKey)
+            accessKeyModifiers += "Ctrl+";
+        if (modifiers & PlatformKeyboardEvent::AltKey)
+            accessKeyModifiers += "Alt+";
+        if (modifiers & PlatformKeyboardEvent::ShiftKey)
+            accessKeyModifiers += "Shift+";
+        if (modifiers & PlatformKeyboardEvent::MetaKey)
+            accessKeyModifiers += "Win+";
+    }
+    *shortcut = BString(accessKeyModifiers + accessKey).release();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE AccessibleBase::accSelect(long, VARIANT)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accFocus(VARIANT*)
 {
     return E_NOTIMPL;
 }
@@ -159,27 +333,277 @@ HRESULT STDMETHODCALLTYPE AccessibleBase::get_accSelection(VARIANT*)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::get_accDefaultAction(VARIANT, BSTR*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accFocus(VARIANT* pvFocusedChild)
 {
-    return E_NOTIMPL;
+    if (!pvFocusedChild)
+        return E_POINTER;
+
+    ::VariantInit(pvFocusedChild);
+
+    if (!m_object)
+        return E_FAIL;
+
+    AccessibilityObject* focusedObj = m_object->focusedUIElement();
+    if (!focusedObj)
+        return S_FALSE;
+
+    // Only return the focused child if it's us or a child of us. Otherwise,
+    // report VT_EMPTY.
+    if (focusedObj == m_object) {
+        V_VT(pvFocusedChild) = VT_I4;
+        V_I4(pvFocusedChild) = CHILDID_SELF;
+    } else if (focusedObj->parentObject() == m_object) {
+        V_VT(pvFocusedChild) = VT_DISPATCH;
+        V_DISPATCH(pvFocusedChild) = wrapper(focusedObj);
+        V_DISPATCH(pvFocusedChild)->AddRef();
+    }
+
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::accLocation(long*, long*, long*, long*, VARIANT)
+HRESULT STDMETHODCALLTYPE AccessibleBase::get_accDefaultAction(VARIANT vChild, BSTR* action)
 {
-    return E_NOTIMPL;
+    if (!action)
+        return E_POINTER;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (*action = BString(childObj->actionVerb()).release())
+        return S_OK;
+    return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::accNavigate(long, VARIANT, VARIANT*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::accLocation(long* left, long* top, long* width, long* height, VARIANT vChild)
 {
-    return E_NOTIMPL;
+    if (!left || !top || !width || !height)
+        return E_POINTER;
+
+    *left = *top = *width = *height = 0;
+
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    IntRect screenRect(childObj->documentFrameView()->contentsToScreen(childObj->boundingBoxRect()));
+    *left = screenRect.x();
+    *top = screenRect.y();
+    *width = screenRect.width();
+    *height = screenRect.height();
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::accHitTest(long, long, VARIANT*)
+HRESULT STDMETHODCALLTYPE AccessibleBase::accNavigate(long direction, VARIANT vFromChild, VARIANT* pvNavigatedTo)
 {
-    return E_NOTIMPL;
+    if (!pvNavigatedTo)
+        return E_POINTER;
+
+    ::VariantInit(pvNavigatedTo);
+
+    AccessibilityObject* childObj = 0;
+
+    switch (direction) {
+        case NAVDIR_DOWN:
+        case NAVDIR_UP:
+        case NAVDIR_LEFT:
+        case NAVDIR_RIGHT:
+            // These directions are not implemented, matching Mozilla and IE.
+            return E_NOTIMPL;
+        case NAVDIR_LASTCHILD:
+        case NAVDIR_FIRSTCHILD:
+            // MSDN states that navigating to first/last child can only be from self.
+            if (vFromChild.lVal != CHILDID_SELF)
+                return E_INVALIDARG;
+
+            if (!m_object)
+                return E_FAIL;
+
+            if (direction == NAVDIR_FIRSTCHILD)
+                childObj = m_object->firstChild();
+            else
+                childObj = m_object->lastChild();
+            break;
+        case NAVDIR_NEXT:
+        case NAVDIR_PREVIOUS: {
+            // Navigating to next and previous is allowed from self or any of our children.
+            HRESULT hr = getAccessibilityObjectForChild(vFromChild, childObj);
+            if (FAILED(hr))
+                return hr;
+
+            if (direction == NAVDIR_NEXT)
+                childObj = childObj->nextSibling();
+            else
+                childObj = childObj->previousSibling();
+            break;
+        }
+        default:
+            ASSERT_NOT_REACHED();
+            return E_INVALIDARG;
+    }
+
+    if (!childObj)
+        return E_FAIL;
+
+    V_VT(pvNavigatedTo) = VT_DISPATCH;
+    V_DISPATCH(pvNavigatedTo) = wrapper(childObj);
+    V_DISPATCH(pvNavigatedTo)->AddRef();
+    return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE AccessibleBase::accDoDefaultAction(VARIANT)
+HRESULT STDMETHODCALLTYPE AccessibleBase::accHitTest(long x, long y, VARIANT* pvChildAtPoint)
 {
-    return E_NOTIMPL;
+    if (!pvChildAtPoint)
+        return E_POINTER;
+
+    ::VariantInit(pvChildAtPoint);
+
+    if (!m_object)
+        return E_FAIL;
+
+    IntPoint point = m_object->documentFrameView()->screenToContents(IntPoint(x, y));
+    AccessibilityObject* childObj = m_object->doAccessibilityHitTest(point);
+
+    if (!childObj) {
+        // If we did not hit any child objects, test whether the point hit us, and
+        // report that.
+        if (!m_object->boundingBoxRect().contains(point))
+            return S_FALSE;
+        childObj = m_object;
+    }
+
+    if (childObj == m_object) {
+        V_VT(pvChildAtPoint) = VT_I4;
+        V_I4(pvChildAtPoint) = CHILDID_SELF;
+    } else {
+        V_VT(pvChildAtPoint) = VT_DISPATCH;
+        V_DISPATCH(pvChildAtPoint) = static_cast<IDispatch*>(wrapper(childObj));
+        V_DISPATCH(pvChildAtPoint)->AddRef();
+    }
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE AccessibleBase::accDoDefaultAction(VARIANT vChild)
+{
+    AccessibilityObject* childObj;
+    HRESULT hr = getAccessibilityObjectForChild(vChild, childObj);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (!childObj->performDefaultAction())
+        return S_FALSE;
+
+    return S_OK;
+}
+
+// AccessibleBase
+String AccessibleBase::name() const
+{
+    return m_object->title();
+}
+
+String AccessibleBase::value() const
+{
+    return m_object->stringValue();
+}
+
+String AccessibleBase::description() const
+{
+    String desc = m_object->accessibilityDescription();
+    if (desc.isNull())
+        return desc;
+
+    // From the Mozilla MSAA implementation:
+    // "Signal to screen readers that this description is speakable and is not
+    // a formatted positional information description. Don't localize the
+    // 'Description: ' part of this string, it will be parsed out by assistive
+    // technologies."
+    return "Description: " + desc;
+}
+
+static long MSAARole(AccessibilityRole role)
+{
+    switch (role) {
+        case WebCore::ButtonRole:
+            return ROLE_SYSTEM_PUSHBUTTON;
+        case WebCore::RadioButtonRole:
+            return ROLE_SYSTEM_RADIOBUTTON;
+        case WebCore::CheckBoxRole:
+            return ROLE_SYSTEM_CHECKBUTTON;
+        case WebCore::SliderRole:
+            return ROLE_SYSTEM_SLIDER;
+        case WebCore::TabGroupRole:
+            return ROLE_SYSTEM_PAGETABLIST;
+        case WebCore::TextFieldRole:
+        case WebCore::TextAreaRole:
+        case WebCore::ListMarkerRole:
+            return ROLE_SYSTEM_TEXT;
+        case WebCore::StaticTextRole:
+            return ROLE_SYSTEM_STATICTEXT;
+        case WebCore::OutlineRole:
+            return ROLE_SYSTEM_OUTLINE;
+        case WebCore::ColumnRole:
+            return ROLE_SYSTEM_COLUMN;
+        case WebCore::RowRole:
+            return ROLE_SYSTEM_ROW;
+        case WebCore::GroupRole:
+            return ROLE_SYSTEM_GROUPING;
+        case WebCore::ListRole:
+            return ROLE_SYSTEM_LIST;
+        case WebCore::TableRole:
+            return ROLE_SYSTEM_TABLE;
+        case WebCore::LinkRole:
+        case WebCore::WebCoreLinkRole:
+            return ROLE_SYSTEM_LINK;
+        case WebCore::ImageMapRole:
+        case WebCore::ImageRole:
+            return ROLE_SYSTEM_GRAPHIC;
+        default:
+            // This is the default role for MSAA.
+            return ROLE_SYSTEM_CLIENT;
+    }
+}
+
+long AccessibleBase::role() const
+{
+    return MSAARole(m_object->roleValue());
+}
+
+HRESULT AccessibleBase::getAccessibilityObjectForChild(VARIANT vChild, AccessibilityObject*& childObj) const
+{
+    childObj = 0;
+
+    if (!m_object)
+        return E_FAIL;
+
+    if (vChild.vt != VT_I4)
+        return E_INVALIDARG;
+
+    if (vChild.lVal == CHILDID_SELF)
+        childObj = m_object;
+    else {
+        size_t childIndex = static_cast<size_t>(vChild.lVal - 1);
+
+        if (childIndex >= m_object->children().size())
+            return E_FAIL;
+        childObj = m_object->children().at(childIndex).get();
+    }
+
+    if (!childObj)
+        return E_FAIL;
+
+    return S_OK;
+}
+
+AccessibleBase* AccessibleBase::wrapper(AccessibilityObject* obj)
+{
+    AccessibleBase* result = static_cast<AccessibleBase*>(obj->wrapper());
+    if (!result)
+        result = createInstance(obj);
+    return result;
 }

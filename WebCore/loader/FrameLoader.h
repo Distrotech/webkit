@@ -191,7 +191,8 @@ namespace WebCore {
 
         DocumentLoader* activeDocumentLoader() const;
         DocumentLoader* documentLoader() const;
-        DocumentLoader* provisionalDocumentLoader();
+        DocumentLoader* policyDocumentLoader() const;
+        DocumentLoader* provisionalDocumentLoader() const;
         FrameState state() const;
         static double timeOfLastCompletedLoad();
         
@@ -439,6 +440,10 @@ namespace WebCore {
         bool shouldAllowNavigation(Frame* targetFrame) const;
         Frame* findFrameForNavigation(const AtomicString& name);
 
+        void startIconLoader();
+
+        void applyUserAgent(ResourceRequest& request);
+
     private:
         PassRefPtr<HistoryItem> createHistoryItem(bool useOriginal);
         PassRefPtr<HistoryItem> createHistoryItemTree(Frame* targetFrame, bool clipAtTarget);
@@ -535,13 +540,9 @@ namespace WebCore {
         bool shouldReloadToHandleUnreachableURL(DocumentLoader*);
         void handleUnimplementablePolicy(const ResourceError&);
 
-        void applyUserAgent(ResourceRequest& request);
-
         void scheduleRedirection(ScheduledRedirection*);
         void startRedirectionTimer();
         void stopRedirectionTimer();
-
-        void startIconLoader();
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
         // implementation of CachedResourceClient        

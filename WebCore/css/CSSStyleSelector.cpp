@@ -36,6 +36,7 @@
 #include "CSSPrimitiveValueMappings.h"
 #include "CSSProperty.h"
 #include "CSSPropertyNames.h"
+#include "CSSReflectValue.h"
 #include "CSSRuleList.h"
 #include "CSSSelector.h"
 #include "CSSStyleRule.h"
@@ -44,7 +45,6 @@
 #include "CSSValueList.h"
 #include "CachedImage.h"
 #include "Counter.h"
-#include "DashboardRegion.h"
 #include "FontFamilyValue.h"
 #include "FontValue.h"
 #include "Frame.h"
@@ -75,6 +75,10 @@
 #include "SVGNames.h"
 #endif
 
+#if ENABLE(DASHBOARD_SUPPORT)
+#include "DashboardRegion.h"
+#endif
+
 using namespace std;
 
 namespace WebCore {
@@ -103,15 +107,15 @@ if (isInitial) { \
     return;\
 }
 
-#define HANDLE_MULTILAYER_INHERIT_AND_INITIAL(layerType, LayerType, prop, Prop) \
+#define HANDLE_FILL_LAYER_INHERIT_AND_INITIAL(layerType, LayerType, prop, Prop) \
 if (isInherit) { \
-    LayerType* currChild = m_style->access##LayerType##s(); \
-    LayerType* prevChild = 0; \
-    const LayerType* currParent = m_parentStyle->layerType##s(); \
+    FillLayer* currChild = m_style->access##LayerType##Layers(); \
+    FillLayer* prevChild = 0; \
+    const FillLayer* currParent = m_parentStyle->layerType##Layers(); \
     while (currParent && currParent->is##Prop##Set()) { \
         if (!currChild) { \
             /* Need to make a new layer.*/ \
-            currChild = new LayerType(); \
+            currChild = new FillLayer(LayerType##FillLayer); \
             prevChild->setNext(currChild); \
         } \
         currChild->set##Prop(currParent->prop()); \
@@ -126,33 +130,33 @@ if (isInherit) { \
         currChild = currChild->next(); \
     } \
 } else if (isInitial) { \
-    LayerType* currChild = m_style->access##LayerType##s(); \
-    currChild->set##Prop(RenderStyle::initial##Prop()); \
+    FillLayer* currChild = m_style->access##LayerType##Layers(); \
+    currChild->set##Prop(FillLayer::initialFill##Prop(LayerType##FillLayer)); \
     for (currChild = currChild->next(); currChild; currChild = currChild->next()) \
         currChild->clear##Prop(); \
 }
 
-#define HANDLE_MULTILAYER_VALUE(layerType, LayerType, prop, Prop, value) { \
-HANDLE_MULTILAYER_INHERIT_AND_INITIAL(layerType, LayerType, prop, Prop) \
+#define HANDLE_FILL_LAYER_VALUE(layerType, LayerType, prop, Prop, value) { \
+HANDLE_FILL_LAYER_INHERIT_AND_INITIAL(layerType, LayerType, prop, Prop) \
 if (isInherit || isInitial) \
     return; \
-LayerType* currChild = m_style->access##LayerType##s(); \
-LayerType* prevChild = 0; \
+FillLayer* currChild = m_style->access##LayerType##Layers(); \
+FillLayer* prevChild = 0; \
 if (value->isValueList()) { \
     /* Walk each value and put it into a layer, creating new layers as needed. */ \
     CSSValueList* valueList = static_cast<CSSValueList*>(value); \
     for (unsigned int i = 0; i < valueList->length(); i++) { \
         if (!currChild) { \
             /* Need to make a new layer to hold this value */ \
-            currChild = new LayerType(); \
+            currChild = new FillLayer(LayerType##FillLayer); \
             prevChild->setNext(currChild); \
         } \
-        map##Prop(currChild, valueList->itemWithoutBoundsCheck(i)); \
+        mapFill##Prop(currChild, valueList->itemWithoutBoundsCheck(i)); \
         prevChild = currChild; \
         currChild = currChild->next(); \
     } \
 } else { \
-    map##Prop(currChild, value); \
+    mapFill##Prop(currChild, value); \
     currChild = currChild->next(); \
 } \
 while (currChild) { \
@@ -162,17 +166,87 @@ while (currChild) { \
 } }
 
 #define HANDLE_BACKGROUND_INHERIT_AND_INITIAL(prop, Prop) \
-HANDLE_MULTILAYER_INHERIT_AND_INITIAL(backgroundLayer, BackgroundLayer, prop, Prop)
+HANDLE_FILL_LAYER_INHERIT_AND_INITIAL(background, Background, prop, Prop)
 
 #define HANDLE_BACKGROUND_VALUE(prop, Prop, value) \
-HANDLE_MULTILAYER_VALUE(backgroundLayer, BackgroundLayer, prop, Prop, value)
+HANDLE_FILL_LAYER_VALUE(background, Background, prop, Prop, value)
 
-#define HANDLE_TRANSITION_VALUE(prop, Prop, value) \
-HANDLE_MULTILAYER_VALUE(transition, Transition, prop, Prop, value)
+#define HANDLE_MASK_INHERIT_AND_INITIAL(prop, Prop) \
+HANDLE_FILL_LAYER_INHERIT_AND_INITIAL(mask, Mask, prop, Prop)
+
+#define HANDLE_MASK_VALUE(prop, Prop, value) \
+HANDLE_FILL_LAYER_VALUE(mask, Mask, prop, Prop, value)
+
+#define HANDLE_TRANSITION_INHERIT_AND_INITIAL(prop, Prop) \
+if (isInherit) { \
+    Transition* currChild = m_style->accessTransitions(); \
+    Transition* prevChild = 0; \
+    const Transition* currParent = m_parentStyle->transitions(); \
+    while (currParent && currParent->is##Prop##Set()) { \
+        if (!currChild) { \
+            /* Need to make a new layer.*/ \
+            currChild = new Transition(); \
+            prevChild->setNext(currChild); \
+        } \
+        currChild->set##Prop(currParent->prop()); \
+        prevChild = currChild; \
+        currChild = prevChild->next(); \
+        currParent = currParent->next(); \
+    } \
+    \
+    while (currChild) { \
+        /* Reset any remaining layers to not have the property set. */ \
+        currChild->clear##Prop(); \
+        currChild = currChild->next(); \
+    } \
+} else if (isInitial) { \
+    Transition* currChild = m_style->accessTransitions(); \
+    currChild->set##Prop(RenderStyle::initialTransition##Prop()); \
+    for (currChild = currChild->next(); currChild; currChild = currChild->next()) \
+        currChild->clear##Prop(); \
+}
+
+#define HANDLE_TRANSITION_VALUE(prop, Prop, value) { \
+HANDLE_TRANSITION_INHERIT_AND_INITIAL(prop, Prop) \
+if (isInherit || isInitial) \
+    return; \
+Transition* currChild = m_style->accessTransitions(); \
+Transition* prevChild = 0; \
+if (value->isValueList()) { \
+    /* Walk each value and put it into a layer, creating new layers as needed. */ \
+    CSSValueList* valueList = static_cast<CSSValueList*>(value); \
+    for (unsigned int i = 0; i < valueList->length(); i++) { \
+        if (!currChild) { \
+            /* Need to make a new layer to hold this value */ \
+            currChild = new Transition(); \
+            prevChild->setNext(currChild); \
+        } \
+        mapTransition##Prop(currChild, valueList->itemWithoutBoundsCheck(i)); \
+        prevChild = currChild; \
+        currChild = currChild->next(); \
+    } \
+} else { \
+    mapTransition##Prop(currChild, value); \
+    currChild = currChild->next(); \
+} \
+while (currChild) { \
+    /* Reset all remaining layers to not have the property set. */ \
+    currChild->clear##Prop(); \
+    currChild = currChild->next(); \
+} }
 
 #define HANDLE_INHERIT_COND(propID, prop, Prop) \
 if (id == propID) { \
     m_style->set##Prop(m_parentStyle->prop()); \
+    return; \
+}
+    
+#define HANDLE_INHERIT_COND_WITH_BACKUP(propID, prop, propAlt, Prop) \
+if (id == propID) { \
+    if (m_parentStyle->prop().isValid()) \
+        m_style->set##Prop(m_parentStyle->prop()); \
+    else \
+        m_style->set##Prop(m_parentStyle->propAlt()); \
     return; \
 }
 
@@ -239,6 +313,7 @@ static const MediaQueryEvaluator& printEval()
 
 CSSStyleSelector::CSSStyleSelector(Document* doc, const String& userStyleSheet, StyleSheetList* styleSheets, CSSStyleSheet* mappedElementSheet, bool strictParsing, bool matchAuthorAndUserStyles)
     : m_strictParsing(strictParsing)
+    , m_backgroundData(BackgroundFillLayer)
 {
     init();
     
@@ -1107,14 +1182,15 @@ void CSSStyleSelector::adjustRenderStyle(RenderStyle* style, Element *e)
     }
 
     // Make sure our z-index value is only applied if the object is positioned,
-    // relatively positioned, transparent, or has a transform.
-    if (style->position() == StaticPosition && style->opacity() == 1.0f && !style->hasTransform())
+    // relatively positioned, transparent, or has a transform/mask/reflection.
+    if (style->position() == StaticPosition && style->opacity() == 1.0f && !style->hasTransform() && !style->hasMask() && !style->boxReflect())
         style->setHasAutoZIndex();
 
     // Auto z-index becomes 0 for the root element and transparent objects.  This prevents
     // cases where objects that should be blended as a single unit end up with a non-transparent
-    // object wedged in between them.  Auto z-index also becomes 0 for objects that specify transforms.
-    if (style->hasAutoZIndex() && ((e && e->document()->documentElement() == e) || style->opacity() < 1.0f || style->hasTransform()))
+    // object wedged in between them.  Auto z-index also becomes 0 for objects that specify transforms/masks/reflections.
+    if (style->hasAutoZIndex() && ((e && e->document()->documentElement() == e) || style->opacity() < 1.0f || 
+        style->hasTransform() || style->hasMask() || style->boxReflect()))
         style->setZIndex(0);
     
     // Button, legend, input, select and textarea all consider width values of 'auto' to be 'intrinsic'.
@@ -1155,6 +1231,7 @@ void CSSStyleSelector::adjustRenderStyle(RenderStyle* style, Element *e)
 
     // Cull out any useless layers and also repeat patterns into additional layers.
     style->adjustBackgroundLayers();
+    style->adjustMaskLayers();
 
     // Do the same for transitions.
     style->adjustTransitions();
@@ -2266,22 +2343,40 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     switch (static_cast<CSSPropertyID>(id)) {
 // ident only properties
     case CSSPropertyBackgroundAttachment:
-        HANDLE_BACKGROUND_VALUE(backgroundAttachment, BackgroundAttachment, value)
+        HANDLE_BACKGROUND_VALUE(attachment, Attachment, value)
         return;
     case CSSPropertyWebkitBackgroundClip:
-        HANDLE_BACKGROUND_VALUE(backgroundClip, BackgroundClip, value)
+        HANDLE_BACKGROUND_VALUE(clip, Clip, value)
         return;
     case CSSPropertyWebkitBackgroundComposite:
-        HANDLE_BACKGROUND_VALUE(backgroundComposite, BackgroundComposite, value)
+        HANDLE_BACKGROUND_VALUE(composite, Composite, value)
         return;
     case CSSPropertyWebkitBackgroundOrigin:
-        HANDLE_BACKGROUND_VALUE(backgroundOrigin, BackgroundOrigin, value)
+        HANDLE_BACKGROUND_VALUE(origin, Origin, value)
         return;
     case CSSPropertyBackgroundRepeat:
-        HANDLE_BACKGROUND_VALUE(backgroundRepeat, BackgroundRepeat, value)
+        HANDLE_BACKGROUND_VALUE(repeat, Repeat, value)
         return;
     case CSSPropertyWebkitBackgroundSize:
-        HANDLE_BACKGROUND_VALUE(backgroundSize, BackgroundSize, value)
+        HANDLE_BACKGROUND_VALUE(size, Size, value)
+        return;
+    case CSSPropertyWebkitMaskAttachment:
+        HANDLE_MASK_VALUE(attachment, Attachment, value)
+        return;
+    case CSSPropertyWebkitMaskClip:
+        HANDLE_MASK_VALUE(clip, Clip, value)
+        return;
+    case CSSPropertyWebkitMaskComposite:
+        HANDLE_MASK_VALUE(composite, Composite, value)
+        return;
+    case CSSPropertyWebkitMaskOrigin:
+        HANDLE_MASK_VALUE(origin, Origin, value)
+        return;
+    case CSSPropertyWebkitMaskRepeat:
+        HANDLE_MASK_VALUE(repeat, Repeat, value)
+        return;
+    case CSSPropertyWebkitMaskSize:
+        HANDLE_MASK_VALUE(size, Size, value)
         return;
     case CSSPropertyBorderCollapse:
         HANDLE_INHERIT_AND_INITIAL(borderCollapse, BorderCollapse)
@@ -2600,15 +2695,27 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
 
     case CSSPropertyBackgroundPosition:
-        HANDLE_BACKGROUND_INHERIT_AND_INITIAL(backgroundXPosition, BackgroundXPosition);
-        HANDLE_BACKGROUND_INHERIT_AND_INITIAL(backgroundYPosition, BackgroundYPosition);
+        HANDLE_BACKGROUND_INHERIT_AND_INITIAL(xPosition, XPosition);
+        HANDLE_BACKGROUND_INHERIT_AND_INITIAL(yPosition, YPosition);
         return;
     case CSSPropertyBackgroundPositionX: {
-        HANDLE_BACKGROUND_VALUE(backgroundXPosition, BackgroundXPosition, value)
+        HANDLE_BACKGROUND_VALUE(xPosition, XPosition, value)
         return;
     }
     case CSSPropertyBackgroundPositionY: {
-        HANDLE_BACKGROUND_VALUE(backgroundYPosition, BackgroundYPosition, value)
+        HANDLE_BACKGROUND_VALUE(yPosition, YPosition, value)
+        return;
+    }
+    case CSSPropertyWebkitMaskPosition:
+        HANDLE_MASK_INHERIT_AND_INITIAL(xPosition, XPosition);
+        HANDLE_MASK_INHERIT_AND_INITIAL(yPosition, YPosition);
+        return;
+    case CSSPropertyWebkitMaskPositionX: {
+        HANDLE_MASK_VALUE(xPosition, XPosition, value)
+        return;
+    }
+    case CSSPropertyWebkitMaskPositionY: {
+        HANDLE_MASK_VALUE(yPosition, YPosition, value)
         return;
     }
     case CSSPropertyBorderSpacing: {
@@ -2678,12 +2785,16 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         }
         return;
 // colors || inherit
+    case CSSPropertyColor:
+        // If the 'currentColor' keyword is set on the 'color' property itself,
+        // it is treated as 'color:inherit' at parse time
+        if (primitiveValue && primitiveValue->getIdent() == CSSValueCurrentcolor)
+            isInherit = true;
     case CSSPropertyBackgroundColor:
     case CSSPropertyBorderTopColor:
     case CSSPropertyBorderRightColor:
     case CSSPropertyBorderBottomColor:
     case CSSPropertyBorderLeftColor:
-    case CSSPropertyColor:
     case CSSPropertyOutlineColor:
     case CSSPropertyWebkitColumnRuleColor:
     case CSSPropertyWebkitTextStrokeColor:
@@ -2691,15 +2802,15 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         Color col;
         if (isInherit) {
             HANDLE_INHERIT_COND(CSSPropertyBackgroundColor, backgroundColor, BackgroundColor)
-            HANDLE_INHERIT_COND(CSSPropertyBorderTopColor, borderTopColor, BorderTopColor)
-            HANDLE_INHERIT_COND(CSSPropertyBorderBottomColor, borderBottomColor, BorderBottomColor)
-            HANDLE_INHERIT_COND(CSSPropertyBorderRightColor, borderRightColor, BorderRightColor)
-            HANDLE_INHERIT_COND(CSSPropertyBorderLeftColor, borderLeftColor, BorderLeftColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyBorderTopColor, borderTopColor, color, BorderTopColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyBorderBottomColor, borderBottomColor, color, BorderBottomColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyBorderRightColor, borderRightColor, color, BorderRightColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyBorderLeftColor, borderLeftColor, color, BorderLeftColor)
             HANDLE_INHERIT_COND(CSSPropertyColor, color, Color)
-            HANDLE_INHERIT_COND(CSSPropertyOutlineColor, outlineColor, OutlineColor)
-            HANDLE_INHERIT_COND(CSSPropertyWebkitColumnRuleColor, columnRuleColor, ColumnRuleColor)
-            HANDLE_INHERIT_COND(CSSPropertyWebkitTextStrokeColor, textStrokeColor, TextStrokeColor)
-            HANDLE_INHERIT_COND(CSSPropertyWebkitTextFillColor, textFillColor, TextFillColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyOutlineColor, outlineColor, color, OutlineColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyWebkitColumnRuleColor, columnRuleColor, color, ColumnRuleColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyWebkitTextStrokeColor, textStrokeColor, color, TextStrokeColor)
+            HANDLE_INHERIT_COND_WITH_BACKUP(CSSPropertyWebkitTextFillColor, textFillColor, color, TextFillColor)
             return;
         }
         if (isInitial) {
@@ -2752,7 +2863,10 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     
 // uri || inherit
     case CSSPropertyBackgroundImage:
-        HANDLE_BACKGROUND_VALUE(backgroundImage, BackgroundImage, value)
+        HANDLE_BACKGROUND_VALUE(image, Image, value)
+        return;
+    case CSSPropertyWebkitMaskImage:
+        HANDLE_MASK_VALUE(image, Image, value)
         return;
     case CSSPropertyListStyleImage:
     {
@@ -3592,13 +3706,19 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         if (isInitial) {
             m_style->clearBackgroundLayers();
             m_style->setBackgroundColor(Color());
-            return;
         }
         else if (isInherit) {
             m_style->inheritBackgroundLayers(*m_parentStyle->backgroundLayers());
             m_style->setBackgroundColor(m_parentStyle->backgroundColor());
         }
         return;
+    case CSSPropertyWebkitMask:
+        if (isInitial)
+            m_style->clearMaskLayers();
+        else if (isInherit)
+            m_style->inheritMaskLayers(*m_parentStyle->maskLayers());
+        return;
+
     case CSSPropertyBorder:
     case CSSPropertyBorderStyle:
     case CSSPropertyBorderWidth:
@@ -3606,10 +3726,10 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         if (id == CSSPropertyBorder || id == CSSPropertyBorderColor)
         {
             if (isInherit) {
-                m_style->setBorderTopColor(m_parentStyle->borderTopColor());
-                m_style->setBorderBottomColor(m_parentStyle->borderBottomColor());
-                m_style->setBorderLeftColor(m_parentStyle->borderLeftColor());
-                m_style->setBorderRightColor(m_parentStyle->borderRightColor());
+                m_style->setBorderTopColor(m_parentStyle->borderTopColor().isValid() ? m_parentStyle->borderTopColor() : m_parentStyle->color());
+                m_style->setBorderBottomColor(m_parentStyle->borderBottomColor().isValid() ? m_parentStyle->borderBottomColor() : m_parentStyle->color());
+                m_style->setBorderLeftColor(m_parentStyle->borderLeftColor().isValid() ? m_parentStyle->borderLeftColor() : m_parentStyle->color());
+                m_style->setBorderRightColor(m_parentStyle->borderRightColor().isValid() ? m_parentStyle->borderRightColor(): m_parentStyle->color());
             }
             else if (isInitial) {
                 m_style->setBorderTopColor(Color()); // Reset to invalid color so currentColor is used instead.
@@ -3651,7 +3771,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     case CSSPropertyBorderTop:
         if (isInherit) {
-            m_style->setBorderTopColor(m_parentStyle->borderTopColor());
+            m_style->setBorderTopColor(m_parentStyle->borderTopColor().isValid() ? m_parentStyle->borderTopColor() : m_parentStyle->color());
             m_style->setBorderTopStyle(m_parentStyle->borderTopStyle());
             m_style->setBorderTopWidth(m_parentStyle->borderTopWidth());
         }
@@ -3660,7 +3780,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     case CSSPropertyBorderRight:
         if (isInherit) {
-            m_style->setBorderRightColor(m_parentStyle->borderRightColor());
+            m_style->setBorderRightColor(m_parentStyle->borderRightColor().isValid() ? m_parentStyle->borderRightColor() : m_parentStyle->color());
             m_style->setBorderRightStyle(m_parentStyle->borderRightStyle());
             m_style->setBorderRightWidth(m_parentStyle->borderRightWidth());
         }
@@ -3669,7 +3789,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     case CSSPropertyBorderBottom:
         if (isInherit) {
-            m_style->setBorderBottomColor(m_parentStyle->borderBottomColor());
+            m_style->setBorderBottomColor(m_parentStyle->borderBottomColor().isValid() ? m_parentStyle->borderBottomColor() : m_parentStyle->color());
             m_style->setBorderBottomStyle(m_parentStyle->borderBottomStyle());
             m_style->setBorderBottomWidth(m_parentStyle->borderBottomWidth());
         }
@@ -3678,7 +3798,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     case CSSPropertyBorderLeft:
         if (isInherit) {
-            m_style->setBorderLeftColor(m_parentStyle->borderLeftColor());
+            m_style->setBorderLeftColor(m_parentStyle->borderLeftColor().isValid() ? m_parentStyle->borderLeftColor() : m_parentStyle->color());
             m_style->setBorderLeftStyle(m_parentStyle->borderLeftStyle());
             m_style->setBorderLeftWidth(m_parentStyle->borderLeftWidth());
         }
@@ -3772,7 +3892,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     case CSSPropertyOutline:
         if (isInherit) {
             m_style->setOutlineWidth(m_parentStyle->outlineWidth());
-            m_style->setOutlineColor(m_parentStyle->outlineColor());
+            m_style->setOutlineColor(m_parentStyle->outlineColor().isValid() ? m_parentStyle->outlineColor() : m_parentStyle->color());
             m_style->setOutlineStyle(m_parentStyle->outlineStyle());
         }
         else if (isInitial)
@@ -3819,66 +3939,25 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     }
 
-    case CSSPropertyWebkitBorderImage: {
-        HANDLE_INHERIT_AND_INITIAL(borderImage, BorderImage)
-        BorderImage image;
-        if (primitiveValue) {
-            if (primitiveValue->getIdent() == CSSValueNone)
-                m_style->setBorderImage(image);
-        } else {
-            // Retrieve the border image value.
-            CSSBorderImageValue* borderImage = static_cast<CSSBorderImageValue*>(value);
-            
-            // Set the image (this kicks off the load).
-            image.m_image = styleImage(borderImage->imageValue());
-
-            // Set up a length box to represent our image slices.
-            LengthBox& l = image.m_slices;
-            Rect* r = borderImage->m_imageSliceRect.get();
-            if (r->top()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
-                l.top = Length(r->top()->getDoubleValue(), Percent);
-            else
-                l.top = Length(r->top()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
-            if (r->bottom()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
-                l.bottom = Length(r->bottom()->getDoubleValue(), Percent);
-            else
-                l.bottom = Length((int)r->bottom()->getFloatValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
-            if (r->left()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
-                l.left = Length(r->left()->getDoubleValue(), Percent);
-            else
-                l.left = Length(r->left()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
-            if (r->right()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
-                l.right = Length(r->right()->getDoubleValue(), Percent);
-            else
-                l.right = Length(r->right()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
-            
-            // Set the appropriate rules for stretch/round/repeat of the slices
-            switch (borderImage->m_horizontalSizeRule) {
-                case CSSValueStretch:
-                    image.m_horizontalRule = BI_STRETCH;
-                    break;
-                case CSSValueRound:
-                    image.m_horizontalRule = BI_ROUND;
-                    break;
-                default: // CSSValueRepeat
-                    image.m_horizontalRule = BI_REPEAT;
-                    break;
-            }
-
-            switch (borderImage->m_verticalSizeRule) {
-                case CSSValueStretch:
-                    image.m_verticalRule = BI_STRETCH;
-                    break;
-                case CSSValueRound:
-                    image.m_verticalRule = BI_ROUND;
-                    break;
-                default: // CSSValueRepeat
-                    image.m_verticalRule = BI_REPEAT;
-                    break;
-            }
-
-            m_style->setBorderImage(image);
+    case CSSPropertyWebkitBorderImage:
+    case CSSPropertyWebkitMaskBoxImage: {
+        if (isInherit) {
+            HANDLE_INHERIT_COND(CSSPropertyWebkitBorderImage, borderImage, BorderImage)
+            HANDLE_INHERIT_COND(CSSPropertyWebkitMaskBoxImage, maskBoxImage, MaskBoxImage)
+            return;
+        } else if (isInitial) {
+            HANDLE_INITIAL_COND_WITH_VALUE(CSSPropertyWebkitBorderImage, BorderImage, NinePieceImage)
+            HANDLE_INITIAL_COND_WITH_VALUE(CSSPropertyWebkitMaskBoxImage, MaskBoxImage, NinePieceImage)
+            return;
         }
+
+        NinePieceImage image;
+        mapNinePieceImage(value, image);
+        
+        if (id == CSSPropertyWebkitBorderImage)
+            m_style->setBorderImage(image);
+        else
+            m_style->setMaskBoxImage(image);
         return;
     }
 
@@ -3987,6 +4066,29 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             else
                 m_style->setBoxShadow(shadowData, i != 0);
         }
+        return;
+    }
+    case CSSPropertyWebkitBoxReflect: {
+        HANDLE_INHERIT_AND_INITIAL(boxReflect, BoxReflect)
+        if (primitiveValue) {
+            m_style->setBoxReflect(RenderStyle::initialBoxReflect());
+            return;
+        }
+        CSSReflectValue* reflectValue = static_cast<CSSReflectValue*>(value);
+        RefPtr<StyleReflection> reflection = new StyleReflection();
+        reflection->setDirection(reflectValue->direction());
+        if (reflectValue->offset()) {
+            int type = reflectValue->offset()->primitiveType();
+            if (type == CSSPrimitiveValue::CSS_PERCENTAGE)
+                reflection->setOffset(Length(reflectValue->offset()->getDoubleValue(), Percent));
+            else
+                reflection->setOffset(Length(reflectValue->offset()->computeLengthIntForLength(m_style, zoomFactor), Fixed));
+        }
+        NinePieceImage mask;
+        mapNinePieceImage(reflectValue->mask(), mask);
+        reflection->setMask(mask);
+        
+        m_style->setBoxReflect(reflection);
         return;
     }
     case CSSPropertyOpacity:
@@ -4127,7 +4229,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     }
      case CSSPropertyWebkitColumnRule:
         if (isInherit) {
-            m_style->setColumnRuleColor(m_parentStyle->columnRuleColor());
+            m_style->setColumnRuleColor(m_parentStyle->columnRuleColor().isValid() ? m_parentStyle->columnRuleColor() : m_parentStyle->color());
             m_style->setColumnRuleStyle(m_parentStyle->columnRuleStyle());
             m_style->setColumnRuleWidth(m_parentStyle->columnRuleWidth());
         }
@@ -4314,6 +4416,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             m_style->setTextSecurity(*primitiveValue);
         return;
     }
+#if ENABLE(DASHBOARD_SUPPORT)
     case CSSPropertyWebkitDashboardRegion: {
         HANDLE_INHERIT_AND_INITIAL(dashboardRegions, DashboardRegions)
         if (!primitiveValue)
@@ -4345,6 +4448,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         
         return;
     }
+#endif        
     case CSSPropertyWebkitRtlOrdering:
         HANDLE_INHERIT_AND_INITIAL(visuallyOrdered, VisuallyOrdered)
         if (!primitiveValue || !primitiveValue->getIdent())
@@ -4535,16 +4639,16 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             m_style->inheritTransitions(m_parentStyle->transitions());
         return;
     case CSSPropertyWebkitTransitionDuration:
-        HANDLE_TRANSITION_VALUE(transitionDuration, TransitionDuration, value)
+        HANDLE_TRANSITION_VALUE(duration, Duration, value)
         return;
     case CSSPropertyWebkitTransitionRepeatCount:
-        HANDLE_TRANSITION_VALUE(transitionRepeatCount, TransitionRepeatCount, value)
+        HANDLE_TRANSITION_VALUE(repeatCount, RepeatCount, value)
         return;
     case CSSPropertyWebkitTransitionTimingFunction:
-        HANDLE_TRANSITION_VALUE(transitionTimingFunction, TransitionTimingFunction, value)
+        HANDLE_TRANSITION_VALUE(timingFunction, TimingFunction, value)
         return;
     case CSSPropertyWebkitTransitionProperty:
-        HANDLE_TRANSITION_VALUE(transitionProperty, TransitionProperty, value)
+        HANDLE_TRANSITION_VALUE(property, Property, value)
         return;
     case CSSPropertyInvalid:
         return;
@@ -4588,10 +4692,10 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
     }
 }
 
-void CSSStyleSelector::mapBackgroundAttachment(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillAttachment(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundAttachment(RenderStyle::initialBackgroundAttachment());
+        layer->setAttachment(FillLayer::initialFillAttachment(layer->type()));
         return;
     }
 
@@ -4601,20 +4705,20 @@ void CSSStyleSelector::mapBackgroundAttachment(BackgroundLayer* layer, CSSValue*
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
     switch (primitiveValue->getIdent()) {
         case CSSValueFixed:
-            layer->setBackgroundAttachment(false);
+            layer->setAttachment(false);
             break;
         case CSSValueScroll:
-            layer->setBackgroundAttachment(true);
+            layer->setAttachment(true);
             break;
         default:
             return;
     }
 }
 
-void CSSStyleSelector::mapBackgroundClip(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillClip(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundClip(RenderStyle::initialBackgroundClip());
+        layer->setClip(FillLayer::initialFillClip(layer->type()));
         return;
     }
 
@@ -4622,13 +4726,13 @@ void CSSStyleSelector::mapBackgroundClip(BackgroundLayer* layer, CSSValue* value
         return;
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    layer->setBackgroundClip(*primitiveValue);
+    layer->setClip(*primitiveValue);
 }
 
-void CSSStyleSelector::mapBackgroundComposite(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillComposite(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundComposite(RenderStyle::initialBackgroundComposite());
+        layer->setComposite(FillLayer::initialFillComposite(layer->type()));
         return;
     }
     
@@ -4636,13 +4740,13 @@ void CSSStyleSelector::mapBackgroundComposite(BackgroundLayer* layer, CSSValue* 
         return;
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    layer->setBackgroundComposite(*primitiveValue);
+    layer->setComposite(*primitiveValue);
 }
 
-void CSSStyleSelector::mapBackgroundOrigin(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillOrigin(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundOrigin(RenderStyle::initialBackgroundOrigin());
+        layer->setOrigin(FillLayer::initialFillOrigin(layer->type()));
         return;
     }
 
@@ -4650,7 +4754,7 @@ void CSSStyleSelector::mapBackgroundOrigin(BackgroundLayer* layer, CSSValue* val
         return;
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    layer->setBackgroundOrigin(*primitiveValue);
+    layer->setOrigin(*primitiveValue);
 }
 
 StyleImage* CSSStyleSelector::styleImage(CSSValue* value)
@@ -4662,20 +4766,20 @@ StyleImage* CSSStyleSelector::styleImage(CSSValue* value)
     return 0;
 }
 
-void CSSStyleSelector::mapBackgroundImage(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillImage(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundImage(RenderStyle::initialBackgroundImage());
+        layer->setImage(FillLayer::initialFillImage(layer->type()));
         return;
     }
 
-    layer->setBackgroundImage(styleImage(value));
+    layer->setImage(styleImage(value));
 }
 
-void CSSStyleSelector::mapBackgroundRepeat(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillRepeat(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundRepeat(RenderStyle::initialBackgroundRepeat());
+        layer->setRepeat(FillLayer::initialFillRepeat(layer->type()));
         return;
     }
     
@@ -4683,15 +4787,15 @@ void CSSStyleSelector::mapBackgroundRepeat(BackgroundLayer* layer, CSSValue* val
         return;
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    layer->setBackgroundRepeat(*primitiveValue);
+    layer->setRepeat(*primitiveValue);
 }
 
-void CSSStyleSelector::mapBackgroundSize(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillSize(FillLayer* layer, CSSValue* value)
 {
-    LengthSize b = RenderStyle::initialBackgroundSize();
+    LengthSize b = FillLayer::initialFillSize(layer->type());
     
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundSize(b);
+        layer->setSize(b);
         return;
     }
     
@@ -4735,13 +4839,13 @@ void CSSStyleSelector::mapBackgroundSize(BackgroundLayer* layer, CSSValue* value
     
     b.width = firstLength;
     b.height = secondLength;
-    layer->setBackgroundSize(b);
+    layer->setSize(b);
 }
 
-void CSSStyleSelector::mapBackgroundXPosition(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillXPosition(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundXPosition(RenderStyle::initialBackgroundXPosition());
+        layer->setXPosition(FillLayer::initialFillXPosition(layer->type()));
         return;
     }
     
@@ -4759,13 +4863,13 @@ void CSSStyleSelector::mapBackgroundXPosition(BackgroundLayer* layer, CSSValue* 
         l = Length(primitiveValue->getDoubleValue(), Percent);
     else
         return;
-    layer->setBackgroundXPosition(l);
+    layer->setXPosition(l);
 }
 
-void CSSStyleSelector::mapBackgroundYPosition(BackgroundLayer* layer, CSSValue* value)
+void CSSStyleSelector::mapFillYPosition(FillLayer* layer, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        layer->setBackgroundYPosition(RenderStyle::initialBackgroundYPosition());
+        layer->setYPosition(FillLayer::initialFillYPosition(layer->type()));
         return;
     }
     
@@ -4783,13 +4887,13 @@ void CSSStyleSelector::mapBackgroundYPosition(BackgroundLayer* layer, CSSValue* 
         l = Length(primitiveValue->getDoubleValue(), Percent);
     else
         return;
-    layer->setBackgroundYPosition(l);
+    layer->setYPosition(l);
 }
 
 void CSSStyleSelector::mapTransitionDuration(Transition* transition, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        transition->setTransitionDuration(RenderStyle::initialTransitionDuration());
+        transition->setDuration(RenderStyle::initialTransitionDuration());
         return;
     }
 
@@ -4798,15 +4902,15 @@ void CSSStyleSelector::mapTransitionDuration(Transition* transition, CSSValue* v
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
     if (primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_S)
-        transition->setTransitionDuration(int(1000*primitiveValue->getFloatValue()));
+        transition->setDuration(int(1000*primitiveValue->getFloatValue()));
     else if (primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_MS)
-        transition->setTransitionDuration(int(primitiveValue->getFloatValue()));
+        transition->setDuration(int(primitiveValue->getFloatValue()));
 }
 
 void CSSStyleSelector::mapTransitionRepeatCount(Transition* transition, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        transition->setTransitionRepeatCount(RenderStyle::initialTransitionRepeatCount());
+        transition->setRepeatCount(RenderStyle::initialTransitionRepeatCount());
         return;
     }
 
@@ -4815,15 +4919,15 @@ void CSSStyleSelector::mapTransitionRepeatCount(Transition* transition, CSSValue
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
     if (primitiveValue->getIdent() == CSSValueInfinite)
-        transition->setTransitionRepeatCount(-1);
+        transition->setRepeatCount(-1);
     else
-        transition->setTransitionRepeatCount(int(primitiveValue->getFloatValue()));
+        transition->setRepeatCount(int(primitiveValue->getFloatValue()));
 }
 
 void CSSStyleSelector::mapTransitionTimingFunction(Transition* transition, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        transition->setTransitionTimingFunction(RenderStyle::initialTransitionTimingFunction());
+        transition->setTimingFunction(RenderStyle::initialTransitionTimingFunction());
         return;
     }
 
@@ -4831,19 +4935,19 @@ void CSSStyleSelector::mapTransitionTimingFunction(Transition* transition, CSSVa
         CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
         switch (primitiveValue->getIdent()) {
             case CSSValueLinear:
-                transition->setTransitionTimingFunction(TimingFunction(LinearTimingFunction));
+                transition->setTimingFunction(TimingFunction(LinearTimingFunction));
                 break;
-            case CSSValueAuto:
-                transition->setTransitionTimingFunction(TimingFunction());
+            case CSSValueEase:
+                transition->setTimingFunction(TimingFunction());
                 break;
             case CSSValueEaseIn:
-                transition->setTransitionTimingFunction(TimingFunction(CubicBezierTimingFunction, .42, .0, 1.0, 1.0));
+                transition->setTimingFunction(TimingFunction(CubicBezierTimingFunction, .42, .0, 1.0, 1.0));
                 break;
             case CSSValueEaseOut:
-                transition->setTransitionTimingFunction(TimingFunction(CubicBezierTimingFunction, .0, .0, .58, 1.0));
+                transition->setTimingFunction(TimingFunction(CubicBezierTimingFunction, .0, .0, .58, 1.0));
                 break;
             case CSSValueEaseInOut:
-                transition->setTransitionTimingFunction(TimingFunction(CubicBezierTimingFunction, .42, .0, .58, 1.0));
+                transition->setTimingFunction(TimingFunction(CubicBezierTimingFunction, .42, .0, .58, 1.0));
                 break;
         }
         return;
@@ -4851,14 +4955,14 @@ void CSSStyleSelector::mapTransitionTimingFunction(Transition* transition, CSSVa
 
     if (value->isTransitionTimingFunctionValue()) {
         CSSTimingFunctionValue* timingFunction = static_cast<CSSTimingFunctionValue*>(value);
-        transition->setTransitionTimingFunction(TimingFunction(CubicBezierTimingFunction, timingFunction->x1(), timingFunction->y1(), timingFunction->x2(), timingFunction->y2()));
+        transition->setTimingFunction(TimingFunction(CubicBezierTimingFunction, timingFunction->x1(), timingFunction->y1(), timingFunction->x2(), timingFunction->y2()));
     }
 }
 
 void CSSStyleSelector::mapTransitionProperty(Transition* transition, CSSValue* value)
 {
     if (value->cssValueType() == CSSValue::CSS_INITIAL) {
-        transition->setTransitionProperty(RenderStyle::initialTransitionProperty());
+        transition->setProperty(RenderStyle::initialTransitionProperty());
         return;
     }
 
@@ -4866,7 +4970,65 @@ void CSSStyleSelector::mapTransitionProperty(Transition* transition, CSSValue* v
         return;
 
     CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
-    transition->setTransitionProperty(primitiveValue->getIdent());
+    transition->setProperty(primitiveValue->getIdent());
+}
+
+void CSSStyleSelector::mapNinePieceImage(CSSValue* value, NinePieceImage& image)
+{
+    // If we're a primitive value, then we are "none" and don't need to alter the empty image at all.
+    if (!value || value->isPrimitiveValue())
+        return;
+
+    // Retrieve the border image value.
+    CSSBorderImageValue* borderImage = static_cast<CSSBorderImageValue*>(value);
+    
+    // Set the image (this kicks off the load).
+    image.m_image = styleImage(borderImage->imageValue());
+
+    // Set up a length box to represent our image slices.
+    LengthBox& l = image.m_slices;
+    Rect* r = borderImage->m_imageSliceRect.get();
+    if (r->top()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
+        l.top = Length(r->top()->getDoubleValue(), Percent);
+    else
+        l.top = Length(r->top()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
+    if (r->bottom()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
+        l.bottom = Length(r->bottom()->getDoubleValue(), Percent);
+    else
+        l.bottom = Length((int)r->bottom()->getFloatValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
+    if (r->left()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
+        l.left = Length(r->left()->getDoubleValue(), Percent);
+    else
+        l.left = Length(r->left()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
+    if (r->right()->primitiveType() == CSSPrimitiveValue::CSS_PERCENTAGE)
+        l.right = Length(r->right()->getDoubleValue(), Percent);
+    else
+        l.right = Length(r->right()->getIntValue(CSSPrimitiveValue::CSS_NUMBER), Fixed);
+    
+    // Set the appropriate rules for stretch/round/repeat of the slices
+    switch (borderImage->m_horizontalSizeRule) {
+        case CSSValueStretch:
+            image.m_horizontalRule = StretchImageRule;
+            break;
+        case CSSValueRound:
+            image.m_horizontalRule = RoundImageRule;
+            break;
+        default: // CSSValueRepeat
+            image.m_horizontalRule = RepeatImageRule;
+            break;
+    }
+
+    switch (borderImage->m_verticalSizeRule) {
+        case CSSValueStretch:
+            image.m_verticalRule = StretchImageRule;
+            break;
+        case CSSValueRound:
+            image.m_verticalRule = RoundImageRule;
+            break;
+        default: // CSSValueRepeat
+            image.m_verticalRule = RepeatImageRule;
+            break;
+    }
 }
 
 void CSSStyleSelector::checkForTextSizeAdjust()
@@ -5110,6 +5272,8 @@ Color CSSStyleSelector::getColorFromPrimitiveValue(CSSPrimitiveValue* primitiveV
             col = m_element->document()->activeLinkColor();
         else if (ident == CSSValueWebkitFocusRingColor)
             col = focusRingColor();
+        else if (ident == CSSValueCurrentcolor)
+            col = m_style->color();
         else
             col = colorForCSSValue(ident);
     } else if (primitiveValue->primitiveType() == CSSPrimitiveValue::CSS_RGBCOLOR)

@@ -34,7 +34,7 @@
 
 namespace KJS {
 
-const ClassInfo JSCallbackConstructor::info = { "CallbackConstructor", 0, 0};
+const ClassInfo JSCallbackConstructor::info = { "CallbackConstructor", 0, 0, 0 };
 
 JSCallbackConstructor::JSCallbackConstructor(ExecState* exec, JSClassRef jsClass, JSObjectCallAsConstructorCallback callback)
     : JSObject(exec->lexicalGlobalObject()->objectPrototype())
@@ -56,9 +56,9 @@ bool JSCallbackConstructor::implementsHasInstance() const
     return true;
 }
 
-ConstructType JSCallbackConstructor::getConstructData(ConstructData&)
+bool JSCallbackConstructor::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* JSCallbackConstructor::construct(ExecState* exec, const List &args)

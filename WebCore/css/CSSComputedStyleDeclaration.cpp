@@ -24,18 +24,23 @@
 #include "config.h"
 #include "CSSComputedStyleDeclaration.h"
 
+#include "CSSBorderImageValue.h"
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSPrimitiveValue.h"
 #include "CSSPrimitiveValueMappings.h"
 #include "CSSPropertyNames.h"
 #include "CSSValueList.h"
 #include "CachedImage.h"
-#include "DashboardRegion.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "Pair.h"
+#include "Rect.h"
 #include "RenderObject.h"
 #include "ShadowValue.h"
+
+#if ENABLE(DASHBOARD_SUPPORT)
+#include "DashboardRegion.h"
+#endif
 
 namespace WebCore {
 
@@ -130,6 +135,7 @@ static const int computedProperties[] = {
     CSSPropertyWebkitBackgroundOrigin,
     CSSPropertyWebkitBackgroundSize,
     CSSPropertyWebkitBorderFit,
+    CSSPropertyWebkitBorderImage,
     CSSPropertyWebkitBorderHorizontalSpacing,
     CSSPropertyWebkitBorderVerticalSpacing,
     CSSPropertyWebkitBoxAlign,
@@ -140,6 +146,7 @@ static const int computedProperties[] = {
     CSSPropertyWebkitBoxOrdinalGroup,
     CSSPropertyWebkitBoxOrient,
     CSSPropertyWebkitBoxPack,
+    CSSPropertyWebkitBoxReflect,
     CSSPropertyWebkitBoxShadow,
     CSSPropertyWebkitBoxSizing,
     CSSPropertyWebkitColumnBreakAfter,
@@ -160,6 +167,15 @@ static const int computedProperties[] = {
     CSSPropertyWebkitMarqueeIncrement,
     CSSPropertyWebkitMarqueeRepetition,
     CSSPropertyWebkitMarqueeStyle,
+    CSSPropertyWebkitMaskAttachment,
+    CSSPropertyWebkitMaskBoxImage,
+    CSSPropertyWebkitMaskImage,
+    CSSPropertyWebkitMaskPosition,
+    CSSPropertyWebkitMaskRepeat,
+    CSSPropertyWebkitMaskClip,
+    CSSPropertyWebkitMaskComposite,
+    CSSPropertyWebkitMaskOrigin,
+    CSSPropertyWebkitMaskSize,
     CSSPropertyWebkitNbspMode,
     CSSPropertyWebkitRtlOrdering,
     CSSPropertyWebkitTextDecorationsInEffect,
@@ -170,7 +186,9 @@ static const int computedProperties[] = {
     CSSPropertyWebkitUserDrag,
     CSSPropertyWebkitUserModify,
     CSSPropertyWebkitUserSelect,
+#if ENABLE(DASHBOARD_SUPPORT)
     CSSPropertyWebkitDashboardRegion,
+#endif
     CSSPropertyWebkitBorderBottomLeftRadius,
     CSSPropertyWebkitBorderBottomRightRadius,
     CSSPropertyWebkitBorderTopLeftRadius,
@@ -232,9 +250,84 @@ static PassRefPtr<CSSValue> valueForShadow(const ShadowData* shadow)
         RefPtr<CSSPrimitiveValue> y = new CSSPrimitiveValue(s->y, CSSPrimitiveValue::CSS_PX);
         RefPtr<CSSPrimitiveValue> blur = new CSSPrimitiveValue(s->blur, CSSPrimitiveValue::CSS_PX);
         RefPtr<CSSPrimitiveValue> color = new CSSPrimitiveValue(s->color.rgb());
-        list->append(new ShadowValue(x.release(), y.release(), blur.release(), color.release()));
+        list->prepend(new ShadowValue(x.release(), y.release(), blur.release(), color.release()));
     }
     return list.release();
+}
+
+static int valueForRepeatRule(int rule)
+{
+    switch (rule) {
+        case RepeatImageRule:
+            return CSSValueRepeat;
+        case RoundImageRule:
+            return CSSValueRound;
+        default:
+            return CSSValueStretch;
+    }
+    
+    ASSERT_NOT_REACHED();
+    return CSSValueStretch;
+}
+        
+static PassRefPtr<CSSValue> valueForNinePieceImage(const NinePieceImage& image)
+{
+    if (!image.hasImage())
+        return new CSSPrimitiveValue(CSSValueNone);
+    
+    // Image first.
+    RefPtr<CSSValue> imageValue;
+    if (image.image())
+        imageValue = image.image()->cssValue();
+    
+    // Create the slices.
+    RefPtr<CSSPrimitiveValue> top;
+    if (image.m_slices.top.isPercent())
+        top = new CSSPrimitiveValue(image.m_slices.top.value(), CSSPrimitiveValue::CSS_PERCENTAGE);
+    else
+        top = new CSSPrimitiveValue(image.m_slices.top.value(), CSSPrimitiveValue::CSS_NUMBER);
+        
+    RefPtr<CSSPrimitiveValue> right;
+    if (image.m_slices.right.isPercent())
+        right = new CSSPrimitiveValue(image.m_slices.right.value(), CSSPrimitiveValue::CSS_PERCENTAGE);
+    else
+        right = new CSSPrimitiveValue(image.m_slices.right.value(), CSSPrimitiveValue::CSS_NUMBER);
+        
+    RefPtr<CSSPrimitiveValue> bottom;
+    if (image.m_slices.bottom.isPercent())
+        bottom = new CSSPrimitiveValue(image.m_slices.bottom.value(), CSSPrimitiveValue::CSS_PERCENTAGE);
+    else
+        bottom = new CSSPrimitiveValue(image.m_slices.bottom.value(), CSSPrimitiveValue::CSS_NUMBER);
+    
+    RefPtr<CSSPrimitiveValue> left;
+    if (image.m_slices.left.isPercent())
+        left = new CSSPrimitiveValue(image.m_slices.left.value(), CSSPrimitiveValue::CSS_PERCENTAGE);
+    else
+        left = new CSSPrimitiveValue(image.m_slices.left.value(), CSSPrimitiveValue::CSS_NUMBER);
+
+    RefPtr<Rect> rect = new Rect();
+    rect->setTop(top);
+    rect->setRight(right);
+    rect->setBottom(bottom);
+    rect->setLeft(left);
+
+    return new CSSBorderImageValue(imageValue, rect, valueForRepeatRule(image.m_horizontalRule), valueForRepeatRule(image.m_verticalRule));
+}
+
+static PassRefPtr<CSSValue> valueForReflection(const StyleReflection* reflection)
+{
+    if (!reflection)
+        return new CSSPrimitiveValue(CSSValueNone);
+
+    RefPtr<CSSReflectValue> reflectValue = new CSSReflectValue();
+    reflectValue->setDirection(reflection->direction());
+    if (reflection->offset().isPercent())
+        reflectValue->setOffset(new CSSPrimitiveValue(reflection->offset().percent(), CSSPrimitiveValue::CSS_PERCENTAGE));
+    else
+        reflectValue->setOffset(new CSSPrimitiveValue(reflection->offset().value(), CSSPrimitiveValue::CSS_PX));
+    
+    reflectValue->setMask(valueForNinePieceImage(reflection->mask()));
+    return reflectValue.release();
 }
 
 static PassRefPtr<CSSValue> getPositionOffsetValue(RenderStyle* style, int propertyID)
@@ -372,7 +465,7 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             return new CSSPrimitiveValue(CSSValueFixed);
         case CSSPropertyWebkitBackgroundClip:
         case CSSPropertyWebkitBackgroundOrigin: {
-            EBackgroundBox box = (propertyID == CSSPropertyWebkitBackgroundClip ? style->backgroundClip() : style->backgroundOrigin());
+            EFillBox box = (propertyID == CSSPropertyWebkitBackgroundClip ? style->backgroundClip() : style->backgroundOrigin());
             return new CSSPrimitiveValue(box);
         }
         case CSSPropertyBackgroundPosition: {
@@ -449,6 +542,8 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
                 return 0;
             return new CSSPrimitiveValue(boxPack);
         }
+        case CSSPropertyWebkitBoxReflect:
+            return valueForReflection(style->boxReflect());
         case CSSPropertyWebkitBoxShadow:
             return valueForShadow(style->boxShadow());
         case CSSPropertyCaptionSide:
@@ -614,6 +709,41 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             return new CSSPrimitiveValue(style->marqueeLoopCount(), CSSPrimitiveValue::CSS_NUMBER);
         case CSSPropertyWebkitMarqueeStyle:
             return new CSSPrimitiveValue(style->marqueeBehavior());
+        case CSSPropertyWebkitMaskImage:
+            if (style->maskImage())
+                return style->maskImage()->cssValue();
+            return new CSSPrimitiveValue(CSSValueNone);
+        case CSSPropertyWebkitMaskSize: {
+            RefPtr<CSSValueList> list = new CSSValueList(true);
+            list->append(new CSSPrimitiveValue(style->maskSize().width));
+            list->append(new CSSPrimitiveValue(style->maskSize().height));
+            return list.release();
+        }  
+        case CSSPropertyWebkitMaskRepeat:
+            return new CSSPrimitiveValue(style->maskRepeat());
+        case CSSPropertyWebkitMaskAttachment:
+            if (style->maskAttachment())
+                return new CSSPrimitiveValue(CSSValueScroll);
+            return new CSSPrimitiveValue(CSSValueFixed);
+        case CSSPropertyWebkitMaskComposite:
+            return new CSSPrimitiveValue(style->maskComposite());
+        case CSSPropertyWebkitMaskClip:
+        case CSSPropertyWebkitMaskOrigin: {
+            EFillBox box = (propertyID == CSSPropertyWebkitMaskClip ? style->maskClip() : style->maskOrigin());
+            return new CSSPrimitiveValue(box);
+        }
+        case CSSPropertyWebkitMaskPosition: {
+            RefPtr<CSSValueList> list = new CSSValueList(true);
+
+            list->append(new CSSPrimitiveValue(style->maskXPosition()));
+            list->append(new CSSPrimitiveValue(style->maskYPosition()));
+
+            return list.release();
+        }
+        case CSSPropertyWebkitMaskPositionX:
+            return new CSSPrimitiveValue(style->maskXPosition());
+        case CSSPropertyWebkitMaskPositionY:
+            return new CSSPrimitiveValue(style->maskYPosition());
         case CSSPropertyWebkitUserModify:
             return new CSSPrimitiveValue(style->userModify());
         case CSSPropertyMaxHeight: {
@@ -812,6 +942,7 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             if (style->boxSizing() == CONTENT_BOX)
                 return new CSSPrimitiveValue(CSSValueContentBox);
             return new CSSPrimitiveValue(CSSValueBorderBox);
+#if ENABLE(DASHBOARD_SUPPORT)
         case CSSPropertyWebkitDashboardRegion:
         {
             const Vector<StyleDashboardRegion>& regions = style->dashboardRegions();
@@ -842,8 +973,13 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             }
             return new CSSPrimitiveValue(firstRegion.release());
         }
+#endif
         case CSSPropertyWebkitAppearance:
             return new CSSPrimitiveValue(style->appearance());
+        case CSSPropertyWebkitBorderImage:
+            return valueForNinePieceImage(style->borderImage());
+        case CSSPropertyWebkitMaskBoxImage:
+            return valueForNinePieceImage(style->maskBoxImage());
         case CSSPropertyWebkitFontSizeDelta:
             // Not a real style property -- used by the editing engine -- so has no computed value.
             break;
@@ -915,7 +1051,6 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
         case CSSPropertyTextUnderlineStyle:
         case CSSPropertyTextUnderlineWidth:
         case CSSPropertyUnicodeRange: // Only used in @font-face rules.
-        case CSSPropertyWebkitBorderImage:
         case CSSPropertyWebkitBorderRadius:
         case CSSPropertyWebkitColumns:
         case CSSPropertyWebkitColumnRule:

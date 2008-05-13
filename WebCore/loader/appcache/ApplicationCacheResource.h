@@ -50,8 +50,12 @@ public:
     }
 
     unsigned type() const { return m_type; }
-    void addType(unsigned type) { m_type |= type; }
+    void addType(unsigned type);
     
+    void setStorageID(unsigned storageID) { m_storageID = storageID; }
+    unsigned storageID() const { return m_storageID; }
+    void clearStorageID() { m_storageID = 0; }
+
 #ifndef NDEBUG
     static void dumpType(unsigned type);
 #endif
@@ -60,6 +64,7 @@ private:
     ApplicationCacheResource(const KURL& url, const ResourceResponse& response, unsigned type, PassRefPtr<SharedBuffer> buffer);
 
     unsigned m_type;
+    unsigned m_storageID;
 };
     
 } // namespace WebCore

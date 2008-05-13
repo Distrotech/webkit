@@ -99,6 +99,8 @@ int WebCore::findNextWordFromIndex(UChar const*,int,int,bool) { notImplemented()
 
 void Frame::clearPlatformScriptObjects() { notImplemented(); }
 
+void Frame::disconnectPlatformScriptObjects() { notImplemented(); }
+
 DragImageRef Frame::dragImageForSelection() { notImplemented(); return 0; }
 
 void GraphicsContext::addInnerRoundedRectClip(const IntRect& rect, int thickness) { notImplemented(); }
@@ -155,14 +157,6 @@ void PlatformScrollbar::setRect(const IntRect&) { notImplemented(); }
 
 void FileChooser::openFileChooser(Document*) { notImplemented(); }
 String FileChooser::basenameForWidth(const Font&, int width) const { notImplemented(); return String(); }
-
-PopupMenu::PopupMenu(PopupMenuClient*) : RefCounted<PopupMenu>(0) { notImplemented(); }
-
-PopupMenu::~PopupMenu() { notImplemented(); }
-void PopupMenu::show(const IntRect&, FrameView*, int index) { notImplemented(); }
-void PopupMenu::hide() { notImplemented(); }
-void PopupMenu::updateFromElement() { notImplemented(); }
-bool PopupMenu::itemWritingDirectionIsNatural() { notImplemented(); return false; }
 
 Icon::Icon() : RefCounted<Icon>(0) { notImplemented(); }
 Icon::~Icon() { notImplemented(); }

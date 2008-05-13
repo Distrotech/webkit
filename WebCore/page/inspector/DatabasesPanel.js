@@ -69,9 +69,20 @@ WebInspector.DatabasesPanel.prototype = {
 
     reset: function()
     {
+        if (this._databases) {
+            var databasesLength = this._databases.length;
+            for (var i = 0; i < databasesLength; ++i) {
+                var database = this._databases[i];
+
+                delete database._tableViews;
+                delete database._queryView;
+            }
+        }
+
         this._databases = [];
 
         this.sidebarTree.removeChildren();
+        this.databaseViews.removeChildren();
     },
 
     handleKeyEvent: function(event)
@@ -131,7 +142,7 @@ WebInspector.DatabasesPanel.prototype = {
         if (!database || !database._databasesTreeElement)
             return;
 
-        database._databasesTreeElement.refreshChildren = true;
+        database._databasesTreeElement.shouldRefreshChildren = true;
 
         if (!("_tableViews" in database))
             return;
@@ -161,7 +172,7 @@ WebInspector.DatabasesPanel.prototype = {
         var columnWidths = [];
 
         var table = document.createElement("table");
-        table.className = "database-result-table";
+        table.className = "data-grid";
 
         var headerRow = document.createElement("tr");
         table.appendChild(headerRow);
@@ -296,6 +307,13 @@ WebInspector.DatabaseSidebarTreeElement.prototype = {
     onselect: function()
     {
         WebInspector.panels.databases.showDatabase(this.database);
+    },
+
+    oncollapse: function()
+    {
+        // Request a refresh after every collapse so the next
+        // expand will have an updated table list.
+        this.shouldRefreshChildren = true;
     },
 
     onpopulate: function()

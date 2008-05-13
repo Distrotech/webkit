@@ -15,10 +15,8 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
-
-    This class provides all functionality needed for loading images, style sheets and html
-    pages from the web. It has a memory cache for these objects.
 */
+
 #include "config.h"
 #include "Font.h"
 #include "FontDescription.h"
@@ -165,7 +163,9 @@ int Font::width(const TextRun& run) const
     if (!run.length())
         return 0;
     QString string = qstring(run);
-    int w = QFontMetrics(m_font).width(string);
+    QTextLayout layout(string, m_font);
+    QTextLine line = setupLayout(&layout, run);
+    int w = int(line.naturalTextWidth());
     // WebKit expects us to ignore word spacing on the first character (as opposed to what Qt does)
     if (treatAsSpace(run[0]))
         w -= m_wordSpacing;

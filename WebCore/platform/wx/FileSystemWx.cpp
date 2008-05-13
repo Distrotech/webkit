@@ -33,6 +33,9 @@
 #include "NotImplemented.h"
 #include "PlatformString.h"
 
+#include <wx/wx.h>
+#include <wx/filename.h>
+
 namespace WebCore {
 
 bool fileExists(const String& path)
@@ -83,7 +86,12 @@ String homeDirectoryPath()
     return String();
 }
 
-String pathGetFileName(const String&)
+String pathGetFileName(const String& path)
+{
+    return wxFileName(path).GetFullName();
+}
+
+String directoryName(const String& path)
 {
     notImplemented();
     return String();

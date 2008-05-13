@@ -249,8 +249,18 @@ static void _didExecute(WebScriptObject *obj)
 
 + (BOOL)throwException:(NSString *)exceptionMessage
 {
-    ObjcInstance::setGlobalException(exceptionMessage);
-    return YES;
+    JSLock lock;
+
+    JSGlobalObject* globalObject = Instance::currentGlobalObject();
+    if (!globalObject)
+        return NO;
+
+    if (globalObject->activeExecStates().size()) {
+        throwError(globalObject->activeExecStates().last(), GeneralError, exceptionMessage);
+        return YES;
+    }
+
+    return NO;
 }
 
 static void getListFromNSArray(ExecState *exec, NSArray *array, RootObject* rootObject, List& aList)
@@ -321,7 +331,7 @@ static void getListFromNSArray(ExecState *exec, NSArray *array, RootObject* root
     JSLock lock;
     
     [self _rootObject]->globalObject()->startTimeoutCheck();
-    Completion completion = Interpreter::evaluate([self _rootObject]->globalObject()->globalExec(), [self _rootObject]->globalObject()->globalScopeChain(), UString(), 0, String(script));
+    Completion completion = Interpreter::evaluate([self _rootObject]->globalObject()->globalExec(), UString(), 0, String(script));
     [self _rootObject]->globalObject()->stopTimeoutCheck();
     ComplType type = completion.complType();
     
@@ -483,7 +493,19 @@ static void getListFromNSArray(ExecState *exec, NSArray *array, RootObject* root
 {
     if (![self _rootObject])
         return;
-    ObjcInstance::setGlobalException(description, [self _rootObject]->globalObject());
+
+    JSLock lock;
+
+    ExecState* exec = 0;
+    JSGlobalObject* globalObject = [self _rootObject]->globalObject();
+    ExecStateStack::const_iterator end = globalObject->activeExecStates().end();
+    for (ExecStateStack::const_iterator it = globalObject->activeExecStates().begin(); it != end; ++it) {
+        if ((*it)->dynamicGlobalObject() == globalObject)
+            exec = *it;
+    }
+
+    if (exec)
+        throwError(exec, GeneralError, description);
 }
 
 - (JSObjectRef)JSObject

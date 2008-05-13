@@ -55,6 +55,9 @@ void JSXMLHttpRequest::mark()
     if (JSUnprotectedEventListener* onLoadListener = static_cast<JSUnprotectedEventListener*>(m_impl->onLoadListener()))
         onLoadListener->mark();
     
+    if (JSUnprotectedEventListener* onProgressListener = static_cast<JSUnprotectedEventListener*>(m_impl->onProgressListener()))
+        onProgressListener->mark();
+    
     typedef XMLHttpRequest::EventListenersMap EventListenersMap;
     typedef XMLHttpRequest::ListenerVector ListenerVector;
     EventListenersMap& eventListeners = m_impl->eventListeners();
@@ -98,12 +101,20 @@ void JSXMLHttpRequest::setOnload(ExecState*, JSValue* value)
     }
 }
 
-JSValue* JSXMLHttpRequest::responseXML(ExecState* exec) const
+JSValue* JSXMLHttpRequest::onprogress(ExecState*) const
 {
-    ExceptionCode ec = 0;
-    Document* responseXML = impl()->responseXML(ec);
-    setDOMException(exec, ec);
-    return toJS(exec, responseXML);
+    if (JSUnprotectedEventListener* listener = static_cast<JSUnprotectedEventListener*>(impl()->onProgressListener()))
+        if (JSObject* listenerObj = listener->listenerObj())
+            return listenerObj;
+    return jsNull();
+}
+
+void JSXMLHttpRequest::setOnprogress(ExecState*, JSValue* value)
+{
+    if (Document* document = impl()->document()) {
+        if (Frame* frame = document->frame())
+            impl()->setOnProgressListener(toJSDOMWindow(frame)->findOrCreateJSUnprotectedEventListener(value, true));
+    }
 }
 
 // Custom functions
@@ -112,7 +123,7 @@ JSValue* JSXMLHttpRequest::open(ExecState* exec, const List& args)
     if (args.size() < 2)
         return throwError(exec, SyntaxError, "Not enough arguments");
 
-    Frame* frame = toJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
+    Frame* frame = asJSDOMWindow(exec->dynamicGlobalObject())->impl()->frame();
     if (!frame)
         return jsUndefined();
     const KURL& url = frame->loader()->completeURL(args[1]->toString(exec));
