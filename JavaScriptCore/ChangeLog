@@ -1,3 +1,18 @@
+2008-04-25  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fix signal catching magic
+        
+        The signal handlers are restored to _exit but are only set when
+        running under run-javascriptcore-tests. fprintf from a signal
+        handler is not safe.
+
+        * kjs/testkjs.cpp:
+        (main):
+        (parseArguments):
+        * tests/mozilla/jsDriver.pl:
+
 2008-04-25  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
