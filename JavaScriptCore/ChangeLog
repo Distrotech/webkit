@@ -1,3 +1,16 @@
+2008-04-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+
+        - fix huge performance regression (from trunk) in string-unpack-code
+        
+        This restores string-unpack-code performance to parity with
+        trunk (2.27x speedup relative to previous SquirrelFish)
+        
+        * VM/Machine.cpp:
+        (KJS::Machine::execute): Shrink register file after call to avoid
+        growing repeatedly.
+
 2008-04-15  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
