@@ -340,6 +340,11 @@ bool JSObject::getPrimitiveNumber(ExecState* exec, double& number, JSValue*& res
 // ECMA 8.6.2.6
 JSValue* JSObject::defaultValue(ExecState* exec, JSType hint) const
 {
+  // We need this check to guard against the case where this object is rhs of
+  // a binary expression where lhs threw an exception in its conversion to
+  // primitive
+  if (exec->hadException())
+    return exec->exception();
   /* Prefer String for Date objects */
   if ((hint == StringType) || (hint != NumberType && _proto == exec->lexicalGlobalObject()->datePrototype())) {
     if (JSValue* v = tryGetAndCallProperty(exec, this, exec->propertyNames().toString))

@@ -1,3 +1,18 @@
+2008-05-13  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18752: SQUIRRELFISH: exceptions are not always handled by the vm
+        <https://bugs.webkit.org/show_bug.cgi?id=18752>
+
+        First step: prevent incorrect evaluation of valueOf/toString conversion
+        in right hand side of expression after earlier conversion throws.
+
+        * API/JSCallbackObjectFunctions.h:
+        (KJS::::toNumber):
+        * kjs/object.cpp:
+        (KJS::JSObject::defaultValue):
+
 2008-05-12  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
