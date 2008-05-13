@@ -78,8 +78,9 @@ namespace KJS {
         using JSVariableObject::JSVariableObjectData;
 
         struct JSGlobalObjectData : public JSVariableObjectData {
-            JSGlobalObjectData()
-                : JSVariableObjectData(&inlineSymbolTable)
+            JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
+                : JSVariableObjectData(&symbolTable, &registers)
+                , globalExec(new GlobalExecState(globalObject, thisValue))
             {
             }
 
@@ -132,7 +133,7 @@ namespace KJS {
             NativeErrorPrototype* typeErrorPrototype;
             NativeErrorPrototype* URIErrorPrototype;
             
-            SymbolTable inlineSymbolTable;
+            SymbolTable symbolTable;
 
             ExecStateStack activeExecStates;
 
@@ -150,14 +151,14 @@ namespace KJS {
 
     public:
         JSGlobalObject()
-            : JSVariableObject(new JSGlobalObjectData)
+            : JSVariableObject(new JSGlobalObjectData(this, this))
         {
             init(this);
         }
 
     protected:
         JSGlobalObject(JSValue* proto, JSObject* globalThisValue)
-            : JSVariableObject(proto, new JSGlobalObjectData)
+            : JSVariableObject(proto, new JSGlobalObjectData(this, globalThisValue))
         {
             init(globalThisValue);
         }
@@ -245,7 +246,7 @@ namespace KJS {
         virtual bool isDynamicScope() const;
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
-        
+
         Vector<Register>& registers() { return d()->registers; }
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
