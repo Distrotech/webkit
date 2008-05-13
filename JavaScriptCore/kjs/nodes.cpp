@@ -1946,6 +1946,15 @@ void PostfixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
     nodeStack.append(m_base.get());
 }
 
+RegisterID* PostIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> r1 = generator.emitGetPropId(dst ? dst : generator.newTemporary(), r0.get(), m_ident);
+    RegisterID* r2 = generator.emitPostInc(dst ? dst : generator.newTemporary(), r1.get());
+    generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    return r2;
+}
+
 JSValue* PostIncDotNode::evaluate(ExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);

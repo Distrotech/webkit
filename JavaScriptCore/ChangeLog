@@ -1,5 +1,15 @@
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+        
+        - generate call for PostIncDotNode
+
+        * kjs/nodes.cpp:
+        (KJS::PostIncDotNode::emitCode):
+        * kjs/nodes.h:
+
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
         Build fix.
         
         - fix build (not sure how this ever worked?)
