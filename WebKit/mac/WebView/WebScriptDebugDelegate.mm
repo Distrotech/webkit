@@ -174,6 +174,7 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 - (NSString *)functionName
 {
+#if 0
     ExecState* state = _private->state;
     if (!state->scopeNode())
         return nil;
@@ -184,6 +185,8 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
     Identifier fn = func->functionName();
     return toNSString(fn.ustring());
+#endif
+    return nil;
 }
 
 // Returns the pending exception for this frame (nil if none).
@@ -207,6 +210,7 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 // incorrect variable values. So this is not appropriate for evaluating arbitrary script.
 - (id)evaluateWebScript:(NSString *)script
 {
+#if 0
     JSLock lock;
 
     UString code = String(script);
@@ -243,6 +247,8 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
     state->setException(savedException);
 
     return [self _convertValueToObjcValue:result];
+#endif
+    return nil;
 }
 
 @end
