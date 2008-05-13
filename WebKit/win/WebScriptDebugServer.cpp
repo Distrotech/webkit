@@ -331,6 +331,7 @@ void WebScriptDebugServer::willExecuteStatement(ExecState* exec, int sourceID, i
 
 void WebScriptDebugServer::willLeaveCallFrame(ExecState* exec, int sourceID, int lineNumber)
 {
+#if 0
     COMPtr<WebScriptCallFrame> callFrame(AdoptCOM, WebScriptCallFrame::createInstance(exec->callingExecState()));
     ListenerSet listenersCopy = s_Listeners;
     ListenerSet::iterator end = listenersCopy.end();
@@ -338,6 +339,7 @@ void WebScriptDebugServer::willLeaveCallFrame(ExecState* exec, int sourceID, int
         (**it).willLeaveCallFrame(webView(exec), callFrame.get(), sourceID, lineNumber, webFrame(exec));
 
     suspendProcessIfPaused();
+#endif
 }
 
 void WebScriptDebugServer::exceptionWasRaised(ExecState* exec, int sourceID, int lineNumber)

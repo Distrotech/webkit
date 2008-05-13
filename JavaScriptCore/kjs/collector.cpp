@@ -291,6 +291,17 @@ collect:
 
   return newCell;
 }
+#if !PLATFORM(MAC)
+void* Collector::allocate(size_t s)
+{
+    return heapAllocate<PrimaryHeap>(s);
+}
+
+void* Collector::allocateNumber(size_t s)
+{
+    return heapAllocate<NumberHeap>(s);
+}
+#endif
 
 static inline void* currentThreadStackBase()
 {

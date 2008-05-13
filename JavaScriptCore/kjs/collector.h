@@ -38,15 +38,17 @@ namespace KJS {
     class Thread;
     enum HeapType { PrimaryHeap, NumberHeap };
 
-    static void* allocate(size_t s) 
-    {
-        return heapAllocate<PrimaryHeap>(s);
-    }
+#if PLATFORM(MAC)
+    // We can inline these functions on Mac because everything is compiled as
+    // one file, so the heapAllocate template definitions are available.
+    // FIXME: This should be enabled for all platforms using AllInOneFile.cpp
+    static void* allocate(size_t s) { return heapAllocate<PrimaryHeap>(s); }
+    static void* allocateNumber(size_t s) { return heapAllocate<NumberHeap>(s); }
+#else
+    static void* allocate(size_t s);
 
-    static void* allocateNumber(size_t s) 
-    {
-        return heapAllocate<NumberHeap>(s);
-    }
+    static void* allocateNumber(size_t s);
+#endif
 
     static bool collect();
     static bool isBusy(); // true if an allocation or collection is in progress
