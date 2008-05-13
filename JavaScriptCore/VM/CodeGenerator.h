@@ -156,6 +156,8 @@ namespace KJS {
 
         RegisterID* emitTypeOf(RegisterID*, RegisterID*);
 
+        RegisterID* emitIn(RegisterID*, RegisterID*, RegisterID*);
+
         RegisterID* emitResolve(RegisterID*, const Identifier&);
         RegisterID* emitResolve(RegisterID*, int);
         RegisterID* emitResolve(RegisterID*, int, int);
