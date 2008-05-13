@@ -459,7 +459,7 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
         if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
             // Need to set line and sourceURL properties on the exception, but that is not currently possible
             exception->put(exec, "line", jsNumber(42));
-            exception->put(exec, "sourceURL", jsString("FIXME: need sourceURL"));
+            exception->put(exec, "sourceURL", jsOwnedString(codeBlock->sourceURL));
         }
     }
 

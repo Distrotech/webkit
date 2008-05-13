@@ -1,3 +1,16 @@
+2008-04-20  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Provide "sourceURL" in exceptions
+
+        * VM/CodeBlock.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::throwException):
+        * kjs/nodes.cpp:
+        (KJS::EvalNode::generateCode):
+        (KJS::ProgramNode::generateCode):
+
 2008-04-19  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
