@@ -881,7 +881,7 @@ RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, Argumen
 
 RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
 {
-    m_codeBlock->needsActivation = true;
+    m_codeBlock->needsFullScopeChain = true;
     instructions().append(machine().getOpcode(op_push_scope));
     instructions().append(r0->index());
 

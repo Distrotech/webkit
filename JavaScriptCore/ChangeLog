@@ -1,3 +1,10 @@
+2008-04-22  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt and Maciej Stachowiak.
+        
+        Renamed "needsActivation" to "needsFullScopeChain" because lying will
+        make hair grow on the backs of your hands.
+
 2008-04-21  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
