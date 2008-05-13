@@ -1,3 +1,13 @@
+2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed another case of a dst register being an unreferenced temporary
+        (caused an ASSERT when running the full sunspider suite).
+
+        * kjs/nodes.cpp:
+        (KJS::CaseBlockNode::emitCodeForBlock):
+
 2008-04-16  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.
