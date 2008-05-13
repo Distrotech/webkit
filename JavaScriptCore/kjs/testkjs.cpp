@@ -241,6 +241,14 @@ JSValue* functionQuit(ExecState*, JSObject*, const List&)
 
 int kjsmain(int argc, char** argv);
 
+#if PLATFORM(UNIX)
+void handleCrash(int sig)
+{
+    fprintf(stderr, "CRASH: signal %d\n", sig);
+    exit(sig);
+}
+#endif
+
 int main(int argc, char** argv)
 {
 #if defined(_DEBUG) && PLATFORM(WIN_OS)
@@ -253,10 +261,10 @@ int main(int argc, char** argv)
 #endif
 
 #if PLATFORM(UNIX)
-    signal(SIGILL, _exit);
-    signal(SIGFPE, _exit);
-    signal(SIGBUS, _exit);
-    signal(SIGSEGV, _exit);
+    signal(SIGILL, handleCrash);
+    signal(SIGFPE, handleCrash);
+    signal(SIGBUS, handleCrash);
+    signal(SIGSEGV, handleCrash);
 #endif
 
     int res = 0;
