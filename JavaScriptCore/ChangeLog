@@ -1,3 +1,14 @@
+2008-04-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - only print "End:" output when -d flag is passed.
+        
+        This fixes half of our failing JSC regression tests.
+
+        * kjs/testkjs.cpp:
+        (runWithScripts):
+
 2008-04-21  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
