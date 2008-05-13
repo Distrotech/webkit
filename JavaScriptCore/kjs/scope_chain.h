@@ -76,16 +76,16 @@ namespace KJS {
         ScopeChain(const ScopeChain& c)
             : _node(c._node)
         {
-            ref();
+            _node->ref();
         }
 
         explicit ScopeChain(ScopeChainNode* node)
             : _node(node)
         {
-            ref();
+            _node->ref();
         }
     
-        ~ScopeChain() { deref(); }
+        ~ScopeChain() { _node->deref(); }
 
         JSObject* top() const { return _node->object; }
         JSObject* bottom() const;
@@ -93,7 +93,7 @@ namespace KJS {
         ScopeChainIterator begin() const { return ScopeChainIterator(_node); }
         ScopeChainIterator end() const { return ScopeChainIterator(0); }
 
-        void clear() { deref(); _node = 0; }
+        void clear() { _node->deref(); _node = 0; }
         void push(JSObject *);
         void push(const ScopeChain &);
         void push(ScopeChainNode*);
@@ -108,11 +108,9 @@ namespace KJS {
 #endif
         
         ScopeChainNode* node() { return _node; }
+
     private:
         ScopeChainNode* _node;
-        
-        void deref() const { _node->deref(); }
-        void ref() const { _node->ref(); }
     };
 
 inline JSObject *ScopeChain::bottom() const
