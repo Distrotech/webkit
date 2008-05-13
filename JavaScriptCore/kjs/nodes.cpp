@@ -1061,8 +1061,8 @@ uint32_t BracketAccessorNode::evaluateToUInt32(ExecState* exec)
 
 RegisterID* DotAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.emitNode(m_base.get());
-    return generator.emitGetPropId(generator.finalDestination(dst), r0, m_ident);
+    RegisterID* base = generator.emitNode(m_base.get());
+    return generator.emitGetPropId(generator.finalDestination(dst), base, m_ident);
 }
 
 void DotAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1613,9 +1613,9 @@ static const char* dotExprDoesNotAllowCallsString()
 
 RegisterID* FunctionCallDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
-    return generator.emitCall(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* function = generator.emitGetPropId(generator.newTemporary(), base.get(), m_ident);
+    return generator.emitCall(generator.finalDestination(dst, base.get()), function, base.get(), m_args.get());
 }
 
 void FunctionCallDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -1977,10 +1977,10 @@ void PostfixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
 
 RegisterID* PostIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
-    RegisterID* r2 = generator.emitPostInc(generator.finalDestination(dst), r1.get());
-    generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> value = generator.emitGetPropId(generator.newTemporary(), base.get(), m_ident);
+    RegisterID* r2 = generator.emitPostInc(generator.finalDestination(dst), value.get());
+    generator.emitPutPropId(base.get(), m_ident, value.get());
     return r2;
 }
 
@@ -2001,10 +2001,10 @@ JSValue* PostIncDotNode::evaluate(ExecState* exec)
 
 RegisterID* PostDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.newTemporary(), r0.get(), m_ident);
-    RegisterID* r2 = generator.emitPostDec(generator.finalDestination(dst), r1.get());
-    generator.emitPutPropId(r0.get(), m_ident, r1.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> value = generator.emitGetPropId(generator.newTemporary(), base.get(), m_ident);
+    RegisterID* r2 = generator.emitPostDec(generator.finalDestination(dst), value.get());
+    generator.emitPutPropId(base.get(), m_ident, value.get());
     return r2;
 }
 
@@ -2548,10 +2548,10 @@ void PrefixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const
 
 RegisterID* PreIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitGetPropId(generator.finalDestination(dst), r0.get(), m_ident);
-    generator.emitPreInc(r1);
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* value = generator.emitGetPropId(generator.finalDestination(dst), base.get(), m_ident);
+    generator.emitPreInc(value);
+    return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
 JSValue* PreIncDotNode::evaluate(ExecState* exec)
@@ -2573,10 +2573,10 @@ JSValue* PreIncDotNode::evaluate(ExecState* exec)
 
 RegisterID* PreDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
-    RegisterID* r1 = generator.emitGetPropId(generator.finalDestination(dst), r0.get(), m_ident);
-    generator.emitPreDec(r1);
-    return generator.emitPutPropId(r0.get(), m_ident, r1);
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
+    RegisterID* value = generator.emitGetPropId(generator.finalDestination(dst), base.get(), m_ident);
+    generator.emitPreDec(value);
+    return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
 JSValue* PreDecDotNode::evaluate(ExecState* exec)
@@ -2973,9 +2973,9 @@ static inline double addToNumber(ExecState* exec, JSValue* v1, JSValue* v2)
 
 RegisterID* AddNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_term1.get());
-    RegisterID* r1 = generator.emitNode(m_term2.get());
-    return generator.emitAdd(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_term1.get());
+    RegisterID* src2 = generator.emitNode(m_term2.get());
+    return generator.emitAdd(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void AddNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4295,13 +4295,13 @@ JSValue* AssignDotNode::evaluate(ExecState* exec)
 
 RegisterID* ReadModifyDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_base.get());
+    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
 
     // FIXME: should not write temp value to dst if dst is a local!
-    RefPtr<RegisterID> r1 = generator.emitGetPropId(generator.tempDestination(dst), r0.get(), m_ident);
+    RefPtr<RegisterID> value = generator.emitGetPropId(generator.tempDestination(dst), base.get(), m_ident);
     RegisterID* r2 = generator.emitNode(m_right.get());
-    RegisterID* r3 = emitReadModifyAssignment(generator, generator.finalDestination(dst, r1.get()), r1.get(), r2, m_operator);
-    return generator.emitPutPropId(r0.get(), m_ident, r3);
+    RegisterID* r3 = emitReadModifyAssignment(generator, generator.finalDestination(dst, value.get()), value.get(), r2, m_operator);
+    return generator.emitPutPropId(base.get(), m_ident, r3);
 }
 
 void ReadModifyDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
