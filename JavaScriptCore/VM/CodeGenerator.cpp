@@ -430,58 +430,58 @@ RegisterID* CodeGenerator::emitNot(RegisterID* dst, RegisterID* src)
     return dst;
 }
 
-RegisterID* CodeGenerator::emitEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_eq));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNotEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitNotEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_neq));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitStrictEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitStrictEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_stricteq));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitNotStrictEqual(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitNotStrictEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_nstricteq));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLess(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitLess(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_less));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitLessEq(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+RegisterID* CodeGenerator::emitLessEq(RegisterID* dst, RegisterID* src1, RegisterID* src2)
 {
     instructions().append(machine().getOpcode(op_lesseq));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(r2->index());
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(src1->index());
+    instructions().append(src2->index());
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitPreInc(RegisterID* srcDst)
