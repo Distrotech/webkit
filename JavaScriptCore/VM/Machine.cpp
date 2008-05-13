@@ -818,7 +818,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_equal) {
+    BEGIN_OPCODE(op_eq) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
@@ -827,7 +827,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_nequal) {
+    BEGIN_OPCODE(op_neq) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
@@ -1251,8 +1251,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_resolve_base_and_property) {
-        /* resolve_base_and_property baseDst(r) propDst(r) property(id)
+    BEGIN_OPCODE(op_resolve_with_base) {
+        /* resolve_with_base baseDst(r) propDst(r) property(id)
 
            Searches the scope chain for an object containing
            identifier property, and if one is found, writes it to
@@ -1260,7 +1260,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            propDst. If the property is not found, raises an exception.
 
            This is more efficient than doing resolve_base followed by
-           resolve, or resolve_base followed by get_prop_id, as it
+           resolve, or resolve_base followed by get_by_id, as it
            avoids duplicate hash lookups.
         */
         if (UNLIKELY(!resolveBaseAndProperty(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
@@ -1270,8 +1270,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_resolve_base_and_func) {
-        /* resolve_base_and_func baseDst(r) funcDst(r) property(id)
+    BEGIN_OPCODE(op_resolve_func) {
+        /* resolve_func baseDst(r) funcDst(r) property(id)
 
            Searches the scope chain for an object containing
            identifier property, and if one is found, writes the
@@ -1280,7 +1280,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            value to register propDst. If the property is not found,
            raises an exception.
 
-           This differs from resolve_base_and_property, because the
+           This differs from resolve_with_base, because the
            global this value will be substituted for activations or
            the global object, which is the right behavior for function
            calls but not for other property lookup.
@@ -1291,7 +1291,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_get_prop_id) {
+    BEGIN_OPCODE(op_get_by_id) {
         /* get_prop_id dst(r) base(r) property(id)
 
            Converts register base to Object, gets the property
@@ -1311,8 +1311,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_put_prop_id) {
-        /* put_prop_id base(r) property(id) value(r)
+    BEGIN_OPCODE(op_put_by_id) {
+        /* put_by_id base(r) property(id) value(r)
 
            Sets register value on register base as the property named
            by identifier property. Base is converted to object first.
@@ -1333,8 +1333,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_delete_prop_id) {
-        /* delete_prop_id dst(r) base(r) property(id)
+    BEGIN_OPCODE(op_del_by_id) {
+        /* del_by_id dst(r) base(r) property(id)
 
            Converts register base to Object, deletes the property
            named by identifier property from the object, and writes a
@@ -1354,8 +1354,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_get_prop_val) {
-        /* get_prop_val dst(r) base(r) property(r)
+    BEGIN_OPCODE(op_get_by_val) {
+        /* get_by_val dst(r) base(r) property(r)
 
            Converts register base to Object, gets the property named
            by register property from the object, and puts the result
@@ -1383,8 +1383,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_put_prop_val) {
-        /* put_prop_val base(r) property(r) value(r)
+    BEGIN_OPCODE(op_put_by_val) {
+        /* put_by_val base(r) property(r) value(r)
 
            Sets register value on register base as the property named
            by register property. Base is converted to object
@@ -1414,8 +1414,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_delete_prop_val) {
-        /* delete_prop_id dst(r) base(r) property(r)
+    BEGIN_OPCODE(op_del_by_val) {
+        /* del_by_val dst(r) base(r) property(r)
 
            Converts register base to Object, deletes the property
            named by register property from the object, and writes a
@@ -1443,8 +1443,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_put_prop_index) {
-        /* put_prop_val base(r) property(n) value(r)
+    BEGIN_OPCODE(op_put_by_index) {
+        /* put_by_index base(r) property(n) value(r)
 
            Sets register value on register base as the property named
            by the immediate number property. Base is converted to

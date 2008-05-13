@@ -190,16 +190,16 @@ namespace KJS {
         RegisterID* emitResolve(RegisterID* dst, const Identifier& property);
 
         RegisterID* emitResolveBase(RegisterID* dst, const Identifier& property);
-        RegisterID* emitResolveBaseAndProperty(RegisterID* baseDst, RegisterID* propDst, const Identifier& property);
-        RegisterID* emitResolveBaseAndFunc(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property);
+        RegisterID* emitResolveWithBase(RegisterID* baseDst, RegisterID* propDst, const Identifier& property);
+        RegisterID* emitResolveFunction(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property);
         
-        RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& property);
-        RegisterID* emitPutPropId(RegisterID* base, const Identifier& property, RegisterID* value);
-        RegisterID* emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier&);
-        RegisterID* emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
-        RegisterID* emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* value);
-        RegisterID* emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
-        RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* value);
+        RegisterID* emitGetById(RegisterID* dst, RegisterID* base, const Identifier& property);
+        RegisterID* emitPutById(RegisterID* base, const Identifier& property, RegisterID* value);
+        RegisterID* emitDeleteById(RegisterID* dst, RegisterID* base, const Identifier&);
+        RegisterID* emitGetByVal(RegisterID* dst, RegisterID* base, RegisterID* property);
+        RegisterID* emitPutByVal(RegisterID* base, RegisterID* property, RegisterID* value);
+        RegisterID* emitDeleteByVal(RegisterID* dst, RegisterID* base, RegisterID* property);
+        RegisterID* emitPutByIndex(RegisterID* base, unsigned index, RegisterID* value);
         RegisterID* emitPutGetter(RegisterID* base, const Identifier& property, RegisterID* value);
         RegisterID* emitPutSetter(RegisterID* base, const Identifier& property, RegisterID* value);
 

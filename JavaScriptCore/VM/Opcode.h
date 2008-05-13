@@ -42,8 +42,8 @@ namespace KJS {
         macro(op_mov) \
         \
         macro(op_not) \
-        macro(op_equal) \
-        macro(op_nequal) \
+        macro(op_eq) \
+        macro(op_neq) \
         macro(op_stricteq) \
         macro(op_nstricteq) \
         macro(op_less) \
@@ -75,15 +75,15 @@ namespace KJS {
         \
         macro(op_resolve) \
         macro(op_resolve_base) \
-        macro(op_resolve_base_and_property) \
-        macro(op_resolve_base_and_func) \
-        macro(op_get_prop_id) \
-        macro(op_put_prop_id) \
-        macro(op_delete_prop_id) \
-        macro(op_get_prop_val) \
-        macro(op_put_prop_val) \
-        macro(op_delete_prop_val) \
-        macro(op_put_prop_index) \
+        macro(op_resolve_with_base) \
+        macro(op_resolve_func) \
+        macro(op_get_by_id) \
+        macro(op_put_by_id) \
+        macro(op_del_by_id) \
+        macro(op_get_by_val) \
+        macro(op_put_by_val) \
+        macro(op_del_by_val) \
+        macro(op_put_by_index) \
         macro(op_put_getter) \
         macro(op_put_setter) \
         \
