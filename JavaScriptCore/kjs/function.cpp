@@ -84,7 +84,7 @@ CallType FunctionImp::getCallData(CallData& callData)
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
     JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
+    JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
     exec->setException(exception);
     return result;
 }
@@ -211,18 +211,18 @@ JSObject* FunctionImp::construct(ExecState* exec, const List& args)
     else
         proto = exec->lexicalGlobalObject()->objectPrototype();
 
-    JSObject* newObject = new JSObject(proto);
+    JSObject* thisObj = new JSObject(proto);
 
     JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, newObject, exec, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
+    JSValue* result = machine().execute(body.get(), exec, this, thisObj, args, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
     if (exception) {
         exec->setException(exception);
-        return newObject;
+        return thisObj;
     }
 
     if (result->isObject())
         return static_cast<JSObject*>(result);
-    return newObject;
+    return thisObj;
 }
 
 // ------------------------------ IndexToNameMap ---------------------------------
