@@ -279,6 +279,20 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] put_prop_id\t%s, %s, %s\n", location, registerName(r0).c_str(), idName(id0, identifiers[id0]).c_str(), registerName(r1).c_str());
             break;
         }
+        case op_get_prop_val: {
+            int r0 = (++it)->u.operand;
+            int r1 = (++it)->u.operand;
+            int r2 = (++it)->u.operand;
+            printf("[%4d] get_prop_val\t%s, %s, %s\n", location, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str());
+            break;
+        }
+        case op_put_prop_val: {
+            int r0 = (++it)->u.operand;
+            int r1 = (++it)->u.operand;
+            int r2 = (++it)->u.operand;
+            printf("[%4d] put_prop_val\t%s, %s, %s\n", location, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str());
+            break;
+        }
         case op_put_prop_index: {
             int r0 = (++it)->u.operand;
             unsigned n0 = (++it)->u.operand;

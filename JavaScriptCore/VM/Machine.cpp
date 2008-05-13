@@ -520,6 +520,42 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_get_prop_val) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+
+        JSObject* base = r[r1].u.jsValue->toObject(exec);
+        // FIXME: missing exception check
+        JSValue* subscript = r[r2].u.jsValue;
+
+        uint32_t i;
+        if (subscript->getUInt32(i))
+            r[r0].u.jsValue = base->get(exec, i);
+        else
+            r[r0].u.jsValue = base->get(exec, Identifier(subscript->toString(exec)));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_put_prop_val) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+
+        JSObject* base = r[r0].u.jsValue->toObject(exec);
+        // FIXME: missing exception check
+        JSValue* subscript = r[r1].u.jsValue;
+
+        uint32_t i;
+        if (subscript->getUInt32(i))
+            base->put(exec, i, r[r2].u.jsValue);
+        else
+            base->put(exec, Identifier(subscript->toString(exec)), r[r2].u.jsValue);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_put_prop_index) {
         int r0 = (++vPC)->u.operand;
         unsigned n0 = (++vPC)->u.operand;
