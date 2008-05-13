@@ -1,5 +1,19 @@
 2008-04-07  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Maciej Stachowiak.
+        
+        Fixed crasing SunSpider tests.
+        
+        Let's just pretend this never happened, bokay?
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/CodeGenerator.h:
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::addGlobals):
+
+2008-04-07  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt.
         
         Restored dumping of generated code as a command-line switch:

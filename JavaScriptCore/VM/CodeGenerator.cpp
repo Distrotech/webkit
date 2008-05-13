@@ -195,7 +195,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
              emitLoad(addVar(varStack[i].first), jsUndefined());
 }
 
-CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier> parameters)
+CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier>& parameters)
     : m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(functionBody)
