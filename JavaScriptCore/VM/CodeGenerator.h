@@ -63,6 +63,7 @@ namespace KJS {
         
         CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&);
         CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier>& parameters);
+        CodeGenerator(EvalNode*, const ScopeChain&, SymbolTable*, CodeBlock*);
 
         const CommonIdentifiers& propertyNames() const { return *m_propertyNames; }
 
@@ -187,6 +188,7 @@ namespace KJS {
         RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* val);
 
         RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
+        RegisterID* emitCallEval(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitReturn(RegisterID*);
         RegisterID* emitEnd(RegisterID*);
 
@@ -220,6 +222,8 @@ namespace KJS {
 
         typedef HashMap<JSValue*, unsigned, DefaultHash<JSValue*>::Hash, JSValueHashTraits> JSValueMap;
         
+        RegisterID* emitCall(OpcodeID, RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
+
         // Maps a register index in the symbol table to a RegisterID index in m_locals.
         int localsIndex(int registerIndex) { return -registerIndex - 1; }
         
@@ -246,7 +250,7 @@ namespace KJS {
         SymbolTable& symbolTable() { return *m_symbolTable; }
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
         
-        bool shouldOptimizeLocals() { return !m_scopeDepth; }
+        bool shouldOptimizeLocals() { return !m_isEvalCode && !m_scopeDepth; }
 
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
@@ -260,6 +264,7 @@ namespace KJS {
         Vector<RegisterID, 128> m_temporaries;
         Vector<LabelID, 128> m_labels;
         int m_scopeDepth;
+        bool m_isEvalCode;
         
         Vector<JumpContext> m_jumpContextStack;
 

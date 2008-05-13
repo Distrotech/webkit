@@ -430,6 +430,15 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] call\t\t%s, %s, %s, %d, %d\n", location, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str(), tempCount, argCount);
             break;
         }
+        case op_call_eval: {
+            int r0 = (++it)->u.operand;
+            int r1 = (++it)->u.operand;
+            int r2 = (++it)->u.operand;
+            int tempCount = (++it)->u.operand;
+            int argCount = (++it)->u.operand;
+            printf("[%4d] eval\t\t%s, %s, %s, %d, %d\n", location, registerName(r0).c_str(), registerName(r1).c_str(), registerName(r2).c_str(), tempCount, argCount);
+            break;
+        }
         case op_ret: {
             int r0 = (++it)->u.operand;
             printf("[%4d] ret\t\t%s\n", location, registerName(r0).c_str());

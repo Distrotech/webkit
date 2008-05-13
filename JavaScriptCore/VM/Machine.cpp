@@ -495,8 +495,34 @@ static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBl
     return true;
 }
 
+static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChainNode* scopeChain, RegisterFile* registerFile, Register* r, int argv, int argc, JSValue*& exceptionValue)
+{
+    JSValue* x = argc >= 2 ? r[argv + 1].u.jsValue : jsUndefined();
+    
+    UString s = x->toString(exec);
+    if (exec->hadException()) {
+        exceptionValue = exec->exception();
+        exec->clearException();
+        return 0;
+    }
+
+    int sourceId;
+    int errLine;
+    UString errMsg;
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+    
+    if (!evalNode) {
+        exceptionValue = throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
+        return 0;
+    }
+
+    EvalExecState newExec(exec->dynamicGlobalObject(), thisObj, evalNode.get(), exec, exec->scopeChain(), exec->dynamicGlobalObject());
+    return machine().execute(evalNode.get(), &newExec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
+}
+
 #if HAVE(COMPUTED_GOTO)
-static void* throwTarget;
+static void* op_throw_end_indirect;
+static void* op_call_indirect;
 #endif
 
 JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
@@ -552,6 +578,41 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, 
     return result;
 }
 
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception)
+{
+    CodeBlock* codeBlock = &evalNode->code(scopeChain);
+
+    size_t oldSize = registerFile->size();
+    size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries;
+    registerFile->grow(newSize);
+    Register* r = (*registerFile->basePointer()) + registerOffset + codeBlock->numVars;
+    
+    r[ProgramCodeThisRegister].u.jsValue = thisObj;
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
+    
+    registerFile->shrink(oldSize);
+    
+    return result;
+}
+
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
+{
+    RegisterFile* registerFile = registerFileStack->current();
+    CodeBlock* codeBlock = &evalNode->code(scopeChain);
+
+    size_t oldSize = registerFile->size();
+    size_t newSize = oldSize + codeBlock->numVars + codeBlock->numTemporaries;
+    registerFile->grow(newSize);
+    Register* r = (*registerFile->basePointer()) + oldSize + codeBlock->numVars;
+    
+    r[ProgramCodeThisRegister].u.jsValue = thisObj;
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
+    
+    registerFile->shrink(oldSize);
+    
+    return result;
+}
+
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
 {
     // One-time initialization of our address tables. We have to put this code
@@ -566,7 +627,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
                 FOR_EACH_OPCODE_ID(ADD_OPCODE_ID);
             #undef ADD_OPCODE
             ASSERT(m_opcodeIDTable.size() == numOpcodeIDs);
-            throwTarget = &&gcc_dependency_hack;
+            op_throw_end_indirect = &&op_throw_end;
+            op_call_indirect = &&op_call;
         #endif // HAVE(COMPUTED_GOTO)
         return 0;
     }
@@ -1167,6 +1229,42 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_call_eval) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+        int argv = (++vPC)->u.operand;
+        int argc = (++vPC)->u.operand;
+
+        JSValue* v = r[r1].u.jsValue;
+        JSValue* base = r[r2].u.jsValue;
+        
+        if (base == exec->lexicalGlobalObject() && v == exec->lexicalGlobalObject()->evalFunction()) {
+            int registerOffset = r - (*registerBase);
+
+            JSValue* result = eval(exec, static_cast<JSObject*>(base), scopeChain, registerFile, r, argv, argc, exceptionValue);
+            if (exceptionValue)
+                goto vm_throw;
+
+            r = (*registerBase) + registerOffset;
+            r[r0].u.jsValue = result;
+            
+            ++vPC;
+            NEXT_OPCODE;
+        }
+        
+        // We didn't find the blessed version of eval, so reset vPC and process
+        // this instruction as a normal function call.
+        vPC -= 5;
+
+#if HAVE(COMPUTED_GOTO)
+        // Hack around gcc performance quirk by performing an indirect goto
+        // in order to set the vPC -- attempting to do so directly results in a
+        // significant regression.
+        goto *op_call_indirect; // indirect goto -> op_call
+#endif
+        // fall through to op_call
+    }
     BEGIN_OPCODE(op_call) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
@@ -1395,9 +1493,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         // Hack around gcc performance quirk by performing an indirect goto
         // in order to set the vPC -- attempting to do so directly results in a
         // significant regression.
-        goto *throwTarget; // indirect goto -> gcc_dependency_hack
+        goto *op_throw_end_indirect; // indirect goto -> op_throw_end
     }
-    gcc_dependency_hack: {
+    op_throw_end: {
 #endif
 
         vPC = exceptionTarget;
