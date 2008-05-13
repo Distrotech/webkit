@@ -1,3 +1,13 @@
+2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Fix CodeGenerator::addConstant() so it uses the functionExpressions
+        counter for function expressions, not the functions counter.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::addConstant):
+
 2008-03-31  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.
