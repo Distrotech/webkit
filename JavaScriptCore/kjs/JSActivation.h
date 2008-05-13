@@ -40,7 +40,7 @@ namespace KJS {
     class JSActivation : public JSVariableObject {
     typedef JSVariableObject Base;
     public:
-        JSActivation(PassRefPtr<FunctionBodyNode>, Vector<Register>*, int rOffset);
+        JSActivation(PassRefPtr<FunctionBodyNode>, Register**, int registerOffset);
         virtual ~JSActivation();
         
         virtual bool isActivationObject() const;
@@ -58,17 +58,17 @@ namespace KJS {
         
         virtual const ClassInfo* classInfo() const { return &info; }
         static const ClassInfo info;
-        
+
     private:
         struct JSActivationData : public JSVariableObjectData {
-            JSActivationData(PassRefPtr<FunctionBodyNode> functionBody_, Vector<Register>* registers, int rOffset)
-                : JSVariableObjectData(&functionBody_->symbolTable(), registers, rOffset)
-                , didCopyRegisters(false)
+            JSActivationData(PassRefPtr<FunctionBodyNode> functionBody_, Register** registerBase, int registerOffset)
+                : JSVariableObjectData(&functionBody_->symbolTable(), registerBase, registerOffset)
+                , registerArray(0)
                 , functionBody(functionBody_)
             {
             }
 
-            bool didCopyRegisters;
+            Register* registerArray;
             RefPtr<FunctionBodyNode> functionBody; // Owns the symbol table
         };
         
