@@ -50,6 +50,7 @@ namespace KJS {
     class ConstDeclNode;
     class FuncDeclNode;
     class Node;
+    class ProgramCodeBlock;
     class PropertyListNode;
     class SourceStream;
 
@@ -2922,28 +2923,18 @@ namespace KJS {
     public:
         ScopeNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        CodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
-        {
-            if (!m_code)
-                generateCode(scopeChain);
-            return *m_code;
-        }
-
         int sourceId() const KJS_FAST_CALL { return m_sourceId; }
         const UString& sourceURL() const KJS_FAST_CALL { return m_sourceURL; }
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
         
         bool usesEval() const { return m_usesEval; }
         bool needsClosure() const { return m_needsClosure; }
-        void mark();
 
     protected:
         void optimizeVariableAccess(ExecState*) KJS_FAST_CALL;
-        virtual void generateCode(ScopeChain&) KJS_FAST_CALL { ASSERT_NOT_REACHED(); }
 
         VarStack m_varStack;
         FunctionStack m_functionStack;
-        OwnPtr<CodeBlock> m_code;
 
     private:
         UString m_sourceURL;
@@ -2955,13 +2946,21 @@ namespace KJS {
     class ProgramNode : public ScopeNode {
     public:
         static ProgramNode* create(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
-
+        virtual ~ProgramNode();
+        
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
+
+        ProgramCodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        {
+            if (!m_code)
+                generateCode(scopeChain);
+            return *m_code;
+        }
 
     private:
         ProgramNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        virtual void generateCode(ScopeChain&) KJS_FAST_CALL;
+        void generateCode(ScopeChain&) KJS_FAST_CALL;
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         void initializeSymbolTable(ExecState*) KJS_FAST_CALL;
@@ -2969,23 +2968,37 @@ namespace KJS {
 
         Vector<size_t> m_varIndexes; // Storage indexes belonging to the nodes in m_varStack. (Recorded to avoid double lookup.)
         Vector<size_t> m_functionIndexes; // Storage indexes belonging to the nodes in m_functionStack. (Recorded to avoid double lookup.)
+
+        ProgramCodeBlock* m_code;
     };
 
     class EvalNode : public ScopeNode {
     public:
         static EvalNode* create(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
-
+        virtual ~EvalNode();
+        
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
+
+        ProgramCodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        {
+            if (!m_code)
+                generateCode(scopeChain);
+            return *m_code;
+        }
 
     private:
         EvalNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
         ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
+        void generateCode(ScopeChain&) KJS_FAST_CALL;
+
+        ProgramCodeBlock* m_code;
     };
 
     class FunctionBodyNode : public ScopeNode {
     public:
         static FunctionBodyNode* create(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
+        virtual ~FunctionBodyNode();
         
         Vector<Identifier>& parameters() KJS_FAST_CALL { return m_parameters; }
         UString paramString() const KJS_FAST_CALL;
@@ -2994,14 +3007,24 @@ namespace KJS {
         
         SymbolTable& symbolTable() { return m_symbolTable; } // FIXME: Remove this
         
+        CodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
+        {
+            if (!m_code)
+                generateCode(scopeChain);
+            return *m_code;
+        }
+
+        void mark();
+
     protected:
         FunctionBodyNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
     private:
-        virtual void generateCode(ScopeChain&) KJS_FAST_CALL;
+        void generateCode(ScopeChain&) KJS_FAST_CALL;
         
         Vector<Identifier> m_parameters;
         SymbolTable m_symbolTable;
+        CodeBlock* m_code;
     };
 
     class FuncExprNode : public ExpressionNode {

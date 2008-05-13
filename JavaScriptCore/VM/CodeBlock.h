@@ -31,6 +31,7 @@
 #define CodeBlock_h
 
 #include "Instruction.h"
+#include "JSGlobalObject.h"
 #include "nodes.h"
 #include "ustring.h"
 #include <wtf/RefPtr.h>
@@ -60,6 +61,7 @@ namespace KJS {
         
         void dump(ExecState*) const;
         
+        bool getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth);
         void mark();
 
         Vector<Instruction> instructions;
@@ -80,11 +82,30 @@ namespace KJS {
         Vector<RefPtr<RegExp> > regexps;        
         Vector<HandlerInfo> exceptionHandlers;
 
-        bool getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth);
     private:
         void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
     };
     
+    // Program code is not marked by any function, so we make the global object
+    // responsible for marking it.
+
+    struct ProgramCodeBlock : public CodeBlock {
+        ProgramCodeBlock(bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
+            : CodeBlock(usesEval_, needsClosure_)
+            , globalObject(globalObject_)
+        {
+            globalObject->codeBlocks().add(this);
+        }
+
+        ~ProgramCodeBlock()
+        {
+            if (globalObject)
+                globalObject->codeBlocks().remove(this);
+        }
+
+        JSGlobalObject* globalObject; // For program and eval nodes, the global object that marks the constant pool.
+    };
+
 } // namespace KJS
 
 #endif // CodeBlock_h
