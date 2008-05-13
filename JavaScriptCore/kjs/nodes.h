@@ -2969,7 +2969,7 @@ namespace KJS {
         Vector<size_t> m_varIndexes; // Storage indexes belonging to the nodes in m_varStack. (Recorded to avoid double lookup.)
         Vector<size_t> m_functionIndexes; // Storage indexes belonging to the nodes in m_functionStack. (Recorded to avoid double lookup.)
 
-        ProgramCodeBlock* m_code;
+        OwnPtr<ProgramCodeBlock> m_code;
     };
 
     class EvalNode : public ScopeNode {
@@ -2992,7 +2992,7 @@ namespace KJS {
         ALWAYS_INLINE void processDeclarations(ExecState*) KJS_FAST_CALL;
         void generateCode(ScopeChain&) KJS_FAST_CALL;
 
-        ProgramCodeBlock* m_code;
+        OwnPtr<ProgramCodeBlock> m_code;
     };
 
     class FunctionBodyNode : public ScopeNode {
@@ -3024,7 +3024,7 @@ namespace KJS {
         
         Vector<Identifier> m_parameters;
         SymbolTable m_symbolTable;
-        CodeBlock* m_code;
+        OwnPtr<CodeBlock> m_code;
     };
 
     class FuncExprNode : public ExpressionNode {
