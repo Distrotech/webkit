@@ -2,6 +2,16 @@
 
         Reviewed by Maciej Stachowiak.
         
+        Simplified activation object a bit: No need to store the callee
+        in the activation object -- we can pull it out of the call frame
+        when needed, instead.
+        
+        SunSpider reports no change.
+
+2008-04-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
         RS by Oliver Hunt on moving JSArguments.cpp out of AllInOneFile.cpp.
 
         Substantially more handling of "arguments": "arguments" works fully
