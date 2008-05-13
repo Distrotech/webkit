@@ -1,3 +1,18 @@
+2008-04-22  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Sam.
+        
+        - propagate the "this" value properly to local eval
+        
+        (fixes a measly one regression test)
+
+        * VM/CodeBlock.h:
+        (KJS::CodeBlock::CodeBlock):
+        (KJS::ProgramCodeBlock::ProgramCodeBlock):
+        (KJS::EvalCodeBlock::EvalCodeBlock):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-22  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
