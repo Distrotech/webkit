@@ -2,6 +2,19 @@
 
         Reviewed by Maciej Stachowiak.
         
+        Turned ScopeChain::depth into a stand-alone function, and simplified it
+        a bit. 
+        
+        I also moved ScopeChain::depth to Machine.cpp because it doesn't report
+        the true depth of the ScopeChain -- just the Machine's perspective of
+        its depth within a given call frame.
+
+        SunSpider reports no change.
+        
+2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
         Removed indirection in ScopeChain::ref / ScopeChain::deref.
         
         SunSpider reports no change.
