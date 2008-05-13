@@ -1,3 +1,25 @@
+2008-04-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - Code cleanup in preparation for JS constructors
+
+        - Renamed returnInfo to callFrame. 
+        - Made an enum which defines what goes where in the call frame.
+        - Factored out initializeCallFrame function from op_call
+        
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitCall):
+        (KJS::CodeGenerator::emitConstruct):
+        * VM/Machine.cpp:
+        (KJS::Machine::dumpRegisters):
+        (KJS::initializeCallFrame):
+        (KJS::Machine::unwindCallFrame):
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        (KJS::Machine::):
+
 2008-04-10  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
