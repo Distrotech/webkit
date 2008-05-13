@@ -2561,7 +2561,7 @@ namespace KJS {
         RefPtr<ExpressionNode> m_init;
         
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
-        virtual RegisterID* emitCodeSingle(CodeGenerator&, RegisterID*) KJS_FAST_CALL;
+        virtual RegisterID* emitCodeSingle(CodeGenerator&) KJS_FAST_CALL;
     private:
         void handleSlowCase(OldInterpreterExecState*, const ScopeChain&, JSValue*) KJS_FAST_CALL NEVER_INLINE;
     };
