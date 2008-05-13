@@ -81,7 +81,8 @@ namespace KJS {
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
                 : JSVariableObjectData(&symbolTable, registerFileStack.basePointer(), 0)
-                , globalExec(new GlobalExecState(globalObject, thisValue))
+                , globalScopeChain(globalObject)
+                , globalExec(new ExecState(globalObject, thisValue, globalScopeChain))
             {
             }
 
@@ -90,7 +91,9 @@ namespace KJS {
 
             Debugger* debugger;
             
-            OwnPtr<GlobalExecState> globalExec;
+            ScopeChain globalScopeChain;
+            OwnPtr<ExecState> globalExec;
+
             int recursion;
 
             unsigned timeoutTime;
@@ -135,8 +138,6 @@ namespace KJS {
             NativeErrorPrototype* URIErrorPrototype;
             
             SymbolTable symbolTable;
-
-            ExecStateStack activeExecStates;
 
             ActivationStackNode* activations;
             size_t activationCount;
@@ -233,6 +234,8 @@ namespace KJS {
         int recursion() { return d()->recursion; }
         void incRecursion() { ++d()->recursion; }
         void decRecursion() { --d()->recursion; }
+        
+        ScopeChain& globalScopeChain() { return d()->globalScopeChain; }
 
         virtual void mark();
 
@@ -246,8 +249,6 @@ namespace KJS {
         virtual bool allowsAccessFrom(const JSGlobalObject*) const { return true; }
 
         virtual bool isDynamicScope() const;
-
-        ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 

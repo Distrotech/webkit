@@ -54,12 +54,12 @@ Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, i
     return Completion(Normal);
 }
 
-Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UString& code, JSValue* thisV)
+Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const UString& sourceURL, int startingLineNumber, const UString& code, JSValue* thisV)
 {
-    return evaluate(exec, sourceURL, startingLineNumber, code.data(), code.size(), thisV);
+    return evaluate(exec, scopeChain, sourceURL, startingLineNumber, code.data(), code.size(), thisV);
 }
 
-Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisValue)
+Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisValue)
 {
     JSLock lock;
     
@@ -81,7 +81,7 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     JSObject* thisObj = (!thisValue || thisValue->isUndefinedOrNull()) ? exec->dynamicGlobalObject() : thisValue->toObject(exec);
 
     JSValue* exception = 0;
-    JSValue* result = machine().execute(programNode.get(), exec, thisObj, &exec->dynamicGlobalObject()->registerFileStack(), exec->scopeChain().node(), &exception);
+    JSValue* result = machine().execute(programNode.get(), exec, scopeChain.node(), thisObj, &exec->dynamicGlobalObject()->registerFileStack(), &exception);
 
 #if JAVASCRIPT_PROFILING
     Profiler::profiler()->didExecute(exec, sourceURL, startingLineNumber);

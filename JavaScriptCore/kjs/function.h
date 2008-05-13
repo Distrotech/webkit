@@ -56,7 +56,6 @@ namespace KJS {
   };
 
   class FunctionImp : public InternalFunctionImp {
-    friend class ActivationImp;
   public:
     FunctionImp(ExecState*, const Identifier&, FunctionBodyNode*, ScopeChainNode*);
 

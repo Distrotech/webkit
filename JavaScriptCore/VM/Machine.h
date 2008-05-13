@@ -83,10 +83,10 @@ namespace KJS {
 
         bool isOpcode(Opcode opcode);
         
-        JSValue* execute(ProgramNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
+        JSValue* execute(ProgramNode*, ExecState*, ScopeChainNode*, JSObject* thisObj, RegisterFileStack*, JSValue** exception);
         JSValue* execute(FunctionBodyNode*, ExecState*, FunctionImp*, JSObject* thisObj, const List& args, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
-        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFile*, int registerOffset, ScopeChainNode*, JSValue** exception, JSObject* variableObject = 0);
-        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception, JSObject* variableObject);
+        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFile*, int registerOffset, ScopeChainNode*, JSValue** exception);
+        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
         
     private:
         enum { MaxReentryDepth = 128 };

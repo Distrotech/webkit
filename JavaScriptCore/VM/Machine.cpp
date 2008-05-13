@@ -59,7 +59,7 @@ void Machine::dumpCallFrame(const CodeBlock* codeBlock, ScopeChainNode* scopeCha
 {
     ScopeChain sc(scopeChain);
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(sc.bottom());
-    InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+    ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
     codeBlock->dump(&tmpExec);
     dumpRegisters(codeBlock, registerFile, r);
 }
@@ -539,7 +539,7 @@ static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChain
         return 0;
     }
 
-    EvalExecState newExec(exec->dynamicGlobalObject(), thisObj, evalNode.get(), exec, exec->scopeChain(), exec->dynamicGlobalObject());
+    ExecState newExec(exec->dynamicGlobalObject(), thisObj, exec->dynamicGlobalObject()->globalScopeChain());
     return machine().execute(evalNode.get(), &newExec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
 }
 
@@ -548,7 +548,7 @@ static void* op_throw_end_indirect;
 static void* op_call_indirect;
 #endif
 
-JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
+JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainNode* scopeChain, JSObject* thisObj, RegisterFileStack* registerFileStack, JSValue** exception)
 {
     if (m_reentryDepth >= MaxReentryDepth) {
         *exception = createStackOverflowError(exec);
@@ -567,9 +567,11 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
+
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
     m_reentryDepth--;
+
     registerFileStack->popGlobalRegisterFile();
     return result;
 }
@@ -617,15 +619,17 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
 
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
+
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
     m_reentryDepth--;
+
     registerFile->shrink(oldSize);
     return result;
     
 }
 
-JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception)
 {
     if (m_reentryDepth >= MaxReentryDepth) {
         *exception = createStackOverflowError(exec);
@@ -633,11 +637,13 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     }
     EvalCodeBlock* codeBlock = &evalNode->code(scopeChain);
     
-    if (!variableObject) {
-        ScopeChainNode* node;
-        
-        for (node = scopeChain; !node->object->isActivationObject() && node->next; node = node->next) { }
-        variableObject = node->object;
+    JSVariableObject* variableObject;
+    for (ScopeChainNode* node = scopeChain; ; node = node->next) {
+        ASSERT(node);
+        if (node->object->isVariableObject()) {
+            variableObject = static_cast<JSVariableObject*>(node->object);
+            break;
+        }
     }
     
     for (Vector<Identifier>::const_iterator iter = codeBlock->declaredVariableNames.begin(); iter != codeBlock->declaredVariableNames.end(); ++iter) {
@@ -664,18 +670,19 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
 
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
+
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
     m_reentryDepth--;
+
     registerFile->shrink(oldSize);
-    
     return result;
 }
 
-JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
+JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->current();
-    return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception, variableObject);
+    return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception);
 }
 
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
@@ -710,6 +717,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     Register** registerBase = registerFile->basePointer();
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
+    
 #define VM_CHECK_EXCEPTION() \
      do { \
         if (UNLIKELY(exec->hadException())) { \
@@ -717,7 +725,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             exec->clearException(); \
             goto vm_throw; \
         } \
-    }while (0)
+    } while (0)
 
 #if HAVE(COMPUTED_GOTO)
     #define NEXT_OPCODE goto *vPC->u.opcode
@@ -1320,7 +1328,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (subscript->getUInt32(i))
             r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, i));
         else {
-            VM_CHECK_EXCEPTION(); // This is needed as toString may have side effects
+            VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
             r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, Identifier(subscript->toString(exec))));
         }
         

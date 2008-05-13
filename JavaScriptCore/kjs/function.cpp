@@ -26,9 +26,7 @@
 #include "config.h"
 #include "function.h"
 
-#include "Activation.h"
 #include "ExecState.h"
-#include "ExecStateInlines.h"
 #include "JSActivation.h"
 #include "JSGlobalObject.h"
 #include "Machine.h"
@@ -90,9 +88,10 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
     return result;
 }
 
-JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier& propertyName, const PropertySlot& slot)
+JSValue* FunctionImp::argumentsGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&)
 {
     ASSERT_NOT_REACHED();
+#if 0
   FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
   
   for (ExecState* e = exec; e; e = e->callingExecState())
@@ -100,12 +99,14 @@ JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifi
       ASSERT_NOT_REACHED();
       return e->activationObject()->get(exec, propertyName);
     }
-  
+#endif  
   return jsNull();
 }
 
-JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&, const PropertySlot& slot)
+JSValue* FunctionImp::callerGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&)
 {
+    ASSERT_NOT_REACHED();
+#if 0
     FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
     ExecState* e = exec;
     while (e) {
@@ -113,7 +114,6 @@ JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&
             break;
         e = e->callingExecState();
     }
-
     if (!e)
         return jsNull();
     
@@ -124,8 +124,9 @@ JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&
     FunctionImp* callingFunction = callingExecState->function();
     if (!callingFunction)
         return jsNull();
-
     return callingFunction;
+#endif
+    return 0;
 }
 
 JSValue* FunctionImp::lengthGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot)
@@ -355,116 +356,6 @@ bool Arguments::deleteProperty(ExecState* exec, const Identifier& propertyName)
   } else {
     return JSObject::deleteProperty(exec, propertyName);
   }
-}
-
-// ------------------------------ ActivationImp --------------------------------
-
-const ClassInfo ActivationImp::info = { "Activation", 0, 0, 0 };
-
-ActivationImp::ActivationImp(const ActivationData& oldData, bool leaveRelic)
-    : JSVariableObject(new ActivationData(oldData))
-{
-    d()->leftRelic = leaveRelic;
-}
-
-ActivationImp::~ActivationImp()
-{
-    if (!d()->isOnStack)
-        delete d();
-}
-
-JSValue* ActivationImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier&, const PropertySlot& slot)
-{
-  ActivationImp* thisObj = static_cast<ActivationImp*>(slot.slotBase());
-  
-  if (!thisObj->d()->argumentsObject)
-    thisObj->createArgumentsObject(exec);
-  
-  return thisObj->d()->argumentsObject;
-}
-
-PropertySlot::GetValueFunc ActivationImp::getArgumentsGetter()
-{
-  return ActivationImp::argumentsGetter;
-}
-
-bool ActivationImp::getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&)
-{
-    ASSERT_NOT_REACHED();
-    return false;
-}
-
-bool ActivationImp::deleteProperty(ExecState* exec, const Identifier& propertyName)
-{
-    if (propertyName == exec->propertyNames().arguments)
-        return false;
-
-    return JSVariableObject::deleteProperty(exec, propertyName);
-}
-
-void ActivationImp::put(ExecState*, const Identifier& propertyName, JSValue* value)
-{
-    if (symbolTablePut(propertyName, value))
-        return;
-
-    // We don't call through to JSObject because __proto__ and getter/setter 
-    // properties are non-standard extensions that other implementations do not
-    // expose in the activation object.
-    ASSERT(!_prop.hasGetterSetterProperties());
-    _prop.put(propertyName, value, 0, true);
-}
-
-void ActivationImp::putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes)
-{
-    if (symbolTablePutWithAttributes(propertyName, value, attributes))
-        return;
-
-    // We don't call through to JSObject because __proto__ and getter/setter 
-    // properties are non-standard extensions that other implementations do not
-    // expose in the activation object.
-    ASSERT(!_prop.hasGetterSetterProperties());
-    _prop.put(propertyName, value, attributes, true);
-}
-
-void ActivationImp::markChildren()
-{
-    ASSERT_NOT_REACHED();
-
-    if (!d()->function->marked())
-        d()->function->mark();
-    
-    if (d()->argumentsObject && !d()->argumentsObject->marked())
-        d()->argumentsObject->mark();    
-}
-
-void ActivationImp::mark()
-{
-    JSObject::mark();
-    markChildren();
-}
-
-void ActivationImp::createArgumentsObject(ExecState*)
-{
-    ASSERT_NOT_REACHED();
-}
-
-JSObject* ActivationImp::toThisObject(ExecState* exec) const
-{
-    return exec->globalThisValue();
-}
-
-ActivationImp::ActivationData::ActivationData(const ActivationData& old)
-    : JSVariableObjectData(old)
-    , exec(old.exec)
-    , function(old.function)
-    , argumentsObject(old.argumentsObject)
-    , isOnStack(false)
-{
-}
-
-bool ActivationImp::isDynamicScope() const
-{
-    return d()->function->body->usesEval();
 }
 
 // ------------------------------ Global Functions -----------------------------------
@@ -718,10 +609,10 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
 
     ASSERT(!exec->dynamicGlobalObject()->debugger());
 
-    EvalExecState newExec(globalObject, thisObj, evalNode.get(), exec, scopeChain, globalObject);
+    ExecState newExec(globalObject, thisObj, globalObject->globalScopeChain());
 
     JSValue* exception = 0;
-    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception, globalObject);
+    JSValue* value = machine().execute(evalNode.get(), &newExec, thisObj, &newExec.dynamicGlobalObject()->registerFileStack(), scopeChain.node(), &exception);
 
 #if JAVASCRIPT_PROFILING
     Profiler::profiler()->didExecute(exec, UString(), 0);

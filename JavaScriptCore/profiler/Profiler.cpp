@@ -116,15 +116,30 @@ void Profiler::didExecute(ExecState* exec, const UString& sourceURL, int startin
     m_currentProfile->didExecute(callStackNames);
 }
 
-void getStackNames(Vector<UString>& names, ExecState* exec)
+void getStackNames(Vector<UString>&, ExecState*)
 {
-    for (ExecState* currentState = exec; currentState; currentState = currentState->callingExecState()) {
+    ASSERT_NOT_REACHED();
+#if 0
+    FunctionCallProfile* callTreeInsertionPoint = 0;
+    FunctionCallProfile* foundNameInTree = m_callTree.get();
+    NameIterator callStackLocation = callStackNames.begin();
 
-        if (FunctionImp* functionImp = currentState->function())
-            names.prepend(getFunctionName(functionImp));
-        else if (ScopeNode* scopeNode = currentState->scopeNode())
-            names.prepend(Script + scopeNode->sourceURL() + ": " + UString::from(scopeNode->lineNo() + 1));   // FIXME: Why is the line number always off by one?
+    while (callStackLocation != callStackNames.end() && foundNameInTree) {
+        callTreeInsertionPoint = foundNameInTree;
+        foundNameInTree = callTreeInsertionPoint->findChild(*callStackLocation);
+        ++callStackLocation;
     }
+
+    if (!foundNameInTree) {   // Insert remains of the stack into the call tree.
+        --callStackLocation;
+        for (FunctionCallProfile* next; callStackLocation != callStackNames.end(); ++callStackLocation) {
+            next = new FunctionCallProfile(*callStackLocation);
+            callTreeInsertionPoint->addChild(next);
+            callTreeInsertionPoint = next;
+        }
+    } else    // We are calling a function that is already in the call tree.
+        foundNameInTree->willExecute();
+#endif
 }
 
 void getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction)

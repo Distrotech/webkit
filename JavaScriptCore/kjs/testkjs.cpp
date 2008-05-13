@@ -184,8 +184,10 @@ JSValue* functionRun(ExecState* exec, JSObject*, const List& args)
     if (!fillBufferWithContentsOfFile(fileName, script))
         return throwError(exec, GeneralError, "Could not open file.");
 
+    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
+
     stopWatch.start();
-    Interpreter::evaluate(exec->dynamicGlobalObject()->globalExec(), fileName, 0, script.data());
+    Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
     stopWatch.stop();
 
     return jsNumber(stopWatch.getElapsedMS());
@@ -198,7 +200,8 @@ JSValue* functionLoad(ExecState* exec, JSObject*, const List& args)
     if (!fillBufferWithContentsOfFile(fileName, script))
         return throwError(exec, GeneralError, "Could not open file.");
 
-    Interpreter::evaluate(exec->dynamicGlobalObject()->globalExec(), fileName, 0, script.data());
+    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
+    Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
 
     return jsUndefined();
 }
@@ -293,7 +296,7 @@ static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& ar
         if (prettyPrint)
             prettyPrintScript(fileName, script);
         else {
-            Completion completion = Interpreter::evaluate(globalObject->globalExec(), fileName, 0, script.data());
+            Completion completion = Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
             success = success && completion.complType() != Throw;
             if (dump) {
                 if (success)
