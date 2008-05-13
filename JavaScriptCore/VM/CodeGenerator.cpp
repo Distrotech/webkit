@@ -922,9 +922,9 @@ void CodeGenerator::popFinallyContext()
     m_finallyDepth--;
 }
 
-void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget)
+void CodeGenerator::pushJumpContext(LabelStack* labels, LabelID* continueTarget, LabelID* breakTarget, bool isValidUnlabeledBreakTarget)
 {
-    JumpContext context = { labels, continueTarget, breakTarget, scopeDepth() };
+    JumpContext context = { labels, continueTarget, breakTarget, scopeDepth(), isValidUnlabeledBreakTarget };
     m_jumpContextStack.append(context);
     if (continueTarget)
         m_continueDepth++;
@@ -938,22 +938,40 @@ void CodeGenerator::popJumpContext()
     m_jumpContextStack.removeLast();
 }
 
-JumpContext* CodeGenerator::jumpContextForLabel(const Identifier& label, bool forContinue)
+JumpContext* CodeGenerator::jumpContextForContinue(const Identifier& label)
 {
     if(!m_jumpContextStack.size())
         return 0;
 
     if (label.isEmpty()) {
-        if (forContinue) {
-            for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
-                JumpContext* scope = &m_jumpContextStack[i];
-                if (scope->continueTarget)
-                    return scope;
-            }
-            return 0;
+        for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
+            JumpContext* scope = &m_jumpContextStack[i];
+            if (scope->continueTarget)
+                return scope;
         }
-        
-        return &m_jumpContextStack.last();
+        return 0;
+    }
+    
+    for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
+        JumpContext* scope = &m_jumpContextStack[i];
+        if (scope->labels->contains(label))
+            return scope;
+    }
+    return 0;
+}
+
+JumpContext* CodeGenerator::jumpContextForBreak(const Identifier& label)
+{
+    if(!m_jumpContextStack.size())
+        return 0;
+
+    if (label.isEmpty()) {
+        for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
+            JumpContext* scope = &m_jumpContextStack[i];
+            if (scope->isValidUnlabeledBreakTarget)
+                return scope;
+        }
+        return 0;
     }
     
     for (int i = m_jumpContextStack.size() - 1; i >= 0; i--) {
