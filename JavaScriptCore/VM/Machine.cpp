@@ -1197,14 +1197,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            object.
         */
         int dst = (++vPC)->u.operand;
-        int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
 
         JSValue* baseVal = r[base].u.jsValue;
         if (isNotObject(exec, vPC, codeBlock, baseVal, exceptionValue))
             goto vm_throw;
 
-        JSObject* baseObj = static_cast<JSObject*>(baseObj);
+        JSObject* baseObj = static_cast<JSObject*>(baseVal);
 
         JSValue* propName = r[property].u.jsValue;
 
