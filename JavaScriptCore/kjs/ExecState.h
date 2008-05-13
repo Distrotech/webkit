@@ -102,9 +102,7 @@ namespace KJS  {
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
     private:
-#ifndef NDEBUG
         bool isGlobalObject(JSObject*) const;
-#endif
     
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
