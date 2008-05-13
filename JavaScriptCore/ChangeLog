@@ -1,5 +1,14 @@
 2008-05-09  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Nobody (build fix).
+
+        Debug build fix
+
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::restoreLocalStorage):
+
+2008-05-09  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Geoff.
 
         Build fixes for SquirrelFish on windows.
