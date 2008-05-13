@@ -36,6 +36,7 @@
 #include "LabelID.h"
 #include "RegisterID.h"
 #include "SymbolTable.h"
+#include "SegmentedVector.h"
 #include "nodes.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
@@ -288,9 +289,9 @@ namespace KJS {
         
         HashSet<RefPtr<UString::Rep>, IdentifierRepHash> m_functions;
 
-        Vector<RegisterID, 512> m_locals;
-        Vector<RegisterID, 512> m_temporaries;
-        Vector<LabelID, 512> m_labels;
+        SegmentedVector<RegisterID, 512> m_locals;
+        SegmentedVector<RegisterID, 512> m_temporaries;
+        SegmentedVector<LabelID, 512> m_labels;
         int m_finallyDepth;
         int m_dynamicScopeDepth;
         CodeType m_codeType;
