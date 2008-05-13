@@ -32,10 +32,11 @@
 
 #include "CodeBlock.h"
 #include "ExecState.h"
+#include "JSActivation.h"
 #include "JSLock.h"
+#include "JSPropertyNameIterator.h"
 #include "Register.h"
 #include "internal.h"
-#include "JSActivation.h"
 
 namespace KJS {
 
@@ -226,6 +227,7 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
+
 void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Register>* registers, ScopeChain* scopeChain, CodeBlock* codeBlock)
 {
     // One-time initialization of our address tables. We have to put this code
@@ -243,7 +245,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         #endif // HAVE(COMPUTED_GOTO)
         return;
     }
-    
+
     registers->reserveCapacity(512);
 
     registers->resize(codeBlock->numRegisters());
@@ -821,6 +823,29 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     }
     BEGIN_OPCODE(op_pop_scope) {
         scopeChain->pop();
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_get_pnames) {
+        int iterReg = (++vPC)->u.operand;
+        int objectReg = (++vPC)->u.operand;
+
+        r[iterReg].u.jsPropertyNameIterator = JSPropertyNameIterator::create(exec, r[objectReg].u.jsValue);
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_next_pname) {
+        int destReg = (++vPC)->u.operand;
+        int iterReg = (++vPC)->u.operand;
+        int offset = (++vPC)->u.operand;
+
+        JSPropertyNameIterator* iter = r[iterReg].u.jsPropertyNameIterator;
+        if (JSValue* temp = iter->next(exec)) {
+            r[destReg].u.jsValue = temp;
+            vPC += offset;
+            NEXT_OPCODE;
+        }
+        iter->invalidate();
         ++vPC;
         NEXT_OPCODE;
     }

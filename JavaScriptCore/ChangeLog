@@ -1,3 +1,47 @@
+2008-04-01  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff
+
+        Add support for for..in nodes
+        
+        Added two new opcodes to get_pnames and next_pname to handle iterating
+        over the set of properties on an object.  This iterator is explicitly
+        invalidated and the property name array is released on standard exit
+        from the loop, otherwise we rely on GC to do the clean up for us.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitNextPropertyName):
+        (KJS::CodeGenerator::emitGetPropertyNames):
+        * VM/CodeGenerator.h:
+        * VM/JSPropertyNameIterator.cpp: Added.
+        (KJS::JSPropertyNameIterator::JSPropertyNameIterator):
+        (KJS::JSPropertyNameIterator::type):
+        (KJS::JSPropertyNameIterator::toPrimitive):
+        (KJS::JSPropertyNameIterator::getPrimitiveNumber):
+        (KJS::JSPropertyNameIterator::toBoolean):
+        (KJS::JSPropertyNameIterator::toNumber):
+        (KJS::JSPropertyNameIterator::toString):
+        (KJS::JSPropertyNameIterator::toObject):
+        (KJS::JSPropertyNameIterator::mark):
+        (KJS::JSPropertyNameIterator::next):
+        (KJS::JSPropertyNameIterator::invalidate):
+        (KJS::JSPropertyNameIterator::~JSPropertyNameIterator):
+        (KJS::JSPropertyNameIterator::create):
+        * VM/JSPropertyNameIterator.h: Added.
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * VM/Register.h:
+        (KJS::Register::):
+        * kjs/PropertyNameArray.h:
+        * kjs/nodes.cpp:
+        (KJS::ForInNode::emitCode):
+        * kjs/nodes.h:
+        * kjs/value.h:
+
 2008-04-01  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.

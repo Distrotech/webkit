@@ -25,41 +25,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
-#ifndef Register_h
-#define Register_h
 
-#include <wtf/VectorTraits.h>
+#ifndef JSPropertyNameIterator_h
+#define JSPropertyNameIterator_h
+
+#include "value.h"
 
 namespace KJS {
-
-    class CodeBlock;
-    class FunctionImp;
-    class Instruction;
     class JSObject;
-    class JSPropertyNameIterator;
-    class JSValue;
-    class ScopeChain;
-    
-    struct Register {
-        union {
-            CodeBlock* codeBlock;
-            Instruction* vPC;
-            JSValue* jsValue;
-            JSObject* jsObject;
-            ScopeChain* scopeChain;
-            JSPropertyNameIterator* jsPropertyNameIterator;
-            Register* r;
-            int i;
-        } u;
+    class Identifier;
+
+    class JSPropertyNameIterator : public JSCell {
+    public:
+        virtual JSType type() const;
+        virtual JSValue *toPrimitive(ExecState *, JSType) const;
+        virtual bool getPrimitiveNumber(ExecState*, double&, JSValue*&);
+        virtual bool toBoolean(ExecState *) const;
+        virtual double toNumber(ExecState *) const;
+        virtual UString toString(ExecState *) const;
+        virtual JSObject *toObject(ExecState *) const;
+        
+        virtual void mark();
+        
+        JSValue* next(ExecState* exec);        
+        void invalidate();
+        
+        virtual ~JSPropertyNameIterator();
+        
+        static JSPropertyNameIterator* create(ExecState*, JSValue*);
+    private:
+        JSPropertyNameIterator(JSObject* object, Identifier* propertyNames, size_t numProperties);
+        JSObject* m_object;
+        Identifier* m_propertyNames;
+        Identifier* m_position;
+        Identifier* m_end;
     };
-    
-} // namespace KJS
+}
 
-namespace WTF {
-
-    template<> struct VectorTraits<KJS::Register> : VectorTraitsBase<true, KJS::Register> { };
-
-} // namespace WTF
-
-#endif // Register_h
+#endif

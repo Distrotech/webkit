@@ -91,6 +91,9 @@ namespace KJS {
         \
         macro(op_construct) \
         \
+        macro(op_get_pnames) \
+        macro(op_next_pname) \
+        \
         macro(op_push_scope) \
         macro(op_pop_scope) \
         \
