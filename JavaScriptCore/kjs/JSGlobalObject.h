@@ -82,7 +82,7 @@ namespace KJS {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
                 : JSVariableObjectData(&symbolTable, registerFileStack.globalBasePointer(), 0)
                 , globalScopeChain(globalObject)
-                , globalExec(new ExecState(globalObject, thisValue, globalScopeChain.node()))
+                , globalExec(new ExecState(globalObject, thisValue, globalScopeChain.node(), registerFileStack.current()))
             {
             }
 
@@ -91,6 +91,7 @@ namespace KJS {
 
             Debugger* debugger;
             
+            RegisterFileStack registerFileStack;
             ScopeChain globalScopeChain;
             OwnPtr<ExecState> globalExec;
 
@@ -138,18 +139,13 @@ namespace KJS {
             NativeErrorPrototype* URIErrorPrototype;
             
             SymbolTable symbolTable;
-
-            ActivationStackNode* activations;
-            size_t activationCount;
-            
             unsigned pageGroupIdentifier;
-
-            OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
 
             PerThreadData perThreadData;
 
             HashSet<ProgramCodeBlock*> codeBlocks;
-            RegisterFileStack registerFileStack;
+
+            OwnPtr<HashSet<JSObject*> > arrayVisitedElements; // Global data shared by array prototype functions.
         };
 
     public:
