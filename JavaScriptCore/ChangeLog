@@ -1,5 +1,16 @@
 2008-03-30  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+        
+        Implement StringNode and VoidNode (both pretty trivial).
+
+        * kjs/nodes.cpp:
+        (KJS::StringNode::emitCode):
+        (KJS::VoidNode::emitCode):
+        * kjs/nodes.h:
+
+2008-03-30  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Sam.
 
         Implement CommaNode.
