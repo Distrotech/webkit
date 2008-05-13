@@ -31,6 +31,7 @@
 
 namespace KJS {
     class ExecState;
+    class SourceProvider;
     class UString;
 }
 
@@ -43,8 +44,8 @@ namespace WebCore {
     public:
         virtual ~JavaScriptDebugListener() { }
 
-        virtual void didParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID) = 0;
-        virtual void failedToParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage) = 0;
+        virtual void didParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID) = 0;
+        virtual void failedToParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage) = 0;
         virtual void didEnterCallFrame(KJS::ExecState*, int sourceID, int lineNumber) = 0;
         virtual void willExecuteStatement(KJS::ExecState*, int sourceID, int lineNumber) = 0;
         virtual void willLeaveCallFrame(KJS::ExecState*, int sourceID, int lineNumber) = 0;

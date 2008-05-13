@@ -31,6 +31,10 @@
 #include <WebCore/JavaScriptDebugListener.h>
 #pragma warning(pop)
 
+namespace KJS {
+    class SourceProvider;
+}
+
 namespace WebCore {
     class Page;
 }
@@ -82,8 +86,8 @@ private:
     void suspendProcessIfPaused();
 
     // JavaScriptDebugListener
-    virtual void didParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
-    virtual void failedToParseSource(KJS::ExecState*, const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
+    virtual void didParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
+    virtual void failedToParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
     virtual void didEnterCallFrame(KJS::ExecState*, int sourceID, int lineNumber);
     virtual void willExecuteStatement(KJS::ExecState*, int sourceID, int lineNumber);
     virtual void willLeaveCallFrame(KJS::ExecState*, int sourceID, int lineNumber);

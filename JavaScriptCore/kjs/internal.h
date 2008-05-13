@@ -68,17 +68,6 @@ namespace KJS {
   //                            Evaluation
   // ---------------------------------------------------------------------------
 
-  struct AttachedGlobalObject;
-  class DebuggerImp {
-  public:
-
-    DebuggerImp() {
-      globalObjects = 0;
-    }
-
-    AttachedGlobalObject* globalObjects;
-  };
-
 } // namespace
 
 #endif //  INTERNAL_H

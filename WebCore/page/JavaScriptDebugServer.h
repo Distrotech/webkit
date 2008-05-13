@@ -63,7 +63,7 @@ namespace WebCore {
 
         void dispatchFunctionToListeners(JavaScriptExecutionCallback, KJS::ExecState*, int sourceID, int lineNumber);
 
-        virtual bool sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::UString& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
+        virtual void sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::SourceProvider& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
         virtual bool callEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function, const KJS::List& args);
         virtual bool atStatement(KJS::ExecState*, int sourceID, int firstLine, int lastLine);
         virtual bool returnEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function);

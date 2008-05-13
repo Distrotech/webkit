@@ -1065,7 +1065,7 @@ FunctionBody:
 ;
 
 Program:
-    /* not in spec */                   { parser().didFinishParsing(0, 0, 0, false, false, @0.last_line); }
+    /* not in spec */                   { parser().didFinishParsing(new SourceElements, 0, 0, false, false, @0.last_line); }
     | SourceElements                    { parser().didFinishParsing($1.m_node, $1.m_varDeclarations, $1.m_funcDeclarations, 
                                                                     ($1.m_featureInfo & EvalFeature) != 0, ($1.m_featureInfo & ClosureFeature) != 0,
                                                                     @1.last_line); }

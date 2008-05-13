@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 2 -*-
 /*
- *  This file is part of the KDE libraries
+ *  Copyright (C) 2008 Apple Inc. All rights reserved.
  *  Copyright (C) 1999-2001 Harri Porten (porten@kde.org)
  *  Copyright (C) 2001 Peter Kelly (pmk@post.com)
  *
@@ -24,12 +24,7 @@
 #include "debugger.h"
 
 #include "JSGlobalObject.h"
-#include "internal.h"
 #include "ustring.h"
-
-using namespace KJS;
-
-// ------------------------------ Debugger -------------------------------------
 
 namespace KJS {
   struct AttachedGlobalObject
@@ -41,19 +36,16 @@ namespace KJS {
     AttachedGlobalObject* next;
   };
 
-}
-
 int Debugger::debuggersPresent = 0;
 
 Debugger::Debugger()
+    : globalObjects(0)
 {
-  rep = new DebuggerImp();
 }
 
 Debugger::~Debugger()
 {
   detach(0);
-  delete rep;
 }
 
 void Debugger::attach(JSGlobalObject* globalObject)
@@ -64,14 +56,14 @@ void Debugger::attach(JSGlobalObject* globalObject)
   if (other)
     other->detach(globalObject);
   globalObject->setDebugger(this);
-  rep->globalObjects = new AttachedGlobalObject(globalObject, rep->globalObjects);
+  globalObjects = new AttachedGlobalObject(globalObject, globalObjects);
 }
 
 void Debugger::detach(JSGlobalObject* globalObj)
 {
   // iterate the addresses where AttachedGlobalObject pointers are stored
   // so we can unlink items from the list
-  AttachedGlobalObject **p = &rep->globalObjects;
+  AttachedGlobalObject **p = &globalObjects;
   AttachedGlobalObject *q;
   while ((q = *p)) {
     if (!globalObj || q->globalObj == globalObj) {
@@ -97,10 +89,9 @@ bool Debugger::hasHandledException(ExecState *exec, JSValue *exception)
     return false;
 }
 
-bool Debugger::sourceParsed(ExecState*, int /*sourceId*/, const UString &/*sourceURL*/, 
-                           const UString &/*source*/, int /*startingLineNumber*/, int /*errorLine*/, const UString & /*errorMsg*/)
+void Debugger::sourceParsed(ExecState*, int /*sourceId*/, const UString &/*sourceURL*/, 
+                           const SourceProvider&, int /*startingLineNumber*/, int /*errorLine*/, const UString & /*errorMsg*/)
 {
-  return true;
 }
 
 bool Debugger::sourceUnused(ExecState*, int /*sourceId*/)
@@ -132,3 +123,4 @@ bool Debugger::returnEvent(ExecState*, int /*sourceId*/, int /*lineno*/,
   return true;
 }
 
+} // namespace KJS

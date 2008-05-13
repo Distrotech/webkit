@@ -38,6 +38,7 @@
 #include <kjs/ExecState.h>
 #include <wtf/Assertions.h>
 #include <wtf/Vector.h>
+#include <kjs/SourceProvider.h>
 
 using namespace KJS;
 using namespace WebCore;
@@ -281,9 +282,9 @@ void WebScriptDebugServer::didLoadMainResourceForDataSource(IWebView* webView, I
         (**it).didLoadMainResourceForDataSource(webView, dataSource);
 }
 
-void WebScriptDebugServer::didParseSource(ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int sourceID)
+void WebScriptDebugServer::didParseSource(ExecState* exec, const SourceProvider& source, int startingLineNumber, const UString& sourceURL, int sourceID)
 {
-    BString bSource = source;
+    BString bSource(source.data(), source.length());
     BString bSourceURL = sourceURL;
 
     ListenerSet listenersCopy = s_Listeners;
@@ -292,9 +293,9 @@ void WebScriptDebugServer::didParseSource(ExecState* exec, const UString& source
         (**it).didParseSource(webView(exec), bSource, startingLineNumber, bSourceURL, sourceID, webFrame(exec));
 }
 
-void WebScriptDebugServer::failedToParseSource(ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
+void WebScriptDebugServer::failedToParseSource(ExecState* exec, const SourceProvider& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
 {
-    BString bSource = source;
+    BString bSource(source.data(), source.length());
     BString bSourceURL = sourceURL;
 
     // FIXME: the error var should be made with the information in the errorMsg.  It is not a simple

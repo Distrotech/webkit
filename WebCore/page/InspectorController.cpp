@@ -2002,11 +2002,11 @@ bool InspectorController::handleException(JSContextRef context, JSValueRef excep
 #pragma mark -
 #pragma mark JavaScriptDebugListener functions
 
-void InspectorController::didParseSource(ExecState*, const UString& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
+void InspectorController::didParseSource(ExecState*, const KJS::SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
 {
 }
 
-void InspectorController::failedToParseSource(ExecState*, const UString& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
+void InspectorController::failedToParseSource(ExecState*, const KJS::SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
 {
 }
 

@@ -20,21 +20,22 @@
  *
  */
 
-#ifndef _KJSDEBUGGER_H_
-#define _KJSDEBUGGER_H_
+#ifndef Debugger_h
+#define Debugger_h
 
 #include <wtf/HashMap.h>
 #include "protect.h"
 
 namespace KJS {
 
-  class DebuggerImp;
+  class AttachedGlobalObject;
   class ExecState;
   class JSGlobalObject;
   class JSObject;
   class JSValue;
-  class UString;
   class List;
+  class SourceProvider;
+  class UString;
 
   /**
    * @internal
@@ -62,8 +63,6 @@ namespace KJS {
      * it is automatically detached.
      */
     virtual ~Debugger();
-
-    DebuggerImp *imp() const { return rep; }
 
     /**
      * Attaches the debugger to specified global object. This will cause this
@@ -111,11 +110,9 @@ namespace KJS {
      * error, or -1 if the source code was valid and parsed successfully
      * @param errorMsg The error description, or null if the source code
        was valid and parsed successfully
-     * @return true if execution should be continue, false if it should
-     * be aborted
      */
-    virtual bool sourceParsed(ExecState *exec, int sourceId, const UString &sourceURL,
-                              const UString &source, int startingLineNumber, int errorLine, const UString &errorMsg);
+    virtual void sourceParsed(ExecState *exec, int sourceId, const UString &sourceURL,
+                              const SourceProvider& source, int startingLineNumber, int errorLine, const UString &errorMsg);
 
     /**
      * Called when all functions/programs associated with a particular
@@ -213,13 +210,13 @@ namespace KJS {
                              JSObject *function);
 
   private:
-    DebuggerImp *rep;
     HashMap<JSGlobalObject*, ProtectedPtr<JSValue> > latestExceptions;
+    AttachedGlobalObject* globalObjects;
 
   public:
     static int debuggersPresent;
   };
 
-}
+} // namespace KJS
 
 #endif

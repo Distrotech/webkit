@@ -116,7 +116,7 @@ void JavaScriptDebugServer::pageCreated(Page* page)
     page->setDebugger(this);
 }
 
-static void dispatchDidParseSource(const ListenerSet& listeners, ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int sourceID)
+static void dispatchDidParseSource(const ListenerSet& listeners, ExecState* exec, const KJS::SourceProvider& source, int startingLineNumber, const String& sourceURL, int sourceID)
 {
     Vector<JavaScriptDebugListener*> copy;
     copyToVector(listeners, copy);
@@ -124,7 +124,7 @@ static void dispatchDidParseSource(const ListenerSet& listeners, ExecState* exec
         copy[i]->didParseSource(exec, source, startingLineNumber, sourceURL, sourceID);
 }
 
-static void dispatchFailedToParseSource(const ListenerSet& listeners, ExecState* exec, const UString& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
+static void dispatchFailedToParseSource(const ListenerSet& listeners, ExecState* exec, const SourceProvider& source, int startingLineNumber, const String& sourceURL, int errorLine, const String& errorMessage)
 {
     Vector<JavaScriptDebugListener*> copy;
     copyToVector(listeners, copy);
@@ -142,14 +142,14 @@ static Page* toPage(ExecState* exec)
     return window->impl()->frame()->page();
 }
 
-bool JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const UString& sourceURL, const UString& source, int startingLineNumber, int errorLine, const UString& errorMessage)
+void JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const UString& sourceURL, const SourceProvider& source, int startingLineNumber, int errorLine, const UString& errorMessage)
 {
     if (m_callingListeners)
-        return true;
+        return;
 
     Page* page = toPage(exec);
     if (!page)
-        return true;
+        return;
 
     m_callingListeners = true;
 
@@ -173,7 +173,6 @@ bool JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const US
     }
 
     m_callingListeners = false;
-    return true;
 }
 
 static void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScriptDebugServer::JavaScriptExecutionCallback callback, ExecState* exec, int sourceID, int lineNumber)

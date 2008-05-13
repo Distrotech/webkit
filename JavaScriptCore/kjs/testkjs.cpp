@@ -262,12 +262,12 @@ int main(int argc, char** argv)
     return res;
 }
 
-static bool prettyPrintScript(const UString& fileName, const Vector<char>& script)
+static bool prettyPrintScript(ExecState* exec, const UString& fileName, const Vector<char>& script)
 {
     int errLine = 0;
     UString errMsg;
     UString scriptUString(script.data());
-    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(fileName, 0, UStringSourceProvider::create(scriptUString), 0, &errLine, &errMsg);
+    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(exec, fileName, 0, UStringSourceProvider::create(scriptUString), 0, &errLine, &errMsg);
     if (!programNode) {
         fprintf(stderr, "%s:%d: %s.\n", fileName.UTF8String().c_str(), errLine, errMsg.UTF8String().c_str());
         return false;
@@ -294,7 +294,7 @@ static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& ar
             return false; // fail early so we can catch missing files
 
         if (prettyPrint)
-            prettyPrintScript(fileName, script);
+            prettyPrintScript(globalObject->globalExec(), fileName, script);
         else {
             Completion completion = Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
             success = success && completion.complType() != Throw;
