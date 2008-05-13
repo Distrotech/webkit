@@ -1,6 +1,16 @@
 2008-05-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
+
+        Updated for API changes in KJS::Debugger.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _attachScriptDebugger]): Changed the order of operations to
+        fix an ASSERT that can happen when re-entering _attachScriptDebugger.
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
         
         Updated WebScriptDebugger API to accept a SourceProvider instead
         of a WebCore::String, to avoid copying.

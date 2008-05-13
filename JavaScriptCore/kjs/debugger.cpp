@@ -27,66 +27,30 @@
 #include "ustring.h"
 
 namespace KJS {
-  struct AttachedGlobalObject
-  {
-  public:
-    AttachedGlobalObject(JSGlobalObject* o, AttachedGlobalObject* ai) : globalObj(o), next(ai) { ++Debugger::debuggersPresent; }
-    ~AttachedGlobalObject() { --Debugger::debuggersPresent; }
-    JSGlobalObject* globalObj;
-    AttachedGlobalObject* next;
-  };
-
-int Debugger::debuggersPresent = 0;
 
 Debugger::Debugger()
-    : globalObjects(0)
 {
 }
 
 Debugger::~Debugger()
 {
-  detach(0);
+    HashSet<JSGlobalObject*>::iterator end = m_globalObjects.end();
+    for (HashSet<JSGlobalObject*>::iterator it = m_globalObjects.begin(); it != end; ++it)
+        (*it)->setDebugger(0);
 }
 
 void Debugger::attach(JSGlobalObject* globalObject)
 {
-  Debugger* other = globalObject->debugger();
-  if (other == this)
-    return;
-  if (other)
-    other->detach(globalObject);
-  globalObject->setDebugger(this);
-  globalObjects = new AttachedGlobalObject(globalObject, globalObjects);
+    ASSERT(!globalObject->debugger());
+    globalObject->setDebugger(this);
+    m_globalObjects.add(globalObject);
 }
 
-void Debugger::detach(JSGlobalObject* globalObj)
+void Debugger::detach(JSGlobalObject* globalObject)
 {
-  // iterate the addresses where AttachedGlobalObject pointers are stored
-  // so we can unlink items from the list
-  AttachedGlobalObject **p = &globalObjects;
-  AttachedGlobalObject *q;
-  while ((q = *p)) {
-    if (!globalObj || q->globalObj == globalObj) {
-      *p = q->next;
-      q->globalObj->setDebugger(0);
-      delete q;
-    } else
-      p = &q->next;
-  }
-
-  if (globalObj)
-    latestExceptions.remove(globalObj);
-  else
-    latestExceptions.clear();
-}
-
-bool Debugger::hasHandledException(ExecState *exec, JSValue *exception)
-{
-    if (latestExceptions.get(exec->dynamicGlobalObject()).get() == exception)
-        return true;
-
-    latestExceptions.set(exec->dynamicGlobalObject(), exception);
-    return false;
+    ASSERT(m_globalObjects.contains(globalObject));
+    m_globalObjects.remove(globalObject);
+    globalObject->setDebugger(0);
 }
 
 void Debugger::sourceParsed(ExecState*, int /*sourceId*/, const UString &/*sourceURL*/, 
@@ -94,33 +58,20 @@ void Debugger::sourceParsed(ExecState*, int /*sourceId*/, const UString &/*sourc
 {
 }
 
-bool Debugger::sourceUnused(ExecState*, int /*sourceId*/)
+void Debugger::exception(ExecState*, int /*sourceId*/, int /*lineno*/, JSValue* /*exception*/)
 {
-  return true;
 }
 
-bool Debugger::exception(ExecState*, int /*sourceId*/, int /*lineno*/,
-                         JSValue* /*exception */)
+void Debugger::atStatement(ExecState*, int /*sourceId*/, int /*firstLine*/, int /*lastLine*/)
 {
-  return true;
 }
 
-bool Debugger::atStatement(ExecState*, int /*sourceId*/, int /*firstLine*/,
-                           int /*lastLine*/)
+void Debugger::callEvent(ExecState*, int /*sourceId*/, int /*lineno*/, JSObject* /*function*/, const List &/*args*/)
 {
-  return true;
 }
 
-bool Debugger::callEvent(ExecState*, int /*sourceId*/, int /*lineno*/,
-                         JSObject* /*function*/, const List &/*args*/)
+void Debugger::returnEvent(ExecState*, int /*sourceId*/, int /*lineno*/, JSObject* /*function*/)
 {
-  return true;
-}
-
-bool Debugger::returnEvent(ExecState*, int /*sourceId*/, int /*lineno*/,
-                           JSObject* /*function*/)
-{
-  return true;
 }
 
 } // namespace KJS

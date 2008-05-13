@@ -372,9 +372,11 @@ void Node::handleException(OldInterpreterExecState* exec, JSValue* exceptionValu
             exception->put(exec, "sourceURL", jsString(currentSourceURL(exec)));
         }
     }
+#if 0
     Debugger* dbg = exec->dynamicGlobalObject()->debugger();
     if (dbg && !dbg->hasHandledException(exec, exceptionValue))
         dbg->exception(exec, currentSourceId(exec), m_line, exceptionValue);
+#endif
 }
 
 NEVER_INLINE JSValue* Node::rethrowException(OldInterpreterExecState* exec)
@@ -436,8 +438,7 @@ BreakpointCheckStatement::BreakpointCheckStatement(PassRefPtr<StatementNode> sta
 JSValue* BreakpointCheckStatement::execute(OldInterpreterExecState* exec)
 {
     if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
-        if (!debugger->atStatement(exec, currentSourceId(exec), m_statement->firstLine(), m_statement->lastLine()))
-            return exec->setNormalCompletion();
+        debugger->atStatement(exec, currentSourceId(exec), m_statement->firstLine(), m_statement->lastLine());
     return m_statement->execute(exec);
 }
 
@@ -6017,18 +6018,15 @@ FunctionBodyNodeWithDebuggerHooks::FunctionBodyNodeWithDebuggerHooks(SourceEleme
 
 JSValue* FunctionBodyNodeWithDebuggerHooks::execute(OldInterpreterExecState* exec)
 {
-    if (Debugger* dbg = exec->dynamicGlobalObject()->debugger()) {
-        if (!dbg->callEvent(exec, sourceId(), lineNo(), exec->function(), *exec->arguments()))
-            return exec->setInterruptedCompletion();
-    }
+    if (Debugger* dbg = exec->dynamicGlobalObject()->debugger())
+        dbg->callEvent(exec, sourceId(), lineNo(), exec->function(), *exec->arguments());
 
     JSValue* result = FunctionBodyNode::execute(exec);
 
     if (Debugger* dbg = exec->dynamicGlobalObject()->debugger()) {
         if (exec->completionType() == Throw)
             exec->setException(result);
-        if (!dbg->returnEvent(exec, sourceId(), lastLine(), exec->function()))
-            return exec->setInterruptedCompletion();
+        dbg->returnEvent(exec, sourceId(), lastLine(), exec->function());
     }
 
     return result;

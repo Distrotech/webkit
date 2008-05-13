@@ -1,6 +1,19 @@
 2008-05-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
+
+        Updated for API changes in KJS::Debugger.
+
+        * page/JavaScriptDebugServer.cpp:
+        (WebCore::JavaScriptDebugServer::callEvent):
+        (WebCore::JavaScriptDebugServer::atStatement):
+        (WebCore::JavaScriptDebugServer::returnEvent):
+        (WebCore::JavaScriptDebugServer::exception):
+        * page/JavaScriptDebugServer.h:
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
         
         Updated JavaScriptDebugServer API to accept a SourceProvider instead
         of a UString, to avoid copying.
