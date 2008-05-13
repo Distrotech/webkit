@@ -2,6 +2,17 @@
 
         Reviewed by Oliver Hunt.
         
+        Fixed ASSERT seen during run-sunspider of a debug build.
+
+        * VM/CodeGenerator.h: Made the default codegen buffers bigger. SunSpider
+        runs all tests in one global environment, so you end up with more than
+        128 locals. This is just a stop-gap until we code up a real
+        solution to arbitrary symbol and label limits.
+
+2008-04-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Fixed a bug in exception unwinding, where we wouldn't deref the scope
         chain in global scope, so we would leak ScopeChainNodes when exceptions
         were thrown inside "with" and "catch" scopes.
