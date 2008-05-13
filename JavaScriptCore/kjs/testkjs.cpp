@@ -295,11 +295,12 @@ static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& ar
         else {
             Completion completion = Interpreter::evaluate(globalObject->globalExec(), fileName, 0, script.data());
             success = success && completion.complType() != Throw;
-            if (dump)
+            if (dump) {
                 if (success)
                     printf("End: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
                 else
                     printf("Exception: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
+            }
         }
     }
     return success;
