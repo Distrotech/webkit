@@ -128,9 +128,13 @@ Machine::Machine()
 
 bool Machine::isOpcode(Opcode opcode)
 {
+#if HAVE(COMPUTED_GOTO)
     return opcode != HashTraits<Opcode>::emptyValue()
         && HashTraits<Opcode>::isDeletedValue(opcode)
         && m_opcodeIDTable.contains(opcode);
+#else
+    return opcode >= 0 && opcode < op_end;
+#endif
 }
 
 void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock)
@@ -138,16 +142,16 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
     if (flag == InitializeAndReturn) {
-        #define ADD_OPCODE(id) m_opcodeTable[id] = &&id;
-            FOR_EACH_OPCODE_ID(ADD_OPCODE);
-        #undef ADD_OPCODE
+        #if HAVE(COMPUTED_GOTO)
+            #define ADD_OPCODE(id) m_opcodeTable[id] = &&id;
+                FOR_EACH_OPCODE_ID(ADD_OPCODE);
+            #undef ADD_OPCODE
 
-        #define ADD_OPCODE_ID(id) m_opcodeIDTable.add(&&id, id);
-            FOR_EACH_OPCODE_ID(ADD_OPCODE_ID);
-        #undef ADD_OPCODE
-        
-        ASSERT(m_opcodeIDTable.size() == numOpcodeIDs);
-        
+            #define ADD_OPCODE_ID(id) m_opcodeIDTable.add(&&id, id);
+                FOR_EACH_OPCODE_ID(ADD_OPCODE_ID);
+            #undef ADD_OPCODE
+            ASSERT(m_opcodeIDTable.size() == numOpcodeIDs);
+        #endif // HAVE(COMPUTED_GOTO)
         return;
     }
     
@@ -160,54 +164,68 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     JSValue** k = codeBlock->jsValues.data();
 
     dumpRegisters(registers, r);
-
-    goto *vPC->u.opcode;
-    
-    op_load: {
+#if HAVE(COMPUTED_GOTO)
+    #define NEXT_OPCODE goto *vPC->u.opcode
+    #define BEGIN_OPCODE(opcode) opcode:
+    NEXT_OPCODE;
+#else
+    #define NEXT_OPCODE continue
+    #define BEGIN_OPCODE(opcode) case opcode:
+    while(1) // iterator loop begins
+    switch (vPC->u.opcode)
+#endif
+    {
+    BEGIN_OPCODE(op_load) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
         r[r0].u.jsValue = k[k0];
         
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_mov: {
+    BEGIN_OPCODE(op_mov) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         r[r0] = r[r1];
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_less: {
+    BEGIN_OPCODE(op_less) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsBoolean(jsLess(exec, r[r1].u.jsValue, r[r2].u.jsValue));
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_pre_inc: {
+    BEGIN_OPCODE(op_pre_inc) {
         int r0 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) + 1);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_post_inc: {
+    BEGIN_OPCODE(op_post_inc) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         r[r0].u.jsValue = r[r1].u.jsValue->toJSNumber(exec);
         r[r1].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) + 1);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_add: {
+    BEGIN_OPCODE(op_add) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsAdd(exec, r[r1].u.jsValue, r[r2].u.jsValue);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_resolve: {
+    BEGIN_OPCODE(op_resolve) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
 
@@ -221,13 +239,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
             JSObject* o = *iter;
             if (o->getPropertySlot(exec, ident, slot)) {
                 r[r0].u.jsValue = slot.getValue(exec, o, ident);
-                goto *(++vPC)->u.opcode;
+                ++vPC;
+                NEXT_OPCODE;
             }
         } while (++iter != end);
 
         ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
     }
-    op_resolve_base: {
+    BEGIN_OPCODE(op_resolve_base) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
 
@@ -243,15 +262,17 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
             if (base->getPropertySlot(exec, ident, slot)) {
                 r[r0].u.jsValue = base;
 
-                goto *(++vPC)->u.opcode;
+                ++vPC;
+                NEXT_OPCODE;
             }
         } while (++iter != end);
 
         r[r0].u.jsValue = base;
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_object_get: {
+    BEGIN_OPCODE(op_object_get) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
@@ -259,9 +280,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         Identifier& ident = codeBlock->identifiers[k0];
         r[r0].u.jsValue = r[r1].u.jsObject->get(exec, ident);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_object_put: {
+    BEGIN_OPCODE(op_object_put) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
@@ -269,33 +291,36 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         Identifier& ident = codeBlock->identifiers[k0];
         r[r0].u.jsObject->put(exec, ident, r[r1].u.jsValue);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_jmp: {
+    BEGIN_OPCODE(op_jmp) {
         int offset = (++vPC)->u.operand;
         vPC += offset;
 
-        goto *vPC->u.opcode;
+        NEXT_OPCODE;
     }
-    op_jtrue: {
+    BEGIN_OPCODE(op_jtrue) {
         int r0 = (++vPC)->u.operand;
         int offset = (++vPC)->u.operand;
         if (r[r0].u.jsValue->toBoolean(exec)) {
             vPC += offset;
-            goto *vPC->u.opcode;
+            NEXT_OPCODE;
         }
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_new_func: {
+    BEGIN_OPCODE(op_new_func) {
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
 
         r[r0].u.jsValue = codeBlock->functions[k0]->makeFunction(exec);
 
-        goto *(++vPC)->u.opcode;
+        ++vPC;
+        NEXT_OPCODE;
     }
-    op_call: {
+    BEGIN_OPCODE(op_call) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
         int argv = (++vPC)->u.operand;
@@ -345,9 +370,9 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         scopeChain = &function->scope();
         codeBlock = newCodeBlock;
 
-        goto *vPC->u.opcode;
+        NEXT_OPCODE;
     }
-    op_ret: {
+    BEGIN_OPCODE(op_ret) {
         int r1 = (++vPC)->u.operand;
 
         CodeBlock* oldCodeBlock = codeBlock;
@@ -363,13 +388,16 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r0 = returnInfo[4].u.i;
         r[r0] = *returnValue;
         
-        goto *vPC->u.opcode;
+        NEXT_OPCODE;
     }
-    op_end: {
+    BEGIN_OPCODE(op_end) {
         int r0 = (++vPC)->u.operand;
         printf("End: %s\n", r[r0].u.jsValue->toString(exec).ascii());
         return;
     }
+    }
+    #undef NEXT_OPCODE
+    #undef BEGIN_OPCODE
 }
 
 Machine& machine()
