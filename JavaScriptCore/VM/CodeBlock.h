@@ -69,6 +69,7 @@ namespace KJS {
         Vector<RefPtr<FuncDeclNode> > functions;
         Vector<RefPtr<FuncExprNode> > functionExpressions;
         Vector<JSValue*> jsValues;
+        Vector<RefPtr<RegExp> > regexps;
         
     private:
         void dump(ExecState*, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator&);

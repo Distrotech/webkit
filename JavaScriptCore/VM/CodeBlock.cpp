@@ -75,6 +75,24 @@ static CString idName(int id0, const Identifier& ident)
     return (ident.ustring() + "(@id" + UString::from(id0) +")").UTF8String();
 }
 
+static UString regexpToSourceString(RegExp* regExp)
+{
+    UString pattern = UString("/") + regExp->pattern() + "/";
+    if (regExp->global())
+        pattern += "g";
+    if (regExp->ignoreCase())
+        pattern += "i";
+    if (regExp->multiline())
+        pattern += "m";
+
+    return pattern;
+}
+
+static CString regexpName(int re, RegExp* regexp)
+{
+    return (regexpToSourceString(regexp) + "(@re" + UString::from(re) + ")").UTF8String();
+}
+
 static int jumpTarget(const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it, int offset)
 {
     return it - begin + offset;
@@ -126,6 +144,10 @@ void CodeBlock::dump(ExecState* exec)
     printf("\nConstants:\n");
     for (size_t i = 0; i < jsValues.size(); ++i)
         printf("  k%u = %s\n", static_cast<unsigned>(i), valueToSourceString(exec, jsValues[i]).ascii());
+
+    printf("\nRegExps:\n");
+    for (size_t i = 0; i < regexps.size(); ++i)
+        printf("  re%u = %s\n", static_cast<unsigned>(i), regexpToSourceString(regexps[i].get()).ascii());
 }
 
 void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator& it)
@@ -146,6 +168,12 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
         case op_new_array: {
             int r0 = (++it)->u.operand;
             printf("[%4d] new_array\t%s\n", location, registerName(r0).c_str());
+            break;
+        }
+        case op_new_regexp: {
+            int r0 = (++it)->u.operand;
+            int re0 = (++it)->u.operand;
+            printf("[%4d] new_regexp\t%s, %s\n", location, registerName(r0).c_str(), regexpName(re0, regexps[re0].get()).c_str());
             break;
         }
         case op_mov: {

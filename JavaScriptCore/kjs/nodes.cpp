@@ -551,6 +551,11 @@ bool StringNode::evaluateToBoolean(ExecState*)
 
 // ------------------------------ RegExpNode -----------------------------------
 
+RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitNewRegExp(dst ? dst : generator.newTemporary(), m_regExp.get());
+}
+
 JSValue* RegExpNode::evaluate(ExecState* exec)
 {
     return exec->lexicalGlobalObject()->regExpConstructor()->createRegExpImp(exec, m_regExp);
