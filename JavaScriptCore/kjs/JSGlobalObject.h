@@ -247,9 +247,12 @@ namespace KJS {
 
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
 
+        HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
+
         Vector<Register>& registers() { return d()->registers; }
 
-        HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
+        void setROffset(int rOffset) { d()->rOffset = rOffset; }
+        int rOffset() { return d()->rOffset; }
 
         // Per-thread hash tables, cached on the global object for faster access.
         const PerThreadData* perThreadData() const { return &d()->perThreadData; }

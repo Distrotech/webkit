@@ -98,7 +98,6 @@ namespace KJS {
         bool symbolTableGet(const Identifier&, PropertySlot&);
         bool symbolTablePut(const Identifier&, JSValue*);
         bool symbolTablePutWithAttributes(const Identifier&, JSValue*, unsigned attributes);
-        bool symbolTableInsert(const Identifier&, JSValue*, unsigned attributes);
 
         JSVariableObjectData* d;
     };
@@ -143,19 +142,10 @@ namespace KJS {
         if (index == missingSymbolMarker())
             return false;
         // FIXME: Implement attribute support by storing attributes in the symbol table.
-        ASSERT(!attributes);
+        ASSERT(attributes & ReadOnly == 0);
+        ASSERT(attributes & DontEnum == 0);
         UNUSED_PARAM(attributes);
         valueAt(index) = value;
-        return true;
-    }
-
-    inline bool JSVariableObject::symbolTableInsert(const Identifier& propertyName, JSValue* value, unsigned attributes)
-    {
-        if (symbolTable().get(propertyName.ustring().rep()) != missingSymbolMarker())
-            return false;
-        size_t localStorageIndex = d->localStorage.size();
-        d->localStorage.append(LocalStorageEntry(value, attributes));
-        symbolTable().add(propertyName.ustring().rep(), localStorageIndex);
         return true;
     }
 
