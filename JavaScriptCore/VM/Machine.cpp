@@ -543,7 +543,6 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         returnInfo[3].u.i = rOffset; // r value after return
         returnInfo[4].u.i = r0; // return value slot
         returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
-        COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
         
         FunctionBodyNode* functionBody = function->body.get();
         
@@ -576,6 +575,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         }
 
         if (newCodeBlock->needsActivation) {
+            COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
             scopeChain = new (&returnInfo[6]) ScopeChain(function->scope());
             scopeChain->push(new JSActivation(functionBody, &registers, r - registers.data()));
         } else
