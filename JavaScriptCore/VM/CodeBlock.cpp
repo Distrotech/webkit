@@ -162,6 +162,15 @@ void CodeBlock::dump(ExecState* exec) const
             ++i;
         } while (i < regexps.size());
     }
+
+    if (exceptionHandlers.size()) {
+        printf("\nException Handlers:\n");
+        unsigned i = 0;
+        do {
+            printf("\t%d: { start: [%4d] end: [%4d] target: [%4d] }\n", i+1, exceptionHandlers[i].start, exceptionHandlers[i].end, exceptionHandlers[i].target);
+            ++i;
+        } while (i < exceptionHandlers.size());
+    }
         
     printf("\n");
 }
@@ -448,6 +457,16 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] jmp_scopes\t^%d, %d(->%d)\n", location, scopeDelta, offset, jumpTarget(begin, it, offset));
             break;
         }
+        case op_catch: {
+            int r0 = (++it)->u.operand;
+            printf("[%4d] catch\t\t%s\n", location, registerName(r0).c_str());
+            break;
+        }
+        case op_throw: {
+            int r0 = (++it)->u.operand;
+            printf("[%4d] throw\t\t%s\n", location, registerName(r0).c_str());
+            break;
+        }
         case op_end: {
             int r0 = (++it)->u.operand;
             printf("[%4d] end\t\t%s\n", location, registerName(r0).c_str());
@@ -471,6 +490,25 @@ void CodeBlock::mark()
 
     for (size_t i = 0; i < functionExpressions.size(); ++i)
         functionExpressions[i]->body()->mark();
+}
+
+bool CodeBlock::getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth)
+{
+    Vector<HandlerInfo>::iterator ptr = exceptionHandlers.begin(); 
+    Vector<HandlerInfo>::iterator end = exceptionHandlers.end();
+    unsigned addressOffset = vPC - instructions.begin();
+    ASSERT(addressOffset < instructions.size());
+    
+    for (; ptr != end; ++ptr) {
+        // Handlers are ordered innermost first, so the first handler we encounter
+        // that contains the source address is the correct handler to use.
+        if (ptr->start <= addressOffset && ptr->end >= addressOffset) {
+            scopeDepth = ptr->scopeDepth;
+            target = instructions.begin() + ptr->target;
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace KJS

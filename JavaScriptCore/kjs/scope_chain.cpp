@@ -37,6 +37,23 @@ void ScopeChain::push(const ScopeChain &c)
     }
 }
 
+int ScopeChain::depth()
+{
+    int scopeDepth = 0;
+    ScopeChainIterator iter = begin(); 
+    ScopeChainIterator end = this->end(); 
+    while (!((*iter)->isActivationObject())) {
+        ++iter;
+        ++scopeDepth;
+        if (iter == end) {
+            // reached the global object at the top of the scope chain
+            --scopeDepth;
+            break;
+        }
+    }
+    return scopeDepth;
+}
+    
 #ifndef NDEBUG
 
 void ScopeChain::print()
