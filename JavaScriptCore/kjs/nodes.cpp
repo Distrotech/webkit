@@ -733,7 +733,9 @@ static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t, size_t scopeDe
     ScopeChainIterator iter = chain.begin();
     for (size_t i = 0; i < scopeDepth; ++iter, ++i)
         ASSERT(iter != chain.end());
+#ifndef NDEBUG
     JSObject* scope = *iter;
+#endif
     ASSERT(scope->isVariableObject());
     ASSERT_NOT_REACHED();
     return 0;
