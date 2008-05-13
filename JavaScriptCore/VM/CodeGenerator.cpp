@@ -1025,6 +1025,15 @@ void CodeGenerator::emitThrow(RegisterID* exception)
     instructions().append(exception->index());
 }
 
+RegisterID* CodeGenerator::emitCreateError(RegisterID* r0, ErrorType errorType, JSValue* errorMessage)
+{
+    instructions().append(machine().getOpcode(op_create_error));
+    instructions().append(r0->index());
+    instructions().append((int) errorType);
+    instructions().append(addConstant(errorMessage));
+    return r0;
+}
+
 PassRefPtr<LabelID> CodeGenerator::emitJumpSubroutine(RegisterID* retAddrDst, LabelID* finally)
 {
     instructions().append(machine().getOpcode(op_jsr));

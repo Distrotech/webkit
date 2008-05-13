@@ -490,6 +490,13 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] throw\t\t%s\n", location, registerName(r0).c_str());
             break;
         }
+        case op_create_error: {
+            int r0 = (++it)->u.operand;
+            int errorType = (++it)->u.operand;
+            int k0 = (++it)->u.operand;
+            printf("[%4d] create_error\t%s, %d, %s\n", location, registerName(r0).c_str(), errorType, constantName(exec, k0, jsValues[k0]).c_str());
+            break;
+        }
         case op_jsr: {
             int retAddrDst = (++it)->u.operand;
             int offset = (++it)->u.operand;
