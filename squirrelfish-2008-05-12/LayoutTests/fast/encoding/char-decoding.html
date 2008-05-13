@@ -1,0 +1,76 @@
+<html>
+<head>
+<link rel="stylesheet" href="../js/resources/js-test-style.css">
+<script src="../js/resources/js-test-pre.js"></script>
+</head>
+<body>
+<p id="description"></p>
+<div id="console"></div>
+<script>
+
+description("This tests decoding characters in various character sets.");
+
+function hex(number)
+{
+    var hexDigit = "0123456789ABCDEF";
+    var hex = hexDigit.substr(number & 0xf, 1);
+    while (number > 15) {
+        number >>= 4;
+        hex = hexDigit.substr(number & 15, 1) + hex;
+    }
+    return hex;
+}
+
+function decode(charsetName, characterSequence)
+{
+    var req = new XMLHttpRequest;
+    req.open('GET', 'data:text/plain,' + characterSequence, false);
+    req.overrideMimeType('text/plain; charset="' + charsetName + '"');
+    req.send('');
+    var code = hex(req.responseText.charCodeAt(0));
+    return "U+" + ("0000" + code).substr(code.length, 4);
+}
+
+function testDecode(charsetName, characterSequence, unicode)
+{
+    shouldBe("decode('" + charsetName + "', '" + characterSequence + "')", "'" + unicode + "'");
+}
+
+testDecode('UTF-8', '%E2%88%9A', 'U+221A');
+testDecode('macintosh', '%C3', 'U+221A');
+testDecode('MacRoman', '%C3', 'U+221A');
+
+// <http://bugs.webkit.org/show_bug.cgi?id=17014> EUC-CN code A3A0 is mapped to U+E5E5 instead of U+3000
+testDecode('gb2312', '%A3%A0', 'U+3000');
+testDecode('gb_2312-80', '%A3%A0', 'U+3000');
+testDecode('chinese', '%A3%A0', 'U+3000');
+testDecode('gbk', '%A3%A0', 'U+3000');
+testDecode('gb18030', '%A3%A0', 'U+3000');
+
+// Test that all Korean encodings of EUC-KR family are treated as windows-949.
+testDecode('korean', '%A2%E6', 'U+20AC');
+testDecode('korean', '%A1%A4', 'U+00B7');
+testDecode('korean', '%A1%A9', 'U+00AD');
+testDecode('korean', '%A1%AA', 'U+2015');
+testDecode('korean', '%A1%AD', 'U+223C');
+testDecode('korean', '%A2%A6', 'U+FF5E');
+testDecode('korean', '%A2%C1', 'U+2299');
+testDecode('korean', '%1A', 'U+001A');
+testDecode('korean', '%1C', 'U+001C');
+testDecode('korean', '%8F%A1', 'U+B8EA');
+testDecode('korean', '%B4%D3', 'U+B2D2');
+testDecode('korean', '%A2%41', 'U+C910');
+testDecode('euc-kr', '%A2%41', 'U+C910');
+testDecode('korean', '%A2%41', 'U+C910');
+testDecode('windows-949', '%A2%41', 'U+C910');
+testDecode('iso-ir-149', '%A2%41', 'U+C910');
+testDecode('KS_C_5601-1987', '%A2%41', 'U+C910');
+testDecode('KS_C_5601-1989', '%A2%41', 'U+C910');
+debug('');
+
+successfullyParsed = true;
+
+</script>
+<script src="../js/resources/js-test-post.js"></script>
+</body>
+</html>

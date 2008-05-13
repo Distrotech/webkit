@@ -1,0 +1,2 @@
+XPathResult_iterateNext_INVALID_STATE_ERR
+throw_INVALID_STATE_ERR: assertTrue failed
