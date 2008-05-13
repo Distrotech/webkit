@@ -59,6 +59,7 @@ namespace KJS {
             , numTemporaries(0)
             , numVars(0)
             , numParameters(0)
+            , numLocals(0)
             , needsFullScopeChain(usesEval_ || needsClosure_)
             , usesEval(usesEval_)
             , needsClosure(needsClosure_)
@@ -78,6 +79,7 @@ namespace KJS {
         int numTemporaries;
         int numVars;
         int numParameters;
+        int numLocals;
         
         bool needsFullScopeChain;
         bool usesEval;

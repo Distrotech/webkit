@@ -66,7 +66,7 @@ namespace KJS  {
         friend class Machine;
 
     public:
-        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, RegisterFile* globalRegisterFile);
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, const RegisterFile* globalRegisterFile);
 
         // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
@@ -103,11 +103,9 @@ namespace KJS  {
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
     private:
-        ExecState(ExecState*, ScopeChainNode*, RegisterFile*);
+        ExecState(const ExecState*, ScopeChainNode*, const RegisterFile*, int callFrameOffset);
 
         bool isGlobalObject(JSObject*) const;
-
-        ExecState* m_prev;
 
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
@@ -117,8 +115,11 @@ namespace KJS  {
 
         const PerThreadData* m_perThreadData;
 
+        // These values are controlled by the machine.
+        const ExecState* m_prev;
+        const RegisterFile* m_registerFile;
         ScopeChainNode* m_scopeChain;
-        RegisterFile* m_registerFile;
+        int m_callFrameOffset;
     };
 
     // This code is now defunct:

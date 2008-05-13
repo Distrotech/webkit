@@ -1,3 +1,21 @@
+2008-05-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+
+        More scaffolding for f.arguments.
+        
+        Track the offset of the last call frame in the ExecState, so we can
+        produce a backtrace at any time.
+        
+        Also, record numLocals, the sum of numVars + numParameters, in each code
+        block, to make updates to the ExecState a little cheaper than they
+        would be otherwise.
+        
+        We now use numLocals in a bunch of places where we used to calculate
+        numVars + numParameters or -numVars - numParameters.
+        
+        Reports are mixed, but all in all, this seems to be a wash on SunSpider.
+
 2008-05-04  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
