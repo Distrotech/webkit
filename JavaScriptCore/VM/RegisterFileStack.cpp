@@ -73,6 +73,7 @@ void RegisterFileStack::popGlobalRegisterFile()
     RegisterFile* current = this->current();
     current->addGlobalSlots(tmp->numGlobalSlots() - current->numGlobalSlots());
     current->copyGlobals(tmp);
+    m_base = *current->basePointer();
     delete tmp;
 }
 
