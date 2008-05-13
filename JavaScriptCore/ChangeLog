@@ -1,20 +1,3 @@
-2008-04-01  Maciej Stachowiak  <mjs@apple.com>
-
-        Reviewed by Geoff.
-        
-        - mark the constant pool (at least for function code blocks)
-
-        * VM/CodeBlock.cpp:
-        (KJS::CodeBlock::mark):
-        * VM/CodeBlock.h:
-        * kjs/function.cpp:
-        (KJS::FunctionImp::mark):
-        * kjs/nodes.cpp:
-        (KJS::ScopeNode::mark):
-        * kjs/nodes.h:
-        (KJS::FuncExprNode::body):
-        (KJS::FuncDeclNode::body):
-
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
@@ -31,6 +14,23 @@
         (KJS::Machine::privateExecute): For the sake of re-entrancy, we track
         and restore the global object's old rOffset value. (No way to test this
         yet, but I think it will work.)
+
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
+        - mark the constant pool (at least for function code blocks)
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::mark):
+        * VM/CodeBlock.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::mark):
+        * kjs/nodes.cpp:
+        (KJS::ScopeNode::mark):
+        * kjs/nodes.h:
+        (KJS::FuncExprNode::body):
+        (KJS::FuncDeclNode::body):
 
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
