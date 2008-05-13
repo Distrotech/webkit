@@ -1,5 +1,16 @@
 2008-04-22  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Alexey.
+        
+        - use global object instead of null for "this" on unqualified calls
+        
+        This fixes 10 more JSC test regressions.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-04-22  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
         
         - throw proper exceptions for objects that don't implement call or construct
