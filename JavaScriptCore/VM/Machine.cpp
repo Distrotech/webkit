@@ -576,7 +576,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
     
-    ExecState newExec(exec, scopeChain, registerFile, 0);
+    ExecState newExec(exec, this, registerFile, scopeChain, -1);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);
@@ -630,7 +630,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
 
-    ExecState newExec(exec, scopeChain, registerFile, callFrameOffset);
+    ExecState newExec(exec, this, registerFile, scopeChain, callFrameOffset);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, newCodeBlock, exception);
@@ -683,7 +683,7 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
 
-    ExecState newExec(exec, scopeChain, registerFile, 0);
+    ExecState newExec(exec, this, registerFile, scopeChain, -1);
 
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, &newExec, registerFile, r, scopeChain, codeBlock, exception);
@@ -1695,13 +1695,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSValue* returnValue = r[r1].u.jsValue;
 
         if (JSActivation* activation = static_cast<JSActivation*>(callFrame[OptionalCalleeActivation].u.jsValue)) {
-            ASSERT(scopeChain->object == activation);
+            ASSERT(!codeBlock->needsFullScopeChain || scopeChain->object == activation);
             ASSERT(activation->isActivationObject());
             activation->copyRegisters();
-            
-            ASSERT(codeBlock->needsFullScopeChain);
-            scopeChain->deref();
         }
+
+        if (codeBlock->needsFullScopeChain)
+            scopeChain->deref();
 
         if (callFrame[CalledAsConstructor].u.i && !returnValue->isObject()) {
             JSValue* thisObject = callFrame[CallFrameHeaderSize].u.jsValue;
@@ -2022,6 +2022,36 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     #undef NEXT_OPCODE
     #undef BEGIN_OPCODE
     #undef VM_CHECK_EXCEPTION
+}
+
+JSValue* Machine::retrieveArguments(ExecState* exec, FunctionImp* function) const
+{
+    Register** registerBase;
+    int callFrameOffset;
+
+    if (!getCallFrame(exec, function, registerBase, callFrameOffset))
+        return jsNull();
+
+    Register* callFrame = (*registerBase) + callFrameOffset;
+    JSActivation* activation = static_cast<JSActivation*>(callFrame[OptionalCalleeActivation].u.jsValue);
+    if (!activation) {
+        CodeBlock* codeBlock = &function->body->generatedCode();
+        activation = new JSActivation(function->body, registerBase, callFrameOffset + CallFrameHeaderSize + codeBlock->numLocals);
+        callFrame[OptionalCalleeActivation].u.jsValue = activation;
+    }
+
+    return activation->get(exec, exec->propertyNames().arguments);
+}
+
+bool Machine::getCallFrame(ExecState* exec, FunctionImp* function, Register**& registerBase, int& callFrameOffset) const
+{
+    callFrameOffset = exec->m_callFrameOffset;
+    if (callFrameOffset < 0)
+        return false;
+    
+    registerBase = exec->m_registerFile->basePointer();
+    Register* callFrame = (*registerBase) + callFrameOffset;
+    return callFrame[Callee].u.jsValue == function;
 }
 
 } // namespace KJS

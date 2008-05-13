@@ -207,7 +207,7 @@ void JSGlobalObject::init(JSObject* thisValue)
     d()->perThreadData.stringTable = &threadClassInfoHashTables()->stringTable;
     d()->perThreadData.propertyNames = CommonIdentifiers::shared();
 
-    d()->globalExec.set(new ExecState(this, thisValue, d()->globalScopeChain.node(), d()->registerFileStack.current()));
+    d()->globalExec.set(new ExecState(this, thisValue, d()->globalScopeChain.node()));
 
     d()->pageGroupIdentifier = 0;
 
