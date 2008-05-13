@@ -80,7 +80,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
-                : JSVariableObjectData(&symbolTable, registerFileStack.basePointer(), 0)
+                : JSVariableObjectData(&symbolTable, registerFileStack.globalBasePointer(), 0)
                 , globalScopeChain(globalObject)
                 , globalExec(new ExecState(globalObject, thisValue, globalScopeChain))
             {
