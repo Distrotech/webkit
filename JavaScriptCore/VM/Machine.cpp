@@ -253,10 +253,6 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
 
-#ifndef NDEBUG
-    dumpRegisters(registers, r);
-#endif
-
 #if HAVE(COMPUTED_GOTO)
     #define NEXT_OPCODE goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
