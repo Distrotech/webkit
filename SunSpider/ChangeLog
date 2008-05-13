@@ -1,3 +1,11 @@
+2008-04-15  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Oliver.
+        
+        - add newly working tests to squirrelfish list
+
+        * tests/LIST-SQUIRRELFISH: Add 3d-raytrace and string-unpack-code
+
 2008-04-14  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by Oliver.
