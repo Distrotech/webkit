@@ -1,3 +1,55 @@
+2008-04-10  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18420: SquirrelFish: need to throw Reference and Type errors 
+        when attempting invalid operations on JSValues
+
+        Add validation and exception checks to SquirrelFish so that the
+        correct exceptions are thrown for undefined variables, type errors
+        and toObject failure.  Also handle exceptions thrown by native
+        function calls.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/ExceptionHelpers.cpp: Added.
+        (KJS::substitute):
+        (KJS::createError):
+        (KJS::createUndefinedVariableError):
+        * VM/ExceptionHelpers.h: Added.
+          Helper functions
+        * VM/Machine.cpp:
+        (KJS::resolve):
+           Modified to signal failure
+        (KJS::isNotObject):
+           Wrapper for JSValue::isObject and exception creation (these need
+           to be merged, lest GCC go off the deep end)
+        (KJS::Machine::privateExecute):
+           Adding the many exception and validity checks.
+
+        * kjs/JSNotAnObject.cpp: Added.
+          Stub object used to reduce the need for multiple exception checks
+          when toObject fails.
+        (KJS::JSNotAnObject::toPrimitive):
+        (KJS::JSNotAnObject::getPrimitiveNumber):
+        (KJS::JSNotAnObject::toBoolean):
+        (KJS::JSNotAnObject::toNumber):
+        (KJS::JSNotAnObject::toString):
+        (KJS::JSNotAnObject::toObject):
+        (KJS::JSNotAnObject::mark):
+        (KJS::JSNotAnObject::getOwnPropertySlot):
+        (KJS::JSNotAnObject::put):
+        (KJS::JSNotAnObject::deleteProperty):
+        (KJS::JSNotAnObject::defaultValue):
+        (KJS::JSNotAnObject::construct):
+        (KJS::JSNotAnObject::callAsFunction):
+        (KJS::JSNotAnObject::getPropertyNames):
+        * kjs/JSNotAnObject.h: Added.
+        (KJS::JSNotAnObject::JSNotAnObject):
+        * kjs/JSImmediate.cpp:
+        (KJS::JSImmediate::toObject):
+          modified to create an JSNotAnObject rather than throwing an exception
+          directly.
+
 2008-04-10  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
