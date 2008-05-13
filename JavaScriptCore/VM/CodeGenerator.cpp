@@ -556,22 +556,31 @@ RegisterID* CodeGenerator::emitResolveBase(RegisterID* r0, const Identifier& ide
     return r0;
 }
 
-RegisterID* CodeGenerator::emitGetPropId(RegisterID* r0, RegisterID* r1, const Identifier& ident)
+RegisterID* CodeGenerator::emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& ident)
 {
     instructions().append(machine().getOpcode(op_get_prop_id));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
+    instructions().append(dst->index());
+    instructions().append(base->index());
     instructions().append(addConstant(ident));
-    return r0;
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropId(RegisterID* r0, const Identifier& ident, RegisterID* r1)
+RegisterID* CodeGenerator::emitPutPropId(RegisterID* base, const Identifier& ident, RegisterID* val)
 {
     instructions().append(machine().getOpcode(op_put_prop_id));
-    instructions().append(r0->index());
+    instructions().append(base->index());
     instructions().append(addConstant(ident));
-    instructions().append(r1->index());
-    return r1;
+    instructions().append(val->index());
+    return val;
+}
+
+RegisterID* CodeGenerator::emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier& ident)
+{
+    instructions().append(machine().getOpcode(op_delete_prop_id));
+    instructions().append(dst->index());
+    instructions().append(base->index());
+    instructions().append(addConstant(ident));
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
@@ -592,13 +601,22 @@ RegisterID* CodeGenerator::emitPutPropVal(RegisterID* base, RegisterID* property
     return val;
 }
 
-RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* r0, unsigned index, RegisterID* r1)
+RegisterID* CodeGenerator::emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
+{
+    instructions().append(machine().getOpcode(op_delete_prop_val));
+    instructions().append(dst->index());
+    instructions().append(base->index());
+    instructions().append(property->index());
+    return dst;
+}
+
+RegisterID* CodeGenerator::emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* value)
 {
     instructions().append(machine().getOpcode(op_put_prop_index));
-    instructions().append(r0->index());
+    instructions().append(base->index());
     instructions().append(index);
-    instructions().append(r1->index());
-    return r1;
+    instructions().append(value->index());
+    return value;
 }
 
 RegisterID* CodeGenerator::emitNewFunction(RegisterID* r0, FuncDeclNode* n)
