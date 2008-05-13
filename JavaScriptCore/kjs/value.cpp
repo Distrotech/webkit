@@ -207,6 +207,11 @@ const JSObject *JSCell::getObject() const
     return isObject() ? static_cast<const JSObject *>(this) : 0;
 }
 
+CallType JSCell::getCallData(CallData&)
+{
+    return CallTypeNone;
+}
+
 JSCell* jsString(const char* s)
 {
     return new StringImp(s ? s : "");

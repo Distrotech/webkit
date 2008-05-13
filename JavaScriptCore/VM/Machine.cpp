@@ -558,10 +558,12 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         int argc = (++vPC)->u.operand;
         
         JSValue* v = r[r1].u.jsValue;
-
-        ASSERT(v->isObject(&FunctionImp::info));
-        FunctionImp* function = static_cast<FunctionImp*>(v);
         
+        CallData callData;
+        CallType callType = v->getCallData(callData);
+        
+        if (callType == CallTypeJS) {
+
         int rOffset = r - registers->data();
         Register* returnInfo = r + argv - returnInfoSize;
 
@@ -575,27 +577,31 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
         r[argv].u.jsValue = r2 == static_cast<int>(missingSymbolMarker()) ? jsNull() : r[r2].u.jsValue; // "this" value
 
-        FunctionBodyNode* functionBody = function->body.get();
-
         // WARNING: If code generation wants to optimize resolves to parent scopes,
         // it needs to be aware that, for functions that require activations,
         // the scope chain is off by one, since the activation hasn't been pushed yet.
-        CodeBlock* newCodeBlock = &functionBody->code(*scopeChain);
+        CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
         int offset = rOffset + argv + argc + newCodeBlock->numVars;
         if (argc == newCodeBlock->numParameters) { // correct number of arguments
-            registers->resize(offset + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+            if (registers->size() < size)
+                registers->grow(size);
             r = registers->data() + offset;
         } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
             int omittedArgCount = newCodeBlock->numParameters - argc;
-            registers->resize(offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+            if (registers->size() < size)
+                registers->grow(size);
             r = registers->data() + omittedArgCount + offset;
             
             Register* end = r;
             for (Register* it = r - omittedArgCount; it != end; ++it)
                 (*it).u.jsValue = jsUndefined();
         } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-            registers->resize(offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries);
+            size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
+            if (registers->size() < size)
+                registers->grow(size);
             r = registers->data() + returnInfoSize + newCodeBlock->numParameters + offset;
 
             int shift = returnInfoSize + argc;
@@ -607,15 +613,36 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
         if (newCodeBlock->needsActivation) {
             COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
-            scopeChain = new (&returnInfo[6]) ScopeChain(function->scope());
-            scopeChain->push(new JSActivation(functionBody, registers, r - registers->data()));
+            scopeChain = new (&returnInfo[6]) ScopeChain(*callData.js.scopeChain);
+            scopeChain->push(new JSActivation(callData.js.functionBody, registers, r - registers->data()));
         } else
-            scopeChain = &function->scope();
+            scopeChain = callData.js.scopeChain;
         
         k = newCodeBlock->jsValues.data();
         vPC = newCodeBlock->instructions.begin();
         codeBlock = newCodeBlock;
 
+        NEXT_OPCODE;
+        }
+        
+        if (callType == CallTypeNative) {
+            int rOffset = r - registers->data();
+            
+            // FIXME: Substitute lexical global object for null.
+
+            JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
+            List args(&r[argv + 1].u.jsValue, argc);
+
+            r[r0].u.jsValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
+
+            r = registers->data() + rOffset;
+
+            ++vPC;
+            NEXT_OPCODE;
+        }
+
+        ASSERT(callType == CallTypeNone);
+        ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_ret) {

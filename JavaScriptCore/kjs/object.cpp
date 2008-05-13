@@ -493,9 +493,10 @@ JSObject* JSObject::construct(ExecState* exec, const List& args, const Identifie
   return construct(exec, args);
 }
 
-bool JSObject::implementsCall() const
+bool JSObject::implementsCall()
 {
-  return false;
+    CallData callData;
+    return getCallData(callData) != CallTypeNone;
 }
 
 JSValue *JSObject::callAsFunction(ExecState* /*exec*/, JSObject* /*thisObj*/, const List &/*args*/)

@@ -1,3 +1,11 @@
+2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Build fix.
+
+        * ForwardingHeaders/wtf/UnusedParam.h: Copied from ForwardingHeaders/wtf/OwnPtr.h.
+
 2008-05-12  Alexey Proskuryakov  <ap@webkit.org>
 
         Roll out recent  threading changes (r32807, r32810, r32819, r32822) to simplify

@@ -1,3 +1,49 @@
+2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Implemented native function calls. (Re-entering from native code back
+        to JS doesn't work yet, though.)
+
+        0.2% speedup overall, due to some inlining tweaks. 3.6% regression on
+        function-empty.js, since we're making a new virtual call and taking a
+        new branch inside every op_call.
+        
+        I adjusted the JavaScriptCore calling convention to minimize overhead,
+        like so:
+        
+        The machine calls a single virtual function, "getCallData", to get all
+        the data it needs for a function call. Native code still uses the old
+        "isObject()" check followed by an "implementsCall()" check, which
+        aliases to "getCallData". (We can optimize native code to use getCallData
+        at our leisure.)
+        
+        To supply a list of arguments, the machine calls a new List constructor
+        that just takes a pointer and a length, without copying. Native code
+        still appends to the list one argument at a time. (We can optimize
+        native code to use the new List constructor at our leisure.)
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Changed resize() call to grow() call,
+        to encourage the compiler to inline the Vector code.
+
+        * kjs/CallData.h: Added.
+        (KJS::): CallData is a union because eventually native calls will stuff
+        a function pointer into it, to eliminate the callAsFunction virtual call.
+
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction): Changed this to an ASSERT since
+        it's not implemented yet.
+        
+        * kjs/list.h: Made the List class two-faced, to support the old way and
+        the new way during this transition phase: lists can be made read-only
+        with just a pointer and a legnth, or you can append to them one item
+        at a time.
+
+        * kjs/value.h:
+        (KJS::jsUndefined): Marked this function ALWAYS_INLINE for the benefit
+        of a certain compiler that doesn't know what's best for it.
+
 2008-03-30  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

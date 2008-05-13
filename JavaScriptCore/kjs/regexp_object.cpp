@@ -230,9 +230,9 @@ JSValue* RegExpImp::exec(ExecState* exec, const List& args)
         :  jsNull();
 }
 
-bool RegExpImp::implementsCall() const
+CallType RegExpImp::getCallData(CallData&)
 {
-    return true;
+    return CallTypeNative;
 }
 
 JSValue* RegExpImp::callAsFunction(ExecState* exec, JSObject*, const List& args)
