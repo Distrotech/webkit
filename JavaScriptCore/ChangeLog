@@ -1,3 +1,20 @@
+2008-04-27  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Bug 18746: SQUIRRELFISH: indirect eval used when direct eval should be used
+        <https://bugs.webkit.org/show_bug.cgi?id=18746>
+
+        Change the base to the correct value of the 'this' object after the direct
+        eval test instead of before.
+
+        Fixes 5 layout tests.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/nodes.cpp:
+        (KJS::EvalFunctionCallNode::emitCode):
+
 2008-04-26  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
