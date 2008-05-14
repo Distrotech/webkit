@@ -1,3 +1,31 @@
+2008-05-13  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 19027: SquirrelFish: Incorrect codegen for pre-increment
+        <https://bugs.webkit.org/show_bug.cgi?id=19027>
+
+        This fixes the codegen issues for the pre-inc/decrement operators
+        to prevent incorrectly clobbering the destination in the event of
+        an exception.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitPreInc):
+        (KJS::CodeGenerator::emitPreDec):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::PreIncResolveNode::emitCode):
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+
 2008-05-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

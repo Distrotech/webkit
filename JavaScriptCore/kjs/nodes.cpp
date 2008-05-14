@@ -2346,9 +2346,9 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
         return generator.moveToDestinationIfNeeded(dst, local);
     }
     
-    RefPtr<RegisterID> propDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), propDst.get(), m_ident);
-    generator.emitPreInc(propDst.get());
+    generator.emitPreInc(dst, propDst.get());
     return generator.emitPutById(base.get(), m_ident, propDst.get());
 }
 
@@ -2416,9 +2416,9 @@ RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
         return generator.moveToDestinationIfNeeded(dst, local);
     }
 
-    RefPtr<RegisterID> propDst = generator.finalDestination(dst);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), propDst.get(), m_ident);
-    generator.emitPreDec(propDst.get());
+    generator.emitPreDec(dst, propDst.get());
     return generator.emitPutById(base.get(), m_ident, propDst.get());
 }
 
@@ -2518,8 +2518,9 @@ RegisterID* PreIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
-    RegisterID* value = generator.emitGetByVal(generator.finalDestination(dst), base.get(), property.get());
-    generator.emitPreInc(value);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
+    RegisterID* value = generator.emitGetByVal(propDst.get(), base.get(), property.get());
+    generator.emitPreInc(dst, value);
     return generator.emitPutByVal(base.get(), property.get(), value);
 }
 
@@ -2559,8 +2560,9 @@ RegisterID* PreDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
-    RegisterID* value = generator.emitGetByVal(generator.finalDestination(dst), base.get(), property.get());
-    generator.emitPreDec(value);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
+    RegisterID* value = generator.emitGetByVal(propDst.get(), base.get(), property.get());
+    generator.emitPreDec(dst, value);
     return generator.emitPutByVal(base.get(), property.get(), value);
 }
 
@@ -2606,8 +2608,9 @@ void PrefixDotNode::optimizeVariableAccess(OldInterpreterExecState*, const Symbo
 RegisterID* PreIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-    RegisterID* value = generator.emitGetById(generator.finalDestination(dst), base.get(), m_ident);
-    generator.emitPreInc(value);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
+    RegisterID* value = generator.emitGetById(propDst.get(), base.get(), m_ident);
+    generator.emitPreInc(dst, value);
     return generator.emitPutById(base.get(), m_ident, value);
 }
 
@@ -2631,8 +2634,9 @@ JSValue* PreIncDotNode::evaluate(OldInterpreterExecState* exec)
 RegisterID* PreDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-    RegisterID* value = generator.emitGetById(generator.finalDestination(dst), base.get(), m_ident);
-    generator.emitPreDec(value);
+    RefPtr<RegisterID> propDst = generator.tempDestination(dst);
+    RegisterID* value = generator.emitGetById(propDst.get(), base.get(), m_ident);
+    generator.emitPreDec(dst, value);
     return generator.emitPutById(base.get(), m_ident, value);
 }
 

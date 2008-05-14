@@ -51,6 +51,8 @@ namespace KJS {
         \
         macro(op_pre_inc) \
         macro(op_pre_dec) \
+        macro(op_pre_inc_mov) \
+        macro(op_pre_dec_mov) \
         macro(op_post_inc) \
         macro(op_post_dec) \
         macro(op_to_jsnumber) \
