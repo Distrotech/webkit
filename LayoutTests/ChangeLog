@@ -1,5 +1,17 @@
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
+        RS=Geoff.
+
+        Splitting exception sequencing test as it was too long and made DRT unhappy
+        on non-MacPros.
+
+        * fast/js/exception-sequencing-binops-expected.txt: Added.
+        * fast/js/exception-sequencing-binops.html: Added.
+        * fast/js/exception-sequencing-expected.txt:
+        * fast/js/exception-sequencing.html:
+
+2008-05-13  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Geoff.
 
         Bug 19027: SquirrelFish: Incorrect codegen for pre-increment

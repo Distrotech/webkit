@@ -674,36 +674,6 @@ var getterThrowerStr = "getterThrower.value";
 rhsGetterTester = { get value() { executedRHS = true; return 'string'; }};
 var rhsGetterTesterStr = "rhsGetterTester.value";
 
-for (var i = 0; i < binaryOps.length; i++) {
-    var numVal = binaryOps[i] == '||' ? '0' : '1';
-    createTest(numVal + " " + binaryOps[i] + " " + valueOfThrowerStr )();
-    createTest(numVal + " " + binaryOps[i] + " " + toStringThrowerStr)();
-    createTest(numVal + " " + binaryOps[i] + " " + throwingPropStr   )();
-    createTest(numVal + " " + binaryOps[i] + " " + throwingObjGetter )();
-    createTest(numVal + " " + binaryOps[i] + " " + getterThrowerStr )();
-
-    createTest("'string' " + binaryOps[i] + " " + valueOfThrowerStr )();
-    createTest("'string' " + binaryOps[i] + " " + toStringThrowerStr)();
-    createTest("'string' " + binaryOps[i] + " " + throwingPropStr   )();
-    createTest("'string' " + binaryOps[i] + " " + throwingObjGetter )();
-    createTest("'string' " + binaryOps[i] + " " + getterThrowerStr )();
-    
-    numVal = binaryOps[i] == '||' ? 'rhsZeroNum' : 'rhsNonZeroNum';
-    createTest(valueOfThrowerStr  + " " + binaryOps[i] + " " + numVal)();
-    createTest(toStringThrowerStr + " " + binaryOps[i] + " " + numVal)();
-    createTest(throwingPropStr    + " " + binaryOps[i] + " " + numVal)();
-    createTest(throwingObjGetter  + " " + binaryOps[i] + " " + numVal)();
-    createTest(getterThrowerStr  + " " + binaryOps[i] + " " + numVal)();
-    createTest(valueOfThrowerStr  + " " + binaryOps[i] + " rhsToStringThrower")();
-    createTest(toStringThrowerStr + " " + binaryOps[i] + " rhsToStringThrower")();
-    createTest(throwingPropStr    + " " + binaryOps[i] + " rhsToStringThrower")();
-    createTest(throwingObjGetter  + " " + binaryOps[i] + " rhsToStringThrower")();
-    createTest(getterThrowerStr  + " " + binaryOps[i] + " rhsToStringThrower")();
-    createTestWithRHSExec(valueOfThrowerStr  + " " + binaryOps[i] + " " + rhsGetterTesterStr)();
-    createTestWithRHSExec(toStringThrowerStr + " " + binaryOps[i] + " " + rhsGetterTesterStr)();
-
-}
-
 var executionOrder = "";
 __defineGetter__("nonThrowingIndexBase", function(){ 
     executionOrder += "nonThrowingIndexBase, "; 
