@@ -56,36 +56,31 @@ namespace KJS {
     };
 
     struct CodeBlock {
-        CodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, CodeType codeType_ = FunctionCode)
-            : sourceURL(sourceURL_)
+        CodeBlock(ScopeNode* ownerNode_)
+            : ownerNode(ownerNode_)
             , numTemporaries(0)
             , numVars(0)
             , numParameters(0)
             , numLocals(0)
-            , needsFullScopeChain(usesEval_ || needsClosure_)
-            , usesEval(usesEval_)
-            , needsClosure(needsClosure_)
-            , codeType(codeType_)
+            , needsFullScopeChain(ownerNode_->usesEval() || ownerNode_->needsClosure())
         {
         }
-        
+
         void dump(ExecState*) const;
         int lineNumberForVPC(const Instruction*);
         bool getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth);
         void mark();
 
-        Vector<Instruction> instructions;
-
-        UString sourceURL;
+        ScopeNode* ownerNode;
 
         int numTemporaries;
         int numVars;
         int numParameters;
         int numLocals;
-        
+        int thisRegister;
         bool needsFullScopeChain;
-        bool usesEval;
-        bool needsClosure;
+
+        Vector<Instruction> instructions;
 
         // Constant pool
         Vector<Identifier> identifiers;
@@ -95,18 +90,17 @@ namespace KJS {
         Vector<RefPtr<RegExp> > regexps;        
         Vector<HandlerInfo> exceptionHandlers;
         Vector<LineInfo> lineInfo;
-        CodeType codeType;
 
     private:
         void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
     };
-    
+
     // Program code is not marked by any function, so we make the global object
     // responsible for marking it.
 
     struct ProgramCodeBlock : public CodeBlock {
-        ProgramCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_, CodeType codeType_ = GlobalCode)
-            : CodeBlock(sourceURL_, usesEval_, needsClosure_, codeType_)
+        ProgramCodeBlock(ScopeNode* ownerNode, JSGlobalObject* globalObject_)
+            : CodeBlock(ownerNode)
             , globalObject(globalObject_)
         {
             globalObject->codeBlocks().add(this);
@@ -122,8 +116,8 @@ namespace KJS {
     };
 
     struct EvalCodeBlock : public ProgramCodeBlock {
-        EvalCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
-            : ProgramCodeBlock(sourceURL_, usesEval_, needsClosure_, globalObject_, EvalCode)
+        EvalCodeBlock(ScopeNode* ownerNode, JSGlobalObject* globalObject_)
+            : ProgramCodeBlock(ownerNode, globalObject_)
         {
         }
 
