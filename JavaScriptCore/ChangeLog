@@ -1,3 +1,15 @@
+2008-05-14  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 19025: SQUIRRELFISH: malformed syntax in onload handler causes crash
+        <https://bugs.webkit.org/show_bug.cgi?id=19025>
+
+        Simple fix -- move the use of functionBodyNode to after the null check.
+
+        * kjs/function_object.cpp:
+        (KJS::FunctionObjectImp::construct):
+
 2008-05-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

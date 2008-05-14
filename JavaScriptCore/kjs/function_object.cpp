@@ -164,14 +164,14 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
     UString errMsg;
     RefPtr<SourceProvider> source = UStringSourceProvider::create(body);
     RefPtr<FunctionBodyNode> functionBody = parser().parse<FunctionBodyNode>(exec, sourceURL, lineNumber, source, &sourceId, &errLine, &errMsg);
-    functionBody->setSource(SourceRange(source, 0, source->length()));
 
     // No program node == syntax error - throw a syntax error
     if (!functionBody)
         // We can't return a Completion(Throw) here, so just set the exception
         // and return it
         return throwError(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL);
-
+    
+    functionBody->setSource(SourceRange(source, 0, source->length()));
     ScopeChain scopeChain(exec->lexicalGlobalObject());
 
     FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain.node());

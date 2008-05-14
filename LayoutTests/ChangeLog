@@ -1,11 +1,14 @@
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+2008-05-14  Oliver Hunt  <oliver@apple.com>
 
-        Reviewed by Oliver Hunt.
-        
-        Added layout test for a codegen crash with run-time parse errors.
+        Reviewed by Geoff.
 
-        * fast/js/exception-codegen-crash-expected.txt: Added.
-        * fast/js/exception-codegen-crash.html: Added.
+        Bug 19025: SQUIRRELFISH: malformed syntax in onload handler causes crash
+        <https://bugs.webkit.org/show_bug.cgi?id=19025>
+
+        Test for malformed function in onload.
+
+        * fast/js/invalid-syntax-for-function-expected.txt: Added.
+        * fast/js/invalid-syntax-for-function.html: Added.
 
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
@@ -18,6 +21,15 @@
         * fast/js/exception-sequencing-binops.js: Added.
         * fast/js/exception-sequencing-binops2-expected.txt: Added.
         * fast/js/exception-sequencing-binops2.html: Added.
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Added layout test for a codegen crash with run-time parse errors.
+
+        * fast/js/exception-codegen-crash-expected.txt: Added.
+        * fast/js/exception-codegen-crash.html: Added.
 
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
