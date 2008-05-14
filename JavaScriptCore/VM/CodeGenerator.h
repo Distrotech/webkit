@@ -38,6 +38,7 @@
 #include "RegisterID.h"
 #include "SymbolTable.h"
 #include "SegmentedVector.h"
+#include "debugger.h"
 #include "nodes.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
@@ -74,9 +75,9 @@ namespace KJS {
         
         static void setDumpsGeneratedCode(bool dumpsGeneratedCode);
         
-        CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, bool canCreateGlobals);
-        CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier>& parameters);
-        CodeGenerator(EvalNode*, const ScopeChain&, SymbolTable*, EvalCodeBlock*, VarStack&, FunctionStack& functionStack);
+        CodeGenerator(ProgramNode*, const Debugger*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, bool canCreateGlobals);
+        CodeGenerator(FunctionBodyNode*, const Debugger*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier>& parameters);
+        CodeGenerator(EvalNode*, const Debugger*, const ScopeChain&, SymbolTable*, EvalCodeBlock*, VarStack&, FunctionStack& functionStack);
 
         ~CodeGenerator();
 
@@ -234,6 +235,8 @@ namespace KJS {
         
         RegisterID* emitPushScope(RegisterID* scope);
         void emitPopScope();
+        
+        void emitDebugHook(DebugHookID);
 
         int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }
         
@@ -297,6 +300,9 @@ namespace KJS {
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
         
         bool shouldOptimizeLocals() { return (m_codeType != EvalCode) && !m_dynamicScopeDepth; }
+
+        bool m_shouldEmitDebugHooks;
+        
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
         

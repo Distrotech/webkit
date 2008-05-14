@@ -162,8 +162,9 @@ bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0, bool isCons
     return result.second;
 }
 
-CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, bool canCreateVariables)
-    : m_scopeChain(&scopeChain)
+CodeGenerator::CodeGenerator(ProgramNode* programNode, const Debugger* debugger, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, bool canCreateVariables)
+    : m_shouldEmitDebugHooks(!!debugger)
+    , m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(programNode)
     , m_codeBlock(codeBlock)
@@ -195,7 +196,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
 
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
-
+    
     ExecState* exec = globalObject->globalExec();
 
     if (canCreateVariables) {
@@ -224,8 +225,9 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     }
 }
 
-CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier>& parameters)
-    : m_scopeChain(&scopeChain)
+CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const Debugger* debugger, const ScopeChain& scopeChain, SymbolTable* symbolTable, CodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack, Vector<Identifier>& parameters)
+    : m_shouldEmitDebugHooks(!!debugger)
+    , m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(functionBody)
     , m_codeBlock(codeBlock)
@@ -263,8 +265,9 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     }
 }
 
-CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, EvalCodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack)
-    : m_scopeChain(&scopeChain)
+CodeGenerator::CodeGenerator(EvalNode* evalNode, const Debugger* debugger, const ScopeChain& scopeChain, SymbolTable* symbolTable, EvalCodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack)
+    : m_shouldEmitDebugHooks(!!debugger)
+    , m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(evalNode)
     , m_codeBlock(codeBlock)
@@ -978,6 +981,14 @@ void CodeGenerator::emitPopScope()
 
     m_scopeContextStack.removeLast();
     m_dynamicScopeDepth--;
+}
+
+void CodeGenerator::emitDebugHook(DebugHookID debugHookID)
+{
+    if (!m_shouldEmitDebugHooks)
+        return;
+    instructions().append(machine().getOpcode(op_dbg));
+    instructions().append(debugHookID);
 }
 
 void CodeGenerator::pushFinallyContext(LabelID* target, RegisterID* retAddrDst)

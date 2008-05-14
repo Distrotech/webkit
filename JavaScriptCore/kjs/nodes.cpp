@@ -4676,9 +4676,11 @@ static inline RegisterID* statementListEmitCode(StatementVector& statements, Cod
     RegisterID* r0 = dst;
 
     StatementVector::iterator end = statements.end();
-    for (StatementVector::iterator it = statements.begin(); it != end; ++it)
+    for (StatementVector::iterator it = statements.begin(); it != end; ++it) {
+        generator.emitDebugHook(WillExecuteStatement);
         if (RegisterID* r1 = generator.emitNode(dst, it->get()))
             r0 = r1;
+    }
     
     return r0;
 }
@@ -5332,6 +5334,7 @@ RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitJumpScopes(l0.get(), 0);
         generator.emitLabel(l0.get());
     }
+    generator.emitDebugHook(WillLeaveCallFrame);
     return generator.emitReturn(r0);
 }
 
@@ -5756,7 +5759,7 @@ void EvalNode::generateCode(ScopeChainNode* sc)
     
     m_code.set(new EvalCodeBlock(this, globalObject));
     
-    CodeGenerator generator(this, scopeChain, new SymbolTable(), m_code.get(), m_varStack, m_functionStack);
+    CodeGenerator generator(this, globalObject->debugger(), scopeChain, new SymbolTable(), m_code.get(), m_varStack, m_functionStack);
     generator.generate();
 
     m_children.shrinkCapacity(0);
@@ -5794,7 +5797,10 @@ void FunctionBodyNode::generateCode(ScopeChainNode* sc)
     m_code.set(new CodeBlock(this));
 
     ScopeChain scopeChain(sc);
-    CodeGenerator generator(this, scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
+    ASSERT(globalObject->isGlobalObject());
+
+    CodeGenerator generator(this, globalObject->debugger(), scopeChain, &m_symbolTable, m_code.get(), m_varStack, m_functionStack, m_parameters);
     generator.generate();
 
     m_children.shrinkCapacity(0);
@@ -5802,9 +5808,11 @@ void FunctionBodyNode::generateCode(ScopeChainNode* sc)
 
 RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
+    generator.emitDebugHook(DidEnterCallFrame);
     statementListEmitCode(m_children, generator);
     if (!m_children.size() || !m_children.last()->isReturnNode()) {
         RegisterID* r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
+        generator.emitDebugHook(WillLeaveCallFrame);
         generator.emitReturn(r0);
     }
     return 0;
@@ -5827,7 +5835,7 @@ void ProgramNode::generateCode(ScopeChainNode* sc, bool canCreateGlobals)
     
     m_code.set(new ProgramCodeBlock(this, globalObject));
     
-    CodeGenerator generator(this, scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack, canCreateGlobals);
+    CodeGenerator generator(this, globalObject->debugger(), scopeChain, &globalObject->symbolTable(), m_code.get(), m_varStack, m_functionStack, canCreateGlobals);
     generator.generate();
 
     m_children.shrinkCapacity(0);
