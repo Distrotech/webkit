@@ -62,17 +62,6 @@ namespace KJS {
         return NaN;
     }
 
-    double JSNotAnObject::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-    {
-        ASSERT_NOT_REACHED();
-        resultPC = normalExitPC;
-        if (normalExitPC != exceptionExitPC) {
-            exec->setExceptionSource(normalExitPC);
-            resultPC = exceptionExitPC;
-        }
-        return NaN;
-    }
-    
     UString JSNotAnObject::toString(ExecState* exec) const
     {
         UNUSED_PARAM(exec);

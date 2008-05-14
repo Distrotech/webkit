@@ -2050,7 +2050,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     vm_throw: {
-        exec->clearException();
+        ASSERT(!exec->hadException());
         handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);
         if (!handlerVPC) {
             *exception = exceptionValue;

@@ -84,9 +84,6 @@ namespace KJS  {
         Machine* machine() const { return m_machine; }
         
         // Exception propogation.
-        void setExceptionSource(Instruction* source) { m_exceptionSource = source; }
-        Instruction* exceptionSource() { return m_exceptionSource; }
-        void clearExceptionSource() { m_exceptionSource = 0; }
         void setException(JSValue* exception) { m_exception = exception; }
         void clearException() { m_exception = 0; }
         JSValue* exception() const { return m_exception; }
@@ -114,7 +111,6 @@ namespace KJS  {
         JSObject* m_globalThisValue;
 
         JSValue* m_exception;
-        Instruction* m_exceptionSource;
 
         const PerThreadData* m_perThreadData;
 
