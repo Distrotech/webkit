@@ -569,13 +569,9 @@ bool StringNode::evaluateToBoolean(OldInterpreterExecState*)
 
 RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    if (m_regExp->isValid())
-        return generator.emitNewRegExp(generator.finalDestination(dst), m_regExp.get());
-    
-    UString errorMessageString = UString("Invalid regular expression: ").append(m_regExp->errorMessage());
-    RegisterID* exception = generator.emitNewError(generator.tempDestination(dst), SyntaxError, jsOwnedString(errorMessageString));
-    generator.emitThrow(exception);
-    return generator.finalDestination(dst);
+    if (!m_regExp->isValid())
+        return emitThrowError(generator, dst, SyntaxError, "Invalid regular expression: %s", m_regExp->errorMessage());
+    return generator.emitNewRegExp(generator.finalDestination(dst), m_regExp.get());
 }
 
 JSValue* RegExpNode::evaluate(OldInterpreterExecState*)

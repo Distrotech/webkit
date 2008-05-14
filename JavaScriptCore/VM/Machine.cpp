@@ -1966,7 +1966,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int type = (++vPC)->u.operand;
         int message = (++vPC)->u.operand;
         
-        r[dst].u.jsValue = Error::create(exec, (ErrorType)type, k[message]->toString(exec), -1, -1, 0); // lineNo(), currentSourceId(exec), currentSourceURL(exec)
+        r[dst].u.jsValue = Error::create(exec, (ErrorType)type, k[message]->toString(exec), codeBlock->lineNumberForVPC(vPC), codeBlock->ownerNode->sourceId(), codeBlock->ownerNode->sourceURL());
         
         ++vPC;
         NEXT_OPCODE;
