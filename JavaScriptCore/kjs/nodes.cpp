@@ -387,20 +387,20 @@ NEVER_INLINE JSValue* Node::rethrowException(OldInterpreterExecState* exec)
     return exec->setThrowCompletion(exception);
 }
 
-RegisterID* Node::emitThrowError(CodeGenerator& generator, RegisterID* dst, ErrorType e, const char* msg)
+RegisterID* Node::emitThrowError(CodeGenerator& generator, ErrorType e, const char* msg)
 {
-    RegisterID* r0 = generator.emitNewError(generator.newTemporary(), e, jsString(msg));
-    generator.emitThrow(r0);
-    return dst;
+    RegisterID* exception = generator.emitNewError(generator.newTemporary(), e, jsString(msg));
+    generator.emitThrow(exception);
+    return exception;
 }
 
-RegisterID* Node::emitThrowError(CodeGenerator& generator, RegisterID* dst, ErrorType e, const char* msg, const Identifier& label)
+RegisterID* Node::emitThrowError(CodeGenerator& generator, ErrorType e, const char* msg, const Identifier& label)
 {
     UString message = msg;
     substitute(message, label.ustring());
     RegisterID* exception = generator.emitNewError(generator.newTemporary(), e, jsString(message));
     generator.emitThrow(exception);
-    return dst;
+    return exception;
 }
     
 // ------------------------------ StatementNode --------------------------------
@@ -570,7 +570,7 @@ bool StringNode::evaluateToBoolean(OldInterpreterExecState*)
 RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (!m_regExp->isValid())
-        return emitThrowError(generator, dst, SyntaxError, "Invalid regular expression: %s", m_regExp->errorMessage());
+        return emitThrowError(generator, SyntaxError, "Invalid regular expression: %s", m_regExp->errorMessage());
     return generator.emitNewRegExp(generator.finalDestination(dst), m_regExp.get());
 }
 
@@ -2066,9 +2066,9 @@ JSValue* PostDecDotNode::evaluate(OldInterpreterExecState* exec)
 
 // ------------------------------ PostfixErrorNode -----------------------------------
 
-RegisterID* PostfixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* PostfixErrorNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    return emitThrowError(generator, dst, ReferenceError, m_operator == OpPlusPlus ? "Postfix ++ operator applied to value that is not a reference." : "Postfix -- operator applied to value that is not a reference.");
+    return emitThrowError(generator, ReferenceError, m_operator == OpPlusPlus ? "Postfix ++ operator applied to value that is not a reference." : "Postfix -- operator applied to value that is not a reference.");
 }
 
 JSValue* PostfixErrorNode::evaluate(OldInterpreterExecState* exec)
@@ -2659,9 +2659,9 @@ JSValue* PreDecDotNode::evaluate(OldInterpreterExecState* exec)
 
 // ------------------------------ PrefixErrorNode -----------------------------------
 
-RegisterID* PrefixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* PrefixErrorNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    return emitThrowError(generator, dst, ReferenceError, m_operator == OpPlusPlus ? "Prefix ++ operator applied to value that is not a reference." : "Prefix -- operator applied to value that is not a reference.");
+    return emitThrowError(generator, ReferenceError, m_operator == OpPlusPlus ? "Prefix ++ operator applied to value that is not a reference." : "Prefix -- operator applied to value that is not a reference.");
 }
 
 JSValue* PrefixErrorNode::evaluate(OldInterpreterExecState* exec)
@@ -4406,9 +4406,9 @@ JSValue* ReadModifyDotNode::evaluate(OldInterpreterExecState* exec)
 
 // ------------------------------ AssignErrorNode -----------------------------------
 
-RegisterID* AssignErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* AssignErrorNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    return emitThrowError(generator, dst, ReferenceError, "Left side of assignment is not a reference.");
+    return emitThrowError(generator, ReferenceError, "Left side of assignment is not a reference.");
 }
 
 JSValue* AssignErrorNode::evaluate(OldInterpreterExecState* exec)
@@ -5258,19 +5258,19 @@ JSValue* ForInNode::execute(OldInterpreterExecState* exec)
 RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (!generator.inContinueContext())
-        return emitThrowError(generator, dst, SyntaxError, "Invalid continue statement.");
+        return emitThrowError(generator, SyntaxError, "Invalid continue statement.");
 
     JumpContext* targetContext = generator.jumpContextForContinue(m_ident);
 
     if (!targetContext) {
         if (m_ident.isEmpty())
-            return emitThrowError(generator, dst, SyntaxError, "Invalid continue statement.");
+            return emitThrowError(generator, SyntaxError, "Invalid continue statement.");
         else
-            return emitThrowError(generator, dst, SyntaxError, "Label %s not found.", m_ident);
+            return emitThrowError(generator, SyntaxError, "Label %s not found.", m_ident);
     }
 
     if (!targetContext->continueTarget)
-        return emitThrowError(generator, dst, SyntaxError, "Invalid continue statement.");        
+        return emitThrowError(generator, SyntaxError, "Invalid continue statement.");        
 
     generator.emitJumpScopes(targetContext->continueTarget, targetContext->scopeDepth);
     
@@ -5292,15 +5292,15 @@ JSValue* ContinueNode::execute(OldInterpreterExecState* exec)
 RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (!generator.inJumpContext())
-        return emitThrowError(generator, dst, SyntaxError, "Invalid break statement.");
+        return emitThrowError(generator, SyntaxError, "Invalid break statement.");
     
     JumpContext* targetContext = generator.jumpContextForBreak(m_ident);
     
     if (!targetContext) {
         if (m_ident.isEmpty())
-            return emitThrowError(generator, dst, SyntaxError, "Invalid break statement.");
+            return emitThrowError(generator, SyntaxError, "Invalid break statement.");
         else
-            return emitThrowError(generator, dst, SyntaxError, "Label %s not found.", m_ident);
+            return emitThrowError(generator, SyntaxError, "Label %s not found.", m_ident);
     }
 
     ASSERT(targetContext->breakTarget);
@@ -5324,7 +5324,7 @@ JSValue* BreakNode::execute(OldInterpreterExecState* exec)
 RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (generator.codeType() != FunctionCode)
-        return emitThrowError(generator, dst, SyntaxError, "Invalid return statement.");
+        return emitThrowError(generator, SyntaxError, "Invalid return statement.");
         
     RegisterID* r0 = m_value ? generator.emitNode(dst, m_value.get()) : generator.emitLoad(generator.finalDestination(dst), jsUndefined());
     if (generator.scopeDepth()) {
@@ -5573,7 +5573,7 @@ JSValue* SwitchNode::execute(OldInterpreterExecState* exec)
 RegisterID* LabelNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
     if (generator.jumpContextForBreak(m_label))
-        return emitThrowError(generator, dst, SyntaxError, "Duplicated label %s found.", m_label);
+        return emitThrowError(generator, SyntaxError, "Duplicated label %s found.", m_label);
     
     RefPtr<LabelID> l0 = generator.newLabel();
     m_labelStack.push(m_label);

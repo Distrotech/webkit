@@ -1,3 +1,16 @@
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed a codegen crash with run-time parse errors.
+        
+        SunSpider reports no change.
+        
+        emitThrowError needs to return the temporary holding the error, not dst,
+        since dst may be NULL. In fact, emitThrowError shouldn't take a dst
+        parameter at all, since exceptions should not modify the destination
+        register.
+
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
