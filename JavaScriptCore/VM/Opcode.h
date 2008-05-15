@@ -90,7 +90,6 @@ namespace KJS {
         macro(op_put_setter) \
         \
         macro(op_jmp) \
-        macro(op_loop_if_true) \
         macro(op_jtrue) \
         macro(op_jfalse) \
         macro(op_jmp_scopes) \

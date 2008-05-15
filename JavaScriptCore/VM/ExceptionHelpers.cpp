@@ -73,16 +73,6 @@ JSValue* createStackOverflowError(ExecState* exec)
     return createError(exec, RangeError, "Maximum call stack size exceeded.");
 }
 
-class InterruptedExecutionError : public JSObject {
-public:
-    virtual bool isWatchdogException() const { return true; }
-};
-
-JSValue* createInterruptedExecutionException(ExecState*)
-{
-    return new InterruptedExecutionError;
-}
-
 JSValue* createUndefinedVariableError(ExecState* exec, const Identifier& ident)
 {
     return createError(exec, ReferenceError, "Can't find variable: %s", ident);
