@@ -4895,7 +4895,7 @@ RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     
     generator.emitLabel(continueTarget.get());
     RegisterID* cond = generator.emitNode(m_expr.get());
-    generator.emitJumpIfTrue(cond, topOfLoop.get());
+    generator.emitLoopIfTrue(cond, topOfLoop.get());
     generator.emitLabel(breakTarget.get());
     return result.get();
 }
@@ -4957,7 +4957,7 @@ RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 
     generator.emitLabel(continueTarget.get());
     RegisterID* cond = generator.emitNode(m_expr.get());
-    generator.emitJumpIfTrue(cond, topOfLoop.get());
+    generator.emitLoopIfTrue(cond, topOfLoop.get());
 
     generator.emitLabel(breakTarget.get());
     
@@ -5025,7 +5025,7 @@ RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 
     generator.emitLabel(beforeCondition.get());
     RegisterID* cond = generator.emitNode(m_expr2.get());
-    generator.emitJumpIfTrue(cond, topOfLoop.get());
+    generator.emitLoopIfTrue(cond, topOfLoop.get());
     generator.emitLabel(breakTarget.get());
     return result.get();
 }
