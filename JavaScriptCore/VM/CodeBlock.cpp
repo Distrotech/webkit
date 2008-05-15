@@ -97,12 +97,12 @@ static CString regexpName(int re, RegExp* regexp)
 static const char* debugHookName(int debugHookID)
 {
     if (debugHookID == DidEnterCallFrame)
-        return "DidEnterCallFrame";
+        return "didEnterCallFrame";
     else if (debugHookID == WillLeaveCallFrame)
-        return "WillLeaveCallFrame";
+        return "willLeaveCallFrame";
     else {
         ASSERT(debugHookID == WillExecuteStatement);
-        return "WillExecuteStatement";
+        return "willExecuteStatement";
     }
 }
 
@@ -529,9 +529,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] sret\t\t %s\n", location, registerName(retAddrSrc).c_str());
             break;
         }
-        case op_dbg: {
+        case op_debug: {
             int debugHookID = (++it)->u.operand;
-            printf("[%4d] dbg\t\t %s\n", location, debugHookName(debugHookID));
+            int firstLine = (++it)->u.operand;
+            int lastLine = (++it)->u.operand;
+            printf("[%4d] debug\t\t %s, %d, %d\n", location, debugHookName(debugHookID), firstLine, lastLine);
             break;
         }
         case op_end: {

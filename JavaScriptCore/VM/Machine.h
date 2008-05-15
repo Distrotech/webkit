@@ -91,11 +91,14 @@ namespace KJS {
         JSValue* retrieveArguments(ExecState*, FunctionImp*) const;
         JSValue* retrieveCaller(ExecState*, FunctionImp*) const;
         
+        void getFunctionAndArguments(Register** registerBase, Register* callFrame, FunctionImp*&, Register*& argv, int& argc);
+        
     private:
         enum { MaxReentryDepth = 128 };
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
 
         ALWAYS_INLINE void setScopeChain(ExecState* exec, ScopeChainNode*&, ScopeChainNode*);
+        NEVER_INLINE void debug(ExecState*, const Instruction*, const CodeBlock*, const ScopeChainNode*, Register**, Register*);
 
         NEVER_INLINE bool unwindCallFrame(ExecState*, Register**, const Instruction*&, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
         NEVER_INLINE Instruction* throwException(ExecState*, JSValue*, Register**, const Instruction*, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);

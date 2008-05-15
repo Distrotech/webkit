@@ -983,12 +983,14 @@ void CodeGenerator::emitPopScope()
     m_dynamicScopeDepth--;
 }
 
-void CodeGenerator::emitDebugHook(DebugHookID debugHookID)
+void CodeGenerator::emitDebugHook(DebugHookID debugHookID, int firstLine, int lastLine)
 {
     if (!m_shouldEmitDebugHooks)
         return;
-    instructions().append(machine().getOpcode(op_dbg));
+    instructions().append(machine().getOpcode(op_debug));
     instructions().append(debugHookID);
+    instructions().append(firstLine);
+    instructions().append(lastLine);
 }
 
 void CodeGenerator::pushFinallyContext(LabelID* target, RegisterID* retAddrDst)

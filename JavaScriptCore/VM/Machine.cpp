@@ -737,6 +737,35 @@ ALWAYS_INLINE void Machine::setScopeChain(ExecState* exec, ScopeChainNode*& scop
     exec->m_scopeChain = newScopeChain;
 }
 
+NEVER_INLINE void Machine::debug(ExecState* exec, const Instruction* vPC, const CodeBlock* codeBlock, const ScopeChainNode*, Register** registerBase, Register* r)
+{
+    int debugHookID = (++vPC)->u.operand;
+    int firstLine = (++vPC)->u.operand;
+    int lastLine = (++vPC)->u.operand;
+
+    Debugger* debugger = exec->dynamicGlobalObject()->debugger();
+    if (!debugger)
+        return;
+
+    if (debugHookID == DidEnterCallFrame) {
+        Register* callFrame = r - codeBlock->numLocals - CallFrameHeaderSize;
+        FunctionImp* function;
+        Register* argv;
+        int argc;
+        getFunctionAndArguments(registerBase, callFrame, function, argv, argc);
+        List args(&argv->u.jsValue, argc);
+        debugger->callEvent(exec, codeBlock->ownerNode->sourceId(), firstLine, function, args);
+    } else if (debugHookID == WillLeaveCallFrame) {
+        Register* callFrame = r - codeBlock->numLocals - CallFrameHeaderSize;
+        FunctionImp* function = static_cast<FunctionImp*>(callFrame[Callee].u.jsValue);
+        ASSERT(function->inherits(&FunctionImp::info));
+        debugger->returnEvent(exec, codeBlock->ownerNode->sourceId(), lastLine, function);
+    } else {
+        ASSERT(debugHookID == WillExecuteStatement);
+        debugger->atStatement(exec, codeBlock->ownerNode->sourceId(), firstLine, lastLine);
+    }
+}
+
 JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue** exception)
 {
     // One-time initialization of our address tables. We have to put this code
@@ -1360,7 +1389,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             goto vm_throw;
 
         vPC += 3;
-        
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base) {
@@ -1372,8 +1400,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            will be the global object) is stored in register dst.
         */
         resolveBase(exec, vPC, r, scopeChain, codeBlock);
-        vPC += 3;
 
+        vPC += 3;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_with_base) {
@@ -1392,7 +1420,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             goto vm_throw;
 
         vPC += 4;
-        
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_func) {
@@ -1412,8 +1439,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         */
         if (UNLIKELY(!resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
             goto vm_throw;
-        vPC += 4;
 
+        vPC += 4;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_get_by_id) {
@@ -1604,8 +1631,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            instruction.
         */
         int target = (++vPC)->u.operand;
-        vPC += target;
 
+        vPC += target;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_jtrue) {
@@ -2093,8 +2120,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         vPC = r[retAddrSrc].u.vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_dbg) {
-        /* dbg debugHookID(n)
+    BEGIN_OPCODE(op_debug) {
+        /* debug debugHookID(n) firstLine(n) lastLine(n)
          
          Notifies the debugger of the current state of execution:
          DidEnterCallFrame; WillLeaveCallFrame; or WillExecuteStatement.
@@ -2102,24 +2129,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
          This opcode is only generated while the debugger is attached.
         */
 
-        int debugHookID = (++vPC)->u.operand;
+        debug(exec, vPC, codeBlock, scopeChain, registerBase, r);
 
-        Debugger* debugger = exec->dynamicGlobalObject()->debugger();
-        if (!debugger) {
-            ++vPC;
-            NEXT_OPCODE;
-        }
-
-        if (debugHookID == DidEnterCallFrame) {
-            // callEvent
-        } else if (debugHookID == WillLeaveCallFrame) {
-            // returnEvent
-        } else {
-            // atStatement
-            ASSERT(debugHookID == WillExecuteStatement);
-        }
-
-        ++vPC;
+        vPC += 3;
         NEXT_OPCODE;
     }
     vm_throw: {
@@ -2194,6 +2206,15 @@ bool Machine::getCallFrame(ExecState* exec, FunctionImp* function, Register**& r
         if (!getCallerFunctionOffset(registerBase, callFrameOffset, callFrameOffset))
             callFrameOffset = -1;
     }
+}
+
+void Machine::getFunctionAndArguments(Register** registerBase, Register* callFrame, FunctionImp*& function, Register*& argv, int& argc)
+{
+    function = static_cast<FunctionImp*>(callFrame[Callee].u.jsValue);
+    ASSERT(function->inherits(&FunctionImp::info));
+
+    argv = (*registerBase) + callFrame[CallerRegisterOffset].u.i + callFrame[ArgumentStartRegister].u.i + 1; // skip "this"
+    argc = callFrame[ArgumentCount].u.i - 1; // skip "this"
 }
 
 } // namespace KJS
