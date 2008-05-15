@@ -2131,7 +2131,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         debug(exec, vPC, codeBlock, scopeChain, registerBase, r);
 
-        vPC += 3;
+        vPC += 4;
         NEXT_OPCODE;
     }
     vm_throw: {
