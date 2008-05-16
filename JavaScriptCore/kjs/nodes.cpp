@@ -4673,7 +4673,7 @@ JSValue* ConstStatementNode::execute(OldInterpreterExecState* exec)
 
 static inline RegisterID* statementListEmitCode(StatementVector& statements, CodeGenerator& generator, RegisterID* dst = 0)
 {
-    RegisterID* r0 = dst;
+    RefPtr<RegisterID> r0 = dst;
 
     StatementVector::iterator end = statements.end();
     for (StatementVector::iterator it = statements.begin(); it != end; ++it) {
@@ -4683,7 +4683,7 @@ static inline RegisterID* statementListEmitCode(StatementVector& statements, Cod
             r0 = r1;
     }
     
-    return r0;
+    return r0.get();
 }
 
 static inline void statementListPushFIFO(StatementVector& statements, DeclarationStacks::NodeStack& stack)

@@ -1,3 +1,17 @@
+2008-05-16  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver Hunt.
+
+        Bug 19098: SquirrelFish: Ref'd temporaries can be clobbered
+        <https://bugs.webkit.org/show_bug.cgi?id=19098>
+
+        When doing code generation for a statement list, increase the reference
+        count on a register that might eventually be returned, so that it doesn't
+        get clobbered by a request for a new temporary.
+
+        * kjs/nodes.cpp:
+        (KJS::statementListEmitCode):
+
 2008-05-16  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
