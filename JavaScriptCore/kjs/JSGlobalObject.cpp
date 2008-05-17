@@ -257,6 +257,7 @@ void JSGlobalObject::reset(JSValue* prototype)
 
     _prop.clear();
     registerFileStack().current()->clear();
+    registerFileStack().current()->addGlobalSlots(1);
     symbolTable().clear();
 
     // Prototypes
@@ -377,11 +378,14 @@ void JSGlobalObject::reset(JSValue* prototype)
     putDirect("URIError", d()->URIErrorConstructor);
 
     // Set global values.
+    GlobalPropertyInfo staticGlobals[] = {
+        GlobalPropertyInfo("Math", new MathObjectImp(exec, d()->objectPrototype), DontEnum | DontDelete),
+        GlobalPropertyInfo("NaN", jsNaN(), DontEnum | DontDelete),
+        GlobalPropertyInfo("Infinity", jsNumber(Inf), DontEnum | DontDelete),
+        GlobalPropertyInfo("undefined", jsUndefined(), DontEnum | DontDelete)
+    };
 
-    putDirect("Math", new MathObjectImp(exec, d()->objectPrototype), DontEnum);
-    putDirect("NaN", jsNaN(), DontEnum | DontDelete);
-    putDirect("Infinity", jsNumber(Inf), DontEnum | DontDelete);
-    putDirect("undefined", jsUndefined(), DontEnum | DontDelete);
+    addStaticGlobals(staticGlobals, sizeof(staticGlobals) / sizeof(GlobalPropertyInfo));
 
     // Set global functions.
 

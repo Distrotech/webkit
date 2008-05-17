@@ -1,3 +1,15 @@
+2008-05-16  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff
+
+        Bug 19076: SquirrelFish: RegisterFile can be corrupted if implictly reenter global scope with no declared vars
+        <https://bugs.webkit.org/show_bug.cgi?id=19076>
+
+        Test that we can re-enter safely.
+
+        * fast/js/direct-entry-to-function-code-expected.txt: Added.
+        * fast/js/direct-entry-to-function-code.html: Added.
+
 2008-05-16  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver Hunt.

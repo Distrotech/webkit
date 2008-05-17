@@ -584,8 +584,7 @@ JSValue* RegExpNode::evaluate(OldInterpreterExecState*)
 
 RegisterID* ThisNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RegisterID* r0 = generator.registerForLocal(generator.propertyNames().thisIdentifier);
-    return generator.moveToDestinationIfNeeded(dst, r0);
+    return generator.moveToDestinationIfNeeded(dst, generator.thisRegister());
 }
 
 // ECMA 11.1.1

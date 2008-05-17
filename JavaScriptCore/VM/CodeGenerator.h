@@ -93,6 +93,9 @@ namespace KJS {
         // dynamic scope should not interfere with const initialisation
         RegisterID* registerForLocalConstInit(const Identifier&);
 
+        // Returns the register storing "this"
+        RegisterID* thisRegister() { return m_thisRegister; }
+
         bool isLocalConstant(const Identifier&);
 
         // Returns the next available temporary register. Registers returned by
@@ -288,7 +291,7 @@ namespace KJS {
         // Returns true if a new RegisterID was added, false if a pre-existing RegisterID was re-used.
         bool addVar(const Identifier&, RegisterID*&, bool isConstant);
 
-        void addParameter(const Identifier&);
+        RegisterID* addParameter(const Identifier&);
 
         unsigned addConstant(FuncDeclNode*);
         unsigned addConstant(FuncExprNode*);
@@ -311,7 +314,8 @@ namespace KJS {
         CodeBlock* m_codeBlock;
         
         HashSet<RefPtr<UString::Rep>, IdentifierRepHash> m_functions;
-
+        static RegisterID* programCodeThis();
+        RegisterID* m_thisRegister;
         SegmentedVector<RegisterID, 512> m_locals;
         SegmentedVector<RegisterID, 512> m_temporaries;
         SegmentedVector<LabelID, 512> m_labels;

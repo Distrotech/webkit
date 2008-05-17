@@ -263,11 +263,40 @@ namespace KJS {
         
         JSGlobalObjectData* d() const { return static_cast<JSGlobalObjectData*>(JSVariableObject::d); }
 
+        struct GlobalPropertyInfo {
+            GlobalPropertyInfo(const Identifier& i, JSValue* v, unsigned a)
+                : identifier(i)
+                , value(v)
+                , attributes(a)
+            {
+            }
+
+            const Identifier& identifier;
+            JSValue* value;
+            unsigned attributes;
+        };
+        void addStaticGlobals(GlobalPropertyInfo*, int count);
+
         bool checkTimeout();
         void resetTimeoutCheck();
 
         static JSGlobalObject* s_head;
     };
+
+    inline void JSGlobalObject::addStaticGlobals(GlobalPropertyInfo* globals, int count)
+    {
+        RegisterFile* registerFile = registerFileStack().current();
+        ASSERT(registerFile->safeForReentry() && registerFile->isGlobal() && !registerFile->size());
+        int index = -registerFile->numGlobalSlots() - 1;
+        registerFile->addGlobalSlots(count);
+        for (int i = 0; i < count; ++i) {
+            ASSERT(globals[i].attributes & DontDelete);
+            SymbolTableEntry newEntry(index, globals[i].attributes);
+            symbolTable().add(globals[i].identifier.ustring().rep(), newEntry);
+            valueAt(index) = globals[i].value;
+            --index;
+        }
+    }
 
     inline bool JSGlobalObject::timedOut()
     {

@@ -74,7 +74,7 @@ namespace KJS  {
         
         // Global object in which the current script was defined. (Can differ
         // from dynamicGlobalObject() during function calls across frames.)
-        JSGlobalObject* ExecState::lexicalGlobalObject() const
+        JSGlobalObject* lexicalGlobalObject() const
         {
             return m_scopeChain->globalObject();
         }

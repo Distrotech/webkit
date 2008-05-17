@@ -593,6 +593,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainN
     }
 
     RegisterFile* registerFile = registerFileStack->pushGlobalRegisterFile();
+    ASSERT(registerFile->numGlobalSlots());
     CodeBlock* codeBlock = &programNode->code(scopeChain, !registerFileStack->inImplicitCall());
     registerFile->addGlobalSlots(codeBlock->numVars);
 
