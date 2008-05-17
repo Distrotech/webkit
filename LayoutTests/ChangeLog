@@ -1,3 +1,15 @@
+2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Add tests for:
+
+        Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr
+        <https://bugs.webkit.org/show_bug.cgi?id=18991>
+
+        * fast/js/codegen-temporaries-expected.txt:
+        * fast/js/resources/codegen-temporaries.js:
+
 2008-05-17  Oliver Hunt  <oliver@apple.com>
 
         Forgot to check in the results to the activation gc tests

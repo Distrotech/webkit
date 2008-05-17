@@ -1,3 +1,40 @@
+2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Partial fix for:
+
+        Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr
+        <https://bugs.webkit.org/show_bug.cgi?id=18991>
+
+        Ensure that the code generated for assignments uses temporaries whenever
+        necessary. This patch covers the vast majority of situations, but there
+        are still a few left.
+
+        This patch also adds some missing cases to CodeBlock::dump().
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::destinationForAssignResult):
+        (KJS::CodeGenerator::leftHandSideNeedsCopy):
+        (KJS::CodeGenerator::emitNodeForLeftHandSide):
+        * kjs/NodeInfo.h:
+        * kjs/grammar.y:
+        * kjs/nodes.cpp:
+        (KJS::AssignDotNode::emitCode):
+        (KJS::ReadModifyDotNode::emitCode):
+        (KJS::AssignBracketNode::emitCode):
+        (KJS::ReadModifyBracketNode::emitCode):
+        (KJS::ForInNode::ForInNode):
+        * kjs/nodes.h:
+        (KJS::ReadModifyResolveNode::):
+        (KJS::AssignResolveNode::):
+        (KJS::ReadModifyBracketNode::):
+        (KJS::AssignBracketNode::):
+        (KJS::AssignDotNode::):
+        (KJS::ReadModifyDotNode::):
+
 2008-05-17  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

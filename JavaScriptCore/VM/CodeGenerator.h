@@ -126,6 +126,12 @@ namespace KJS {
                 return tempDst;
             return newTemporary(); 
         }
+        
+        RegisterID* destinationForAssignResult(RegisterID* dst) { 
+            if (dst && m_codeBlock->needsFullScopeChain) 
+                return dst->isTemporary() ? dst : newTemporary();
+            return 0;
+        }
 
         // moves src to dst if dst is not null and is different from src, otherwise just returns src
         RegisterID* moveToDestinationIfNeeded(RegisterID* dst, RegisterID* src) { return (dst && dst != src) ? emitMove(dst, src) : src; }
@@ -148,6 +154,22 @@ namespace KJS {
         RegisterID* emitNode(Node* n)
         {
             return emitNode(0, n);
+        }
+
+        ALWAYS_INLINE bool leftHandSideNeedsCopy(bool rightHasAssignments)
+        {
+            return m_codeBlock->needsFullScopeChain || rightHasAssignments;
+        }
+
+        ALWAYS_INLINE PassRefPtr<RegisterID> emitNodeForLeftHandSide(ExpressionNode* n, bool rightHasAssignments)
+        {
+            if (leftHandSideNeedsCopy(rightHasAssignments)) {
+                PassRefPtr<RegisterID> dst = newTemporary();
+                emitNode(dst.get(), n);
+                return dst;
+            }
+            
+            return PassRefPtr<RegisterID>(emitNode(n));
         }
 
         RegisterID* emitLoad(RegisterID* dst, bool);

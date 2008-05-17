@@ -2300,10 +2300,11 @@ namespace KJS {
 
     class ReadModifyResolveNode : public ExpressionNode {
     public:
-        ReadModifyResolveNode(const Identifier& ident, Operator oper, ExpressionNode*  right) KJS_FAST_CALL
+        ReadModifyResolveNode(const Identifier& ident, Operator oper, ExpressionNode*  right, bool rightHasAssignments) KJS_FAST_CALL
             : m_ident(ident)
-            , m_operator(oper)
             , m_right(right)
+            , m_operator(oper)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2311,6 +2312,7 @@ namespace KJS {
             : ExpressionNode(PlacementNewAdopt)
             , m_ident(PlacementNewAdopt)
             , m_right(PlacementNewAdopt)
+            , m_rightHasAssignments(true)
         {
         }
 
@@ -2323,9 +2325,10 @@ namespace KJS {
 
     protected:
         Identifier m_ident;
-        Operator m_operator;
         RefPtr<ExpressionNode> m_right;
         size_t m_index; // Used by ReadModifyLocalVarNode.
+        Operator m_operator : 31;
+        bool m_rightHasAssignments : 1;
     };
 
     class ReadModifyLocalVarNode : public ReadModifyResolveNode {
@@ -2354,9 +2357,10 @@ namespace KJS {
 
     class AssignResolveNode : public ExpressionNode {
     public:
-        AssignResolveNode(const Identifier& ident, ExpressionNode* right) KJS_FAST_CALL
+        AssignResolveNode(const Identifier& ident, ExpressionNode* right, bool rightHasAssignments) KJS_FAST_CALL
             : m_ident(ident)
             , m_right(right)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2378,6 +2382,7 @@ namespace KJS {
         Identifier m_ident;
         RefPtr<ExpressionNode> m_right;
         size_t m_index; // Used by ReadModifyLocalVarNode.
+        bool m_rightHasAssignments;
     };
 
     class AssignLocalVarNode : public AssignResolveNode {
@@ -2404,11 +2409,13 @@ namespace KJS {
 
     class ReadModifyBracketNode : public ExpressionNode {
     public:
-        ReadModifyBracketNode(ExpressionNode* base, ExpressionNode* subscript, Operator oper, ExpressionNode* right) KJS_FAST_CALL
+        ReadModifyBracketNode(ExpressionNode* base, ExpressionNode* subscript, Operator oper, ExpressionNode* right, bool subscriptHasAssignments, bool rightHasAssignments) KJS_FAST_CALL
             : m_base(base)
             , m_subscript(subscript)
-            , m_operator(oper)
             , m_right(right)
+            , m_operator(oper)
+            , m_subscriptHasAssignments(subscriptHasAssignments)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2422,16 +2429,20 @@ namespace KJS {
     protected:
         RefPtr<ExpressionNode> m_base;
         RefPtr<ExpressionNode> m_subscript;
-        Operator m_operator;
         RefPtr<ExpressionNode> m_right;
+        Operator m_operator : 30;
+        bool m_subscriptHasAssignments : 1;
+        bool m_rightHasAssignments : 1;
     };
 
     class AssignBracketNode : public ExpressionNode {
     public:
-        AssignBracketNode(ExpressionNode* base, ExpressionNode* subscript, ExpressionNode* right) KJS_FAST_CALL
+        AssignBracketNode(ExpressionNode* base, ExpressionNode* subscript, ExpressionNode* right, bool subscriptHasAssignments, bool rightHasAssignments) KJS_FAST_CALL
             : m_base(base)
             , m_subscript(subscript)
             , m_right(right)
+            , m_subscriptHasAssignments(subscriptHasAssignments)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2446,14 +2457,17 @@ namespace KJS {
         RefPtr<ExpressionNode> m_base;
         RefPtr<ExpressionNode> m_subscript;
         RefPtr<ExpressionNode> m_right;
+        bool m_subscriptHasAssignments : 1;
+        bool m_rightHasAssignments : 1;
     };
 
     class AssignDotNode : public ExpressionNode {
     public:
-        AssignDotNode(ExpressionNode* base, const Identifier& ident, ExpressionNode* right) KJS_FAST_CALL
+        AssignDotNode(ExpressionNode* base, const Identifier& ident, ExpressionNode* right, bool rightHasAssignments) KJS_FAST_CALL
             : m_base(base)
             , m_ident(ident)
             , m_right(right)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2467,15 +2481,17 @@ namespace KJS {
         RefPtr<ExpressionNode> m_base;
         Identifier m_ident;
         RefPtr<ExpressionNode> m_right;
+        bool m_rightHasAssignments;
     };
 
     class ReadModifyDotNode : public ExpressionNode {
     public:
-        ReadModifyDotNode(ExpressionNode* base, const Identifier& ident, Operator oper, ExpressionNode* right) KJS_FAST_CALL
+        ReadModifyDotNode(ExpressionNode* base, const Identifier& ident, Operator oper, ExpressionNode* right, bool rightHasAssignments) KJS_FAST_CALL
             : m_base(base)
             , m_ident(ident)
-            , m_operator(oper)
             , m_right(right)
+            , m_operator(oper)
+            , m_rightHasAssignments(rightHasAssignments)
         {
         }
 
@@ -2489,8 +2505,9 @@ namespace KJS {
     protected:
         RefPtr<ExpressionNode> m_base;
         Identifier m_ident;
-        Operator m_operator;
         RefPtr<ExpressionNode> m_right;
+        Operator m_operator : 31;
+        bool m_rightHasAssignments : 1;
     };
 
     class AssignErrorNode : public ExpressionNode {
