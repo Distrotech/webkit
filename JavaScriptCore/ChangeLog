@@ -1,3 +1,43 @@
+2008-05-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Behold: debugging.
+        
+        SunSpider reports no change.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj: Added DebuggerCallFrame.h/.cpp,
+        and created a debugger folder.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::generate): If the debugger is attached, always
+        generate full scope chains for its sake.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::unwindCallFrame): Notify the debugger when unwinding
+        due to an exception, so it doesn't keep stale call frames around.
+
+        (KJS::Machine::execute): Set Callee to 0 in eval frames, so the
+        debugger can distinguish them from function call frames.
+
+        (KJS::Machine::debug): Simplified this function, since the debugger
+        doesn't actually need all the information we used to provide.
+
+        (KJS::Machine::privateExecute): Treat debugging hooks like other function
+        calls, so the code we hook into (the debugger UI) can be optimized.
+
+        * kjs/debugger.cpp: Nixed these default callback implementations and
+        made the callbacks pure virtual instead, so the compiler could tell me
+        if I made a mistake in one of the subclasses.
+
+        * kjs/debugger.h: Removed a bunch of irrelevent data from the debugger
+        callbacks. Changed from passing an ExecState* to passing a
+        DebuggerCallFrame*, since an ExecState* doesn't contain sufficient
+        information anymore.
+
+        * kjs/function.cpp:
+        (KJS::globalFuncEval): Easiest bug fix evar!
+
 2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.

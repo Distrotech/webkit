@@ -32,6 +32,7 @@
 #include "WebViewInternal.h"
 #include "WebScriptDebugServerPrivate.h"
 #include <JavaScriptCore/JSGlobalObject.h>
+#include <JavaScriptCore/DebuggerCallFrame.h>
 #include <WebCore/DOMWindow.h>
 #include <WebCore/Frame.h>
 #include <WebCore/JSDOMWindow.h>
@@ -41,9 +42,9 @@ using namespace KJS;
 using namespace WebCore;
 
 @interface WebScriptCallFrame (WebScriptDebugDelegateInternal)
-
-- (WebScriptCallFrame *)_initWithGlobalObject:(WebScriptObject *)globalObj caller:(WebScriptCallFrame *)caller state:(ExecState *)state;
-
+- (WebScriptCallFrame *)_initWithGlobalObject:(WebScriptObject *)globalObj caller:(WebScriptCallFrame *)caller debuggerCallFrame:(const DebuggerCallFrame&)debuggerCallFrame;
+- (void)_setDebuggerCallFrame:(const DebuggerCallFrame&)debuggerCallFrame;
+- (void)_clearDebuggerCallFrame;
 @end
 
 NSString *toNSString(const UString& s)
@@ -53,7 +54,7 @@ NSString *toNSString(const UString& s)
     return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(s.data()) length:s.size()];
 }
 
-NSString *toNSString(const KJS::SourceProvider& s)
+NSString *toNSString(const SourceProvider& s)
 {
     if (!s.length())
         return nil;
@@ -68,9 +69,9 @@ static NSURL *toNSURL(const UString& s)
     return KURL(s);
 }
 
-static WebFrame *toWebFrame(ExecState* state)
+static WebFrame *toWebFrame(JSGlobalObject* globalObject)
 {
-    JSDOMWindow* window = static_cast<JSDOMWindow*>(state->dynamicGlobalObject());
+    JSDOMWindow* window = static_cast<JSDOMWindow*>(globalObject);
     return kit(window->impl()->frame());
 }
 
@@ -78,12 +79,12 @@ WebScriptDebugger::WebScriptDebugger(JSGlobalObject* globalObject)
     : m_callingDelegate(false)
 {
     attach(globalObject);
-    List emptyList;
-    callEvent(globalObject->globalExec(), -1, -1, 0, emptyList);
+    DebuggerCallFrame globalCallFrame(globalObject->globalExec()->machine(), 0, globalObject->globalScopeChain().node(), 0, 0, 0);
+    callEvent(globalCallFrame, 0, -1);
 }
 
 // callbacks - relay to delegate
-void WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UString& url, const KJS::SourceProvider& source, int lineNumber, int errorLine, const UString& errorMsg)
+void WebScriptDebugger::sourceParsed(ExecState* exec, int sourceID, const UString& url, const SourceProvider& source, int lineNumber, int errorLine, const UString& errorMsg)
 {
     if (m_callingDelegate)
         return;
@@ -93,7 +94,7 @@ void WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UStri
     NSString *nsSource = toNSString(source);
     NSURL *nsURL = toNSURL(url);
 
-    WebFrame *webFrame = toWebFrame(state);
+    WebFrame *webFrame = toWebFrame(exec->dynamicGlobalObject());
     WebView *webView = [webFrame webView];
     if (errorLine == -1) {
         [[webView _scriptDebugDelegateForwarder] webView:webView didParseSource:nsSource baseLineNumber:lineNumber fromURL:nsURL sourceId:sourceID forWebFrame:webFrame];
@@ -114,16 +115,16 @@ void WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UStri
     m_callingDelegate = false;
 }
 
-void WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber, JSObject*, const List&)
+void WebScriptDebugger::callEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_callingDelegate)
         return;
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(state);
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
 
-    m_topCallFrame.adoptNS([[WebScriptCallFrame alloc] _initWithGlobalObject:core(webFrame)->windowScriptObject() caller:m_topCallFrame.get() state:state]);
+    m_topCallFrame.adoptNS([[WebScriptCallFrame alloc] _initWithGlobalObject:core(webFrame)->windowScriptObject() caller:m_topCallFrame.get() debuggerCallFrame:debuggerCallFrame]);
 
     WebView *webView = [webFrame webView];
     [[webView _scriptDebugDelegateForwarder] webView:webView didEnterCallFrame:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
@@ -133,15 +134,17 @@ void WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber
     m_callingDelegate = false;
 }
 
-void WebScriptDebugger::atStatement(ExecState* state, int sourceID, int lineNumber, int)
+void WebScriptDebugger::atStatement(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_callingDelegate)
         return;
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(state);
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
     WebView *webView = [webFrame webView];
+
+    [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
     [[webView _scriptDebugDelegateForwarder] webView:webView willExecuteStatement:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
     if ([WebScriptDebugServer listenerCount])
         [[WebScriptDebugServer sharedScriptDebugServer] webView:webView willExecuteStatement:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
@@ -149,33 +152,38 @@ void WebScriptDebugger::atStatement(ExecState* state, int sourceID, int lineNumb
     m_callingDelegate = false;
 }
 
-void WebScriptDebugger::returnEvent(ExecState* state, int sourceID, int lineNumber, JSObject*)
+void WebScriptDebugger::returnEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_callingDelegate)
         return;
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(state);
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
     WebView *webView = [webFrame webView];
+
+    [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
     [[webView _scriptDebugDelegateForwarder] webView:webView willLeaveCallFrame:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
     if ([WebScriptDebugServer listenerCount])
         [[WebScriptDebugServer sharedScriptDebugServer] webView:webView willLeaveCallFrame:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
 
+    [m_topCallFrame.get() _clearDebuggerCallFrame];
     m_topCallFrame = [m_topCallFrame.get() caller];
 
     m_callingDelegate = false;
 }
 
-void WebScriptDebugger::exception(ExecState* state, int sourceID, int lineNumber, JSValue*)
+void WebScriptDebugger::exception(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_callingDelegate)
         return;
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(state);
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
     WebView *webView = [webFrame webView];
+    [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
+
     [[webView _scriptDebugDelegateForwarder] webView:webView exceptionWasRaised:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
     if ([WebScriptDebugServer listenerCount])
         [[WebScriptDebugServer sharedScriptDebugServer] webView:webView exceptionWasRaised:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];

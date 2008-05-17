@@ -129,7 +129,9 @@ void CodeGenerator::generate()
 {
     m_codeBlock->numLocals = m_codeBlock->numVars + m_codeBlock->numParameters;
     m_codeBlock->thisRegister = m_codeType == FunctionCode ? -m_codeBlock->numLocals : Machine::ProgramCodeThisRegister;
-
+    if (m_shouldEmitDebugHooks)
+        m_codeBlock->needsFullScopeChain = true;
+    
     m_scopeNode->emitCode(*this);
 
 #ifndef NDEBUG

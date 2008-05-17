@@ -2002,27 +2002,27 @@ bool InspectorController::handleException(JSContextRef context, JSValueRef excep
 #pragma mark -
 #pragma mark JavaScriptDebugListener functions
 
-void InspectorController::didParseSource(ExecState*, const KJS::SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
+void InspectorController::didParseSource(ExecState*, const SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
 {
 }
 
-void InspectorController::failedToParseSource(ExecState*, const KJS::SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
+void InspectorController::failedToParseSource(ExecState*, const SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
 {
 }
 
-void InspectorController::didEnterCallFrame(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+void InspectorController::didEnterCallFrame(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
 {
 }
 
-void InspectorController::willExecuteStatement(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+void InspectorController::willExecuteStatement(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
 {
 }
 
-void InspectorController::willLeaveCallFrame(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+void InspectorController::willLeaveCallFrame(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
 {
 }
 
-void InspectorController::exceptionWasRaised(ExecState*, int /*sourceID*/, int /*lineNumber*/)
+void InspectorController::exceptionWasRaised(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
 {
 }
 
