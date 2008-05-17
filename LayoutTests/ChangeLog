@@ -1,3 +1,17 @@
+2008-05-17  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        Bug 19106: SquirrelFish: Activation is not marked correctly
+        <https://bugs.webkit.org/show_bug.cgi?id=19106>
+
+        Testcases for activation marking
+
+        * fast/js/duplicate-param-gc-crash.html: Added.
+        * fast/js/resources/duplicate-param-gc-crash.js: Added.
+        * fast/js/resources/var-shadows-arg-gc-crash.js: Added.
+        * fast/js/var-shadows-arg-gc-crash.html: Added.
+
 2008-05-16  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff

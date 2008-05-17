@@ -1,3 +1,17 @@
+2008-05-17  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 19106: SquirrelFish: Activation is not marked correctly
+        <https://bugs.webkit.org/show_bug.cgi?id=19106>
+
+        We can't rely on the symbol table for a count of the number of globals
+        we need to mark as that misses duplicate parameters and 'this'.  Now we
+        use the actual local register count from the codeBlock.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::mark):
+
 2008-05-16  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

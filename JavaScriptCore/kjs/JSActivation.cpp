@@ -140,8 +140,9 @@ void JSActivation::mark()
     // the register file gets marked independently.
     if(!d()->registerArray)
         return;
-
-    Register* end = d()->registerArray + symbolTable().size();
+    
+    int numRegisters = d()->functionBody->generatedCode().numLocals;
+    Register* end = d()->registerArray + numRegisters;
     for (Register* it = d()->registerArray; it != end; ++it) {
         JSValue* v = (*it).u.jsValue;
         if (!v->marked())
