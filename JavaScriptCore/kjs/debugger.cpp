@@ -52,4 +52,25 @@ void Debugger::detach(JSGlobalObject* globalObject)
     globalObject->setDebugger(0);
 }
 
+void Debugger::sourceParsed(ExecState*, int /*sourceId*/, const UString &/*sourceURL*/, 
+                           const SourceProvider&, int /*startingLineNumber*/, int /*errorLine*/, const UString & /*errorMsg*/)
+{
+}
+
+void Debugger::exception(ExecState*, int /*sourceId*/, int /*lineno*/, JSValue* /*exception*/)
+{
+}
+
+void Debugger::atStatement(ExecState*, int /*sourceId*/, int /*firstLine*/, int /*lastLine*/)
+{
+}
+
+void Debugger::callEvent(ExecState*, int /*sourceId*/, int /*lineno*/, JSObject* /*function*/, const List &/*args*/)
+{
+}
+
+void Debugger::returnEvent(ExecState*, int /*sourceId*/, int /*lineno*/, JSObject* /*function*/)
+{
+}
+
 } // namespace KJS

@@ -34,7 +34,6 @@
 #include "JSDOMWindow.h"
 #include "JavaScriptDebugListener.h"
 #include "Page.h"
-#include <kjs/DebuggerCallFrame.h>
 
 using namespace KJS;
 
@@ -133,11 +132,11 @@ static void dispatchFailedToParseSource(const ListenerSet& listeners, ExecState*
         copy[i]->failedToParseSource(exec, source, startingLineNumber, sourceURL, errorLine, errorMessage);
 }
 
-static Page* toPage(JSGlobalObject* globalObject)
+static Page* toPage(ExecState* exec)
 {
-    ASSERT_ARG(globalObject, globalObject);
+    ASSERT_ARG(exec, exec);
 
-    JSDOMWindow* window = asJSDOMWindow(globalObject);
+    JSDOMWindow* window = asJSDOMWindow(exec->dynamicGlobalObject());
     ASSERT(window);
 
     return window->impl()->frame()->page();
@@ -148,7 +147,7 @@ void JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const US
     if (m_callingListeners)
         return;
 
-    Page* page = toPage(exec->dynamicGlobalObject());
+    Page* page = toPage(exec);
     if (!page)
         return;
 
@@ -176,20 +175,20 @@ void JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const US
     m_callingListeners = false;
 }
 
-static void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScriptDebugServer::JavaScriptExecutionCallback callback, const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+static void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScriptDebugServer::JavaScriptExecutionCallback callback, ExecState* exec, int sourceID, int lineNumber)
 {
     Vector<JavaScriptDebugListener*> copy;
     copyToVector(listeners, copy);
     for (size_t i = 0; i < copy.size(); ++i)
-        (copy[i]->*callback)(debuggerCallFrame, sourceID, lineNumber);
+        (copy[i]->*callback)(exec, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::dispatchFunctionToListeners(JavaScriptExecutionCallback callback, const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+void JavaScriptDebugServer::dispatchFunctionToListeners(JavaScriptExecutionCallback callback, ExecState* exec, int sourceID, int lineNumber)
 {
     if (m_callingListeners)
         return;
 
-    Page* page = toPage(debuggerCallFrame.scopeChain()->globalObject());
+    Page* page = toPage(exec);
     if (!page)
         return;
 
@@ -197,33 +196,33 @@ void JavaScriptDebugServer::dispatchFunctionToListeners(JavaScriptExecutionCallb
 
     ASSERT(hasListeners());
 
-    WebCore::dispatchFunctionToListeners(m_listeners, callback, debuggerCallFrame, sourceID, lineNumber);
+    WebCore::dispatchFunctionToListeners(m_listeners, callback, exec, sourceID, lineNumber);
     if (ListenerSet* pageListeners = m_pageListenersMap.get(page)) {
         ASSERT(!pageListeners->isEmpty());
-        WebCore::dispatchFunctionToListeners(*pageListeners, callback, debuggerCallFrame, sourceID, lineNumber);
+        WebCore::dispatchFunctionToListeners(*pageListeners, callback, exec, sourceID, lineNumber);
     }
 
     m_callingListeners = false;
 }
 
-void JavaScriptDebugServer::callEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+void JavaScriptDebugServer::callEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*, const List&)
 {
-    dispatchFunctionToListeners(&JavaScriptDebugListener::didEnterCallFrame, debuggerCallFrame, sourceID, lineNumber);
+    dispatchFunctionToListeners(&JavaScriptDebugListener::didEnterCallFrame, exec, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::atStatement(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+void JavaScriptDebugServer::atStatement(ExecState* exec, int sourceID, int firstLine, int)
 {
-    dispatchFunctionToListeners(&JavaScriptDebugListener::willExecuteStatement, debuggerCallFrame, sourceID, lineNumber);
+    dispatchFunctionToListeners(&JavaScriptDebugListener::willExecuteStatement, exec, sourceID, firstLine);
 }
 
-void JavaScriptDebugServer::returnEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+void JavaScriptDebugServer::returnEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*)
 {
-    dispatchFunctionToListeners(&JavaScriptDebugListener::willLeaveCallFrame, debuggerCallFrame, sourceID, lineNumber);
+    dispatchFunctionToListeners(&JavaScriptDebugListener::willLeaveCallFrame, exec, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::exception(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
+void JavaScriptDebugServer::exception(ExecState* exec, int sourceID, int lineNumber, JSValue*)
 {
-    dispatchFunctionToListeners(&JavaScriptDebugListener::exceptionWasRaised, debuggerCallFrame, sourceID, lineNumber);
+    dispatchFunctionToListeners(&JavaScriptDebugListener::exceptionWasRaised, exec, sourceID, lineNumber);
 }
 
 } // namespace WebCore

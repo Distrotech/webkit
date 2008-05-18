@@ -587,6 +587,8 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
     if (!evalNode)
         return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
 
+    ASSERT(!exec->dynamicGlobalObject()->debugger());
+
     JSValue* exception = 0;
     JSValue* value = machine().execute(evalNode.get(), exec, thisObj, &exec->dynamicGlobalObject()->registerFileStack(), globalObject->globalScopeChain().node(), &exception);
 

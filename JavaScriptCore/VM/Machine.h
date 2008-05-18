@@ -46,12 +46,6 @@ namespace KJS {
     class RegisterFileStack;
     class ScopeChainNode;
     
-    enum DebugHookID {
-        WillExecuteStatement,
-        DidEnterCallFrame,
-        WillLeaveCallFrame
-    };
-
     class Machine {
     public:
         enum { CallerCodeBlock = 0, 
@@ -104,9 +98,9 @@ namespace KJS {
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
 
         ALWAYS_INLINE void setScopeChain(ExecState* exec, ScopeChainNode*&, ScopeChainNode*);
-        NEVER_INLINE void debug(ExecState*, const Instruction*, const CodeBlock*, ScopeChainNode*, Register**, Register*);
+        NEVER_INLINE void debug(ExecState*, const Instruction*, const CodeBlock*, const ScopeChainNode*, Register**, Register*);
 
-        NEVER_INLINE bool unwindCallFrame(ExecState*, JSValue*, Register**, const Instruction*&, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
+        NEVER_INLINE bool unwindCallFrame(ExecState*, Register**, const Instruction*&, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
         NEVER_INLINE Instruction* throwException(ExecState*, JSValue*, Register**, const Instruction*, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
         
         bool getCallFrame(ExecState*, FunctionImp*, Register**& registerBase, int& callFrameOffset) const;

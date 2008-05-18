@@ -28,7 +28,6 @@
 
 namespace KJS {
 
-  class DebuggerCallFrame;
   class ExecState;
   class JSGlobalObject;
   class JSObject;
@@ -37,6 +36,12 @@ namespace KJS {
   class SourceProvider;
   class UString;
   
+  enum DebugHookID {
+    WillExecuteStatement,
+    DidEnterCallFrame,
+    WillLeaveCallFrame
+  };
+
   /**
    * @internal
    *
@@ -100,8 +105,8 @@ namespace KJS {
      * @param errorMsg The error description, or null if the source code
        was valid and parsed successfully
      */
-    virtual void sourceParsed(ExecState*, int sourceId, const UString& sourceURL,
-                              const SourceProvider& source, int startingLineNumber, int errorLine, const UString& errorMsg) = 0;
+    virtual void sourceParsed(ExecState *exec, int sourceId, const UString &sourceURL,
+                              const SourceProvider& source, int startingLineNumber, int errorLine, const UString &errorMsg);
 
     /**
      * Called when an exception is thrown during script execution.
@@ -114,7 +119,7 @@ namespace KJS {
      * @param lineno The line at which the error occurred
      * @param exceptionObj The exception object
      */
-    virtual void exception(const DebuggerCallFrame&, int sourceId, int lineno) = 0;
+    virtual void exception(ExecState* exec, int sourceId, int lineno, JSValue* exception);
 
     /**
      * Called when a line of the script is reached (before it is executed)
@@ -129,7 +134,7 @@ namespace KJS {
      * @param lastLine The ending line of the statement  that is about to be
      * executed (usually the same as firstLine)
      */
-    virtual void atStatement(const DebuggerCallFrame&, int sourceId, int lineno) = 0;
+    virtual void atStatement(ExecState *exec, int sourceId, int firstLine, int lastLine);
     /**
      * Called on each function call. Use together with @ref #returnEvent
      * if you want to keep track of the call stack.
@@ -144,8 +149,11 @@ namespace KJS {
      * @param exec The current execution state
      * @param sourceId The ID of the source code being executed
      * @param lineno The line that is about to be executed
+     * @param function The function being called
+     * @param args The arguments that were passed to the function
+     * line is being executed
      */
-    virtual void callEvent(const DebuggerCallFrame&, int sourceId, int lineno) = 0;
+    virtual void callEvent(ExecState *exec, int sourceId, int lineno, JSObject *function, const List &args);
 
     /**
      * Called on each function exit. The function being returned from is that
@@ -161,8 +169,9 @@ namespace KJS {
      * @param exec The current execution state
      * @param sourceId The ID of the source code being executed
      * @param lineno The line that is about to be executed
+     * @param function The function being called
      */
-    virtual void returnEvent(const DebuggerCallFrame&, int sourceId, int lineno) = 0;
+    virtual void returnEvent(ExecState *exec, int sourceId, int lineno, JSObject *function);
 
   private:
     HashSet<JSGlobalObject*> m_globalObjects;

@@ -31,7 +31,6 @@
 #include "Machine.h"
 
 #include "CodeBlock.h"
-#include "DebuggerCallFrame.h"
 #include "ExceptionHelpers.h"
 #include "ExecState.h"
 #include "JSActivation.h"
@@ -519,16 +518,9 @@ bool Machine::isOpcode(Opcode opcode)
 #endif
 }
 
-NEVER_INLINE bool Machine::unwindCallFrame(ExecState* exec, JSValue* exceptionValue, Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
+NEVER_INLINE bool Machine::unwindCallFrame(ExecState* exec, Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
     CodeBlock* oldCodeBlock = codeBlock;
-
-    if (Debugger* debugger = exec->dynamicGlobalObject()->debugger()) {
-        if (!isGlobalCallFrame(registerBase, r)) {
-            DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
-            debugger->returnEvent(debuggerCallFrame, codeBlock->ownerNode->sourceId(), codeBlock->ownerNode->lastLine());
-        }
-    }
 
     if (oldCodeBlock->needsFullScopeChain)
         scopeChain->deref();
@@ -569,10 +561,8 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
         }
     }
 
-    if (Debugger* debugger = exec->dynamicGlobalObject()->debugger()) {
-        DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
-        debugger->exception(debuggerCallFrame, codeBlock->ownerNode->sourceId(), codeBlock->lineNumberForVPC(vPC));
-    }
+    if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
+        debugger->exception(exec, codeBlock->ownerNode->sourceId(), codeBlock->lineNumberForVPC(vPC), exceptionValue);
 
     // Calculate an exception handler vPC, unwinding call frames as necessary.
 
@@ -580,7 +570,7 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     Instruction* handlerVPC;
 
     while (!codeBlock->getHandlerForVPC(vPC, handlerVPC, scopeDepth))
-        if (!unwindCallFrame(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r))
+        if (!unwindCallFrame(exec, registerBase, vPC, codeBlock, k, scopeChain, r))
             return 0;
 
     // Now unwind the scope chain within the exception handler's call frame.
@@ -713,13 +703,9 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
         *exception = createStackOverflowError(exec);
         return 0;
     }
-
-    Register* callFrame = *registerFile->basePointer() + registerOffset;
+    Register* r = (*registerFile->basePointer()) + registerOffset + codeBlock->numVars + CallFrameHeaderSize;
     
-    // put call frame in place, using a 0 codeBlock to indicate a built-in caller
-    initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, 0, 0, 0, 0);
-
-    Register* r = callFrame + CallFrameHeaderSize + codeBlock->numVars;
+    ((*registerFile->basePointer()) + registerOffset)[CallerCodeBlock].u.codeBlock = 0;
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
 
     if (codeBlock->needsFullScopeChain)
@@ -752,7 +738,7 @@ ALWAYS_INLINE void Machine::setScopeChain(ExecState* exec, ScopeChainNode*& scop
     exec->m_scopeChain = newScopeChain;
 }
 
-NEVER_INLINE void Machine::debug(ExecState* exec, const Instruction* vPC, const CodeBlock* codeBlock, ScopeChainNode* scopeChain, Register** registerBase, Register* r)
+NEVER_INLINE void Machine::debug(ExecState* exec, const Instruction* vPC, const CodeBlock* codeBlock, const ScopeChainNode*, Register** registerBase, Register* r)
 {
     int debugHookID = (++vPC)->u.operand;
     int firstLine = (++vPC)->u.operand;
@@ -762,21 +748,22 @@ NEVER_INLINE void Machine::debug(ExecState* exec, const Instruction* vPC, const 
     if (!debugger)
         return;
 
-    DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, 0, registerBase, r - *registerBase);
-
-    switch((DebugHookID)debugHookID) {
-    case DidEnterCallFrame: {
-        debugger->callEvent(debuggerCallFrame, codeBlock->ownerNode->sourceId(), firstLine);
-        return;
-    }
-    case WillLeaveCallFrame: {
-        debugger->returnEvent(debuggerCallFrame, codeBlock->ownerNode->sourceId(), lastLine);
-        return;
-    }
-    case WillExecuteStatement: {
-        debugger->atStatement(debuggerCallFrame, codeBlock->ownerNode->sourceId(), firstLine);
-        return;
-    }
+    if (debugHookID == DidEnterCallFrame) {
+        Register* callFrame = r - codeBlock->numLocals - CallFrameHeaderSize;
+        FunctionImp* function;
+        Register* argv;
+        int argc;
+        getFunctionAndArguments(registerBase, callFrame, function, argv, argc);
+        List args(&argv->u.jsValue, argc);
+        debugger->callEvent(exec, codeBlock->ownerNode->sourceId(), firstLine, function, args);
+    } else if (debugHookID == WillLeaveCallFrame) {
+        Register* callFrame = r - codeBlock->numLocals - CallFrameHeaderSize;
+        FunctionImp* function = static_cast<FunctionImp*>(callFrame[Callee].u.jsValue);
+        ASSERT(function->inherits(&FunctionImp::info));
+        debugger->returnEvent(exec, codeBlock->ownerNode->sourceId(), lastLine, function);
+    } else {
+        ASSERT(debugHookID == WillExecuteStatement);
+        debugger->atStatement(exec, codeBlock->ownerNode->sourceId(), firstLine, lastLine);
     }
 }
 
@@ -2138,16 +2125,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         /* debug debugHookID(n) firstLine(n) lastLine(n)
          
          Notifies the debugger of the current state of execution:
-         didEnterCallFrame; willLeaveCallFrame; or willExecuteStatement.
+         DidEnterCallFrame; WillLeaveCallFrame; or WillExecuteStatement.
          
          This opcode is only generated while the debugger is attached.
         */
 
-        int registerOffset = r - (*registerBase);
-        registerFile->setSafeForReentry(true);
         debug(exec, vPC, codeBlock, scopeChain, registerBase, r);
-        registerFile->setSafeForReentry(false);
-        r = (*registerBase) + registerOffset;
 
         vPC += 4;
         NEXT_OPCODE;

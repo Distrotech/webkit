@@ -35,7 +35,6 @@
 #include "HashTraits.h"
 #include "Instruction.h"
 #include "LabelID.h"
-#include "Machine.h"
 #include "RegisterID.h"
 #include "SymbolTable.h"
 #include "SegmentedVector.h"
