@@ -65,6 +65,7 @@ namespace KJS  {
     // Passed as the first argument to most functions.
     class ExecState : Noncopyable {
         friend class Machine;
+        friend class DebuggerCallFrame;
 
     public:
         ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain);
