@@ -2,6 +2,18 @@
 
         Reviewed by Oliver.
 
+        Add more tests for:
+
+        Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr
+        <https://bugs.webkit.org/show_bug.cgi?id=18991>
+
+        * fast/js/codegen-temporaries-expected.txt:
+        * fast/js/resources/codegen-temporaries.js:
+
+2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
         Add tests for:
 
         Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr

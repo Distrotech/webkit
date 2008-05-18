@@ -4157,6 +4157,15 @@ RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID
             return emitReadModifyAssignment(generator, generator.finalDestination(dst), local, src2, m_operator);
         }
         
+        if (generator.leftHandSideNeedsCopy(m_rightHasAssignments) && !m_right.get()->isNumber()) {
+            RefPtr<RegisterID> result = generator.newTemporary();
+            generator.emitMove(result.get(), local);
+            RegisterID* src2 = generator.emitNode(m_right.get());
+            emitReadModifyAssignment(generator, result.get(), result.get(), src2, m_operator);
+            generator.emitMove(local, result.get());
+            return generator.moveToDestinationIfNeeded(dst, result.get());
+        }
+        
         RegisterID* src2 = generator.emitNode(m_right.get());
         RegisterID* result = emitReadModifyAssignment(generator, local, local, src2, m_operator);
         return generator.moveToDestinationIfNeeded(dst, result);

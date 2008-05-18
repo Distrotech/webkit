@@ -2,6 +2,19 @@
 
         Reviewed by Oliver.
 
+        Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr
+        <https://bugs.webkit.org/show_bug.cgi?id=18991>
+
+        Fix the last remaining blocking cases of this bug.
+
+        * kjs/grammar.y:
+        * kjs/nodes.cpp:
+        (KJS::ReadModifyResolveNode::emitCode):
+
+2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
         Partial fix for:
 
         Bug 18991: SquirrelFish: Major codegen issue in a.b=expr, a[b]=expr

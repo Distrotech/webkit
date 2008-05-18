@@ -165,4 +165,127 @@ function assign_test16()
 
 shouldBe("assign_test16()", "2");
 
+var a17 = 1;
+a17 += (a17 += 1);
+
+shouldBe("a17", "3");
+
+function assign_test18()
+{
+    var a = 1;
+    a += (a += 1);
+    return a;
+}
+
+shouldBe("assign_test18()", "3");
+
+var a19 = { b: 1 };
+a19.b += (a19.b += 1);
+
+shouldBe("a19.b", "3");
+
+function assign_test20()
+{
+    var a = { b: 1 };
+    a.b += (a.b += 1);
+    return a.b;
+}
+
+shouldBe("assign_test20()", "3");
+
+var a21 = { b: 1 };
+a21["b"] += (a21["b"] += 1);
+
+shouldBe("a21['b']", "3");
+
+function assign_test22()
+{
+    var a = { b: 1 };
+    a["b"] += (a["b"] += 1);
+    return a["b"];
+}
+
+shouldBe("assign_test22()", "3");
+
+function assign_test23()
+{
+    var o = { b: 1 };
+    var a = o;
+    a.b += a = 2;
+    return o.b;
+}
+
+shouldBe("assign_test23()", "3");
+
+function assign_test24()
+{
+    var o = { b: 1 };
+    var a = o;
+    a["b"] += a = 2;
+    return o["b"];
+}
+
+shouldBe("assign_test24()", "3");
+
+function assign_test25()
+{
+    var o = { b: 1 };
+    var a = o;
+    a[a = "b"] += a = 2;
+    return o["b"];
+}
+
+shouldBe("assign_test25()", "3");
+
+function assign_test26()
+{
+    var o = { b: 1 };
+    var a = o;
+    var b = "b";
+    a[b] += a = 2;
+    return o["b"];
+}
+
+shouldBe("assign_test26()", "3");
+
+function assign_test27()
+{
+    var o = { b: 1 };
+    var a = o;
+    a.b += (a = 100, 2);
+    return o.b;
+}
+
+shouldBe("assign_test27()", "3");
+
+function assign_test28()
+{
+    var o = { b: 1 };
+    var a = o;
+    a["b"] += (a = 100, 2);
+    return o["b"];
+}
+
+shouldBe("assign_test28()", "3");
+
+function assign_test29()
+{
+    var o = { b: 1 };
+    var a = o;
+    var b = "b";
+    a[b] += (a = 100, 2);
+    return o["b"];
+}
+
+shouldBe("assign_test29()", "3");
+
+function assign_test30()
+{
+    var a = "foo";
+    a += (a++);
+    return a;
+}
+
+shouldBe("assign_test30()", "'fooNaN'");
+
 successfullyParsed = true;
