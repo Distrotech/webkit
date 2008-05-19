@@ -1386,8 +1386,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         uint32_t i;
         if (propName->getUInt32(i))
             r[dst].u.jsValue = jsBoolean(baseObj->hasProperty(exec, i));
-        else
-            r[dst].u.jsValue = jsBoolean(baseObj->hasProperty(exec, Identifier(propName->toString(exec))));
+        else {
+            Identifier property(propName->toString(exec));
+            VM_CHECK_EXCEPTION();
+            r[dst].u.jsValue = jsBoolean(baseObj->hasProperty(exec, property));
+        }
 
         ++vPC;
         NEXT_OPCODE;
@@ -1547,8 +1550,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (subscript->getUInt32(i))
             result = baseObj->get(exec, i);
         else {
-            VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            result = baseObj->get(exec, Identifier(subscript->toString(exec)));
+            Identifier property;
+            if (subscript->isObject()) {
+                VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
+                property = Identifier(subscript->toString(exec));
+            } else
+                property = Identifier(subscript->toString(exec));
+
+            VM_CHECK_EXCEPTION(); // This check is needed to prevent us from incorrectly calling a getter after an exception is thrown
+            result = baseObj->get(exec, property);
         }
         
         VM_CHECK_EXCEPTION();
@@ -1579,8 +1589,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (subscript->getUInt32(i))
             baseObj->put(exec, i, r[value].u.jsValue);
         else {
-            VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            baseObj->put(exec, Identifier(subscript->toString(exec)), r[value].u.jsValue);
+            Identifier property;
+            if (subscript->isObject()) {
+                VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
+                property = Identifier(subscript->toString(exec));
+            } else
+                property = Identifier(subscript->toString(exec));
+
+            VM_CHECK_EXCEPTION(); // This check is needed to prevent us from incorrectly calling a setter after an exception is thrown
+            baseObj->put(exec, property, r[value].u.jsValue);
         }
         
         VM_CHECK_EXCEPTION();
@@ -1608,7 +1625,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             result = jsBoolean(baseObj->deleteProperty(exec, i));
         else {
             VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            result = jsBoolean(baseObj->deleteProperty(exec, Identifier(subscript->toString(exec))));
+            Identifier property(subscript->toString(exec));
+            VM_CHECK_EXCEPTION();
+            result = jsBoolean(baseObj->deleteProperty(exec, property));
         }
         
         VM_CHECK_EXCEPTION();

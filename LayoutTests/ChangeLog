@@ -1,3 +1,16 @@
+2008-05-18  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18752: SQUIRRELFISH: exceptions are not always handled by the vm
+        <https://bugs.webkit.org/show_bug.cgi?id=18752>
+
+        Test cases for subscript access that throw exceptions. 
+
+        * fast/js/resources/tostring-exception-in-property-access.js: Added.
+        * fast/js/tostring-exception-in-property-access-expected.txt: Added.
+        * fast/js/tostring-exception-in-property-access.html: Added.
+
 2008-05-17  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.
