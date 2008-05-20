@@ -1,3 +1,16 @@
+2008-05-13  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Sam.
+        
+        Update results for remainder of split-window merge. The new results are correct.
+
+        * http/tests/security/listener/xss-JSTargetNode-onclick-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-JSTargetNode-onclick-shortcut-expected.txt:
+        * http/tests/security/listener/xss-XMLHttpRequest-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-XMLHttpRequest-shortcut-expected.txt:
+        * http/tests/security/listener/xss-window-onclick-addEventListener-expected.txt:
+        * http/tests/security/listener/xss-window-onclick-shortcut-expected.txt:
+
 2008-05-12  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
