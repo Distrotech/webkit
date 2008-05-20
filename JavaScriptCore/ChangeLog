@@ -1,3 +1,24 @@
+2008-05-08  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed failure in fast/canvas/canvas-pattern-behaviour.html.
+        
+        SunSpider reports a small speedup. Not sure what that's about.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump): Fixed op_call_eval to dump as "op_call_eval".
+        This helped me while debugging.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::unwindCallFrame): When looking for an activation to tear
+        off, don't use the scope chain. Inside eval, the scope chain doesn't
+        belong to us; it belongs to our calling function.
+        
+        Also, don't use the needsFullScopeChain flag to decide whether to tear
+        off the activation. "function.arguments" can create an activation
+        for a function whose needsFullScopeChain flag is set to false.
+
 2008-05-08  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
