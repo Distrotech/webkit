@@ -810,8 +810,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_add) {
         /* add dst(r) src1(r) src2(r)
 
-           Adds registers src1 and src2, and puts the result in
-           register dst. (JS add may be string concatenation or
+           Adds register src1 and register src2, and puts the result
+           in register dst. (JS add may be string concatenation or
            numeric add, depending on the types of the operands.)
         */
         int dst = (++vPC)->u.operand;
@@ -825,7 +825,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_mul) {
         /* mul dst(r) src1(r) src2(r)
 
-           Multiplies the registers src1 and src2 (converted to
+           Multiplies register src1 and register src2 (converted to
            numbers), and puts the product in register dst.
         */
         int dst = (++vPC)->u.operand;
@@ -873,9 +873,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_sub) {
         /* sub dst(r) src1(r) src2(r)
 
-           Subtracts the register src2 (converted to number) from
-           register src1 (converted to number), and puts the
-           difference in register dst.
+           Subtracts register src2 (converted to number) from register
+           src1 (converted to number), and puts the difference in
+           register dst.
         */
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
@@ -938,8 +938,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         /* bitand dst(r) src1(r) src2(r)
 
            Computes bitwise AND of register src1 (converted to int32)
-           and the register src2 (converted to int32), and puts the
-           result in register dst.
+           and register src2 (converted to int32), and puts the result
+           in register dst.
         */
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
@@ -1507,6 +1507,16 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 #endif
 
         vPC = handlerVPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_create_error) {
+        int r0 = (++vPC)->u.operand;
+        int errorType = (++vPC)->u.operand;
+        int k0 = (++vPC)->u.operand;
+        
+        r[r0].u.jsValue = Error::create(exec, (ErrorType) errorType, k[k0]->toString(exec), -1, -1, 0); // lineNo(), currentSourceId(exec), currentSourceURL(exec)
+        
+        ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {

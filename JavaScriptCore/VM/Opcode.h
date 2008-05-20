@@ -109,6 +109,7 @@ namespace KJS {
         macro(op_catch) \
         macro(op_throw) \
         macro(op_builtin_throw) \
+        macro(op_create_error) \
         \
         macro(op_jsr) \
         macro(op_sret) \
