@@ -241,14 +241,6 @@ JSValue* functionQuit(ExecState*, JSObject*, const List&)
 
 int kjsmain(int argc, char** argv);
 
-#if PLATFORM(UNIX)
-void handleCrash(int sig)
-{
-    fprintf(stderr, "CRASH: signal %d\n", sig);
-    exit(sig);
-}
-#endif
-
 int main(int argc, char** argv)
 {
 #if defined(_DEBUG) && PLATFORM(WIN_OS)
@@ -258,13 +250,6 @@ int main(int argc, char** argv)
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-#endif
-
-#if PLATFORM(UNIX)
-    signal(SIGILL, handleCrash);
-    signal(SIGFPE, handleCrash);
-    signal(SIGBUS, handleCrash);
-    signal(SIGSEGV, handleCrash);
 #endif
 
     int res = 0;
@@ -347,6 +332,15 @@ static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Ve
         }
         if (strcmp(arg, "-d") == 0) {
             dump = true;
+            continue;
+        }
+        if (strcmp(arg, "-s") == 0) {
+#if PLATFORM(UNIX)
+            signal(SIGILL, _exit);
+            signal(SIGFPE, _exit);
+            signal(SIGBUS, _exit);
+            signal(SIGSEGV, _exit);
+#endif
             continue;
         }
         if (strcmp(arg, "--") == 0) {
