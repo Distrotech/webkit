@@ -88,6 +88,7 @@ namespace KJS {
         JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception, JSObject* variableObject);
         
     private:
+        enum { MaxReentryDepth = 128 };
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
 
         NEVER_INLINE bool unwindCallFrame(Register**, const Instruction*&, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register*&);
@@ -100,6 +101,7 @@ namespace KJS {
         
         bool isGlobalCallFrame(Register** registerBase, const Register* r) { return (*registerBase) == r; }
 
+        int m_reentryDepth;
 #if HAVE(COMPUTED_GOTO)        
         Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
         HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
