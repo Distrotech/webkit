@@ -34,6 +34,7 @@
 #include <wtf/RetainPtr.h>
 
 namespace KJS {
+    class DebuggerCallFrame;
     class ExecState;
     class JSGlobalObject;
     class JSObject;
@@ -51,10 +52,10 @@ public:
     WebScriptDebugger(KJS::JSGlobalObject*);
 
     virtual void sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::SourceProvider& source, int lineNumber, int errorLine, const KJS::UString& errorMsg);
-    virtual void callEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function, const KJS::List& args);
-    virtual void atStatement(KJS::ExecState*, int sourceID, int firstLine, int lastLine);
-    virtual void returnEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function);
-    virtual void exception(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSValue* exception);
+    virtual void callEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+    virtual void atStatement(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+    virtual void returnEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+    virtual void exception(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
 
 private:
     bool m_callingDelegate;

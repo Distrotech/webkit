@@ -437,8 +437,6 @@ BreakpointCheckStatement::BreakpointCheckStatement(PassRefPtr<StatementNode> sta
 
 JSValue* BreakpointCheckStatement::execute(OldInterpreterExecState* exec)
 {
-    if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
-        debugger->atStatement(exec, currentSourceId(exec), m_statement->firstLine(), m_statement->lastLine());
     return m_statement->execute(exec);
 }
 
@@ -6028,16 +6026,7 @@ FunctionBodyNodeWithDebuggerHooks::FunctionBodyNodeWithDebuggerHooks(SourceEleme
 
 JSValue* FunctionBodyNodeWithDebuggerHooks::execute(OldInterpreterExecState* exec)
 {
-    if (Debugger* dbg = exec->dynamicGlobalObject()->debugger())
-        dbg->callEvent(exec, sourceId(), lineNo(), exec->function(), *exec->arguments());
-
     JSValue* result = FunctionBodyNode::execute(exec);
-
-    if (Debugger* dbg = exec->dynamicGlobalObject()->debugger()) {
-        if (exec->completionType() == Throw)
-            exec->setException(result);
-        dbg->returnEvent(exec, sourceId(), lastLine(), exec->function());
-    }
 
     return result;
 }

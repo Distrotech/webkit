@@ -25,31 +25,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifndef JavaScriptDebugListener_h
-#define JavaScriptDebugListener_h
+ 
+#ifndef DebuggerCallFrame_h
+#define DebuggerCallFrame_h
 
 namespace KJS {
-    class DebuggerCallFrame;
-    class ExecState;
-    class SourceProvider;
+    
+    class CodeBlock;
+    class JSObject;
+    class JSValue;
+    class Machine;
     class UString;
-}
-
-namespace WebCore {
-
-    class Frame;
-    class Page;
-
-    class JavaScriptDebugListener {
+    class Register;
+    class ScopeChainNode;
+    
+    class DebuggerCallFrame {
     public:
-        virtual ~JavaScriptDebugListener() { }
+        DebuggerCallFrame(Machine* machine, const CodeBlock* codeBlock, ScopeChainNode* scopeChain, JSValue* exception, Register** registerBase, int registerOffset)
+            : m_machine(machine)
+            , m_codeBlock(codeBlock)
+            , m_scopeChain(scopeChain)
+            , m_exception(exception)
+            , m_registerBase(registerBase)
+            , m_registerOffset(registerOffset)
+        {
+        }
 
-        virtual void didParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID) = 0;
-        virtual void failedToParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage) = 0;
-        virtual void didPause() = 0;
+        const ScopeChainNode* scopeChain() const { return m_scopeChain; }
+        const UString* functionName();
+        JSObject* thisObject() const;
+        JSValue* evaluateScript(const UString&);
+        JSValue* exception() const { return m_exception; }
+        
+    private:
+        Machine* m_machine;
+        const CodeBlock* m_codeBlock;
+        ScopeChainNode* m_scopeChain;
+        JSValue* m_exception;
+        Register** m_registerBase;
+        int m_registerOffset;
     };
 
-} // namespace WebCore
+} // namespace KJS
 
-#endif // JavaScriptDebugListener_h
+#endif // DebuggerCallFrame_h

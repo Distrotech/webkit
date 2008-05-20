@@ -37,12 +37,13 @@
 #include "JSDOMWindow.h"
 #include "JavaScriptCallFrame.h"
 #include "JavaScriptDebugListener.h"
-#include "kjs_proxy.h"
 #include "Page.h"
 #include "PageGroup.h"
 #include "PluginView.h"
 #include "ScrollView.h"
 #include "Widget.h"
+#include "kjs_proxy.h"
+#include <kjs/DebuggerCallFrame.h>
 #include <wtf/MainThread.h>
 
 using namespace KJS;
@@ -259,11 +260,11 @@ static void dispatchFailedToParseSource(const ListenerSet& listeners, ExecState*
         copy[i]->failedToParseSource(exec, source, startingLineNumber, sourceURL, errorLine, errorMessage);
 }
 
-static Page* toPage(ExecState* exec)
+static Page* toPage(JSGlobalObject* globalObject)
 {
-    ASSERT_ARG(exec, exec);
+    ASSERT_ARG(globalObject, globalObject);
 
-    JSDOMWindow* window = asJSDOMWindow(exec->dynamicGlobalObject());
+    JSDOMWindow* window = asJSDOMWindow(globalObject);
     ASSERT(window);
 
     return window->impl()->frame()->page();
@@ -278,7 +279,7 @@ void JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const US
     if (m_callingListeners)
         return;
 
-    Page* page = toPage(exec);
+    Page* page = toPage(exec->dynamicGlobalObject());
     if (!page)
         return;
 
@@ -321,12 +322,12 @@ static void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScript
         (copy[i]->*callback)();
 }
 
-void JavaScriptDebugServer::dispatchFunctionToListeners(JavaScriptExecutionCallback callback, ExecState* exec)
+void JavaScriptDebugServer::dispatchFunctionToListeners(JavaScriptExecutionCallback callback, const DebuggerCallFrame& debuggerCallFrame)
 {
     if (m_callingListeners)
         return;
 
-    Page* page = toPage(exec);
+    Page* page = toPage(debuggerCallFrame.scopeChain()->globalObject());
     if (!page)
         return;
 
@@ -402,8 +403,9 @@ void JavaScriptDebugServer::setJavaScriptPaused(FrameView* view, bool paused)
 #endif
 }
 
-void JavaScriptDebugServer::pauseIfNeeded(ExecState* exec, int sourceID, int lineNumber)
+void JavaScriptDebugServer::pauseIfNeeded(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
+#if 0
     if (m_paused)
         return;
 
@@ -423,7 +425,7 @@ void JavaScriptDebugServer::pauseIfNeeded(ExecState* exec, int sourceID, int lin
     m_pauseOnNextStatement = false;
     m_paused = true;
 
-    dispatchFunctionToListeners(&JavaScriptDebugListener::didPause, exec);
+    dispatchFunctionToListeners(&JavaScriptDebugListener::didPause, debuggerCallFrame);
 
     setJavaScriptPaused(page->group(), true);
 
@@ -434,9 +436,10 @@ void JavaScriptDebugServer::pauseIfNeeded(ExecState* exec, int sourceID, int lin
     setJavaScriptPaused(page->group(), false);
 
     m_paused = false;
+#endif
 }
 
-static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCallFrame, ExecState* exec, int sourceID, int lineNumber, ExecState*& pauseExecState)
+static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCallFrame, const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber, ExecState*& pauseExecState)
 {
 #if 0
 
@@ -511,38 +514,38 @@ static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCa
 #endif
 }
 
-void JavaScriptDebugServer::callEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*, const List&)
+void JavaScriptDebugServer::callEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_paused)
         return;
-    updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
-    pauseIfNeeded(exec, sourceID, lineNumber);
+    updateCurrentCallFrame(m_currentCallFrame, debuggerCallFrame, sourceID, lineNumber, m_pauseOnExecState);
+    pauseIfNeeded(debuggerCallFrame, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::atStatement(ExecState* exec, int sourceID, int firstLine, int)
+void JavaScriptDebugServer::atStatement(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_paused)
         return;
-    updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, firstLine, m_pauseOnExecState);
-    pauseIfNeeded(exec, sourceID, firstLine);
+    updateCurrentCallFrame(m_currentCallFrame, debuggerCallFrame, sourceID, lineNumber, m_pauseOnExecState);
+    pauseIfNeeded(debuggerCallFrame, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::returnEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*)
+void JavaScriptDebugServer::returnEvent(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_paused)
         return;
-    updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
-    pauseIfNeeded(exec, sourceID, lineNumber);
+    updateCurrentCallFrame(m_currentCallFrame, debuggerCallFrame, sourceID, lineNumber, m_pauseOnExecState);
+    pauseIfNeeded(debuggerCallFrame, sourceID, lineNumber);
 }
 
-void JavaScriptDebugServer::exception(ExecState* exec, int sourceID, int lineNumber, JSValue*)
+void JavaScriptDebugServer::exception(const DebuggerCallFrame& debuggerCallFrame, int sourceID, int lineNumber)
 {
     if (m_paused)
         return;
-    updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
+    updateCurrentCallFrame(m_currentCallFrame, debuggerCallFrame, sourceID, lineNumber, m_pauseOnExecState);
     if (m_pauseOnExceptions)
         m_pauseOnNextStatement = true;
-    pauseIfNeeded(exec, sourceID, lineNumber);
+    pauseIfNeeded(debuggerCallFrame, sourceID, lineNumber);
 }
 
 } // namespace WebCore

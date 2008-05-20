@@ -1,3 +1,9 @@
+2008-05-17  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        Updated for API changes in KJS::Debugger.
+
 2008-05-13  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

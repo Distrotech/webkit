@@ -35,6 +35,10 @@
 #include <wtf/HashSet.h>
 #include <wtf/RefPtr.h>
 
+namespace KJS {
+    class DebuggerCallFrame;
+}
+
 namespace WebCore {
 
     class Frame;
@@ -89,14 +93,14 @@ namespace WebCore {
         void setJavaScriptPaused(Frame*, bool paused);
         void setJavaScriptPaused(FrameView*, bool paused);
 
-        void dispatchFunctionToListeners(JavaScriptExecutionCallback, KJS::ExecState*);
-        void pauseIfNeeded(KJS::ExecState* exec, int sourceID, int lineNumber);
+        void dispatchFunctionToListeners(JavaScriptExecutionCallback, const KJS::DebuggerCallFrame&);
+        void pauseIfNeeded(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
 
         virtual void sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::SourceProvider& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
-        virtual void callEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function, const KJS::List& args);
-        virtual void atStatement(KJS::ExecState*, int sourceID, int firstLine, int lastLine);
-        virtual void returnEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function);
-        virtual void exception(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSValue* exception);
+        virtual void callEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        virtual void atStatement(const KJS::DebuggerCallFrame&, int sourceID, int firstLine);
+        virtual void returnEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        virtual void exception(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
 
         typedef HashMap<Page*, ListenerSet*> PageListenersMap;
         PageListenersMap m_pageListenersMap;

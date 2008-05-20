@@ -2336,7 +2336,7 @@ bool InspectorController::handleException(JSContextRef context, JSValueRef excep
 #pragma mark -
 #pragma mark JavaScriptDebugListener functions
 
-void InspectorController::didParseSource(ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const UString& sourceURL, int sourceID)
+void InspectorController::didParseSource(ExecState*, const SourceProvider& source, int startingLineNumber, const UString& sourceURL, int sourceID)
 {
     JSValueRef sourceIDValue = JSValueMakeNumber(m_scriptContext, sourceID);
     JSValueRef sourceURLValue = JSValueMakeString(m_scriptContext, jsStringRef(sourceURL).get());
@@ -2348,7 +2348,7 @@ void InspectorController::didParseSource(ExecState*, const KJS::SourceProvider& 
     callFunction(m_scriptContext, m_scriptObject, "parsedScriptSource", 4, arguments, exception);
 }
 
-void InspectorController::failedToParseSource(ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
+void InspectorController::failedToParseSource(ExecState*, const SourceProvider& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
 {
     JSValueRef sourceURLValue = JSValueMakeString(m_scriptContext, jsStringRef(sourceURL).get());
     JSValueRef sourceValue = JSValueMakeString(m_scriptContext, jsStringRef(source.data()).get());
