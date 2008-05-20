@@ -34,6 +34,7 @@
 #include "SymbolTable.h"
 #include "UnusedParam.h"
 #include "object.h"
+#include <wtf/UnusedParam.h>
 
 namespace KJS {
 
