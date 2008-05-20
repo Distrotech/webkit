@@ -1,5 +1,9 @@
 2008-04-30  Geoffrey Garen  <ggaren@apple.com>
 
+        Build fix: #ifdef'd out some code that doesn't work anymore.
+
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Oliver Hunt.
         
         #ifdef'd out some debugger code that doesn't work anymore.
