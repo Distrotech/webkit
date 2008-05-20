@@ -85,6 +85,10 @@ namespace KJS {
         // the next instruction to overwrite it anyway.
         RegisterID* newTemporaryOr(RegisterID* suggestion) { return suggestion->isTemporary() ? suggestion : newTemporary(); }
 
+        RegisterID* tempDestination(RegisterID* dst) { return (dst && dst->isTemporary()) ? dst : newTemporary(); }
+        RegisterID* finalDestination(RegisterID* originalDst, RegisterID* tempDst = 0) { return originalDst ? originalDst : (tempDst ? tempDst : newTemporary()); }
+
+
         PassRefPtr<LabelID> newLabel();
         
         // The emitNode functions are just syntactic sugar for calling
