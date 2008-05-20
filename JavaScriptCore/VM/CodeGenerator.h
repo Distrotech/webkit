@@ -148,7 +148,7 @@ namespace KJS {
         RegisterID* emitPostInc(RegisterID*, RegisterID*);
         RegisterID* emitPostDec(RegisterID*, RegisterID*);
         RegisterID* emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2);
-        RegisterID* emitMult(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitMul(RegisterID* dst, RegisterID* src1, RegisterID* src2);
         RegisterID* emitDiv(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitMod(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitSub(RegisterID*, RegisterID*, RegisterID*);
