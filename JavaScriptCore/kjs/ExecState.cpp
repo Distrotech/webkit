@@ -31,7 +31,7 @@
 
 namespace KJS {
 
-ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain)
+ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, RegisterFile* globalRegisterFile)
     : m_prev(0)
     , m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
@@ -39,10 +39,11 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
     , m_exceptionSource(0)
     , m_perThreadData(globalObject->perThreadData())
     , m_scopeChain(globalScopeChain)
+    , m_registerFile(globalRegisterFile)
 {
 }
 
-ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain)
+ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain, RegisterFile* registerFile)
     : m_prev(exec)
     , m_globalObject(exec->m_globalObject)
     , m_globalThisValue(exec->m_globalThisValue)
@@ -50,6 +51,7 @@ ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain)
     , m_exceptionSource(0)
     , m_perThreadData(exec->m_globalObject->perThreadData())
     , m_scopeChain(scopeChain)
+    , m_registerFile(registerFile)
 {
     ASSERT(!exec->m_exception);
     ASSERT(!exec->m_exceptionSource);

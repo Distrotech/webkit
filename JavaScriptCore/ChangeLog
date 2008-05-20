@@ -1,3 +1,18 @@
+2008-05-04  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        More scaffolding for f.arguments.
+        
+        Store the register file associated with an ExecState in the ExecState.
+        
+        SunSpider reports no change.
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData): Moved
+        registerFileStack above globalExec, so it gets initialized first.
+        Removed remnants of old activation scheme.
+
 2008-05-04  Maciej Stachowiak  <mjs@apple.com>
 
         Rubber stamped by Oliver.
