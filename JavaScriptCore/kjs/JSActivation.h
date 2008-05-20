@@ -65,13 +65,19 @@ namespace KJS {
                 : JSVariableObjectData(&functionBody_->symbolTable(), registerBase, registerOffset)
                 , registerArray(0)
                 , functionBody(functionBody_)
+                , argumentsObject(0)
             {
             }
 
             Register* registerArray;
             RefPtr<FunctionBodyNode> functionBody; // Owns the symbol table
+            JSObject* argumentsObject;
         };
         
+        static JSValue* argumentsGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&);
+        NEVER_INLINE PropertySlot::GetValueFunc getArgumentsGetter();
+        NEVER_INLINE JSObject* createArgumentsObject(ExecState*);
+
         JSActivationData* d() const { return static_cast<JSActivationData*>(JSVariableObject::d); }
     };
     

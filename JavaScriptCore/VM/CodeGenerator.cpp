@@ -283,6 +283,9 @@ void CodeGenerator::addParameter(const Identifier& ident)
 
 RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
 {
+    if (m_codeType == FunctionCode && ident == m_propertyNames->arguments)
+        m_codeBlock->needsFullScopeChain = true;
+
     if (!shouldOptimizeLocals() && ident != m_propertyNames->thisIdentifier)
         return 0;
 

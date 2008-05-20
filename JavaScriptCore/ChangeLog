@@ -1,3 +1,33 @@
+2008-04-23  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Degenerate handling of "arguments" as a property of the activation
+        object. Currently, we just return a vanilla object.
+        
+        SunSpider reports no change.
+
+        Fixes:
+
+        ecma_3/Function/regress-94506.js.
+        
+        Reveals to have been secretly broken:
+
+        ecma_3/Function/15.3.4.3-1.js
+        ecma_3/Function/15.3.4.4-1.js
+        
+        These tests were passing incorrectly. testkjs creates a global array
+        named "arguments" to hold command-line arguments. That array was
+        tricking these tests into thinking that an arguments object with length
+        0 had been created. Since our new vanilla object shadows the global
+        property named arguments, that object no longer fools these tests into
+        passing.
+        
+        Net change: +1 failing test.
+
+        * kjs/AllInOneFile.cpp: Had to put JSActivation.cpp into AllInOneFile.cpp
+        to solve a surprising 8.6% regression in bitops-3bit-bits-in-byte.
+
 2008-04-23  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
