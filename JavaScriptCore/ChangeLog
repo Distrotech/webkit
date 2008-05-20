@@ -1,3 +1,14 @@
+2008-04-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed crash when accessing registers in a torn-off activation object.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::copyRegisters): Update our registerOffset after
+        copying our registers, since our offset should now be relative to
+        our private register array, not the shared register file.
+
 2008-04-14  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
