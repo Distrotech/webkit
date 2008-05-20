@@ -73,7 +73,7 @@ namespace KJS {
         
         static void setDumpsGeneratedCode(bool dumpsGeneratedCode);
         
-        CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&);
+        CodeGenerator(ProgramNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, bool canCreateGlobals);
         CodeGenerator(FunctionBodyNode*, const ScopeChain&, SymbolTable*, CodeBlock*, VarStack&, FunctionStack&, Vector<Identifier>& parameters);
         CodeGenerator(EvalNode*, const ScopeChain&, SymbolTable*, EvalCodeBlock*, VarStack&, FunctionStack& functionStack);
 
