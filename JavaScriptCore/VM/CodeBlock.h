@@ -54,6 +54,8 @@ namespace KJS {
         void dump(ExecState*);
         unsigned numRegisters() { return numTemporaries + numVars; }
         
+        void mark();
+
         Vector<Instruction> instructions;
         
         int numTemporaries;
