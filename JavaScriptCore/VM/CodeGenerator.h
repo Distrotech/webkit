@@ -52,8 +52,8 @@ namespace KJS {
         static const bool emptyValueIsZero = false;
     };
 
-    // LoopContexts are used to track entry and exit points for javascript loops
-    struct LoopContext {
+    // JumpContexts are used to track entry and exit points for javascript loops and switch statements
+    struct JumpContext {
         LabelStack* labels;
         LabelID* continueTarget;
         LabelID* breakTarget;
@@ -73,7 +73,6 @@ namespace KJS {
             , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
             , m_thisIdentifier(&CommonIdentifiers::shared()->thisIdentifier)
             , m_propertyNames(CommonIdentifiers::shared())
-
         {
         }
 
@@ -186,9 +185,9 @@ namespace KJS {
         RegisterID* emitGetPropertyNames(RegisterID*, RegisterID*);
         RegisterID* emitNextPropertyName(RegisterID*, RegisterID*, LabelID*);
         
-        void pushLoopContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
-        void popLoopContext();
-        LoopContext* loopContextForLabel(const Identifier&);
+        void pushJumpContext(LabelStack*, LabelID* continueTarget, LabelID* breakTarget);
+        void popJumpContext();
+        JumpContext* jumpContextForLabel(const Identifier&);
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
@@ -223,7 +222,7 @@ namespace KJS {
         
         HashMap<int, int, DefaultHash<int>::Hash, LocalsHashTraits> m_localsMap; // Maps register index to index in m_locals.
 
-        Vector<LoopContext> m_loopContextStack;
+        Vector<JumpContext> m_jumpContextStack;
 
         int m_nextVar;
         int m_nextParameter;

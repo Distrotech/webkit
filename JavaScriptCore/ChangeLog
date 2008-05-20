@@ -1,3 +1,31 @@
+2008-04-04  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
+        - Implement codegen for Switch statements.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::pushJumpContext):
+        (KJS::CodeGenerator::popJumpContext):
+        (KJS::CodeGenerator::jumpContextForLabel):
+        * VM/CodeGenerator.h:
+        Rename LoopContext to JumpContext now that it used of Switch statements in addition
+        to loops.
+
+        * kjs/nodes.cpp:
+        (KJS::DoWhileNode::emitCode):
+        (KJS::WhileNode::emitCode):
+        (KJS::ForNode::emitCode):
+        (KJS::ForInNode::emitCode):
+        (KJS::ContinueNode::emitCode):
+        (KJS::BreakNode::emitCode):
+        (KJS::CaseBlockNode::emitCodeForBlock):
+        (KJS::SwitchNode::emitCode):
+        * kjs/nodes.h:
+        (KJS::CaseClauseNode::expr):
+        (KJS::CaseClauseNode::children):
+        (KJS::CaseBlockNode::):
+
 2008-04-03  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.

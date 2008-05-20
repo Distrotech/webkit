@@ -3058,6 +3058,9 @@ namespace KJS {
         JSValue* evaluate(ExecState*) KJS_FAST_CALL;
         JSValue* executeStatements(ExecState*) KJS_FAST_CALL;
 
+        ExpressionNode* expr() const { return m_expr.get(); }
+        StatementVector& children() { return m_children; }
+
     private:
         RefPtr<ExpressionNode> m_expr;
         StatementVector m_children;
@@ -3091,7 +3094,14 @@ namespace KJS {
 
     class CaseBlockNode : public Node {
     public:
-        CaseBlockNode(ClauseListNode* list1, CaseClauseNode* defaultClause, ClauseListNode* list2) KJS_FAST_CALL;
+        CaseBlockNode(ClauseListNode* list1, CaseClauseNode* defaultClause, ClauseListNode* list2) KJS_FAST_CALL
+            : m_list1(list1)
+            , m_defaultClause(defaultClause)
+            , m_list2(list2)
+        {
+        }
+
+        RegisterID* emitCodeForBlock(CodeGenerator&, RegisterID* dst, RegisterID* input) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         JSValue* executeBlock(ExecState*, JSValue *input) KJS_FAST_CALL;
@@ -3111,6 +3121,8 @@ namespace KJS {
             , m_block(block)
         {
         }
+
+        virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         virtual void optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack&) KJS_FAST_CALL;
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
