@@ -72,6 +72,7 @@ public:
     bool getBoolean() const; // false if not a boolean
     bool getNumber(double&) const;
     double getNumber() const; // NaN if not a number
+    double uncheckedGetNumber() const;
     bool getString(UString&) const;
     UString getString() const; // null string if not a string
     JSObject *getObject(); // NULL if not an object
@@ -90,6 +91,9 @@ public:
     bool getPrimitiveNumber(ExecState* exec, double& number, JSValue*& value);
 
     bool toBoolean(ExecState *exec) const;
+
+    // toNumber conversion is expected to be side effect free if an exception has
+    // been set in the ExecState already.
     double toNumber(ExecState *exec) const;
     double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     JSValue* toJSNumber(ExecState*) const; // Fast path for when you expect that the value is an immediate number.
@@ -413,6 +417,12 @@ inline bool JSValue::getNumber(double& v) const
 inline double JSValue::getNumber() const
 {
     return JSImmediate::isImmediate(this) ? JSImmediate::toDouble(this) : asCell()->getNumber();
+}
+
+inline double JSValue::uncheckedGetNumber() const
+{
+    ASSERT(JSImmediate::isImmediate(this) || asCell()->isNumber());
+    return JSImmediate::isImmediate(this) ? JSImmediate::toDouble(this) : static_cast<const NumberImp*>(this)->value();
 }
 
 inline bool JSValue::getString(UString& s) const
