@@ -411,7 +411,7 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
 
 ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
 {
-    if (newCodeBlock->needsActivation) {
+    if (newCodeBlock->needsFullScopeChain) {
         JSActivation* activation = new JSActivation(functionBody, registerBase, r - (*registerBase));
         callFrame[Machine::OptionalCalleeActivation].u.jsValue = activation;
 
@@ -426,14 +426,14 @@ ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeCh
 NEVER_INLINE bool Machine::unwindCallFrame(Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
     if (isGlobalCallFrame(registerBase, r)) {
-        if (codeBlock->needsActivation)
+        if (codeBlock->needsFullScopeChain)
             scopeChain->deref();
         return false;
     }
 
     CodeBlock* oldCodeBlock = codeBlock;
 
-    if (oldCodeBlock->needsActivation) {
+    if (oldCodeBlock->needsFullScopeChain) {
         // Find the activation object
         ScopeChainIterator it = scopeChain->begin(); 
         ScopeChainIterator end = scopeChain->end();
@@ -544,7 +544,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     ASSERT(exec->dynamicGlobalObject()->symbolTable().get(CommonIdentifiers::shared()->thisIdentifier.ustring().rep()) == ProgramCodeThisRegister);
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
     
-    if (codeBlock->needsActivation)
+    if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
@@ -613,7 +613,7 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     ((*registerFile->basePointer()) + registerOffset)[CallerCodeBlock].u.codeBlock = 0;
     r[ProgramCodeThisRegister].u.jsValue = thisObj;
 
-    if (codeBlock->needsActivation)
+    if (codeBlock->needsFullScopeChain)
         scopeChain = scopeChain->copy();
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
@@ -1356,7 +1356,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
         JSValue* returnValue = r[r1].u.jsValue;
         
-        if (oldCodeBlock->needsActivation) {
+        if (oldCodeBlock->needsFullScopeChain) {
             ASSERT(scopeChain->object->isActivationObject());
             static_cast<JSActivation*>(scopeChain->object)->copyRegisters();
             scopeChain->deref();
@@ -1529,7 +1529,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_end) {
-        if (codeBlock->needsActivation) {
+        if (codeBlock->needsFullScopeChain) {
             ASSERT(scopeChain->refCount > 1);
             scopeChain->deref();
         }
