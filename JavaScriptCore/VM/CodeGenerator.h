@@ -180,7 +180,9 @@ namespace KJS {
 
         RegisterID* emitPushScope(RegisterID*);
         void emitPopScope();
-        
+
+        RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
+        void emitThrow(RegisterID*);
     private:
         struct JSValueHashTraits : HashTraits<JSValue*> {
             static void constructDeletedValue(JSValue** slot) { *slot = JSImmediate::impossibleValue(); }
@@ -213,7 +215,8 @@ namespace KJS {
         
         Vector<Instruction>& instructions() { return m_codeBlock->instructions; }
         SymbolTable& symbolTable() { return *m_symbolTable; }
-        
+        Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
+
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;
         
