@@ -101,7 +101,7 @@ Lexer::~Lexer()
     delete[] mainTable.table;
 }
 
-void Lexer::setCode(int startingLineNumber, const UChar* c, unsigned int len)
+void Lexer::setCode(int startingLineNumber, PassRefPtr<SourceProvider> source)
 {
     yylineno = 1 + startingLineNumber;
     restrKeyword = false;
@@ -109,9 +109,11 @@ void Lexer::setCode(int startingLineNumber, const UChar* c, unsigned int len)
     eatNextIdentifier = false;
     stackToken = -1;
     lastToken = -1;
+
     pos = 0;
-    code = c;
-    length = len;
+    m_source = source;
+    code = m_source->data();
+    length = m_source->length();
     skipLF = false;
     skipCR = false;
     error = false;
@@ -132,6 +134,7 @@ void Lexer::shift(unsigned p)
         next2 = next3;
         do {
             if (pos >= length) {
+                pos++;
                 next3 = -1;
                 break;
             }
@@ -750,11 +753,11 @@ int Lexer::matchPunctuator(int& charPos, int c1, int c2, int c3, int c4)
       shift(1);
       return static_cast<int>(c1);
     case '{':
-      charPos = pos;
+      charPos = pos - 4;
       shift(1);
       return OPENBRACE;
     case '}':
-      charPos = pos;
+      charPos = pos - 4;
       shift(1);
       return CLOSEBRACE;
     default:

@@ -586,7 +586,7 @@ JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, J
     Profiler::profiler()->willExecute(exec, UString(), 0);
 #endif
 
-    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, UStringSourceProvider::create(s), &sourceId, &errLine, &errMsg);
     
     if (!evalNode)
         return throwError(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
