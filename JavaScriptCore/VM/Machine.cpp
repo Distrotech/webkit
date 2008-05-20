@@ -729,7 +729,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_new_regexp) {
         int r0 = (++vPC)->u.operand;
         int re0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = exec->lexicalGlobalObject()->regExpConstructor()->createRegExpImp(exec, codeBlock->regexps[re0]);
+        r[r0].u.jsValue = new RegExpImp(static_cast<RegExpPrototype*>(exec->lexicalGlobalObject()->regExpPrototype()), codeBlock->regexps[re0]);
 
         ++vPC;
         NEXT_OPCODE;
