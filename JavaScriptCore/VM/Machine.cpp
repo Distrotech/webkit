@@ -650,6 +650,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_jmp_scopes) {
+        int scopeDelta = (++vPC)->u.operand;
+        int offset = (++vPC)->u.operand;
+        while (scopeDelta--)
+            scopeChain->pop();
+        vPC += offset;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_end) {
         int r0 = (++vPC)->u.operand;
 #ifndef NDEBUG
