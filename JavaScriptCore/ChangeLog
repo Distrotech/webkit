@@ -2,6 +2,22 @@
 
         Reviewed by Oliver Hunt.
         
+        Made "this" work in program code / global scope.
+        
+        The machine can initialize "this" prior to execution because it knows
+        that, for program code, "this" is always stored in lr1. 
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * VM/Machine.h:
+        (KJS::Machine::):
+        * kjs/interpreter.cpp:
+        (KJS::Interpreter::evaluate):
+
+2008-04-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Fixed a codegen bug when returning from inside a dynamic scope (a with
         or catch block): we need to pop any dynamic scope(s) that have been
         added so op_ret can find the activation object at the top of the scope
