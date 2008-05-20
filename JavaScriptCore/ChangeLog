@@ -1,3 +1,16 @@
+2008-05-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - don't return a null RegisterID from RegExpNode in the exception case, since the caller may need a real register
+
+        Fixes:
+        - fast/regex/early-acid3-86.html
+        - http/tests/misc/acid3.html
+        
+        * kjs/nodes.cpp:
+        (KJS::RegExpNode::emitCode):
+
 2008-05-07  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.
