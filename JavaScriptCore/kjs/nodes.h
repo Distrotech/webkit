@@ -50,6 +50,7 @@ namespace KJS {
     class ConstDeclNode;
     class FuncDeclNode;
     class Node;
+    class EvalCodeBlock;
     class ProgramCodeBlock;
     class PropertyListNode;
     class SourceStream;
@@ -2986,7 +2987,7 @@ namespace KJS {
         
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
 
-        ProgramCodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
+        EvalCodeBlock& code(ScopeChainNode* scopeChain) KJS_FAST_CALL
         {
             if (!m_code)
                 generateCode(scopeChain);
@@ -3000,7 +3001,7 @@ namespace KJS {
         void generateCode(ScopeChainNode*) KJS_FAST_CALL;
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
-        OwnPtr<ProgramCodeBlock> m_code;
+        OwnPtr<EvalCodeBlock> m_code;
     };
 
     class FunctionBodyNode : public ScopeNode {
