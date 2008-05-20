@@ -128,6 +128,8 @@ void CodeGenerator::setDumpsGeneratedCode(bool dumpsGeneratedCode)
 void CodeGenerator::generate()
 {
     m_scopeNode->emitCode(*this);
+    m_codeBlock->numLocals = m_codeBlock->numVars + m_codeBlock->numParameters;
+
 #ifndef NDEBUG
     if (s_dumpsGeneratedCode) {
         JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(m_scopeChain->bottom());
