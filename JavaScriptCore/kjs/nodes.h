@@ -199,6 +199,9 @@ namespace KJS {
         JSValue* throwError(ExecState*, ErrorType, const char* msg, JSValue*, const Identifier&) KJS_FAST_CALL;
         JSValue* throwError(ExecState*, ErrorType, const char* msg, JSValue*, Node*, Node*) KJS_FAST_CALL;
         JSValue* throwError(ExecState*, ErrorType, const char* msg, JSValue*, Node*, const Identifier&) KJS_FAST_CALL;
+        
+        RegisterID* emitThrowError(CodeGenerator&, RegisterID* dst, ErrorType, const char* msg);
+        RegisterID* emitThrowError(CodeGenerator&, RegisterID* dst, ErrorType, const char* msg, const Identifier&);
 
         JSValue* throwUndefinedVariableError(ExecState*, const Identifier&) KJS_FAST_CALL;
 
