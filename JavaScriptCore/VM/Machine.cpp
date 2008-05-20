@@ -1469,6 +1469,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             JSValue* returnValue = constructor->construct(exec, args);
         
             r = (*registerBase) + registerOffset;
+            VM_CHECK_EXCEPTION();
             r[r0].u.jsValue = returnValue;
             
             ++vPC;
