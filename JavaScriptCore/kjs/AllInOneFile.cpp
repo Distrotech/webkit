@@ -68,7 +68,6 @@
 #include "string_object.cpp"
 #include "ustring.cpp"
 #include "value.cpp"
-#include "JSActivation.cpp"
 #include "wtf/FastMalloc.cpp"
 #include "wtf/TCSystemAlloc.cpp"
 #include "VM/CodeGenerator.cpp"

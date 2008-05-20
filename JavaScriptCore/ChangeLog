@@ -2,6 +2,29 @@
 
         Reviewed by Maciej Stachowiak.
         
+        RS by Oliver Hunt on moving JSArguments.cpp out of AllInOneFile.cpp.
+
+        Substantially more handling of "arguments": "arguments" works fully
+        now, but "f.arguments" still doesn't work.
+
+        Fixes 10 regression tests.
+        
+        SunSpider reports no regression.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::createArgumentsObject): Reconstruct an arguments
+        List to pass to the arguments object constructor.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * kjs/AllInOneFile.cpp: Removed JSActivation.cpp from AllInOneFile.cpp
+        because that seems to make GCC happy. (Previously, I had added
+        JSActivation.cpp to AllInOneFile.cpp because *that* seemed to make GCC
+        happy. So it goes.)
+
+2008-04-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
         Groundwork for more handling of "arguments". I'm not checking in the
         actual handling of "arguments" yet, because it still needs a little
         fiddling to avoid a performance regression.
