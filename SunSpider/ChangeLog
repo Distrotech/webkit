@@ -1,3 +1,21 @@
+2008-03-26  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        --squirrelfish mode: pared down tests for squirrelfish to chew on.
+
+        * sunspider:
+        * tests/LIST:
+        * tests/squirrelfish: Added.
+        * tests/squirrelfish/function-closure.js: Added.
+        * tests/squirrelfish/function-empty.js: Added.
+        * tests/squirrelfish/function-missing-args.js: Added.
+        * tests/squirrelfish/function-sum.js: Added.
+        * tests/squirrelfish/loop-empty-resolve.js: Added.
+        * tests/squirrelfish/loop-empty.js: Added.
+        * tests/squirrelfish/loop-resolve.js: Added.
+        * tests/squirrelfish/loop-sum.js: Added.
+
 2008-03-21  Alexey Proskuryakov  <ap@webkit.org>
 
         Reviewed by Geoff.
