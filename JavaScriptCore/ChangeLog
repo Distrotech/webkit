@@ -1,3 +1,77 @@
+2008-05-04  Maciej Stachowiak  <mjs@apple.com>
+
+        Rubber stamped by Oliver.
+        
+        - renamed a few opcodes and fixed assembly formatting to accomodate the longest opcode
+        
+        equal --> eq
+        nequal --> neq
+        resolve_base_and_property --> resolve_with_base
+        resolve_base_and_func --> resolve_func
+        get_prop_id --> get_by_id
+        put_prop_id --> put_by_id
+        delete_prop_id --> del_by_id
+        get_prop_val --> get_by_val
+        put_prop_val --> put_by_val
+        delete_prop_val --> del_by_val
+        put_prop_index --> put_by_index
+        
+        * VM/CodeBlock.cpp:
+        (KJS::printUnaryOp):
+        (KJS::printBinaryOp):
+        (KJS::printConditionalJump):
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitEqual):
+        (KJS::CodeGenerator::emitNotEqual):
+        (KJS::CodeGenerator::emitResolveWithBase):
+        (KJS::CodeGenerator::emitResolveFunction):
+        (KJS::CodeGenerator::emitGetById):
+        (KJS::CodeGenerator::emitPutById):
+        (KJS::CodeGenerator::emitDeleteById):
+        (KJS::CodeGenerator::emitGetByVal):
+        (KJS::CodeGenerator::emitPutByVal):
+        (KJS::CodeGenerator::emitDeleteByVal):
+        (KJS::CodeGenerator::emitPutByIndex):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::ArrayNode::emitCode):
+        (KJS::PropertyListNode::emitCode):
+        (KJS::BracketAccessorNode::emitCode):
+        (KJS::DotAccessorNode::emitCode):
+        (KJS::EvalFunctionCallNode::emitCode):
+        (KJS::FunctionCallResolveNode::emitCode):
+        (KJS::FunctionCallBracketNode::emitCode):
+        (KJS::FunctionCallDotNode::emitCode):
+        (KJS::PostIncResolveNode::emitCode):
+        (KJS::PostDecResolveNode::emitCode):
+        (KJS::PostIncBracketNode::emitCode):
+        (KJS::PostDecBracketNode::emitCode):
+        (KJS::PostIncDotNode::emitCode):
+        (KJS::PostDecDotNode::emitCode):
+        (KJS::DeleteResolveNode::emitCode):
+        (KJS::DeleteBracketNode::emitCode):
+        (KJS::DeleteDotNode::emitCode):
+        (KJS::TypeOfResolveNode::emitCode):
+        (KJS::PreIncResolveNode::emitCode):
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+        (KJS::ReadModifyResolveNode::emitCode):
+        (KJS::AssignResolveNode::emitCode):
+        (KJS::AssignDotNode::emitCode):
+        (KJS::ReadModifyDotNode::emitCode):
+        (KJS::AssignBracketNode::emitCode):
+        (KJS::ReadModifyBracketNode::emitCode):
+        (KJS::ConstDeclNode::emitCodeSingle):
+        (KJS::ForInNode::emitCode):
+        (KJS::TryNode::emitCode):
+
 2008-05-04  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
