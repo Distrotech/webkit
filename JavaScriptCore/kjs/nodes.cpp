@@ -4880,7 +4880,7 @@ RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RegisterID* propertyName;
     if (m_lexpr->isResolveNode()) {
         const Identifier& ident = static_cast<ResolveNode*>(m_lexpr.get())->identifier();
-        propertyName = generator.registerForLocal(m_ident);
+        propertyName = generator.registerForLocal(ident);
         if (!propertyName) {
             propertyName = generator.newTemporary();
             RefPtr<RegisterID> protect = propertyName;
