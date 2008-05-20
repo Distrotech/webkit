@@ -151,6 +151,7 @@ namespace KJS {
         RegisterID* emitResolveBase(RegisterID*, const Identifier&);
         RegisterID* emitResolveBase(RegisterID*, int);
         RegisterID* emitResolveBase(RegisterID*, int, int);
+        RegisterID* emitResolveBaseAndProperty(RegisterID*, RegisterID*, const Identifier&);
         RegisterID* emitResolveBaseAndFunc(RegisterID*, RegisterID*, const Identifier&);
         
         RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier&);
