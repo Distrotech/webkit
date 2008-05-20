@@ -4547,8 +4547,6 @@ inline void ConstDeclNode::evaluateSingle(ExecState* exec)
     const ScopeChain& chain = exec->scopeChain();
     JSVariableObject* variableObject = exec->variableObject();
 
-    ASSERT(!chain.isEmpty());
-
     bool inGlobalScope = ++chain.begin() == chain.end();
 
     if (m_init) {
