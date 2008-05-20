@@ -672,7 +672,7 @@ RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, Argumen
 {
     // Generate code for arguments.
     Vector<RefPtr<RegisterID>, 16> argv;
-    for (ArgumentListNode* n = argumentsNode->m_listNode.get(); n; n = n->m_next.get()) {
+    for (ArgumentListNode* n = argumentsNode ? argumentsNode->m_listNode.get() : 0; n; n = n->m_next.get()) {
         argv.append(newTemporary());
         emitNode(argv.last().get(), n);
     }
