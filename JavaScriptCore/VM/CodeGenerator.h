@@ -155,12 +155,12 @@ namespace KJS {
         RegisterID* emitMove(RegisterID* dst, RegisterID* src);
 
         RegisterID* emitNot(RegisterID* dst, RegisterID* src);
-        RegisterID* emitEqual(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitNotEqual(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitStrictEqual(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitNotStrictEqual(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitLess(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitLessEq(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitNotEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitStrictEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitNotStrictEqual(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitLess(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitLessEq(RegisterID* dst, RegisterID* src1, RegisterID* src2);
 
         RegisterID* emitToJSNumber(RegisterID* dst, RegisterID* src);
         RegisterID* emitNegate(RegisterID* dst, RegisterID* src);

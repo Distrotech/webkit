@@ -821,55 +821,91 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_eq) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(equal(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* eq dst(r) src1(r) src2(r)
+
+           Checks whether register src1 and register src2 are equal,
+           as with the ECMAScript '==' operator, and puts the result
+           as a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_neq) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(!equal(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* neq dst(r) src1(r) src2(r)
+
+           Checks whether register src1 and register src2 are not
+           equal, as with the ECMAScript '!=' operator, and puts the
+           result as a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(!equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_stricteq) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(strictEqual(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* stricteq dst(r) src1(r) src2(r)
+
+           Checks whether register src1 and register src2 are strictly
+           equal, as with the ECMAScript '===' operator, and puts the
+           result as a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(strictEqual(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_nstricteq) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(!strictEqual(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* nstricteq dst(r) src1(r) src2(r)
+
+           Checks whether register src1 and register src2 are not
+           strictly equal, as with the ECMAScript '!==' operator, and
+           puts the result as a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(!strictEqual(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_less) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(jsLess(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* less dst(r) src1(r) src2(r)
+
+           Checks whether register src1 is less than register src2, as
+           with the ECMAScript '<' operator, and puts the result as
+           a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(jsLess(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_lesseq) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(jsLessEq(exec, r[r1].u.jsValue, r[r2].u.jsValue));
+        /* lesseq dst(r) src1(r) src2(r)
+
+           Checks whether register src1 is less than or equal to
+           register src2, as with the ECMAScript '<=' operator, and
+           puts the result as a boolean in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src1 = (++vPC)->u.operand;
+        int src2 = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(jsLessEq(exec, r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
@@ -1294,7 +1330,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_get_by_id) {
-        /* get_prop_id dst(r) base(r) property(id)
+        /* get_by_id dst(r) base(r) property(id)
 
            Converts register base to Object, gets the property
            named by identifier property from the object, and puts the

@@ -3339,9 +3339,9 @@ static inline bool lessThanEq(OldInterpreterExecState* exec, JSValue* v1, JSValu
 
 RegisterID* LessNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitLess(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitLess(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void LessNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3408,9 +3408,9 @@ bool LessStringsNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* GreaterNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
-    RegisterID* r1 = generator.emitNode(m_expr1.get());
-    return generator.emitLess(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr2.get());
+    RegisterID* src2 = generator.emitNode(m_expr1.get());
+    return generator.emitLess(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void GreaterNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3441,9 +3441,9 @@ bool GreaterNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* LessEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitLessEq(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitLessEq(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void LessEqNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3474,9 +3474,9 @@ bool LessEqNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* GreaterEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr2.get());
-    RegisterID* r1 = generator.emitNode(m_expr1.get());
-    return generator.emitLessEq(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr2.get());
+    RegisterID* src2 = generator.emitNode(m_expr1.get());
+    return generator.emitLessEq(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void GreaterEqNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3611,9 +3611,9 @@ bool InNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* EqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitEqual(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void EqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3645,9 +3645,9 @@ bool EqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* NotEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitNotEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitNotEqual(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void NotEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3679,9 +3679,9 @@ bool NotEqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* StrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitStrictEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitStrictEqual(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void StrictEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -3713,9 +3713,9 @@ bool StrictEqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 
 RegisterID* NotStrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> r0 = generator.emitNode(m_expr1.get());
-    RegisterID* r1 = generator.emitNode(m_expr2.get());
-    return generator.emitNotStrictEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
+    RefPtr<RegisterID> src1 = generator.emitNode(m_expr1.get());
+    RegisterID* src2 = generator.emitNode(m_expr2.get());
+    return generator.emitNotStrictEqual(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
 void NotStrictEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -5398,17 +5398,17 @@ RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID
 
     // Setup jumps
     for (ClauseListNode* list = m_list1.get(); list; list = list->getNext()) {
-        RegisterID* r0 = generator.emitNode(list->getClause()->expr());
-        generator.emitStrictEqual(r0, r0, switchExpression);
+        RegisterID* clauseVal = generator.emitNode(list->getClause()->expr());
+        generator.emitStrictEqual(clauseVal, clauseVal, switchExpression);
         labelVector.append(generator.newLabel());
-        generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
+        generator.emitJumpIfTrue(clauseVal, labelVector[labelVector.size() - 1].get());
     }
 
     for (ClauseListNode* list = m_list2.get(); list; list = list->getNext()) {
-        RegisterID* r0 = generator.emitNode(list->getClause()->expr());
-        generator.emitStrictEqual(r0, r0, switchExpression);
+        RegisterID* clauseVal = generator.emitNode(list->getClause()->expr());
+        generator.emitStrictEqual(clauseVal, clauseVal, switchExpression);
         labelVector.append(generator.newLabel());
-        generator.emitJumpIfTrue(r0, labelVector[labelVector.size() - 1].get());
+        generator.emitJumpIfTrue(clauseVal, labelVector[labelVector.size() - 1].get());
     }
 
     RefPtr<LabelID> defaultLabel;
