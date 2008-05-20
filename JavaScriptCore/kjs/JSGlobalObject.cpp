@@ -194,11 +194,6 @@ void JSGlobalObject::init(JSObject* thisValue)
     d()->recursion = 0;
     d()->debugger = 0;
     
-    ActivationStackNode* newStackNode = new ActivationStackNode;
-    newStackNode->prev = 0;    
-    d()->activations = newStackNode;
-    d()->activationCount = 0;
-
     d()->perThreadData.arrayTable = &threadClassInfoHashTables()->arrayTable;
     d()->perThreadData.dateTable = &threadClassInfoHashTables()->dateTable;
     d()->perThreadData.mathTable = &threadClassInfoHashTables()->mathTable;
