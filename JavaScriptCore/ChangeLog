@@ -1,3 +1,21 @@
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        A little more debugger action.
+
+        * kjs/debugger.cpp:
+        * kjs/debugger.h: Removed debuggersPresent because it was unused.
+        Replaced AttachedGlobalObject linked list with a HashSet because HashSet
+        is faster and simpler. Changed all functions to return void instead of
+        bool, because no clients ever return false, and we don't want to support
+        it.
+
+        * kjs/nodes.cpp: Did some up-keep to avoid build bustage.
+        (KJS::Node::handleException):
+        (KJS::BreakpointCheckStatement::execute):
+        (KJS::FunctionBodyNodeWithDebuggerHooks::execute):
+
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Darin.

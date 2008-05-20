@@ -110,10 +110,10 @@ void WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UStri
     m_callingDelegate = false;
 }
 
-bool WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber, JSObject*, const List&)
+void WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber, JSObject*, const List&)
 {
     if (m_callingDelegate)
-        return true;
+        return;
 
     m_callingDelegate = true;
 
@@ -125,14 +125,12 @@ bool WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber
     [[webView _scriptDebugDelegateForwarder] webView:webView didEnterCallFrame:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
 
     m_callingDelegate = false;
-
-    return true;
 }
 
-bool WebScriptDebugger::atStatement(ExecState* state, int sourceID, int lineNumber, int)
+void WebScriptDebugger::atStatement(ExecState* state, int sourceID, int lineNumber, int)
 {
     if (m_callingDelegate)
-        return true;
+        return;
 
     m_callingDelegate = true;
 
@@ -141,14 +139,12 @@ bool WebScriptDebugger::atStatement(ExecState* state, int sourceID, int lineNumb
     [[webView _scriptDebugDelegateForwarder] webView:webView willExecuteStatement:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
 
     m_callingDelegate = false;
-
-    return true;
 }
 
-bool WebScriptDebugger::returnEvent(ExecState* state, int sourceID, int lineNumber, JSObject*)
+void WebScriptDebugger::returnEvent(ExecState* state, int sourceID, int lineNumber, JSObject*)
 {
     if (m_callingDelegate)
-        return true;
+        return;
 
     m_callingDelegate = true;
 
@@ -159,14 +155,12 @@ bool WebScriptDebugger::returnEvent(ExecState* state, int sourceID, int lineNumb
     m_topCallFrame = [m_topCallFrame.get() caller];
 
     m_callingDelegate = false;
-
-    return true;
 }
 
-bool WebScriptDebugger::exception(ExecState* state, int sourceID, int lineNumber, JSValue*)
+void WebScriptDebugger::exception(ExecState* state, int sourceID, int lineNumber, JSValue*)
 {
     if (m_callingDelegate)
-        return true;
+        return;
 
     m_callingDelegate = true;
 
@@ -175,6 +169,4 @@ bool WebScriptDebugger::exception(ExecState* state, int sourceID, int lineNumber
     [[webView _scriptDebugDelegateForwarder] webView:webView exceptionWasRaised:m_topCallFrame.get() sourceId:sourceID line:lineNumber forWebFrame:webFrame];
 
     m_callingDelegate = false;
-
-    return true;
 }

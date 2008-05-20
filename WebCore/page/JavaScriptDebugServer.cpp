@@ -511,42 +511,38 @@ static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCa
 #endif
 }
 
-bool JavaScriptDebugServer::callEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*, const List&)
+void JavaScriptDebugServer::callEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*, const List&)
 {
     if (m_paused)
-        return true;
+        return;
     updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
     pauseIfNeeded(exec, sourceID, lineNumber);
-    return true;
 }
 
-bool JavaScriptDebugServer::atStatement(ExecState* exec, int sourceID, int firstLine, int)
+void JavaScriptDebugServer::atStatement(ExecState* exec, int sourceID, int firstLine, int)
 {
     if (m_paused)
-        return true;
+        return;
     updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, firstLine, m_pauseOnExecState);
     pauseIfNeeded(exec, sourceID, firstLine);
-    return true;
 }
 
-bool JavaScriptDebugServer::returnEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*)
+void JavaScriptDebugServer::returnEvent(ExecState* exec, int sourceID, int lineNumber, JSObject*)
 {
     if (m_paused)
-        return true;
+        return;
     updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
     pauseIfNeeded(exec, sourceID, lineNumber);
-    return true;
 }
 
-bool JavaScriptDebugServer::exception(ExecState* exec, int sourceID, int lineNumber, JSValue*)
+void JavaScriptDebugServer::exception(ExecState* exec, int sourceID, int lineNumber, JSValue*)
 {
     if (m_paused)
-        return true;
+        return;
     updateCurrentCallFrame(m_currentCallFrame, exec, sourceID, lineNumber, m_pauseOnExecState);
     if (m_pauseOnExceptions)
         m_pauseOnNextStatement = true;
     pauseIfNeeded(exec, sourceID, lineNumber);
-    return true;
 }
 
 } // namespace WebCore
