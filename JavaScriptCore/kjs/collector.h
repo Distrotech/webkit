@@ -95,7 +95,6 @@ namespace KJS {
 
     static size_t mainThreadOnlyObjectCount;
     static bool memoryFull;
-    static void reportOutOfMemoryToAllExecStates();
   };
 
   // tunable parameters

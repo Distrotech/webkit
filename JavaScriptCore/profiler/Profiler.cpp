@@ -117,14 +117,16 @@ void Profiler::didExecute(ExecState* exec, const UString& sourceURL, int startin
     m_currentProfile->didExecute(callStackNames);
 }
 
-void getStackNames(Vector<UString>& names, ExecState* exec)
+void getStackNames(Vector<UString>&, ExecState*)
 {
+    ASSERT_NOT_REACHED();
+#if 0
     for (ExecState* currentState = exec; currentState; currentState = currentState->callingExecState()) {
         if (FunctionImp* functionImp = currentState->function())
             names.append(getFunctionName(functionImp));
         else if (ScopeNode* scopeNode = currentState->scopeNode())
             names.append(Script + scopeNode->sourceURL() + ": " + UString::from(scopeNode->lineNo() + 1));   // FIXME: Why is the line number always off by one?
-    }
+#endif
 }
 
 void getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction)

@@ -1,3 +1,15 @@
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Removed a lot of unused bits from ExecState, moving them into
+        OldInterpreterExecState, the fake scaffolding class.
+        
+        The clutter was making it hard to see the forest from the trees.
+        
+        .4% SunSpider speedup, probably because ExecState::lexicalGlobalObject()
+        is faster now.
+
 2008-04-29  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

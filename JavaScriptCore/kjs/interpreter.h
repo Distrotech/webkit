@@ -59,8 +59,8 @@ namespace KJS {
      * execution. This should either be jsNull() or an Object.
      * @return A completion object representing the result of the execution.
      */
-    static Completion evaluate(ExecState*, const UString& sourceURL, int startingLineNumber, const UString& code, JSValue* thisV = 0);
-    static Completion evaluate(ExecState*, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisV = 0);
+    static Completion evaluate(ExecState*, ScopeChain&, const UString& sourceURL, int startingLineNumber, const UString& code, JSValue* thisV = 0);
+    static Completion evaluate(ExecState*, ScopeChain&, const UString& sourceURL, int startingLineNumber, const UChar* code, int codeLength, JSValue* thisV = 0);
     
     static bool shouldPrintExceptions();
     static void setShouldPrintExceptions(bool);
