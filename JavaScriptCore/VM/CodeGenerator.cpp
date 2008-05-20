@@ -527,26 +527,6 @@ RegisterID* CodeGenerator::emitPreDec(RegisterID* srcDst)
     return srcDst;
 }
 
-RegisterID* CodeGenerator::emitPreInc(RegisterID* dst, RegisterID* src)
-{
-    if (!dst || dst == src)
-        return emitPreInc(src);
-    instructions().append(machine().getOpcode(op_pre_inc_mov));
-    instructions().append(dst->index());
-    instructions().append(src->index());
-    return dst;
-}
-
-RegisterID* CodeGenerator::emitPreDec(RegisterID* dst, RegisterID* src)
-{
-    if (!dst || dst == src)
-        return emitPreDec(src);
-    instructions().append(machine().getOpcode(op_pre_dec_mov));
-    instructions().append(dst->index());
-    instructions().append(src->index());
-    return dst;
-}
-
 RegisterID* CodeGenerator::emitPostInc(RegisterID* dst, RegisterID* srcDst)
 {
     instructions().append(machine().getOpcode(op_post_inc));

@@ -1,3 +1,32 @@
+2008-05-20  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 19110: SquirrelFish: Google Maps - no maps
+        <https://bugs.webkit.org/show_bug.cgi?id=19110>
+
+        Correct a comedy of errors present in my original patch to "fix"
+        exceptions occurring midway through pre and post increment. This
+        solution is cleaner than the original, doesn't need the additional
+        opcodes, and as an added benefit does not break Google Maps.
+
+        Sunspider reports a 0.4% progression.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::PreIncResolveNode::emitCode):
+        (KJS::PreDecResolveNode::emitCode):
+        (KJS::PreIncBracketNode::emitCode):
+        (KJS::PreDecBracketNode::emitCode):
+        (KJS::PreIncDotNode::emitCode):
+        (KJS::PreDecDotNode::emitCode):
+
 2008-05-20  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

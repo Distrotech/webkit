@@ -1015,36 +1015,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_pre_inc_mov) {
-        /* pre_inc_mov dst(r) src(r)
-         
-         Converts register src to number, adds one, and puts the result
-         in register dst.
-         */
-        int dst = (++vPC)->u.operand;
-        int src = (++vPC)->u.operand;
-        JSValue* result = jsNumber(r[src].u.jsValue->toNumber(exec) + 1);
-        VM_CHECK_EXCEPTION();
-        r[dst].u.jsValue = result;
-        
-        ++vPC;
-        NEXT_OPCODE;
-    }
-    BEGIN_OPCODE(op_pre_dec_mov) {
-        /* pre_dec_mov dst(r) src(r)
-         
-         Converts register src to number, subtracts one, and puts the result
-         in register dst.
-         */
-        int dst = (++vPC)->u.operand;
-        int src = (++vPC)->u.operand;
-        JSValue* result = jsNumber(r[src].u.jsValue->toNumber(exec) - 1);
-        VM_CHECK_EXCEPTION();
-        r[dst].u.jsValue = result;
-        
-        ++vPC;
-        NEXT_OPCODE;
-    }
     BEGIN_OPCODE(op_post_inc) {
         /* post_inc dst(r) srcDst(r)
 

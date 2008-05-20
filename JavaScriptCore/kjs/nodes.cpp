@@ -2345,8 +2345,9 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), propDst.get(), m_ident);
-    generator.emitPreInc(dst, propDst.get());
-    return generator.emitPutById(base.get(), m_ident, propDst.get());
+    generator.emitPreInc(propDst.get());
+    generator.emitPutById(base.get(), m_ident, propDst.get());
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 void PreIncResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2415,8 +2416,9 @@ RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
 
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RefPtr<RegisterID> base = generator.emitResolveWithBase(generator.newTemporary(), propDst.get(), m_ident);
-    generator.emitPreDec(dst, propDst.get());
-    return generator.emitPutById(base.get(), m_ident, propDst.get());
+    generator.emitPreDec(propDst.get());
+    generator.emitPutById(base.get(), m_ident, propDst.get());
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 void PreDecResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
@@ -2517,8 +2519,9 @@ RegisterID* PreIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
     RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RegisterID* value = generator.emitGetByVal(propDst.get(), base.get(), property.get());
-    generator.emitPreInc(dst, value);
-    return generator.emitPutByVal(base.get(), property.get(), value);
+    generator.emitPreInc(value);
+    generator.emitPutByVal(base.get(), property.get(), value);
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 JSValue* PreIncBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -2555,12 +2558,14 @@ JSValue* PreIncBracketNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* PreDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
+    
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RegisterID* value = generator.emitGetByVal(propDst.get(), base.get(), property.get());
-    generator.emitPreDec(dst, value);
-    return generator.emitPutByVal(base.get(), property.get(), value);
+    generator.emitPreDec(value);
+    generator.emitPutByVal(base.get(), property.get(), value);
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 JSValue* PreDecBracketNode::evaluate(OldInterpreterExecState* exec)
@@ -2607,8 +2612,9 @@ RegisterID* PreIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RegisterID* value = generator.emitGetById(propDst.get(), base.get(), m_ident);
-    generator.emitPreInc(dst, value);
-    return generator.emitPutById(base.get(), m_ident, value);
+    generator.emitPreInc(value);
+    generator.emitPutById(base.get(), m_ident, value);
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 JSValue* PreIncDotNode::evaluate(OldInterpreterExecState* exec)
@@ -2633,8 +2639,9 @@ RegisterID* PreDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     RefPtr<RegisterID> base = generator.emitNode(m_base.get());
     RefPtr<RegisterID> propDst = generator.tempDestination(dst);
     RegisterID* value = generator.emitGetById(propDst.get(), base.get(), m_ident);
-    generator.emitPreDec(dst, value);
-    return generator.emitPutById(base.get(), m_ident, value);
+    generator.emitPreDec(value);
+    generator.emitPutById(base.get(), m_ident, value);
+    return generator.moveToDestinationIfNeeded(dst, propDst.get());
 }
 
 JSValue* PreDecDotNode::evaluate(OldInterpreterExecState* exec)

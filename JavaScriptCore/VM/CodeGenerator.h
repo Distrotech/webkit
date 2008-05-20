@@ -198,8 +198,6 @@ namespace KJS {
         RegisterID* emitNegate(RegisterID* dst, RegisterID* src);
         RegisterID* emitPreInc(RegisterID* srcDst);
         RegisterID* emitPreDec(RegisterID* srcDst);
-        RegisterID* emitPreInc(RegisterID* dst, RegisterID* src);
-        RegisterID* emitPreDec(RegisterID* dst, RegisterID* srcDst);
         RegisterID* emitPostInc(RegisterID* dst, RegisterID* srcDst);
         RegisterID* emitPostDec(RegisterID* dst, RegisterID* srcDst);
         RegisterID* emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2);
