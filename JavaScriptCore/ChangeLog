@@ -1,5 +1,14 @@
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
+        Build fix.
+        
+        - fix build (not sure how this ever worked?)
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallBracketNode::emitCode):
+
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Geoff.
         
         - generate code for FunctionCallBracketNode
