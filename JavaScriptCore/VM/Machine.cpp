@@ -830,7 +830,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsBoolean(equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
+        JSValue* result = jsBoolean(equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
+        VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
 
         ++vPC;
         NEXT_OPCODE;
@@ -845,7 +847,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsBoolean(!equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
+        JSValue* result = jsBoolean(!equal(exec, r[src1].u.jsValue, r[src2].u.jsValue));
+        VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
 
         ++vPC;
         NEXT_OPCODE;
@@ -860,8 +864,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsBoolean(strictEqual(exec, r[src1].u.jsValue, r[src2].u.jsValue));
-
+        r[dst].u.jsValue = jsBoolean(strictEqual(r[src1].u.jsValue, r[src2].u.jsValue));
+        
         ++vPC;
         NEXT_OPCODE;
     }
@@ -875,7 +879,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int src1 = (++vPC)->u.operand;
         int src2 = (++vPC)->u.operand;
-        r[dst].u.jsValue = jsBoolean(!strictEqual(exec, r[src1].u.jsValue, r[src2].u.jsValue));
+        r[dst].u.jsValue = jsBoolean(!strictEqual(r[src1].u.jsValue, r[src2].u.jsValue));
 
         ++vPC;
         NEXT_OPCODE;
