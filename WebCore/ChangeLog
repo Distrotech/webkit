@@ -1,5 +1,29 @@
 2008-05-19  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Anders.
+
+        - inline asDOMWindow (using a new JSDOMWindowCustom.h header) since it is just a cast
+        1% speedup to SunSpider in-browser
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * bindings/js/JSCustomVoidCallback.cpp:
+        * bindings/js/JSCustomXPathNSResolver.cpp:
+        * bindings/js/JSDOMApplicationCacheCustom.cpp:
+        * bindings/js/JSDOMWindowBase.cpp:
+        * bindings/js/JSDOMWindowBase.h:
+        * bindings/js/JSDOMWindowCustom.cpp:
+        * bindings/js/JSDOMWindowCustom.h: Added.
+        (WebCore::asJSDOMWindow):
+        * bindings/js/JSDatabaseCustom.cpp:
+        * bindings/js/JSDocumentCustom.cpp:
+        * bindings/js/JSLocationCustom.cpp:
+        * bindings/js/JSSQLTransactionCustom.cpp:
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        * page/JavaScriptDebugServer.cpp:
+
+2008-05-19  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
 
         - obtain current inner window of outer window in a more efficient way

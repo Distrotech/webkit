@@ -34,7 +34,7 @@
 #include "Frame.h"
 #include "FrameTree.h"
 #include "FrameView.h"
-#include "JSDOMWindow.h"
+#include "JSDOMWindowCustom.h"
 #include "JavaScriptCallFrame.h"
 #include "JavaScriptDebugListener.h"
 #include "Page.h"

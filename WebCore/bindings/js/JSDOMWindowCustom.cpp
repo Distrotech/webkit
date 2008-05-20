@@ -18,7 +18,7 @@
  */
 
 #include "config.h"
-#include "JSDOMWindow.h"
+#include "JSDOMWindowCustom.h"
 
 #include "AtomicString.h"
 #include "DOMWindow.h"

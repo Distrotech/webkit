@@ -26,7 +26,7 @@
 #include "DOMWindow.h"
 #include "Frame.h"
 #include "FrameLoader.h"
-#include "JSDOMWindow.h"
+#include "JSDOMWindowCustom.h"
 #include "KURL.h"
 #include "Location.h"
 #include "kjs_binding.h"

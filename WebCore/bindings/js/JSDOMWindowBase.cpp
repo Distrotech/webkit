@@ -39,8 +39,7 @@
 #include "GCController.h"
 #include "HTMLDocument.h"
 #include "JSAudioConstructor.h"
-#include "JSDOMWindow.h"
-#include "JSDOMWindow.h"
+#include "JSDOMWindowCustom.h"
 #include "JSEvent.h"
 #include "JSHTMLCollection.h"
 #include "JSHTMLOptionElementConstructor.h"
@@ -1382,16 +1381,6 @@ JSDOMWindow* toJSDOMWindow(Frame* frame)
     if (!frame)
         return 0;
     return frame->scriptProxy()->windowShell()->window();
-}
-
-JSDOMWindow* asJSDOMWindow(JSGlobalObject* globalObject)
-{
-    return static_cast<JSDOMWindow*>(globalObject);
-}
-
-const JSDOMWindow* asJSDOMWindow(const JSGlobalObject* globalObject)
-{
-    return static_cast<const JSDOMWindow*>(globalObject);
 }
 
 } // namespace WebCore
