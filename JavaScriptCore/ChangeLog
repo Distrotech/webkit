@@ -17,6 +17,15 @@
 
 2008-04-24  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Oliver Hunt.
+        
+        A tiny bit more handling of "arguments": create a real, but mostly
+        hollow, arguments object.
+        
+        Fixes 2 regression tests.
+
+2008-04-24  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Sam Weinig.
         
         Print a CRASH statement when crashing, so test failures are not a
