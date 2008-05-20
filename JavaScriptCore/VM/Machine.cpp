@@ -750,28 +750,48 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 #endif
     {
     BEGIN_OPCODE(op_load) {
-        int r0 = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = k[k0];
+        /* load dst(r) src(k)
+
+           Copies constant src to register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst].u.jsValue = k[src];
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_object) {
-        int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = scopeChain->globalObject()->objectConstructor()->construct(exec, exec->emptyList());
+        /* new_object dst(r)
+
+           Constructs a new empty Object instance using the original
+           constructor, and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        r[dst].u.jsValue = scopeChain->globalObject()->objectConstructor()->construct(exec, exec->emptyList());
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_array) {
-        int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = scopeChain->globalObject()->arrayConstructor()->construct(exec, exec->emptyList());
+        /* new_array dst(r)
+
+           Constructs a new empty Array instance using the original
+           constructor, and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        r[dst].u.jsValue = scopeChain->globalObject()->arrayConstructor()->construct(exec, exec->emptyList());
         
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_regexp) {
+        /* new_regexp dst(r) regExp(re)
+
+           Constructs a new RegExp instance using the original
+           constructor from regexp regExp, and puts the result in
+           register dst.
+        */
         int dst = (++vPC)->u.operand;
         int regExp = (++vPC)->u.operand;
         r[dst].u.jsValue = new RegExpImp(scopeChain->globalObject()->regExpPrototype(), codeBlock->regexps[regExp]);
@@ -780,9 +800,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_mov) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0] = r[r1];
+        /* mov dst(r) src(r)
+
+           Copies register src to register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst] = r[src];
 
         ++vPC;
         NEXT_OPCODE;
@@ -842,54 +866,88 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pre_inc) {
-        int r0 = (++vPC)->u.operand;
+        /* pre_inc srcDst(r)
+
+           Converts register srcDst to number, adds one, and puts the result
+           back in register srcDst.
+        */
+        int srcDst = (++vPC)->u.operand;
         Instruction* target;
-        double d = r[r0].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
-        r[r0].u.jsValue = jsNumber(d + 1);
+        double d = r[srcDst].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[srcDst].u.jsValue = jsNumber(d + 1);
+        
         vPC = target + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pre_dec) {
-        int r0 = (++vPC)->u.operand;
+        /* pre_dec srcDst(r)
+
+           Converts register srcDst to number, subtracts one, and puts the result
+           back in register srcDst.
+        */
+        int srcDst = (++vPC)->u.operand;
         Instruction* target;
-        double d = r[r0].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
-        r[r0].u.jsValue = jsNumber(d - 1);
+        double d = r[srcDst].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[srcDst].u.jsValue = jsNumber(d - 1);
+        
         vPC = target + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_post_inc) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = r[r1].u.jsValue->toJSNumber(exec);
-        r[r1].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) + 1);
+        /* post_inc dst(r) srcDst(r)
+
+           Converts register srcDst to number. The number itself is
+           written to register dst, and the number plus one is written
+           back to register srcDst.
+        */
+        int dst = (++vPC)->u.operand;
+        int srcDst = (++vPC)->u.operand;
+        r[dst].u.jsValue = r[srcDst].u.jsValue->toJSNumber(exec);
+        r[srcDst].u.jsValue = jsNumber(r[dst].u.jsValue->toNumber(exec) + 1);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_post_dec) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = r[r1].u.jsValue->toJSNumber(exec);
-        r[r1].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) - 1);
+        /* post_dec dst(r) srcDst(r)
+
+           Converts register srcDst to number. The number itself is
+           written to register dst, and the number minus one is written
+           back to register srcDst.
+        */
+        int dst = (++vPC)->u.operand;
+        int srcDst = (++vPC)->u.operand;
+        r[dst].u.jsValue = r[srcDst].u.jsValue->toJSNumber(exec);
+        r[srcDst].u.jsValue = jsNumber(r[dst].u.jsValue->toNumber(exec) - 1);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_to_jsnumber) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = r[r1].u.jsValue->toJSNumber(exec);
+        /* to_jsnumber dst(r) src(r)
+
+           Converts register src to number, and puts the result
+           in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst].u.jsValue = r[src].u.jsValue->toJSNumber(exec);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_negate) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
+        /* negate dst(r) src(r)
+
+           Converts register src to number, negates it, and puts the
+           result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
         
         Instruction* target;
-        double d = r[r1].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
-        r[r0].u.jsValue = jsNumber(-d);
+        double d = r[src].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[dst].u.jsValue = jsNumber(-d);
 
         vPC = target + 1;
         NEXT_OPCODE;
@@ -1067,63 +1125,94 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_bitnot) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(~r[r1].u.jsValue->toInt32(exec));
+        /* bitnot dst(r) src(r)
+
+           Computes bitwise NOT of register src1 (converted to int32),
+           and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsNumber(~r[src].u.jsValue->toInt32(exec));
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_not) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsBoolean(!r[r1].u.jsValue->toBoolean(exec));
+        /* not dst(r) src1(r) src2(r)
+
+           Computes logical NOT of register src1 (converted to
+           boolean), and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsBoolean(!r[src].u.jsValue->toBoolean(exec));
 
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_instance_of) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
+    BEGIN_OPCODE(op_instanceof) {
+        /* instanceof dst(r) value(r) constructor(r)
 
-        JSValue* v2 = r[r2].u.jsValue;
+           Tests whether register value is an instance of register
+           constructor, and puts the boolean result in register dst.
+          
+           Raises an exception if register constructor is not an
+           object.
+        */
+        int dst = (++vPC)->u.operand;
+        int value = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
 
-        if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
+        JSValue* baseVal = r[base].u.jsValue;
+
+        if (isNotObject(exec, vPC, codeBlock, baseVal, exceptionValue))
             goto vm_throw;
 
-        JSObject* o2 = static_cast<JSObject*>(v2);
-        r[r0].u.jsValue = jsBoolean(o2->implementsHasInstance() ? o2->hasInstance(exec, r[r1].u.jsValue) : false);
+        JSObject* baseObj = static_cast<JSObject*>(baseVal);
+        r[dst].u.jsValue = jsBoolean(baseObj->implementsHasInstance() ? baseObj->hasInstance(exec, r[value].u.jsValue) : false);
 
         ++vPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_type_of) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsTypeStringForValue(r[r1].u.jsValue);
+    BEGIN_OPCODE(op_typeof) {
+        /* typeof dst(r) src(r)
+
+           Determines the type string for src according to ECMAScript
+           rules, and puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        r[dst].u.jsValue = jsTypeStringForValue(r[src].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_in) {
-        int r0 = (++vPC)->u.operand;
-        int r1 = (++vPC)->u.operand;
-        int r2 = (++vPC)->u.operand;
+        /* in dst(r) property(r) base(r)
 
-        JSValue* v2 = r[r2].u.jsValue;
-        if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
+           Tests whether register base has a property named register
+           property, and puts the boolean result in register dst.
+          
+           Raises an exception if register constructor is not an
+           object.
+        */
+        int dst = (++vPC)->u.operand;
+        int base = (++vPC)->u.operand;
+        int property = (++vPC)->u.operand;
+
+        JSValue* baseVal = r[base].u.jsValue;
+        if (isNotObject(exec, vPC, codeBlock, baseVal, exceptionValue))
             goto vm_throw;
 
-        JSObject* o2 = static_cast<JSObject*>(v2);
+        JSObject* baseObj = static_cast<JSObject*>(baseObj);
 
-        JSValue* v1 = r[r1].u.jsValue;
+        JSValue* propName = r[property].u.jsValue;
 
         uint32_t i;
-        if (v1->getUInt32(i))
-            r[r0].u.jsValue = jsBoolean(o2->hasProperty(exec, i));
+        if (propName->getUInt32(i))
+            r[dst].u.jsValue = jsBoolean(baseObj->hasProperty(exec, i));
         else
-            r[r0].u.jsValue = jsBoolean(o2->hasProperty(exec, Identifier(v1->toString(exec))));
+            r[dst].u.jsValue = jsBoolean(baseObj->hasProperty(exec, Identifier(propName->toString(exec))));
 
         ++vPC;
         NEXT_OPCODE;
@@ -1135,7 +1224,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            scope chain, and writes the resulting value to register
            dst. If the property is not found, raises an exception.
         */
-
         if (UNLIKELY(!resolve(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
             goto vm_throw;
 
@@ -1203,7 +1291,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            named by identifier property from the object, and puts the
            result in register dst.
         */
-
         int dst = (++vPC)->u.operand;
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
@@ -1226,7 +1313,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
-
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
         int value = (++vPC)->u.operand;
@@ -1363,7 +1449,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
            This opcode is mainly used to initialize array literals.
         */
-
         int base = (++vPC)->u.operand;
         unsigned property = (++vPC)->u.operand;
         int value = (++vPC)->u.operand;
@@ -1402,19 +1487,33 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_func) {
-        int r0 = (++vPC)->u.operand;
-        int f0 = (++vPC)->u.operand;
+        /* new_func dst(r) func(f)
 
-        r[r0].u.jsValue = codeBlock->functions[f0]->makeFunction(exec, scopeChain);
+           Constructs a new Function instance from function func and
+           the current scope chain using the original Function
+           constructor, using the rules for function declarations, and
+           puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int func = (++vPC)->u.operand;
+
+        r[dst].u.jsValue = codeBlock->functions[func]->makeFunction(exec, scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_new_func_exp) {
-        int r0 = (++vPC)->u.operand;
-        int f0 = (++vPC)->u.operand;
+        /* new_func_exp dst(r) func(f)
 
-        r[r0].u.jsValue = codeBlock->functionExpressions[f0]->makeFunction(exec, scopeChain);
+           Constructs a new Function instance from function func and
+           the current scope chain using the original Function
+           constructor, using the rules for function expressions, and
+           puts the result in register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int func = (++vPC)->u.operand;
+
+        r[dst].u.jsValue = codeBlock->functionExpressions[func]->makeFunction(exec, scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
@@ -1704,12 +1803,19 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         vPC = handlerVPC;
         NEXT_OPCODE;
     }
-    BEGIN_OPCODE(op_create_error) {
-        int r0 = (++vPC)->u.operand;
-        int errorType = (++vPC)->u.operand;
-        int k0 = (++vPC)->u.operand;
+    BEGIN_OPCODE(op_new_error) {
+        /* new_error dst(r) type(n) message(k)
+
+           Constructs a new Error instance using the original
+           constructor, using immediate number n as the type and
+           constant message as the message string. The result is
+           written to register dst.
+        */
+        int dst = (++vPC)->u.operand;
+        int type = (++vPC)->u.operand;
+        int message = (++vPC)->u.operand;
         
-        r[r0].u.jsValue = Error::create(exec, (ErrorType) errorType, k[k0]->toString(exec), -1, -1, 0); // lineNo(), currentSourceId(exec), currentSourceURL(exec)
+        r[dst].u.jsValue = Error::create(exec, (ErrorType)type, k[message]->toString(exec), -1, -1, 0); // lineNo(), currentSourceId(exec), currentSourceURL(exec)
         
         ++vPC;
         NEXT_OPCODE;
@@ -1732,8 +1838,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
          
            Unlike many opcodes, this one does not write any output to
            the register file.
-         */
-        
+        */
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
         int function = (++vPC)->u.operand;
@@ -1750,15 +1855,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_put_setter) {
         /* put_setter base(r) property(id) function(r)
          
-         Sets register function on register base as the setter named
-         by identifier property. Base and function are assumed to be
-         objects as this op should only be used for setters defined
-         in object literal form.
+           Sets register function on register base as the setter named
+           by identifier property. Base and function are assumed to be
+           objects as this op should only be used for setters defined
+           in object literal form.
          
-         Unlike many opcodes, this one does not write any output to
-         the register file.
-         */
-        
+           Unlike many opcodes, this one does not write any output to
+           the register file.
+        */
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
         int function = (++vPC)->u.operand;
@@ -1775,12 +1879,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     BEGIN_OPCODE(op_jsr) {
         /* jsr retAddrDst(r) target(offset)
          
-         Places the address of the next instruction into the retAddrDst
-         register and jumps to offset target from the current instruction.
+           Places the address of the next instruction into the retAddrDst
+           register and jumps to offset target from the current instruction.
         */
         int retAddrDst = (++vPC)->u.operand;
         int target = (++vPC)->u.operand;
         r[retAddrDst].u.vPC = vPC + 1;
+
         vPC += target;
         NEXT_OPCODE;
     }

@@ -1,3 +1,4 @@
+// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Cameron Zwarich <cwzwarich@uwaterloo.ca>
@@ -140,20 +141,20 @@ namespace KJS {
             return emitNode(0, n);
         }
 
-        RegisterID* emitLoad(RegisterID*, bool);
-        RegisterID* emitLoad(RegisterID*, double);
-        RegisterID* emitLoad(RegisterID*, JSValue*);
+        RegisterID* emitLoad(RegisterID* dst, bool);
+        RegisterID* emitLoad(RegisterID* dst, double);
+        RegisterID* emitLoad(RegisterID* dst, JSValue*);
         
-        RegisterID* emitNewObject(RegisterID*);
-        RegisterID* emitNewArray(RegisterID*);
+        RegisterID* emitNewObject(RegisterID* dst);
+        RegisterID* emitNewArray(RegisterID* dst);
 
-        RegisterID* emitNewFunction(RegisterID*, FuncDeclNode*);
-        RegisterID* emitNewFunctionExpression(RegisterID*, FuncExprNode*);
-        RegisterID* emitNewRegExp(RegisterID*, RegExp*);
+        RegisterID* emitNewFunction(RegisterID* dst, FuncDeclNode* func);
+        RegisterID* emitNewFunctionExpression(RegisterID* dst, FuncExprNode* func);
+        RegisterID* emitNewRegExp(RegisterID* dst, RegExp* regExp);
 
-        RegisterID* emitMove(RegisterID*, RegisterID*);
+        RegisterID* emitMove(RegisterID* dst, RegisterID* src);
 
-        RegisterID* emitNot(RegisterID*, RegisterID*);
+        RegisterID* emitNot(RegisterID* dst, RegisterID* src);
         RegisterID* emitEqual(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitNotEqual(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitStrictEqual(RegisterID*, RegisterID*, RegisterID*);
@@ -161,32 +162,30 @@ namespace KJS {
         RegisterID* emitLess(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitLessEq(RegisterID*, RegisterID*, RegisterID*);
 
-        RegisterID* emitToJSNumber(RegisterID*, RegisterID*);
-        RegisterID* emitNegate(RegisterID*, RegisterID*);
-        RegisterID* emitPreInc(RegisterID*);
-        RegisterID* emitPreDec(RegisterID*);
-        RegisterID* emitPostInc(RegisterID*, RegisterID*);
-        RegisterID* emitPostDec(RegisterID*, RegisterID*);
+        RegisterID* emitToJSNumber(RegisterID* dst, RegisterID* src);
+        RegisterID* emitNegate(RegisterID* dst, RegisterID* src);
+        RegisterID* emitPreInc(RegisterID* srcDst);
+        RegisterID* emitPreDec(RegisterID* srcDst);
+        RegisterID* emitPostInc(RegisterID* dst, RegisterID* srcDst);
+        RegisterID* emitPostDec(RegisterID* dst, RegisterID* srcDst);
         RegisterID* emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2);
         RegisterID* emitMul(RegisterID* dst, RegisterID* src1, RegisterID* src2);
-        RegisterID* emitDiv(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitMod(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitSub(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitDiv(RegisterID* dst, RegisterID* dividend, RegisterID* divisor);
+        RegisterID* emitMod(RegisterID* dst, RegisterID* dividend, RegisterID* divisor);
+        RegisterID* emitSub(RegisterID* dst, RegisterID* src1, RegisterID* src2);
 
-        RegisterID* emitLeftShift(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitRightShift(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitUnsignedRightShift(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitLeftShift(RegisterID* dst, RegisterID* val, RegisterID* shift);
+        RegisterID* emitRightShift(RegisterID* dst, RegisterID* val, RegisterID* shift);
+        RegisterID* emitUnsignedRightShift(RegisterID* dst, RegisterID* val, RegisterID* shift);
 
-        RegisterID* emitBitAnd(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitBitXOr(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitBitOr(RegisterID*, RegisterID*, RegisterID*);
-        RegisterID* emitBitNot(RegisterID*, RegisterID*);
+        RegisterID* emitBitAnd(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitBitXOr(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitBitOr(RegisterID* dst, RegisterID* src1, RegisterID* src2);
+        RegisterID* emitBitNot(RegisterID* dst, RegisterID* src);
 
-        RegisterID* emitInstanceOf(RegisterID*, RegisterID*, RegisterID*);
-
-        RegisterID* emitTypeOf(RegisterID*, RegisterID*);
-
-        RegisterID* emitIn(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitInstanceOf(RegisterID* dst, RegisterID* value, RegisterID* base);
+        RegisterID* emitTypeOf(RegisterID* dst, RegisterID* src);
+        RegisterID* emitIn(RegisterID* dst, RegisterID* property, RegisterID* base);
 
         RegisterID* emitResolve(RegisterID* dst, const Identifier& property);
 
@@ -222,6 +221,15 @@ namespace KJS {
         
         RegisterID* emitGetPropertyNames(RegisterID*, RegisterID*);
         RegisterID* emitNextPropertyName(RegisterID*, RegisterID*, LabelID*);
+
+        RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
+        void emitThrow(RegisterID*);
+        RegisterID* emitNewError(RegisterID* dst, ErrorType type, JSValue* message);
+        
+        RegisterID* emitPushScope(RegisterID*);
+        void emitPopScope();
+
+        int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }
         
         void pushFinallyContext(LabelID* target, RegisterID* returnAddrDst);
         void popFinallyContext();
@@ -232,14 +240,7 @@ namespace KJS {
         JumpContext* jumpContextForContinue(const Identifier&);
         JumpContext* jumpContextForBreak(const Identifier&);
 
-        RegisterID* emitPushScope(RegisterID*);
-        void emitPopScope();
-        int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }
 
-        RegisterID* emitCatch(RegisterID*, LabelID* start, LabelID* end);
-        void emitThrow(RegisterID*);
-        RegisterID* emitCreateError(RegisterID*, ErrorType, JSValue*);
-        
         CodeType codeType() const { return m_codeType; }
     private:
         PassRefPtr<LabelID> emitComplexJumpScopes(LabelID* target, ControlFlowContext* topScope, ControlFlowContext* bottomScope);
@@ -258,9 +259,9 @@ namespace KJS {
         // Returns the RegisterID corresponding to ident.
         RegisterID* addVar(const Identifier& ident)
         {
-            RegisterID* r0;
-            addVar(ident, r0);
-            return r0;
+            RegisterID* local;
+            addVar(ident, local);
+            return local;
         }
 
         // Returns true if a new RegisterID was added, false if a pre-existing RegisterID was re-used.
