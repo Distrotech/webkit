@@ -545,4 +545,25 @@ bool CodeBlock::getHandlerForVPC(const Instruction* vPC, Instruction*& target, i
     return false;
 }
 
+int CodeBlock::lineNumberForVPC(const Instruction* vPC)
+{
+    unsigned instructionOffset = vPC - instructions.begin();
+    ASSERT(instructionOffset < instructions.size());
+
+    if (!lineInfo.size())
+        return 1; // Empty function
+
+    int low = 0;
+    int high = lineInfo.size();
+    while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (lineInfo[mid].instructionOffset <= instructionOffset)
+            low = mid + 1;
+        else
+            high = mid;
+    }
+
+    return lineInfo[low - 1].lineNumber;
+}
+
 } // namespace KJS

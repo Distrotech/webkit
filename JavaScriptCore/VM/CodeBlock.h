@@ -48,6 +48,11 @@ namespace KJS {
         unsigned scopeDepth;
     };
 
+    struct LineInfo {
+        unsigned instructionOffset;
+        int lineNumber;
+    };
+
     struct CodeBlock {
         CodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_)
             : sourceURL(sourceURL_)
@@ -61,7 +66,7 @@ namespace KJS {
         }
         
         void dump(ExecState*) const;
-        
+        int lineNumberForVPC(const Instruction*);
         bool getHandlerForVPC(const Instruction* vPC, Instruction*& target, int& scopeDepth);
         void mark();
 
@@ -84,6 +89,7 @@ namespace KJS {
         Vector<JSValue*> jsValues;
         Vector<RefPtr<RegExp> > regexps;        
         Vector<HandlerInfo> exceptionHandlers;
+        Vector<LineInfo> lineInfo;
 
     private:
         void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
