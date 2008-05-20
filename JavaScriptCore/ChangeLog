@@ -1,5 +1,20 @@
 2008-04-21  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Sam.
+        
+        - add some support for the split window object
+
+        This fixes many layout tests.
+        
+        * VM/Machine.cpp:
+        (KJS::resolveBaseAndFunc): Use toThisObject() to ensure we get the
+        wrapper global, if one exists, as the "this" object.
+        * kjs/function.cpp:
+        (KJS::globalFuncEval): Use toGlobalObject() to handle the wrapper
+        case properly.
+
+2008-04-21  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
         
         - restore ScopeChain::operator= to avoid crash on many layout tests

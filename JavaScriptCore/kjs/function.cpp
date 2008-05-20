@@ -692,7 +692,7 @@ static double parseFloat(const UString& s)
 
 JSValue* globalFuncEval(ExecState* exec, PrototypeReflexiveFunction* function, JSObject* thisObj, const List& args)
 {
-    JSGlobalObject* globalObject = thisObj->isGlobalObject() ? static_cast<JSGlobalObject*>(thisObj) : 0;
+    JSGlobalObject* globalObject = thisObj->toGlobalObject(exec);
 
     if (!globalObject || globalObject->evalFunction() != function)
         return throwError(exec, EvalError, "The \"this\" value passed to eval must be the global object from which eval originated");
