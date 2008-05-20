@@ -293,6 +293,10 @@ sub GenerateHeader
         push(@headerContent, "#include <kjs/CallData.h>\n");
     }
 
+    if ($hasParent && $dataNode->extendedAttributes->{"GenerateNativeConverter"}) {
+        push(@headerContent, "#include \"${implClassName}.h\"");
+    }
+
     # Get correct pass/store types respecting PODType flag
     my $podType = $dataNode->extendedAttributes->{"PODType"};
     my $passType = $podType ? "JSSVGPODTypeWrapper<$podType>*" : "$implClassName*";
@@ -477,7 +481,10 @@ sub GenerateHeader
             push(@headerContent, "    RefPtr<$implClassName> m_impl;\n");
         }
     } elsif ($dataNode->extendedAttributes->{"GenerateNativeConverter"}) {
-        push(@headerContent, "    $implClassName* impl() const;\n");
+        push(@headerContent, "    $implClassName* impl() const\n");
+        push(@headerContent, "    {\n");
+        push(@headerContent, "        return static_cast<$implClassName*>(Base::impl());\n");
+        push(@headerContent, "    }\n");
     }
 
     # Index getter
@@ -1301,13 +1308,6 @@ sub GenerateImplementation
         } else {
             push(@implContent, "0;\n}\n");
         }
-    }
-
-    if ($dataNode->extendedAttributes->{"GenerateNativeConverter"} && $hasParent) {
-        push(@implContent, "\n$implClassName* ${className}::impl() const\n");
-        push(@implContent, "{\n");
-        push(@implContent, "    return static_cast<$implClassName*>(Base::impl());\n");
-        push(@implContent, "}\n");
     }
 
     push(@implContent, "\n}\n");
