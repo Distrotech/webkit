@@ -85,7 +85,7 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     Profiler::profiler()->didExecute(exec, sourceURL, startingLineNumber);
 #endif
 
-    return result ? Completion(Normal, result) : Completion(Throw, exception);
+    return exception ? Completion(Throw, exception) : Completion(Normal, result);
 }
 
 static bool printExceptions = false;
