@@ -688,64 +688,64 @@ RegisterID* CodeGenerator::emitNewArray(RegisterID* r0)
     return r0;
 }
 
-RegisterID* CodeGenerator::emitResolve(RegisterID* r0, const Identifier& ident)
+RegisterID* CodeGenerator::emitResolve(RegisterID* dst, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_resolve));
-    instructions().append(r0->index());
-    instructions().append(addConstant(ident));
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(addConstant(property));
+    return dst;
 }
 
-RegisterID* CodeGenerator::emitResolveBase(RegisterID* r0, const Identifier& ident)
+RegisterID* CodeGenerator::emitResolveBase(RegisterID* dst, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_resolve_base));
-    instructions().append(r0->index());
-    instructions().append(addConstant(ident));
-    return r0;
+    instructions().append(dst->index());
+    instructions().append(addConstant(property));
+    return dst;
 }
     
-RegisterID* CodeGenerator::emitResolveBaseAndProperty(RegisterID* r0, RegisterID* r1, const Identifier& ident)
+RegisterID* CodeGenerator::emitResolveBaseAndProperty(RegisterID* baseDst, RegisterID* propDst, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_resolve_base_and_property));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(addConstant(ident));
-    return r0;
+    instructions().append(baseDst->index());
+    instructions().append(propDst->index());
+    instructions().append(addConstant(property));
+    return baseDst;
 }
 
-RegisterID* CodeGenerator::emitResolveBaseAndFunc(RegisterID* r0, RegisterID* r1, const Identifier& ident)
+RegisterID* CodeGenerator::emitResolveBaseAndFunc(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_resolve_base_and_func));
-    instructions().append(r0->index());
-    instructions().append(r1->index());
-    instructions().append(addConstant(ident));
-    return r0;
+    instructions().append(baseDst->index());
+    instructions().append(funcDst->index());
+    instructions().append(addConstant(property));
+    return baseDst;
 }
 
-RegisterID* CodeGenerator::emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& ident)
+RegisterID* CodeGenerator::emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_get_prop_id));
     instructions().append(dst->index());
     instructions().append(base->index());
-    instructions().append(addConstant(ident));
+    instructions().append(addConstant(property));
     return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropId(RegisterID* base, const Identifier& ident, RegisterID* val)
+RegisterID* CodeGenerator::emitPutPropId(RegisterID* base, const Identifier& property, RegisterID* value)
 {
     instructions().append(machine().getOpcode(op_put_prop_id));
     instructions().append(base->index());
-    instructions().append(addConstant(ident));
-    instructions().append(val->index());
-    return val;
+    instructions().append(addConstant(property));
+    instructions().append(value->index());
+    return value;
 }
 
-RegisterID* CodeGenerator::emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier& ident)
+RegisterID* CodeGenerator::emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_delete_prop_id));
     instructions().append(dst->index());
     instructions().append(base->index());
-    instructions().append(addConstant(ident));
+    instructions().append(addConstant(property));
     return dst;
 }
 
@@ -758,13 +758,13 @@ RegisterID* CodeGenerator::emitGetPropVal(RegisterID* dst, RegisterID* base, Reg
     return dst;
 }
 
-RegisterID* CodeGenerator::emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* val)
+RegisterID* CodeGenerator::emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* value)
 {
     instructions().append(machine().getOpcode(op_put_prop_val));
     instructions().append(base->index());
     instructions().append(property->index());
-    instructions().append(val->index());
-    return val;
+    instructions().append(value->index());
+    return value;
 }
 
 RegisterID* CodeGenerator::emitDeletePropVal(RegisterID* dst, RegisterID* base, RegisterID* property)
