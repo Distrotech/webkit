@@ -1,3 +1,12 @@
+2008-05-05  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Fix call frame set up for native -> JS function calls.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+
 2008-05-05  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
