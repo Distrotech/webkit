@@ -38,6 +38,7 @@ namespace KJS {
         macro(op_load) \
         macro(op_new_object) \
         macro(op_new_array) \
+        macro(op_new_regexp) \
         macro(op_mov) \
         \
         macro(op_not) \
