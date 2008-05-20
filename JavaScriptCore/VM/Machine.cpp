@@ -1198,8 +1198,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* baseObj = r[base].u.jsValue->toObject(exec);
 
         Identifier& ident = codeBlock->identifiers[property];
-        r[dst].u.jsValue = baseObj->get(exec, ident);
+        JSValue *result = baseObj->get(exec, ident);
         VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1241,9 +1242,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* baseObj = r[base].u.jsValue->toObject(exec);
         
         Identifier& ident = codeBlock->identifiers[property];
-        r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, ident));
-        
+        JSValue* result = jsBoolean(baseObj->deleteProperty(exec, ident));
         VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1262,16 +1263,17 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* baseObj = r[base].u.jsValue->toObject(exec); // may throw
         
         JSValue* subscript = r[property].u.jsValue;
-
+        JSValue* result;
         uint32_t i;
         if (subscript->getUInt32(i))
-            r[dst].u.jsValue = baseObj->get(exec, i);
+            result = baseObj->get(exec, i);
         else {
             VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            r[dst].u.jsValue = baseObj->get(exec, Identifier(subscript->toString(exec)));
+            result = baseObj->get(exec, Identifier(subscript->toString(exec)));
         }
         
         VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1321,16 +1323,17 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSObject* baseObj = r[base].u.jsValue->toObject(exec); // may throw
 
         JSValue* subscript = r[property].u.jsValue;
-
+        JSValue* result;
         uint32_t i;
         if (subscript->getUInt32(i))
-            r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, i));
+            result = jsBoolean(baseObj->deleteProperty(exec, i));
         else {
             VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
-            r[dst].u.jsValue = jsBoolean(baseObj->deleteProperty(exec, Identifier(subscript->toString(exec))));
+            result = jsBoolean(baseObj->deleteProperty(exec, Identifier(subscript->toString(exec))));
         }
         
         VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
         ++vPC;
         NEXT_OPCODE;
     }
