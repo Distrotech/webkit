@@ -1,3 +1,22 @@
+2008-03-24  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff Garen.
+
+        Bug 18059: squirrelfish needs to compile on platforms without computed goto
+        <http://bugs.webkit.org/show_bug.cgi?id=18059>
+
+        "Standard" macro style support for conditionalising the use of computed goto.
+
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/Machine.cpp:
+        (KJS::Machine::isOpcode):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        (KJS::Machine::getOpcode):
+        (KJS::Machine::getOpcodeID):
+        * VM/Opcode.h:
+        * wtf/Platform.h:
+
 2008-03-24  Geoffrey Garen  <ggaren@apple.com>
 
         Moved my notes from nodes.h to the wiki.
