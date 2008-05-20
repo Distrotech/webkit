@@ -215,20 +215,10 @@
 		95AB83570DA43C3000BC83F3 /* ProfileNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 95AB83550DA43B4400BC83F3 /* ProfileNode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		95C18D490C90E82600E72F73 /* JSRetainPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = 95C18D3E0C90E7EF00E72F73 /* JSRetainPtr.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A72700900DAC6BBC00E548D7 /* JSNotAnObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72700780DAC605600E548D7 /* JSNotAnObject.cpp */; };
-		A72700920DAC6BBD00E548D7 /* JSNotAnObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72700780DAC605600E548D7 /* JSNotAnObject.cpp */; };
-		A72700930DAC6BBD00E548D7 /* JSNotAnObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72700780DAC605600E548D7 /* JSNotAnObject.cpp */; };
-		A72700940DAC6BC300E548D7 /* JSNotAnObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72700780DAC605600E548D7 /* JSNotAnObject.cpp */; };
-		A72701B10DADE70200E548D7 /* CodeBlock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 149B1A9E0D86ED73009CB8C7 /* CodeBlock.cpp */; };
 		A72701B50DADE94900E548D7 /* ExceptionHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = A72701B30DADE94900E548D7 /* ExceptionHelpers.h */; };
 		A72701B60DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72701B40DADE94900E548D7 /* ExceptionHelpers.cpp */; };
-		A72701B70DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72701B40DADE94900E548D7 /* ExceptionHelpers.cpp */; };
-		A72701B80DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72701B40DADE94900E548D7 /* ExceptionHelpers.cpp */; };
 		A72701B90DADE94900E548D7 /* ExceptionHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = A72701B30DADE94900E548D7 /* ExceptionHelpers.h */; };
-		A72701BA0DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A72701B40DADE94900E548D7 /* ExceptionHelpers.cpp */; };
 		A727FF6B0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A727FF660DA3053B00E548D7 /* JSPropertyNameIterator.cpp */; };
-		A727FF6C0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A727FF660DA3053B00E548D7 /* JSPropertyNameIterator.cpp */; };
-		A727FF6D0DA3092300E548D7 /* JSPropertyNameIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A727FF660DA3053B00E548D7 /* JSPropertyNameIterator.cpp */; };
-		A727FF6E0DA3092400E548D7 /* JSPropertyNameIterator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A727FF660DA3053B00E548D7 /* JSPropertyNameIterator.cpp */; };
 		A8E894320CD0602400367179 /* JSCallbackObjectFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = A8E894310CD0602400367179 /* JSCallbackObjectFunctions.h */; };
 		A8E894340CD0603F00367179 /* JSGlobalObject.h in Headers */ = {isa = PBXBuildFile; fileRef = A8E894330CD0603F00367179 /* JSGlobalObject.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		BC8F3CED0DAF1A8000577A80 /* ConstructData.h in Headers */ = {isa = PBXBuildFile; fileRef = BC8F3CCF0DAF17BA00577A80 /* ConstructData.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -1495,9 +1485,6 @@
 				1440063F0A53598A0005F061 /* Node.c in Sources */,
 				1440074B0A536CC20005F061 /* NodeList.c in Sources */,
 				141211340A48795800480255 /* minidom.c in Sources */,
-				A727FF6C0DA3092200E548D7 /* JSPropertyNameIterator.cpp in Sources */,
-				A72700940DAC6BC300E548D7 /* JSNotAnObject.cpp in Sources */,
-				A72701BA0DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1506,9 +1493,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1440F6100A4F85670005F061 /* testapi.c in Sources */,
-				A727FF6D0DA3092300E548D7 /* JSPropertyNameIterator.cpp in Sources */,
-				A72700920DAC6BBD00E548D7 /* JSNotAnObject.cpp in Sources */,
-				A72701B80DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1565,10 +1549,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				932F5BDD0822A1C700736975 /* testkjs.cpp in Sources */,
-				A727FF6E0DA3092400E548D7 /* JSPropertyNameIterator.cpp in Sources */,
-				A72700930DAC6BBD00E548D7 /* JSNotAnObject.cpp in Sources */,
-				A72701B10DADE70200E548D7 /* CodeBlock.cpp in Sources */,
-				A72701B70DADE94900E548D7 /* ExceptionHelpers.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
