@@ -36,9 +36,9 @@ namespace KJS {
 
 using namespace std;
 
-size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t offset)
+size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t maxSize, size_t offset)
 {
-    capacity = (max(minCapacity, min(m_maxSize, max<size_t>(16, capacity + capacity / 4 + 1))));
+    capacity = (max(minCapacity, min(maxSize, max<size_t>(16, capacity + capacity / 4 + 1))));
     Register* newBuffer = static_cast<Register*>(fastCalloc(capacity, sizeof(Register))); // zero-filled memory
 
     if (m_buffer)
@@ -48,7 +48,7 @@ size_t RegisterFile::newBuffer(size_t size, size_t capacity, size_t minCapacity,
     return capacity;
 }
 
-bool RegisterFile::growBuffer(size_t minCapacity)
+bool RegisterFile::growBuffer(size_t minCapacity, size_t maxSize)
 {
     if (minCapacity > m_maxSize)
         return false;
@@ -57,7 +57,7 @@ bool RegisterFile::growBuffer(size_t minCapacity)
     size_t capacity = m_capacity + numGlobalSlots;
     minCapacity += numGlobalSlots;
     
-    capacity = newBuffer(size, capacity, minCapacity, 0);
+    capacity = newBuffer(size, capacity, minCapacity, maxSize, 0);
 
     setBase(m_buffer + numGlobalSlots);
     m_capacity = capacity - numGlobalSlots;
@@ -77,7 +77,7 @@ void RegisterFile::addGlobalSlots(size_t count)
     if (minCapacity < capacity)
         memmove(m_buffer + count, m_buffer, size * sizeof(Register));
     else
-        capacity = newBuffer(size, capacity, minCapacity, count);
+        capacity = newBuffer(size, capacity, minCapacity, m_maxSize, count);
 
     numGlobalSlots += count;
 

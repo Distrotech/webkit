@@ -66,7 +66,7 @@ namespace KJS {
     private:
         typedef Vector<std::auto_ptr<RegisterFile>, 4> Stack;
 
-        RegisterFile* allocateRegisterFile();
+        RegisterFile* allocateRegisterFile(size_t maxSize = RegisterFile::DefaultRegisterFileSize);
 
         RegisterFile* previous() { return m_stack[m_stack.size() - 2].get(); }
         bool hasPrevious() { return m_stack.size() > 1; }
