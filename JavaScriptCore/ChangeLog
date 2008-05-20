@@ -1,3 +1,32 @@
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        First steps toward supporting the debugger API: support the sourceParsed
+        callback; plus some minor fixups.
+
+        SunSpider reports no regression.
+
+        * VM/CodeGenerator.h: Removed a misleading comment.
+
+        * kjs/Parser.h: Changed the parser to take an ExecState*, so it can
+        implement the sourceParsed callback -- that way, we only have to
+        implement the callback in one place.
+
+        * kjs/debugger.cpp: Nixed DebuggerImp, because its sole purpose in life
+        was to demonstrate the misapplication of design patterns.
+
+        * kjs/debugger.h: Changed sourceParsed to take a SourceProvider, to
+        reduce copying, and not to return a value, because pausing execution
+        after parsing is complicated, and no clients needed that ability, anyway.
+
+        * kjs/grammar.y: Make sure never to pass a NULL SourceElements* to
+        didFinishParsing -- that simplifies some code down the road.
+        
+        * kjs/nodes.cpp: Don't generate special AST nodes just because the
+        debugger is attached -- that's a relic of the old AST execution model,
+        and those nodes haven't been maintained.
+
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

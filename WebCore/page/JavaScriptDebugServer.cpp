@@ -243,20 +243,20 @@ JavaScriptCallFrame* JavaScriptDebugServer::currentCallFrame()
     return m_currentCallFrame.get();
 }
 
-static void dispatchDidParseSource(const ListenerSet& listeners, const UString& source, int startingLineNumber, const UString& sourceURL, int sourceID)
+static void dispatchDidParseSource(const ListenerSet& listeners, ExecState* exec, const KJS::SourceProvider& source, int startingLineNumber, const String& sourceURL, int sourceID)
 {
     Vector<JavaScriptDebugListener*> copy;
     copyToVector(listeners, copy);
     for (size_t i = 0; i < copy.size(); ++i)
-        copy[i]->didParseSource(source, startingLineNumber, sourceURL, sourceID);
+        copy[i]->didParseSource(exec, source, startingLineNumber, sourceURL, sourceID);
 }
 
-static void dispatchFailedToParseSource(const ListenerSet& listeners, const UString& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
+static void dispatchFailedToParseSource(const ListenerSet& listeners, ExecState* exec, const SourceProvider& source, int startingLineNumber, const String& sourceURL, int errorLine, const String& errorMessage)
 {
     Vector<JavaScriptDebugListener*> copy;
     copyToVector(listeners, copy);
     for (size_t i = 0; i < copy.size(); ++i)
-        copy[i]->failedToParseSource(source, startingLineNumber, sourceURL, errorLine, errorMessage);
+        copy[i]->failedToParseSource(exec, source, startingLineNumber, sourceURL, errorLine, errorMessage);
 }
 
 static Page* toPage(ExecState* exec)
@@ -273,14 +273,14 @@ static Page* toPage(ExecState* exec)
 static unsigned s_callDepth = 0;
 #endif
 
-bool JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const UString& sourceURL, const UString& source, int startingLineNumber, int errorLine, const UString& errorMessage)
+void JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const UString& sourceURL, const SourceProvider& source, int startingLineNumber, int errorLine, const UString& errorMessage)
 {
     if (m_callingListeners)
-        return true;
+        return;
 
     Page* page = toPage(exec);
     if (!page)
-        return true;
+        return;
 
     m_callingListeners = true;
 
@@ -297,21 +297,20 @@ bool JavaScriptDebugServer::sourceParsed(ExecState* exec, int sourceID, const US
 
     if (!m_listeners.isEmpty()) {
         if (isError)
-            dispatchFailedToParseSource(m_listeners, source, startingLineNumber, sourceURL, errorLine, errorMessage);
+            dispatchFailedToParseSource(m_listeners, exec, source, startingLineNumber, sourceURL, errorLine, errorMessage);
         else
-            dispatchDidParseSource(m_listeners, source, startingLineNumber, sourceURL, sourceID);
+            dispatchDidParseSource(m_listeners, exec, source, startingLineNumber, sourceURL, sourceID);
     }
 
     if (ListenerSet* pageListeners = m_pageListenersMap.get(page)) {
         ASSERT(!pageListeners->isEmpty());
         if (isError)
-            dispatchFailedToParseSource(*pageListeners, source, startingLineNumber, sourceURL, errorLine, errorMessage);
+            dispatchFailedToParseSource(*pageListeners, exec, source, startingLineNumber, sourceURL, errorLine, errorMessage);
         else
-            dispatchDidParseSource(*pageListeners, source, startingLineNumber, sourceURL, sourceID);
+            dispatchDidParseSource(*pageListeners, exec, source, startingLineNumber, sourceURL, sourceID);
     }
 
     m_callingListeners = false;
-    return true;
 }
 
 static void dispatchFunctionToListeners(const ListenerSet& listeners, JavaScriptDebugServer::JavaScriptExecutionCallback callback)
@@ -439,6 +438,8 @@ void JavaScriptDebugServer::pauseIfNeeded(ExecState* exec, int sourceID, int lin
 
 static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCallFrame, ExecState* exec, int sourceID, int lineNumber, ExecState*& pauseExecState)
 {
+#if 0
+
 #ifdef DEBUG_DEBUGGER_CALLBACKS
     const char* action = 0;
 #endif
@@ -505,6 +506,8 @@ static inline void updateCurrentCallFrame(RefPtr<JavaScriptCallFrame>& currentCa
     for(unsigned i = 0; i < s_callDepth; ++i)
         printf(" ");
     printf("%d: at exec: %p (caller: %p, pause: %p) source: %d line: %d\n", s_callDepth, exec, exec->callingExecState(), pauseExecState, sourceID, lineNumber);
+#endif
+
 #endif
 }
 

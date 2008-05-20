@@ -49,7 +49,7 @@ namespace KJS {
     class Parser : Noncopyable {
     public:
         template <class ParsedNode>
-        PassRefPtr<ParsedNode> parse(const UString& sourceURL, int startingLineNumber,
+        PassRefPtr<ParsedNode> parse(ExecState*, const UString& sourceURL, int startingLineNumber,
                                      PassRefPtr<SourceProvider> source,
                                      int* sourceId = 0, int* errLine = 0, UString* errMsg = 0);
 
@@ -64,7 +64,7 @@ namespace KJS {
         friend class WTF::ThreadSpecific<Parser>;
 
         Parser(); // Use parser() instead.
-        void parse(int startingLineNumber, PassRefPtr<SourceProvider> source,
+        void parse(ExecState*, const UString& sourceURL, int startingLineNumber, PassRefPtr<SourceProvider> source,
                    int* sourceId, int* errLine, UString* errMsg);
 
         UString m_sourceURL;
@@ -80,12 +80,12 @@ namespace KJS {
     Parser& parser(); // Returns the singleton JavaScript parser.
 
     template <class ParsedNode>
-    PassRefPtr<ParsedNode> Parser::parse(const UString& sourceURL, int startingLineNumber,
+    PassRefPtr<ParsedNode> Parser::parse(ExecState* exec, const UString& sourceURL, int startingLineNumber,
                                          PassRefPtr<SourceProvider> source,
                                          int* sourceId, int* errLine, UString* errMsg)
     {
         m_sourceURL = sourceURL;
-        parse(startingLineNumber, source, sourceId, errLine, errMsg);
+        parse(exec, sourceURL, startingLineNumber, source, sourceId, errLine, errMsg);
         if (!m_sourceElements) {
             m_sourceURL = UString();
             return 0;

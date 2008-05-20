@@ -52,7 +52,13 @@ namespace WebCore {
         void setLine(int line) { m_line = line; }
 
         String functionName() const;
-        const KJS::ScopeChain& scopeChain() const { return m_exec->scopeChain(); }
+        const KJS::ScopeChain& scopeChain() const {
+#if 0
+            return m_exec->scopeChain();
+#endif
+            static KJS::ScopeChain scopeChain(static_cast<KJS::JSObject*>(0));
+            return scopeChain;
+        }
         KJS::JSObject* thisObject() const;
         KJS::JSValue* evaluate(const KJS::UString& script, KJS::JSValue*& exception) const;
 

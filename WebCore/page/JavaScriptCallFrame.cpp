@@ -51,6 +51,7 @@ JavaScriptCallFrame* JavaScriptCallFrame::caller()
 
 String JavaScriptCallFrame::functionName() const
 {
+#if 0
     if (!m_exec || !m_exec->scopeNode())
         return String();
 
@@ -59,18 +60,24 @@ String JavaScriptCallFrame::functionName() const
         return String();
 
     return String(function->functionName());
+#endif
+    return String();
 }
 
 JSObject* JavaScriptCallFrame::thisObject() const
 {
+#if 0
     if (!m_exec)
         return 0;
     return m_exec->thisValue();
+#endif
+    return 0;
 }
 
 // Evaluate some JavaScript code in the scope of this frame.
 JSValue* JavaScriptCallFrame::evaluate(const UString& script, JSValue*& exception) const
 {
+#if 0
     if (!m_exec)
         return jsNull();
 
@@ -91,6 +98,8 @@ JSValue* JavaScriptCallFrame::evaluate(const UString& script, JSValue*& exceptio
     exec->setException(savedException);
 
     return result;
+#endif
+    return jsNull();
 }
 
 } // namespace WebCore

@@ -46,12 +46,18 @@ using namespace WebCore;
 
 @end
 
-// convert UString to NSString
 NSString *toNSString(const UString& s)
 {
     if (s.isEmpty())
         return nil;
     return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(s.data()) length:s.size()];
+}
+
+NSString *toNSString(const KJS::SourceProvider& s)
+{
+    if (!s.length())
+        return nil;
+    return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(s.data()) length:s.length()];
 }
 
 // convert UString to NSURL
@@ -77,10 +83,10 @@ WebScriptDebugger::WebScriptDebugger(JSGlobalObject* globalObject)
 }
 
 // callbacks - relay to delegate
-bool WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UString& url, const UString& source, int lineNumber, int errorLine, const UString& errorMsg)
+void WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UString& url, const KJS::SourceProvider& source, int lineNumber, int errorLine, const UString& errorMsg)
 {
     if (m_callingDelegate)
-        return true;
+        return;
 
     m_callingDelegate = true;
 
@@ -102,8 +108,6 @@ bool WebScriptDebugger::sourceParsed(ExecState* state, int sourceID, const UStri
     }
 
     m_callingDelegate = false;
-
-    return true;
 }
 
 bool WebScriptDebugger::callEvent(ExecState* state, int sourceID, int lineNumber, JSObject*, const List&)

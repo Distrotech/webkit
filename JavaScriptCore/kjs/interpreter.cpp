@@ -49,7 +49,7 @@ Completion Interpreter::checkSyntax(ExecState* exec, const UString& sourceURL, i
     int errLine;
     UString errMsg;
 
-    RefPtr<ProgramNode> progNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, source, 0, &errLine, &errMsg);
+    RefPtr<ProgramNode> progNode = parser().parse<ProgramNode>(exec, sourceURL, startingLineNumber, source, 0, &errLine, &errMsg);
     if (!progNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, 0, sourceURL));
     return Completion(Normal);
@@ -73,7 +73,7 @@ Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const 
     Profiler::profiler()->willExecute(exec, sourceURL, startingLineNumber);
 #endif
 
-    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(sourceURL, startingLineNumber, source, &sourceId, &errLine, &errMsg);
+    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(exec, sourceURL, startingLineNumber, source, &sourceId, &errLine, &errMsg);
 
     // no program node means a syntax error occurred
     if (!programNode)

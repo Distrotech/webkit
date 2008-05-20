@@ -422,10 +422,7 @@ void SourceElements::append(PassRefPtr<StatementNode> statement)
     if (statement->isEmptyStatement())
         return;
 
-    if (Debugger::debuggersPresent)
-        m_statements.append(new BreakpointCheckStatement(statement));
-    else
-        m_statements.append(statement);
+    m_statements.append(statement);
 }
 
 // ------------------------------ BreakpointCheckStatement --------------------------------
@@ -5788,8 +5785,6 @@ void FunctionBodyNode::mark()
 
 FunctionBodyNode* FunctionBodyNode::create(SourceElements* children, VarStack* varStack, FunctionStack* funcStack, bool usesEval, bool needsClosure)
 {
-    if (Debugger::debuggersPresent)
-        return new FunctionBodyNodeWithDebuggerHooks(children, varStack, funcStack, usesEval, needsClosure);
     return new FunctionBodyNode(children, varStack, funcStack, usesEval, needsClosure);
 }
 
