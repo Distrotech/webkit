@@ -1,5 +1,17 @@
 2008-05-01  Oliver Hunt  <oliver@apple.com>
 
+        RS=Geoff
+
+        Rename unsafeForReentry to safeForReentry to avoid double negatives.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/RegisterFile.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+
+2008-05-01  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Maciej.
 
         Bug 18827: SquirrelFish: Prevent getters and setters from destroying the current RegisterFile
