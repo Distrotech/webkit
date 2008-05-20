@@ -87,14 +87,13 @@ namespace KJS {
     class RegisterFile : Noncopyable {
     public:
         enum { DefaultRegisterFileSize = 2 * 1024 * 1024 };
-        RegisterFile(RegisterFileStack* stack, size_t maxSize)
-            : m_isForImplicitCall(false)
-            , m_size(0)
+        RegisterFile(size_t maxSize, RegisterFileStack* m_baseObserver)
+            : m_size(0)
             , m_capacity(0)
             , m_maxSize(maxSize)
             , m_base(0)
             , m_buffer(0)
-            , m_stack(stack)
+            , m_baseObserver(m_baseObserver)
         {
         }
         
@@ -149,8 +148,9 @@ namespace KJS {
         {
             Collector::markStackObjectsConservatively(m_buffer, m_base + m_size);
         }
-        void setIsForImplicitCall(bool isForImplicitCall) { m_isForImplicitCall = isForImplicitCall; }
-        bool isForImplicitCall() { return m_isForImplicitCall; }
+
+        bool isGlobal() { return !!m_baseObserver; }
+
     private:
         size_t newBuffer(size_t size, size_t capacity, size_t minCapacity, size_t maxSize, size_t offset);
         bool growBuffer(size_t minCapacity, size_t maxSize);
@@ -169,7 +169,7 @@ namespace KJS {
         size_t m_maxSize;
         Register* m_base;
         Register* m_buffer;
-        RegisterFileStack* m_stack;
+        RegisterFileStack* m_baseObserver;
     };
     
 } // namespace KJS

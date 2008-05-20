@@ -37,9 +37,9 @@ namespace KJS {
     class RegisterFileStack {
     public:
         RegisterFileStack()
-            : m_implicitCallDepth(0)
+            : m_globalBase(0)
         {
-            allocateRegisterFile();
+            allocateRegisterFile(RegisterFile::DefaultRegisterFileSize, this);
         }
 
         ~RegisterFileStack();
@@ -59,37 +59,35 @@ namespace KJS {
             }
         }
 
-        // Pointer to a value that holds the base of the top-most register file.
-        Register** basePointer() { return &m_base; }
+        // Pointer to a value that holds the base of the top-most global register file.
+        Register** globalBasePointer() { return &m_globalBase; }
 
         void baseChanged(RegisterFile* registerFile)
         {
-            ASSERT(registerFile == current());
-            m_base = *registerFile->basePointer();
+            ASSERT(registerFile == lastGlobal());
+            m_globalBase = *registerFile->basePointer();
         }
 
-        bool inImplicitCall() { return m_implicitCallDepth > 0; }
+    private:
+        typedef Vector<RegisterFile*, 4> Stack;
 
         RegisterFile* lastGlobal() {
             ASSERT(m_stack.size());
             for (size_t i = m_stack.size() - 1; i > 0; --i) {
-                if (!m_stack[i]->isForImplicitCall())
+                if (m_stack[i]->isGlobal())
                     return m_stack[i];
             }
-            ASSERT(!m_stack[0]->isForImplicitCall());
+            ASSERT(m_stack[0]->isGlobal());
             return m_stack[0];
         }
-    private:
-        typedef Vector<RegisterFile*, 4> Stack;
 
-        RegisterFile* allocateRegisterFile(size_t maxSize = RegisterFile::DefaultRegisterFileSize);
+        RegisterFile* allocateRegisterFile(size_t maxSize, RegisterFileStack* = 0);
 
         RegisterFile* previous() { return m_stack[m_stack.size() - 2]; }
         bool hasPrevious() { return m_stack.size() > 1; }
 
         Stack m_stack;
-        Register* m_base;
-        int m_implicitCallDepth;
+        Register* m_globalBase;
     };
 
 } // namespace KJS

@@ -97,7 +97,8 @@ void RegisterFile::copyGlobals(RegisterFile* src)
 void RegisterFile::setBase(Register* base)
 {
     m_base = base;
-    m_stack->baseChanged(this);
+    if (m_baseObserver)
+        m_baseObserver->baseChanged(this);
 }
 
 void RegisterFile::clear()

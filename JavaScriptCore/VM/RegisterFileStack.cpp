@@ -35,8 +35,8 @@ namespace KJS {
 
 RegisterFileStack::~RegisterFileStack()
 {
-    for (size_t i = 0; i < m_stack.size(); ++i)
-        delete m_stack[i];
+    ASSERT(m_stack.size() == 1 && m_stack[0]->size() == 0); // The stack shouldn't be destroyed during execution.
+    delete m_stack[0];
 }
 
 RegisterFile* RegisterFileStack::pushGlobalRegisterFile()
@@ -47,15 +47,16 @@ RegisterFile* RegisterFileStack::pushGlobalRegisterFile()
     if (!current->size())
         return current;
 
-    RegisterFile* previous = current;
-
     // Slow case: Existing register file is in use: Create a nested
     // register file with a copy of this register file's globals.
-    RegisterFile* registerFile = allocateRegisterFile(current->maxSize() - current->size());
-    registerFile->addGlobalSlots(previous->numGlobalSlots());
-    registerFile->copyGlobals(previous);
+    RegisterFile* lastGlobal = this->lastGlobal();
 
-    return registerFile;
+    current = allocateRegisterFile(current->maxSize() - current->size(), this);
+    current->addGlobalSlots(lastGlobal->numGlobalSlots());
+    current->copyGlobals(lastGlobal);
+    m_globalBase = *current->basePointer();
+
+    return current;
 }
 
 void RegisterFileStack::popGlobalRegisterFile()
@@ -71,44 +72,33 @@ void RegisterFileStack::popGlobalRegisterFile()
     RegisterFile* tmp = m_stack.last();
     m_stack.removeLast();
 
-    RegisterFile* previous = current();
-    ASSERT(tmp->numGlobalSlots() == previous->numGlobalSlots() || !m_implicitCallDepth);
-    previous->addGlobalSlots(tmp->numGlobalSlots() - previous->numGlobalSlots());
-    previous->copyGlobals(tmp);
-    m_base = *current()->basePointer();
+    ASSERT(tmp->isGlobal() || tmp->numGlobalSlots() == lastGlobal()->numGlobalSlots());
+    if (tmp->isGlobal()) {
+        RegisterFile* lastGlobal = this->lastGlobal();
+        lastGlobal->addGlobalSlots(tmp->numGlobalSlots() - lastGlobal->numGlobalSlots());
+        lastGlobal->copyGlobals(tmp);
+
+        m_globalBase = *lastGlobal->basePointer();
+    }
+
     delete tmp;
 }
 
 RegisterFile* RegisterFileStack::pushFunctionRegisterFile()
 {
-    m_implicitCallDepth++;
-
-    RegisterFile* previous = current();
-
-    RegisterFile* result = allocateRegisterFile(current()->maxSize() - current()->size());
-    result->addGlobalSlots(previous->numGlobalSlots());
-    result->copyGlobals(previous);
-    result->setIsForImplicitCall(true);
-    return result;
+    return allocateRegisterFile(current()->maxSize() - current()->size());
 }
 
 void RegisterFileStack::popFunctionRegisterFile()
 {
-    RegisterFile* tmp = m_stack.last();
+    delete m_stack.last();
     m_stack.removeLast();
-
-    RegisterFile* previous = current();
-    ASSERT(tmp->numGlobalSlots() == previous->numGlobalSlots());
-    previous->copyGlobals(tmp);
-    m_base = *current()->basePointer();
-    delete tmp;
 }
 
-RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize)
+RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize, RegisterFileStack* registerFileStack)
 {
-    RegisterFile* registerFile = new RegisterFile(this, maxSize);
+    RegisterFile* registerFile = new RegisterFile(maxSize, registerFileStack);
     m_stack.append(registerFile);
-    m_base = *registerFile->basePointer();
     return registerFile;
 }
 
