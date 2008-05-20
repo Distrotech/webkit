@@ -54,7 +54,7 @@ namespace KJS {
     };
 
     struct CodeBlock {
-        CodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_)
+        CodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, CodeType codeType_ = FunctionCode)
             : sourceURL(sourceURL_)
             , numTemporaries(0)
             , numVars(0)
@@ -62,6 +62,7 @@ namespace KJS {
             , needsFullScopeChain(usesEval_ || needsClosure_)
             , usesEval(usesEval_)
             , needsClosure(needsClosure_)
+            , codeType(codeType_)
         {
         }
         
@@ -90,6 +91,7 @@ namespace KJS {
         Vector<RefPtr<RegExp> > regexps;        
         Vector<HandlerInfo> exceptionHandlers;
         Vector<LineInfo> lineInfo;
+        CodeType codeType;
 
     private:
         void dump(ExecState*, const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator&) const;
@@ -99,8 +101,8 @@ namespace KJS {
     // responsible for marking it.
 
     struct ProgramCodeBlock : public CodeBlock {
-        ProgramCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
-            : CodeBlock(sourceURL_, usesEval_, needsClosure_)
+        ProgramCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_, CodeType codeType_ = GlobalCode)
+            : CodeBlock(sourceURL_, usesEval_, needsClosure_, codeType_)
             , globalObject(globalObject_)
         {
             globalObject->codeBlocks().add(this);
@@ -117,7 +119,7 @@ namespace KJS {
 
     struct EvalCodeBlock : public ProgramCodeBlock {
         EvalCodeBlock(const UString& sourceURL_, bool usesEval_, bool needsClosure_, JSGlobalObject* globalObject_)
-            : ProgramCodeBlock(sourceURL_, usesEval_, needsClosure_, globalObject_)
+            : ProgramCodeBlock(sourceURL_, usesEval_, needsClosure_, globalObject_, EvalCode)
         {
         }
 

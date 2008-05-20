@@ -1268,7 +1268,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (base == exec->lexicalGlobalObject() && v == exec->lexicalGlobalObject()->evalFunction()) {
             int registerOffset = r - (*registerBase);
 
-            JSValue* result = eval(exec, static_cast<JSObject*>(base), scopeChain, registerFile, r, argv, argc, exceptionValue);
+            int thisRegister = (codeBlock->codeType == FunctionCode) ? -(codeBlock->numVars + codeBlock->numParameters) : ProgramCodeThisRegister;
+            JSObject* thisObject = r[thisRegister].u.jsObject;
+
+            JSValue* result = eval(exec, thisObject, scopeChain, registerFile, r, argv, argc, exceptionValue);
             r = (*registerBase) + registerOffset;
 
             if (exceptionValue)
