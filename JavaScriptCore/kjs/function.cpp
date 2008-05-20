@@ -77,14 +77,14 @@ void FunctionImp::mark()
 CallType FunctionImp::getCallData(CallData& callData)
 {
     callData.js.functionBody = body.get();
-    callData.js.scopeChain = &_scope;
+    callData.js.scopeChain = _scope.node();
     return CallTypeJS;
 }
 
 JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
 {
     JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
+    JSValue* result = machine().execute(body.get(), args, thisObj, exec, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
     exec->setException(exception);
     return result;
 }
@@ -198,7 +198,7 @@ Identifier FunctionImp::getParameterName(int index)
 ConstructType FunctionImp::getConstructData(ConstructData& constructData)
 {
     constructData.js.functionBody = body.get();
-    constructData.js.scopeChain = &_scope;
+    constructData.js.scopeChain = _scope.node();
     return ConstructTypeJS;
 }
 
@@ -214,7 +214,7 @@ JSObject* FunctionImp::construct(ExecState* exec, const List& args)
     JSObject* newObject = new JSObject(proto);
 
     JSValue* exception = 0;
-    JSValue* result = machine().execute(body.get(), args, newObject, exec, &exec->dynamicGlobalObject()->registerFileStack(), &_scope, &exception);
+    JSValue* result = machine().execute(body.get(), args, newObject, exec, &exec->dynamicGlobalObject()->registerFileStack(), _scope.node(), &exception);
     if (exception) {
         exec->setException(exception);
         return newObject;
