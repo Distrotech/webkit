@@ -85,7 +85,6 @@ namespace KJS  {
         ScopeChain& scopeChain() { return m_scopeChain; }
         void pushScope(JSObject* s) { m_scopeChain.push(s); }
         void popScope() { m_scopeChain.pop(); }
-        void replaceScopeChainTop(JSObject* o) { m_scopeChain.replaceTop(o); }
         
         JSVariableObject* variableObject() const { ASSERT_NOT_REACHED(); return m_variableObject; }
         void setVariableObject(JSVariableObject* v) { m_variableObject = v; }
