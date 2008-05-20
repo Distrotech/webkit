@@ -333,6 +333,14 @@ RegisterID* CodeGenerator::emitPostInc(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitPostDec(RegisterID* r0, RegisterID* r1)
+{
+    instructions().append(machine().getOpcode(op_post_dec));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitToJSNumber(RegisterID* r0, RegisterID* r1)
 {
     instructions().append(machine().getOpcode(op_to_jsnumber));
