@@ -88,7 +88,7 @@ bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName
 
 void JSActivation::put(ExecState*, const Identifier& propertyName, JSValue* value)
 {
-    size_t index = symbolTable().get(propertyName.ustring().rep());
+    int index = symbolTable().get(propertyName.ustring().rep());
     if (index != missingSymbolMarker()) {
         registers()[d()->rOffset + index].u.jsValue = value;
         return;

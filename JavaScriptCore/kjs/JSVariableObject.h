@@ -90,27 +90,29 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot)
     {
-        size_t index = symbolTable().inlineGet(propertyName.ustring().rep());
-        if (index == missingSymbolMarker())
-            return false;
+        int index = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (index != missingSymbolMarker()) {
 #ifndef NDEBUG
-        // During initialization, the variable object needs to advertise that it has certain
-        // properties, even if they're not ready for access yet. This check verifies that
-        // no one tries to access such a property. In a release build, we optimize this check
-        // away and just return an invalid pointer. There's no harm in an invalid pointer,
-        // since no one dereferences it.
-        if (index >= d->localStorage.size()) {
-            slot.setUngettable(this);
+            // During initialization, the variable object needs to advertise that it has certain
+            // properties, even if they're not ready for access yet. This check verifies that
+            // no one tries to access such a property.
+            
+            // In a release build, we optimize this check away and just return an invalid pointer.
+            // There's no harm in an invalid pointer, since no one dereferences it.
+            if (index < 0 || static_cast<unsigned>(index) >= d->localStorage.size()) {
+                slot.setUngettable(this);
+                return true;
+            }
+#endif
+            slot.setValueSlot(this, &d->localStorage[index].value);
             return true;
         }
-#endif
-        slot.setValueSlot(this, &d->localStorage[index].value);
-        return true;
+        return false;
     }
 
     inline bool JSVariableObject::symbolTablePut(const Identifier& propertyName, JSValue* value)
     {
-        size_t index = symbolTable().inlineGet(propertyName.ustring().rep());
+        int index = symbolTable().inlineGet(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
         LocalStorageEntry& entry = d->localStorage[index];
@@ -122,7 +124,7 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTablePutWithAttributes(const Identifier& propertyName, JSValue* value, unsigned attributes)
     {
-        size_t index = symbolTable().get(propertyName.ustring().rep());
+        int index = symbolTable().get(propertyName.ustring().rep());
         if (index == missingSymbolMarker())
             return false;
         LocalStorageEntry& entry = d->localStorage[index];

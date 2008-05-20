@@ -39,9 +39,9 @@ namespace KJS {
         static unsigned hash(UString::Rep* key) { return key->computedHash(); }
     };
 
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
+    static ALWAYS_INLINE int missingSymbolMarker() { return std::numeric_limits<int>::max(); }
 
-    struct SymbolTableIndexHashTraits : HashTraits<size_t> {
+    struct SymbolTableIndexHashTraits : HashTraits<int> {
         static const bool emptyValueIsZero = false;
         static size_t emptyValue() { return missingSymbolMarker(); }
     };
