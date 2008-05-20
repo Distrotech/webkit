@@ -22,6 +22,7 @@
 
 #include "config.h"
 
+#include "CodeGenerator.h"
 #include "JSGlobalObject.h"
 #include "JSLock.h"
 #include "Parser.h"
@@ -273,10 +274,13 @@ static bool prettyPrintScript(const UString& fileName, const Vector<char>& scrip
     return true;
 }
 
-static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint)
+static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint, bool dump)
 {
     GlobalObject* globalObject = new GlobalObject(arguments);
     Vector<char> script;
+
+    if (dump)
+        CodeGenerator::setDumpsGeneratedCode(true);
 
     bool success = true;
 
@@ -302,7 +306,7 @@ static void printUsageStatement()
     exit(-1);
 }
 
-static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint)
+static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint, bool& dump)
 {
     if (argc < 3)
         printUsageStatement();
@@ -318,6 +322,10 @@ static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Ve
         }
         if (strcmp(arg, "-p") == 0) {
             prettyPrint = true;
+            continue;
+        }
+        if (strcmp(arg, "-d") == 0) {
+            dump = true;
             continue;
         }
         if (strcmp(arg, "--") == 0) {
@@ -338,11 +346,12 @@ int kjsmain(int argc, char** argv)
     JSLock lock;
 
     bool prettyPrint = false;
+    bool dump = false;
     Vector<UString> fileNames;
     Vector<UString> arguments;
-    parseArguments(argc, argv, fileNames, arguments, prettyPrint);
+    parseArguments(argc, argv, fileNames, arguments, prettyPrint, dump);
 
-    bool success = runWithScripts(fileNames, arguments, prettyPrint);
+    bool success = runWithScripts(fileNames, arguments, prettyPrint, dump);
 
 #ifndef NDEBUG
     Collector::collect();
