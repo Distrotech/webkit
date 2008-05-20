@@ -1,3 +1,10 @@
+2008-05-17  Oliver Hunt  <oliver@apple.com>
+
+        Forgot to check in the results to the activation gc tests
+
+        * fast/js/duplicate-param-gc-crash-expected.txt: Added.
+        * fast/js/var-shadows-arg-gc-crash-expected.txt: Added.
+
 2008-05-17  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
