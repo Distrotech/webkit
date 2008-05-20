@@ -547,8 +547,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         int r1 = (++vPC)->u.operand;
         int id0 = (++vPC)->u.operand;
 
+        JSObject* base = r[r1].u.jsValue->toObject(exec);
+        // FIXME: missing exception check
         Identifier& ident = codeBlock->identifiers[id0];
-        r[r0].u.jsValue = r[r1].u.jsObject->get(exec, ident);
+        r[r0].u.jsValue = base->get(exec, ident);
 
         ++vPC;
         NEXT_OPCODE;
@@ -558,8 +560,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         int id0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
 
+        JSObject* base = r[r0].u.jsValue->toObject(exec);
+        // FIXME: missing exception check
         Identifier& ident = codeBlock->identifiers[id0];
-        r[r0].u.jsObject->put(exec, ident, r[r1].u.jsValue);
+        base->put(exec, ident, r[r1].u.jsValue);
 
         ++vPC;
         NEXT_OPCODE;
@@ -735,7 +739,9 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             
             // FIXME: Substitute lexical global object for null.
 
-            JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
+            JSObject* thisObj = (r[argv].u.jsValue)->toObject(exec);
+            // FIXME: needs exception check
+            
             List args(&r[argv + 1].u.jsValue, argc - 1);
 
             r[r0].u.jsValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
