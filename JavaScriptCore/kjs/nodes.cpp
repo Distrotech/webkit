@@ -5402,10 +5402,8 @@ RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID
     }
 
     RefPtr<LabelID> defaultLabel;
-    if (m_defaultClause) {
-        defaultLabel = generator.newLabel();
-        generator.emitJump(defaultLabel.get());
-    }
+    defaultLabel = generator.newLabel();
+    generator.emitJump(defaultLabel.get());
 
     RegisterID* result = 0;
 
@@ -5424,6 +5422,8 @@ RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID
         generator.emitLabel(labelVector[i++].get());
         result = statementListEmitCode(list->getClause()->children(), generator, dst);
     }
+    if (!m_defaultClause)
+        generator.emitLabel(defaultLabel.get());
 
     ASSERT(i == labelVector.size());
 
