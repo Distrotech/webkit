@@ -209,7 +209,10 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
 
+#ifndef NDEBUG
     dumpRegisters(registers, r);
+#endif
+
 #if HAVE(COMPUTED_GOTO)
     #define NEXT_OPCODE goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
@@ -421,7 +424,11 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
     }
     BEGIN_OPCODE(op_end) {
         int r0 = (++vPC)->u.operand;
+#ifndef NDEBUG
         printf("End: %s\n", r[r0].u.jsValue->toString(exec).ascii());
+#else
+        UNUSED_PARAM(r0);
+#endif
         return;
     }
     }
