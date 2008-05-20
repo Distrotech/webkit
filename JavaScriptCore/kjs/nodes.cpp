@@ -552,6 +552,12 @@ JSValue* RegExpNode::evaluate(ExecState* exec)
 
 // ------------------------------ ThisNode -------------------------------------
 
+RegisterID* ThisNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RegisterID* r0 = generator.getRegister(CommonIdentifiers::shared()->thisIdentifier);
+    return dst ? generator.emitMove(dst, r0) : r0;
+}
+
 // ECMA 11.1.1
 JSValue* ThisNode::evaluate(ExecState* exec)
 {
@@ -1222,7 +1228,7 @@ RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, Register
 {
     RegisterID* r0 = dst ? dst : generator.newTemporary();
     if (RegisterID* r1 = generator.getRegister(m_ident))
-        return generator.emitCall(r0, r1, m_args.get());
+        return generator.emitCall(r0, r1, 0, m_args.get());
 
     ASSERT_NOT_REACHED();
     return 0;
