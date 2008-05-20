@@ -185,7 +185,7 @@ JSObject* JSActivation::createArgumentsObject(ExecState* exec)
     int argv = callFrame[Machine::ArgumentStartRegister].u.i;
     int argc = callFrame[Machine::ArgumentCount].u.i;
 
-    List args(&(*registerBase() + argv + 1)->u.jsValue, argc - 1);
+    List args(&(*registerBase() + callFrame[Machine::CallerRegisterOffset].u.i + argv + 1)->u.jsValue, argc - 1);
     return new Arguments(exec, function, args, this);
 }
 
