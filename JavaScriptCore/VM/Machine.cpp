@@ -251,15 +251,21 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     registers->reserveCapacity(512);
 
     int oldROffset = globalObject->rOffset();
-    int newROffset = registers->size() + codeBlock->numVars;
 
-    registers->resize(newROffset + codeBlock->numTemporaries);
-    Register* r = registers->data() + newROffset;
+    // Allocate enough register space for this code block.
+    int rOffset = oldROffset + codeBlock->numVars + codeBlock->numParameters;
+    registers->resize(rOffset + codeBlock->numTemporaries);
+    globalObject->setROffset(rOffset);
+
+    // Move previously defined locals to make room for newly defined locals.
+    int shift = rOffset - oldROffset;
+    if (oldROffset && shift)
+        memmove(registers->data() + shift, registers->data(), oldROffset * sizeof(Register));
+
+    Register* r = registers->data() + rOffset;
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
-
-    globalObject->setROffset(newROffset);
-  
+    
 #if HAVE(COMPUTED_GOTO)
     #define NEXT_OPCODE goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
@@ -927,7 +933,8 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 #else
         UNUSED_PARAM(r0);
 #endif
-        globalObject->setROffset(oldROffset);
+        int rOffset = r - registers->data();
+        registers->resize(rOffset);
         return;
     }
     }
