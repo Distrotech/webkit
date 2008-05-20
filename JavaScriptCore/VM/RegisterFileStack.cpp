@@ -44,8 +44,10 @@ RegisterFile* RegisterFileStack::pushGlobalRegisterFile()
     RegisterFile* current = this->current();
 
     // Common case: Existing register file is not in use: re-use it.
-    if (!current->size())
+    if (!current->size()) {
+        current->setSafeForReentry(true);
         return current;
+    }
 
     // Slow case: Existing register file is in use: Create a nested
     // register file with a copy of this register file's globals.
@@ -86,13 +88,11 @@ void RegisterFileStack::popGlobalRegisterFile()
 
 RegisterFile* RegisterFileStack::pushFunctionRegisterFile()
 {
-    m_functionStackDepth++;
     return allocateRegisterFile(current()->maxSize() - current()->size());
 }
 
 void RegisterFileStack::popFunctionRegisterFile()
 {
-    m_functionStackDepth--;
     delete m_stack.last();
     m_stack.removeLast();
 }

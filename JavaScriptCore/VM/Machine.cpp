@@ -723,7 +723,12 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
 JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFileStack* registerFileStack, ScopeChainNode* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->current();
-    return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception);
+    if (registerFile->safeForReentry())
+        return Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception);
+    registerFile = registerFileStack->pushFunctionRegisterFile();
+    JSValue* result = Machine::execute(evalNode, exec, thisObj, registerFile, registerFile->size(), scopeChain, exception);
+    registerFileStack->popFunctionRegisterFile();
+    return result;
 }
 
 ALWAYS_INLINE void Machine::setScopeChain(ExecState* exec, ScopeChainNode*& scopeChain, ScopeChainNode* newScopeChain)
@@ -1421,11 +1426,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int dst = (++vPC)->u.operand;
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
-
+#ifndef NDEBUG
+        int registerOffset = r - (*registerBase);
+#endif
         JSObject* baseObj = r[base].u.jsValue->toObject(exec);
 
         Identifier& ident = codeBlock->identifiers[property];
         JSValue *result = baseObj->get(exec, ident);
+        ASSERT(registerOffset == (r - (*registerBase)));
         VM_CHECK_EXCEPTION();
         r[dst].u.jsValue = result;
         ++vPC;
@@ -1443,11 +1451,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int base = (++vPC)->u.operand;
         int property = (++vPC)->u.operand;
         int value = (++vPC)->u.operand;
+#ifndef NDEBUG
+        int registerOffset = r - (*registerBase);
+#endif
 
         JSObject* baseObj = r[base].u.jsValue->toObject(exec);
         
         Identifier& ident = codeBlock->identifiers[property];
         baseObj->put(exec, ident, r[value].u.jsValue);
+        ASSERT(registerOffset == (r - (*registerBase)));
         
         VM_CHECK_EXCEPTION();
         ++vPC;

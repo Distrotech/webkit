@@ -1,3 +1,29 @@
+2008-05-14  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 19024: SQUIRRELFISH: ASSERTION FAILED: activation->isActivationObject() in Machine::unwindCallFrame
+        <https://bugs.webkit.org/show_bug.cgi?id=19024>
+
+        This fixes a number of issues.  The most important is that we now check every register
+        file for tainting rather than just looking for function register files as that was
+        insufficient. Additionally guarded against implicit re-entry into Eval code.
+
+        Also added a few additional assertions to reduce the amout of time between something
+        going wrong and us seeing the error.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::growBuffer):
+        (KJS::RegisterFile::addGlobalSlots):
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::pushGlobalRegisterFile):
+        (KJS::RegisterFileStack::pushFunctionRegisterFile):
+        * VM/RegisterFileStack.h:
+        (KJS::RegisterFileStack::inImplicitCall):
+
 2008-05-14  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

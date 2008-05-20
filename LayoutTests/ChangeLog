@@ -1,5 +1,17 @@
 2008-05-14  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Maciej.
+
+        Bug 19024: SQUIRRELFISH: ASSERTION FAILED: activation->isActivationObject() in Machine::unwindCallFrame
+        <https://bugs.webkit.org/show_bug.cgi?id=19024>
+
+        Make sure we handled tainted global RegisterFiles properly.
+
+        * fast/js/implicit-global-to-global-reentry-expected.txt: Added.
+        * fast/js/implicit-global-to-global-reentry.html: Added.
+
+2008-05-14  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Geoff.
 
         Bug 19025: SQUIRRELFISH: malformed syntax in onload handler causes crash
