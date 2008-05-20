@@ -643,6 +643,24 @@ RegisterID* CodeGenerator::emitEnd(RegisterID* r0)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitConstruct(RegisterID* r0, RegisterID* r1, ArgumentsNode* argumentsNode)
+{
+    // Generate code for arguments.
+    Vector<RefPtr<RegisterID>, 16> argv;
+    for (ArgumentListNode* n = argumentsNode->m_listNode.get(); n; n = n->m_next.get()) {
+        argv.append(newTemporary());
+        emitNode(argv.last().get(), n);
+    }
+
+    instructions().append(machine().getOpcode(op_construct));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(argv.size() ? argv[0]->index() : m_temporaries.size()); // argv
+    instructions().append(argv.size()); // argc
+    return r0;
+}
+
+
 RegisterID* CodeGenerator::emitPushScope(RegisterID* r0)
 {
     m_codeBlock->needsActivation = true;

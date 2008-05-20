@@ -1,3 +1,21 @@
+2008-04-01  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Maciej Stachowiak.
+
+        Add support for calling Native constructors like new Array(). 
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitConstruct):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::NewExprNode::emitCode):
+        * kjs/nodes.h:
+
 2008-04-01  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.

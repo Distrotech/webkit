@@ -89,6 +89,8 @@ namespace KJS {
         macro(op_call) \
         macro(op_ret) \
         \
+        macro(op_construct) \
+        \
         macro(op_push_scope) \
         macro(op_pop_scope) \
         \

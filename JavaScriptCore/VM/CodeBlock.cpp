@@ -345,6 +345,14 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] ret\t\t%s\n", location, registerName(r0).c_str());
             break;
         }
+        case op_construct: {
+            int r0 = (++it)->u.operand;
+            int r1 = (++it)->u.operand;
+            int tempCount = (++it)->u.operand;
+            int argCount = (++it)->u.operand;
+            printf("[%4d] construct\t%s, %s, %d, %d\n", location, registerName(r0).c_str(), registerName(r1).c_str(), tempCount, argCount);
+            break;
+        }
         case op_push_scope: {
             int r0 = (++it)->u.operand;
             printf("[%4d] push_scope\t%s\n", location, registerName(r0).c_str());
