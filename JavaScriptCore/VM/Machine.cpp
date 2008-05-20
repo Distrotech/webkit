@@ -40,28 +40,71 @@
 
 namespace KJS {
 
-void Machine::dumpRegisters(const Vector<Register>* registers, Register* r)
+void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, const Register* registerBase, const Register* r)
 {
-    printf("\nRegisters: ");
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain->bottom());
+    InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
+    codeBlock->dump(&tmpExec);
+    dumpRegisters(codeBlock, registerBase, r);
+}
 
-    size_t size = registers->size();
-    for (size_t i = 0; i < size; ++i) {
-        printf("| %10p ", (*registers)[i].u.jsValue);
-    }
-    printf("|\n           ");
-
-    Vector<Register>::const_iterator it = registers->begin();
-    for ( ; it != r; ++it)
-        printf("| %10p ", it);
-
-    printf("|     r^     ");
-    ++it;
+void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register* registerBase, const Register* r)
+{
+    printf("Register frame: \n\n");
+    printf("----------------------------------------\n");
+    printf("     use      |   address  |    value   \n");
+    printf("----------------------------------------\n");
     
-    Vector<Register>::const_iterator end = registers->end();
-    for ( ; it < end; ++it)
-        printf("| %10p ", it);
+    bool isGlobalFrame = !codeBlock->numParameters; // All functions have at least a "this" parameter
 
-    printf("|\n");
+    const Register* it;
+    const Register* end;
+    
+    if (isGlobalFrame) {
+        it = registerBase;
+        end = r;
+        if (it != end) {
+            do {
+                printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+    } else {
+        it = r - codeBlock->numVars - codeBlock->numParameters - returnInfoSize;
+        end = it + returnInfoSize;
+        if (it != end) {
+            do {
+                printf("[return info] | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+        
+        end = it + codeBlock->numParameters;
+        if (it != end) {
+            do {
+                printf("[param]       | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+        }
+
+        end = it + codeBlock->numVars;
+        if (it != end) {
+            do {
+                printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+        }
+    }
+
+    end = it + codeBlock->numTemporaries;
+    if (it != end) {
+        do {
+            printf("[temp]        | %10p | %10p \n", it, (*it).u.jsValue);
+            ++it;
+        } while (it != end);
+    }
 }
 
 static inline bool jsLess(ExecState* exec, JSValue* v1, JSValue* v2)
