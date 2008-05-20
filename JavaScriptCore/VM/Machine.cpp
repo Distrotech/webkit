@@ -1513,6 +1513,27 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         return r[r0].u.jsValue;
     }
+    BEGIN_OPCODE(op_jsr) {
+        /* jsr retAddrDst(r) target(address)
+         
+         Places the address of the next instruction into the retAddrDst
+         register and branches to target.
+         */
+        int retAddrDst = (++vPC)->u.operand;
+        int offset = (++vPC)->u.operand;
+        r[retAddrDst].u.vPC = vPC + 1;
+        vPC += offset;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_sret) {
+        /* sret retAddrSrc(r)
+         
+         Sets the vPC to the address stored in the retAddrSrc register.
+         */
+        int retAddrSrc = (++vPC)->u.operand;
+        vPC = r[retAddrSrc].u.vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_builtin_throw) {
         ASSERT(exec->exceptionSource()->u.opcode != getOpcode(op_builtin_throw));
         exceptionValue = exec->exception();
