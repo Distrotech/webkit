@@ -28,7 +28,6 @@
 
 namespace KJS {
 
-  class AttachedGlobalObject;
   class ExecState;
   class JSGlobalObject;
   class JSObject;

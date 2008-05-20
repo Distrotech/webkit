@@ -24,7 +24,6 @@
 #include "debugger.h"
 
 #include "JSGlobalObject.h"
-#include "ustring.h"
 
 namespace KJS {
 

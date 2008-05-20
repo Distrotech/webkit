@@ -2,6 +2,22 @@
 
         Reviewed by Oliver Hunt.
         
+        A little more debugger action: supply a real line number, sourceId,
+        and sourceURL in op_new_error.
+        
+        SunSpider reports a .2% speedup. Not sure what that's about.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): Use the new good stuff in op_new_error.
+
+        * kjs/nodes.cpp:
+        (KJS::RegExpNode::emitCode): Use the shared emitThrowError instead of
+        rolling our own.
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         A little more debugger action: implemented the exception callback.
         
         SunSpider reports a .2% speedup. Not sure what that's about.
