@@ -63,7 +63,7 @@ using namespace std;
 
 static AddNode* makeAddNode(ExpressionNode*, ExpressionNode*);
 static LessNode* makeLessNode(ExpressionNode*, ExpressionNode*);
-static ExpressionNode* makeAssignNode(ExpressionNode* loc, Operator, ExpressionNode* expr);
+static ExpressionNode* makeAssignNode(ExpressionNode* loc, Operator, ExpressionNode* expr, bool locHasAssignments, bool exprHasAssignments);
 static ExpressionNode* makePrefixNode(ExpressionNode* expr, Operator);
 static ExpressionNode* makePostfixNode(ExpressionNode* expr, Operator);
 static PropertyNode* makeGetterOrSetterPropertyNode(const Identifier &getOrSet, const Identifier& name, ParameterNode*, FunctionBodyNode*, const SourceRange&);
@@ -97,14 +97,14 @@ template <typename T> NodeDeclarationInfo<T> createNodeDeclarationInfo(T node, P
                                                                        ParserRefCountedData<DeclarationStacks::FunctionStack>* funcDecls,
                                                                        FeatureInfo info) 
 {
-    ASSERT((info & ~(EvalFeature | ClosureFeature)) == 0);
+    ASSERT((info & ~(EvalFeature | ClosureFeature | AssignFeature)) == 0);
     NodeDeclarationInfo<T> result = {node, varDecls, funcDecls, info};
     return result;
 }
 
 template <typename T> NodeFeatureInfo<T> createNodeFeatureInfo(T node, FeatureInfo info) 
 {
-    ASSERT((info & ~(EvalFeature | ClosureFeature)) == 0);
+    ASSERT((info & ~(EvalFeature | ClosureFeature | AssignFeature)) == 0);
     NodeFeatureInfo<T> result = {node, info};
     return result;
 }
@@ -437,10 +437,10 @@ UnaryExprCommon:
     DELETETOKEN UnaryExpr               { $$ = createNodeFeatureInfo<ExpressionNode*>(makeDeleteNode($2.m_node), $2.m_featureInfo); }
   | VOIDTOKEN UnaryExpr                 { $$ = createNodeFeatureInfo<ExpressionNode*>(new VoidNode($2.m_node), $2.m_featureInfo); }
   | TYPEOF UnaryExpr                    { $$ = createNodeFeatureInfo<ExpressionNode*>(makeTypeOfNode($2.m_node), $2.m_featureInfo); }
-  | PLUSPLUS UnaryExpr                  { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpPlusPlus), $2.m_featureInfo); }
-  | AUTOPLUSPLUS UnaryExpr              { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpPlusPlus), $2.m_featureInfo); }
-  | MINUSMINUS UnaryExpr                { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpMinusMinus), $2.m_featureInfo); }
-  | AUTOMINUSMINUS UnaryExpr            { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpMinusMinus), $2.m_featureInfo); }
+  | PLUSPLUS UnaryExpr                  { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpPlusPlus), $2.m_featureInfo | AssignFeature); }
+  | AUTOPLUSPLUS UnaryExpr              { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpPlusPlus), $2.m_featureInfo | AssignFeature); }
+  | MINUSMINUS UnaryExpr                { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpMinusMinus), $2.m_featureInfo | AssignFeature); }
+  | AUTOMINUSMINUS UnaryExpr            { $$ = createNodeFeatureInfo<ExpressionNode*>(makePrefixNode($2.m_node, OpMinusMinus), $2.m_featureInfo | AssignFeature); }
   | '+' UnaryExpr                       { $$ = createNodeFeatureInfo<ExpressionNode*>(new UnaryPlusNode($2.m_node), $2.m_featureInfo); }
   | '-' UnaryExpr                       { $$ = createNodeFeatureInfo<ExpressionNode*>(makeNegateNode($2.m_node), $2.m_featureInfo); }
   | '~' UnaryExpr                       { $$ = createNodeFeatureInfo<ExpressionNode*>(new BitwiseNotNode($2.m_node), $2.m_featureInfo); }
@@ -667,19 +667,19 @@ ConditionalExprNoBF:
 AssignmentExpr:
     ConditionalExpr
   | LeftHandSideExpr AssignmentOperator AssignmentExpr
-                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node), $1.m_featureInfo | $3.m_featureInfo); }
+                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node, $1.m_featureInfo & AssignFeature, $3.m_featureInfo & AssignFeature), $1.m_featureInfo | $3.m_featureInfo | AssignFeature); }
 ;
 
 AssignmentExprNoIn:
     ConditionalExprNoIn
   | LeftHandSideExpr AssignmentOperator AssignmentExprNoIn
-                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node), $1.m_featureInfo | $3.m_featureInfo); }
+                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node, $1.m_featureInfo & AssignFeature, $3.m_featureInfo & AssignFeature), $1.m_featureInfo | $3.m_featureInfo | AssignFeature); }
 ;
 
 AssignmentExprNoBF:
     ConditionalExprNoBF
   | LeftHandSideExprNoBF AssignmentOperator AssignmentExpr
-                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node), $1.m_featureInfo | $3.m_featureInfo); }
+                                        { $$ = createNodeFeatureInfo<ExpressionNode*>(makeAssignNode($1.m_node, $2, $3.m_node, $1.m_featureInfo & AssignFeature, $3.m_featureInfo & AssignFeature), $1.m_featureInfo | $3.m_featureInfo | AssignFeature); }
 ;
 
 AssignmentOperator:
@@ -753,7 +753,7 @@ VariableDeclarationList:
                                           $$.m_funcDeclarations = 0;
                                           $$.m_featureInfo = 0;
                                         }
-  | IDENT Initializer                   { $$.m_node = new AssignResolveNode(*$1, $2.m_node);
+  | IDENT Initializer                   { $$.m_node = new AssignResolveNode(*$1, $2.m_node, $2.m_featureInfo & AssignFeature);
                                           $$.m_varDeclarations = new ParserRefCountedData<DeclarationStacks::VarStack>;
                                           appendToVarDeclarationList($$.m_varDeclarations, *$1, DeclarationStacks::HasInitializer);
                                           $$.m_funcDeclarations = 0;
@@ -767,7 +767,7 @@ VariableDeclarationList:
                                           $$.m_featureInfo = $1.m_featureInfo;
                                         }
   | VariableDeclarationList ',' IDENT Initializer
-                                        { $$.m_node = combineVarInitializers($1.m_node, new AssignResolveNode(*$3, $4.m_node));
+                                        { $$.m_node = combineVarInitializers($1.m_node, new AssignResolveNode(*$3, $4.m_node, $4.m_featureInfo & AssignFeature));
                                           $$.m_varDeclarations = $1.m_varDeclarations;
                                           appendToVarDeclarationList($$.m_varDeclarations, *$3, DeclarationStacks::HasInitializer);
                                           $$.m_funcDeclarations = 0;
@@ -782,7 +782,7 @@ VariableDeclarationListNoIn:
                                           $$.m_funcDeclarations = 0;
                                           $$.m_featureInfo = 0;
                                         }
-  | IDENT InitializerNoIn               { $$.m_node = new AssignResolveNode(*$1, $2.m_node);
+  | IDENT InitializerNoIn               { $$.m_node = new AssignResolveNode(*$1, $2.m_node, $2.m_featureInfo & AssignFeature);
                                           $$.m_varDeclarations = new ParserRefCountedData<DeclarationStacks::VarStack>;
                                           appendToVarDeclarationList($$.m_varDeclarations, *$1, DeclarationStacks::HasInitializer);
                                           $$.m_funcDeclarations = 0;
@@ -796,7 +796,7 @@ VariableDeclarationListNoIn:
                                           $$.m_featureInfo = $1.m_featureInfo;
                                         }
   | VariableDeclarationListNoIn ',' IDENT InitializerNoIn
-                                        { $$.m_node = combineVarInitializers($1.m_node, new AssignResolveNode(*$3, $4.m_node));
+                                        { $$.m_node = combineVarInitializers($1.m_node, new AssignResolveNode(*$3, $4.m_node, $4.m_featureInfo & AssignFeature));
                                           $$.m_varDeclarations = $1.m_varDeclarations;
                                           appendToVarDeclarationList($$.m_varDeclarations, *$3, DeclarationStacks::HasInitializer);
                                           $$.m_funcDeclarations = 0;
@@ -1125,7 +1125,7 @@ static LessNode* makeLessNode(ExpressionNode* left, ExpressionNode* right)
     return new LessNode(left, right);
 }
 
-static ExpressionNode* makeAssignNode(ExpressionNode* loc, Operator op, ExpressionNode* expr)
+static ExpressionNode* makeAssignNode(ExpressionNode* loc, Operator op, ExpressionNode* expr, bool locHasAssignments, bool exprHasAssignments)
 {
     if (!loc->isLocation())
         return new AssignErrorNode(loc, op, expr);
@@ -1133,22 +1133,22 @@ static ExpressionNode* makeAssignNode(ExpressionNode* loc, Operator op, Expressi
     if (loc->isResolveNode()) {
         ResolveNode* resolve = static_cast<ResolveNode*>(loc);
         if (op == OpEqual)
-            return new AssignResolveNode(resolve->identifier(), expr);
+            return new AssignResolveNode(resolve->identifier(), expr, exprHasAssignments);
         else
-            return new ReadModifyResolveNode(resolve->identifier(), op, expr);
+            return new ReadModifyResolveNode(resolve->identifier(), op, expr, exprHasAssignments);
     }
     if (loc->isBracketAccessorNode()) {
         BracketAccessorNode* bracket = static_cast<BracketAccessorNode*>(loc);
         if (op == OpEqual)
-            return new AssignBracketNode(bracket->base(), bracket->subscript(), expr);
+            return new AssignBracketNode(bracket->base(), bracket->subscript(), expr, locHasAssignments, exprHasAssignments);
         else
-            return new ReadModifyBracketNode(bracket->base(), bracket->subscript(), op, expr);
+            return new ReadModifyBracketNode(bracket->base(), bracket->subscript(), op, expr, locHasAssignments, exprHasAssignments);
     }
     ASSERT(loc->isDotAccessorNode());
     DotAccessorNode* dot = static_cast<DotAccessorNode*>(loc);
     if (op == OpEqual)
-        return new AssignDotNode(dot->base(), dot->identifier(), expr);
-    return new ReadModifyDotNode(dot->base(), dot->identifier(), op, expr);
+        return new AssignDotNode(dot->base(), dot->identifier(), expr, exprHasAssignments);
+    return new ReadModifyDotNode(dot->base(), dot->identifier(), op, expr, exprHasAssignments);
 }
 
 static ExpressionNode* makePrefixNode(ExpressionNode* expr, Operator op)

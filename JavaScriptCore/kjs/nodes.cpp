@@ -4341,9 +4341,11 @@ found:
 
 RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-    RegisterID* value = generator.emitNode(dst, m_right.get());
-    return generator.emitPutById(base.get(), m_ident, value);
+    RefPtr<RegisterID> base = generator.emitNodeForLeftHandSide(m_base.get(), m_rightHasAssignments);
+    RefPtr<RegisterID> value = generator.destinationForAssignResult(dst);
+    RegisterID* result = generator.emitNode(value.get(), m_right.get());
+    generator.emitPutById(base.get(), m_ident, result);
+    return generator.moveToDestinationIfNeeded(dst, result);
 }
 
 void AssignDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4368,9 +4370,7 @@ JSValue* AssignDotNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* ReadModifyDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-
-    // FIXME: should not write temp value to dst if dst is a local!
+    RefPtr<RegisterID> base = generator.emitNodeForLeftHandSide(m_base.get(), m_rightHasAssignments);
     RefPtr<RegisterID> value = generator.emitGetById(generator.tempDestination(dst), base.get(), m_ident);
     RegisterID* change = generator.emitNode(m_right.get());
     RegisterID* updatedValue = emitReadModifyAssignment(generator, generator.finalDestination(dst, value.get()), value.get(), change, m_operator);
@@ -4421,10 +4421,12 @@ JSValue* AssignErrorNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* AssignBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
-    RegisterID* value = generator.emitNode(dst, m_right.get());
-    return generator.emitPutByVal(base.get(), property.get(), value);
+    RefPtr<RegisterID> base = generator.emitNodeForLeftHandSide(m_base.get(), m_subscriptHasAssignments || m_rightHasAssignments);
+    RefPtr<RegisterID> property = generator.emitNodeForLeftHandSide(m_subscript.get(), m_rightHasAssignments);
+    RefPtr<RegisterID> value = generator.destinationForAssignResult(dst);
+    RegisterID* result = generator.emitNode(value.get(), m_right.get());
+    generator.emitPutByVal(base.get(), property.get(), result);
+    return generator.moveToDestinationIfNeeded(dst, result);
 }
 
 void AssignBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
@@ -4462,8 +4464,8 @@ JSValue* AssignBracketNode::evaluate(OldInterpreterExecState* exec)
 
 RegisterID* ReadModifyBracketNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 {
-    RefPtr<RegisterID> base = generator.emitNode(m_base.get());
-    RefPtr<RegisterID> property = generator.emitNode(m_subscript.get());
+    RefPtr<RegisterID> base = generator.emitNodeForLeftHandSide(m_base.get(), m_subscriptHasAssignments || m_rightHasAssignments);
+    RefPtr<RegisterID> property = generator.emitNodeForLeftHandSide(m_subscript.get(), m_rightHasAssignments);
 
     RefPtr<RegisterID> value = generator.emitGetByVal(generator.tempDestination(dst), base.get(), property.get());
     RegisterID* change = generator.emitNode(m_right.get());
@@ -5095,7 +5097,7 @@ ForInNode::ForInNode(const Identifier& ident, ExpressionNode* in, ExpressionNode
     , m_identIsVarDecl(true)
 {
     if (in)
-        m_init = new AssignResolveNode(ident, in);
+        m_init = new AssignResolveNode(ident, in, true);
     // for( var foo = bar in baz )
 }
 
