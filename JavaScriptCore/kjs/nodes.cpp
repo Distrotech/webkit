@@ -5504,8 +5504,6 @@ RegisterID* FuncExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 
 FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChain& scopeChain)
 {
-    exec->dynamicGlobalObject()->tearOffActivation(exec);
-
     bool named = !m_ident.isNull();
     JSObject* functionScopeObject = 0;
 
