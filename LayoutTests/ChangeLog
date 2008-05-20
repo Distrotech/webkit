@@ -1,3 +1,12 @@
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Added layout test for a codegen crash with run-time parse errors.
+
+        * fast/js/exception-codegen-crash-expected.txt: Added.
+        * fast/js/exception-codegen-crash.html: Added.
+
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
         RS=Geoff.
