@@ -1,3 +1,20 @@
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam.
+        
+        - fix crash when running SunSpider full harness
+        
+        When growing the register file's buffer to make space for new globals,
+        make sure to copy accounting for the fact that the new space is logically
+        at the beginning of the buffer in this case, instead of at the end as when
+        growing for a new call frame.
+
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::newBuffer):
+        (KJS::RegisterFile::growBuffer):
+        (KJS::RegisterFile::addGlobalSlots):
+        * VM/RegisterFile.h:
+
 2008-04-11  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
