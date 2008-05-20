@@ -1,3 +1,11 @@
+2008-04-14  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - added support for --ubench mode
+
+        * Scripts/run-sunspider:
+
 2008-03-26  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
