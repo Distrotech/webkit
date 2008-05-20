@@ -56,7 +56,7 @@ namespace WebCore {
         virtual bool implementsHasInstance() const;
         virtual bool hasInstance(KJS::ExecState*, KJS::JSValue*);
 
-        virtual bool implementsCall() const;
+        virtual KJS::CallType getCallData(KJS::CallData&);
         virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject* thisObj, const KJS::List& args);
 
         virtual void getPropertyNames(KJS::ExecState*, KJS::PropertyNameArray&);

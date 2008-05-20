@@ -86,9 +86,9 @@ Bindings::Class* ObjcInstance::getClass() const
     return static_cast<Bindings::Class*>(_class);
 }
 
-bool ObjcInstance::implementsCall() const
+CallType ObjcInstance::getCallData(CallData&)
 {
-    return [_instance.get() respondsToSelector:@selector(invokeDefaultMethodWithArguments:)];
+    return [_instance.get() respondsToSelector:@selector(invokeDefaultMethodWithArguments:)] ? CallTypeNative : CallTypeNone;
 }
 
 JSValue* ObjcInstance::invokeMethod(ExecState* exec, const MethodList &methodList, const List &args)
