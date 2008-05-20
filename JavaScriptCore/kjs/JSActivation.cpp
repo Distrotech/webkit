@@ -51,7 +51,7 @@ JSActivation::~JSActivation()
 
 void JSActivation::copyRegisters()
 {
-    int numRegisters = symbolTable().size();
+    int numRegisters = d()->functionBody->generatedCode().numLocals;
     if (!numRegisters)
         return;
 

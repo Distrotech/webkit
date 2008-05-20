@@ -1,3 +1,18 @@
+2008-05-16  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - fixed Bug 19044: SquirrelFish: Bogus values enter evaluation when closing over scope with parameter and var with same name
+        https://bugs.webkit.org/show_bug.cgi?id=19044
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::copyRegisters): Use numLocals from the code
+        block rather than the size of the symbol table for the number of
+        registers to copy, to account for duplicate parameters and vars
+        with the same name as parameters (we still have potentially
+        suboptimal codegen in that we allocate a local register for the
+        var in the latter case but it is never used).
+        
 2008-05-15  Geoffrey Garen  <ggaren@apple.com>
 
         Not reviewed.
