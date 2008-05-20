@@ -1,3 +1,13 @@
+2008-05-03  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff and Sam.
+        
+        - generate HTML bytecode docs at build time
+
+        * DerivedSources.make:
+        * docs: Added.
+        * docs/make-bytecode-docs.pl: Added.
+
 2008-05-03  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
