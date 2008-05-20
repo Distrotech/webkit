@@ -30,11 +30,13 @@
 #define RegisterFile_h
 
 #include "Register.h"
+#include "collector.h"
+#include <wtf/Noncopyable.h>
 
 namespace KJS {
 
 /*
-    The register file is a stack of register frames. We represent a register
+    A register file is a stack of register frames. We represent a register
     frame by its offset from "base", the logical first entry in the register
     file. The bottom-most register frame's offset from base is 0.
     
@@ -80,46 +82,67 @@ namespace KJS {
     "base", not "buffer".
 */
 
-    class RegisterFile {
+    class RegisterFileStack;
+    
+    class RegisterFile : Noncopyable {
     public:
-        RegisterFile()
+        RegisterFile(RegisterFileStack* stack)
             : m_size(0)
             , m_capacity(0)
             , m_base(0)
             , m_buffer(0)
+            , m_stack(stack)
         {
         }
         
         ~RegisterFile()
         {
-            if (m_buffer)
-                fastFree(m_buffer);
+            setBuffer(0);
         }
         
+        // Pointer to a value that holds the base of this register file.
         Register** basePointer() { return &m_base; }
-
+        
         void resize(size_t size)
         {
             if (size > m_capacity)
-                reallocate(size);
+                growBuffer(size);
             m_size = size;
         }
+        size_t size() { return m_size; }
+        
         void clear();
 
-        void addGlobals(size_t count);
-        size_t numGlobals() { return m_base - m_buffer; }
-        
-        void mark();
+        void addGlobalSlots(size_t count);
+        size_t numGlobalSlots() { return m_base - m_buffer; }
+
+        void copyGlobals(RegisterFile* src);
+
+        void mark()
+        {
+            Collector::markStackObjectsConservatively(m_buffer, m_base + m_size);
+        }
 
     private:
-        void reallocate(size_t minCapacity);
+        size_t newBuffer(size_t size, size_t capacity, size_t minCapacity);
+        void growBuffer(size_t minCapacity);
+        void setBuffer(Register* buffer)
+        {
+            if (m_buffer)
+                fastFree(m_buffer);
 
+            m_buffer = buffer;
+        }
+        
+        void setBase(Register*);
+        
         size_t m_size;
         size_t m_capacity;
         Register* m_base;
         Register* m_buffer;
+        RegisterFileStack* m_stack;
     };
-
+    
 } // namespace KJS
 
 #endif // RegisterFile_h

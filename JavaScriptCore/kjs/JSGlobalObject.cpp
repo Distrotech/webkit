@@ -252,7 +252,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    registerFile().clear();
+    registerFileStack().current()->clear();
     symbolTable().clear();
 
     // Prototypes
@@ -475,7 +475,7 @@ void JSGlobalObject::mark()
             scopeNode->mark();
     }
 
-    registerFile().mark();
+    registerFileStack().mark();
 
     markIfNeeded(d()->globalExec->exception());
 
