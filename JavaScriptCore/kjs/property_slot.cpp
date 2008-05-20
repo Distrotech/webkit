@@ -23,7 +23,10 @@
 
 #include "config.h"
 #include "property_slot.h"
+
+#include "JSGlobalObject.h"
 #include "object.h"
+#include "RegisterFileStack.h"
 
 namespace KJS {
 
