@@ -5641,10 +5641,10 @@ EvalNode::~EvalNode()
 
 RegisterID* EvalNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    RegisterID* r0 = statementListEmitCode(m_children, generator);
-    if (!r0)
-        r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
-    generator.emitEnd(r0);
+    RefPtr<RegisterID> dstRegister = generator.newTemporary();
+    generator.emitLoad(dstRegister.get(), jsUndefined());
+    statementListEmitCode(m_children, generator, dstRegister.get());
+    generator.emitEnd(dstRegister.get());
     return 0;
 }
 
@@ -5714,10 +5714,10 @@ RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 
 RegisterID* ProgramNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    RegisterID* r0 = statementListEmitCode(m_children, generator);
-    if (!r0)
-        r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
-    generator.emitEnd(r0);
+    RefPtr<RegisterID> dstRegister = generator.newTemporary();
+    generator.emitLoad(dstRegister.get(), jsUndefined());
+    statementListEmitCode(m_children, generator, dstRegister.get());
+    generator.emitEnd(dstRegister.get());
     return 0;
 }
 

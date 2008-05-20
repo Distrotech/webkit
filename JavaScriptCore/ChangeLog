@@ -1,3 +1,20 @@
+2008-04-20  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18642: Iterator context may get placed into the return register, leading to much badness
+        <https://bugs.webkit.org/show_bug.cgi?id=18642>
+
+        To prevent incorrectly reusing what will become the result register for
+        eval and global code execution, we need to request and ref the destination
+        in advance of codegen.  Unfortunately this may lead to unnecessary copying,
+        although in future we can probably limit this.  Curiously SunSpider shows
+        a progression in a number of tests, although it comes out as a wash overall.
+
+        * kjs/nodes.cpp:
+        (KJS::EvalNode::emitCode):
+        (KJS::ProgramNode::emitCode):
+
 2008-04-20  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
