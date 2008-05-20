@@ -51,6 +51,7 @@ namespace KJS {
     class NumberPrototype;
     class ObjectObjectImp;
     class ObjectPrototype;
+    class ProgramCodeBlock;
     class PrototypeReflexiveFunction;
     class RangeError;
     class RangeErrorPrototype;
@@ -146,6 +147,7 @@ namespace KJS {
 
             PerThreadData perThreadData;
 
+            HashSet<ProgramCodeBlock*> codeBlocks;
             RegisterFileStack registerFileStack;
         };
 
@@ -248,6 +250,8 @@ namespace KJS {
         ExecStateStack& activeExecStates() const { return d()->activeExecStates; }
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
+
+        HashSet<ProgramCodeBlock*>& codeBlocks() { return d()->codeBlocks; }
 
         RegisterFileStack& registerFileStack() { return d()->registerFileStack; }
 

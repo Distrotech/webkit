@@ -30,7 +30,7 @@
 #include "config.h"
 #include "JSGlobalObject.h"
 
-#include "Activation.h"
+#include "CodeBlock.h"
 #include "array_object.h"
 #include "bool_object.h"
 #include "date_object.h"
@@ -116,6 +116,10 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
+
+    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
+    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
+        (*it)->globalObject = 0;
     
     delete d();
 }
@@ -466,14 +470,10 @@ bool JSGlobalObject::checkTimeout()
 void JSGlobalObject::mark()
 {
     JSVariableObject::mark();
-
-    ExecStateStack::const_iterator end = d()->activeExecStates.end();
-    for (ExecStateStack::const_iterator it = d()->activeExecStates.begin(); it != end; ++it) {
-        ExecState* exec = *it;
-        exec->m_scopeChain.mark();
-        if (ScopeNode* scopeNode = exec->scopeNode())
-            scopeNode->mark();
-    }
+    
+    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
+    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
+        (*it)->mark();
 
     registerFileStack().mark();
 

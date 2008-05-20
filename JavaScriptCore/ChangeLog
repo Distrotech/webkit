@@ -1,3 +1,22 @@
+2008-04-11  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Mark constant pools for global and eval code (collectively known as
+        "program code"). (Constant pools for function code are already marked by
+        their functions.)
+        
+        The global object is responsible for marking program code constant
+        pools. Code blocks add themselves to the mark set at creation time, and
+        remove themselves from the mark set at destruction time.
+        
+        sunspider --squirrelfish reports a 1% speedup, perhaps because
+        generateCode() is now non-virtual.
+
+        * kjs/nodes.cpp: I had to use manual init and delete in this file
+        because putting an OwnPtr into the header would have created a circular
+        header dependency.
+
 2008-04-10  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Maciej.
