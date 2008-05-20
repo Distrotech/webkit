@@ -69,7 +69,6 @@ GetOptions('runs=i' => \$testRuns,
            'tests=s' => \$testsPattern,
            'help' => \$showHelp);
 
-$testRuns = 1 if $squirrelfish;
 $runShark = 1 if $runSharkCache;
 $runShark = 20 if $runShark20;
 $testRuns = 1 if $runShark;
