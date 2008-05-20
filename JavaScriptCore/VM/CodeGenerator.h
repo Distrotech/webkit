@@ -127,6 +127,7 @@ namespace KJS {
         
         RegisterID* emitMove(RegisterID*, RegisterID*);
 
+        RegisterID* emitNot(RegisterID*, RegisterID*);
         RegisterID* emitEqual(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitNotEqual(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitStrictEqual(RegisterID*, RegisterID*, RegisterID*);
@@ -154,9 +155,9 @@ namespace KJS {
         RegisterID* emitBitOr(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitBitNot(RegisterID*, RegisterID*);
 
-        RegisterID* emitNot(RegisterID*, RegisterID*);
-
         RegisterID* emitInstanceOf(RegisterID*, RegisterID*, RegisterID*);
+
+        RegisterID* emitTypeOf(RegisterID*, RegisterID*);
 
         RegisterID* emitResolve(RegisterID*, const Identifier&);
         RegisterID* emitResolve(RegisterID*, int);
