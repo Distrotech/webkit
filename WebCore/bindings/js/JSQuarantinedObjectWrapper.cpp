@@ -190,9 +190,9 @@ bool JSQuarantinedObjectWrapper::deleteProperty(ExecState* exec, unsigned identi
     return result;
 }
 
-bool JSQuarantinedObjectWrapper::implementsConstruct() const
+KJS::ConstructType JSQuarantinedObjectWrapper::getConstructData(KJS::ConstructData& data)
 {
-    return m_unwrappedObject->implementsConstruct();
+    return m_unwrappedObject->getConstructData(data);
 }
 
 JSObject* JSQuarantinedObjectWrapper::construct(ExecState* exec, const List& args)

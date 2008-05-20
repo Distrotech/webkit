@@ -1,3 +1,68 @@
+2008-04-10  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Geoffrey Garen.
+
+        Replace the use of getCallData in op_construct with the new
+        getConstructData function that replaces implementsConstruct.
+
+        * API/JSCallbackConstructor.cpp:
+        (KJS::JSCallbackConstructor::getConstructData):
+        * API/JSCallbackConstructor.h:
+        * API/JSCallbackObject.h:
+        * API/JSCallbackObjectFunctions.h:
+        (KJS::::getConstructData):
+        (KJS::::construct):
+        * API/JSObjectRef.cpp:
+        (JSObjectIsConstructor):
+        * JavaScriptCore.exp:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/CallData.h:
+        * kjs/ConstructData.h: Copied from JavaScriptCore/kjs/CallData.h.
+        (KJS::):
+        * kjs/array_object.cpp:
+        (KJS::ArrayObjectImp::getConstructData):
+        * kjs/array_object.h:
+        * kjs/bool_object.cpp:
+        (KJS::BooleanObjectImp::getConstructData):
+        * kjs/bool_object.h:
+        * kjs/date_object.cpp:
+        (KJS::DateObjectImp::getConstructData):
+        * kjs/date_object.h:
+        * kjs/error_object.cpp:
+        (KJS::ErrorObjectImp::getConstructData):
+        (KJS::NativeErrorImp::getConstructData):
+        * kjs/error_object.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::getCallData):
+        (KJS::FunctionImp::getConstructData):
+        (KJS::FunctionImp::construct):
+        * kjs/function.h:
+        * kjs/function_object.cpp:
+        (KJS::FunctionObjectImp::getConstructData):
+        * kjs/function_object.h:
+        * kjs/nodes.cpp:
+        (KJS::NewExprNode::inlineEvaluate):
+        * kjs/number_object.cpp:
+        (KJS::NumberObjectImp::getConstructData):
+        * kjs/number_object.h:
+        * kjs/object.cpp:
+        * kjs/object.h:
+        * kjs/object_object.cpp:
+        (KJS::ObjectObjectImp::getConstructData):
+        * kjs/object_object.h:
+        * kjs/regexp_object.cpp:
+        (KJS::RegExpObjectImp::getConstructData):
+        * kjs/regexp_object.h:
+        * kjs/string_object.cpp:
+        (KJS::StringObjectImp::getConstructData):
+        * kjs/string_object.h:
+        * kjs/value.cpp:
+        (KJS::JSCell::getConstructData):
+        * kjs/value.h:
+        (KJS::JSValue::getConstructData):
+
 2008-04-10  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

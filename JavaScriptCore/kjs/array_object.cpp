@@ -722,9 +722,9 @@ ArrayObjectImp::ArrayObjectImp(ExecState* exec, FunctionPrototype* funcProto, Ar
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly|DontDelete|DontEnum);
 }
 
-bool ArrayObjectImp::implementsConstruct() const
+ConstructType ArrayObjectImp::getConstructData(ConstructData&)
 {
-    return true;
+    return ConstructTypeNative;
 }
 
 // ECMA 15.4.2
