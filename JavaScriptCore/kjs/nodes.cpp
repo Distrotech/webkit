@@ -4677,8 +4677,9 @@ static inline RegisterID* statementListEmitCode(StatementVector& statements, Cod
 
     StatementVector::iterator end = statements.end();
     for (StatementVector::iterator it = statements.begin(); it != end; ++it) {
-        generator.emitDebugHook(WillExecuteStatement);
-        if (RegisterID* r1 = generator.emitNode(dst, it->get()))
+        StatementNode* n = it->get();
+        generator.emitDebugHook(WillExecuteStatement, n->firstLine(), n->lastLine());
+        if (RegisterID* r1 = generator.emitNode(dst, n))
             r0 = r1;
     }
     
@@ -5334,7 +5335,7 @@ RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
         generator.emitJumpScopes(l0.get(), 0);
         generator.emitLabel(l0.get());
     }
-    generator.emitDebugHook(WillLeaveCallFrame);
+    generator.emitDebugHook(WillLeaveCallFrame, firstLine(), lastLine());
     return generator.emitReturn(r0);
 }
 
@@ -5808,11 +5809,11 @@ void FunctionBodyNode::generateCode(ScopeChainNode* sc)
 
 RegisterID* FunctionBodyNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    generator.emitDebugHook(DidEnterCallFrame);
+    generator.emitDebugHook(DidEnterCallFrame, firstLine(), lastLine());
     statementListEmitCode(m_children, generator);
     if (!m_children.size() || !m_children.last()->isReturnNode()) {
         RegisterID* r0 = generator.emitLoad(generator.newTemporary(), jsUndefined());
-        generator.emitDebugHook(WillLeaveCallFrame);
+        generator.emitDebugHook(WillLeaveCallFrame, firstLine(), lastLine());
         generator.emitReturn(r0);
     }
     return 0;

@@ -133,7 +133,8 @@ namespace KJS {
         // The emitNode functions are just syntactic sugar for calling
         // Node::emitCode. They're the only functions that accept a NULL register.
         RegisterID* emitNode(RegisterID* dst, Node* n) {
-            ASSERT(!dst || !dst->isTemporary() || dst->refCount()); // Node::emitCode assumes that dst, if provided, is either a local or a referenced temporary.
+            // Node::emitCode assumes that dst, if provided, is either a local or a referenced temporary.
+            ASSERT(!dst || !dst->isTemporary() || dst->refCount());
             if (!m_codeBlock->lineInfo.size() || m_codeBlock->lineInfo.last().lineNumber != n->lineNo()) {
                 LineInfo info = { instructions().size(), n->lineNo() };
                 m_codeBlock->lineInfo.append(info);
@@ -236,7 +237,7 @@ namespace KJS {
         RegisterID* emitPushScope(RegisterID* scope);
         void emitPopScope();
         
-        void emitDebugHook(DebugHookID);
+        void emitDebugHook(DebugHookID, int firstLine, int lastLine);
 
         int scopeDepth() { return m_dynamicScopeDepth + m_finallyDepth; }
         

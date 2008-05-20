@@ -1,3 +1,31 @@
+2008-05-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+
+        A little more debugger action: filled in op_debug. All debugger control
+        flow works now, but variable inspection and backtraces still don't.
+        
+        SunSpider reports no change.
+
+        * VM/CodeGenerator.cpp: Changed op_debug to accept line number parameters.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::getFunctionAndArguments): Moved op_debug into a
+        NEVER_INLINE function to avoid a stunning 10% performance regression.
+        Also factored out a common function for retrieving the function and 
+        arguments from a  call frame. 
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::createArgumentsObject): Use the new factored out
+        function mentioned above.
+
+        * kjs/Parser.cpp:
+        (KJS::Parser::parse): Increment m_sourceId before assigning it, so the
+        sourceId we send to the debugger matches the sourceId recorded in the
+        node.
+
+        * kjs/nodes.cpp: Emit debugging hooks.
+
 2008-05-14  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

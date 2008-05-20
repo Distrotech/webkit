@@ -178,14 +178,13 @@ PropertySlot::GetValueFunc JSActivation::getArgumentsGetter()
 
 JSObject* JSActivation::createArgumentsObject(ExecState* exec)
 {
-    CodeBlock* codeBlock = &d()->functionBody->generatedCode();
-    Register* callFrame = registers() - codeBlock->numLocals - Machine::CallFrameHeaderSize;
+    Register* callFrame = registers() - d()->functionBody->generatedCode().numLocals - Machine::CallFrameHeaderSize;
 
-    FunctionImp* function = static_cast<FunctionImp*>(callFrame[Machine::Callee].u.jsValue);
-    int argv = callFrame[Machine::ArgumentStartRegister].u.i;
-    int argc = callFrame[Machine::ArgumentCount].u.i;
-
-    List args(&(*registerBase() + callFrame[Machine::CallerRegisterOffset].u.i + argv + 1)->u.jsValue, argc - 1);
+    FunctionImp* function;
+    Register* argv;
+    int argc;
+    exec->machine()->getFunctionAndArguments(registerBase(), callFrame, function, argv, argc);
+    List args(&argv->u.jsValue, argc);
     return new Arguments(exec, function, args, this);
 }
 
