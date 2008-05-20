@@ -31,8 +31,6 @@
 
 namespace KJS {
 
-// ECMA 10.2
-
 ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChain& globalScopeChain)
     : m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
@@ -43,11 +41,11 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
 {
 }
 
-JSGlobalObject* ExecState::lexicalGlobalObject() const
+#ifndef NDEBUG
+bool ExecState::isGlobalObject(JSObject* o) const
 {
-    JSObject* object = m_scopeChain->bottom();
-    ASSERT(object->isGlobalObject());
-    return static_cast<JSGlobalObject*>(object);
+    return o->isGlobalObject();
 }
+#endif
 
 } // namespace KJS

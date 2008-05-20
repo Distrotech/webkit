@@ -70,7 +70,12 @@ namespace KJS  {
         
         // Global object in which the current script was defined. (Can be differ
         // from dynamicGlobalObject() during function calls across frames.)
-        JSGlobalObject* lexicalGlobalObject() const;
+        JSGlobalObject* ExecState::lexicalGlobalObject() const
+        {
+            JSObject* object = m_scopeChain->bottom();
+            ASSERT(isGlobalObject(object));
+            return (JSGlobalObject*)object;
+        }
         
         JSObject* globalThisValue() const { return m_globalThisValue; }
         
@@ -97,6 +102,10 @@ namespace KJS  {
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
     private:
+#ifndef NDEBUG
+        bool isGlobalObject(JSObject*) const;
+#endif
+    
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
 

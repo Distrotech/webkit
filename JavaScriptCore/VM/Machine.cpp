@@ -59,8 +59,7 @@ void Machine::dumpCallFrame(const CodeBlock* codeBlock, ScopeChainNode* scopeCha
 {
     ScopeChain sc(scopeChain);
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(sc.bottom());
-    ExecState tmpExec(globalObject, globalObject, globalObject->globalScopeChain());
-    codeBlock->dump(&tmpExec);
+    codeBlock->dump(globalObject->globalExec());
     dumpRegisters(codeBlock, registerFile, r);
 }
 
@@ -539,8 +538,7 @@ static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChain
         return 0;
     }
 
-    ExecState newExec(exec->dynamicGlobalObject(), thisObj, exec->dynamicGlobalObject()->globalScopeChain());
-    return machine().execute(evalNode.get(), &newExec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
+    return machine().execute(evalNode.get(), exec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
 }
 
 #if HAVE(COMPUTED_GOTO)
