@@ -366,6 +366,11 @@ void JSCallbackObject<Base>::getPropertyNames(ExecState* exec, PropertyNameArray
 template <class Base>
 double JSCallbackObject<Base>::toNumber(ExecState* exec) const
 {
+    // We need this check to guard against the case where this object is rhs of
+    // a binary expression where lhs threw an exception in its conversion to
+    // primitive
+    if (exec->hadException())
+        return NaN;
     JSContextRef ctx = toRef(exec);
     JSObjectRef thisRef = toRef(this);
     
