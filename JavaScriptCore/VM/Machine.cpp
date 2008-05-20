@@ -419,6 +419,13 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_pre_dec) {
+        int r0 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) - 1);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_post_inc) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
