@@ -270,19 +270,6 @@ static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register
     r[r0].u.jsValue = base;
 }
 
-NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue) 
-{
-    if (exceptionValue->isObject()) {
-        JSObject* exception = static_cast<JSObject*>(exceptionValue);
-        if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
-            // Need to set line and sourceURL properties on the exception, but that is not currently possible
-            exception->put(exec, "line", jsNumber(42));
-            exception->put(exec, "sourceURL", jsString("FIXME: need sourceURL"));
-        }
-    }
-    return exceptionValue;
-}
-
 ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
 {
     callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
@@ -378,12 +365,21 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
     return callFrame[ReturnVPC].u.vPC;
 }
 
-NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
+NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exceptionValue, CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
 {
+    if (exceptionValue->isObject()) {
+        JSObject* exception = static_cast<JSObject*>(exceptionValue);
+        if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
+            // Need to set line and sourceURL properties on the exception, but that is not currently possible
+            exception->put(exec, "line", jsNumber(42));
+            exception->put(exec, "sourceURL", jsString("FIXME: need sourceURL"));
+        }
+    }
+
     while (codeBlock) {
         int expectedDepth;        
-        Instruction* handlerPC = 0;
-        if (!codeBlock->getHandlerForVPC(vPC, handlerPC, expectedDepth)) {
+        Instruction* handlerVPC = 0;
+        if (!codeBlock->getHandlerForVPC(vPC, handlerVPC, expectedDepth)) {
             vPC = unwindCallFrame(codeBlock, k, scopeChain, registerBase, r);
             continue;
         }
@@ -398,13 +394,13 @@ NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue
         ASSERT(scopeDelta >= 0);
         while (scopeDelta--)
             scopeChain->pop();
-        return handlerPC;
+        return handlerVPC;
     }
     return 0;
 }
 
 #if HAVE(COMPUTED_GOTO)
-static void* throwTarget = 0;
+static void* throwTarget;
 #endif
 
 JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
@@ -472,11 +468,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         return 0;
     }
 
-    JSValue* exceptionData = 0;
+    Instruction* exceptionTarget = 0;
+    JSValue* exceptionValue = 0;
     
     Register** registerBase = registerFile->basePointer();
     Instruction* vPC = codeBlock->instructions.begin();
-    Instruction* exceptionTarget = 0;
     JSValue** k = codeBlock->jsValues.data();
     
 #if HAVE(COMPUTED_GOTO)
@@ -1147,21 +1143,20 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_catch) {
-        ASSERT(exceptionData);
+        ASSERT(exceptionValue);
         int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = exceptionData;
-        exceptionData = 0;
+        r[r0].u.jsValue = exceptionValue;
+        exceptionValue = 0;
         ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_throw) {
         int e = (++vPC)->u.operand;
-        exceptionData = prepareException(exec, r[e].u.jsValue);
-        if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registerBase, r, vPC))) {
-            // Removing this line of code causes a measurable regression on squirrelfish/function-missing-args.js.
-            registerFile->shrink(0);
-            *exception = exceptionData;
-            return 0;
+        exceptionValue = r[e].u.jsValue;
+        exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
+        if (!exceptionTarget) {
+            *exception = exceptionValue;
+            return jsNull();
         }
 
 #if HAVE(COMPUTED_GOTO)
