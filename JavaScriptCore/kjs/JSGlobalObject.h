@@ -298,6 +298,13 @@ namespace KJS {
         }
     }
 
+    inline bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+    {
+        if (symbolTableGet(propertyName, slot))
+            return true;
+        return JSVariableObject::getOwnPropertySlot(exec, propertyName, slot);
+    }
+
     inline bool JSGlobalObject::timedOut()
     {
         d()->tickCount++;

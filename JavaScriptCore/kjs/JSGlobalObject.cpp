@@ -214,13 +214,6 @@ void JSGlobalObject::init(JSObject* thisValue)
     reset(prototype());
 }
 
-bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
-{
-    if (symbolTableGet(propertyName, slot))
-        return true;
-    return JSVariableObject::getOwnPropertySlot(exec, propertyName, slot);
-}
-
 void JSGlobalObject::put(ExecState* exec, const Identifier& propertyName, JSValue* value)
 {
     if (symbolTablePut(propertyName, value))

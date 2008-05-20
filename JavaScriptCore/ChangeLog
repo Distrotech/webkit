@@ -1,3 +1,14 @@
+2008-05-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - inline JSGlobalObject::getOwnPropertySlot
+        1% improvement on in-browser SunSpider (a wash command-line)
+
+        * kjs/JSGlobalObject.cpp:
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::getOwnPropertySlot):
+
 2008-05-18  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
