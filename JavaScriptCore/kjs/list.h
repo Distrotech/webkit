@@ -44,23 +44,23 @@ namespace KJS {
         // Constructor for a read-write list, to which you may append values.
         // FIXME: Remove all clients of this API, then remove this API.
         List()
-            : m_buffer(m_vector.data())
-            , m_size(m_vector.size())
+            : m_isInMarkSet(false)
 #ifndef NDEBUG
             , m_isReadOnly(false)
 #endif
-            , m_isInMarkSet(false)
         {
+            m_buffer = m_vector.data();
+            m_size = m_vector.size();
         }
 
         // Constructor for a read-only list whose data has already been allocated elsewhere.
         List(JSValue** buffer, size_t size)
             : m_buffer(buffer)
             , m_size(size)
+            , m_isInMarkSet(false)
 #ifndef NDEBUG
             , m_isReadOnly(true)
 #endif
-            , m_isInMarkSet(false)
         {
         }
 
@@ -129,12 +129,12 @@ namespace KJS {
         
         JSValue** m_buffer;
         size_t m_size;
-#ifndef NDEBUG
-        bool m_isReadOnly;
-#endif
 
         VectorType m_vector;
         bool m_isInMarkSet;
+#ifndef NDEBUG
+        bool m_isReadOnly;
+#endif
 
     private:
         // Prohibits new / delete, which would break GC.
