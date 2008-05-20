@@ -269,7 +269,8 @@ static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r,
         JSObject* o = *iter;
         if (o->getPropertySlot(exec, ident, slot)) {
             r[dst].u.jsValue = slot.getValue(exec, o, ident);
-            return true;
+            exceptionValue = exec->exception();
+            return !exceptionValue;
         }
     } while (++iter != end);
     exceptionValue = createUndefinedVariableError(exec, ident);
@@ -716,6 +717,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
     
+    registerFile->setUnsafeForReentry(true);
 #define VM_CHECK_EXCEPTION() \
      do { \
         if (UNLIKELY(exec->hadException())) { \
@@ -1422,7 +1424,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             int thisRegister = (codeBlock->codeType == FunctionCode) ? -(codeBlock->numVars + codeBlock->numParameters) : ProgramCodeThisRegister;
             JSObject* thisObject = r[thisRegister].u.jsObject;
 
+            registerFile->setUnsafeForReentry(false);
             JSValue* result = eval(exec, thisObject, scopeChain, registerFile, r, argv, argc, exceptionValue);
+            registerFile->setUnsafeForReentry(true);
             r = (*registerBase) + registerOffset;
 
             if (exceptionValue)
@@ -1493,7 +1497,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             List args(&r[argv + 1].u.jsValue, argc - 1);
 
+            registerFile->setUnsafeForReentry(false);
             JSValue* returnValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
+            registerFile->setUnsafeForReentry(true);
 
             r = (*registerBase) + registerOffset;
             r[r0].u.jsValue = returnValue;
@@ -1595,7 +1601,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             int registerOffset = r - (*registerBase);
 
             List args(&r[argv + 1].u.jsValue, argc - 1);
+            registerFile->setUnsafeForReentry(false);
             JSValue* returnValue = constructor->construct(exec, args);
+            registerFile->setUnsafeForReentry(true);
         
             r = (*registerBase) + registerOffset;
             VM_CHECK_EXCEPTION();
@@ -1740,6 +1748,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         // exception handling.
     }
     vm_throw: {
+        exec->clearException();
         handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);
         if (!handlerVPC) {
             *exception = exceptionValue;
