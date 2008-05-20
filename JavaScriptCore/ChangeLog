@@ -1,3 +1,22 @@
+2008-04-23  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        A little refactoring in preparation for supporting 'arguments'.
+        
+        Fixes 2 regression tests.
+
+        SunSpider reports no change.        
+
+        We now check the activation register, instead of the codeBlock, to
+        determine whether we need to tear off the activation. This is to support
+        "f.arguments", which will create an activation/arguments pair for f,
+        even though the needsFullScopeChain flag is false for f's codeBlock.
+        
+        The test fixes resulted from calling initializeCallFrame for re-entrant
+        function code, instead of initializing (not enough) parts of the call
+        frame by hand.
+
 2008-04-22  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Sam.
