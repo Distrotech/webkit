@@ -1,3 +1,20 @@
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        First step toward global code: removed some obsolete JSGlobalObject
+        APIs, changing clients to ASSERT_NOT_REACHED.
+        
+        Activation tear-off and scope chain pushing is obsolete because we
+        statically detect whether an activation + scope node is required.
+        
+        The variableObject() and activationObject() accessors are obsolete
+        because they haven't been maintained, and they're mostly used by
+        node evaluation code, anyway.
+        
+        The localStorage() accessor is obsolete because everything is in
+        registers now, and it's mostly used by node evaluation code, anyway.
+
 2008-03-31  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Darin.
