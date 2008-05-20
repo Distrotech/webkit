@@ -110,8 +110,15 @@ namespace KJS {
         
         // The emitNode functions are just syntactic sugar for calling
         // Node::emitCode. They're the only functions that accept a NULL register.
-        RegisterID* emitNode(RegisterID* r0, Node* n) { return n->emitCode(*this, r0); }
-        RegisterID* emitNode(Node* n) { return n->emitCode(*this); }
+        RegisterID* emitNode(RegisterID* dst, Node* n) {
+            ASSERT(!dst || !dst->isTemporary() || dst->refCount()); // Node::emitCode assumes that dst, if provided, is either a local or a referenced temporary.
+            return n->emitCode(*this, dst);
+        }
+
+        RegisterID* emitNode(Node* n)
+        {
+            return n->emitCode(*this);
+        }
 
         RegisterID* emitLoad(RegisterID*, bool);
         RegisterID* emitLoad(RegisterID*, double);
