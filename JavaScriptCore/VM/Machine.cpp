@@ -2081,6 +2081,35 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         vPC = r[retAddrSrc].u.vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_dbg) {
+        /* dbg debugHookID(n)
+         
+         Notifies the debugger of the current state of execution:
+         DidEnterCallFrame; WillLeaveCallFrame; or WillExecuteStatement.
+         
+         This opcode is only generated while the debugger is attached.
+        */
+
+        int debugHookID = (++vPC)->u.operand;
+
+        Debugger* debugger = exec->dynamicGlobalObject()->debugger();
+        if (!debugger) {
+            ++vPC;
+            NEXT_OPCODE;
+        }
+
+        if (debugHookID == DidEnterCallFrame) {
+            // callEvent
+        } else if (debugHookID == WillLeaveCallFrame) {
+            // returnEvent
+        } else {
+            // atStatement
+            ASSERT(debugHookID == WillExecuteStatement);
+        }
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     vm_throw: {
         exec->clearException();
         handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);

@@ -35,6 +35,12 @@ namespace KJS {
   class List;
   class SourceProvider;
   class UString;
+  
+  enum DebugHookID {
+    WillExecuteStatement,
+    DidEnterCallFrame,
+    WillLeaveCallFrame
+  };
 
   /**
    * @internal

@@ -31,6 +31,7 @@
 #include "CodeBlock.h"
 
 #include "Machine.h"
+#include "debugger.h"
 #include "value.h"
 
 namespace KJS {
@@ -91,6 +92,18 @@ static UString regexpToSourceString(RegExp* regExp)
 static CString regexpName(int re, RegExp* regexp)
 {
     return (regexpToSourceString(regexp) + "(@re" + UString::from(re) + ")").UTF8String();
+}
+
+static const char* debugHookName(int debugHookID)
+{
+    if (debugHookID == DidEnterCallFrame)
+        return "DidEnterCallFrame";
+    else if (debugHookID == WillLeaveCallFrame)
+        return "WillLeaveCallFrame";
+    else {
+        ASSERT(debugHookID == WillExecuteStatement);
+        return "WillExecuteStatement";
+    }
 }
 
 static int jumpTarget(const Vector<Instruction>::const_iterator& begin, Vector<Instruction>::const_iterator& it, int offset)
@@ -514,6 +527,11 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
         case op_sret: {
             int retAddrSrc = (++it)->u.operand;
             printf("[%4d] sret\t\t %s\n", location, registerName(retAddrSrc).c_str());
+            break;
+        }
+        case op_dbg: {
+            int debugHookID = (++it)->u.operand;
+            printf("[%4d] dbg\t\t %s\n", location, debugHookName(debugHookID));
             break;
         }
         case op_end: {

@@ -1,3 +1,21 @@
+2008-05-14  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        A little more debugger action: emit opcodes for debugger hooks. Right
+        now, the opcode implementation is just a stub.
+        
+        SunSpider reports no change.
+        
+        Some example codegen for "function f() { 1; }":
+
+            [   0] dbg         DidEnterCallFrame
+            [   2] dbg         WillExecuteStatement
+            [   4] load        tr0, 1(@k0)
+            [   7] load        tr0, undefined(@k1)
+            [  10] dbg         WillLeaveCallFrame
+            [  12] ret         tr0
+
 2008-05-14  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
