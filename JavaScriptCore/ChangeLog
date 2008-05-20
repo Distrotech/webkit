@@ -1,3 +1,15 @@
+2008-04-21  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Oliver.
+
+        Bug 18664: SQUIRRELFISH: correctly throw a SyntaxError when parsing of eval code fails
+        <https://bugs.webkit.org/show_bug.cgi?id=18664>
+
+        Correctly throw a SyntaxError when parsing of eval code fails.
+
+        * VM/Machine.cpp:
+        (KJS::eval):
+
 2008-04-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.
