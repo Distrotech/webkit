@@ -232,7 +232,7 @@ unsigned CodeGenerator::addConstant(FuncDeclNode* n)
 unsigned CodeGenerator::addConstant(FuncExprNode* n)
 {
     // No need to explicitly unique function expression nodes -- they're unique already.
-    int index = m_codeBlock->functions.size();
+    int index = m_codeBlock->functionExpressions.size();
     m_codeBlock->functionExpressions.append(n);
     return index;
 }

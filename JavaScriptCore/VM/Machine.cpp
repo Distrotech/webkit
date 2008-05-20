@@ -736,7 +736,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             // FIXME: Substitute lexical global object for null.
 
             JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
-            List args(&r[argv + 1].u.jsValue, argc);
+            List args(&r[argv + 1].u.jsValue, argc - 1);
 
             r[r0].u.jsValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
 
