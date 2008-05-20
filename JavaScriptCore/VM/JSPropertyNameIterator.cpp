@@ -71,6 +71,18 @@ double JSPropertyNameIterator::toNumber(ExecState *) const
     return 0; 
 }
 
+double JSPropertyNameIterator::toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
+{
+    ASSERT_NOT_REACHED();
+    resultPC = normalExitPC;
+    if (normalExitPC != exceptionExitPC) {
+        exec->setExceptionSource(normalExitPC);
+        resultPC = exceptionExitPC;
+    }
+    return NaN;
+}
+
+
 UString JSPropertyNameIterator::toString(ExecState *) const 
 {
     ASSERT_NOT_REACHED();

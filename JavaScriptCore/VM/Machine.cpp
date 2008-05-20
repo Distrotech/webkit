@@ -570,7 +570,14 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         #endif // HAVE(COMPUTED_GOTO)
         return 0;
     }
-
+    
+    // Any pointer arithmetic to compensate for incrementing the vPC, currently
+    // we only use for opcodes that perform a single increment of vPC.  As we
+    // start applying the branch free exception logic to operands that increment
+    // vPC by more than one Instruction we'll need to make this buffer larger.
+    Instruction builtinThrow = getOpcode(op_builtin_throw);
+    Instruction builtinThrowBuffer[] = { builtinThrow,
+                                          builtinThrow};
     Instruction* exceptionTarget = 0;
     JSValue* exceptionValue = 0;
     
@@ -582,16 +589,16 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (UNLIKELY(exec->hadException())) { \
             exceptionValue = exec->exception(); \
             exec->clearException(); \
-            goto internal_throw; \
+            goto vm_throw; \
         } \
     }while (0)
 
 #if HAVE(COMPUTED_GOTO)
-    #define NEXT_OPCODE ASSERT(!exec->hadException()); goto *vPC->u.opcode
+    #define NEXT_OPCODE goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
     NEXT_OPCODE;
 #else
-    #define NEXT_OPCODE ASSERT(!exec->hadException()); continue
+    #define NEXT_OPCODE continue
     #define BEGIN_OPCODE(opcode) case opcode:
     while(1) // iterator loop begins
     switch (vPC->u.opcode)
@@ -691,9 +698,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_pre_inc) {
         int r0 = (++vPC)->u.operand;
-        r[r0].u.jsValue = jsNumber(r[r0].u.jsValue->toNumber(exec) + 1);
-
-        ++vPC;
+        Instruction* target;
+        double d = r[r0].u.jsValue->toNumber(exec, vPC, builtinThrowBuffer, target);
+        r[r0].u.jsValue = jsNumber(d + 1);
+        vPC = target + 1;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_pre_dec) {
@@ -866,7 +874,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         JSValue* v2 = r[r2].u.jsValue;
 
         if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
-            goto internal_throw;
+            goto vm_throw;
 
         JSObject* o2 = static_cast<JSObject*>(v2);
         r[r0].u.jsValue = jsBoolean(o2->implementsHasInstance() ? o2->hasInstance(exec, r[r1].u.jsValue) : false);
@@ -889,7 +897,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         JSValue* v2 = r[r2].u.jsValue;
         if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
-            goto internal_throw;
+            goto vm_throw;
 
         JSObject* o2 = static_cast<JSObject*>(v2);
 
@@ -906,7 +914,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_resolve) {
         if (UNLIKELY(!resolve(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
-            goto internal_throw;
+            goto vm_throw;
 
         vPC += 3;
         
@@ -920,7 +928,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_resolve_base_and_property) {
         if (UNLIKELY(!resolveBaseAndProperty(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
-            goto internal_throw;
+            goto vm_throw;
 
         vPC += 4;
         
@@ -928,7 +936,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_resolve_base_and_func) {
         if (UNLIKELY(!resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
-            goto internal_throw;
+            goto vm_throw;
         vPC += 4;
 
         NEXT_OPCODE;
@@ -1245,7 +1253,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         }
 
         if (isNotObject(exec, vPC, codeBlock, v, exceptionValue))
-            goto internal_throw;
+            goto vm_throw;
 
         // throw type error for non-contructor object
         ASSERT(constructType == ConstructTypeNone);
@@ -1340,7 +1348,16 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         return r[r0].u.jsValue;
     }
-    internal_throw: {
+    BEGIN_OPCODE(op_builtin_throw) {
+        ASSERT(exec->exceptionSource()->u.opcode != getOpcode(op_builtin_throw));
+        exceptionValue = exec->exception();
+        vPC = exec->exceptionSource();
+        exec->clearExceptionSource();
+        exec->clearException();
+        // fall through to vm_throw to allow shared logic to do the actual
+        // exception handling.
+    }
+    vm_throw: {
         exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
         if (!exceptionTarget) {
             *exception = exceptionValue;

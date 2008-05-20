@@ -33,7 +33,6 @@
 #include "RegisterFileStack.h"
 #include <wtf/HashMap.h>
 #include <kjs/list.h>
-#include <kjs/SavedBuiltins.h>
 
 namespace KJS {
 

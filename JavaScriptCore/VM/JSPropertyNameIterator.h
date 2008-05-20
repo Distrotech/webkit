@@ -42,6 +42,7 @@ namespace KJS {
         virtual bool getPrimitiveNumber(ExecState*, double&, JSValue*&);
         virtual bool toBoolean(ExecState *) const;
         virtual double toNumber(ExecState *) const;
+        virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
         virtual UString toString(ExecState *) const;
         virtual JSObject *toObject(ExecState *) const;
         

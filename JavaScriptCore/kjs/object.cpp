@@ -586,6 +586,23 @@ double JSObject::toNumber(ExecState *exec) const
   return prim->toNumber(exec);
 }
 
+double JSObject::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
+{
+    if (normalExitPC == exceptionExitPC) {
+        resultPC = normalExitPC;
+        return NaN;
+    }
+
+    JSValue *prim = toPrimitive(exec,NumberType);
+    if (exec->hadException()) {
+        exec->setExceptionSource(normalExitPC);
+        resultPC = exceptionExitPC;
+        return NaN;
+    }
+    resultPC = normalExitPC;
+    return prim->toNumber(exec);
+}
+
 UString JSObject::toString(ExecState *exec) const
 {
   JSValue *prim = toPrimitive(exec,StringType);
