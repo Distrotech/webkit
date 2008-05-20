@@ -1,3 +1,21 @@
+2008-05-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - move frame.xhtml and iframe.xhtml into a resources dir, as they were never meant to be tests
+
+        * dom/xhtml/level2/html/HTMLFrameElement09.xhtml-disabled:
+        * dom/xhtml/level2/html/frame.xhtml: Removed.
+        * dom/xhtml/level2/html/iframe.xhtml: Removed.
+        * dom/xhtml/level2/html/resources/frame.xhtml: Copied from dom/xhtml/level2/html/frame.xhtml.
+        * dom/xhtml/level2/html/resources/iframe.xhtml: Copied from dom/xhtml/level2/html/iframe.xhtml.
+        * platform/mac/dom/xhtml/level2/html/frame-expected.checksum: Removed.
+        * platform/mac/dom/xhtml/level2/html/frame-expected.png: Removed.
+        * platform/mac/dom/xhtml/level2/html/frame-expected.txt: Removed.
+        * platform/mac/dom/xhtml/level2/html/iframe-expected.checksum: Removed.
+        * platform/mac/dom/xhtml/level2/html/iframe-expected.png: Removed.
+        * platform/mac/dom/xhtml/level2/html/iframe-expected.txt: Removed.
+
 o2008-05-07  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
