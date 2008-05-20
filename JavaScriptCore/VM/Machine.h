@@ -37,7 +37,8 @@ namespace KJS {
     class CodeBlock;
     class ExecState;
     class Register;
-
+    class RegisterFile;
+    
     class Machine {
     public:
         static const int returnInfoSize = 7;
@@ -63,15 +64,15 @@ namespace KJS {
 
         bool isOpcode(Opcode opcode);
         
-        void execute(ExecState* exec, Vector<Register>* registers, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, registers, scopeChain, codeBlock); }
+        void execute(ExecState* exec, RegisterFile* registers, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, registers, scopeChain, codeBlock); }
         
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
-        NEVER_INLINE static Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Vector<Register>*, Register*&);
-        NEVER_INLINE static Instruction* throwException(CodeBlock*&, JSValue**&, ScopeChain*&, Vector<Register>*, Register*&, const Instruction*);
-        void privateExecute(ExecutionFlag, ExecState* = 0, Vector<Register>* = 0, ScopeChain* = 0, CodeBlock* = 0);
-        void dumpCallFrame(const CodeBlock*, const ScopeChain*, const Register** registerBase, const Register* r);
-        void dumpRegisters(const CodeBlock*, const Register** registerBase, const Register* r);
+        NEVER_INLINE static Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&);
+        NEVER_INLINE static Instruction* throwException(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&, const Instruction*);
+        void privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, ScopeChain* = 0, CodeBlock* = 0);
+        void dumpCallFrame(const CodeBlock*, const ScopeChain*, RegisterFile*, const Register*);
+        void dumpRegisters(const CodeBlock*, RegisterFile*, const Register*);
 #if HAVE(COMPUTED_GOTO)        
         Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
         HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
