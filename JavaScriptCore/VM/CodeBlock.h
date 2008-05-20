@@ -52,7 +52,6 @@ namespace KJS {
         }
         
         void dump(ExecState*);
-        unsigned numRegisters() { return numTemporaries + numVars; }
         
         void mark();
 

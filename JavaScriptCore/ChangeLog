@@ -17,6 +17,23 @@
 
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Maciej Stachowiak.
+        
+        Got globals?
+        
+        To get things working, I had to roll out
+        http://trac.webkit.org/projects/webkit/changeset/31226 for the time
+        being.
+
+        * VM/CodeBlock.h: Removed obsolete function.
+        
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute): For the sake of re-entrancy, we track
+        and restore the global object's old rOffset value. (No way to test this
+        yet, but I think it will work.)
+
+2008-04-01  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Beth Dakin.
         
         Cleaned up a few loose ends.
