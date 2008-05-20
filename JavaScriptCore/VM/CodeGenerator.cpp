@@ -751,6 +751,24 @@ RegisterID* CodeGenerator::emitPutPropId(RegisterID* base, const Identifier& pro
     return value;
 }
 
+RegisterID* CodeGenerator::emitPutGetter(RegisterID* base, const Identifier& property, RegisterID* value)
+{
+    instructions().append(machine().getOpcode(op_put_getter));
+    instructions().append(base->index());
+    instructions().append(addConstant(property));
+    instructions().append(value->index());
+    return value;
+}
+
+RegisterID* CodeGenerator::emitPutSetter(RegisterID* base, const Identifier& property, RegisterID* value)
+{
+    instructions().append(machine().getOpcode(op_put_setter));
+    instructions().append(base->index());
+    instructions().append(addConstant(property));
+    instructions().append(value->index());
+    return value;
+}
+
 RegisterID* CodeGenerator::emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier& property)
 {
     instructions().append(machine().getOpcode(op_delete_prop_id));

@@ -86,6 +86,8 @@ namespace KJS {
         macro(op_put_prop_val) \
         macro(op_delete_prop_val) \
         macro(op_put_prop_index) \
+        macro(op_put_getter) \
+        macro(op_put_setter) \
         \
         macro(op_jmp) \
         macro(op_jtrue) \
