@@ -70,7 +70,21 @@ JSValue* createUndefinedVariableError(ExecState* exec, const Identifier& ident)
 
 JSValue* createNotAnObjectError(ExecState* exec, JSValue* value, Node* expr)
 {
-    return createError(exec, TypeError, "Value %s (result of expression %s) is not an object. Cannot be used with instanceof operator.", value, expr);
+    return createError(exec, TypeError, "Value %s (result of expression %s) is not an object.", value, expr);
+}
+
+JSValue* createNotAConstructorError(ExecState* exec, JSValue* value, Node* expr)
+{
+    if (!value->isObject())
+        return createNotAnObjectError(exec, value, expr);
+    return createError(exec, TypeError, "Value %s (result of expression %s) is not a constructor. Cannot be used with new.", value, expr);
+}
+
+JSValue* createNotAFunctionError(ExecState* exec, JSValue* value, Node* expr)
+{
+    if (!value->isObject())
+        return createNotAnObjectError(exec, value, expr);
+    return createError(exec, TypeError, "Value %s (result of expression %s) does not allow function calls.", value, expr);
 }
 
 }

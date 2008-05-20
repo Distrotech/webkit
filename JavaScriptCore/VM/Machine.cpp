@@ -1342,11 +1342,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
-        // FIXME throw type error
         ASSERT(callType == CallTypeNone);
 
-        vPC++;
-        NEXT_OPCODE;
+        exceptionValue = createNotAFunctionError(exec, v, 0);
+        goto vm_throw;
     }
     BEGIN_OPCODE(op_ret) {
         int r1 = (++vPC)->u.operand;
@@ -1434,14 +1433,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
-        if (isNotObject(exec, vPC, codeBlock, v, exceptionValue))
-            goto vm_throw;
-
-        // throw type error for non-contructor object
         ASSERT(constructType == ConstructTypeNone);
 
-        ++vPC;
-        NEXT_OPCODE;
+        exceptionValue = createNotAConstructorError(exec, v, 0);
+        goto vm_throw;
     }
     BEGIN_OPCODE(op_push_scope) {
         int r0 = (++vPC)->u.operand;
