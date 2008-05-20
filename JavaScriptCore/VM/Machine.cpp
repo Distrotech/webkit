@@ -426,10 +426,10 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(ExecState* exec, CodeBlock* n
     return r;
 }
 
-ALWAYS_INLINE ScopeChainNode* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, FunctionImp* function, Register* callFrame, Register** registerBase, Register* r)
+ALWAYS_INLINE ScopeChainNode* scopeChainForCall(FunctionBodyNode* functionBodyNode, CodeBlock* newCodeBlock, ScopeChainNode* callDataScopeChain, Register* callFrame, Register** registerBase, Register* r)
 {
     if (newCodeBlock->needsFullScopeChain) {
-        JSActivation* activation = new JSActivation(function, registerBase, r - (*registerBase));
+        JSActivation* activation = new JSActivation(functionBodyNode, registerBase, r - (*registerBase));
         callFrame[Machine::OptionalCalleeActivation].u.jsValue = activation;
 
         ScopeChainNode* scopeChain = callDataScopeChain->copy();
@@ -616,7 +616,7 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     }
 
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-    scopeChain = scopeChainForCall(newCodeBlock, scopeChain, function, callFrame, registerBase, r);            
+    scopeChain = scopeChainForCall(functionBodyNode, newCodeBlock, scopeChain, callFrame, registerBase, r);            
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
     m_reentryDepth--;
@@ -1469,7 +1469,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-            scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, static_cast<FunctionImp*>(v), callFrame, registerBase, r);            
+            scopeChain = scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
@@ -1575,7 +1575,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
-            scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, static_cast<FunctionImp*>(constructor), callFrame, registerBase, r);            
+            scopeChain = scopeChainForCall(functionBodyNode, codeBlock, callDataScopeChain, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
             vPC = codeBlock->instructions.begin();
 
