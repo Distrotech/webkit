@@ -764,7 +764,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
      do { \
         if (UNLIKELY(exec->hadException())) { \
             exceptionValue = exec->exception(); \
-            exec->clearException(); \
             goto vm_throw; \
         } \
     } while (0)
@@ -965,6 +964,36 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         VM_CHECK_EXCEPTION();
         r[srcDst].u.jsValue = result;
 
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_pre_inc_mov) {
+        /* pre_inc_mov dst(r) src(r)
+         
+         Converts register src to number, adds one, and puts the result
+         in register dst.
+         */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        JSValue* result = jsNumber(r[src].u.jsValue->toNumber(exec) + 1);
+        VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_pre_dec_mov) {
+        /* pre_dec_mov dst(r) src(r)
+         
+         Converts register src to number, subtracts one, and puts the result
+         in register dst.
+         */
+        int dst = (++vPC)->u.operand;
+        int src = (++vPC)->u.operand;
+        JSValue* result = jsNumber(r[src].u.jsValue->toNumber(exec) - 1);
+        VM_CHECK_EXCEPTION();
+        r[dst].u.jsValue = result;
+        
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1927,6 +1956,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     }
     BEGIN_OPCODE(op_catch) {
         ASSERT(exceptionValue);
+        ASSERT(!exec->hadException());
         int r0 = (++vPC)->u.operand;
         r[r0].u.jsValue = exceptionValue;
         exceptionValue = 0;
@@ -2052,7 +2082,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     vm_throw: {
-        ASSERT(!exec->hadException());
+        exec->clearException();
         handlerVPC = throwException(exec, exceptionValue, registerBase, vPC, codeBlock, k, scopeChain, r);
         if (!handlerVPC) {
             *exception = exceptionValue;

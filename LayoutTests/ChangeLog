@@ -1,5 +1,20 @@
 2008-05-13  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Geoff.
+
+        Bug 19027: SquirrelFish: Incorrect codegen for pre-increment
+        <https://bugs.webkit.org/show_bug.cgi?id=19027>
+
+        Now that codegen is correct for pre-increment/decrement we can enable
+        those tests.  Added additional tests to cover exceptions occuring in
+        similar points of execution, and removed tests that were inconsistent
+        with behaviour of both Opera and Firefox.
+
+        * fast/js/exception-sequencing-expected.txt:
+        * fast/js/exception-sequencing.html:
+
+2008-05-13  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Darin.
 
         Bug 18752: SQUIRRELFISH: exceptions are not always handled by the vm
