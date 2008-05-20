@@ -311,7 +311,7 @@ static bool NEVER_INLINE resolveBaseAndProperty(ExecState* exec, Instruction* vP
     return false;
 }
 
-static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
+static bool NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
     int r0 = (vPC + 1)->u.operand;
     int r1 = (vPC + 2)->u.operand;
@@ -342,12 +342,13 @@ static void NEVER_INLINE resolveBaseAndFunc(ExecState* exec, Instruction* vPC, R
             
             r[r0].u.jsValue = thisObj;
             r[r1].u.jsValue = slot.getValue(exec, base, ident);
-            return;
+            return true;
         }
         ++iter;
     } while (iter != end);
-    
-    ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
+
+    exceptionValue = createUndefinedVariableError(exec, ident);
+    return false;
 }
 
 ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChainNode* scopeChain, int registerOffset, int returnValueRegister, int argv, int calledAsConstructor)
@@ -913,7 +914,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base_and_func) {
-        resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock);
+        if (UNLIKELY(!resolveBaseAndFunc(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
+            goto internal_throw;
         vPC += 4;
 
         NEXT_OPCODE;
