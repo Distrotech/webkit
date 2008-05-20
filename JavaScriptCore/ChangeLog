@@ -1,5 +1,26 @@
 2008-05-01  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Geoff and Maciej.
+
+        Bug 18827: SquirrelFish: Prevent getters and setters from destroying the current RegisterFile
+        <https://bugs.webkit.org/show_bug.cgi?id=18827>
+
+        Remove safe/unsafe RegisterFile concept, and instead just add additional
+        logic to ensure we always push/pop RegisterFiles when executing getters
+        and setters, similar to the logic for valueOf and toString.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/RegisterFile.h:
+        * kjs/function.cpp:
+        (KJS::FunctionImp::callAsFunction):
+        * kjs/object.cpp:
+        (KJS::JSObject::put):
+        * kjs/property_slot.cpp:
+        (KJS::PropertySlot::functionGetter):
+
+2008-05-01  Oliver Hunt  <oliver@apple.com>
+
         RS=Geoff
 
         Rename unsafeForReentry to safeForReentry to avoid double negatives.

@@ -231,8 +231,10 @@ void JSObject::put(ExecState* exec, const Identifier &propertyName, JSValue *val
             
           List args;
           args.append(value);
-        
+          RegisterFileStack* stack = &exec->dynamicGlobalObject()->registerFileStack();
+          stack->pushFunctionRegisterFile();
           setterFunc->call(exec, this->toThisObject(exec), args);
+          stack->popFunctionRegisterFile();
           return;
         } else {
           // If there's an existing property on the object or one of its 
