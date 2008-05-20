@@ -930,11 +930,11 @@ RegisterID* CodeGenerator::emitPushScope(RegisterID* scope)
     instructions().append(machine().getOpcode(op_push_scope));
     instructions().append(scope->index());
 
-    ControlFlowContext scope;
-    scope.isFinallyBlock = false;
-    m_scopeContextStack.append(scope);
+    ControlFlowContext context;
+    context.isFinallyBlock = false;
+    m_scopeContextStack.append(context);
     m_dynamicScopeDepth++;
-    return r0;
+    return scope;
 }
 
 void CodeGenerator::emitPopScope()
@@ -1104,7 +1104,7 @@ RegisterID* CodeGenerator::emitGetPropertyNames(RegisterID* dst, RegisterID* bas
     instructions().append(machine().getOpcode(op_get_pnames));
     instructions().append(dst->index());
     instructions().append(base->index());
-    return base;
+    return dst;
 }
 
 RegisterID* CodeGenerator::emitCatch(RegisterID* targetRegister, LabelID* start, LabelID* end)

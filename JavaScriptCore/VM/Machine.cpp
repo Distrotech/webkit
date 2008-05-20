@@ -1793,7 +1793,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
            of the current scope chain.
         */
         int scope = (++vPC)->u.operand;
-        JSValue* v = r[r0].u.jsValue;
+        JSValue* v = r[scope].u.jsValue;
         JSObject* o = v->toObject(exec);
         VM_CHECK_EXCEPTION();
         
