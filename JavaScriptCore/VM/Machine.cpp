@@ -55,72 +55,10 @@
 
 namespace KJS {
 
-void Machine::dumpCallFrame(const CodeBlock* codeBlock, ScopeChainNode* scopeChain, RegisterFile* registerFile, const Register* r)
-{
-    ScopeChain sc(scopeChain);
-    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(sc.bottom());
-    codeBlock->dump(globalObject->globalExec());
-    dumpRegisters(codeBlock, registerFile, r);
-}
-
-void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFile, const Register* r)
-{
-    printf("Register frame: \n\n");
-    printf("----------------------------------------\n");
-    printf("     use      |   address  |    value   \n");
-    printf("----------------------------------------\n");
-    
-    const Register* it;
-    const Register* end;
-    
-    if (isGlobalCallFrame(registerFile->basePointer(), r)) {
-        it = r - registerFile->numGlobalSlots();
-        end = r;
-        if (it != end) {
-            do {
-                printf("[global var]  | %10p | %10p \n", it, (*it).u.jsValue);
-                ++it;
-            } while (it != end);
-            printf("----------------------------------------\n");
-        }
-    } else {
-        it = r - codeBlock->numVars - codeBlock->numParameters - CallFrameHeaderSize;
-        end = it + CallFrameHeaderSize;
-        if (it != end) {
-            do {
-                printf("[call frame] | %10p | %10p \n", it, (*it).u.jsValue);
-                ++it;
-            } while (it != end);
-            printf("----------------------------------------\n");
-        }
-        
-        end = it + codeBlock->numParameters;
-        if (it != end) {
-            do {
-                printf("[param]       | %10p | %10p \n", it, (*it).u.jsValue);
-                ++it;
-            } while (it != end);
-            printf("----------------------------------------\n");
-        }
-
-        end = it + codeBlock->numVars;
-        if (it != end) {
-            do {
-                printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
-                ++it;
-            } while (it != end);
-            printf("----------------------------------------\n");
-        }
-    }
-
-    end = it + codeBlock->numTemporaries;
-    if (it != end) {
-        do {
-            printf("[temp]        | %10p | %10p \n", it, (*it).u.jsValue);
-            ++it;
-        } while (it != end);
-    }
-}
+#if HAVE(COMPUTED_GOTO)
+static void* op_throw_end_indirect;
+static void* op_call_indirect;
+#endif
 
 // Returns the depth of the scope chain within a given call frame.
 static int depth(ScopeChain& sc)
@@ -235,23 +173,6 @@ static JSValue* jsTypeStringForValue(JSValue* v)
 
             return jsString("object");
     }
-}
-
-Machine::Machine()
-    : m_reentryDepth(0)
-{
-    privateExecute(InitializeAndReturn);
-}
-
-bool Machine::isOpcode(Opcode opcode)
-{
-#if HAVE(COMPUTED_GOTO)
-    return opcode != HashTraits<Opcode>::emptyValue()
-        && HashTraits<Opcode>::isDeletedValue(opcode)
-        && m_opcodeIDTable.contains(opcode);
-#else
-    return opcode >= 0 && opcode <= op_end;
-#endif
 }
 
 static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
@@ -440,6 +361,132 @@ ALWAYS_INLINE ScopeChainNode* scopeChainForCall(FunctionBodyNode* functionBodyNo
     return callDataScopeChain;
 }
 
+static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBlock*, JSValue* value, JSValue*& exceptionData)
+{
+    if (value->isObject())
+        return false;
+    exceptionData = createNotAnObjectError(exec, value, 0);
+    return true;
+}
+
+static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChainNode* scopeChain, RegisterFile* registerFile, Register* r, int argv, int argc, JSValue*& exceptionValue)
+{
+    JSValue* x = argc >= 2 ? r[argv + 1].u.jsValue : jsUndefined();
+    
+    if (!x->isString())
+        return x;
+    
+    UString s = x->toString(exec);
+    if (exec->hadException()) {
+        exceptionValue = exec->exception();
+        exec->clearException();
+        return 0;
+    }
+
+    int sourceId;
+    int errLine;
+    UString errMsg;
+    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
+    
+    if (!evalNode) {
+        exceptionValue = Error::create(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
+        return 0;
+    }
+
+    return machine().execute(evalNode.get(), exec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
+}
+
+Machine& machine()
+{
+    ASSERT(JSLock::currentThreadIsHoldingLock());
+    static Machine machine;
+    return machine;
+}
+
+Machine::Machine()
+    : m_reentryDepth(0)
+{
+    privateExecute(InitializeAndReturn);
+}
+
+void Machine::dumpCallFrame(const CodeBlock* codeBlock, ScopeChainNode* scopeChain, RegisterFile* registerFile, const Register* r)
+{
+    ScopeChain sc(scopeChain);
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(sc.bottom());
+    codeBlock->dump(globalObject->globalExec());
+    dumpRegisters(codeBlock, registerFile, r);
+}
+
+void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFile, const Register* r)
+{
+    printf("Register frame: \n\n");
+    printf("----------------------------------------\n");
+    printf("     use      |   address  |    value   \n");
+    printf("----------------------------------------\n");
+    
+    const Register* it;
+    const Register* end;
+    
+    if (isGlobalCallFrame(registerFile->basePointer(), r)) {
+        it = r - registerFile->numGlobalSlots();
+        end = r;
+        if (it != end) {
+            do {
+                printf("[global var]  | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+    } else {
+        it = r - codeBlock->numVars - codeBlock->numParameters - CallFrameHeaderSize;
+        end = it + CallFrameHeaderSize;
+        if (it != end) {
+            do {
+                printf("[call frame] | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+        
+        end = it + codeBlock->numParameters;
+        if (it != end) {
+            do {
+                printf("[param]       | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+
+        end = it + codeBlock->numVars;
+        if (it != end) {
+            do {
+                printf("[var]         | %10p | %10p \n", it, (*it).u.jsValue);
+                ++it;
+            } while (it != end);
+            printf("----------------------------------------\n");
+        }
+    }
+
+    end = it + codeBlock->numTemporaries;
+    if (it != end) {
+        do {
+            printf("[temp]        | %10p | %10p \n", it, (*it).u.jsValue);
+            ++it;
+        } while (it != end);
+    }
+}
+
+bool Machine::isOpcode(Opcode opcode)
+{
+#if HAVE(COMPUTED_GOTO)
+    return opcode != HashTraits<Opcode>::emptyValue()
+        && !HashTraits<Opcode>::isDeletedValue(opcode)
+        && m_opcodeIDTable.contains(opcode);
+#else
+    return opcode >= 0 && opcode <= op_end;
+#endif
+}
+
 NEVER_INLINE bool Machine::unwindCallFrame(Register** registerBase, const Instruction*& vPC, CodeBlock*& codeBlock, JSValue**& k, ScopeChainNode*& scopeChain, Register*& r)
 {
     CodeBlock* oldCodeBlock = codeBlock;
@@ -506,46 +553,6 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
 
     return handlerVPC;
 }
-
-static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBlock*, JSValue* value, JSValue*& exceptionData)
-{
-    if (value->isObject())
-        return false;
-    exceptionData = createNotAnObjectError(exec, value, 0);
-    return true;
-}
-
-static NEVER_INLINE JSValue* eval(ExecState* exec, JSObject* thisObj, ScopeChainNode* scopeChain, RegisterFile* registerFile, Register* r, int argv, int argc, JSValue*& exceptionValue)
-{
-    JSValue* x = argc >= 2 ? r[argv + 1].u.jsValue : jsUndefined();
-    
-    if (!x->isString())
-        return x;
-    
-    UString s = x->toString(exec);
-    if (exec->hadException()) {
-        exceptionValue = exec->exception();
-        exec->clearException();
-        return 0;
-    }
-
-    int sourceId;
-    int errLine;
-    UString errMsg;
-    RefPtr<EvalNode> evalNode = parser().parse<EvalNode>(UString(), 0, s.data(), s.size(), &sourceId, &errLine, &errMsg);
-    
-    if (!evalNode) {
-        exceptionValue = Error::create(exec, SyntaxError, errMsg, errLine, sourceId, NULL);
-        return 0;
-    }
-
-    return machine().execute(evalNode.get(), exec, thisObj, registerFile, r - (*registerFile->basePointer()) + argv + argc, scopeChain, &exceptionValue);
-}
-
-#if HAVE(COMPUTED_GOTO)
-static void* op_throw_end_indirect;
-static void* op_call_indirect;
-#endif
 
 JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, ScopeChainNode* scopeChain, JSObject* thisObj, RegisterFileStack* registerFileStack, JSValue** exception)
 {
@@ -1923,13 +1930,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     #undef NEXT_OPCODE
     #undef BEGIN_OPCODE
     #undef VM_CHECK_EXCEPTION
-}
-
-Machine& machine()
-{
-    ASSERT(JSLock::currentThreadIsHoldingLock());
-    static Machine machine;
-    return machine;
 }
 
 } // namespace KJS
