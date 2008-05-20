@@ -950,7 +950,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         CodeBlock* oldCodeBlock = codeBlock;
 
         Register* returnInfo = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - returnInfoSize;
-        Register* returnValue = &r[r1];
+        JSValue* returnValue = r[r1].u.jsValue;
         
         if (oldCodeBlock->needsActivation) {
             ASSERT(scopeChain->top()->isActivationObject());
@@ -964,7 +964,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         scopeChain = returnInfo[2].u.scopeChain;
         r = (*registerBase) + returnInfo[3].u.i;
         int r0 = returnInfo[4].u.i;
-        r[r0] = *returnValue;
+        r[r0].u.jsValue = returnValue;
         
         NEXT_OPCODE;
     }
@@ -991,7 +991,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         // FIXME: We need to throw a TypeError here if v doesn't implementConstuct.
         ASSERT(constructor->implementsConstruct());
 
-        List args(&r[argv].u.jsValue, argc);
+        List args(&r[argv + 1].u.jsValue, argc - 1);
         r[r0].u.jsValue = constructor->construct(exec, args);
 
         ++vPC;
