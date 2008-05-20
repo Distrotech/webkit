@@ -1,3 +1,17 @@
+2008-04-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18649: SQUIRRELFISH: correctly handle exceptions in eval code
+        <https://bugs.webkit.org/show_bug.cgi?id=18649>
+
+        Allocate a callframe for eval() and initialise with a null codeBlock to
+        indicate native code.  This prevents the unwinder from clobbering the
+        register stack.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+
 2008-04-21  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Sam Weinig.
