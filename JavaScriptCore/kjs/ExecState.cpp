@@ -31,14 +31,28 @@
 
 namespace KJS {
 
-ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChain& globalScopeChain)
-    : m_globalObject(globalObject)
+ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain)
+    : m_prev(0)
+    , m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
     , m_exception(0)
     , m_exceptionSource(0)
     , m_perThreadData(globalObject->perThreadData())
-    , m_scopeChain(globalScopeChain.node())
+    , m_scopeChain(globalScopeChain)
 {
+}
+
+ExecState::ExecState(ExecState* exec, ScopeChainNode* scopeChain)
+    : m_prev(exec)
+    , m_globalObject(exec->m_globalObject)
+    , m_globalThisValue(exec->m_globalThisValue)
+    , m_exception(0)
+    , m_exceptionSource(0)
+    , m_perThreadData(exec->m_globalObject->perThreadData())
+    , m_scopeChain(scopeChain)
+{
+    ASSERT(!exec->m_exception);
+    ASSERT(!exec->m_exceptionSource);
 }
 
 bool ExecState::isGlobalObject(JSObject* o) const

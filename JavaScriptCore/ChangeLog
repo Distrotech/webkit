@@ -2,6 +2,35 @@
 
         Reviewed by Sam Weinig.
         
+        Update ExecState::m_scopeChain when switching scope chains inside the
+        machine.
+        
+        This fixes uses of lexicalGlobalObject, such as, in a subframe
+
+            alert(top.makeArray() instanceof Array ? "FAIL" : "PASS");
+        
+        and a bunch of the security failures listed in
+        https://bugs.webkit.org/show_bug.cgi?id=18870. (Those tests still fail,
+        seemingly because of regressions in exception messages).
+        
+        SunSpider reports no change.
+
+        * VM/Machine.cpp: Factored out scope chain updating into a common
+        function that takes care to update ExecState::m_scopeChain, too.
+
+        * kjs/ExecState.h: I made Machine a friend of ExecState so that Machine
+        could update ExecState::m_scopeChain, even though that value is
+        read-only for everyone else.
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData): Changed
+        this client to be a little friendlier to ExecState's internal
+        storage type for scope chain data.
+
+2008-05-03  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
         Fixed https://bugs.webkit.org/show_bug.cgi?id=18876
         Squirrelfish: ScopeChainNode leak in op_jmp_scopes.
         

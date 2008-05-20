@@ -62,8 +62,10 @@ namespace KJS  {
     // Represents the current state of script execution.
     // Passed as the first argument to most functions.
     class ExecState : Noncopyable {
+        friend class Machine;
+
     public:
-        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChain& globalScopeChain);
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain);
 
         // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
@@ -100,7 +102,11 @@ namespace KJS  {
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
     private:
+        ExecState(ExecState*, ScopeChainNode*);
+
         bool isGlobalObject(JSObject*) const;
+        
+        ExecState* m_prev;
     
         JSGlobalObject* m_globalObject;
         JSObject* m_globalThisValue;
@@ -110,7 +116,7 @@ namespace KJS  {
 
         const PerThreadData* m_perThreadData;
 
-        const ScopeChainNode* m_scopeChain;
+        ScopeChainNode* m_scopeChain;
     };
 
     // This code is now defunct:
