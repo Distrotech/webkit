@@ -95,6 +95,7 @@ namespace KJS {
         macro(op_new_func) \
         macro(op_new_func_exp) \
         macro(op_call) \
+        macro(op_call_eval) \
         macro(op_ret) \
         \
         macro(op_construct) \

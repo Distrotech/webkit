@@ -79,6 +79,8 @@ namespace KJS {
         
         JSValue* execute(ProgramNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChain*, JSValue** exception);
         JSValue* execute(FunctionBodyNode*, const List& args, JSObject* thisObj, ExecState*, RegisterFileStack*, ScopeChain*, JSValue** exception);
+        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFile*, int registerOffset, ScopeChainNode*, JSValue** exception);
+        JSValue* execute(EvalNode*, ExecState*, JSObject* thisObj, RegisterFileStack*, ScopeChainNode*, JSValue** exception);
         
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
