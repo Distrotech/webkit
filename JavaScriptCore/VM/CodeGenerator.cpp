@@ -147,8 +147,7 @@ bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)
     else {
         --m_nextVar;
         ++m_codeBlock->numVars;
-        
-        ASSERT(m_locals.size() < m_locals.capacity()); // FIXME: Handle growing the locals vector dynamically.
+
         m_locals.append(index);
     }
 
@@ -231,7 +230,6 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     }
 
     m_nextParameter = m_nextVar - parameters.size();
-    ASSERT(localsIndex(m_nextParameter) + 1 < static_cast<int>(m_locals.capacity())); // FIXME: Handle growing the locals vector dynamically.
     m_locals.resize(localsIndex(m_nextParameter) + 1);
 
     addParameter(m_propertyNames->thisIdentifier);
@@ -313,7 +311,6 @@ RegisterID* CodeGenerator::newTemporary()
         m_temporaries.removeLast();
 
     // Allocate new register ID.
-    ASSERT(m_temporaries.size() < m_temporaries.capacity()); // FIXME: Handle growing the temporaries vector dynamically.
     m_temporaries.append(m_temporaries.size());
     m_codeBlock->numTemporaries = max<int>(m_codeBlock->numTemporaries, m_temporaries.size());
     return &m_temporaries.last();
@@ -326,7 +323,6 @@ PassRefPtr<LabelID> CodeGenerator::newLabel()
         m_labels.removeLast();
 
     // Allocate new label ID.
-    ASSERT(m_labels.size() < m_labels.capacity()); // FIXME: Handle growing the label vector dynamically.
     m_labels.append(m_codeBlock);
     return &m_labels.last();
 }
