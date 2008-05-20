@@ -35,7 +35,6 @@ ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, Sc
     : m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
     , m_exception(0)
-    , m_exceptionSource(0)
     , m_perThreadData(globalObject->perThreadData())
     , m_prev(0)
     , m_machine(0)
@@ -49,7 +48,6 @@ ExecState::ExecState(ExecState* exec, Machine* machine, RegisterFile* registerFi
     : m_globalObject(exec->m_globalObject)
     , m_globalThisValue(exec->m_globalThisValue)
     , m_exception(0)
-    , m_exceptionSource(0)
     , m_perThreadData(exec->m_globalObject->perThreadData())
     , m_prev(exec)
     , m_machine(machine)
@@ -58,7 +56,6 @@ ExecState::ExecState(ExecState* exec, Machine* machine, RegisterFile* registerFi
     , m_callFrameOffset(callFrameOffset)
 {
     ASSERT(!exec->m_exception);
-    ASSERT(!exec->m_exceptionSource);
 }
 
 bool ExecState::isGlobalObject(JSObject* o) const

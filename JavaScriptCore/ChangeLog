@@ -2,6 +2,24 @@
 
         Reviewed by Oliver Hunt.
         
+        Removed some unused exception machinery.
+        
+        SunSpider reports a .3% speedup.
+
+        * API/JSCallbackObject.h:
+        * API/JSCallbackObjectFunctions.h:
+        * JavaScriptCore.exp:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * kjs/internal.cpp:
+        * kjs/object.cpp:
+        * kjs/object.h:
+        * kjs/value.h:
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         A little more debugger action.
 
         * kjs/debugger.cpp:

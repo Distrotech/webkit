@@ -95,7 +95,6 @@ public:
     // toNumber conversion is expected to be side effect free if an exception has
     // been set in the ExecState already.
     double toNumber(ExecState *exec) const;
-    double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
     JSValue* toJSNumber(ExecState*) const; // Fast path for when you expect that the value is an immediate number.
     UString toString(ExecState *exec) const;
     JSObject *toObject(ExecState *exec) const;
@@ -174,7 +173,6 @@ public:
     virtual bool getPrimitiveNumber(ExecState* exec, double& number, JSValue*& value) = 0;
     virtual bool toBoolean(ExecState *exec) const = 0;
     virtual double toNumber(ExecState *exec) const = 0;
-    virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const = 0;
     virtual UString toString(ExecState *exec) const = 0;
     virtual JSObject *toObject(ExecState *exec) const = 0;
 
@@ -196,7 +194,6 @@ public:
   virtual bool getPrimitiveNumber(ExecState*, double& number, JSValue*& value);
   virtual bool toBoolean(ExecState* exec) const;
   virtual double toNumber(ExecState* exec) const;
-  virtual double toNumber(ExecState* exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const;
   virtual UString toString(ExecState* exec) const;
   virtual JSObject* toObject(ExecState* exec) const;
   
@@ -511,16 +508,6 @@ ALWAYS_INLINE double JSValue::toNumber(ExecState *exec) const
     return JSImmediate::isImmediate(this) ? JSImmediate::toDouble(this) : asCell()->toNumber(exec);
 }
 
-ALWAYS_INLINE double JSValue::toNumber(ExecState *exec, Instruction* normalExitPC, Instruction* exceptionExitPC, Instruction*& resultPC) const
-{
-    if (JSImmediate::isImmediate(this)) {
-        resultPC = normalExitPC;
-        return JSImmediate::toDouble(this);
-    }
-
-    return asCell()->toNumber(exec, normalExitPC, exceptionExitPC, resultPC);
-}
-    
 ALWAYS_INLINE JSValue* JSValue::toJSNumber(ExecState* exec) const
 {
     return JSImmediate::isNumber(this) ? const_cast<JSValue*>(this) : jsNumber(this->toNumber(exec));
