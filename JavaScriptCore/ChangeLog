@@ -1,3 +1,21 @@
+2008-03-27  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
+        Add emitCode support for InstanceOfNode.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitInstanceOf):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::InstanceOfNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-27  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

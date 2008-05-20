@@ -60,6 +60,8 @@ namespace KJS {
         macro(op_bitxor) \
         macro(op_bitor) \
         \
+        macro(op_instance_of) \
+        \
         macro(op_resolve) \
         macro(op_resolve_base) \
         macro(op_object_get) \
