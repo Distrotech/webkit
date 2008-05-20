@@ -45,6 +45,7 @@ namespace KJS {
             : numTemporaries(0)
             , numLocals(0)
             , numParameters(0)
+            , needsActivation(usesEval_ || needsClosure_)
             , usesEval(usesEval_)
             , needsClosure(needsClosure_)
         {
@@ -59,6 +60,7 @@ namespace KJS {
         int numLocals;
         int numParameters;
         
+        bool needsActivation;
         bool usesEval;
         bool needsClosure;
 

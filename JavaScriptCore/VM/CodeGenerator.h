@@ -59,6 +59,7 @@ namespace KJS {
             , m_symbolTable(symbolTable)
             , m_scopeNode(scopeNode)
             , m_codeBlock(codeBlock)
+            , m_scopeDepth(0)
             , m_nextLocal(-1)
             , m_nextParameter(-localCount - parameterCount)
             , m_argumentsIdentifier(&CommonIdentifiers::shared()->arguments)
@@ -133,6 +134,9 @@ namespace KJS {
         PassRefPtr<LabelID> emitJumpIfTrue(RegisterID*, LabelID*);
         PassRefPtr<LabelID> emitJumpIfFalse(RegisterID*, LabelID*);
 
+        RegisterID* emitPushScope(RegisterID*);
+        void emitPopScope();
+        
     private:
         typedef HashMap<JSValue*, unsigned> JSValueMap;
         
@@ -152,6 +156,7 @@ namespace KJS {
         Vector<RegisterID, 128> m_locals;
         Vector<RegisterID, 128> m_temporaries;
         Vector<LabelID, 128> m_labels;
+        int m_scopeDepth;
         
         HashMap<int, int, DefaultHash<int>::Hash, LocalsHashTraits> m_localsMap; // Maps register index to index in m_locals.
         

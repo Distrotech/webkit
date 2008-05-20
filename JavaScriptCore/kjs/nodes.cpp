@@ -4701,6 +4701,16 @@ JSValue* ReturnNode::execute(ExecState* exec)
 
 // ------------------------------ WithNode -------------------------------------
 
+RegisterID* WithNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    dst = m_expr->emitCode(generator, dst);
+    ASSERT(dst);
+    generator.emitPushScope(dst);
+    dst = m_statement->emitCode(generator, dst);
+    generator.emitPopScope();
+    return dst;
+}
+
 void WithNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     // Can't optimize within statement because "with" introduces a dynamic scope.

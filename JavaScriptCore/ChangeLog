@@ -1,3 +1,30 @@
+2008-03-27  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18142: squirrelfish needs to support dynamic scoping/with
+        <http://bugs.webkit.org/show_bug.cgi?id=18142>
+
+        Add support for dynamic scoping and add code to handle 'with'
+        statements.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeBlock.h:
+        (KJS::CodeBlock::CodeBlock):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::getRegister):
+        (KJS::CodeGenerator::emitPushScope):
+        (KJS::CodeGenerator::emitPopScope):
+        * VM/CodeGenerator.h:
+        (KJS::CodeGenerator::CodeGenerator):
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::WithNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-27  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Geoffrey Garen.

@@ -216,6 +216,15 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::iterator& begin
             printf("[%4d] ret\t\tr[%d]\n", location, r0);
             break;
         }
+        case op_push_scope: {
+            int r0 = (++it)->u.operand;
+            printf("[%4d] push_scope\tr[%d]\n", location, r0);
+            break;
+        }
+        case op_pop_scope: {
+            printf("[%4d] pop_scope\n", location);
+            break;
+        }
         case op_end: {
             int r0 = (++it)->u.operand;
             printf("[%4d] end\t\tr[%d]\n", location, r0);
