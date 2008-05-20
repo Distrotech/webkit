@@ -115,6 +115,8 @@ namespace KJS {
         RegisterID* emitLoad(RegisterID*, double);
         RegisterID* emitLoad(RegisterID*, JSValue*);
         
+        RegisterID* emitNewObject(RegisterID*);
+
         RegisterID* emitNewFunction(RegisterID*, FuncDeclNode*);
         
         RegisterID* emitMove(RegisterID*, RegisterID*);

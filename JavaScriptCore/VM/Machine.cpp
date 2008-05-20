@@ -247,6 +247,13 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_new_object) {
+        int r0 = (++vPC)->u.operand;
+        r[r0].u.jsValue = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
+        
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_mov) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
