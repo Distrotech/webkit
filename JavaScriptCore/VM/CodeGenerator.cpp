@@ -240,7 +240,7 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
     }
 }
 
-CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, EvalCodeBlock* codeBlock, VarStack& varStack)
+CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, SymbolTable* symbolTable, EvalCodeBlock* codeBlock, VarStack& varStack, FunctionStack& functionStack)
     : m_scopeChain(&scopeChain)
     , m_symbolTable(symbolTable)
     , m_scopeNode(evalNode)
@@ -255,7 +255,16 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
     addVar(m_propertyNames->thisIdentifier);
     
     for (size_t i = 0; i < varStack.size(); ++i)
-        codeBlock->declaredVariables.append(varStack[i].first);
+        codeBlock->declaredVariableNames.append(varStack[i].first);
+    
+    for (size_t i = 0; i < functionStack.size(); ++i) {
+        FuncDeclNode* funcDecl = functionStack[i];
+        const Identifier& ident = funcDecl->m_ident;
+        
+        codeBlock->declaredFunctionNames.append(ident);
+        m_functions.add(ident.ustring().rep());
+        addConstant(funcDecl);
+    }
 }
 
 void CodeGenerator::addParameter(const Identifier& ident)
