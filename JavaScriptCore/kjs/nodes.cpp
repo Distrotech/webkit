@@ -5969,7 +5969,7 @@ void FuncDeclNode::addParams()
 
 FunctionImp* FuncDeclNode::makeFunction(ExecState* exec, ScopeChainNode* scopeChain)
 {
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), ScopeChain(scopeChain));
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
 
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
@@ -6008,7 +6008,7 @@ FunctionImp* FuncExprNode::makeFunction(ExecState* exec, ScopeChainNode* scopeCh
         exec->pushScope(functionScopeObject);
     }
 
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), ScopeChain(scopeChain));
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), scopeChain);
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
     func->putDirect(exec->propertyNames().prototype, proto, DontDelete);
@@ -6043,7 +6043,7 @@ JSValue* FuncExprNode::evaluate(ExecState* exec)
         exec->pushScope(functionScopeObject);
     }
 
-    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), exec->scopeChain());
+    FunctionImp* func = new FunctionImp(exec, m_ident, m_body.get(), exec->scopeChain().node());
     JSObject* proto = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
     proto->putDirect(exec->propertyNames().constructor, func, DontEnum);
     func->putDirect(exec->propertyNames().prototype, proto, DontDelete);

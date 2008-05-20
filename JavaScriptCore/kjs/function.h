@@ -58,7 +58,7 @@ namespace KJS {
   class FunctionImp : public InternalFunctionImp {
     friend class ActivationImp;
   public:
-    FunctionImp(ExecState*, const Identifier& name, FunctionBodyNode*, const ScopeChain&);
+    FunctionImp(ExecState*, const Identifier&, FunctionBodyNode*, ScopeChainNode*);
 
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
     virtual void put(ExecState*, const Identifier& propertyName, JSValue*);
