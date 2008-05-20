@@ -2808,10 +2808,10 @@ namespace KJS {
     public:
         ScopeNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        CodeBlock& code(ExecState* exec) KJS_FAST_CALL
+        CodeBlock& code(ScopeChain& scopeChain) KJS_FAST_CALL
         {
             if (!m_code)
-                generateCode(exec);
+                generateCode(scopeChain);
             return *m_code;
         }
 
@@ -2824,7 +2824,7 @@ namespace KJS {
         
     protected:
         void optimizeVariableAccess(ExecState*) KJS_FAST_CALL;
-        virtual void generateCode(ExecState*) KJS_FAST_CALL { ASSERT_NOT_REACHED(); }
+        virtual void generateCode(ScopeChain&) KJS_FAST_CALL { ASSERT_NOT_REACHED(); }
 
         VarStack m_varStack;
         FunctionStack m_functionStack;
@@ -2846,7 +2846,7 @@ namespace KJS {
     private:
         ProgramNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
-        virtual void generateCode(ExecState*) KJS_FAST_CALL;
+        virtual void generateCode(ScopeChain&) KJS_FAST_CALL;
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
 
         void initializeSymbolTable(ExecState*) KJS_FAST_CALL;
@@ -2875,19 +2875,18 @@ namespace KJS {
         Vector<Identifier>& parameters() KJS_FAST_CALL { return m_parameters; }
         UString paramString() const KJS_FAST_CALL;
 
-        SymbolTable& symbolTable() KJS_FAST_CALL { return m_symbolTable; }
-
         virtual RegisterID* emitCode(CodeGenerator&, RegisterID* = 0) KJS_FAST_CALL;
+        
+        SymbolTable& symbolTable() { return m_symbolTable; } // FIXME: Remove this
         
     protected:
         FunctionBodyNode(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
 
     private:
-        virtual void generateCode(ExecState*) KJS_FAST_CALL;
+        virtual void generateCode(ScopeChain&) KJS_FAST_CALL;
         
-        SymbolTable m_symbolTable;
-
         Vector<Identifier> m_parameters;
+        SymbolTable m_symbolTable;
     };
 
     class FuncExprNode : public ExpressionNode {
@@ -2936,7 +2935,7 @@ namespace KJS {
 
         virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
         virtual void streamTo(SourceStream&) const KJS_FAST_CALL;
-        FunctionImp* makeFunction(ExecState*) KJS_FAST_CALL;
+        FunctionImp* makeFunction(ExecState*, ScopeChain&) KJS_FAST_CALL;
 
         Identifier m_ident;
 

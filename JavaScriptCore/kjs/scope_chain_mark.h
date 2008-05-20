@@ -30,16 +30,7 @@ namespace KJS {
     {
         for (ScopeChainNode* n = _node; n; n = n->next) {
             JSObject* o = n->object;
-            
-            // An ActivationImp that is on the activation stack can't have the
-            // JSObject::marked() method called on it, because it doesn't have an
-            // entry in a GC mark bitmap, so we check here whether it is on the
-            // stack and directly call the portion of the marking code that is
-            // still relevant.
-            
-            if (o->isActivationObject() && static_cast<ActivationImp*>(o)->isOnStack())
-                static_cast<ActivationImp*>(o)->markChildren();
-            else if (!o->marked())
+            if (!o->marked())
                 o->mark();
         }
     }

@@ -64,7 +64,7 @@ namespace KJS {
         {
         }
 
-        void generate(ExecState*);
+        void generate();
 
         void addVar(const Identifier&);
         void addFunction(const Identifier&);
@@ -121,6 +121,7 @@ namespace KJS {
         unsigned addConstant(JSValue*);
         
         Vector<Instruction>& instructions() { return m_codeBlock->instructions; }
+        SymbolTable& symbolTable() { return *m_symbolTable; }
         
         const ScopeChain* m_scopeChain;
         SymbolTable* m_symbolTable;

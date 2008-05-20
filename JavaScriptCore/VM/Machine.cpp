@@ -34,6 +34,7 @@
 #include "JSLock.h"
 #include "Register.h"
 #include "internal.h"
+#include "JSActivation.h"
 
 namespace KJS {
 
@@ -325,7 +326,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r0 = (++vPC)->u.operand;
         int k0 = (++vPC)->u.operand;
 
-        r[r0].u.jsValue = codeBlock->functions[k0]->makeFunction(exec);
+        r[r0].u.jsValue = codeBlock->functions[k0]->makeFunction(exec, *scopeChain);
 
         ++vPC;
         NEXT_OPCODE;
@@ -340,7 +341,6 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
 
         ASSERT(v->isObject(&FunctionImp::info));
         FunctionImp* function = static_cast<FunctionImp*>(v);
-        CodeBlock* newCodeBlock = &function->body->code(exec);
         
         int rOffset = r - registers.data();
         Register* returnInfo = r + argv - returnInfoSize;
@@ -351,7 +351,15 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         returnInfo[3].u.i = rOffset; // r value after return
         returnInfo[4].u.i = r0; // return value slot
         returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
+        COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
         
+        FunctionBodyNode* functionBody = function->body.get();
+        
+        // WARNING: If code generation wants to optimize resolves to parent scopes,
+        // it needs to be aware that, for functions that require activations,
+        // the scope chain is off by one, since the activation hasn't been pushed yet.
+        CodeBlock* newCodeBlock = &functionBody->code(*scopeChain);
+
         int offset = rOffset + argv + argc + newCodeBlock->numLocals;
         if (argc == newCodeBlock->numParameters) { // correct number of arguments
             registers.resize(offset + newCodeBlock->numLocals + newCodeBlock->numTemporaries);
@@ -375,9 +383,14 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
                 *(it + shift) = *it;
         }
 
+        if (newCodeBlock->usesEval | newCodeBlock->needsClosure) { // FIXME: Do this for functions that use "with" and "catch", too
+            scopeChain = new (&returnInfo[6]) ScopeChain(function->scope());
+            scopeChain->push(new JSActivation(functionBody, &registers, r - registers.data()));
+        } else
+            scopeChain = &function->scope();
+        
         k = newCodeBlock->jsValues.data();
         vPC = newCodeBlock->instructions.begin();
-        scopeChain = &function->scope();
         codeBlock = newCodeBlock;
 
         NEXT_OPCODE;
@@ -389,6 +402,12 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
 
         Register* returnInfo = r - oldCodeBlock->numLocals - oldCodeBlock->numParameters - returnInfoSize;
         Register* returnValue = &r[r1];
+        
+        if (oldCodeBlock->usesEval | oldCodeBlock->needsClosure) {
+            ASSERT(scopeChain->top()->isActivationObject());
+            static_cast<JSActivation*>(scopeChain->top())->copyRegisters();
+            scopeChain->~ScopeChain();
+        }
 
         codeBlock = returnInfo[0].u.codeBlock;
         k = codeBlock->jsValues.data();

@@ -40,10 +40,12 @@ namespace KJS {
     class ExecState;
 
     struct CodeBlock {
-        CodeBlock()
+        CodeBlock(bool usesEval_, bool needsClosure_)
             : numTemporaries(0)
             , numLocals(0)
             , numParameters(0)
+            , usesEval(usesEval_)
+            , needsClosure(needsClosure_)
         {
         }
         
@@ -56,6 +58,9 @@ namespace KJS {
         int numLocals;
         int numParameters;
         
+        bool usesEval;
+        bool needsClosure;
+
         // Constant pool
         Vector<Identifier> identifiers;
         Vector<RefPtr<FuncDeclNode> > functions;
