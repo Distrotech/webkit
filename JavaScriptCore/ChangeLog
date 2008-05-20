@@ -1,6 +1,14 @@
 2008-03-28  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
+        
+        Responding to feedback, added some comments, fixed up a few names, and
+        clarified that "locals" always means all local variables, functions,
+        and parameters.
+
+2008-03-28  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
 
         Added support for "this".
         
