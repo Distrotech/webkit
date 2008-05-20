@@ -377,8 +377,8 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
         registerFile->grow(size);
         r = (*registerBase) + omittedArgCount + registerOffset;
         
-        Register* end = r;
-        for (Register* it = r - omittedArgCount; it != end; ++it)
+        Register* endOfParams = r - newCodeBlock->numVars;
+        for (Register* it = endOfParams - omittedArgCount; it != endOfParams; ++it)
             (*it).u.jsValue = jsUndefined();
     } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
         size_t size = registerOffset + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
