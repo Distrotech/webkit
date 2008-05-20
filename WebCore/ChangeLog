@@ -1,5 +1,15 @@
 2008-05-19  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+
+        - obtain current inner window of outer window in a more efficient way
+        1.6% speedup to SunSpider in-browser
+
+        * bindings/js/JSDOMWindowBase.cpp:
+        (WebCore::JSDOMWindowBase::allowsAccessFromPrivate):
+
+2008-05-19  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Adam.
 
         - make impl() method for JSWindow inline

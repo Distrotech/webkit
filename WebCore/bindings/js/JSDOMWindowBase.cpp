@@ -763,7 +763,7 @@ bool JSDOMWindowBase::allowsAccessFrom(ExecState* exec, String& message) const
 ALWAYS_INLINE bool JSDOMWindowBase::allowsAccessFromPrivate(const JSGlobalObject* other) const
 {
     const JSDOMWindow* originWindow = asJSDOMWindow(other);
-    const JSDOMWindow* targetWindow = toJSDOMWindow(impl()->frame());
+    const JSDOMWindow* targetWindow = d->m_shell->window();
 
     if (originWindow == targetWindow)
         return true;
