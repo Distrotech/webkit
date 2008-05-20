@@ -4572,25 +4572,23 @@ inline void ConstDeclNode::evaluateSingle(OldInterpreterExecState* exec)
     }
 }
 
-RegisterID* ConstDeclNode::emitCodeSingle(CodeGenerator& generator, RegisterID* dst)
+RegisterID* ConstDeclNode::emitCodeSingle(CodeGenerator& generator)
 {
-    if (RegisterID* constReg = generator.registerForLocalConstInit(m_ident)) {
-        RegisterID* exprResult = generator.emitNode(constReg, m_init.get());
-        return generator.moveToDestinationIfNeeded(dst, exprResult);
-    }
+    if (RegisterID* constReg = generator.registerForLocalConstInit(m_ident))
+        return generator.emitNode(constReg, m_init.get());
 
     // FIXME: While this code should only be hit in eval code, it will potentially
     // assign to the wrong base if m_ident exists in an intervening dynamic scope.
     RefPtr<RegisterID> constBase = generator.emitResolveBase(generator.newTemporary(), m_ident);
-    RegisterID* exprResult = generator.emitNode(dst, m_init.get());
+    RegisterID* exprResult = generator.emitNode(m_init.get());
     return generator.emitPutPropId(constBase.get(), m_ident, exprResult);
 }
 
-RegisterID* ConstDeclNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* ConstDeclNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
     RegisterID* result = 0;
     for (ConstDeclNode* n = this; n; n = n->m_next.get())
-        result = n->emitCodeSingle(generator, n->m_next ? 0 : dst);
+        result = n->emitCodeSingle(generator);
 
     return result;
 }
@@ -4617,9 +4615,9 @@ void ConstStatementNode::optimizeVariableAccess(OldInterpreterExecState*, const 
     nodeStack.append(m_next.get());
 }
 
-RegisterID* ConstStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* ConstStatementNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
-    return generator.emitNode(dst, m_next.get());
+    return generator.emitNode(m_next.get());
 }
 
 // ECMA 12.2
@@ -4748,10 +4746,10 @@ JSValue* ExprStatementNode::execute(OldInterpreterExecState* exec)
 
 // ------------------------------ VarStatementNode ----------------------------
 
-RegisterID* VarStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+RegisterID* VarStatementNode::emitCode(CodeGenerator& generator, RegisterID*)
 {
     ASSERT(m_expr);
-    return generator.emitNode(dst, m_expr.get());
+    return generator.emitNode(m_expr.get());
 }
 
 void VarStatementNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
