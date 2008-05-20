@@ -127,8 +127,10 @@ void CodeGenerator::setDumpsGeneratedCode(bool dumpsGeneratedCode)
 
 void CodeGenerator::generate()
 {
-    m_scopeNode->emitCode(*this);
     m_codeBlock->numLocals = m_codeBlock->numVars + m_codeBlock->numParameters;
+    m_codeBlock->thisRegister = m_codeType == FunctionCode ? -m_codeBlock->numLocals : Machine::ProgramCodeThisRegister;
+
+    m_scopeNode->emitCode(*this);
 
 #ifndef NDEBUG
     if (s_dumpsGeneratedCode) {
@@ -136,6 +138,9 @@ void CodeGenerator::generate()
         m_codeBlock->dump(globalObject->globalExec());
     }
 #endif
+
+    // Remove "this" from symbol table so it does not appear as a global object property at runtime.
+    symbolTable().remove(m_propertyNames->thisIdentifier.ustring().rep());
 }
 
 bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0, bool isConstant)
@@ -284,8 +289,6 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
 
 CodeGenerator::~CodeGenerator()
 {
-    // remove "this" from symbol table so it does not appear as a global object property at runtime
-    symbolTable().remove(m_propertyNames->thisIdentifier.ustring().rep());
 }
 
 void CodeGenerator::addParameter(const Identifier& ident)

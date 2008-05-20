@@ -39,12 +39,13 @@
 #include "Parser.h"
 #include "Register.h"
 #include "array_object.h"
+#include "debugger.h"
 #include "function.h"
 #include "internal.h"
 #include "object_object.h"
 #include "operations.h"
+#include "operations.h"
 #include "regexp_object.h"
-#include <kjs/operations.h>
 
 #if COMPILER(GCC)
 #define UNLIKELY(x) \
@@ -555,11 +556,13 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     if (exceptionValue->isObject()) {
         JSObject* exception = static_cast<JSObject*>(exceptionValue);
         if (!exception->hasProperty(exec, "line") && !exception->hasProperty(exec, "sourceURL")) {
-            // Need to set line and sourceURL properties on the exception, but that is not currently possible
             exception->put(exec, "line", jsNumber(codeBlock->lineNumberForVPC(vPC)));
-            exception->put(exec, "sourceURL", jsOwnedString(codeBlock->sourceURL));
+            exception->put(exec, "sourceURL", jsOwnedString(codeBlock->ownerNode->sourceURL()));
         }
     }
+
+    if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
+        debugger->exception(exec, codeBlock->ownerNode->sourceId(), codeBlock->lineNumberForVPC(vPC), exceptionValue);
 
     // Calculate an exception handler vPC, unwinding call frames as necessary.
 
@@ -1641,8 +1644,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (base == scopeChain->globalObject() && v == scopeChain->globalObject()->evalFunction()) {
             int registerOffset = r - (*registerBase);
 
-            int thisRegister = (codeBlock->codeType == FunctionCode) ? -codeBlock->numLocals : ProgramCodeThisRegister;
-            JSObject* thisObject = r[thisRegister].u.jsObject;
+            JSObject* thisObject = r[codeBlock->thisRegister].u.jsObject;
 
             registerFile->setSafeForReentry(true);
             JSValue* result = eval(exec, thisObject, scopeChain, registerFile, r, argv, argc, exceptionValue);

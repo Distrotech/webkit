@@ -2,6 +2,30 @@
 
         Reviewed by Oliver Hunt.
         
+        A little more debugger action: implemented the exception callback.
+        
+        SunSpider reports a .2% speedup. Not sure what that's about.
+
+        * VM/CodeBlock.h: A little refactoring here. Store a pointer to our
+        owner ScopeNode so we can retrieve data from it. This allows us to
+        stop storing copies of the data ourselves. Also, store a "this" register
+        instead of a code type, since we were only using the code type to
+        calculate the "this" register.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::generate): Calculate the "this" register mentioned
+        above. Also, take care of removing "this" from the symbol table after
+        codegen is done, since relying on the timing of a destructor for correct
+        behavior is not so good.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::throwException): Invoke the debugger's exception callback.
+        (KJS::Machine::privateExecute): Use the "this" register mentioned above.
+
+2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
         Removed some unused exception machinery.
         
         SunSpider reports a .3% speedup.
