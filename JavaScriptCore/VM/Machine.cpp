@@ -38,8 +38,12 @@
 #include "JSPropertyNameIterator.h"
 #include "Parser.h"
 #include "Register.h"
+#include "array_object.h"
+#include "function.h"
 #include "internal.h"
+#include "object_object.h"
 #include "operations.h"
+#include "regexp_object.h"
 #include <kjs/operations.h>
 
 #if COMPILER(GCC)
