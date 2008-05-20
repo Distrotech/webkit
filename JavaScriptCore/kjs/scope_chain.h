@@ -33,7 +33,11 @@ namespace KJS {
     class ScopeChainNode {
     public:
         ScopeChainNode(ScopeChainNode* n, JSObject* o)
-            : next(n), object(o), refCount(1) { }
+            : next(n)
+            , object(o)
+            , refCount(1)
+        {
+        }
 
         ScopeChainNode* next;
         JSObject* object;
@@ -41,14 +45,56 @@ namespace KJS {
 
         void deref() { if (--refCount == 0) release(); }
         void ref() { ++refCount; }
+        void release();
 
         JSObject* bottom() const;
 
-        void release();
+        ScopeChainNode* push(JSObject* o);
+        ScopeChainNode* pop();
 
         ScopeChainIterator begin() const;
         ScopeChainIterator end() const;
     };
+
+    inline ScopeChainNode* ScopeChainNode::push(JSObject* o)
+    {
+        ASSERT(o);
+        return new ScopeChainNode(this, o);
+    }
+
+    inline ScopeChainNode* ScopeChainNode::pop()
+    {
+        ASSERT(next);
+        ScopeChainNode* result = next;
+        
+        if (--refCount != 0)
+            ++result->refCount;
+        else
+            delete this;
+        
+        return result;
+    }
+
+    inline JSObject* ScopeChainNode::bottom() const
+    {
+        const ScopeChainNode* n = this;
+        while (n->next)
+            n = n->next;
+        return n->object;
+    }
+
+    inline void ScopeChainNode::release()
+    {
+        // This function is only called by deref(),
+        // Deref ensures these conditions are true.
+        ASSERT(refCount == 0);
+        ScopeChainNode* n = this;
+        do {
+            ScopeChainNode* next = n->next;
+            delete n;
+            n = next;
+        } while (n && --n->refCount == 0);
+    }
 
     class ScopeChainIterator {
     public:
@@ -67,6 +113,16 @@ namespace KJS {
     private:
         const ScopeChainNode* m_node;
     };
+
+    inline ScopeChainIterator ScopeChainNode::begin() const
+    {
+        return ScopeChainIterator(this); 
+    }
+
+    inline ScopeChainIterator ScopeChainNode::end() const
+    { 
+        return ScopeChainIterator(0); 
+    }
 
     class ScopeChain {
     public:
@@ -89,17 +145,19 @@ namespace KJS {
     
         ~ScopeChain() { _node->deref(); }
 
+        ScopeChainNode* node() const { return _node; }
+
         JSObject* top() const { return _node->object; }
         JSObject* bottom() const { return _node->bottom(); }
 
         ScopeChainIterator begin() const { return _node->begin(); }
         ScopeChainIterator end() const { return _node->end(); }
 
-        void clear() { _node->deref(); _node = 0; }
-        void push(JSObject *);
+        void push(JSObject* o) { _node = _node->push(o); }
         void push(const ScopeChain &);
-        void push(ScopeChainNode*);
-        void pop();
+
+        void pop() { _node = _node->pop(); }
+        void clear() { _node->deref(); _node = 0; }
 
         void mark() const;
 
@@ -107,72 +165,9 @@ namespace KJS {
         void print() const;
 #endif
         
-        ScopeChainNode* node() const { return _node; }
-
     private:
         ScopeChainNode* _node;
     };
-
-inline void ScopeChain::push(JSObject *o)
-{
-    ASSERT(o);
-    _node = new ScopeChainNode(_node, o);
-}
-
-inline void ScopeChain::push(ScopeChainNode *node)
-{
-    ASSERT(node);
-    ASSERT(node->object);
-    node->refCount++;
-    node->next = _node;
-    _node = node;
-}
-
-inline void ScopeChain::pop()
-{
-    ScopeChainNode *oldNode = _node;
-    ASSERT(oldNode);
-    ScopeChainNode *newNode = oldNode->next;
-    _node = newNode;
-    
-    if (--oldNode->refCount != 0) {
-        if (newNode)
-            ++newNode->refCount;
-    } else {
-        delete oldNode;
-    }
-}
-
-inline JSObject* ScopeChainNode::bottom() const
-{
-    const ScopeChainNode* n = this;
-    while (n->next)
-        n = n->next;
-    return n->object;
-}
-
-inline void ScopeChainNode::release()
-{
-    // This function is only called by deref(),
-    // Deref ensures these conditions are true.
-    ASSERT(refCount == 0);
-    ScopeChainNode* n = this;
-    do {
-        ScopeChainNode* next = n->next;
-        delete n;
-        n = next;
-    } while (n && --n->refCount == 0);
-}
-
-inline ScopeChainIterator ScopeChainNode::begin() const
-{
-    return ScopeChainIterator(this); 
-}
-
-inline ScopeChainIterator ScopeChainNode::end() const
-{ 
-    return ScopeChainIterator(0); 
-}
 
 } // namespace KJS
 
