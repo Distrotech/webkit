@@ -138,10 +138,11 @@ void CodeGenerator::generate()
 #endif
 }
 
-bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0)
+bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0, bool isConstant)
 {
     int index = m_nextVar;
-    pair<SymbolTable::iterator, bool> result = symbolTable().add(ident.ustring().rep(), index);
+    SymbolTableEntry newEntry(index, isConstant ? ReadOnly : 0);
+    pair<SymbolTable::iterator, bool> result = symbolTable().add(ident.ustring().rep(), newEntry);
 
     if (!result.second)
         index = result.first->second.index;
@@ -182,7 +183,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
         // Shift new symbols so they get stored prior to previously defined symbols.
         m_nextVar -= size;
     } else
-        addVar(m_propertyNames->thisIdentifier); // No need to make "this" a true parameter, since it's not passed by our caller.
+        addVar(m_propertyNames->thisIdentifier, false); // No need to make "this" a true parameter, since it's not passed by our caller.
 
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
     ASSERT(globalObject->isGlobalObject());
@@ -192,12 +193,12 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
     if (canCreateVariables) {
         for (size_t i = 0; i < functionStack.size(); ++i) {
             FuncDeclNode* funcDecl = functionStack[i];
-            emitNewFunction(addVar(funcDecl->m_ident), funcDecl);
+            emitNewFunction(addVar(funcDecl->m_ident, false), funcDecl);
         }
         
         for (size_t i = 0; i < varStack.size(); ++i) {
             if (!globalObject->hasProperty(exec, varStack[i].first))
-                emitLoad(addVar(varStack[i].first), jsUndefined());
+                emitLoad(addVar(varStack[i].first, varStack[i].second & DeclarationStacks::IsConstant), jsUndefined());
         }
     } else {
         for (size_t i = 0; i < functionStack.size(); ++i) {
@@ -232,7 +233,7 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
         const Identifier& ident = funcDecl->m_ident;
         
         m_functions.add(ident.ustring().rep());
-        emitNewFunction(addVar(ident), funcDecl);
+        emitNewFunction(addVar(ident, false), funcDecl);
     }
 
     for (size_t i = 0; i < varStack.size(); ++i) {
@@ -241,7 +242,7 @@ CodeGenerator::CodeGenerator(FunctionBodyNode* functionBody, const ScopeChain& s
             continue;
         
         RegisterID* r0;
-        if (addVar(ident, r0))
+        if (addVar(ident, r0, varStack[i].second & DeclarationStacks::IsConstant))
             emitLoad(r0, jsUndefined());
     }
 
@@ -266,7 +267,7 @@ CodeGenerator::CodeGenerator(EvalNode* evalNode, const ScopeChain& scopeChain, S
     , m_nextVar(-1)
     , m_propertyNames(CommonIdentifiers::shared())
 {
-    addVar(m_propertyNames->thisIdentifier);
+    addVar(m_propertyNames->thisIdentifier, false);
     
     for (size_t i = 0; i < varStack.size(); ++i)
         codeBlock->declaredVariableNames.append(varStack[i].first);
@@ -318,6 +319,11 @@ RegisterID* CodeGenerator::registerForLocalConstInit(const Identifier& ident)
     ASSERT(index != missingSymbolMarker());
     
     return &m_locals[localsIndex(index)];
+}
+
+bool CodeGenerator::isLocalConstant(const Identifier& ident)
+{
+    return symbolTable().get(ident.ustring().rep()).attributes & ReadOnly;
 }
 
 RegisterID* CodeGenerator::newTemporary()
