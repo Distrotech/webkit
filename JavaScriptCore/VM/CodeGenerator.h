@@ -147,7 +147,7 @@ namespace KJS {
         RegisterID* emitPreDec(RegisterID*);
         RegisterID* emitPostInc(RegisterID*, RegisterID*);
         RegisterID* emitPostDec(RegisterID*, RegisterID*);
-        RegisterID* emitAdd(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitAdd(RegisterID* dst, RegisterID* src1, RegisterID* src2);
         RegisterID* emitMult(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitDiv(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitMod(RegisterID*, RegisterID*, RegisterID*);
@@ -178,7 +178,7 @@ namespace KJS {
         RegisterID* emitResolveBaseAndProperty(RegisterID*, RegisterID*, const Identifier&);
         RegisterID* emitResolveBaseAndFunc(RegisterID*, RegisterID*, const Identifier&);
         
-        RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier&);
+        RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier& property);
         RegisterID* emitPutPropId(RegisterID* base, const Identifier&, RegisterID* val);
         RegisterID* emitDeletePropId(RegisterID* dst, RegisterID* base, const Identifier&);
         RegisterID* emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
