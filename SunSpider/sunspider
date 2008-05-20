@@ -66,7 +66,6 @@ GetOptions('runs=i' => \$testRuns,
            'tests=s' => \$testsPattern,
            'help' => \$showHelp);
 
-$testsPattern = "squirrelfish" if $squirrelfish;
 $testRuns = 1 if $squirrelfish;
 $runShark = 1 if $runSharkCache;
 $runShark = 20 if $runShark20;
@@ -111,7 +110,7 @@ my %uniqueCategories = ();
 
 sub loadTestsList()
 {
-    open TESTLIST, "<", "tests/LIST" or die "Can't find ./tests/LIST";
+    open TESTLIST, "<", ($squirrelfish ? "tests/LIST-SQUIRRELFISH" : "tests/LIST") or die "Can't find ./tests/LIST";
     while (<TESTLIST>) {
         chomp;
         next unless !$testsPattern || /$testsPattern/;
@@ -153,14 +152,13 @@ sub runTestsOnce($)
 
             $total += $elapsed;
 
-            $test =~ /[a-zA-z\-\.]*$/;
+            $test =~ /[0-9a-zA-z\-\.]*$/;
             push @results, "$&: $elapsed";
         }
         
         my $average = $total / @results;
         
-        sort @results;
-        $output = "\n" . join("\n", @results) . "\n\naverage: $average\ntotal: $total\n\n";
+        $output = "\n" . join("\n", sort(@results)) . "\n\naverage: $average\ntotal: $total\n\n";
         return $output;
     }
     
