@@ -752,8 +752,8 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             
             // FIXME: Substitute lexical global object for null.
 
-            r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
-            JSObject* thisObj = (r[argv].u.jsValue)->toObject(exec);
+            r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : (r[r2].u.jsValue)->toObject(exec); // "this" value
+            JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
             // FIXME: needs exception check
             
             List args(&r[argv + 1].u.jsValue, argc - 1);
