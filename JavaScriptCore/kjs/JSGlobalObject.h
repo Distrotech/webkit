@@ -79,7 +79,7 @@ namespace KJS {
 
         struct JSGlobalObjectData : public JSVariableObjectData {
             JSGlobalObjectData(JSGlobalObject* globalObject, JSObject* thisValue)
-                : JSVariableObjectData(&symbolTable, &registers, 0)
+                : JSVariableObjectData(&symbolTable, registerVector.dataSlot(), 0)
                 , globalExec(new GlobalExecState(globalObject, thisValue))
             {
             }
@@ -146,7 +146,7 @@ namespace KJS {
 
             PerThreadData perThreadData;
 
-            Vector<Register> registers;
+            Vector<Register> registerVector;
         };
 
     public:
@@ -249,10 +249,7 @@ namespace KJS {
 
         HashSet<JSObject*>& arrayVisitedElements() { if (!d()->arrayVisitedElements) d()->arrayVisitedElements.set(new HashSet<JSObject*>); return *d()->arrayVisitedElements; }
 
-        Vector<Register>& registers() { return d()->registers; }
-
-        void setROffset(int rOffset) { d()->rOffset = rOffset; }
-        int rOffset() { return d()->rOffset; }
+        Vector<Register>& registerVector() { return d()->registerVector; }
 
         // Per-thread hash tables, cached on the global object for faster access.
         const PerThreadData* perThreadData() const { return &d()->perThreadData; }

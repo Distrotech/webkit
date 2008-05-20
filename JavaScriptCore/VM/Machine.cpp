@@ -40,7 +40,7 @@
 
 namespace KJS {
 
-void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, const Register* registerBase, const Register* r)
+void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeChain, const Register** registerBase, const Register* r)
 {
     JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain->bottom());
     InterpreterExecState tmpExec(globalObject, globalObject, reinterpret_cast<ProgramNode*>(0x1));
@@ -48,7 +48,7 @@ void Machine::dumpCallFrame(const CodeBlock* codeBlock, const ScopeChain* scopeC
     dumpRegisters(codeBlock, registerBase, r);
 }
 
-void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register* registerBase, const Register* r)
+void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register** registerBase, const Register* r)
 {
     printf("Register frame: \n\n");
     printf("----------------------------------------\n");
@@ -61,7 +61,7 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, const Register* register
     const Register* end;
     
     if (isGlobalFrame) {
-        it = registerBase;
+        it = *registerBase;
         end = r;
         if (it != end) {
             do {
@@ -293,19 +293,21 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
     registers->reserveCapacity(512);
 
-    int oldROffset = globalObject->rOffset();
+    int oldRegisterOffset = globalObject->registerOffset();
 
     // Allocate enough register space for this code block.
-    int rOffset = oldROffset + codeBlock->numVars + codeBlock->numParameters;
-    registers->resize(rOffset + codeBlock->numTemporaries);
-    globalObject->setROffset(rOffset);
+    Register** registerBase = globalObject->registerBase();
+    int registerOffset = oldRegisterOffset + codeBlock->numVars + codeBlock->numParameters;
+
+    registers->resize(registerOffset + codeBlock->numTemporaries);
+    globalObject->setRegisterOffset(registerOffset);
 
     // Move previously defined locals to make room for newly defined locals.
-    int shift = rOffset - oldROffset;
-    if (oldROffset && shift)
-        memmove(registers->data() + shift, registers->data(), oldROffset * sizeof(Register));
+    int shift = registerOffset - oldRegisterOffset;
+    if (oldRegisterOffset && shift)
+        memmove((*registerBase) + shift, (*registerBase), oldRegisterOffset * sizeof(Register));
 
-    Register* r = registers->data() + rOffset;
+    Register* r = (*registerBase) + registerOffset;
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
     
@@ -794,13 +796,13 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         CallType callType = v->getCallData(callData);
         
         if (callType == CallTypeJS) {
-            int rOffset = r - registers->data();
+            int registerOffset = r - (*registerBase);
             Register* returnInfo = r + argv - returnInfoSize;
 
             returnInfo[0].u.codeBlock = codeBlock; // codeBlock after return
             returnInfo[1].u.vPC = ++vPC; // vPC after return
             returnInfo[2].u.scopeChain = scopeChain; // scope chain after return
-            returnInfo[3].u.i = rOffset; // r value after return
+            returnInfo[3].u.i = registerOffset; // offset of "r" after return
             returnInfo[4].u.i = r0; // return value slot
             returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
             // returnInfo[6] gets optionally set later
@@ -812,18 +814,18 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-            int offset = rOffset + argv + argc + newCodeBlock->numVars;
+            int offset = registerOffset + argv + argc + newCodeBlock->numVars;
             if (argc == newCodeBlock->numParameters) { // correct number of arguments
                 size_t size = offset + newCodeBlock->numVars + newCodeBlock->numTemporaries;
                 if (registers->size() < size)
                     registers->grow(size);
-                r = registers->data() + offset;
+                r = (*registerBase) + offset;
             } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
                 int omittedArgCount = newCodeBlock->numParameters - argc;
                 size_t size = offset + omittedArgCount + newCodeBlock->numVars + newCodeBlock->numTemporaries;
                 if (registers->size() < size)
                     registers->grow(size);
-                r = registers->data() + omittedArgCount + offset;
+                r = (*registerBase) + omittedArgCount + offset;
                 
                 Register* end = r;
                 for (Register* it = r - omittedArgCount; it != end; ++it)
@@ -832,7 +834,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
                 size_t size = offset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numVars + newCodeBlock->numTemporaries;
                 if (registers->size() < size)
                     registers->grow(size);
-                r = registers->data() + returnInfoSize + newCodeBlock->numParameters + offset;
+                r = (*registerBase) + returnInfoSize + newCodeBlock->numParameters + offset;
 
                 int shift = returnInfoSize + argc;
                 Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
@@ -844,7 +846,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
             if (newCodeBlock->needsActivation) {
                 COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
                 scopeChain = new (&returnInfo[6]) ScopeChain(*callData.js.scopeChain);
-                scopeChain->push(new JSActivation(callData.js.functionBody, registers, r - registers->data()));
+                scopeChain->push(new JSActivation(callData.js.functionBody, registerBase, r - (*registerBase)));
             } else
                 scopeChain = callData.js.scopeChain;
             
@@ -856,7 +858,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         }
         
         if (callType == CallTypeNative) {
-            int rOffset = r - registers->data();
+            int registerOffset = r - (*registerBase);
             
             // FIXME: Substitute lexical global object for null.
 
@@ -868,7 +870,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 
             r[r0].u.jsValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
 
-            r = registers->data() + rOffset;
+            r = (*registerBase) + registerOffset;
 
             ++vPC;
             NEXT_OPCODE;
@@ -896,7 +898,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         k = codeBlock->jsValues.data();
         vPC = returnInfo[1].u.vPC;
         scopeChain = returnInfo[2].u.scopeChain;
-        r = registers->data() + returnInfo[3].u.i;
+        r = (*registerBase) + returnInfo[3].u.i;
         int r0 = returnInfo[4].u.i;
         r[r0] = *returnValue;
         
@@ -983,8 +985,8 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
 #else
         UNUSED_PARAM(r0);
 #endif
-        int rOffset = r - registers->data();
-        registers->resize(rOffset);
+        int registerOffset = r - (*registerBase);
+        registers->resize(registerOffset);
         return;
     }
     }

@@ -220,7 +220,7 @@ namespace KJS {
         ScopeNode* m_scopeNode;
         CodeBlock* m_codeBlock;
         
-        HashSet<RefPtr<UString::Rep>, IdentifierRepHash, IdentifierRepHashTraits> m_functions;
+        HashSet<RefPtr<UString::Rep>, IdentifierRepHash> m_functions;
 
         Vector<RegisterID, 128> m_locals;
         Vector<RegisterID, 128> m_temporaries;
