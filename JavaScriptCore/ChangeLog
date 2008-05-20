@@ -2,6 +2,16 @@
 
         Reviewed by Oliver Hunt.
 
+        Implement codegen for ReadModifyDotNode.
+
+        * kjs/nodes.cpp:
+        (KJS::ReadModifyDotNode::emitCode):
+        * kjs/nodes.h:
+
+2008-04-06  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Oliver Hunt.
+
         Fix codegen for PostIncDotNode and implement codegen for PostIncBracketNode,
         PostDecBracketNode and PostDecDotNode.
 
