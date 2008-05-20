@@ -1,3 +1,15 @@
+2008-04-23  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Bug 18707: SQUIRRELFISH: eval always performs toString() on its argument
+        <https://bugs.webkit.org/show_bug.cgi?id=18707>
+
+        This fixes 4 more regression tests.
+
+        * VM/Machine.cpp:
+        (KJS::eval):
+
 2008-04-23  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
