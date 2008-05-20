@@ -1,3 +1,33 @@
+2008-05-16  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 19076: SquirrelFish: RegisterFile can be corrupted if implictly reenter global scope with no declared vars
+        <https://bugs.webkit.org/show_bug.cgi?id=19076>
+
+        Don't delay allocation of initial global RegisterFile, as we can't guarantee we will be able
+        to allocate the global 'this' register safely at any point after initialisation of the Global
+        Object.
+
+        Unfortunately this initial allocation caused a regression of 0.2-0.3%, however this patch adds
+        support for the static slot optimisation for the global Math object which brings it to a 0.3%
+        progression.
+
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::programCodeThis):
+        (KJS::CodeGenerator::CodeGenerator):
+        (KJS::CodeGenerator::addParameter):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        * kjs/ExecState.h:
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::reset):
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::GlobalPropertyInfo::GlobalPropertyInfo):
+        (KJS::JSGlobalObject::addStaticGlobals):
+        * kjs/nodes.cpp:
+
 2008-05-16  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver Hunt.
