@@ -1,5 +1,13 @@
 2008-05-10  Maciej Stachowiak  <mjs@apple.com>
 
+        Build fix.
+        
+        - add missing forwarding header
+
+        * ForwardingHeaders/kjs/SourceProvider.h: Added.
+
+2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Oliver.
 
         - JavaScriptGlue part of fix for: "SQUIRRELFISH: function toString broken after calling"
