@@ -144,7 +144,7 @@ private:
     void ref() const;
     void deref() const;
 
-    static AtomicStringImpl* const hashTableDeletedValue() { return reinterpret_cast<AtomicStringImpl*>(-1); }
+    static AtomicStringImpl* hashTableDeletedValue() { return reinterpret_cast<AtomicStringImpl*>(-1); }
 
     AtomicStringImpl* m_name;
     AtomicStringImpl* m_type;
@@ -538,6 +538,11 @@ public:
     void addWindowEventListener(const AtomicString& eventType, PassRefPtr<EventListener>, bool useCapture);
     void removeWindowEventListener(const AtomicString& eventType, EventListener*, bool useCapture);
     bool hasWindowEventListener(const AtomicString& eventType);
+    
+    void addPendingFrameUnloadEventCount();
+    void removePendingFrameUnloadEventCount();
+    void addPendingFrameBeforeUnloadEventCount();
+    void removePendingFrameBeforeUnloadEventCount();
 
     PassRefPtr<EventListener> createHTMLEventListener(const String& functionName, const String& code, Node*);
     
@@ -631,8 +636,6 @@ public:
 
     HTMLHeadElement* head();
 
-    String toString() const;
-    
     bool execCommand(const String& command, bool userInterface = false, const String& value = String());
     bool queryCommandEnabled(const String& command);
     bool queryCommandIndeterm(const String& command);

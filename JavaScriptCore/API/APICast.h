@@ -108,6 +108,7 @@ inline JSContextRef toRef(KJS::ExecState* e)
 
 inline JSGlobalContextRef toGlobalRef(KJS::ExecState* e)
 {
+    ASSERT(!e->callingExecState());
     return reinterpret_cast<JSGlobalContextRef>(e);
 }
 

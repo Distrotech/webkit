@@ -289,10 +289,6 @@ sub GenerateHeader
         push(@headerContent, "#include \"EventTargetNode.h\"\n");
     }
 
-    if ($dataNode->extendedAttributes->{"CustomCall"}) {
-        push(@headerContent, "#include <kjs/CallData.h>\n");
-    }
-
     # Get correct pass/store types respecting PODType flag
     my $podType = $dataNode->extendedAttributes->{"PODType"};
     my $passType = $podType ? "JSSVGPODTypeWrapper<$podType>*" : "$implClassName*";
@@ -374,7 +370,7 @@ sub GenerateHeader
     # Custom call functions
     if ($dataNode->extendedAttributes->{"CustomCall"}) {
         push(@headerContent, "    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);\n");
-        push(@headerContent, "    virtual KJS::CallType getCallData(KJS::CallData&);\n\n");
+        push(@headerContent, "    virtual bool implementsCall() const;\n\n");
     }
 
     # Custom deleteProperty function
@@ -1775,7 +1771,7 @@ EOF
 
     if ($canConstruct) {
 $implContent .= << "EOF";
-    virtual ConstructType getConstructData(ConstructData&) { return ConstructTypeNative; }
+    virtual bool implementsConstruct() const { return true; }
     virtual JSObject* construct(ExecState* exec, const List& args) { return static_cast<JSObject*>(toJS(exec, ${interfaceName}::create())); }
 EOF
     }

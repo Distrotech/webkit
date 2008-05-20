@@ -35,7 +35,7 @@ using namespace KJS;
 
 static bool needsYouTubeQuirk(ExecState*, Frame*);
 
-#if 1
+#if !PLATFORM(WIN)
 
 static inline bool needsYouTubeQuirk(ExecState*, Frame*)
 {

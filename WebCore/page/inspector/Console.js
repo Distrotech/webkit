@@ -58,7 +58,7 @@ WebInspector.Console = function()
 WebInspector.Console.prototype = {
     show: function()
     {
-        if (this._animating)
+        if (this._animating || this.visible)
             return;
 
         WebInspector.View.prototype.show.call(this);
@@ -97,7 +97,7 @@ WebInspector.Console.prototype = {
 
     hide: function()
     {
-        if (this._animating)
+        if (this._animating || !this.visible)
             return;
 
         WebInspector.View.prototype.hide.call(this);
@@ -113,6 +113,14 @@ WebInspector.Console.prototype = {
 
         var anchoredItems = document.getElementById("anchored-status-bar-items");
 
+        // Temporally set properties and classes to mimic the post-animation values so panels
+        // like Elements in their updateStatusBarItems call will size things to fit the final location.
+        document.getElementById("main-status-bar").style.setProperty("padding-left", (anchoredItems.offsetWidth - 1) + "px");
+        document.body.removeStyleClass("console-visible");
+        if ("updateStatusBarItems" in WebInspector.currentPanel)
+            WebInspector.currentPanel.updateStatusBarItems();
+        document.body.addStyleClass("console-visible");
+
         var animations = [
             {element: document.getElementById("main"), end: {bottom: 0}},
             {element: document.getElementById("main-status-bar"), start: {"padding-left": 0}, end: {"padding-left": anchoredItems.offsetWidth - 1}},
@@ -125,8 +133,6 @@ WebInspector.Console.prototype = {
             mainStatusBar.insertBefore(anchoredItems, mainStatusBar.firstChild);
             mainStatusBar.style.removeProperty("padding-left");
             document.body.removeStyleClass("console-visible");
-            if ("updateStatusBarItems" in WebInspector.currentPanel)
-                WebInspector.currentPanel.updateStatusBarItems();
             delete this._animating;
         }
 
@@ -302,6 +308,8 @@ WebInspector.Console.prototype = {
 
     _evalInInspectedWindow: function(expression)
     {
+        if (WebInspector.panels.scripts.paused)
+            return WebInspector.panels.scripts.evaluateInSelectedCallFrame(expression);
         return InspectorController.inspectedWindow().eval(expression);
     },
 
@@ -469,7 +477,10 @@ WebInspector.ConsoleMessage.prototype = {
         if (!parameters.length)
             return formattedResult;
 
-        var formatForConsole = WebInspector.console._format.bind(WebInspector.console, plainText);
+        function formatForConsole(obj)
+        {
+            return WebInspector.console._format(obj, plainText);
+        }
 
         if (Object.type(parameters[0], InspectorController.inspectedWindow()) === "string") {
             var formatters = {}

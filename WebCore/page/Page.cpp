@@ -28,6 +28,7 @@
 #include "EditorClient.h"
 #include "DOMWindow.h"
 #include "DragController.h"
+#include "EventNames.h"
 #include "FileSystem.h"
 #include "FocusController.h"
 #include "Frame.h"
@@ -38,6 +39,7 @@
 #include "InspectorController.h"
 #include "JavaScriptDebugServer.h"
 #include "Logging.h"
+#include "NetworkStateNotifier.h"
 #include "Navigator.h"
 #include "PageGroup.h"
 #include "PluginData.h"
@@ -61,6 +63,8 @@
 
 namespace WebCore {
 
+using namespace EventNames;
+
 static HashSet<Page*>* allPages;
 
 #ifndef NDEBUG
@@ -78,6 +82,34 @@ int PageCounter::count = 0;
 static PageCounter pageCounter;
 #endif
 
+static void networkStateChanged()
+{
+    Vector<RefPtr<Frame> > frames;
+    
+    // Get all the frames of all the pages in all the page groups
+    HashSet<Page*>::iterator end = allPages->end();
+    for (HashSet<Page*>::iterator it = allPages->begin(); it != end; ++it) {
+        for (Frame* frame = (*it)->mainFrame(); frame; frame = frame->tree()->traverseNext())
+            frames.append(frame);
+    }
+
+    AtomicString eventName = networkStateNotifier().onLine() ? onlineEvent : offlineEvent;
+    
+    for (unsigned i = 0; i < frames.size(); i++) {
+        Document* document = frames[i]->document();
+        
+        if (!document)
+            continue;
+
+        // If the document does not have a body the event should be dispatched to the document
+        EventTargetNode* eventTarget = document->body();
+        if (!eventTarget)
+            eventTarget = document;
+        
+        eventTarget->dispatchHTMLEvent(eventName, false, false);
+    }
+}
+    
 Page::Page(ChromeClient* chromeClient, ContextMenuClient* contextMenuClient, EditorClient* editorClient, DragClient* dragClient, InspectorClient* inspectorClient)
     : m_chrome(new Chrome(this, chromeClient))
     , m_dragCaretController(new SelectionController(0, true))
@@ -98,10 +130,14 @@ Page::Page(ChromeClient* chromeClient, ContextMenuClient* contextMenuClient, Edi
     , m_userStyleSheetModificationTime(0)
     , m_group(0)
     , m_debugger(0)
+    , m_pendingUnloadEventCount(0)
+    , m_pendingBeforeUnloadEventCount(0)
 {
     if (!allPages) {
         allPages = new HashSet<Page*>;
         setFocusRingColorChangeFunction(setNeedsReapplyStyles);
+        
+        networkStateNotifier().setNetworkStateChangedFunction(networkStateChanged);
     }
 
     ASSERT(!allPages->contains(this));
@@ -123,7 +159,9 @@ Page::~Page()
     for (Frame* frame = mainFrame(); frame; frame = frame->tree()->traverseNext())
         frame->pageDestroyed();
     m_editorClient->pageDestroyed();
-    m_inspectorController->pageDestroyed();
+    if (m_parentInspectorController)
+        m_parentInspectorController->pageDestroyed();
+    m_inspectorController->inspectedPageDestroyed();
 
     m_backForwardList->close();
 
@@ -484,5 +522,29 @@ void Page::setSessionStorage(PassRefPtr<SessionStorage> newStorage)
     m_sessionStorage = newStorage;
 }
 #endif
+    
+unsigned Page::pendingUnloadEventCount()
+{
+    return m_pendingUnloadEventCount;
+}
+    
+void Page::changePendingUnloadEventCount(int delta) 
+{
+    ASSERT( (delta + (int)m_pendingUnloadEventCount) >= 0 );
+    m_pendingUnloadEventCount += delta;
+    return; 
+}
+    
+unsigned Page::pendingBeforeUnloadEventCount()
+{
+    return m_pendingBeforeUnloadEventCount;
+}
+    
+void Page::changePendingBeforeUnloadEventCount(int delta) 
+{
+    ASSERT( (delta + (int)m_pendingBeforeUnloadEventCount) >= 0 );
+    m_pendingBeforeUnloadEventCount += delta;
+    return; 
+}
 
 } // namespace WebCore

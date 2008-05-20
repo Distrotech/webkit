@@ -30,21 +30,21 @@ WebInspector.SourceView = function(resource)
 {
     WebInspector.ResourceView.call(this, resource);
 
+    resource.addEventListener("finished", this._resourceLoadingFinished, this);
+
     this.element.addStyleClass("source");
 
-    this.messages = [];
     this._frameNeedsSetup = true;
 
-    this.frameElement = document.createElement("iframe");
-    this.frameElement.className = "source-view-frame";
-    this.frameElement.setAttribute("viewsource", "true");
-    this.contentElement.appendChild(this.frameElement);
+    this.sourceFrame = new WebInspector.SourceFrame(null, this._addBreakpoint.bind(this));
+
+    this.contentElement.appendChild(this.sourceFrame.element);
 }
 
 WebInspector.SourceView.prototype = {
-    show: function()
+    show: function(parentElement)
     {
-        WebInspector.ResourceView.prototype.show.call(this);
+        WebInspector.ResourceView.prototype.show.call(this, parentElement);
         this.setupSourceFrameIfNeeded();
     },
 
@@ -55,107 +55,56 @@ WebInspector.SourceView.prototype = {
 
             this.attach();
 
-            InspectorController.addSourceToFrame(this.resource.identifier, this.frameElement);
-            WebInspector.addMainEventListeners(this.frameElement.contentDocument);
-
-            var length = this.messages.length;
-            for (var i = 0; i < length; ++i)
-                this._addMessageToSource(this.messages[i]);
+            InspectorController.addResourceSourceToFrame(this.resource.identifier, this.sourceFrame.element);
         }
     },
 
-    sourceRow: function(lineNumber)
+    revealLine: function(lineNumber)
     {
-        if (!lineNumber)
-            return;
-
         this.setupSourceFrameIfNeeded();
-
-        var doc = this.frameElement.contentDocument;
-        var rows = doc.getElementsByTagName("table")[0].rows;
-
-        // Line numbers are a 1-based index, but the rows collection is 0-based.
-        --lineNumber;
-        if (lineNumber >= rows.length)
-            lineNumber = rows.length - 1;
-
-        return rows[lineNumber];
-    },
-
-    showLine: function(lineNumber)
-    {
-        var row = this.sourceRow(lineNumber);
-        if (!row)
-            return;
-        row.scrollIntoViewIfNeeded(true);
+        this.sourceFrame.revealLine(lineNumber);
     },
 
     addMessage: function(msg)
     {
-        this.messages.push(msg);
-        if (!this._frameNeedsSetup)
-            this._addMessageToSource(msg);
+        this.sourceFrame.addMessage(msg);
     },
 
     clearMessages: function()
     {
-        this.messages = [];
-
-        if (this._frameNeedsSetup)
-            return;
-
-        var bubbles = this.frameElement.contentDocument.querySelectorAll(".webkit-html-message-bubble");
-        if (!bubbles)
-            return;
-
-        for (var i = 0; i < bubbles.length; ++i) {
-            var bubble = bubbles[i];
-            bubble.parentNode.removeChild(bubble);
-        }
+        this.sourceFrame.clearMessages();
     },
 
-    _addMessageToSource: function(msg)
+    detach: function()
     {
-        var row = this.sourceRow(msg.line);
-        if (!row)
-            return;
+        // FIXME: We need to mark the frame for setup on detach because the frame DOM is cleared
+        // when it is removed from the document. Is this a bug?
+        WebInspector.ResourceView.prototype.detach.call(this);
+        this._frameNeedsSetup = true;
+    },
 
-        var doc = this.frameElement.contentDocument;
-        var cell = row.getElementsByTagName("td")[1];
+    _resourceLoadingFinished: function(event)
+    {
+        if (this.visible)
+            this.setupSourceFrameIfNeeded();
+        this.resource.removeEventListener("finished", this._resourceLoadingFinished, this);
+    },
 
-        var errorDiv = cell.lastChild;
-        if (!errorDiv || errorDiv.nodeName.toLowerCase() !== "div" || !errorDiv.hasStyleClass("webkit-html-message-bubble")) {
-            errorDiv = doc.createElement("div");
-            errorDiv.className = "webkit-html-message-bubble";
-            cell.appendChild(errorDiv);
+    _addBreakpoint: function(line)
+    {
+        var sourceID = null;
+        var closestStartingLine = 0;
+        var scripts = this.resource.scripts;
+        for (var i = 0; i < scripts.length; ++i) {
+            var script = scripts[i];
+            if (script.startingLine <= line && script.startingLine >= closestStartingLine) {
+                closestStartingLine = script.startingLine;
+                sourceID = script.sourceID;
+            }
         }
 
-        var imageURL;
-        switch (msg.level) {
-            case WebInspector.ConsoleMessage.MessageLevel.Error:
-                errorDiv.addStyleClass("webkit-html-error-message");
-                imageURL = "Images/errorIcon.png";
-                break;
-            case WebInspector.ConsoleMessage.MessageLevel.Warning:
-                errorDiv.addStyleClass("webkit-html-warning-message");
-                imageURL = "Images/warningIcon.png";
-                break;
-        }
-
-        var lineDiv = doc.createElement("div");
-        lineDiv.className = "webkit-html-message-line";
-        errorDiv.appendChild(lineDiv);
-
-        // Create the image element in the Inspector's document so we can use relative image URLs.
-        var image = document.createElement("img");
-        image.src = imageURL;
-        image.className = "webkit-html-message-icon";
-
-        // Adopt the image element since it wasn't created in doc.
-        image = doc.adoptNode(image);
-        lineDiv.appendChild(image);
-
-        lineDiv.appendChild(doc.createTextNode(msg.message));
+        var breakpoint = new WebInspector.Breakpoint(this.resource.url, line, sourceID);
+        WebInspector.panels.scripts.addBreakpoint(breakpoint);
     }
 }
 

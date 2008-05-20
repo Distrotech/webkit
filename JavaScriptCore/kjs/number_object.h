@@ -55,7 +55,7 @@ namespace KJS {
     public:
         NumberObjectImp(ExecState*, FunctionPrototype*, NumberPrototype*);
 
-        virtual ConstructType getConstructData(ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual JSObject* construct(ExecState*, const List&);
 
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);

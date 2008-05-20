@@ -1,7 +1,6 @@
-/**
- *
+/*
  * Copyright (C) 2004 Zack Rusin <zack@kde.org>
- * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Alexey Proskuryakov <ap@webkit.org>
  * Copyright (C) 2007 Nicholas Shanks <webkit@nickshanks.com>
  *
@@ -29,6 +28,7 @@
 #include "CSSPrimitiveValue.h"
 #include "CSSPrimitiveValueMappings.h"
 #include "CSSPropertyNames.h"
+#include "CSSReflectValue.h"
 #include "CSSValueList.h"
 #include "CachedImage.h"
 #include "Document.h"
@@ -265,9 +265,6 @@ static int valueForRepeatRule(int rule)
         default:
             return CSSValueStretch;
     }
-    
-    ASSERT_NOT_REACHED();
-    return CSSValueStretch;
 }
         
 static PassRefPtr<CSSValue> valueForNinePieceImage(const NinePieceImage& image)
@@ -319,15 +316,13 @@ static PassRefPtr<CSSValue> valueForReflection(const StyleReflection* reflection
     if (!reflection)
         return new CSSPrimitiveValue(CSSValueNone);
 
-    RefPtr<CSSReflectValue> reflectValue = new CSSReflectValue();
-    reflectValue->setDirection(reflection->direction());
+    RefPtr<CSSPrimitiveValue> offset;
     if (reflection->offset().isPercent())
-        reflectValue->setOffset(new CSSPrimitiveValue(reflection->offset().percent(), CSSPrimitiveValue::CSS_PERCENTAGE));
+        offset = new CSSPrimitiveValue(reflection->offset().percent(), CSSPrimitiveValue::CSS_PERCENTAGE);
     else
-        reflectValue->setOffset(new CSSPrimitiveValue(reflection->offset().value(), CSSPrimitiveValue::CSS_PX));
+        offset = new CSSPrimitiveValue(reflection->offset().value(), CSSPrimitiveValue::CSS_PX);
     
-    reflectValue->setMask(valueForNinePieceImage(reflection->mask()));
-    return reflectValue.release();
+    return CSSReflectValue::create(reflection->direction(), offset.release(), valueForNinePieceImage(reflection->mask()));
 }
 
 static PassRefPtr<CSSValue> getPositionOffsetValue(RenderStyle* style, int propertyID)
@@ -1003,6 +998,18 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             return getBorderRadiusCornerValue(style->borderTopLeftRadius());
         case CSSPropertyWebkitBorderTopRightRadius:
             return getBorderRadiusCornerValue(style->borderTopRightRadius());
+        case CSSPropertyClip:
+        {
+            if (style->hasClip()) {
+                Rect* rect = new Rect();
+                rect->setTop(new CSSPrimitiveValue(style->clip().top.value(), CSSPrimitiveValue::CSS_PX));
+                rect->setRight(new CSSPrimitiveValue(style->clip().right.value(), CSSPrimitiveValue::CSS_PX));
+                rect->setBottom(new CSSPrimitiveValue(style->clip().bottom.value(), CSSPrimitiveValue::CSS_PX));
+                rect->setLeft(new CSSPrimitiveValue(style->clip().left.value(), CSSPrimitiveValue::CSS_PX));
+                return new CSSPrimitiveValue(rect);
+            }
+            return 0;
+        }
         case CSSPropertyBackground:
         case CSSPropertyBorder:
         case CSSPropertyBorderBottom:
@@ -1012,7 +1019,6 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
         case CSSPropertyBorderStyle:
         case CSSPropertyBorderTop:
         case CSSPropertyBorderWidth:
-        case CSSPropertyClip:
         case CSSPropertyContent:
         case CSSPropertyCounterIncrement:
         case CSSPropertyCounterReset:

@@ -108,11 +108,22 @@ private:
     bool responseIsXML() const;
 
     String getRequestHeader(const String& name) const;
+    void setRequestHeaderInternal(const String& name, const String& value);
 
     void changeState(XMLHttpRequestState newState);
     void callReadyStateChangeListener();
     void dropProtection();
     void internalAbort();
+    void clearResponseEntityBody();
+
+    void sameOriginRequest(const String& body, ResourceRequest&);
+
+    void loadRequestSynchronously(ResourceRequest&, ExceptionCode&);
+    void loadRequestAsynchronously(ResourceRequest&);
+
+    void genericError();
+    void networkError();
+    void abortError();
 
     Document* m_doc;
 
@@ -146,7 +157,7 @@ private:
     mutable bool m_createdDocument;
     mutable RefPtr<Document> m_responseXML;
 
-    bool m_aborted;
+    bool m_error;
 
     // Used for onprogress tracking
     long long m_receivedLength;

@@ -181,6 +181,88 @@ var WebInspector = {
 
             WebInspector.animateStyle(animations, 250, animationFinished);
         }
+    },
+
+    get errors()
+    {
+        return this._errors || 0;
+    },
+
+    set errors(x)
+    {
+        x = Math.max(x, 0);
+
+        if (this._errors === x)
+            return;
+        this._errors = x;
+        this._updateErrorAndWarningCounts();
+    },
+
+    get warnings()
+    {
+        return this._warnings || 0;
+    },
+
+    set warnings(x)
+    {
+        x = Math.max(x, 0);
+
+        if (this._warnings === x)
+            return;
+        this._warnings = x;
+        this._updateErrorAndWarningCounts();
+    },
+
+    _updateErrorAndWarningCounts: function()
+    {
+        var errorWarningElement = document.getElementById("error-warning-count");
+        if (!errorWarningElement)
+            return;
+
+        if (!this.errors && !this.warnings) {
+            errorWarningElement.addStyleClass("hidden");
+            return;
+        }
+
+        errorWarningElement.removeStyleClass("hidden");
+
+        errorWarningElement.removeChildren();
+
+        if (this.errors) {
+            var errorElement = document.createElement("span");
+            errorElement.id = "error-count";
+            errorElement.textContent = this.errors;
+            errorWarningElement.appendChild(errorElement);
+        }
+
+        if (this.warnings) {
+            var warningsElement = document.createElement("span");
+            warningsElement.id = "warning-count";
+            warningsElement.textContent = this.warnings;
+            errorWarningElement.appendChild(warningsElement);
+        }
+
+        if (this.errors) {
+            if (this.warnings) {
+                if (this.errors == 1) {
+                    if (this.warnings == 1)
+                        errorWarningElement.title = WebInspector.UIString("%d error, %d warning", this.errors, this.warnings);
+                    else
+                        errorWarningElement.title = WebInspector.UIString("%d error, %d warnings", this.errors, this.warnings);
+                } else if (this.warnings == 1)
+                    errorWarningElement.title = WebInspector.UIString("%d errors, %d warning", this.errors, this.warnings);
+                else
+                    errorWarningElement.title = WebInspector.UIString("%d errors, %d warnings", this.errors, this.warnings);
+            } else if (this.errors == 1)
+                errorWarningElement.title = WebInspector.UIString("%d error", this.errors);
+            else
+                errorWarningElement.title = WebInspector.UIString("%d errors", this.errors);
+        } else if (this.warnings == 1)
+            errorWarningElement.title = WebInspector.UIString("%d warning", this.warnings);
+        else if (this.warnings)
+            errorWarningElement.title = WebInspector.UIString("%d warnings", this.warnings);
+        else
+            errorWarningElement.title = null;
     }
 }
 
@@ -193,6 +275,7 @@ WebInspector.loaded = function()
     this.panels = {
         elements: new WebInspector.ElementsPanel(),
         resources: new WebInspector.ResourcesPanel(),
+        scripts: new WebInspector.ScriptsPanel(),
         databases: new WebInspector.DatabasesPanel()
     };
 
@@ -236,6 +319,7 @@ WebInspector.loaded = function()
     document.addEventListener("mousedown", this.changeFocus.bind(this), true);
     document.addEventListener("focus", this.changeFocus.bind(this), true);
     document.addEventListener("keydown", this.documentKeyDown.bind(this), true);
+    document.addEventListener("keyup", this.documentKeyUp.bind(this), true);
     document.addEventListener("beforecopy", this.documentCanCopy.bind(this), true);
     document.addEventListener("copy", this.documentCopy.bind(this), true);
 
@@ -243,6 +327,7 @@ WebInspector.loaded = function()
 
     var mainPanelsElement = document.getElementById("main-panels");
     mainPanelsElement.handleKeyEvent = this.mainKeyDown.bind(this);
+    mainPanelsElement.handleKeyUpEvent = this.mainKeyUp.bind(this);
     mainPanelsElement.handleCopyEvent = this.mainCopy.bind(this);
 
     this.currentFocusElement = mainPanelsElement;
@@ -254,6 +339,10 @@ WebInspector.loaded = function()
         dockToggleButton.title = WebInspector.UIString("Undock into separate window.");
     else
         dockToggleButton.title = WebInspector.UIString("Dock to main window.");
+
+    var errorWarningCount = document.getElementById("error-warning-count");
+    errorWarningCount.addEventListener("click", this.console.show.bind(this.console), false);
+    this._updateErrorAndWarningCounts();
 
     document.getElementById("search-toolbar-label").textContent = WebInspector.UIString("Search");
 
@@ -360,6 +449,13 @@ WebInspector.documentKeyDown = function(event)
     }
 }
 
+WebInspector.documentKeyUp = function(event)
+{
+    if (!this.currentFocusElement || !this.currentFocusElement.handleKeyUpEvent)
+        return;
+    this.currentFocusElement.handleKeyUpEvent(event);
+}
+
 WebInspector.documentCanCopy = function(event)
 {
     if (!this.currentFocusElement)
@@ -385,6 +481,12 @@ WebInspector.mainKeyDown = function(event)
 {
     if (this.currentPanel && this.currentPanel.handleKeyEvent)
         this.currentPanel.handleKeyEvent(event);
+}
+
+WebInspector.mainKeyUp = function(event)
+{
+    if (this.currentPanel && this.currentPanel.handleKeyUpEvent)
+        this.currentPanel.handleKeyUpEvent(event);
 }
 
 WebInspector.mainCopy = function(event)
@@ -628,6 +730,21 @@ WebInspector.addDatabase = function(database)
     this.panels.databases.addDatabase(database);
 }
 
+WebInspector.parsedScriptSource = function(sourceID, sourceURL, source, startingLine)
+{
+    this.panels.scripts.addScript(sourceID, sourceURL, source, startingLine);
+}
+
+WebInspector.failedToParseScriptSource = function(sourceURL, source, startingLine, errorLine, errorMessage)
+{
+    this.panels.scripts.addScript(null, sourceURL, source, startingLine, errorLine, errorMessage);
+}
+
+WebInspector.pausedScript = function()
+{
+    this.panels.scripts.debuggerPaused();
+}
+
 WebInspector.reset = function()
 {
     for (var panelName in this.panels) {
@@ -766,7 +883,7 @@ WebInspector.performSearch = function(query)
         if (!isXPath) {
             var sourceFrame = this.panels.resources.sourceFrameForResource(resource);
             if (sourceFrame)
-                sourceResults = InspectorController.search(sourceFrame.contentDocument, query);
+                sourceResults = InspectorController.search(sourceFrame.element.contentDocument, query);
         }
 
         var domResults = [];

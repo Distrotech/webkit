@@ -26,9 +26,7 @@
 
 VPATH = \
     $(JavaScriptCore)/kjs \
-    $(JavaScriptCore)/VM \
     $(JavaScriptCore)/pcre \
-    $(JavaScriptCore)/docs \
 #
 
 .PHONY : all
@@ -42,7 +40,6 @@ all : \
     number_object.lut.h \
     regexp_object.lut.h \
     string_object.lut.h \
-    $(JavaScriptCore)/docs/bytecode.html \
 #
 
 # lookup tables for classes
@@ -66,7 +63,3 @@ grammar.cpp: grammar.y
 
 chartables.c : dftables
 	$^ $@
-
-$(JavaScriptCore)/docs/bytecode.html: make-bytecode-docs.pl Machine.cpp 
-	perl $^ $@
-

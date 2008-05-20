@@ -181,7 +181,6 @@ class AccessibilityObject : public RefCounted<AccessibilityObject> {
 protected:
     AccessibilityObject();
 public:
-    static PassRefPtr<AccessibilityObject> create();
     virtual ~AccessibilityObject();
     
     virtual bool isAccessibilityRenderObject() const { return false; };
@@ -197,8 +196,9 @@ public:
     virtual bool isNativeTextControl() const { return false; };
     virtual bool isWebArea() const { return false; };
     virtual bool isCheckboxOrRadio() const { return false; };
-    virtual bool isListBox() const { return false; };
+    virtual bool isListBox() const { return roleValue() == ListBoxRole; };
     virtual bool isFileUploadButton() const { return false; };
+    virtual bool isProgressIndicator() const { return false; };
     
     virtual bool isChecked() const { return false; };
     virtual bool isEnabled() const { return false; };
@@ -223,6 +223,9 @@ public:
     virtual bool accessibilityIsIgnored() const  { return true; };
 
     virtual int intValue() const;
+    virtual float valueForRange() const { return 0.0f; }
+    virtual float maxValueForRange() const { return 0.0f; }
+    virtual float minValueForRange() const {return 0.0f; }
     virtual int layoutCount() const;
     static bool isARIAControl(AccessibilityRole);
     static bool isARIAInput(AccessibilityRole);
@@ -244,7 +247,6 @@ public:
     
     virtual HTMLAnchorElement* anchorElement() const;
     virtual Element* actionElement() const;
-
     virtual IntRect boundingBoxRect() const;
     virtual IntRect elementRect() const;
     virtual IntSize size() const;
@@ -270,7 +272,7 @@ public:
     const String& actionVerb() const;
     virtual Widget* widget() const;
     virtual Widget* widgetForAttachmentView() const;
-    void getDocumentLinks(Vector< RefPtr<AccessibilityObject> >&) const;
+    virtual void getDocumentLinks(Vector< RefPtr<AccessibilityObject> >&) const;
     virtual Document* document() const { return 0; }
     virtual FrameView* topDocumentFrameView() const { return 0; }
     virtual FrameView* documentFrameView() const;
@@ -290,7 +292,12 @@ public:
     virtual const Vector<RefPtr<AccessibilityObject> >& children() { return m_children; }
     virtual void addChildren();
     virtual bool hasChildren() const { return m_haveChildren; };
-    
+    virtual void selectedChildren(Vector<RefPtr<AccessibilityObject> >&) = 0;
+    virtual void visibleChildren(Vector<RefPtr<AccessibilityObject> >&) = 0;
+    virtual bool shouldFocusActiveDescendant() const { return false; }
+    virtual AccessibilityObject* activeDescendant() const { return 0; }    
+    virtual void handleActiveDescendantChanged() { }
+
     virtual VisiblePositionRange visiblePositionRange() const;
     virtual VisiblePositionRange doAXTextMarkerRangeForLine(unsigned) const;
     

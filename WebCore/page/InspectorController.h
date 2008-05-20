@@ -47,6 +47,7 @@ class Database;
 class DocumentLoader;
 class GraphicsContext;
 class InspectorClient;
+class JavaScriptCallFrame;
 class Node;
 class Page;
 class ResourceResponse;
@@ -73,6 +74,7 @@ public:
     InspectorController(Page*, InspectorClient*);
     ~InspectorController();
 
+    void inspectedPageDestroyed();
     void pageDestroyed() { m_page = 0; }
 
     bool enabled() const;
@@ -134,6 +136,21 @@ public:
     void stopDebugging();
     bool debuggerAttached() const { return m_debuggerAttached; }
 
+    JavaScriptCallFrame* currentCallFrame() const;
+
+    void addBreakpoint(int sourceID, unsigned lineNumber);
+    void removeBreakpoint(int sourceID, unsigned lineNumber);
+
+    bool pauseOnExceptions();
+    void setPauseOnExceptions(bool pause);
+
+    void pauseInDebugger();
+    void resumeDebugger();
+
+    void stepOverStatementInDebugger();
+    void stepIntoStatementInDebugger();
+    void stepOutOfFunctionInDebugger();
+
     void drawNodeHighlight(GraphicsContext&) const;
 
 private:
@@ -171,12 +188,9 @@ private:
     void showWindow();
     void closeWindow();
 
-    virtual void didParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
-    virtual void failedToParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
-    virtual void didEnterCallFrame(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
-    virtual void willExecuteStatement(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
-    virtual void willLeaveCallFrame(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
-    virtual void exceptionWasRaised(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+    virtual void didParseSource(const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
+    virtual void failedToParseSource(const KJS::UString& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
+    virtual void didPause();
 
     Page* m_inspectedPage;
     InspectorClient* m_client;

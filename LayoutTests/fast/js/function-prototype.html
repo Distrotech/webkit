@@ -33,7 +33,7 @@ MyClass.func.prototype =
 }
 
 var actual = "" + MyClass.runTest();
-shouldBe("actual", "'function () { }'");
+shouldBe("actual", "'function () \\n{\\n}'");
 
 successfullyParsed = true;
 </script>

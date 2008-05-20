@@ -46,9 +46,11 @@
 #include "GraphicsContext.h"
 #include "HTMLFrameOwnerElement.h"
 #include "InspectorClient.h"
+#include "JavaScriptCallFrame.h"
 #include "JSDOMWindow.h"
 #include "JSInspectedObjectWrapper.h"
 #include "JSInspectorCallbackWrapper.h"
+#include "JSJavaScriptCallFrame.h"
 #include "JSNode.h"
 #include "JSRange.h"
 #include "JavaScriptDebugServer.h"
@@ -66,7 +68,10 @@
 #include <JavaScriptCore/JSLock.h>
 #include <JavaScriptCore/JSRetainPtr.h>
 #include <JavaScriptCore/JSStringRef.h>
+#include <JavaScriptProfile.h>
 #include <kjs/ustring.h>
+#include <profiler/Profile.h>
+#include <profiler/Profiler.h>
 #include <wtf/RefCounted.h>
 
 #if ENABLE(DATABASE)
@@ -87,6 +92,12 @@ static JSRetainPtr<JSStringRef> jsStringRef(const char* str)
 static JSRetainPtr<JSStringRef> jsStringRef(const String& str)
 {
     return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithCharacters(str.characters(), str.length()));
+}
+
+static JSRetainPtr<JSStringRef> jsStringRef(const UString& str)
+{
+    JSLock lock;
+    return JSRetainPtr<JSStringRef>(toRef(str.rep()));
 }
 
 static String toString(JSContextRef context, JSValueRef value, JSValueRef* exception)
@@ -375,7 +386,43 @@ private:
 #pragma mark -
 #pragma mark JavaScript Callbacks
 
-static JSValueRef addSourceToFrame(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+static bool addSourceToFrame(const String& mimeType, const String& source, Node* frameNode)
+{
+    ASSERT_ARG(frameNode, frameNode);
+
+    if (!frameNode)
+        return false;
+
+    if (!frameNode->attached()) {
+        ASSERT_NOT_REACHED();
+        return false;
+    }
+
+    ASSERT(frameNode->isElementNode());
+    if (!frameNode->isElementNode())
+        return false;
+
+    Element* element = static_cast<Element*>(frameNode);
+    ASSERT(element->isFrameOwnerElement());
+    if (!element->isFrameOwnerElement())
+        return false;
+
+    HTMLFrameOwnerElement* frameOwner = static_cast<HTMLFrameOwnerElement*>(element);
+    ASSERT(frameOwner->contentFrame());
+    if (!frameOwner->contentFrame())
+        return false;
+
+    FrameLoader* loader = frameOwner->contentFrame()->loader();
+
+    loader->setResponseMIMEType(mimeType);
+    loader->begin();
+    loader->write(source);
+    loader->end();
+
+    return true;
+}
+
+static JSValueRef addResourceSourceToFrame(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
     JSValueRef undefined = JSValueMakeUndefined(ctx);
 
@@ -387,7 +434,7 @@ static JSValueRef addSourceToFrame(JSContextRef ctx, JSObjectRef /*function*/, J
     if (!JSValueIsNumber(ctx, identifierValue))
         return undefined;
 
-    unsigned long identifier = static_cast<unsigned long>(JSValueToNumber(ctx, identifierValue, exception));
+    long long identifier = static_cast<long long>(JSValueToNumber(ctx, identifierValue, exception));
     if (exception && *exception)
         return undefined;
 
@@ -400,36 +447,36 @@ static JSValueRef addSourceToFrame(JSContextRef ctx, JSObjectRef /*function*/, J
     if (sourceString.isEmpty())
         return undefined;
 
-    Node* node = toNode(toJS(arguments[1]));
-    ASSERT(node);
-    if (!node)
+    addSourceToFrame(resource->mimeType, sourceString, toNode(toJS(arguments[1])));
+
+    return undefined;
+}
+
+static JSValueRef addSourceToFrame(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    JSValueRef undefined = JSValueMakeUndefined(ctx);
+
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (argumentCount < 3 || !controller)
         return undefined;
 
-    if (!node->attached()) {
-        ASSERT_NOT_REACHED();
-        return undefined;
-    }
-
-    ASSERT(node->isElementNode());
-    if (!node->isElementNode())
+    JSValueRef mimeTypeValue = arguments[0];
+    if (!JSValueIsString(ctx, mimeTypeValue))
         return undefined;
 
-    Element* element = static_cast<Element*>(node);
-    ASSERT(element->isFrameOwnerElement());
-    if (!element->isFrameOwnerElement())
+    JSValueRef sourceValue = arguments[1];
+    if (!JSValueIsString(ctx, sourceValue))
         return undefined;
 
-    HTMLFrameOwnerElement* frameOwner = static_cast<HTMLFrameOwnerElement*>(element);
-    ASSERT(frameOwner->contentFrame());
-    if (!frameOwner->contentFrame())
+    String mimeType = toString(ctx, mimeTypeValue, exception);
+    if (mimeType.isEmpty())
         return undefined;
 
-    FrameLoader* loader = frameOwner->contentFrame()->loader();
+    String source = toString(ctx, sourceValue, exception);
+    if (source.isEmpty())
+        return undefined;
 
-    loader->setResponseMIMEType(resource->mimeType);
-    loader->begin();
-    loader->write(sourceString);
-    loader->end();
+    addSourceToFrame(mimeType, source, toNode(toJS(arguments[2])));
 
     return undefined;
 }
@@ -446,7 +493,7 @@ static JSValueRef getResourceDocumentNode(JSContextRef ctx, JSObjectRef /*functi
     if (!JSValueIsNumber(ctx, identifierValue))
         return undefined;
 
-    unsigned long identifier = static_cast<unsigned long>(JSValueToNumber(ctx, identifierValue, exception));
+    long long identifier = static_cast<long long>(JSValueToNumber(ctx, identifierValue, exception));
     if (exception && *exception)
         return undefined;
 
@@ -777,6 +824,184 @@ static JSValueRef debuggerAttached(JSContextRef ctx, JSObjectRef /*function*/, J
     return JSValueMakeBoolean(ctx, controller->debuggerAttached());
 }
 
+static JSValueRef currentCallFrame(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    JavaScriptCallFrame* callFrame = controller->currentCallFrame();
+    if (!callFrame || !callFrame->isValid())
+        return JSValueMakeNull(ctx);
+
+    ExecState* globalExec = callFrame->execState()->lexicalGlobalObject()->globalExec();
+
+    JSLock lock;
+    return toRef(JSInspectedObjectWrapper::wrap(globalExec, toJS(toJS(ctx), callFrame)));
+}
+
+static JSValueRef pauseOnExceptions(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+    return JSValueMakeBoolean(ctx, controller->pauseOnExceptions());
+}
+
+static JSValueRef setPauseOnExceptions(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    if (argumentCount < 1)
+        return JSValueMakeUndefined(ctx);
+
+    controller->setPauseOnExceptions(JSValueToBoolean(ctx, arguments[0]));
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef pauseInDebugger(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->pauseInDebugger();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef resumeDebugger(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->resumeDebugger();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef stepOverStatementInDebugger(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->stepOverStatementInDebugger();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef stepIntoStatementInDebugger(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->stepIntoStatementInDebugger();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef stepOutOfFunctionInDebugger(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* /*exception*/)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    controller->stepOutOfFunctionInDebugger();
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef addBreakpoint(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    if (argumentCount < 2)
+        return JSValueMakeUndefined(ctx);
+
+    double sourceID = JSValueToNumber(ctx, arguments[0], exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    double lineNumber = JSValueToNumber(ctx, arguments[1], exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    controller->addBreakpoint(static_cast<int>(sourceID), static_cast<unsigned>(lineNumber));
+
+    return JSValueMakeUndefined(ctx);
+}
+
+static JSValueRef removeBreakpoint(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    InspectorController* controller = reinterpret_cast<InspectorController*>(JSObjectGetPrivate(thisObject));
+    if (!controller)
+        return JSValueMakeUndefined(ctx);
+
+    if (argumentCount < 2)
+        return JSValueMakeUndefined(ctx);
+
+    double sourceID = JSValueToNumber(ctx, arguments[0], exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    double lineNumber = JSValueToNumber(ctx, arguments[1], exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    controller->removeBreakpoint(static_cast<int>(sourceID), static_cast<unsigned>(lineNumber));
+
+    return JSValueMakeUndefined(ctx);
+}
+
+#pragma mark -
+#pragma mark Profiles
+
+static JSValueRef allProfiles(JSContextRef ctx, JSObjectRef /*function*/, JSObjectRef /*thisObject*/, size_t /*argumentCount*/, const JSValueRef[] /*arguments*/, JSValueRef* exception)
+{
+    KJS::JSLock lock;
+
+    const Vector<RefPtr<Profile> >& allProfiles = Profiler::profiler()->allProfiles();
+
+    JSObjectRef global = JSContextGetGlobalObject(ctx);
+
+    JSValueRef arrayProperty = JSObjectGetProperty(ctx, global, jsStringRef("Array").get(), exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    JSObjectRef arrayConstructor = JSValueToObject(ctx, arrayProperty, exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    JSObjectRef result = JSObjectCallAsConstructor(ctx, arrayConstructor, 0, 0, exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    JSValueRef pushProperty = JSObjectGetProperty(ctx, result, jsStringRef("push").get(), exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    JSObjectRef pushFunction = JSValueToObject(ctx, pushProperty, exception);
+    if (exception && *exception)
+        return JSValueMakeUndefined(ctx);
+
+    for (size_t i = 0; i < allProfiles.size(); ++i) {
+        JSValueRef arg0 = toRef(toJS(toJS(ctx), allProfiles[i].get()));
+        JSObjectCallAsFunction(ctx, pushFunction, result, 1, &arg0, exception);
+        if (exception && *exception)
+            return JSValueMakeUndefined(ctx);
+    }
+
+    return result;
+}
+
 #pragma mark -
 #pragma mark InspectorController Class
 
@@ -816,14 +1041,25 @@ InspectorController::~InspectorController()
     if (m_page)
         m_page->setParentInspectorController(0);
 
-    stopDebugging();
+    // m_inspectedPage should have been cleared in inspectedPageDestroyed().
+    ASSERT(!m_inspectedPage);
 
     deleteAllValues(m_frameResources);
     deleteAllValues(m_consoleMessages);
 }
 
+void InspectorController::inspectedPageDestroyed()
+{
+    ASSERT(m_inspectedPage);
+    stopDebugging();
+    m_inspectedPage = 0;
+}
+
 bool InspectorController::enabled() const
 {
+    if (!m_inspectedPage)
+        return false;
+
     return m_inspectedPage->settings()->developerExtrasEnabled();
 }
 
@@ -990,6 +1226,7 @@ void InspectorController::windowScriptObjectAvailable()
     ASSERT(global);
 
     static JSStaticFunction staticFunctions[] = {
+        { "addResourceSourceToFrame", addResourceSourceToFrame, kJSPropertyAttributeNone },
         { "addSourceToFrame", addSourceToFrame, kJSPropertyAttributeNone },
         { "getResourceDocumentNode", getResourceDocumentNode, kJSPropertyAttributeNone },
         { "highlightDOMNode", highlightDOMNode, kJSPropertyAttributeNone },
@@ -1010,6 +1247,17 @@ void InspectorController::windowScriptObjectAvailable()
         { "startDebuggingAndReloadInspectedPage", WebCore::startDebuggingAndReloadInspectedPage, kJSPropertyAttributeNone },
         { "stopDebugging", WebCore::stopDebugging, kJSPropertyAttributeNone },
         { "debuggerAttached", WebCore::debuggerAttached, kJSPropertyAttributeNone },
+        { "allProfiles", allProfiles, kJSPropertyAttributeNone },
+        { "currentCallFrame", WebCore::currentCallFrame, kJSPropertyAttributeNone },
+        { "pauseOnExceptions", WebCore::pauseOnExceptions, kJSPropertyAttributeNone },
+        { "setPauseOnExceptions", WebCore::setPauseOnExceptions, kJSPropertyAttributeNone },
+        { "pauseInDebugger", WebCore::pauseInDebugger, kJSPropertyAttributeNone },
+        { "resumeDebugger", WebCore::resumeDebugger, kJSPropertyAttributeNone },
+        { "stepOverStatementInDebugger", WebCore::stepOverStatementInDebugger, kJSPropertyAttributeNone },
+        { "stepIntoStatementInDebugger", WebCore::stepIntoStatementInDebugger, kJSPropertyAttributeNone },
+        { "stepOutOfFunctionInDebugger", WebCore::stepOutOfFunctionInDebugger, kJSPropertyAttributeNone },
+        { "addBreakpoint", WebCore::addBreakpoint, kJSPropertyAttributeNone },
+        { "removeBreakpoint", WebCore::removeBreakpoint, kJSPropertyAttributeNone },
         { 0, 0, 0 }
     };
 
@@ -1112,13 +1360,10 @@ void InspectorController::close()
         return;
 
     closeWindow();
-    if (m_page)
-        m_page->setParentInspectorController(0);
 
     ASSERT(m_scriptContext && m_scriptObject);
     JSValueUnprotect(m_scriptContext, m_scriptObject);
 
-    m_page = 0;
     m_scriptObject = 0;
     m_scriptContext = 0;
 }
@@ -1608,6 +1853,8 @@ void InspectorController::didCommitLoad(DocumentLoader* loader)
     if (!enabled())
         return;
 
+    ASSERT(m_inspectedPage);
+
     if (loader->frame() == m_inspectedPage->mainFrame()) {
         m_client->inspectedURLChanged(loader->url().string());
 
@@ -1700,6 +1947,8 @@ void InspectorController::didLoadResourceFromMemoryCache(DocumentLoader* loader,
     resource->responseReceivedTime = resource->startTime;
     resource->endTime = resource->startTime;
 
+    ASSERT(m_inspectedPage);
+
     if (loader->frame() == m_inspectedPage->mainFrame() && request.url() == loader->requestURL())
         m_mainResource = resource;
 
@@ -1717,6 +1966,8 @@ void InspectorController::identifierForInitialRequest(unsigned long identifier, 
     RefPtr<InspectorResource> resource = InspectorResource::create(identifier, loader, loader->frame());
 
     updateResourceRequest(resource.get(), request);
+
+    ASSERT(m_inspectedPage);
 
     if (loader->frame() == m_inspectedPage->mainFrame() && request.url() == loader->requestURL())
         m_mainResource = resource;
@@ -1875,15 +2126,80 @@ void InspectorController::moveWindowBy(float x, float y) const
 
 void InspectorController::startDebuggingAndReloadInspectedPage()
 {
+    ASSERT(m_inspectedPage);
+
     JavaScriptDebugServer::shared().addListener(this, m_inspectedPage);
     m_debuggerAttached = true;
+    JavaScriptDebugServer::shared().clearBreakpoints();
     m_inspectedPage->mainFrame()->loader()->reload();
 }
 
 void InspectorController::stopDebugging()
 {
+    ASSERT(m_inspectedPage);
+
     JavaScriptDebugServer::shared().removeListener(this, m_inspectedPage);
     m_debuggerAttached = false;
+}
+
+JavaScriptCallFrame* InspectorController::currentCallFrame() const
+{
+    return JavaScriptDebugServer::shared().currentCallFrame();
+}
+
+bool InspectorController::pauseOnExceptions()
+{
+    return JavaScriptDebugServer::shared().pauseOnExceptions();
+}
+
+void InspectorController::setPauseOnExceptions(bool pause)
+{
+    JavaScriptDebugServer::shared().setPauseOnExceptions(pause);
+}
+
+void InspectorController::pauseInDebugger()
+{
+    if (!m_debuggerAttached)
+        return;
+    JavaScriptDebugServer::shared().pauseOnNextStatement();
+}
+
+void InspectorController::resumeDebugger()
+{
+    if (!m_debuggerAttached)
+        return;
+    JavaScriptDebugServer::shared().resume();
+}
+
+void InspectorController::stepOverStatementInDebugger()
+{
+    if (!m_debuggerAttached)
+        return;
+    JavaScriptDebugServer::shared().stepOverStatement();
+}
+
+void InspectorController::stepIntoStatementInDebugger()
+{
+    if (!m_debuggerAttached)
+        return;
+    JavaScriptDebugServer::shared().stepIntoStatement();
+}
+
+void InspectorController::stepOutOfFunctionInDebugger()
+{
+    if (!m_debuggerAttached)
+        return;
+    JavaScriptDebugServer::shared().stepOutOfFunction();
+}
+
+void InspectorController::addBreakpoint(int sourceID, unsigned lineNumber)
+{
+    JavaScriptDebugServer::shared().addBreakpoint(sourceID, lineNumber);
+}
+
+void InspectorController::removeBreakpoint(int sourceID, unsigned lineNumber)
+{
+    JavaScriptDebugServer::shared().removeBreakpoint(sourceID, lineNumber);
 }
 
 static void drawOutlinedRect(GraphicsContext& context, const IntRect& rect, const Color& fillColor)
@@ -1926,28 +2242,44 @@ static void drawHighlightForBoxes(GraphicsContext& context, const Vector<IntRect
     drawOutlinedRect(context, contentBox, contentBoxColor);
 }
 
+static inline void convertFromFrameToMainFrame(Frame* frame, IntRect& rect)
+{
+    rect = frame->page()->mainFrame()->view()->windowToContents(frame->view()->contentsToWindow(rect));
+}
+
 void InspectorController::drawNodeHighlight(GraphicsContext& context) const
 {
     if (!m_highlightedNode)
         return;
 
     RenderObject* renderer = m_highlightedNode->renderer();
-    if (!renderer)
+    Frame* containingFrame = m_highlightedNode->document()->frame();
+    if (!renderer || !containingFrame)
         return;
 
     IntRect contentBox = renderer->absoluteContentBox();
+    IntRect boundingBox = renderer->absoluteBoundingBoxRect();
+
     // FIXME: Should we add methods to RenderObject to obtain these rects?
     IntRect paddingBox(contentBox.x() - renderer->paddingLeft(), contentBox.y() - renderer->paddingTop(), contentBox.width() + renderer->paddingLeft() + renderer->paddingRight(), contentBox.height() + renderer->paddingTop() + renderer->paddingBottom());
     IntRect borderBox(paddingBox.x() - renderer->borderLeft(), paddingBox.y() - renderer->borderTop(), paddingBox.width() + renderer->borderLeft() + renderer->borderRight(), paddingBox.height() + renderer->borderTop() + renderer->borderBottom());
     IntRect marginBox(borderBox.x() - renderer->marginLeft(), borderBox.y() - renderer->marginTop(), borderBox.width() + renderer->marginLeft() + renderer->marginRight(), borderBox.height() + renderer->marginTop() + renderer->marginBottom());
 
-    IntRect boundingBox = renderer->absoluteBoundingBoxRect();
+    convertFromFrameToMainFrame(containingFrame, contentBox);
+    convertFromFrameToMainFrame(containingFrame, paddingBox);
+    convertFromFrameToMainFrame(containingFrame, borderBox);
+    convertFromFrameToMainFrame(containingFrame, marginBox);
+    convertFromFrameToMainFrame(containingFrame, boundingBox);
 
     Vector<IntRect> lineBoxRects;
     if (renderer->isInline() || (renderer->isText() && !m_highlightedNode->isSVGElement())) {
         // FIXME: We should show margins/padding/border for inlines.
         renderer->addLineBoxRects(lineBoxRects);
     }
+
+    for (unsigned i = 0; i < lineBoxRects.size(); ++i)
+        convertFromFrameToMainFrame(containingFrame, lineBoxRects[i]);
+
     if (lineBoxRects.isEmpty() && contentBox.isEmpty()) {
         // If we have no line boxes and our content box is empty, we'll just draw our bounding box.
         // This can happen, e.g., with an <a> enclosing an <img style="float:right">.
@@ -1955,6 +2287,8 @@ void InspectorController::drawNodeHighlight(GraphicsContext& context) const
         // width/height but the highlight makes it appear to be the size of the <img>.
         lineBoxRects.append(boundingBox);
     }
+
+    ASSERT(m_inspectedPage);
 
     FrameView* view = m_inspectedPage->mainFrame()->view();
     FloatRect overlayRect = view->visibleContentRect();
@@ -2002,28 +2336,35 @@ bool InspectorController::handleException(JSContextRef context, JSValueRef excep
 #pragma mark -
 #pragma mark JavaScriptDebugListener functions
 
-void InspectorController::didParseSource(ExecState*, const SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*sourceID*/)
+void InspectorController::didParseSource(const UString& source, int startingLineNumber, const UString& sourceURL, int sourceID)
 {
+    JSValueRef sourceIDValue = JSValueMakeNumber(m_scriptContext, sourceID);
+    JSValueRef sourceURLValue = JSValueMakeString(m_scriptContext, jsStringRef(sourceURL).get());
+    JSValueRef sourceValue = JSValueMakeString(m_scriptContext, jsStringRef(source).get());
+    JSValueRef startingLineNumberValue = JSValueMakeNumber(m_scriptContext, startingLineNumber);
+
+    JSValueRef exception = 0;
+    JSValueRef arguments[] = { sourceIDValue, sourceURLValue, sourceValue, startingLineNumberValue };
+    callFunction(m_scriptContext, m_scriptObject, "parsedScriptSource", 4, arguments, exception);
 }
 
-void InspectorController::failedToParseSource(ExecState*, const SourceProvider& /*source*/, int /*startingLineNumber*/, const UString& /*sourceURL*/, int /*errorLine*/, const UString& /*errorMessage*/)
+void InspectorController::failedToParseSource(const UString& source, int startingLineNumber, const UString& sourceURL, int errorLine, const UString& errorMessage)
 {
+    JSValueRef sourceURLValue = JSValueMakeString(m_scriptContext, jsStringRef(sourceURL).get());
+    JSValueRef sourceValue = JSValueMakeString(m_scriptContext, jsStringRef(source).get());
+    JSValueRef startingLineNumberValue = JSValueMakeNumber(m_scriptContext, startingLineNumber);
+    JSValueRef errorLineValue = JSValueMakeNumber(m_scriptContext, errorLine);
+    JSValueRef errorMessageValue = JSValueMakeString(m_scriptContext, jsStringRef(errorMessage).get());
+
+    JSValueRef exception = 0;
+    JSValueRef arguments[] = { sourceURLValue, sourceValue, startingLineNumberValue, errorLineValue, errorMessageValue };
+    callFunction(m_scriptContext, m_scriptObject, "failedToParseScriptSource", 5, arguments, exception);
 }
 
-void InspectorController::didEnterCallFrame(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
+void InspectorController::didPause()
 {
-}
-
-void InspectorController::willExecuteStatement(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
-{
-}
-
-void InspectorController::willLeaveCallFrame(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
-{
-}
-
-void InspectorController::exceptionWasRaised(const DebuggerCallFrame&, int /*sourceID*/, int /*lineNumber*/)
-{
+    JSValueRef exception = 0;
+    callFunction(m_scriptContext, m_scriptObject, "pausedScript", 0, 0, exception);
 }
 
 } // namespace WebCore

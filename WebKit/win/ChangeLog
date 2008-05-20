@@ -1,29 +1,139 @@
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+2008-05-19  Anders Carlsson  <andersca@apple.com>
 
-        Reviewed by Oliver Hunt.
+        Reviewed by Darin, Alexey, Jess and Brady.
+
+        Set the application cache path.
         
-        Updated for new JS debugging APIs.
+        * WebView.cpp:
+        (WebKitSetApplicationCachePathIfNecessary):
+        New function that sets the cache path.
+        
+        (WebView::initWithFrame):
+        Set the application cache path.
+        
+2008-05-19  Ada Chan  <adachan@apple.com>
 
-        * WebScriptDebugServer.cpp:
-        (WebScriptDebugServer::didParseSource):
-        (WebScriptDebugServer::failedToParseSource):
-        * WebScriptDebugServer.h:
+        Added IWebCookieManager interface which allows client to set the
+        CFHTTPCookieStorageRef that WebCore should use.
+        
+        Implement IWebCookieManager interface in WebCookieManager.
+        
+        Update the cookie accept policy in the current cookie storage.
 
-2008-05-09  Oliver Hunt  <oliver@apple.com>
+        Reviewed by Steve Falkenburg.
 
-        Reviewed by Geoff.
+        * ForEachCoClass.h:
+        * Interfaces/IWebCookieManager.idl: Added.
+        * Interfaces/WebKit.idl:
+        * WebCookieManager.cpp: Added.
+        (WebCookieManager::createInstance):
+        (WebCookieManager::WebCookieManager):
+        (WebCookieManager::~WebCookieManager):
+        (WebCookieManager::QueryInterface):
+        (WebCookieManager::AddRef):
+        (WebCookieManager::Release):
+        (WebCookieManager::cookieStorage):
+        (WebCookieManager::setCookieStorage):
+        * WebCookieManager.h: Added.
+        * WebKit.vcproj/WebKit.vcproj:
+        * WebKitClassFactory.cpp:
+        * WebView.cpp:
+        (updateSharedSettingsFromPreferencesIfNeeded):
 
-        Build fixes for SquirrelFish on windows.
+2008-05-16  Stephanie Lewis  <slewis@apple.com>
 
-        * WebScriptCallFrame.cpp:
-        (callingFunctionOrGlobalExecState):
-        (WebScriptCallFrame::caller):
-        (WebScriptCallFrame::functionName):
-        (WebScriptCallFrame::variableNames):
-        (WebScriptCallFrame::valueForVariable):
-        (WebScriptCallFrame::valueByEvaluatingJavaScriptFromString):
-        * WebScriptDebugServer.cpp:
-        (WebScriptDebugServer::willLeaveCallFrame):
+        Reviewed by Steve.
+
+        Get pending unload event count from WebCore.
+
+        * Interfaces/IWebFramePrivate.idl:
+        * WebFrame.cpp:
+        (WebFrame::pendingFrameUnloadEventCount):
+        * WebFrame.h:
+
+2008-05-16  Matt Lilek  <webkit@mattlilek.com>
+
+        Rubber stamped by Oliver.
+
+        Remove the Drosera sub-project.
+
+        * WebKit.vcproj/WebKit.sln:
+
+2008-05-16  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Steve Falkenburg
+        
+        <rdar://problem/5942624> - Get LocalStorage persistence working on Windows
+        
+        * WebPreferenceKeysPrivate.h: Add the LocalStorageDirectory defaults key
+        
+        * WebPreferences.cpp:
+        (WebPreferences::initializeDefaultSettings):
+        (WebPreferences::localStorageDatabasePath):
+        (WebPreferences::setLocalStorageDatabasePath):
+        * WebPreferences.h:
+        * Interfaces/IWebPreferencesPrivate.idl:
+
+        * WebView.cpp:
+        (WebView::initWithFrame): Set the path in the WebCore::Settings after new Page creation
+
+2008-05-06  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Tim Hatcher
+
+        Until the settings/preferences equation can be reworked, we'll need to manually set the local storage path
+        before setting the page group of the new page.
+
+        Since I still need to add the local storage path to WebPreferences on Windows, mark this with a FIXME for now.
+
+        * WebView.cpp:
+        (WebView::initWithFrame): Mark an important FIXME for setting the LocalStorage path as
+          appropriate.  Until this FIXME is handled, Windows will have no persistent LocalStorage
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18767: Inspector is currently pretty much useless on Windows
+
+        <https://bugs.webkit.org/show_bug.cgi?id=18767>
+
+        Reviewed by Tim Hatcher.
+
+        * WebCoreSupport/WebInspectorClient.cpp:
+        (WebInspectorClient::highlight): Only move the highlight behind the
+        Inspector window when first creating the highlight, not every time we
+        update it.
+
+2008-05-13  Adam Roben  <aroben@apple.com>
+
+        Neuter WebScriptDebugServer
+
+        Some upcoming changes to JavaScriptDebugServer and
+        JavaScriptDebugListener will break WebScriptDebugServer. Since Drosera
+        is being replaced by the Inspector's debugger, and Drosera is the only
+        client of WebScriptDebugServer, it makes more sense to get rid of
+        WebScriptDebugServer than to update it to keep it working.
+
+        We can't actually remove WebScriptDebugServer entirely yet, so I've
+        just made it non-functional. This will completely break Drosera, but
+        as stated above, Drosera's days are numbered anyway.
+
+        Reviewed by Tim Hatcher and Kevin McCullough.
+
+        * WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebFrameLoaderClient::dispatchDidLoadMainResource): Removed all code
+        in this function.
+        * WebKitDLL.cpp:
+        (LocalServerDidDie): Ditto.
+        * WebScriptDebugServer.cpp: Made all IWebScriptDebugServer functions
+        return E_NOTIMPL.
+        * WebScriptDebugServer.h: Removed everything but the
+        IWebScriptDebugServer functions.
+
+2008-05-12  Dan Bernstein  <mitz@apple.com>
+
+        - build fix
+
+        * Interfaces/WebKit.idl: Touched.
 
 2008-05-12  Dan Bernstein  <mitz@apple.com>
 

@@ -39,6 +39,7 @@
 namespace WebCore {
 
 bool AXObjectCache::gAccessibilityEnabled = false;
+bool AXObjectCache::gAccessibilityEnhancedUserInterfaceEnabled = false;
 
 AXObjectCache::~AXObjectCache()
 {
@@ -184,6 +185,17 @@ void AXObjectCache::childrenChanged(RenderObject* renderer)
 void AXObjectCache::selectedChildrenChanged(RenderObject* renderer)
 {
     postNotificationToElement(renderer, "AXSelectedChildrenChanged");
+}
+#endif
+
+#if HAVE(ACCESSIBILITY)
+void AXObjectCache::handleActiveDescendantChanged(RenderObject* renderer)
+{
+    if (!renderer)
+        return;
+    RefPtr<AccessibilityObject> obj = get(renderer);
+    if (obj)
+        obj->handleActiveDescendantChanged();
 }
 #endif
 

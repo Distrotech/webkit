@@ -588,6 +588,11 @@ void PluginView::stop()
     m_instance->pdata = 0;
 }
 
+const char* PluginView::userAgentStatic()
+{
+    return 0;
+}
+
 const char* PluginView::userAgent()
 {
     if (m_plugin->quirks().contains(PluginQuirkWantsMozillaUserAgent))
@@ -627,6 +632,13 @@ NPError PluginView::handlePostReadFile(Vector<char>& buffer, uint32 len, const c
 
     if (retval == 0 || bytesRead != attrs.nFileSizeLow)
         return NPERR_FILE_NOT_FOUND;
+
+    return NPERR_NO_ERROR;
+}
+
+NPError PluginView::getValueStatic(NPNVariable variable, void* value)
+{
+    return NPERR_GENERIC_ERROR;
 }
 
 NPError PluginView::getValue(NPNVariable variable, void* value)
@@ -634,8 +646,8 @@ NPError PluginView::getValue(NPNVariable variable, void* value)
     switch (variable) {
 #if ENABLE(NETSCAPE_PLUGIN_API)
         case NPNVWindowNPObject: {
-        if (m_isJavaScriptPaused)
-        return NPERR_GENERIC_ERROR;
+            if (m_isJavaScriptPaused)
+                return NPERR_GENERIC_ERROR;
 
             NPObject* windowScriptObject = m_parentFrame->windowScriptNPObject();
 
@@ -650,8 +662,8 @@ NPError PluginView::getValue(NPNVariable variable, void* value)
         }
 
         case NPNVPluginElementNPObject: {
-        if (m_isJavaScriptPaused)
-        return NPERR_GENERIC_ERROR;
+            if (m_isJavaScriptPaused)
+                return NPERR_GENERIC_ERROR;
 
             NPObject* pluginScriptObject = 0;
 

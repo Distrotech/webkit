@@ -71,10 +71,6 @@ void TextCodecICU::registerExtendedEncodingNames(EncodingNameRegistrar registrar
     // apart; ICU works with either name.
     registrar("ISO-8859-8-I", "ISO-8859-8-I");
 
-    // There is no standard name for this encoding, but we want to use it, and to map other encodings of EUC-KR family to it.
-    // No need to enumerate its aliases, as they are duplicated under KS_C_5601-1987.
-    registrar("windows-949-2000", "windows-949-2000");
-
     int32_t numEncodings = ucnv_countAvailable();
     for (int32_t i = 0; i < numEncodings; ++i) {
         const char* name = ucnv_getAvailableName(i);
@@ -92,8 +88,13 @@ void TextCodecICU::registerExtendedEncodingNames(EncodingNameRegistrar registrar
         // Similarly, EUC-KR encodings all map to an extended version.
         else if (strcmp(standardName, "KS_C_5601-1987") == 0 || strcmp(standardName, "EUC-KR") == 0)
             standardName = "windows-949-2000";
-        else
-            registrar(standardName, standardName);
+        // And so on.
+        else if (strcmp(standardName, "ISO_8859-9:1989") == 0)
+            standardName = "windows-1254";
+        else if (strcmp(standardName, "TIS-620") == 0)
+            standardName = "windows-874-2000";
+
+        registrar(standardName, standardName);
 
         uint16_t numAliases = ucnv_countAliases(name, &error);
         ASSERT(U_SUCCESS(error));
@@ -131,7 +132,8 @@ void TextCodecICU::registerExtendedEncodingNames(EncodingNameRegistrar registrar
     registrar("winarabic", "windows-1256");
     registrar("winbaltic", "windows-1257");
     registrar("wincyrillic", "windows-1251");
-    registrar("windows874", "cp874");
+    registrar("windows874", "windows874-2000");
+    registrar("iso885911", "windows874-2000");
     registrar("wingreek", "windows-1253");
     registrar("winhebrew", "windows-1255");
     registrar("winlatin2", "windows-1250");
@@ -247,7 +249,7 @@ public:
                    m_savedContext, &oldAction,
                    &oldContext, &err);
             ASSERT(oldAction == UCNV_TO_U_CALLBACK_SUBSTITUTE);
-            ASSERT(oldContext == UCNV_SUB_STOP_ON_ILLEGAL);
+            ASSERT(!strcmp(static_cast<const char*>(oldContext), UCNV_SUB_STOP_ON_ILLEGAL));
             ASSERT(err == U_ZERO_ERROR);
         }
     }
@@ -283,7 +285,7 @@ String TextCodecICU::decode(const char* bytes, size_t length, bool flush, bool s
 
     do {
         int ucharsDecoded = decodeToBuffer(buffer, bufferLimit, source, sourceLimit, offsets, flush, err);
-        appendOmittingBOM(result, buffer, ucharsDecoded);
+        result.append(buffer, ucharsDecoded);
     } while (err == U_BUFFER_OVERFLOW_ERROR);
 
     if (U_FAILURE(err)) {

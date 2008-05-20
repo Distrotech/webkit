@@ -29,6 +29,7 @@
 #include "AccessItemRule.h"
 #include "PlatformString.h"
 #include "SecurityOrigin.h"
+#include <stdio.h>
 
 namespace WebCore {
 
@@ -44,11 +45,25 @@ AccessControlList::~AccessControlList()
 
 void AccessControlList::parseAccessControlHeader(const String& accessControlHeader)
 {
+    Vector<String> rules;
+    accessControlHeader.split(',', rules);
+    for (size_t i = 0; i < rules.size(); ++i)
+        m_list.append(new AccessItemRule(rules[i]));
 }
 
 bool AccessControlList::checkOrigin(const SecurityOrigin* accessControlOrigin)
 {
     return false;
 }
+
+#ifndef NDEBUG
+void AccessControlList::show()
+{
+    printf("AccessControlList::show count: %d\n", static_cast<int>(m_list.size()));
+    for (size_t i = 0; i < m_list.size(); ++i)
+        m_list[i]->show();
+    printf("\n\n");
+}
+#endif
 
 } // namespace WebCore

@@ -180,8 +180,6 @@ typedef enum {
 
 @interface WebView (WebPrivate)
 
-+ (BOOL)_scriptDebuggerEnabled;
-
 - (WebInspector *)inspector;
 
 /*!
@@ -370,6 +368,8 @@ Could be worth adding to the API.
 
 // SPI for DumpRenderTree
 - (void)_executeCoreCommandByName:(NSString *)name value:(NSString *)value;
+
+- (void)closeWithFastTeardown;
 
 @end
 

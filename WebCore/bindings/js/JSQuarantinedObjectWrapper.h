@@ -39,7 +39,7 @@ namespace WebCore {
         KJS::JSObject* unwrappedObject() const { return m_unwrappedObject; }
         KJS::ExecState* unwrappedExecState() const;
 
-        bool unwrappedExecStateMatches(const KJS::ExecState*) const;
+        bool allowsUnwrappedAccessFrom(const KJS::ExecState*) const;
 
         virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
         virtual bool getOwnPropertySlot(KJS::ExecState*, unsigned, KJS::PropertySlot&);
@@ -50,13 +50,13 @@ namespace WebCore {
         virtual bool deleteProperty(KJS::ExecState*, const KJS::Identifier&);
         virtual bool deleteProperty(KJS::ExecState*, unsigned);
 
-        virtual KJS::ConstructType getConstructData(KJS::ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual KJS::JSObject* construct(KJS::ExecState*, const KJS::List& args);
 
         virtual bool implementsHasInstance() const;
         virtual bool hasInstance(KJS::ExecState*, KJS::JSValue*);
 
-        virtual KJS::CallType getCallData(KJS::CallData&);
+        virtual bool implementsCall() const;
         virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject* thisObj, const KJS::List& args);
 
         virtual void getPropertyNames(KJS::ExecState*, KJS::PropertyNameArray&);

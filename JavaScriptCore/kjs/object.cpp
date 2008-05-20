@@ -164,6 +164,43 @@ UString JSObject::className() const
   return "Object";
 }
 
+JSValue *JSObject::get(ExecState *exec, const Identifier &propertyName) const
+{
+  PropertySlot slot;
+
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
+JSValue *JSObject::get(ExecState *exec, unsigned propertyName) const
+{
+  PropertySlot slot;
+  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
+    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
+    
+  return jsUndefined();
+}
+
+bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
+{
+  JSObject *imp = this;
+  
+  while (true) {
+    if (imp->getOwnPropertySlot(exec, propertyName, slot))
+      return true;
+    
+    JSValue *proto = imp->_proto;
+    if (!proto->isObject())
+      break;
+    
+    imp = static_cast<JSObject *>(proto);
+  }
+  
+  return false;
+}
+
 bool JSObject::getOwnPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
 {
   return getOwnPropertySlot(exec, Identifier::from(propertyName), slot);
@@ -266,6 +303,7 @@ void JSObject::putWithAttributes(ExecState* exec, unsigned propertyName, JSValue
     putWithAttributes(exec, Identifier::from(propertyName), value, attributes);
 }
 
+// ECMA 8.6.2.4
 bool JSObject::hasProperty(ExecState *exec, const Identifier &propertyName) const
 {
   PropertySlot slot;
@@ -312,19 +350,16 @@ bool JSObject::deleteProperty(ExecState *exec, unsigned propertyName)
 }
 
 static ALWAYS_INLINE JSValue *tryGetAndCallProperty(ExecState *exec, const JSObject *object, const Identifier &propertyName) {
-  JSValue* v = object->get(exec, propertyName);
+  JSValue *v = object->get(exec, propertyName);
   if (v->isObject()) {
-      JSObject* o = static_cast<JSObject*>(v);
-      CallData data;
-      CallType callType = o->getCallData(data);
-      // spec says "not primitive type" but ...
-      if (callType != CallTypeNone) {
-          JSObject* thisObj = const_cast<JSObject*>(object);
-          JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
-          JSType defType = def->type();
-          ASSERT(defType != GetterSetterType);
-          if (defType != ObjectType)
-              return def;
+    JSObject *o = static_cast<JSObject*>(v);
+    if (o->implementsCall()) { // spec says "not primitive type" but ...
+      JSObject *thisObj = const_cast<JSObject*>(object);
+      JSValue* def = o->call(exec, thisObj->toThisObject(exec), exec->emptyList());
+      JSType defType = def->type();
+      ASSERT(defType != GetterSetterType);
+      if (defType != ObjectType)
+        return def;
     }
   }
   return NULL;
@@ -340,11 +375,6 @@ bool JSObject::getPrimitiveNumber(ExecState* exec, double& number, JSValue*& res
 // ECMA 8.6.2.6
 JSValue* JSObject::defaultValue(ExecState* exec, JSType hint) const
 {
-  // We need this check to guard against the case where this object is rhs of
-  // a binary expression where lhs threw an exception in its conversion to
-  // primitive
-  if (exec->hadException())
-    return exec->exception();
   /* Prefer String for Date objects */
   if ((hint == StringType) || (hint != NumberType && _proto == exec->lexicalGlobalObject()->datePrototype())) {
     if (JSValue* v = tryGetAndCallProperty(exec, this, exec->propertyNames().toString))
@@ -447,6 +477,11 @@ JSValue* JSObject::lookupSetter(ExecState*, const Identifier& propertyName)
     }
 }
 
+bool JSObject::implementsConstruct() const
+{
+  return false;
+}
+
 JSObject* JSObject::construct(ExecState*, const List& /*args*/)
 {
   ASSERT(false);
@@ -458,10 +493,9 @@ JSObject* JSObject::construct(ExecState* exec, const List& args, const Identifie
   return construct(exec, args);
 }
 
-bool JSObject::implementsCall()
+bool JSObject::implementsCall() const
 {
-    CallData callData;
-    return getCallData(callData) != CallTypeNone;
+  return false;
 }
 
 JSValue *JSObject::callAsFunction(ExecState* /*exec*/, JSObject* /*thisObj*/, const List &/*args*/)
@@ -577,6 +611,16 @@ JSObject* JSObject::toThisObject(ExecState*) const
 JSGlobalObject* JSObject::toGlobalObject(ExecState*) const
 {
     return 0;
+}
+
+void JSObject::putDirect(const Identifier &propertyName, JSValue *value, int attr)
+{
+    _prop.put(propertyName, value, attr);
+}
+
+void JSObject::putDirect(const Identifier &propertyName, int value, int attr)
+{
+    _prop.put(propertyName, jsNumber(value), attr);
 }
 
 void JSObject::removeDirect(const Identifier &propertyName)

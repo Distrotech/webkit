@@ -645,7 +645,7 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* evt)
             int size = listItems().size();
             for (listIndex += 1;
                  listIndex >= 0 && listIndex < size && (listItems()[listIndex]->disabled() || !listItems()[listIndex]->hasTagName(optionTag));
-                 ++listIndex);
+                 ++listIndex) { }
             
             if (listIndex >= 0 && listIndex < size)
                 setSelectedIndex(listToOptionIndex(listIndex));
@@ -654,7 +654,7 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* evt)
             int size = listItems().size();
             for (listIndex -= 1;
                  listIndex >= 0 && listIndex < size && (listItems()[listIndex]->disabled() || !listItems()[listIndex]->hasTagName(optionTag));
-                 --listIndex);
+                 --listIndex) { }
             
             if (listIndex >= 0 && listIndex < size)
                 setSelectedIndex(listToOptionIndex(listIndex));
@@ -978,7 +978,9 @@ void HTMLSelectElement::typeAheadFind(KeyboardEvent* event)
     if (itemCount < 1)
         return;
 
-    int index = (optionToListIndex(selectedIndex()) + searchStartOffset) % itemCount;
+    int selected = selectedIndex();
+    int index = (optionToListIndex(selected >= 0 ? selected : 0) + searchStartOffset) % itemCount;
+    ASSERT(index >= 0);
     for (int i = 0; i < itemCount; i++, index = (index + 1) % itemCount) {
         if (!items[index]->hasTagName(optionTag) || items[index]->disabled())
             continue;

@@ -93,7 +93,7 @@ void PluginView::updateWindow() const
     m_clipRect = windowClipRect();
     m_clipRect.move(-m_windowRect.x(), -m_windowRect.y());
 
-    if(m_window) {
+    if (m_window) {
         m_window->move(m_windowRect.x(), m_windowRect.y());
         m_window->resize(m_windowRect.width(), m_windowRect.height());
     }
@@ -185,10 +185,15 @@ void PluginView::setNPWindowRect(const IntRect& rect)
         return;
 
     if (m_plugin->pluginFuncs()->setwindow) {
+        PluginView::setCurrentPluginView(this);
         KJS::JSLock::DropAllLocks dropAllLocks;
         setCallingPlugin(true);
         m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
         setCallingPlugin(false);
+        PluginView::setCurrentPluginView(0);
+
+        if (!m_isWindowed)
+            return;
 
         ASSERT(m_window);
     }
@@ -207,7 +212,7 @@ void PluginView::attachToWindow()
 void PluginView::detachFromWindow()
 {
     if (!m_attachedToWindow)
-    return;
+        return;
 
     if (m_isVisible && m_window)
         m_window->setVisible(false);
@@ -237,16 +242,20 @@ void PluginView::stop()
     delete (NPSetWindowCallbackStruct *)m_npWindow.ws_info;
     m_npWindow.ws_info = 0;
     if (m_plugin->pluginFuncs()->setwindow && !m_plugin->quirks().contains(PluginQuirkDontSetNullWindowHandleOnDestroy)) {
+        PluginView::setCurrentPluginView(this);
         setCallingPlugin(true);
         m_plugin->pluginFuncs()->setwindow(m_instance, &m_npWindow);
         setCallingPlugin(false);
+        PluginView::setCurrentPluginView(0);
     }
 
     // Destroy the plugin
     {
+        PluginView::setCurrentPluginView(this);
         setCallingPlugin(true);
         m_plugin->pluginFuncs()->destroy(m_instance, 0);
         setCallingPlugin(false);
+        PluginView::setCurrentPluginView(0);
     }
 
     m_instance->pdata = 0;
@@ -265,6 +274,12 @@ const char* PluginView::userAgent()
     return m_userAgent.data();
 }
 
+const char* PluginView::userAgentStatic()
+{
+    //FIXME - Just say we are Mozilla
+    return MozillaUserAgent;
+}
+
 NPError PluginView::handlePostReadFile(Vector<char>& buffer, uint32 len, const char* buf)
 {
     String filename(buf, len);
@@ -272,7 +287,7 @@ NPError PluginView::handlePostReadFile(Vector<char>& buffer, uint32 len, const c
     if (filename.startsWith("file:///"))
         filename = filename.substring(8);
 
-    if(!fileExists(filename))
+    if (!fileExists(filename))
         return NPERR_FILE_NOT_FOUND;
 
     //FIXME - read the file data into buffer
@@ -293,81 +308,84 @@ NPError PluginView::handlePostReadFile(Vector<char>& buffer, uint32 len, const c
     return NPERR_NO_ERROR;
 }
 
+NPError PluginView::getValueStatic(NPNVariable variable, void* value)
+{
+    switch (variable) {
+    case NPNVToolkit:
+        *((uint32 *)value) = 0;
+        return NPERR_NO_ERROR;
+
+    case NPNVSupportsXEmbedBool:
+        *((uint32 *)value) = true;
+        return NPERR_NO_ERROR;
+
+    case NPNVjavascriptEnabledBool:
+        *((uint32 *)value) = true;
+        return NPERR_NO_ERROR;
+
+    default:
+        return NPERR_GENERIC_ERROR;
+    }
+}
+
 NPError PluginView::getValue(NPNVariable variable, void* value)
 {
     switch (variable) {
-        case NPNVxDisplay: {
-            if (m_window)
-                *(void **)value = m_window->x11Info().display();
-            else
-                *(void **)value = containingWindow()->x11Info().display();
-            return NPERR_NO_ERROR;                
-        }
+    case NPNVxDisplay:
+        if (m_window)
+            *(void **)value = m_window->x11Info().display();
+        else
+            *(void **)value = containingWindow()->x11Info().display();
+        return NPERR_NO_ERROR;                
 
-        case NPNVxtAppContext: {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        case NPNVToolkit: {
-            *((uint32 *)value) = 0;
-            return NPERR_NO_ERROR;
-        }
-
-        case NPNVSupportsXEmbedBool: {
-            *((uint32 *)value) = true;
-            return NPERR_NO_ERROR;
-        }
+    case NPNVxtAppContext:
+        return NPERR_GENERIC_ERROR;
 
 #if ENABLE(NETSCAPE_PLUGIN_API)
-        case NPNVWindowNPObject: {
+    case NPNVWindowNPObject: {
         if (m_isJavaScriptPaused)
-        return NPERR_GENERIC_ERROR;
+            return NPERR_GENERIC_ERROR;
 
-            NPObject* windowScriptObject = m_parentFrame->windowScriptNPObject();
+        NPObject* windowScriptObject = m_parentFrame->windowScriptNPObject();
 
-            // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
-            if (windowScriptObject)
-                _NPN_RetainObject(windowScriptObject);
+        // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
+        if (windowScriptObject)
+            _NPN_RetainObject(windowScriptObject);
 
-            void** v = (void**)value;
-            *v = windowScriptObject;
+        void** v = (void**)value;
+        *v = windowScriptObject;
             
-            return NPERR_NO_ERROR;
-        }
+        return NPERR_NO_ERROR;
+    }
 
-        case NPNVPluginElementNPObject: {
+    case NPNVPluginElementNPObject: {
         if (m_isJavaScriptPaused)
-        return NPERR_GENERIC_ERROR;
+            return NPERR_GENERIC_ERROR;
 
-            NPObject* pluginScriptObject = 0;
+        NPObject* pluginScriptObject = 0;
 
-            if (m_element->hasTagName(appletTag) || m_element->hasTagName(embedTag) || m_element->hasTagName(objectTag))
-                pluginScriptObject = static_cast<HTMLPlugInElement*>(m_element)->getNPObject();
+        if (m_element->hasTagName(appletTag) || m_element->hasTagName(embedTag) || m_element->hasTagName(objectTag))
+            pluginScriptObject = static_cast<HTMLPlugInElement*>(m_element)->getNPObject();
 
-            // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
-            if (pluginScriptObject)
-                _NPN_RetainObject(pluginScriptObject);
+        // Return value is expected to be retained, as described here: <http://www.mozilla.org/projects/plugin/npruntime.html>
+        if (pluginScriptObject)
+            _NPN_RetainObject(pluginScriptObject);
 
-            void** v = (void**)value;
-            *v = pluginScriptObject;
+        void** v = (void**)value;
+        *v = pluginScriptObject;
 
-            return NPERR_NO_ERROR;
-        }
+        return NPERR_NO_ERROR;
+    }
 #endif
 
-        case NPNVnetscapeWindow: {
-            void* w = reinterpret_cast<void*>(value);
-            *((XID *)w) = containingWindow()->winId();
-            return NPERR_NO_ERROR;
-        }
+    case NPNVnetscapeWindow: {
+        void* w = reinterpret_cast<void*>(value);
+        *((XID *)w) = containingWindow()->winId();
+        return NPERR_NO_ERROR;
+    }
 
-        case NPNVjavascriptEnabledBool: {
-            *((uint32 *)value) = true;
-            return NPERR_NO_ERROR;
-        }
-
-        default:
-            return NPERR_GENERIC_ERROR;
+    default:
+            return getValueStatic(variable, value);
     }
 }
 
@@ -425,9 +443,14 @@ void PluginView::init()
         return;
     }
 
-    m_needsXEmbed = false;
-    if (m_plugin->pluginFuncs()->getvalue)
+    if (m_plugin->pluginFuncs()->getvalue) {
+        PluginView::setCurrentPluginView(this);
+        KJS::JSLock::DropAllLocks dropAllLocks;
+        setCallingPlugin(true);
         m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginNeedsXEmbed, &m_needsXEmbed);
+        setCallingPlugin(false);
+        PluginView::setCurrentPluginView(0);
+    }
 
     if (m_needsXEmbed) {
         m_window = new QX11EmbedContainer(containingWindow());

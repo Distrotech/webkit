@@ -971,22 +971,22 @@ static NSString *classIBCreatorID = nil;
 
 - (void)_setFTPDirectoryTemplatePath:(NSString *)path
 {
-    [self _setStringValue:path forKey:WebKitFTPDirectoryTemplatePath];
+    [self _setStringValue:[path stringByStandardizingPath] forKey:WebKitFTPDirectoryTemplatePath];
 }
 
 - (NSString *)_localStorageDatabasePath
 {
-    return [self _stringValueForKey:WebKitLocalStorageDatabasePathPreferenceKey];
+    return [[self _stringValueForKey:WebKitLocalStorageDatabasePathPreferenceKey] stringByStandardizingPath];
 }
 
 - (void)_setLocalStorageDatabasePath:(NSString *)path
 {
-    [self _setStringValue:path forKey:WebKitLocalStorageDatabasePathPreferenceKey];
+    [self _setStringValue:[path stringByStandardizingPath] forKey:WebKitLocalStorageDatabasePathPreferenceKey];
 }
 
 - (NSString *)_ftpDirectoryTemplatePath
 {
-    return [self _stringValueForKey:WebKitFTPDirectoryTemplatePath];
+    return [[self _stringValueForKey:WebKitFTPDirectoryTemplatePath] stringByStandardizingPath];
 }
 
 - (void)_setForceFTPDirectoryListings:(BOOL)force
@@ -1014,6 +1014,15 @@ static NSString *classIBCreatorID = nil;
     ++_private->numWebViews;
 }
 
+- (void)setFullDocumentTeardownEnabled:(BOOL)fullDocumentTeardownEnabled
+{
+    [self _setBoolValue:fullDocumentTeardownEnabled forKey:WebKitEnableFullDocumentTeardownPreferenceKey];
+}
+
+- (BOOL)fullDocumentTeardownEnabled
+{
+    return [self _boolValueForKey:WebKitEnableFullDocumentTeardownPreferenceKey];
+}
 @end
 
 @implementation WebPreferences (WebInternal)

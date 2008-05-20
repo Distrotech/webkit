@@ -50,10 +50,9 @@ namespace KJS {
     public:
         FunctionObjectImp(ExecState*, FunctionPrototype*);
 
-        virtual ConstructType getConstructData(ConstructData&);
+        virtual bool implementsConstruct() const;
         virtual JSObject* construct(ExecState*, const List&);
         virtual JSObject* construct(ExecState*, const List&, const Identifier& functionName, const UString& sourceURL, int lineNumber);
-
         virtual JSValue* callAsFunction(ExecState*, JSObject*, const List&);
     };
 

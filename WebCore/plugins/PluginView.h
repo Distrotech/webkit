@@ -118,8 +118,10 @@ namespace WebCore {
         int32 write(NPStream* stream, int32 len, void* buffer);
         NPError destroyStream(NPStream* stream, NPReason reason);
         const char* userAgent();
+        static const char* userAgentStatic();
         void status(const char* message);
         NPError getValue(NPNVariable variable, void* value);
+        static NPError getValueStatic(NPNVariable variable, void* value);
         NPError setValue(NPPVariable variable, void* value);
         void invalidateRect(NPRect*);
         void invalidateRegion(NPRegion);
@@ -148,6 +150,8 @@ namespace WebCore {
         virtual void attachToWindow();
         virtual void detachFromWindow();
 
+        virtual bool isPluginView() const { return true; }
+
 #if PLATFORM(WIN)
         LRESULT wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
         WNDPROC pluginWndProc() const { return m_pluginWndProc; }
@@ -174,9 +178,10 @@ namespace WebCore {
         NPError handlePostReadFile(Vector<char>& buffer, uint32 len, const char* buf);
         static void freeStringArray(char** stringArray, int length);
         void setCallingPlugin(bool) const;
+
+        Frame* m_parentFrame;
         RefPtr<PluginPackage> m_plugin;
         Element* m_element;
-        Frame* m_parentFrame;
         bool m_isStarted;
         KURL m_url;
         KURL m_baseURL;
@@ -193,7 +198,9 @@ namespace WebCore {
         void popPopupsStateTimerFired(Timer<PluginView>*);
         Timer<PluginView> m_popPopupsStateTimer;
 
+#ifndef NP_NO_CARBON
         bool dispatchNPEvent(NPEvent&);
+#endif
         void updateWindow() const;
         void paintMissingPluginIcon(GraphicsContext*, const IntRect&);
 

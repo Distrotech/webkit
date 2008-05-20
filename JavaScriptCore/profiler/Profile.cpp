@@ -26,7 +26,7 @@
 #include "config.h"
 #include "Profile.h"
 
-#include "FunctionCallProfile.h"
+#include "ProfileNode.h"
 #include "JSGlobalObject.h"
 #include "ExecState.h"
 #include "function.h"
@@ -35,42 +35,42 @@
 
 namespace KJS {
 
-typedef Vector<UString>::const_iterator NameIterator;
-
 Profile::Profile(const UString& title)
     : m_title(title)
 {
     // FIXME: When multi-threading is supported this will be a vector and calls
     // into the profiler will need to know which thread it is executing on.
-    m_callTree.set(new FunctionCallProfile("Thread_1"));
+    m_callTree = ProfileNode::create("Thread_1");
 }
 
+// The callStackNames are in order of bottom of the stack to top of the stack so we iterate it backwards.
 void Profile::willExecute(const Vector<UString>& callStackNames)
 {
-    FunctionCallProfile* callTreeInsertionPoint = 0;
-    FunctionCallProfile* foundNameInTree = m_callTree.get();
-    NameIterator callStackLocation = callStackNames.begin();
+    RefPtr<ProfileNode> callTreeInsertionPoint;
+    RefPtr<ProfileNode> foundNameInTree = m_callTree;
 
-    while (callStackLocation != callStackNames.end() && foundNameInTree) {
+    int i = callStackNames.size();
+    while (foundNameInTree && i) {
         callTreeInsertionPoint = foundNameInTree;
-        foundNameInTree = callTreeInsertionPoint->findChild(*callStackLocation);
-        ++callStackLocation;
+        foundNameInTree = callTreeInsertionPoint->findChild(callStackNames[--i]);
     }
 
     if (!foundNameInTree) {   // Insert remains of the stack into the call tree.
-        --callStackLocation;
-        for (FunctionCallProfile* next; callStackLocation != callStackNames.end(); ++callStackLocation) {
-            next = new FunctionCallProfile(*callStackLocation);
+        for (RefPtr<ProfileNode> next; i >= 0; callTreeInsertionPoint = next) {
+            next = ProfileNode::create(callStackNames[i--]);
             callTreeInsertionPoint->addChild(next);
-            callTreeInsertionPoint = next;
         }
     } else    // We are calling a function that is already in the call tree.
         foundNameInTree->willExecute();
 }
 
-void Profile::didExecute(Vector<UString> stackNames)
+void Profile::didExecute(const Vector<UString>& stackNames)
 {
-    m_callTree->didExecute(stackNames, 0);    
+    ASSERT(stackNames.size());
+    if (!stackNames.size())
+        return;
+
+    m_callTree->didExecute(stackNames, stackNames.size() - 1);
 }
 
 void Profile::printDataInspectorStyle() const
@@ -81,7 +81,7 @@ void Profile::printDataInspectorStyle() const
 
 typedef pair<UString::Rep*, unsigned> NameCountPair;
 
-static inline bool functionNameCountPairComparator(const NameCountPair a, const NameCountPair b)
+static inline bool functionNameCountPairComparator(const NameCountPair& a, const NameCountPair& b)
 {
     return a.second > b.second;
 }

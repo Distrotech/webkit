@@ -1,70 +1,260 @@
-2008-05-17  Geoffrey Garen  <ggaren@apple.com>
+2008-05-18  Dan Bernstein  <mitz@apple.com>
 
-        Reviewed by Oliver Hunt.
-        
-        Re-enabled previously disabled debugging functionality.
-        
-        There are two major changes from how the WebKit debugger used to work:
-        
-        (1) All the interesting bits are implemented down in JavaScriptCore. The
-        debugger just calls through to KJS::DebuggerCallFrame for everything.
-        
-        (2) Instead of copyihng a pointer to an ExecState once, the debugger
-        copies the DebuggerCallFrame passed to it in each callback. This is
-        because the VM no longer maintains a fully transparent execution state
-        to which you can hold a pointer, and the DebuggerCallFrames it vends
-        are temporaries.
-        
-        Also, we NULL out a WebScriptCallFrame's DebuggerCallFrame upon return
-        from its function. This is safer than the old method, which was to
-        hold a stale ExecState* and hope for the best.
+        Reviewed by Sam Weinig.
 
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+        - fix <rdar://problem/5944596> IDNs are displayed as punycode in the authentication panel
 
-        Reviewed by Oliver Hunt.
+        * Panels/WebAuthenticationPanel.m:
+        (-[WebAuthenticationPanel setUpForChallenge:]):
 
-        Updated for API changes in KJS::Debugger.
+2008-05-16  Timothy Hatcher  <timothy@apple.com>
+
+        Removes WebScriptDebugServer files and related calls. This removes
+        the hooks that Drosera uses for debugging. Now that the Web Inspector
+        has a better debugger, we don't need these anymore.
+
+        Reviewed by Sam Weinig.
+
+        * DefaultDelegates/WebScriptDebugServer.h: Removed.
+        * DefaultDelegates/WebScriptDebugServer.m: Removed.
+        * DefaultDelegates/WebScriptDebugServerPrivate.h: Removed.
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        * WebKit.exp:
+        * WebView/WebScriptDebugDelegate.mm:
+        * WebView/WebScriptDebugger.mm:
+        (WebScriptDebugger::sourceParsed):
+        (WebScriptDebugger::callEvent):
+        (WebScriptDebugger::atStatement):
+        (WebScriptDebugger::returnEvent):
+        (WebScriptDebugger::exception):
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]):
+        * WebView/WebViewPrivate.h:
+
+2008-05-16  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Anders
+
+        <rdar://problem/5942616> - Need to standardize LocalStorage persistence path
+
+        Took the opportunity to touch up another pref that needs the same standardization.
+        That pref is currently not in use on Mac.
+
+        * WebView/WebPreferences.m:
+        (-[WebPreferences _setFTPDirectoryTemplatePath:]):
+        (-[WebPreferences _localStorageDatabasePath]):
+        (-[WebPreferences _setLocalStorageDatabasePath:]):
+        (-[WebPreferences _ftpDirectoryTemplatePath]):
+
+2008-05-16  Chris Fleizach  <cfleizach@apple.com>
+
+        Reviewed by Alice Liu
+
+        <rdar://problem/5710317> REGRESSION:Selecting ranges of text should be possible using the keyboard (15310)
 
         * WebView/WebFrame.mm:
-        (-[WebFrame _attachScriptDebugger]): Changed the order of operations to
-        fix an ASSERT that can happen when re-entering _attachScriptDebugger.
+        (-[WebFrame _accessibilityTree]):
 
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
         
-        Updated WebScriptDebugger API to accept a SourceProvider instead
-        of a WebCore::String, to avoid copying.
+        fix mac build
 
-        (WebScriptDebugger::sourceParsed): Updated this function not to return
-        a value.
+        * WebView/WebView.mm:
+        (-[WebView closeWithFastTeardown]):
 
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
 
-        Build fix: #ifdef'd out some code that doesn't work anymore.
+        Reviewed by Anders.
 
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+        Turn on fast teardown.  I added a preference for using full teardown because 
+        the LEAKS output will be useless without a full teardown.  
 
-        Reviewed by Oliver Hunt.
+        preference for fullteardown
+        * WebView/WebPreferenceKeysPrivate.h:
+        * WebView/WebPreferences.m:
+        (-[WebPreferences setFullDocumentTeardownEnabled:]):
+        (-[WebPreferences fullDocumentTeardownEnabled]):
+        * WebView/WebPreferencesPrivate.h:
         
-        #ifdef'd out some debugger code that doesn't work anymore.
+        on application quit dispatch unload events and destroy plugins then exit
+        * WebView/WebView.mm:
+        (-[WebView closeWithFastTeardown]):
+        (-[WebView _close]):
+        * WebView/WebViewPrivate.h:
 
-        * WebView/WebScriptDebugDelegate.mm:
-        (-[WebScriptCallFrame scopeChain]):
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
 
-2008-04-21  Geoffrey Garen  <ggaren@apple.com>
+        Reviewed by Anders.
 
-        Build fix.
+        get the pending frame unload count from WebCore
 
-        * ChangeLog:
-        * WebView/WebScriptDebugDelegate.mm:
-        (-[WebScriptCallFrame scopeChain]):
+        * WebView/WebFrame.mm:
+        (-[WebFrame _pendingFrameUnloadEventCount]):
+        * WebView/WebFramePrivate.h:
 
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+2008-05-15  John Sullivan  <sullivan@apple.com>
 
-        Reviewed by Oliver Hunt.
+        Reviewed by Kevin Decker
         
-        Build fix.
+        - fixed <rdar://problem/5940275> Inspector highlighting moves to bottom-left corner of 
+          screen when new tab appears
+          
+        The highlight should go away entirely, but this simple patch just makes it not jump away.
+        The issue with it not going away entirely is harder to fix and covered by <rdar://problem/5322306>
+
+        * WebInspector/WebNodeHighlight.m:
+        (-[WebNodeHighlight _repositionHighlightWindow]):
+        Bail out if target view isn't in a window
+
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Anders.
+
+        Track views that contain plugin instances so that they can be destroyed at application
+        quit without walking the entire document tree.
+
+        Add/Remove Netscape plugin views from instance list.  Start/stop are when netscape
+        plugins are created and destroyed
+        * Plugins/WebBaseNetscapePluginView.mm:
+        (-[WebBaseNetscapePluginView start]):
+        (-[WebBaseNetscapePluginView stop]):
+ 
+        Add/remove WebKit plugin views from instance list
+        * Plugins/WebPluginController.mm:
+        (-[WebPluginController addPlugin:]):
+        (-[WebPluginController destroyPlugin:]):
+        (-[WebPluginController destroyAllPlugins]):
+
+        Add a set of views with plugin instances to the WebPluginDatabase
+        * Plugins/WebPluginDatabase.h:
+        * Plugins/WebPluginDatabase.mm:
+        (-[WebPluginDatabase init]):
+        (-[WebPluginDatabase dealloc]):
+        (-[WebPluginDatabase addPluginInstanceView:]):
+        (-[WebPluginDatabase removePluginInstanceView:]):
+        (-[WebPluginDatabase removePluginInstanceViewsFor:]):
+        (-[WebPluginDatabase destroyAllPluginInstanceViews]):
+        
+        Handle cases where plugin views are detached before the plugin is destroyed.
+        * WebCoreSupport/WebFrameLoaderClient.mm:
+        (WebFrameLoaderClient::detachedFromParent2):
+        (WebFrameLoaderClient::transitionToCommittedFromCachedPage):
+        (WebFrameLoaderClient::transitionToCommittedForNewPage):
+
+        Add plugin instances to the set in the WebPluginDatabase by way of the WebView
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView _destroyAllWebPlugins]):
+        * WebView/WebHTMLViewInternal.h:
+        * WebView/WebView.mm:
+        (-[WebView addPluginInstanceView:]):
+        (-[WebView removePluginInstanceView:]):
+        (-[WebView removePluginInstanceViewsFor:]):
+        * WebView/WebViewInternal.h:
+
+2008-05-15  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Tim Hatcher
+
+        Until the settings/preferences equation can be reworked, we'll need to manually set the local storage path
+        before setting the page group of the new page.
+        
+        * WebView/WebView.mm:
+        (-[WebView _commonInitializationWithFrameName:groupName:]): Set the LocalStorage path 
+          immediately after creating the page so it is in place for initializing the LocalStorageThread
+
+2008-05-15  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes the bug where the Web Inspector would flash white while resizing.
+        This was cause by deferring the window creation.
+
+        <rdar://problem/5873549> REGRESSION: Inspector flickers horribly while resizing (17979)
+
+        Reviewed by Darin Adler.
+
+        * WebCoreSupport/WebInspectorClient.mm:
+        (-[WebInspectorWindowController window]): Don't defer the window creation.
+
+2008-05-15  Alexey Proskuryakov  <ap@webkit.org>
+
+        Tiger build fix.
+
+        * Misc/WebNSAttributedStringExtras.mm: Import WebTypesInternal.h for NSUInteger.
+
+2008-05-15  Adele Peterson  <adele@apple.com>
+
+        Reviewed and landed by Alexey.
+
+        Use TextIterator in +[NSAttributedString _web_attributedStringFromRange:].
+
+        * Misc/WebNSAttributedStringExtras.mm:
+        (+[NSAttributedString _web_attributedStringFromRange:]):
+
+2008-05-14  Eric Seidel  <eric@webkit.org>
+
+        Reviewed by Oliver.
+
+        Add missing NULL check to match rest of file, this was found by the editing fuzzer.
+
+        * WebView/WebResource.mm:
+        (-[WebResource data]):
+
+2008-05-14  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Dan Bernstein.
+
+        NPP_ValidAttributesForMarkedText should return NSArray*, not NSArray.
+
+        * Plugins/nptextinput.h:
+
+2008-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Sam.
+
+        Don't empty the application cache in _setCacheModel, since it will be called during initialization.
+        Instead, do it in [WebCache empty].
+        
+        * Misc/WebCache.mm:
+        (+[WebCache empty]):
+        * WebView/WebView.mm:
+        (+[WebView _setCacheModel:]):
+
+2008-05-13  chris fleizach  <cfleizach@apple.com>
+
+        Reviewed by Beth Dakin
+
+        <rdar://problem/4780592> WebKit application has its window announced as HTML content
+
+        * WebCoreSupport/WebViewFactory.mm:
+        (-[WebViewFactory AXWebAreaText]):
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes a crash seen in Xcode where CallUIDelegateReturningBoolean
+        was referencing a nil WebView under validateUserInterfaceItem.
+        The validateUserInterfaceItem methods was being called at a time
+        when the WebHTMLView is being torndown.
+
+        <rdar://problem/5806229> A crash occurs at CallUIDelegateReturningBoolean()
+        while mousing down on menu bar after Xcode News window is opened
+
+        Reviewed by Ada Chan.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView validateUserInterfaceItem:]): NULL check the WebView and
+        return NO when it is nil. Adds a comment.
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView validateUserInterfaceItem:]): Ditto.
+
+2008-05-13  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by John Sullivan.
+
+        <rdar://problem/5926425> HIWebViewCreateWithClass declared as API in HIWebView.h but never exported from WebKit.framework
+
+        * Carbon/HIWebView.h: Remove HIWebViewCreateWithClass.
+        * Carbon/HIWebView.m: Ditto.
+        (HIWebViewCreate):
+        (HIWebViewConstructor):
 
 2008-05-12  Dan Bernstein  <mitz@apple.com>
 

@@ -2645,6 +2645,10 @@ void Document::removeHTMLWindowEventListener(const AtomicString &eventType)
     RegisteredEventListenerList::iterator it = m_windowEventListeners.begin();
     for (; it != m_windowEventListeners.end(); ++it)
         if ( (*it)->eventType() == eventType && (*it)->listener()->isHTMLEventListener()) {
+            if (eventType == ((AtomicString)unloadEvent))
+                removePendingFrameUnloadEventCount();
+            else if (eventType == ((AtomicString)beforeunloadEvent))
+                removePendingFrameBeforeUnloadEventCount();
             m_windowEventListeners.remove(it);
             return;
         }
@@ -2652,6 +2656,10 @@ void Document::removeHTMLWindowEventListener(const AtomicString &eventType)
 
 void Document::addWindowEventListener(const AtomicString &eventType, PassRefPtr<EventListener> listener, bool useCapture)
 {
+    if (eventType == ((AtomicString)unloadEvent))
+        addPendingFrameUnloadEventCount();
+    else if (eventType == ((AtomicString)beforeunloadEvent))
+        addPendingFrameBeforeUnloadEventCount();
     // Remove existing identical listener set with identical arguments.
     // The DOM 2 spec says that "duplicate instances are discarded" in this case.
     removeWindowEventListener(eventType, listener.get(), useCapture);
@@ -2664,6 +2672,10 @@ void Document::removeWindowEventListener(const AtomicString &eventType, EventLis
     RegisteredEventListenerList::iterator it = m_windowEventListeners.begin();
     for (; it != m_windowEventListeners.end(); ++it)
         if (*(*it) == rl) {
+            if (eventType == ((AtomicString)unloadEvent))
+                removePendingFrameUnloadEventCount();
+            else if (eventType == ((AtomicString)beforeunloadEvent))
+                removePendingFrameBeforeUnloadEventCount();
             m_windowEventListeners.remove(it);
             return;
         }
@@ -2677,6 +2689,30 @@ bool Document::hasWindowEventListener(const AtomicString &eventType)
             return true;
         }
     return false;
+}
+
+void Document::addPendingFrameUnloadEventCount() 
+{
+    if (m_frame)
+         m_frame->eventHandler()->addPendingFrameUnloadEventCount();
+}
+
+void Document::removePendingFrameUnloadEventCount() 
+{
+    if (m_frame)
+        m_frame->eventHandler()->removePendingFrameUnloadEventCount();
+}
+
+void Document::addPendingFrameBeforeUnloadEventCount() 
+{
+    if (m_frame)
+         m_frame->eventHandler()->addPendingFrameBeforeUnloadEventCount();
+}
+
+    void Document::removePendingFrameBeforeUnloadEventCount() 
+{
+    if (m_frame)
+        m_frame->eventHandler()->removePendingFrameBeforeUnloadEventCount();
 }
 
 PassRefPtr<EventListener> Document::createHTMLEventListener(const String& functionName, const String& code, Node *node)
@@ -3038,17 +3074,6 @@ void Document::setShouldCreateRenderers(bool f)
 bool Document::shouldCreateRenderers()
 {
     return m_createRenderers;
-}
-
-String Document::toString() const
-{
-    String result;
-
-    for (Node *child = firstChild(); child != NULL; child = child->nextSibling()) {
-        result += child->toString();
-    }
-
-    return result;
 }
 
 // Support for Javascript execCommand, and related methods

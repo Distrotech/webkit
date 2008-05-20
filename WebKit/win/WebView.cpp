@@ -49,11 +49,13 @@
 #include "WebPreferences.h"
 #pragma warning( push, 0 )
 #include <CoreGraphics/CGContext.h>
+#include <WebCore/ApplicationCacheStorage.h>
 #include <WebCore/AXObjectCache.h>
 #include <WebCore/BString.h>
 #include <WebCore/Cache.h>
 #include <WebCore/ContextMenu.h>
 #include <WebCore/ContextMenuController.h>
+#include <WebCore/CookieStorageWin.h>
 #include <WebCore/CString.h>
 #include <WebCore/Cursor.h>
 #include <WebCore/Document.h>
@@ -2061,6 +2063,19 @@ HRESULT STDMETHODCALLTYPE WebView::URLTitleFromPasteboard(
     return E_NOTIMPL;
 }
 
+static void WebKitSetApplicationCachePathIfNecessary()
+{
+    static bool initialized = false;
+    if (initialized)
+        return;
+
+    String path = localUserSpecificStorageDirectory();
+    if (!path.isNull())
+        cacheStorage().setCacheDirectory(path);
+
+    initialized = true;
+}
+    
 HRESULT STDMETHODCALLTYPE WebView::initWithFrame( 
     /* [in] */ RECT frame,
     /* [in] */ BSTR frameName,
@@ -2091,9 +2106,16 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     m_preferences = sharedPreferences;
 
     WebKitSetWebDatabasesPathIfNecessary();
-
-    m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this), new WebInspectorClient(this));
+    WebKitSetApplicationCachePathIfNecessary();
     
+    m_page = new Page(new WebChromeClient(this), new WebContextMenuClient(this), new WebEditorClient(this), new WebDragClient(this), new WebInspectorClient(this));
+
+    BSTR localStoragePath;
+    if (SUCCEEDED(m_preferences->localStorageDatabasePath(&localStoragePath))) {
+        m_page->settings()->setLocalStorageDatabasePath(String(localStoragePath, SysStringLen(localStoragePath)));
+        SysFreeString(localStoragePath);
+    }
+
     if (m_uiDelegate) {
         COMPtr<IWebUIDelegate2> uiDelegate2;
         if (SUCCEEDED(m_uiDelegate->QueryInterface(IID_IWebUIDelegate2, (void**)&uiDelegate2))) {
@@ -4075,8 +4097,8 @@ HRESULT updateSharedSettingsFromPreferencesIfNeeded(IWebPreferences* preferences
         return hr;
 
     // Set cookie storage accept policy
-    if (CFHTTPCookieStorageRef defaultCookieStorage = wkGetDefaultHTTPCookieStorage())
-        CFHTTPCookieStorageSetCookieAcceptPolicy(defaultCookieStorage, acceptPolicy);
+    if (CFHTTPCookieStorageRef cookieStorage = currentCookieStorage())
+        CFHTTPCookieStorageSetCookieAcceptPolicy(cookieStorage, acceptPolicy);
 
     return S_OK;
 }

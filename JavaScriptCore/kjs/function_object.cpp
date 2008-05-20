@@ -70,7 +70,7 @@ JSValue* functionProtoFuncToString(ExecState* exec, JSObject* thisObj, const Lis
 
     if (thisObj->inherits(&FunctionImp::info)) {
         FunctionImp* fi = static_cast<FunctionImp*>(thisObj);
-        return jsString("function " + fi->functionName().ustring() + "(" + fi->body->paramString() + ") " + fi->body->toSourceString());
+        return jsString("function " + fi->functionName().ustring() + "(" + fi->body->paramString() + ") " + fi->body->toString());
     }
 
     return jsString("function " + static_cast<InternalFunctionImp*>(thisObj)->functionName().ustring() + "() {\n    [native code]\n}");
@@ -136,9 +136,9 @@ FunctionObjectImp::FunctionObjectImp(ExecState* exec, FunctionPrototype* functio
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly | DontDelete | DontEnum);
 }
 
-ConstructType FunctionObjectImp::getConstructData(ConstructData&)
+bool FunctionObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.3.2 The Function Constructor
@@ -162,19 +162,24 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
     int sourceId;
     int errLine;
     UString errMsg;
-    RefPtr<SourceProvider> source = UStringSourceProvider::create(body);
-    RefPtr<FunctionBodyNode> functionBody = parser().parse<FunctionBodyNode>(exec, sourceURL, lineNumber, source, &sourceId, &errLine, &errMsg);
+    RefPtr<FunctionBodyNode> functionBody = parser().parse<FunctionBodyNode>(sourceURL, lineNumber, body.data(), body.size(), &sourceId, &errLine, &errMsg);
+
+    // notify debugger that source has been parsed
+    // send empty sourceURL to indicate constructed code
+    Debugger* dbg = exec->dynamicGlobalObject()->debugger();
+    if (dbg && !dbg->sourceParsed(exec, sourceId, UString(), body, lineNumber, errLine, errMsg))
+        return new JSObject();
 
     // No program node == syntax error - throw a syntax error
     if (!functionBody)
         // We can't return a Completion(Throw) here, so just set the exception
         // and return it
         return throwError(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL);
-    
-    functionBody->setSource(SourceRange(source, 0, source->length()));
-    ScopeChain scopeChain(exec->lexicalGlobalObject());
 
-    FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain.node());
+    ScopeChain scopeChain;
+    scopeChain.push(exec->lexicalGlobalObject());
+
+    FunctionImp* fimp = new FunctionImp(exec, functionName, functionBody.get(), scopeChain);
 
     // parse parameter list. throw syntax error on illegal identifiers
     int len = p.size();
@@ -207,6 +212,8 @@ JSObject* FunctionObjectImp::construct(ExecState* exec, const List& args, const 
         return throwError(exec, SyntaxError, "Syntax error in parameter list");
     }
   
+    List consArgs;
+
     JSObject* objCons = exec->lexicalGlobalObject()->objectConstructor();
     JSObject* prototype = objCons->construct(exec, exec->emptyList());
     prototype->putDirect(exec->propertyNames().constructor, fimp, DontEnum);

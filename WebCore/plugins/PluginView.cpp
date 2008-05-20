@@ -151,15 +151,15 @@ bool PluginView::start()
     ASSERT(m_plugin->pluginFuncs()->newp);
 
     NPError npErr;
-    PluginView::setCurrentPluginView(this);
     {
+        PluginView::setCurrentPluginView(this);
         KJS::JSLock::DropAllLocks dropAllLocks;
         setCallingPlugin(true);
         npErr = m_plugin->pluginFuncs()->newp((NPMIMEType)m_mimeType.data(), m_instance, m_mode, m_paramCount, m_paramNames, m_paramValues, NULL);
         setCallingPlugin(false);
         LOG_NPERROR(npErr);
+        PluginView::setCurrentPluginView(0);
     }
-    PluginView::setCurrentPluginView(0);
 
     if (npErr != NPERR_NO_ERROR)
         return false;
@@ -234,10 +234,12 @@ void PluginView::performRequest(PluginRequest* request)
       
             // FIXME: <rdar://problem/4807469> This should be sent when the document has finished loading
             if (request->sendNotification()) {
+                PluginView::setCurrentPluginView(this);
                 KJS::JSLock::DropAllLocks dropAllLocks;
                 setCallingPlugin(true);
                 m_plugin->pluginFuncs()->urlnotify(m_instance, requestURL.string().utf8().data(), NPRES_DONE, request->notifyData());
                 setCallingPlugin(false);
+                PluginView::setCurrentPluginView(0);
             }
         }
         return;
@@ -304,15 +306,14 @@ NPError PluginView::load(const FrameLoadRequest& frameLoadRequest, bool sendNoti
 
     if (!jsString.isNull()) {
         Settings* settings = m_parentFrame->settings();
-        if (!settings || !settings->isJavaScriptEnabled()) {
-            // Return NPERR_GENERIC_ERROR if JS is disabled. This is what Mozilla does.
+
+        // Return NPERR_GENERIC_ERROR if JS is disabled. This is what Mozilla does.
+        if (!settings || !settings->isJavaScriptEnabled())
             return NPERR_GENERIC_ERROR;
-        } 
         
-        if (!targetFrameName.isNull() && m_parentFrame->tree()->find(targetFrameName) != m_parentFrame) {
-            // For security reasons, only allow JS requests to be made on the frame that contains the plug-in.
+        // For security reasons, only allow JS requests to be made on the frame that contains the plug-in.
+        if (!targetFrameName.isNull() && m_parentFrame->tree()->find(targetFrameName) != m_parentFrame)
             return NPERR_INVALID_PARAM;
-        }
     }
 
     PluginRequest* request = new PluginRequest(frameLoadRequest, sendNotification, notifyData, arePopupsAllowed());
@@ -399,15 +400,15 @@ void PluginView::status(const char* message)
 NPError PluginView::setValue(NPPVariable variable, void* value)
 {
     switch (variable) {
-        case NPPVpluginWindowBool:
-            m_isWindowed = value;
-            return NPERR_NO_ERROR;
-        case NPPVpluginTransparentBool:
-            m_isTransparent = value;
-            return NPERR_NO_ERROR;
-        default:
-            notImplemented();
-            return NPERR_GENERIC_ERROR;
+    case NPPVpluginWindowBool:
+        m_isWindowed = value;
+        return NPERR_NO_ERROR;
+    case NPPVpluginTransparentBool:
+        m_isTransparent = value;
+        return NPERR_NO_ERROR;
+    default:
+        notImplemented();
+        return NPERR_GENERIC_ERROR;
     }
 }
 
@@ -461,10 +462,12 @@ PassRefPtr<KJS::Bindings::Instance> PluginView::bindingInstance()
 
     NPError npErr;
     {
+        PluginView::setCurrentPluginView(this);
         KJS::JSLock::DropAllLocks dropAllLocks;
         setCallingPlugin(true);
         npErr = m_plugin->pluginFuncs()->getvalue(m_instance, NPPVpluginScriptableNPObject, &object);
         setCallingPlugin(false);
+        PluginView::setCurrentPluginView(0);
     }
 
     if (npErr != NPERR_NO_ERROR || !object)
@@ -524,7 +527,6 @@ PluginView::PluginView(Frame* parentFrame, const IntSize& size, PluginPackage* p
     , m_popPopupsStateTimer(this, &PluginView::popPopupsStateTimerFired)
     , m_paramNames(0)
     , m_paramValues(0)
-    , m_window(0)
     , m_isWindowed(true)
     , m_isTransparent(false)
     , m_isVisible(false)
@@ -538,6 +540,7 @@ PluginView::PluginView(Frame* parentFrame, const IntSize& size, PluginPackage* p
     , m_lastMessage(0)
     , m_isCallingPluginWndProc(false)
 #endif
+    , m_window(0)
     , m_loadManually(loadManually)
     , m_manualStream(0)
     , m_isJavaScriptPaused(false)

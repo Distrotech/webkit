@@ -31,7 +31,7 @@
 
 #include "ExecState.h"
 #include "function.h"
-#include "FunctionCallProfile.h"
+#include "ProfileNode.h"
 #include "JSGlobalObject.h"
 #include "Profile.h"
 
@@ -61,7 +61,7 @@ void Profiler::startProfiling(unsigned pageGroupIdentifier, const UString& title
 
     m_pageGroupIdentifier = pageGroupIdentifier;
 
-    m_currentProfile.set(new Profile(title));
+    m_currentProfile = Profile::create(title);
     m_profiling = true;
 }
 
@@ -74,6 +74,7 @@ void Profiler::stopProfiling()
 
     m_currentProfile->stopProfiling();
     m_allProfiles.append(m_currentProfile.release());
+    m_currentProfile = 0;
 }
 
 void Profiler::willExecute(ExecState* exec, JSObject* calledFunction)
@@ -116,46 +117,30 @@ void Profiler::didExecute(ExecState* exec, const UString& sourceURL, int startin
     m_currentProfile->didExecute(callStackNames);
 }
 
-void getStackNames(Vector<UString>&, ExecState*)
+void getStackNames(Vector<UString>& names, ExecState* exec)
 {
-    ASSERT_NOT_REACHED();
-#if 0
-    FunctionCallProfile* callTreeInsertionPoint = 0;
-    FunctionCallProfile* foundNameInTree = m_callTree.get();
-    NameIterator callStackLocation = callStackNames.begin();
-
-    while (callStackLocation != callStackNames.end() && foundNameInTree) {
-        callTreeInsertionPoint = foundNameInTree;
-        foundNameInTree = callTreeInsertionPoint->findChild(*callStackLocation);
-        ++callStackLocation;
+    for (ExecState* currentState = exec; currentState; currentState = currentState->callingExecState()) {
+        if (FunctionImp* functionImp = currentState->function())
+            names.append(getFunctionName(functionImp));
+        else if (ScopeNode* scopeNode = currentState->scopeNode())
+            names.append(Script + scopeNode->sourceURL() + ": " + UString::from(scopeNode->lineNo() + 1));   // FIXME: Why is the line number always off by one?
     }
-
-    if (!foundNameInTree) {   // Insert remains of the stack into the call tree.
-        --callStackLocation;
-        for (FunctionCallProfile* next; callStackLocation != callStackNames.end(); ++callStackLocation) {
-            next = new FunctionCallProfile(*callStackLocation);
-            callTreeInsertionPoint->addChild(next);
-            callTreeInsertionPoint = next;
-        }
-    } else    // We are calling a function that is already in the call tree.
-        foundNameInTree->willExecute();
-#endif
 }
 
 void getStackNames(Vector<UString>& names, ExecState* exec, JSObject* calledFunction)
 {
-    getStackNames(names, exec);
     if (calledFunction->inherits(&FunctionImp::info))
         names.append(getFunctionName(static_cast<FunctionImp*>(calledFunction)));
     else if (calledFunction->inherits(&InternalFunctionImp::info))
         names.append(static_cast<InternalFunctionImp*>(calledFunction)->functionName().ustring());
+    getStackNames(names, exec);
 }
 
 
 void getStackNames(Vector<UString>& names, ExecState* exec, const UString& sourceURL, int startingLineNumber)
 {
-    getStackNames(names, exec);
     names.append(Script + sourceURL + ": " + UString::from(startingLineNumber + 1));
+    getStackNames(names, exec);
 }
 
 UString getFunctionName(FunctionImp* functionImp)
@@ -165,16 +150,6 @@ UString getFunctionName(FunctionImp* functionImp)
     UString URL = functionImp->body->sourceURL();
 
     return (name.isEmpty() ? "[anonymous function]" : name) + " " + URL + ": " + UString::from(lineNumber);
-}
-
-void Profiler::printDataInspectorStyle(unsigned whichProfile) const
-{
-    m_allProfiles[whichProfile]->printDataInspectorStyle();
-}
-
-void Profiler::printDataSampleStyle(unsigned whichProfile) const
-{
-    m_allProfiles[whichProfile]->printDataSampleStyle();
 }
 
 void Profiler::debugLog(UString message)

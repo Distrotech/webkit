@@ -142,7 +142,14 @@ static VisiblePosition visiblePositionForTextMarker(WebCoreTextMarker* textMarke
 
     VisiblePosition visiblePos = VisiblePosition(textMarkerData.node, textMarkerData.offset, textMarkerData.affinity);
     Position deepPos = visiblePos.deepEquivalent();
-    AXObjectCache* cache = deepPos.node()->renderer()->document()->axObjectCache();
+    if (deepPos.isNull())
+        return VisiblePosition();
+    
+    RenderObject* renderer = deepPos.node()->renderer();
+    if (!renderer)
+        return VisiblePosition();
+    
+    AXObjectCache* cache = renderer->document()->axObjectCache();
     if (!cache->isIDinUse(textMarkerData.axID))
         return VisiblePosition();
 
@@ -164,6 +171,9 @@ static VisiblePosition visiblePositionForEndOfTextMarkerRange(WebCoreTextMarkerR
 
 static WebCoreTextMarkerRange* textMarkerRangeFromMarkers(WebCoreTextMarker* textMarker1, WebCoreTextMarker* textMarker2)
 {
+    if (!textMarker1 || !textMarker2)
+        return nil;
+        
     return [[WebCoreViewFactory sharedFactory] textMarkerRangeWithStart:textMarker1 end:textMarker2];
 }
 
@@ -515,6 +525,7 @@ static WebCoreTextMarkerRange* textMarkerRangeFromVisiblePositions(VisiblePositi
     static NSArray* webAreaAttrs = nil;
     static NSArray* textAttrs = nil;
     static NSArray* listBoxAttrs = nil;
+    static NSArray* progressIndicatorAttrs = nil;
     NSMutableArray* tempArray;
     if (attributes == nil) {
         attributes = [[NSArray alloc] initWithObjects: NSAccessibilityRoleAttribute,
@@ -537,6 +548,7 @@ static WebCoreTextMarkerRange* textMarkerRangeFromVisiblePositions(VisiblePositi
                       @"AXVisited",
                       NSAccessibilityLinkedUIElementsAttribute,
                       NSAccessibilitySelectedAttribute,
+                      @"AXBlockQuoteLevel",
                       nil];
     }
     if (anchorAttrs == nil) {
@@ -572,6 +584,15 @@ static WebCoreTextMarkerRange* textMarkerRangeFromVisiblePositions(VisiblePositi
         listBoxAttrs = [[NSArray alloc] initWithArray:tempArray];
         [tempArray release];
     }
+    if (progressIndicatorAttrs == nil) {
+        tempArray = [[NSMutableArray alloc] initWithArray:attributes];
+        [tempArray addObject:NSAccessibilityTopLevelUIElementAttribute];
+        [tempArray addObject:NSAccessibilityValueAttribute];
+        [tempArray addObject:NSAccessibilityMinValueAttribute];
+        [tempArray addObject:NSAccessibilityMaxValueAttribute];
+        progressIndicatorAttrs = [[NSArray alloc] initWithArray:tempArray];
+        [tempArray release];
+    }
     
     if (m_object->isPasswordField())
         return attributes;
@@ -587,6 +608,9 @@ static WebCoreTextMarkerRange* textMarkerRangeFromVisiblePositions(VisiblePositi
 
     if (m_object->isListBox())
         return listBoxAttrs;
+
+    if (m_object->isProgressIndicator())
+        return progressIndicatorAttrs;
 
     return attributes;
 }
@@ -840,11 +864,17 @@ static NSString* roleValueToNSString(AccessibilityRole value)
         return convertToNSArray(m_object->children());
     }
     
-    if ([attributeName isEqualToString: NSAccessibilitySelectedChildrenAttribute] && m_object->isListBox())
-        return convertToNSArray(static_cast<AccessibilityListBox*>(m_object)->selectedChildren());
+    if ([attributeName isEqualToString: NSAccessibilitySelectedChildrenAttribute] && m_object->isListBox()) {
+        Vector<RefPtr<AccessibilityObject> > selectedChildrenCopy;
+        m_object->selectedChildren(selectedChildrenCopy);
+        return convertToNSArray(selectedChildrenCopy);
+    }
     
-    if ([attributeName isEqualToString: NSAccessibilityVisibleChildrenAttribute] && m_object->isListBox())
-        return convertToNSArray(static_cast<AccessibilityListBox*>(m_object)->visibleChildren());
+    if ([attributeName isEqualToString: NSAccessibilityVisibleChildrenAttribute] && m_object->isListBox()) {
+        Vector<RefPtr<AccessibilityObject> > visibleChildrenCopy;
+        m_object->visibleChildren(visibleChildrenCopy);
+        return convertToNSArray(visibleChildrenCopy);
+    }
     
     
     if (m_object->isWebArea()) {
@@ -918,11 +948,19 @@ static NSString* roleValueToNSString(AccessibilityRole value)
         if (m_object->isAttachment()) {
             if ([[[self attachmentView] accessibilityAttributeNames] containsObject:NSAccessibilityValueAttribute]) 
                 return [[self attachmentView] accessibilityAttributeValue:NSAccessibilityValueAttribute];
-        }    
+        }
+        if (m_object->isProgressIndicator())
+            return [NSNumber numberWithFloat:m_object->valueForRange()];
         if (m_object->hasIntValue())
             return [NSNumber numberWithInt:m_object->intValue()];
         return m_object->stringValue();
     }
+
+    if ([attributeName isEqualToString: NSAccessibilityMinValueAttribute])
+        return [NSNumber numberWithFloat:m_object->minValueForRange()];
+
+    if ([attributeName isEqualToString: NSAccessibilityMaxValueAttribute])
+        return [NSNumber numberWithFloat:m_object->maxValueForRange()];
 
     if ([attributeName isEqualToString: NSAccessibilityHelpAttribute])
         return m_object->helpText();
@@ -941,7 +979,8 @@ static NSString* roleValueToNSString(AccessibilityRole value)
     if ([attributeName isEqualToString: NSAccessibilityPositionAttribute])
         return [self position];
 
-    if ([attributeName isEqualToString: NSAccessibilityWindowAttribute]) {
+    if ([attributeName isEqualToString: NSAccessibilityWindowAttribute] ||
+        [attributeName isEqualToString: NSAccessibilityTopLevelUIElementAttribute]) {
         FrameView* fv = m_object->documentFrameView();
         if (fv)
             return [fv->getView() window];
@@ -963,6 +1002,9 @@ static NSString* roleValueToNSString(AccessibilityRole value)
             return textMarkerForVisiblePosition(startOfDocument(renderer->document()));
         if ([attributeName isEqualToString: @"AXEndTextMarker"])
             return textMarkerForVisiblePosition(endOfDocument(renderer->document()));
+
+        if ([attributeName isEqualToString: @"AXBlockQuoteLevel"])
+            return [NSNumber numberWithInt:blockquoteLevel(renderer)];
     }
     
     if ([attributeName isEqualToString: NSAccessibilityLinkedUIElementsAttribute]) {

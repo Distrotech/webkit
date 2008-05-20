@@ -674,7 +674,7 @@ JSValue* arrayProtoFuncIndexOf(ExecState* exec, JSObject* thisObj, const List& a
         JSValue* e = getProperty(exec, thisObj, index);
         if (!e)
             continue;
-        if (strictEqual(searchElement, e))
+        if (strictEqual(exec, searchElement, e))
             return jsNumber(index);
     }
 
@@ -703,7 +703,7 @@ JSValue* arrayProtoFuncLastIndexOf(ExecState* exec, JSObject* thisObj, const Lis
         JSValue* e = getProperty(exec, thisObj, index);
         if (!e)
             continue;
-        if (strictEqual(searchElement, e))
+        if (strictEqual(exec, searchElement, e))
             return jsNumber(index);
     }
 
@@ -722,9 +722,9 @@ ArrayObjectImp::ArrayObjectImp(ExecState* exec, FunctionPrototype* funcProto, Ar
     putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly|DontDelete|DontEnum);
 }
 
-ConstructType ArrayObjectImp::getConstructData(ConstructData&)
+bool ArrayObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.4.2

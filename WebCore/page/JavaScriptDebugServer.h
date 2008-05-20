@@ -33,11 +33,16 @@
 
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
+#include <wtf/RefPtr.h>
 
 namespace WebCore {
 
     class Frame;
+    class FrameView;
     class Page;
+    class PageGroup;
+    class PausedTimeouts;
+    class JavaScriptCallFrame;
     class JavaScriptDebugListener;
 
     class JavaScriptDebugServer : KJS::Debugger {
@@ -50,29 +55,60 @@ namespace WebCore {
         void addListener(JavaScriptDebugListener*, Page*);
         void removeListener(JavaScriptDebugListener*, Page*);
 
+        void addBreakpoint(int sourceID, unsigned lineNumber);
+        void removeBreakpoint(int sourceID, unsigned lineNumber);
+        bool hasBreakpoint(int sourceID, unsigned lineNumber) const;
+        void clearBreakpoints();
+
+        bool pauseOnExceptions() const { return m_pauseOnExceptions; }
+        void setPauseOnExceptions(bool);
+
+        void pauseOnNextStatement();
+        void resume();
+
+        void stepIntoStatement();
+        void stepOverStatement();
+        void stepOutOfFunction();
+
+        JavaScriptCallFrame* currentCallFrame();
+
         void pageCreated(Page*);
 
         typedef HashSet<JavaScriptDebugListener*> ListenerSet;
-        typedef void (JavaScriptDebugListener::*JavaScriptExecutionCallback)(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        typedef void (JavaScriptDebugListener::*JavaScriptExecutionCallback)();
 
     private:
         JavaScriptDebugServer();
         ~JavaScriptDebugServer();
 
         bool hasListeners() const { return !m_listeners.isEmpty() || !m_pageListenersMap.isEmpty(); }
+        bool hasListenersInterestedInPage(Page*);
 
-        void dispatchFunctionToListeners(JavaScriptExecutionCallback, const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        void setJavaScriptPaused(const PageGroup&, bool paused);
+        void setJavaScriptPaused(Page*, bool paused);
+        void setJavaScriptPaused(Frame*, bool paused);
+        void setJavaScriptPaused(FrameView*, bool paused);
 
-        virtual void sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::SourceProvider& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
-        virtual void callEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
-        virtual void atStatement(const KJS::DebuggerCallFrame&, int sourceID, int firstLine);
-        virtual void returnEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
-        virtual void exception(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        void dispatchFunctionToListeners(JavaScriptExecutionCallback, KJS::ExecState*);
+        void pauseIfNeeded(KJS::ExecState* exec, int sourceID, int lineNumber);
+
+        virtual bool sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::UString& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
+        virtual bool callEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function, const KJS::List& args);
+        virtual bool atStatement(KJS::ExecState*, int sourceID, int firstLine, int lastLine);
+        virtual bool returnEvent(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSObject* function);
+        virtual bool exception(KJS::ExecState*, int sourceID, int lineNumber, KJS::JSValue* exception);
 
         typedef HashMap<Page*, ListenerSet*> PageListenersMap;
         PageListenersMap m_pageListenersMap;
         ListenerSet m_listeners;
         bool m_callingListeners;
+        bool m_pauseOnExceptions;
+        bool m_pauseOnNextStatement;
+        bool m_paused;
+        KJS::ExecState* m_pauseOnExecState;
+        RefPtr<JavaScriptCallFrame> m_currentCallFrame;
+        HashMap<RefPtr<Frame>, PausedTimeouts*> m_pausedTimeouts;
+        HashMap<int, HashSet<unsigned>*> m_breakpoints;
     };
 
 } // namespace WebCore

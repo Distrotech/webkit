@@ -442,6 +442,7 @@ HTMLTokenizer::State HTMLTokenizer::scriptHandler(State state)
     processToken();
 
     state.setInScript(false);
+    scriptCodeSize = scriptCodeResync = 0;
     
     // FIXME: The script should be syntax highlighted.
     if (inViewSourceMode())
@@ -450,7 +451,6 @@ HTMLTokenizer::State HTMLTokenizer::scriptHandler(State state)
     SegmentedString *savedPrependingSrc = currentPrependingSrc;
     SegmentedString prependingSrc;
     currentPrependingSrc = &prependingSrc;
-    scriptCodeSize = scriptCodeResync = 0;
 
     if (!parser->skipMode() && !followingFrameset) {
         if (cs) {
@@ -1355,7 +1355,8 @@ HTMLTokenizer::State HTMLTokenizer::parseTag(SegmentedString &src, State state)
                         while (dest > buffer + 1 && (dest[-1] == '\n' || dest[-1] == '\r'))
                             dest--; // remove trailing newlines
                         AtomicString v(buffer + 1, dest - buffer - 1);
-                        attrName = v; // Just make the name/value match. (FIXME: Is this some WinIE quirk?)
+                        if (!v.contains('/'))
+                            attrName = v; // Just make the name/value match. (FIXME: Is this some WinIE quirk?)
                         currToken.addAttribute(m_doc, attrName, v, inViewSourceMode());
                         if (inViewSourceMode())
                             currToken.addViewSourceChar('x');
@@ -1376,7 +1377,7 @@ HTMLTokenizer::State HTMLTokenizer::parseTag(SegmentedString &src, State state)
                         while (dest > buffer + 1 && (dest[-1] == '\n' || dest[-1] == '\r'))
                             dest--; // remove trailing newlines
                         AtomicString v(buffer + 1, dest - buffer - 1);
-                        if (attrName.isEmpty()) {
+                        if (attrName.isEmpty() && !v.contains('/')) {
                             attrName = v; // Make the name match the value. (FIXME: Is this a WinIE quirk?)
                             if (inViewSourceMode())
                                 currToken.addViewSourceChar('x');
@@ -1477,14 +1478,15 @@ HTMLTokenizer::State HTMLTokenizer::parseTag(SegmentedString &src, State state)
 
             RefPtr<Node> n = processToken();
             m_cBufferPos = cBufferPos;
-            if (n) {
+            if (n || inViewSourceMode()) {
                 if ((tagName == preTag || tagName == listingTag) && !inViewSourceMode()) {
                     if (beginTag)
                         state.setDiscardLF(true); // Discard the first LF after we open a pre.
-                } else if (tagName == scriptTag && n) {
+                } else if (tagName == scriptTag) {
                     ASSERT(!scriptNode);
                     scriptNode = n;
-                    scriptSrcCharset = static_cast<HTMLScriptElement*>(n.get())->scriptCharset();
+                    if (n)
+                        scriptSrcCharset = static_cast<HTMLScriptElement*>(n.get())->scriptCharset();
                     if (beginTag) {
                         searchStopper = scriptEnd;
                         searchStopperLen = 8;
@@ -1952,11 +1954,9 @@ void HTMLTokenizer::notifyFinished(CachedResource*)
 
     ASSERT(!pendingScripts.isEmpty());
 
-    // Make scripts loaded from file URLs wait for stylesheets to match Tiger behavior where
-    // file loads were serialized in lower level.
-    // FIXME: this should really be done for all script loads or the same effect should be achieved by other
-    // means, like javascript suspend/resume
-    m_hasScriptsWaitingForStylesheets = !m_doc->haveStylesheetsLoaded() && protocolIs(pendingScripts.head()->url(), "file");
+    // Make external scripts wait for external stylesheets.
+    // FIXME: This needs to be done for inline scripts too.
+    m_hasScriptsWaitingForStylesheets = !m_doc->haveStylesheetsLoaded();
     if (m_hasScriptsWaitingForStylesheets)
         return;
 

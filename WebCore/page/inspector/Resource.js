@@ -230,6 +230,7 @@ WebInspector.Resource.prototype = {
         if (x) {
             this._checkTips();
             this._checkWarnings();
+            this.dispatchEventToListeners("finished");
         }
     },
 
@@ -389,6 +390,48 @@ WebInspector.Resource.prototype = {
         return this._sortedResponseHeaders;
     },
 
+    get scripts()
+    {
+        if (!("_scripts" in this))
+            this._scripts = [];
+        return this._scripts;
+    },
+
+    addScript: function(script)
+    {
+        if (!script)
+            return;
+        this.scripts.unshift(script);
+        script.resource = this;
+    },
+
+    removeAllScripts: function()
+    {
+        if (!this._scripts)
+            return;
+
+        for (var i = 0; i < this._scripts.length; ++i) {
+            if (this._scripts[i].resource === this)
+                delete this._scripts[i].resource;
+        }
+
+        delete this._scripts;
+    },
+
+    removeScript: function(script)
+    {
+        if (!script)
+            return;
+
+        if (script.resource === this)
+            delete script.resource;
+
+        if (!this._scripts)
+            return;
+
+        this._scripts.remove(script);
+    },
+
     get errors()
     {
         if (!("_errors" in this))
@@ -400,6 +443,10 @@ WebInspector.Resource.prototype = {
     {
         if (this._errors === x)
             return;
+
+        var difference = x - this._errors;
+        WebInspector.errors += difference;
+
         this._errors = x;
     },
 
@@ -414,6 +461,10 @@ WebInspector.Resource.prototype = {
     {
         if (this._warnings === x)
             return;
+
+        var difference = x - this._warnings;
+        WebInspector.warnings += difference;
+
         this._warnings = x;
     },
 
@@ -505,6 +556,8 @@ WebInspector.Resource.prototype = {
             WebInspector.console.addMessage(msg);
     }
 }
+
+WebInspector.Resource.prototype.__proto__ = WebInspector.Object.prototype;
 
 WebInspector.Resource.CompareByTime = function(a, b)
 {

@@ -1,151 +1,2383 @@
-2008-05-17  Geoffrey Garen  <ggaren@apple.com>
+2008-05-19  Kuchhal  <kuchal@yahoo.com>
 
-        Reviewed by Oliver Hunt.
+        Reviewed by Justin.
 
-        Updated for API changes in KJS::Debugger.
+        <rdar://problem/5863412> Crash when Ctrl C is pressed after a series of specific mouse events (18506)
 
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+        * editing/markup.cpp:
+        (WebCore::createMarkup): Null check.
 
-        Reviewed by Oliver Hunt.
+2008-05-19  Chris Fleizach  <cfleizach@apple.com>
 
-        Updated for API changes in KJS::Debugger.
+        Reviewed by Beth Dakin.
 
-        * page/JavaScriptDebugServer.cpp:
-        (WebCore::JavaScriptDebugServer::callEvent):
-        (WebCore::JavaScriptDebugServer::atStatement):
-        (WebCore::JavaScriptDebugServer::returnEvent):
-        (WebCore::JavaScriptDebugServer::exception):
-        * page/JavaScriptDebugServer.h:
+        <rdar://problem/5912195> CrashTracer: [USER] 1 crash in Mail at -[AccessibilityObjectWrapper accessibilityAttributeValue:forParameter:]
 
-2008-05-13  Geoffrey Garen  <ggaren@apple.com>
+        * page/mac/AccessibilityObjectWrapper.mm:
+        (visiblePositionForTextMarker):
 
-        Reviewed by Oliver Hunt.
+2008-05-19  Ada Chan  <adachan@apple.com>
+
+        Added CookieStorageWin.h/cpp, introducing methods to get/set the current CFHTTPCookieStorageRef.
+        When setting cookies-related attributes in CFURLRequest, make sure we get them from the
+        current CFHTTPCookieStorageRef.  Also, set the cookie storage in CFURLRequest.
+
+        Reviewed by Steve Falkenburg.
+
+        * WebCore.vcproj/WebCore.vcproj:
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::makeFinalRequest):
+        * platform/network/cf/ResourceRequestCFNet.cpp:
+        (WebCore::ResourceRequest::doUpdatePlatformRequest):
+        * platform/network/win/CookieJarCFNetWin.cpp:
+        (WebCore::setCookies):
+        (WebCore::cookies):
+        (WebCore::cookiesEnabled):
+        * platform/network/win/CookieStorageWin.cpp: Added.
+        (WebCore::currentCookieStorage):
+        (WebCore::setCurrentCookieStorage):
+        * platform/network/win/CookieStorageWin.h: Added.
+
+2008-05-19  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        http://bugs.webkit.org/show_bug.cgi?id=18308
+        SVG Encoding error with fill attribute
+
+        This is caused by problems with data: URL loading. Besides what is fixed by this patch,
+        I filed <rdar://problem/5845875> for CFNetwork.
+
+        While at it, fixed a related javascript: URL issue.
+
+        Tests: fast/loader/data-url-encoding-html.html
+               fast/loader/data-url-encoding-svg.html
+               fast/loader/javascript-url-encoding.html
+
+        * platform/KURL.cpp:
+        (WebCore::KURL::parse): Fix a FIXME, use UTF-8 instead of dropping high bytes. This fixes
+        javascript: URL handling.
+        (WebCore::encodeRelativeString): Like mailto: URLs, data: ones are all UTF-8. Restructured
+        the code to not search for "#" if both parts are to be encoded as UTF-8 anyway.
+
+2008-05-19  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18421
+        <rdar://problem/5857369> XMLHttpRequest does not properly encode & and < in outgoing messages
+
+        Test: http/tests/xmlhttprequest/serialize-document.html
+
+        * bindings/js/JSXMLHttpRequestCustom.cpp:
+        (WebCore::JSXMLHttpRequest::send): Use createMarkup() instead of Document::toString().
+
+        * dom/Attr.cpp:
+        * dom/Attr.h:
+        * dom/Document.cpp:
+        * dom/Document.h:
+        * dom/DocumentFragment.cpp:
+        * dom/DocumentFragment.h:
+        * dom/Element.cpp:
+        * dom/Element.h:
+        * dom/Entity.cpp:
+        * dom/Entity.h:
+        * dom/EntityReference.cpp:
+        * dom/EntityReference.h:
+        * dom/Node.h:
+        * dom/Text.cpp:
+        * dom/Text.h:
+        * html/HTMLElement.cpp:
+        * html/HTMLElement.h:
+        Removed most Node::toString() methods, which were massively wrong, and only used for
+        XMLHttpRequest::send(). The remanining ones are still used in markup.cpp, but should probably
+        be folded into it for consistency.
+
+2008-05-19  Anders Carlsson  <andersca@apple.com>
+
+        Fix Windows build.
         
-        Updated JavaScriptDebugServer API to accept a SourceProvider instead
-        of a UString, to avoid copying.
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginView::userAgentStatic):
+        (WebCore::PluginView::getValueStatic):
+        (WebCore::PluginView::getValue):
 
-        * page/JavaScriptDebugServer.cpp:
-        (WebCore::JavaScriptDebugServer::sourceParsed): Updated this function
-        not to return a value.
+2008-05-19  Chris Fleizach  <cfleizach@apple.com>
 
-2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+        Reviewed by Darin Adler.
 
-        Build fix.
+        <rdar://problem/5935694> AX: crash in text marker range
+
+        * page/mac/AccessibilityObjectWrapper.mm:
+        (textMarkerRangeFromMarkers):
+
+2008-05-19  Darin Adler  <darin@apple.com>
+
+        - fix WebKit build
+
+        * WebCore.xcodeproj/project.pbxproj: Make CSSReflectionDirection.h "private" instead of "project".
+
+2008-05-19  chris fleizach  <cfleizach@apple.com>
+
+        Reviewed by Darin Adler
+
+        <rdar://problem/5700830> VO: VoiceOver should fall back to title attr if form element is not labeled
+
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::title):
+
+2008-05-19  Darin Adler  <darin@apple.com>
+
+        Reviewed by Mitz.
+
+        - tweak CSSReflectValue, possibly fixing the leaks seen on the buildbot
+
+        * WebCore.vcproj/WebCore.vcproj: Added CSSReflectionDirection.h. 
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * css/CSSReflectionDirection.h: Added.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::valueForReflection): Changed to use CSSReflectValue::create.
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseReflect): Ditto.
+
+        * css/CSSReflectValue.h: Added a create function. Got rid of the setter
+        functions, which had const PassRefPtr& arguments -- those probably caused
+        the leaks although I'm not exactly sure why. Made the contructor and all
+        the data members private.
+
+        * rendering/style/RenderStyle.h: Changed to include CSSReflectionDirection.h
+        instead of CSSReflectValue.h so we can tweak CSSReflectValue without
+        recompiling the world.
+
+2008-05-19  Holger Hans Peter Freyther  <zecke@selfish.org>
+
+        Rubber Stamped by Simon.
+
+        Enforce the WebKit Coding Style.
+
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::load):
+        (WebCore::PluginView::setValue):
+        * plugins/gtk/PluginViewGtk.cpp:
+        (WebCore::PluginView::setFocus):
+        (WebCore::PluginView::show):
+        (WebCore::PluginView::hide):
+        (WebCore::PluginView::attachToWindow):
+        (WebCore::PluginView::detachFromWindow):
+        (WebCore::PluginView::getValueStatic):
+        (WebCore::PluginView::getValue):
+        * plugins/qt/PluginViewQt.cpp:
+        (WebCore::PluginView::updateWindow):
+        (WebCore::PluginView::detachFromWindow):
+        (WebCore::PluginView::handlePostReadFile):
+        (WebCore::PluginView::getValueStatic):
+        (WebCore::PluginView::getValue):
+
+2008-05-14  Marc Ordinas i Llopis  <marc.ordinasillopis@collabora.co.uk>
+
+        Reviewed by Holger.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18882
+        https://bugs.webkit.org/show_bug.cgi?id=18892
+        Based also on work by Chris Lord.
         
-        - add missing forwarding header
+        Provides support for NPAPI plugins that pass NULL as their instance
+        info. There are two kinds:
+        - Some call NPN_UserAgent and NPN_GetValue before a PluginView has
+        been created. For those we provide static versions of those functions.
+        - Others call NPN_* functions with a NULL instance inside NPP_*
+        calls, for those we've added extra currentPluginView guards.
 
-        * ForwardingHeaders/kjs/SourceProvider.h: Added.
+        * plugins/PluginView.cpp: Add additional currentPluginView guards and
+        some small style changes.
+        (WebCore::PluginView::start):
+        (WebCore::PluginView::performRequest):
+        (WebCore::PluginView::bindingInstance):
+        (WebCore::PluginView::handlePost):
+        * plugins/PluginView.h: Added static versions of NPN_UserAgent and
+        NPN_GetValue.
+        * plugins/gtk/PluginViewGtk.cpp: Add additional currentPluginView
+        guards and some small style changes.
+        (WebCore::PluginView::setNPWindowRect):
+        (WebCore::PluginView::stop):
+        (WebCore::PluginView::userAgentStatic): Added to deal with plugins
+        that query this before having a PluginView.
+        (WebCore::PluginView::getValueStatic): Added to deal with plugins
+        that call this before we have created a PluginView.
+        (WebCore::PluginView::getValue): Moved some code to getValueStatic.
+        (WebCore::PluginView::init):
+        * plugins/npapi.cpp: Call PluginView::userAgentStatic
+        and PluginView::getValueStatic if no PluginView is
+        present.
+        (NPN_UserAgent):
+        (NPN_GetValue):
+        * plugins/qt/PluginPackageQt.cpp:
+        (WebCore::PluginPackage::fetchInfo): Corrected split args because ignoring
+        empty entries crashed.
+        (WebCore::PluginPackage::load): Resolve all symbols when loading plugins
+        to protect against XPCOM dependencies.
+        * plugins/qt/PluginViewQt.cpp: Add additional currentPluginView guards and
+        some small style changes.
+        (WebCore::PluginView::updateWindow):
+        (WebCore::PluginView::setNPWindowRect):
+        (WebCore::PluginView::stop):
+        (WebCore::PluginView::userAgentStatic): Added to deal with plugins
+        that query this before having a PluginView.
+        (WebCore::PluginView::handlePostReadFile):
+        (WebCore::PluginView::getValueStatic): Added to deal with plugins
+        that call this before we have created a PluginView.
+        (WebCore::PluginView::getValue): Moved some code to getValueStatic.
+        (WebCore::PluginView::init): m_needsXEmbed init was moved to constructor.
 
-2008-05-10  Maciej Stachowiak  <mjs@apple.com>
+2008-05-19  Alp Toker  <alp@nuanti.com>
 
-        Reviewed by Oliver.
+        GTK+ build fix on Mac. Conditionalize XP_UNIX use.
 
-        - JavaScriptGlue part of fix for: "SQUIRRELFISH: function toString broken after calling"
-        https://bugs.webkit.org/show_bug.cgi?id=18869
+        * plugins/gtk/PluginPackageGtk.cpp:
+        (WebCore::PluginPackage::fetchInfo):
+        (WebCore::PluginPackage::load):
+        * plugins/gtk/PluginViewGtk.cpp:
 
-        * bindings/js/StringSourceProvider.h: Added. SourceProvider subclass backed by a WebCore::String.
-        (WebCore::StringSourceProvider::create):
-        (WebCore::StringSourceProvider::getRange):
-        (WebCore::StringSourceProvider::data):
-        (WebCore::StringSourceProvider::length):
-        (WebCore::StringSourceProvider::StringSourceProvider):
-        * bindings/js/kjs_proxy.cpp:
-        (WebCore::KJSProxy::evaluate): Pass a StringSourceProvider to
-        evaluate() instead of UChar* / length.
-        * html/HTMLScriptElement.cpp:
-        (WebCore::HTMLScriptElement::text): Modified to return the
-        original string as-is when the script element contains only a
-        single text node, to avoid excess memory use.
+2008-05-18  Chris Fleizach  <cfleizach@apple.com>
+
+        Reviewed by Darin Adler
+
+        <rdar://problem/5942076> WebKit can no longer find URL links with VoiceOVer-U command (19100)
+
+        * page/AccessibilityObject.h:
+
+2008-05-18  Darin Adler  <darin@apple.com>
+
+        Reviewed by Sam.
+
+        - fix <rdar://problem/5943569> crash due to stale ownerNode pointer
+
+        Test: fast/dom/StyleSheet/ownerNode-lifetime.html
+
+        * bindings/js/JSStyleSheetCustom.cpp:
+        (WebCore::JSStyleSheet::mark): Added code to mark ownerNode. Includes a comment about how
+        it would be even better to solve this in the DOM rather than just in the JavaScript binding.
+
+        * css/StyleSheet.idl: Added CustomMarkFunction attribute.
+
+2008-05-18  Brady Eidson  <beidson@apple.com>
+
+        Reviewed by Sam Weinig
+
+        Fix for https://bugs.webkit.org/show_bug.cgi?id=19111
+        Allow `delete storage.itemName` syntax as an alias for `storage.removeItem("itemName")`
+
+        Tests: storage/domstorage/localstorage/delete-removal.html
+               storage/domstorage/sessionstorage/delete-removal.html
+
+        * bindings/js/JSStorageCustom.cpp:
+        (WebCore::JSStorage::deleteProperty): Only do the delete for non-built in properties
+        * storage/Storage.idl:
+
+2008-05-17  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        Re-factor core setRequestHeader logic into setRequestHeaderInternal.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::sameOriginRequest):
+        (WebCore::XMLHttpRequest::setRequestHeader):
+        (WebCore::XMLHttpRequest::setRequestHeaderInternal):
+        * xml/XMLHttpRequest.h:
+
+2008-05-17  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Mark Rowe.
+
+        Differentiate between cancelation errors and generic network error in XHR.
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::requestFromDelegate):
+        (WebCore::FrameLoader::cancelledError):
+        * platform/network/ResourceErrorBase.h:
+        (WebCore::ResourceErrorBase::setIsCancelation):
+        (WebCore::ResourceErrorBase::isCancelation):
+        (WebCore::ResourceErrorBase::ResourceErrorBase):
+        Add state that differentiates between errors created by cancelation and those made
+        by all other generic network errors as this differentiation is needed by some specs.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::open):
+        (WebCore::XMLHttpRequest::loadRequestSynchronously):
+        (WebCore::XMLHttpRequest::clearResponseEntityBody):
+        (WebCore::XMLHttpRequest::genericError):
+        (WebCore::XMLHttpRequest::networkError):
+        (WebCore::XMLHttpRequest::abortError):
+        (WebCore::XMLHttpRequest::didFail):
+        * xml/XMLHttpRequest.h:
+        * xml/XMLHttpRequestException.h:
+        (WebCore::XMLHttpRequestException::):
+        * xml/XMLHttpRequestException.idl:
+        Add ABORT_ERR. This error cannot be raised with the current WebKit architecture
+        as it requires the ability to cancel a synchronous XHR, which we cannot currently
+        do.  It may be possible in the future though.
+
+2008-05-17  Mark Rowe  <mrowe@apple.com>
+
+        Reviewed by Sam Weinig.
+
+        Including wtf/Platform.h or using any of the macros it defines in headers that may be
+        included from outside of the WebKit project causes any project using those headers to
+        fail to build.
+
+        * page/mac/WebDashboardRegion.h:
+
+2008-05-17  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Brady Eidson.
+
+        Re-factor send() logic a little to make adding cross-site requests easier.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::send):
+        (WebCore::XMLHttpRequest::sameOriginRequest):
+        (WebCore::XMLHttpRequest::loadRequestSynchronously):
+        (WebCore::XMLHttpRequest::loadRequestAsynchronously):
+        * xml/XMLHttpRequest.h:
+
+2008-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        Copy appcache headers.
         
-        * WebCore.vcproj/WebCore.vcproj: Add new file to build.
-        * WebCore.xcodeproj/project.pbxproj: ditto
+        * WebCore.vcproj/WebCore.vcproj:
 
-2008-05-09  Oliver Hunt  <oliver@apple.com>
+2008-05-16  Antti Koivisto  <antti@apple.com>
 
-        Reviewed by Geoff.
-
-        Build fixes for SquirrelFish on windows.
-
-        * bindings/js/JSNavigatorCustom.cpp:
-
-2008-05-08  Geoffrey Garen  <ggaren@apple.com>
-
-        Reviewed by Oliver Hunt.
-
-        Fixed platform/mac/plugins/bindings-test-objc.html.
+        Reviewed by Anders.
         
-        I've restored -[WebScriptObject setException] and
-        +[WebScriptObject throwException].
+        Fix <rdar://problem/5934400> 
+        Movie controller does not update on first load of http://www.apple.com/getamac/ads/
         
-        Instead of mucking around in the JavaScript engine's execution state,
-        throwing an exception sets a global exception string, along with the
-        environment in which to throw it. An ObjC callback checks the global
-        exception string and, if it's non-nil and the environment matches the
-        current exceution environment, throws the global exception string as a
-        JS exception.
+        The issue is that we execute scripts while there are still pending stylesheet loads.
+        If the script depends on a stylesheet having been applied it may fail.
+        
+        This will make external script execution block on external stylesheet loads. A full
+        fix (as discussed with Hyatt) will also need to block inline script execution.
 
-        I also removed the old currentGlobalObject infrastructure: it's no longer
-        used.
+        Test: http/tests/local/stylesheet-and-script-load-order-http.html
 
-2008-05-06  Oliver Hunt  <oliver@apple.com>
+        * html/HTMLTokenizer.cpp:
+        (WebCore::HTMLTokenizer::notifyFinished):
+
+2008-05-16  chris fleizach  <cfleizach@apple.com>
+
+        Reviewed by Jon Honeycutt
+
+        <rdar://problem/5582483> Mail compose area needs to allow AXValue to be settable
+
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::isReadOnly):
+        (WebCore::AccessibilityRenderObject::canSetValueAttribute):
+
+2008-05-16  Stephanie Lewis  <slewis@apple.com>
 
         Reviewed by Maciej.
 
-        Bug 18866: SQUIRRELFISH: JS/ObjC bridge is broken <https://bugs.webkit.org/show_bug.cgi?id=18866>
-        Bug 18867: SQUIRRELFISH: JS/NPRuntime bridge is broken <https://bugs.webkit.org/show_bug.cgi?id=18867>
+        track onbeforeunlaod event counts. Pretty much identical to unload event tracking.
+        Also rename methods from onunload tracking to be more clear.
 
-        This fixes function binding logic for the ObjC and NPRuntime by
-        replacing incorrect implementations of implementsCall (which is
-        no longer virtual) with implementations of getCallData.
+        increment/decrement event counts when onunload and onbeforeunload events are added/removed
+        * dom/Document.cpp:
+        (WebCore::Document::removeHTMLWindowEventListener):
+        (WebCore::Document::addWindowEventListener):
+        (WebCore::Document::removeWindowEventListener):
+        (WebCore::Document::addPendingFrameUnloadEventCount):
+        (WebCore::Document::removePendingFrameUnloadEventCount):
+        (WebCore::Document::addPendingFrameBeforeUnloadEventCount):
+        (WebCore::Document::removePendingFrameBeforeUnloadEventCount):
+        * dom/Document.h:
+        
+        clear onunload count after unload events are dispatched
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
 
-        * bindings/js/JSQuarantinedObjectWrapper.cpp:
-        (WebCore::JSQuarantinedObjectWrapper::getCallData):
-        * bindings/js/JSQuarantinedObjectWrapper.h:
-        * bridge/c/c_instance.cpp:
-        * bridge/c/c_instance.h:
-        * bridge/objc/objc_instance.h:
-        * bridge/objc/objc_instance.mm:
-        * bridge/objc/objc_runtime.h:
-        * bridge/objc/objc_runtime.mm:
-        (ObjcFallbackObjectImp::getCallData):
-        * bridge/runtime.h:
-        * bridge/runtime_object.cpp:
-        (RuntimeObjectImp::getCallData):
-        * bridge/runtime_object.h:
+        track onunload and onbeforeunload event counts for each frame
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::EventHandler):
+        (WebCore::EventHandler::addPendingFrameUnloadEventCount):
+        (WebCore::EventHandler::removePendingFrameUnloadEventCount):
+        (WebCore::EventHandler::clearPendingFrameUnloadEventCount):
+        (WebCore::EventHandler::pendingFrameBeforeUnloadEventCount):
+        (WebCore::EventHandler::addPendingFrameBeforeUnloadEventCount):
+        (WebCore::EventHandler::removePendingFrameBeforeUnloadEventCount):
+        (WebCore::EventHandler::clearPendingFrameBeforeUnloadEventCount):
+        * page/EventHandler.h:
+        
+        clear unbeforeunload count after unbeforeunload events are detached
+        * page/Frame.cpp:
+        (WebCore::Frame::shouldClose):
 
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+        track total event count at page level
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        (WebCore::Page::changePendingUnloadEventCount):
+        (WebCore::Page::pendingBeforeUnloadEventCount):
+        (WebCore::Page::changePendingBeforeUnloadEventCount):
+        * page/Page.h:
 
-        Build fix: supply a parameter that used to be implicit to
-        Interpreter::evaluate.
+2008-05-16  Anders Carlsson  <andersca@apple.com>
 
-2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+        Reviewed by Mitz.
 
-        Build fix: #ifdef'd out some code that doesn't work anymore.
+        <rdar://problem/5787788>
+        REGRESSION: fast/loader/xmlhttprequest-missing-file-exception.html fails on Windows.
+        
+        Replicate the Mac behavior when a sync load fails.
+        
+        * platform/network/cf/ResourceHandleCFNet.cpp:
+        (WebCore::ResourceHandle::loadResourceSynchronously):
 
-        * bindings/objc/WebScriptObject.mm:
-        (+[WebScriptObject throwException:]):
-        (-[WebScriptObject setException:]):
+2008-05-16  Anders Carlsson  <andersca@apple.com>
 
-2008-04-14  Gabor Loki  <loki@inf.u-szeged.hu>
+        Reviewed by Brady.
 
-        Reviewed by Geoffrey Garen.
+        Parse and set the headers on the response.
 
-        Bug 18489: Squirrelfish doesn't build on linux
-        <https://bugs.webkit.org/show_bug.cgi?id=18489>
+        * loader/appcache/ApplicationCacheStorage.cpp:
+        (WebCore::ApplicationCacheStorage::store):
+        (WebCore::parseHeader):
+        (WebCore::parseHeaders):
+        (WebCore::ApplicationCacheStorage::loadCache):
 
-        * WebCore.pro: Add JavaScriptCore/VM into include path
+2008-05-16  Timothy Hatcher  <timothy@apple.com>
 
-2008-04-10  Sam Weinig  <sam@webkit.org>
+        Adds the "this" object to the Local scope section of the
+        Scope Variables pane.
 
-        Reviewed by Geoffrey Garen.
-
-        Adjusted WebCore JS functions to the new "getConstructData" calling convention.
-
-2008-03-30  Geoffrey Garen  <ggaren@apple.com>
+        <rdar://problem/5774773> Web Inspector doesn't show the "this"
+        object in its variables list (10438)
 
         Reviewed by Oliver Hunt.
+
+        * bindings/js/JSJavaScriptCallFrameCustom.cpp:
+        (WebCore::JSJavaScriptCallFrame::thisObject): Returns the thisObject
+        of the JavaScriptCallFrame impl. Returns jsNull if the impl is invalid.
+        * page/JavaScriptCallFrame.cpp:
+        (WebCore::JavaScriptCallFrame::thisObject): Return the thisValue from
+        the ExecState. Return 0 if m_exec is null.
+        * page/JavaScriptCallFrame.h:
+        * page/JavaScriptCallFrame.idl: Add thisObject.
+        * page/inspector/ObjectPropertiesSection.js:
+        (WebInspector.ObjectPropertiesSection): Adds two new arguments.
+        The ignoreHasOwnProperty tells the section to show all properties,
+        including inherited ones. And extraProperties is an object of
+        additional properties to show.
+        (WebInspector.ObjectPropertiesSection.prototype): Honor the
+        extraProperties and ignoreHasOwnProperty properties.
+        * page/inspector/ScopeChainSidebarPane.js:
+        (WebInspector.ScopeChainSidebarPane.prototype.update): Add a this
+        property to an extra object that is passed to the ObjectPropertiesSection.
+        Also pass true for ignoreHasOwnProperty since we want to show all properties.
+
+2008-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        Add mimeType and textEncodingName to the resource table.
         
-        Adjusted WebCore JS functions to the new "getCallData" calling convention.
+        * loader/appcache/ApplicationCacheStorage.cpp:
+        (WebCore::ApplicationCacheStorage::openDatabase):
+        (WebCore::ApplicationCacheStorage::store):
+        (WebCore::ApplicationCacheStorage::loadCache):
+
+2008-05-16  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Tim.
+
+        <rdar://problem/5770054> JavaScript profiler (10928)
+        Use a Vector instead of a Deque since we don't use the extra capabilities
+        of the Deque.
+
+        * page/JavaScriptProfileNode.cpp:
+        (WebCore::getChildren):
+        (WebCore::toJS):
+
+2008-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        Add a version table to the database.
+
+        * loader/appcache/ApplicationCacheStorage.cpp:
+        (WebCore::ApplicationCacheStorage::verifySchemaVersion):
+        (WebCore::ApplicationCacheStorage::openDatabase):
+        * loader/appcache/ApplicationCacheStorage.h:
+
+2008-05-16  Timothy Hatcher  <timothy@apple.com>
+
+        Adds the ability to evaluate expressions in the local scope
+        of the selected call frame.
+
+        https://bugs.webkit.org/show_bug.cgi?id=19052
+
+        Reviewed by Geoff Garen.
+
+        * bindings/js/JSJavaScriptCallFrameCustom.cpp:
+        (WebCore::JSJavaScriptCallFrame::evaluate): Pass the exception
+        from evaluate to the calling ExecState.
+        * page/JavaScriptCallFrame.cpp:
+        (WebCore::JavaScriptCallFrame::evaluate): Added an exception out
+        argument. Simplified the code by calling KJS:eval directly.
+        * page/JavaScriptCallFrame.h: Change evalutate to take an exception
+        out argument.
+        * page/inspector/Console.js: Check if the debugger is paused and
+        call evaluateInSelectedCallFrame on the Scripts panel.
+        * page/inspector/ScriptsPanel.js: Added a paused getter and
+        evaluateInSelectedCallFrame which does the evaluation and updates
+        the scope variables pane afterwards.
+
+2008-05-16  Timothy Hatcher  <timothy@apple.com>
+
+        Fixed the bug where the Inspector node highlight would not show
+        in the correct place for nodes in frames.
+
+        <rdar://problem/5712834> Elements in iframes are highlighted incorrectly (14408)
+
+        Reviewed by John Sullivan.
+
+        * page/InspectorController.cpp:
+        (WebCore::convertFromFrameToMainFrame): Helper function to convert
+        IntRect coordinates from one frame to the main frame.
+        (WebCore::InspectorController::drawNodeHighlight): Call the
+        convertFromFrameToMainFrame helper for all the rects we get from
+        the node since they are in the owner frame's coordinate space.
+
+2008-05-16  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Preparatory work for bug 9191: JS*ElementWrapperFactory should be autogenerated
+
+        Make video tags use a header guard so that make_names.pl for factory generation.
+
+        - Add video tag guard in HTMLTagNames.in & give an extraDefines parameter to make_names.pl
+        when generating HTMLNames.
+
+        - Modify the different build systems to accomodate the new parameter.
+
+        - Small make_names.pl clean up (mainly code generated coding style issue).
+
+        * DerivedSources.make: Add HTML_FLAGS and pass it to make_names.pl
+        if it is defined (similar to SVG) 
+
+        * GNUmakefile.am: Add HTML_FEATURES & HTML_FLAGS and pass it to
+        make_names.pl if HTML_FLAGS is defined.
+
+        * WebCore.pro: Pass $${DEFINES} to make_names.pl.
+
+        * dom/make_names.pl: 
+        * html/HTMLElement.cpp:
+        (WebCore::inlineTagList): Add ENABLE(VIDEO) guard.
+        * html/HTMLTagNames.in: Ditto.
+
+2008-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        Fire progress events.
+        
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::startLoadingEntry):
+
+2008-05-16  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by John.
+
+        Handle the case where the main resource load is cancelled while the cache attempt is in progress.
+        
+        * loader/DocumentLoader.cpp:
+        (WebCore::DocumentLoader::mainReceivedError):
+        Tell the group that the main resource failed to load.
+        
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::failedLoadingMainResource):
+        Call cacheUpdateFailed.
+        
+        (WebCore::ApplicationCacheGroup::cacheUpdateFailed):
+        Stop loading if the update failed.
+        
+        * loader/appcache/ApplicationCacheGroup.h:
+
+2008-05-16  Chris Fleizach  <cfleizach@apple.com>
+
+        Reviewed by Alice Liu
+
+        <rdar://problem/5710317> REGRESSION:Selecting ranges of text should be possible using the keyboard (15310)
+
+        * WebCore.base.exp:
+        * editing/VisiblePosition.cpp:
+        (WebCore::VisiblePosition::leftVisuallyDistinctCandidate):
+        (WebCore::VisiblePosition::rightVisuallyDistinctCandidate):
+        * page/AXObjectCache.cpp:
+        * page/AXObjectCache.h:
+        (WebCore::AXObjectCache::enableEnhancedUserInterfaceAccessibility):
+        (WebCore::AXObjectCache::accessibilityEnabled):
+        (WebCore::AXObjectCache::accessibilityEnhancedUserInterfaceEnabled):
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::visiblePositionRange):
+        (WebCore::AccessibilityRenderObject::doSetAXSelectedTextMarkerRange):
+        (WebCore::AccessibilityRenderObject::addChildren):
+        (WebCore::AccessibilityRenderObject::actionVerb):
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::handleKeyboardSelectionMovement):
+        (WebCore::EventHandler::defaultKeyboardEventHandler):
+        * page/EventHandler.h:
+
+2008-05-15  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        Since WebKitGtk is fully using autotools now, clean-up the .pro/.pri files
+        from gtk-port.
+
+        * WebCore.pro:
+
+2008-05-16  Simon Hausmann  <hausmann@webkit.org>
+
+        Fix the Gtk build.
+
+        * GNUmakefile.am: Added rendering/style to the include paths.
+
+2008-05-16  Simon Hausmann  <hausmann@webkit.org>
+
+        Fix the Qt build.
+
+        * WebCore.pro: Added rendering/style to the include paths
+        * page/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::handleActiveDescendantChanged): Don't compile
+        this method unless a17n is enabled.
+
+2008-05-15  Rob Buis  <buis@kde.org>
+
+        Reviewed by Dave Hyatt.
+
+        https://bugs.webkit.org/show_bug.cgi?id=17433
+        getComputedStyle() -> clip returns empty string
+
+        Make getComputedStyle return a shape value for clip
+        if it is set.
+
+        Tests: fast/css/getPropertyValue-clip.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::CSSComputedStyleDeclaration::getPropertyCSSValue):
+
+2008-05-15  Kevin Ollivier  <kevino@theolliviers.com>
+
+        wx build fix. Add rendering/style to includes dir.
+
+        * webcore-base.bkl:
+
+2008-05-15  Alice Liu  <alice.liu@apple.com>
+
+        Reviewed by Beth Dakin.
+
+        Fixed <rdar://problem/5882283> Implement ARIA aria-activedescendant
+        Also added support for aria roles listbox and option, and aria-selected, 
+        and aria-multiselectable for listboxes
+
+        * dom/Element.cpp:
+        (WebCore::Element::attributeChanged):
+        * dom/Element.h:
+        * dom/StyledElement.cpp:
+        (WebCore::StyledElement::attributeChanged):
+        * html/HTMLAttributeNames.in:
+        * page/AXObjectCache.cpp:
+        (WebCore::AXObjectCache::handleActiveDescendantChanged):
+        * page/AXObjectCache.h:
+        (WebCore::AXObjectCache::accessibilityEnabled):
+        (WebCore::AXObjectCache::handleActiveDescendantChanged):
+        * page/AccessibilityListBox.cpp:
+        (WebCore::AccessibilityListBox::selectedChildren):
+        (WebCore::AccessibilityListBox::visibleChildren):
+        * page/AccessibilityListBox.h:
+        * page/AccessibilityListBoxOption.h:
+        (WebCore::AccessibilityListBoxOption::selectedChildren):
+        (WebCore::AccessibilityListBoxOption::visibleChildren):
+        * page/AccessibilityObject.cpp:
+        * page/AccessibilityObject.h:
+        (WebCore::AccessibilityObject::isListBox):
+        (WebCore::AccessibilityObject::shouldFocusActiveDescendant):
+        (WebCore::AccessibilityObject::activeDescendant):
+        (WebCore::AccessibilityObject::handleActiveDescendantChanged):
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::title):
+        (WebCore::AccessibilityRenderObject::accessibilityShouldUseUniqueId):
+        (WebCore::AccessibilityRenderObject::focusedUIElement):
+        (WebCore::AccessibilityRenderObject::shouldFocusActiveDescendant):
+        (WebCore::AccessibilityRenderObject::activeDescendant):
+        (WebCore::AccessibilityRenderObject::handleActiveDescendantChanged):
+        (WebCore::RoleEntry::):
+        (WebCore::AccessibilityRenderObject::ariaRoleAttribute):
+        (WebCore::AccessibilityRenderObject::ariaListboxSelectedChildren):
+        (WebCore::AccessibilityRenderObject::selectedChildren):
+        (WebCore::AccessibilityRenderObject::ariaListboxVisibleChildren):
+        (WebCore::AccessibilityRenderObject::visibleChildren):
+        * page/AccessibilityRenderObject.h:
+        (WebCore::AccessibilityRenderObject::isDetached):
+        * page/mac/AccessibilityObjectWrapper.mm:
+        (-[AccessibilityObjectWrapper accessibilityAttributeValue:]):
+
+2008-05-15  Timothy Hatcher  <timothy@apple.com>
+
+        Adds an error and warning count indicator at the bottom right in the
+        Inspector's status bar.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18650
+
+        Initial implementation by Adam Roben.
+        Reviewed by Sam Weinig.
+
+        Test: manual-tests/inspector/error-warning-count.html
+
+        * English.lproj/localizedStrings.js: Added new strings.
+        * manual-tests/inspector/error-warning-count.html: Added.
+        * page/inspector/Console.js:
+        (WebInspector.Console.prototype.show): Don't do anything if visible.
+        (WebInspector.Console.prototype.hide): Don't do anything if hidden.
+        Temporally set properties and classes to mimic the post-animation
+        values so panels like Elements in their updateStatusBarItems call will
+        size things to fit the final location. 
+        * page/inspector/ElementsPanel.js:
+        (WebInspector.ElementsPanel.prototype.updateBreadcrumbSizes):
+        Account for the #error-warning-count width when sizing breadcrumbs. 
+        * page/inspector/Resource.js:
+        (WebInspector.Resource.prototype.set errors): Update the global error count.
+        (WebInspector.Resource.prototype.set warnings): Update the global warning count.
+        * page/inspector/inspector.css: Make .hidden's display property
+        !important to ensure things really hide, and added styling for the new
+        #error-warning-count element.
+        * page/inspector/inspector.html: Added an #error-warning-count div
+        in the #anchored-status-bar-items div.
+        * page/inspector/inspector.js:
+        (WebInspector.get errors): Added.
+        (WebInspector.set errors): Added. Calls _updateErrorAndWarningCounts.
+        (WebInspector.get warnings): Added.
+        (WebInspector.set warnings): Added. Calls _updateErrorAndWarningCounts.
+        (WebInspector._updateErrorAndWarningCounts): Added. Update the
+        #error-warning-count div with the current error/warning count.
+        (WebInspector.loaded): Add a click event listener to the
+        #error-warning-count element that will show the Console. Call
+        _updateErrorAndWarningCounts to display the initial error/warning counts.
+
+2008-05-15  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes a bug in the view source parsing of text within <script>,
+        <style>, <xmp>, <textarea> and other special tags. The text was
+        being parsed as HTML and would be syntax highlighted if a "<"
+        was encountered.
+
+        <rdar://problem/5790805> Inspector's source view missing some words,
+        doubles others in JS source in <script> tag (17752)
+
+        Reviewed by Dave Hyatt.
+
+        Added test: fast/frames/viewsource-plain-text-tags.html
+
+        * html/HTMLTokenizer.cpp:
+        (WebCore::HTMLTokenizer::scriptHandler): Set scriptCodeSize and
+        scriptCodeResync to zero before an early return in view source mode.
+        This was causing text from a previous script tag to show up in
+        then next style tag.
+        (WebCore::HTMLTokenizer::parseTag): Enter an if block in view source
+        mode even if n is null. The n is property guarded in other places
+        and not used by view source mode. Removes a redundant null check on n.
+        Add a new null check of n before setting scriptSrcCharset. Other code
+        in HTMLTokenizer is already guarded for this code path. 
+
+2008-05-15  Timothy Hatcher  <timothy@apple.com>
+
+        Changes the Web Inspector node highlight to be less aggressive
+        and only highlight when hovering over the selected node in the DOM
+        tree or breadcrumbs. You can highlight on hover for any node if
+        you hold down the Alt/Option key while hovering.
+
+        Reviewed by Kevin McCullough.
+
+        * page/inspector/ElementsPanel.js:
+        * page/inspector/inspector.js:
+
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
+
+        Fix windows build
+
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
+
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Anders.
+        
+        export a symbol needed for fast teardown
+
+        * WebCore.base.exp:
+
+2008-05-15  Stephanie Lewis  <slewis@apple.com>
+
+        Reviewed by Anders.
+
+        Keep track on pending unload event counts
+
+        No change in behavior so no new tests, but I am dumping the 
+        unload event count to track the new variable.
+
+        * WebCore.base.exp:
+
+        increment/decrement the count when an event is added/removed
+        * dom/Document.cpp:
+        (WebCore::Document::removeHTMLWindowEventListener):
+        (WebCore::Document::addWindowEventListener):
+        (WebCore::Document::removeWindowEventListener):
+        (WebCore::Document::setPendingFrameUnloadEventCount):
+        * dom/Document.h:
+
+        set the count to 0 for each frame after the unload event has been dispatched
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::stopLoading):
+
+        keep track of the number of pending unload events for the eventHandler's frame
+        * page/EventHandler.cpp:
+        (WebCore::EventHandler::EventHandler):
+       (WebCore::EventHandler::pendingFrameUnloadEventCount):
+        (WebCore::EventHandler::setPendingFrameUnloadEventCount):
+        * page/EventHandler.h:
+
+        keep track of the total number of pending unload events for all of the frames
+        * page/Page.cpp:
+        (WebCore::Page::Page):
+        (WebCore::Page::pendingUnloadEventCount):
+        (WebCore::Page::setPendingUnloadEventCount):
+        * page/Page.h:
+
+2008-05-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2008-05-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2008-05-15  Steve Falkenburg  <sfalken@apple.com>
+
+        Fix build.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
+2008-05-15  David Kilzer  <ddkilzer@apple.com>
+
+        Bug 19085: font-family: initial sets font-family differently than font: initial
+
+        <https://bugs.webkit.org/show_bug.cgi?id=19085>
+        <rdar://problem/5939391>
+
+        Reviewed by David Hyatt.
+
+        Test: fast/css/font-family-initial.html
+
+        * css/CSSStyleSelector.cpp:
+        (WebCore::CSSStyleSelector::applyProperty): Don't set family if first
+        family of initial font description is empty.
+
+2008-05-15  David Hyatt  <hyatt@apple.com>
+
+        Move RenderStyle into a new subdirectory, rendering/style/, in preparation for breaking it up into
+        a bunch of smaller files.
+
+        Reviewed by Dan Bernstein
+
+        * GNUmakefile.am:
+        * WebCore.pro:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * WebCoreSources.bkl:
+        * rendering/RenderStyle.cpp: Removed.
+        * rendering/RenderStyle.h: Removed.
+        * rendering/style: Added.
+        * rendering/style/RenderStyle.cpp: Copied from rendering/RenderStyle.cpp.
+        * rendering/style/RenderStyle.h: Copied from rendering/RenderStyle.h.
+
+2008-05-15  David Kilzer  <ddkilzer@apple.com>
+
+        Fix leaks when stopping a page from loading
+
+        Patch suggested by Antti.  Reviewed by Antti.
+
+        * loader/DocLoader.cpp:
+        (WebCore::DocLoader::clearPreloads): If a resource is in m_preloads but
+        never made it to the cache, delete it to prevent it from leaking.
+
+2008-05-15  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Darin.
+
+        https://bugs.webkit.org/show_bug.cgi?id=13942
+        ASSERTION FAILED: !attrName.contains('/') in HTMLTokenizer.cpp:132 when loading http://bamanzi.blogeden.cn/
+
+        In HTML, when an attribute was null (for example when we parse '="somevalue"'
+        (attribute forgotten or there is a space between the attribute and the '=')),
+        the fallback was to assign the value to the attribute. However if the value was
+        a url or did contain a '/', we would trigger the assertion.
+
+        To avoid that, we check the value before assigning it now and do not assign it
+        if it means adding a '/'.
+
+        Test: fast/parser/assertion-empty-attribute.html
+
+        * html/HTMLTokenizer.cpp:
+        (WebCore::HTMLTokenizer::parseTag): Add check for '/' in value before
+        assigning it to an attribute when the attribute is null.
+
+2008-05-15  Kevin Ollivier  <kevino@theolliviers.com>
+
+        wx build fix for recent breakages. Add EventLoopWx.cpp, update the Bakefiles,
+        and add stubs for new Plugins functions. Also move plugin functions outside of
+        TemporaryLinkStubs.cpp so that they are more noticeable.
+
+        * WebCoreSources.bkl:
+        * platform/wx/EventLoopWx.cpp: Added.
+        (WebCore::EventLoop::cycle):
+        * platform/wx/TemporaryLinkStubs.cpp:
+        * plugins/wx: Added.
+        * plugins/wx/PluginDataWx.cpp: Added.
+        (WebCore::PluginData::initPlugins):
+        (WebCore::PluginData::refresh):
+        * plugins/wx/PluginDatabaseWx.cpp: Added.
+        (WebCore::PluginDatabase::getPluginPathsInDirectories):
+        (WebCore::PluginDatabase::defaultPluginDirectories):
+        (WebCore::PluginDatabase::isPreferredPluginDirectory):
+        * plugins/wx/PluginPackageWx.cpp: Added.
+        (WebCore::PluginPackage::determineQuirks):
+        (WebCore::PluginPackage::fetchInfo):
+        (WebCore::PluginPackage::load):
+        (WebCore::PluginPackage::hash):
+        (WebCore::PluginPackage::equal):
+        (WebCore::PluginPackage::compareFileVersion):
+        * plugins/wx/PluginViewWx.cpp: Added.
+        (WebCore::PluginView::updateWindow):
+        (WebCore::PluginView::setFocus):
+        (WebCore::PluginView::show):
+        (WebCore::PluginView::hide):
+        (WebCore::PluginView::paint):
+        (WebCore::PluginView::handleKeyboardEvent):
+        (WebCore::PluginView::handleMouseEvent):
+        (WebCore::PluginView::setParent):
+        (WebCore::PluginView::setNPWindowRect):
+        (WebCore::PluginView::attachToWindow):
+        (WebCore::PluginView::detachFromWindow):
+        (WebCore::PluginView::stop):
+        (WebCore::PluginView::userAgent):
+        (WebCore::PluginView::handlePostReadFile):
+        (WebCore::PluginView::getValue):
+        (WebCore::PluginView::invalidateRect):
+        (WebCore::PluginView::invalidateRegion):
+        (WebCore::PluginView::forceRedraw):
+        (WebCore::PluginView::~PluginView):
+        (WebCore::PluginView::init):
+        * webcore-wx.bkl:
+
+2008-05-15  Adam Treat  <treat@kde.org>
+
+        Reviewed by Simon.
+
+        Don't try to setCompositionMode for devices that do not support PorterDuff
+
+        * platform/graphics/qt/GraphicsContextQt.cpp:
+        (WebCore::TransparencyLayer::TransparencyLayer):
+        (WebCore::GraphicsContext::strokeRect):
+        (WebCore::GraphicsContext::clip):
+
+2008-05-15  Adele Peterson  <adele@apple.com>
+
+        Reviewed and landed by Alexey.
+
+        Use TextIterator in +[NSAttributedString _web_attributedStringFromRange:].
+
+        * WebCore.base.exp: Exported TextIterator methods.
+
+2008-05-15  Simon Hausmann  <hausmann@webkit.org>
+
+        Fix the Qt build by adding NetworkStateNotifier.cpp to the build.
+
+        * WebCore.pro:
+
+2008-05-14  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by Mark Rowe.
+
+        - fix <rdar://problem/5907633> Memory corruption after closing a document that uses box-reflect
+
+        Test: fast/reflections/teardown-crash.html
+
+        * rendering/RenderLayer.cpp:
+        (WebCore::RenderLayer::~RenderLayer): Changed to not call removeLayers()
+        on the reflection if the document is being destroyed, because in that
+        case the layer tree is not being maintained.
+
+2008-05-14  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Tim.
+
+        <rdar://problem/5770054> JavaScript profiler (10928)
+        - Expose the new Profiler functions to the WebInspector.
+
+        * page/JavaScriptProfileNode.cpp:
+        (WebCore::getTotalPercent):
+        (WebCore::getSelfPercent):
+        (WebCore::ProfileNodeClass):
+
+2008-05-14  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes a crash in JavaScriptDebugServer::returnEvent when debugging
+        code that contains an eval. This change makes stepping into eval
+        code work as expected.
+
+        http://bugs.webkit.org/show_bug.cgi?id=19038
+
+        Reviewed by Kevin McCullough.
+
+        Tested with: manual-tests/inspector/returnEvent-crash.html
+
+        * manual-tests/inspector/returnEvent-crash.html: Added.
+        * page/JavaScriptDebugServer.cpp:
+        (WebCore::JavaScriptDebugServer::sourceParsed): Adds #ifdefed
+        debugging code to prevent the sourceID and URL.
+        (WebCore::updateCurrentCallFrame): Added. A helper function that
+        is called from all 4 of the debugger hooks below. This function will
+        update and/or create JavaScriptCallFrames to match the exec state,
+        sourceID and lineNumber passed into it. Contains #ifdefed debugging
+        code that was helpful while fixing this bug.
+        (WebCore::JavaScriptDebugServer::callEvent): Call updateCurrentCallFrame
+        before pauseIfNeeded.
+        (WebCore::JavaScriptDebugServer::atStatement): Ditto.
+        (WebCore::JavaScriptDebugServer::returnEvent): Ditto.
+        (WebCore::JavaScriptDebugServer::exception): Ditto.
+
+2008-05-14  Alp Toker  <alp@nuanti.com>
+
+        GTK+ build fix for r33457. Add NetworkStateNotifier.cpp to the build.
+
+        * GNUmakefile.am:
+
+2008-05-14  Alp Toker  <alp@nuanti.com>
+
+        GTK+ build fix. Include value.h from kjs, not JavaScriptCore.
+
+        * page/JavaScriptProfile.cpp:
+        * page/JavaScriptProfileNode.cpp:
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Windows release build fix
+
+        * WebCore.vcproj/WebCore.vcproj: Make sure the warnings we disable on
+        XPathGrammar.cpp are disabled for all configurations, not just
+        Debug_Internal.
+
+2008-05-14  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Sam.
+
+        <rdar://problem/5770054> JavaScript profiler (10928)
+        - Rename FunctionCallProfile to ProfileNode
+
+        * ForwardingHeaders/profiler/FunctionCallProfile.h: Removed.
+        * ForwardingHeaders/profiler/ProfileNode.h: Copied from ForwardingHeaders/profiler/FunctionCallProfile.h.
+        * GNUmakefile.am:
+        * WebCore.pro:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * WebCoreSources.bkl:
+        * page/JavaScriptFunctionCallProfile.cpp: Removed.
+        * page/JavaScriptFunctionCallProfile.h: Removed.
+        * page/JavaScriptProfile.cpp:
+        * page/JavaScriptProfileNode.cpp: Copied from page/JavaScriptFunctionCallProfile.cpp.
+        (WebCore::ProfileNodeCache):
+        (WebCore::getFunctionName):
+        (WebCore::getTotalTime):
+        (WebCore::getSelfTime):
+        (WebCore::getNumberOfCalls):
+        (WebCore::getChildren):
+        (WebCore::finalize):
+        (WebCore::ProfileNodeClass):
+        (WebCore::toJS):
+        * page/JavaScriptProfileNode.h: Copied from page/JavaScriptFunctionCallProfile.h.
+
+2008-05-13  Beth Dakin  <bdakin@apple.com>
+
+        Reviewed by Brady.
+
+        This patch adds support for the ARIA progressbar role and the 
+        following ARIA states (ie HTML attributes): aria-checked, aria-
+        level, aria-pressed, aria-valuenow, aria-valuemin, and aria-
+        valuemax.
+
+        * html/HTMLAttributeNames.in:
+        * page/AccessibilityObject.h:
+        (WebCore::AccessibilityObject::isProgressIndicator):
+        (WebCore::AccessibilityObject::valueForRange):
+        (WebCore::AccessibilityObject::maxValueForRange):
+        (WebCore::AccessibilityObject::minValueForRange):
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::isProgressIndicator):
+        (WebCore::AccessibilityRenderObject::isPressed): Check the aria-
+        pressed attribute if this is an ARIA button.
+        (WebCore::AccessibilityRenderObject::headingLevel): Check the aria-
+        level attribute if this is an ARIA heading.
+        (WebCore::AccessibilityRenderObject::intValue): Check the aria-
+        checked attribute if this is an ARIA radio button or checkbox.
+        (WebCore::AccessibilityRenderObject::valueForRange):
+        (WebCore::AccessibilityRenderObject::maxValueForRange):
+        (WebCore::AccessibilityRenderObject::minValueForRange):
+        (WebCore::RoleEntry::):
+        (WebCore::AccessibilityRenderObject::canSetValueAttribute):
+        * page/AccessibilityRenderObject.h:
+        * page/mac/AccessibilityObjectWrapper.mm:
+        (-[AccessibilityObjectWrapper accessibilityAttributeNames]):
+        (-[AccessibilityObjectWrapper accessibilityAttributeValue:]):
+
+2008-05-14  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by John.
+
+        -<rdar://problem/5770054> JavaScript profiler (10928)
+        Use the FunctionCallProfile's new total and self time functions.
+
+        * page/JavaScriptFunctionCallProfile.cpp:
+        (WebCore::getTotalTime):
+        (WebCore::getSelfTime):
+
+2008-05-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Don't try to store the resource data if it's empty.
+        
+        * loader/appcache/ApplicationCacheStorage.cpp:
+        (WebCore::ApplicationCacheStorage::store):
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Windows build fix
+
+        * platform/network/NetworkStateNotifier.cpp: Added a missing #include.
+        * platform/network/NetworkStateNotifier.h:
+        (WebCore::NetworkStateNotifier::NetworkStateNotifier): Removed 'void'
+        return type from the constructor, and fixed the spelling of a member
+        variable.
+
+2008-05-14  Kevin McCullough  <kmccullough@apple.com>
+
+        Reviewed by Adam.
+
+        <rdar://problem/5770054> JavaScript profiler (10928)
+        - Add support for interacting with the JavaScriptCore profiler.
+
+        * ForwardingHeaders/profiler/FunctionCallProfile.h: Added.
+        * ForwardingHeaders/profiler/Profile.h: Added.
+        * GNUmakefile.am: Add the new files to all the projects.
+        * WebCore.pro:
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        * WebCoreSources.bkl:
+        * page/InspectorController.cpp: Add the ability to retrieve all of the
+        profiles in JavaScript from the InspectorController.
+        (WebCore::allProfiles):
+        (WebCore::InspectorController::windowScriptObjectAvailable):
+        * page/JavaScriptFunctionCallProfile.cpp: Added. Wrapper around the JSC
+        FunctionCallProfile.
+        (WebCore::functionCallProfileCache): This cache makes sure we don't
+        needlessly create duplicate wrappers around the same
+        FunctionCallProfile*.
+        (WebCore::getFunctionName): Callback to return the name of the function.
+        (WebCore::getTotalTime): Callback to return the total time spent in the
+        function.
+        (WebCore::getSelfTime): Callback to return the time spent in self (total
+        - time in children) in the function.
+        (WebCore::getNumberOfCalls): Callback to return the number of times this
+        function was called.
+        (WebCore::getChildren): Callback to return the children of this function
+        where the children are the functions this function called.
+        (WebCore::finalize): Cleanup.
+        (WebCore::functionCallProfileClass): Define the JSClassRef for this
+        object.
+        (WebCore::toJS): Create a conversion function to make a usable JSValue
+        to wrap the FunctionCallProfile in JSC.
+        * page/JavaScriptFunctionCallProfile.h: Added.
+        * page/JavaScriptProfile.cpp: Added. Wrapper around the JSC Profile.
+        (WebCore::profileCache): This cache makes sure we don't needlessly
+        create duplicate wrappers aroudn the same Profile*.
+        (WebCore::getHeadCallback): Callback to return the head of the graph of
+        the functions profiled durring this profile's run.
+        (WebCore::finalize):
+        (WebCore::profileClass): Define the JSClassRef for this object.
+        (WebCore::toJS): Create a conversion function to make a usable JSValue
+        to wrap the Profile from JSC.
+        * page/JavaScriptProfile.h: Added.
+
+2008-05-14  David Hyatt  <hyatt@apple.com>
+
+        Fix for bug https://bugs.webkit.org/show_bug.cgi?id=16130.
+
+        Opacity, transforms, reflections and masks should not honor z-index unless the element is also
+        positioned.  Always reset to auto if the element is not positioned (and then the following code will
+        adjust auto to 0 as needed).
+
+        Reviewed by Dan Bernstein
+
+        * css/CSSStyleSelector.cpp:
+        (WebCore::CSSStyleSelector::adjustRenderStyle):
+
+2008-05-14  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Brady.
+
+        <rdar://problem/5931742> Support navigator.onLine from HTML5
+        
+        * WebCore.vcproj/WebCore.vcproj:
+        * WebCore.xcodeproj/project.pbxproj:
+        Add NetworkStateNotifier files.
+        
+        * dom/EventNames.h:
+        Add offline and online events.
+        
+        * page/Navigator.cpp:
+        (WebCore::Navigator::onLine):
+        * page/Navigator.h:
+        * page/Navigator.idl:
+        Add navigator.onLine.
+        
+        * page/Page.cpp:
+        (WebCore::networkStateChanged):
+        Dispatch offline/online events to all frames.
+        
+        (WebCore::Page::Page):
+        Set state change callback.
+        
+        * platform/network/NetworkStateNotifier.cpp: Added.
+        * platform/network/NetworkStateNotifier.h: Added.
+
+        * platform/network/mac/NetworkStateNotifierMac.cpp: Added.
+        Mac network state notifier.
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 18888: REGRESSION (r32731): console.log always prints
+        "undefined"
+
+        <https://bugs.webkit.org/show_bug.cgi?id=18888>
+
+        Reviewed by Tim Hatcher.
+
+        Tested by pre-existing
+        manual-tests/inspector/console-log-formatting.html.
+
+        * page/inspector/Console.js:
+        (WebInspector.ConsoleMessage.prototype._format): Changed to explicitly
+        wrap Console._format instead of using bind to do it. Using bind was
+        causing us to pass plainText in as the first parameter instead of as
+        the second.
+
+2008-05-14  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes the bug where stepping out of a function would show the wrong
+        call stack (would look like it stepped out twice.)
+
+        Reviewed by Adam Roben.
+
+        * page/JavaScriptDebugServer.cpp:
+        (WebCore::JavaScriptDebugServer::returnEvent):
+        Call pauseIfNeeded before setting m_currentCallFrame to the caller.
+
+2008-05-14  Stephanie Lewis  <slewis@apple.com>
+   
+        Fix 64bit build
+
+        * plugins/PluginView.h:
+
+2008-05-14  David Kilzer  <ddkilzer@apple.com>
+
+        REGRESSION (r26474): WebKit fails jQuery test 64 core module: text(String) subtest 1 Check escaped text (createTextNode)
+
+        <https://bugs.webkit.org/show_bug.cgi?id=18976>
+        <rdar://problem/5924793>
+
+        Reviewed by Darin.
+
+        Tests: fast/dom/dom-parse-serialize-expected.txt:
+               fast/xsl/xslt-processor-expected.txt:
+               fast/xsl/xslt-text-expected.txt:
+
+        Commit r26474 removed escaping of '>' characters to '&gt;' in serialized
+        HTML content, which broke one jQuery test.  This change restores that
+        serialization behavior to both attributes and content for consistency.
+
+        * editing/markup.cpp:
+        (WebCore::appendAttributeValue): Escape '>' as '&gt;'.
+        (WebCore::escapeContentText): Ditto.
+        (WebCore::appendEscapedContent): Ditto.  This is the bug fix for the jQuery test.
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Fix Bug 19051: REGRESSION (r33447): Assertion in
+        JSDebugServer::removeListener closing tab with Inspector open
+
+        <https://bugs.webkit.org/show_bug.cgi?id=19051>
+
+        m_inspectedPage is now cleared when the Page is destroyed, which never
+        used to happen. Some of InspectorController's code was not prepared
+        for this.
+
+        Reviewed by Dave Hyatt.
+
+        * page/InspectorController.cpp:
+        (WebCore::InspectorController::~InspectorController): Removed a call
+        to stopDebugging and added an assertion. Debugging should have already
+        been stopped by this point.
+        (WebCore::InspectorController::inspectedPageDestroyed): Moved here
+        from the header file. Added a call to stopDebugging.
+        (WebCore::InspectorController::enabled): Return false if our inspected
+        Page has already been destroyed, since we can't really do much at this
+        point anyway.
+        (WebCore::InspectorController::didCommitLoad):
+        (WebCore::InspectorController::didLoadResourceFromMemoryCache):
+        (WebCore::InspectorController::identifierForInitialRequest):
+        (WebCore::InspectorController::startDebuggingAndReloadInspectedPage):
+        (WebCore::InspectorController::stopDebugging):
+        (WebCore::InspectorController::drawNodeHighlight):
+        Assert that m_inspectedPage hasn't been cleared.
+        * page/InspectorController.h:
+
+2008-05-14  Justin Garcia  <justin.garcia@apple.com>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5914803> Improve performance of WebCore::Editor::setComposition
+
+        * editing/Editor.cpp:
+        (WebCore::Editor::confirmComposition): Remove the previous composition
+        when we insert the new one, not with a separate, slower, delete operation.
+        (WebCore::Editor::setComposition): Ditto.
+        * editing/InsertTextCommand.cpp:
+        (WebCore::InsertTextCommand::performTrivialReplace): Remove the selected
+        text with a low level operation that doesn't perform a layout and insert
+        the new text in a way that won't trigger a layout from the removal.
+        (WebCore::InsertTextCommand::input): Call the optimized replace.
+        * editing/InsertTextCommand.h:
+        * editing/htmlediting.cpp:
+        (WebCore::isTabSpanNode): Check to see if the node is a span, to avoid 
+        the expense of getAttribute in the common case.
+        * page/Frame.cpp:
+        (WebCore::Frame::selectionLayoutChanged): Selection::start() and end()
+        will already be at VisiblePosition deepEquivalents. Selection::validate()
+        ensures this.
+
+2008-05-14  Adam Roben  <aroben@apple.com>
+
+        Make the Inspector able to handle being reloaded
+
+        When Reload was selected from the context menu in the Inspector, the
+        Inspector window would close and never be openable again. Now it
+        closes, then reopens when the page finishes loading.
+
+        Reviewed by Tim Hatcher.
+
+        * page/InspectorController.cpp:
+        (WebCore::InspectorController::close): Removed code that cleared out
+        m_page. This is now handled by pageDestroyed.
+        * page/InspectorController.h:
+        (WebCore::InspectorController::inspectedPageDestroyed): Added.
+        * page/Page.cpp:
+        (WebCore::Page::~Page): Fixed a bug and added a call to the new
+        inspectedPageDestroyed. If we have a parent InspectorController, that
+        means that we are the Page in the Inspector's window (i.e., we are the
+        Inspector's UI), so when we are destroyed we should call
+        InspectorController::pageDestroyed. We also need to call
+        inspectedPageDestroyed on our own InspectorController so that it won't
+        try to call into us.
+
+2008-05-14  Timothy Hatcher  <timothy@apple.com>
+
+        Add pause on exception support to the Inspector debugger
+        with a toggle buttons to enable or disable it.
+
+        Reviewed by Adam Roben.
+
+        * page/InspectorController.cpp:
+        (WebCore::pauseOnExceptions): Call the InspectorController.
+        (WebCore::setPauseOnExceptions): Ditto.
+        (WebCore::InspectorController::windowScriptObjectAvailable): Add the new
+        setPauseOnExceptions and pauseOnExceptions functions to the JS class.
+        (WebCore::InspectorController::pauseOnExceptions): Call JavaScriptDebugServer.
+        (WebCore::InspectorController::setPauseOnExceptions): Ditto.
+        * page/InspectorController.h:
+        * page/JavaScriptDebugServer.cpp:
+        (WebCore::JavaScriptDebugServer::setPauseOnExceptions): Set m_pauseOnExceptions.
+        (WebCore::JavaScriptDebugServer::exception): Check m_pauseOnExceptions
+        and set m_pauseOnNextStatement to true before calling pauseIfNeeded.
+        * page/JavaScriptDebugServer.h:
+        * page/inspector/Images/pauseOnExceptionButtons.png: Added.
+        * page/inspector/ScriptsPanel.js: Adds a status bar button that calls
+        the new InspectorController functions.
+        * page/inspector/inspector.css: New styles.
+
+2008-05-14  Timothy Hatcher  <timothy@apple.com>
+
+        Rename the Scope Chain pane to Scope Variables. Name the global
+        object Global. Name objects before the locals "With Block".
+        Name colsure scopes "Closure". Name any element or document
+        after Local, "Event Target" and "Event Document", respectfully.
+
+        Reviewed by Adam Roben.
+
+        * English.lproj/localizedStrings.js: Add new strings.
+        * page/inspector/ObjectPropertiesSection.js:
+        (WebInspector.ObjectPropertiesSection): Add a new argument that is used
+        for the empty placeholder text.
+        (WebInspector.ObjectPropertiesSection.prototype.onpopulate): Use the
+        empty placeholder text.
+        * page/inspector/ScopeChainSidebarPane.js:
+        (WebInspector.ScopeChainSidebarPane): Rename Scope Chain to Scope Variables.
+        (WebInspector.ScopeChainSidebarPane.prototype.update): Use the object name as
+        the subtitle. Use "Global" for the global object title. Use "With Block" for
+        the title of objects before the locals. Use "No Variables" for the empty
+        placeholder text for locals.
+
+2008-05-14  Michael A. Puls II  <shadow2531@gmail.com>
+
+        Reviewed by Alexey.
+
+        Fix for https://bugs.webkit.org/show_bug.cgi?id=16923 
+        Attr nodes with a value of "" should not have any childNodes
+        
+        In Opera, Firefox and IE, when an attribute node has a value
+        of "", the attribute node doesn't have any childNodes. This
+        is true in WebKit also, but not when you assign "" to the
+        Attr's value when the existing value is non-empty.
+        
+        Test: fast/dom/attribute-empty-value-no-children.html
+
+        * dom/Attr.cpp: (WebCore::Attr::setValue): Use createTextChild(), which only appends
+        a child text node if the value being assigned is not empty.
+
+2008-05-14  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        GCC 4.3 build fix.
+        Removes some compiler warnings.
+
+        * dom/Document.h:
+        (WebCore::FormElementKey::hashTableDeletedValue): GCC complained about the const keyword
+        so remove it as it is only used inside FormElementKey.
+
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::menuListDefaultEventHandler): Correct coding style (removes
+        a warning too).
+
+        * loader/appcache/ApplicationCacheResource.cpp: Include stdio.h for gcc4.3 build.
+
+        * plugins/PluginPackage.cpp:
+        (WebCore::PluginPackage::PluginPackage): Changed initialization order in the constructor.
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::PluginView): Ditto.
+        * plugins/PluginView.h:
+        * xml/AccessControlList.cpp: Include stdio.h
+        * xml/AccessItem.cpp: Ditto.
+        * xml/AccessItemRule.cpp: Ditto.
+
+2008-05-14  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        Qt build fix. Add JSJavaScriptCallFrameCustom.cpp to the build
+        and implemented EventLoopQt.
+
+        * WebCore.pro:
+        * platform/qt/EventLoopQt.cpp: Added.
+
+2008-05-14  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        Qt build fix. Add JavaScriptCallFrame.{idl,cpp} to the build.
+
+        * WebCore.pro:
+
+2008-05-13  Dan Bernstein  <mitz@apple.com>
+
+        Reviewed by John Sullivan.
+
+        - Windows part of <rdar://problem/5725912> improve render quality of transformed text
+
+        * platform/graphics/win/FontCGWin.cpp:
+        (WebCore::Font::drawGlyphs): Added call to
+        wkSetCGContextFontRenderingStyle().
+
+2008-05-13  Alp Toker  <alp@nuanti.com>
+
+        GTK+ build fix. Implement EventLoopGtk.cpp.
+
+        * GNUmakefile.am:
+        * platform/gtk/EventLoopGtk.cpp: Added.
+        (WebCore::EventLoop::cycle):
+
+2008-05-13  Alp Toker  <alp@nuanti.com>
+
+        GTK+ build fix. Fix IDL filename typo and add JavaScriptCallFrame.cpp
+        to the build.
+
+        * GNUmakefile.am:
+
+2008-05-13  Matt Lilek  <webkit@mattlilek.com>
+
+        Not reviewed, partial Gtk build fix.
+
+        * GNUmakefile.am:
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes a crash when stepping out in the Inspector's debugger.
+
+        http://bugs.webkit.org/show_bug.cgi?id=19037
+
+        Reviewed by Dan Bernstein.
+
+        * page/InspectorController.cpp:
+        (WebCore::currentCallFrame): Adds a null check of currentCallFrame,
+        since it can be null. Also returns JSNull to better signify this.
+        * page/inspector/ScriptsPanel.js: Updates the debugger interface
+        when stepping so the currentCallFrame isn't accessed when not paused.
+        Adds a _clearInterface function to remove duplicate code.
+
+2008-05-13  chris fleizach  <cfleizach@apple.com>
+
+        Reviewed by Beth Dakin
+
+        <rdar://problem/5932677> AX: Submit buttons aren't returning AXTitle
+
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::title):
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds an overlay window that covers the scripts panel and
+        informs the user that they need to attach the debugger.
+        Provides an "Attach Debugger" button below the info text.
+
+        Reviewed by Dan Bernstein.
+
+        * English.lproj/localizedStrings.js: New strings.
+        * page/inspector/ScriptsPanel.js:
+        (WebInspector.ScriptsPanel): Create the overlay elements and
+        append to the main panel element.
+        * page/inspector/inspector.css: New styles for the over lay elements.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes the assertion and crash that would happen when inspecting a element from a frame.
+        This change makes JSInspectedObjectWrapper pass unwrapped objects around for global objects
+        that share the same page group identifier. Also returns jsUndefined() instead of 0 to prevent
+        crashing in release builds if the page groups don't match.
+
+        Passes all the tests in: manual-tests/inspector-wrappers
+
+        Reviewed by Adam Roben.
+
+        * bindings/js/JSInspectedObjectWrapper.cpp:
+        (WebCore::JSInspectedObjectWrapper::prepareIncomingValue): Return jsUndefined() instead of 0.
+        Call allowsUnwrappedAccessFrom instead of unwrappedExecStateMatches.
+        * bindings/js/JSQuarantinedObjectWrapper.cpp:
+        (WebCore::JSQuarantinedObjectWrapper::allowsUnwrappedAccessFrom): Renamed from unwrappedExecStateMatches.
+        Return true if the pageGroupIdentifier of both wrappers match.
+        (WebCore::JSQuarantinedObjectWrapper::callAsFunction): Return jsUndefined() instead of 0.
+        * bindings/js/JSQuarantinedObjectWrapper.h: Renamed unwrappedExecStateMatches to allowsUnwrappedAccessFrom.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes the hang that could happen when option-clicking to expand
+        a disclosure triangle in the Properties pane. This change limits
+        the recursion depth when expanding the tree elements.
+
+        <rdar://problem/5847681> Safari hangs when option-clicking a
+        disclosure triangle in the Inspector's Properties pane
+
+        Reviewed by John Sullivan.
+
+        * page/inspector/treeoutline.js:
+        (TreeElement.prototype.expandRecursively): Pass an empty info object to
+        traverseNextTreeElement to get the depthChange value. This is used to
+        compute a current depth. If the depth exceeds the maxDepth argument, the
+        item isn't expanded and children wont be populated when traverseNextTreeElement
+        is called until the depth goes below the maxDepth.
+        (TreeElement.prototype.traverseNextTreeElement): Added a new info
+        argument that can be optionally used to return extra info like depth change.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds info text to panes and sections in the Inspector's sidebars
+        that would normally be empty. These help the user know why there
+        is nothing in these sections.
+
+        Reviewed by John Sullivan.
+
+        * English.lproj/localizedStrings.js: Add strings.
+        * page/inspector/BreakpointsSidebarPane.js: Adds "No Breakpoints".
+        * page/inspector/CallStackSidebarPane.js: Adds "Not Paused".
+        * page/inspector/ObjectPropertiesSection.js: Adds "No Properties".
+        * page/inspector/ScopeChainSidebarPane.js: Adds "Not Paused".
+        * page/inspector/inspector.css: Adds style rules for the info elements.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Implements the rest of the Scripts panel to get the debugger
+        mostly working. "Basic debugging seems to work."
+
+        Reviewed by Geoff Garen.
+
+        * English.lproj/localizedStrings.js: Adds new strings.
+        * page/inspector/Resource.js:
+        (WebInspector.Resource.prototype.get scripts): Returns _scripts and 
+        creates it lazily.
+        (WebInspector.Resource.prototype.addScript): Add the script object to the
+        front of the _scripts array.
+        (WebInspector.Resource.prototype.removeAllScripts): Removed all the scripts
+        and removes the resource back-reference.
+        (WebInspector.Resource.prototype.removeScript): Removes the script and
+        breaks the resource back-reference.
+        * page/inspector/ResourceView.js:
+        (WebInspector.ResourceView): Adds a reminder comment.
+        (WebInspector.ResourceView.prototype.get headersVisible): Returns _headersVisible. 
+        (WebInspector.ResourceView.prototype.set headersVisible): Stubs out
+        a setter that currently just sets _headersVisible. Has a comment that
+        points out this needs implemented when network headers are added.
+        * page/inspector/ResourcesPanel.js:
+        (WebInspector.ResourcesPanel.prototype.show): Sets the headersVisible property of
+        the visible view to true and shows it again, in case it was being shown in Scripts.
+        (WebInspector.ResourcesPanel.prototype.recreateViewForResourceIfNeeded):
+        Copies the headersVisible property from the old view to the new view.
+        (WebInspector.ResourcesPanel.prototype.showResource): Sets the headersVisible
+        property to true before showing.
+        * page/inspector/ScriptView.js:
+        (WebInspector.ScriptView): Passes in _addBreakpoint for the add breakpoint delegate.
+        (WebInspector.ScriptView.prototype._addBreakpoint): Calls ScriptsPanel's addBreakpoint
+        for the current Script.sourceID and line.
+        * page/inspector/ScriptsPanel.js:
+        (WebInspector.ScriptsPanel): 
+        (WebInspector.ScriptsPanel.prototype.show): Sets the headersVisible property of
+        the visible view to false and shows it again, in case it was being shown in Resources.
+        (WebInspector.ScriptsPanel.prototype.addScript): Makes a new Script object and
+        adds it to a Resource if one is found. Registers any breakpoint that match
+        the new Script's source URL, and sets the sourceID of the breakpoints.
+        (WebInspector.ScriptsPanel.prototype.addBreakpoint): Adds the breakpoint to the
+        BreakpointsSidebarPane. Also adds it to _breakpointsURLMap so it can be found
+        later in addScript by URL. Finally adds the breakpoint to the SourceFrame that
+        represents the resources or script.
+        (WebInspector.ScriptsPanel.prototype.removeBreakpoint): Removes the breakpoint from
+        the BreakpointsSidebarPane, _breakpointsURLMap and SourceFrame.
+        (WebInspector.ScriptsPanel.prototype.debuggerPaused): Update the debugger
+        state variables, the buttons and the CallStackSidebarPane.
+        (WebInspector.ScriptsPanel.prototype.reset): Clears and resets debugger
+        and interface state.
+        (WebInspector.ScriptsPanel.prototype.get visibleView): Returns _visibleView.
+        (WebInspector.ScriptsPanel.prototype.set visibleView): Sets _visibleView and
+        calls hide on the old view and show on the new view.
+        (WebInspector.ScriptsPanel.prototype.showScript): Calls _showScriptOrResource.
+        (WebInspector.ScriptsPanel.prototype.showResource): Ditto.
+        (WebInspector.ScriptsPanel.prototype.scriptViewForScript): Lazily creates a
+        ScriptView for the Script and returns it. 
+        (WebInspector.ScriptsPanel.prototype.sourceFrameForScript): Returns the SourceFrame
+        for the Script.
+        (WebInspector.ScriptsPanel.prototype._sourceFrameForScriptOrResource): Returns the
+        SourceFrame based on the type of object passed in.
+        (WebInspector.ScriptsPanel.prototype._showScriptOrResource): Shows the view based on
+        the type of object passed in. If the object is a resource and there are breakpoints
+        defined for that Resource URL, then populate the SourceFrame with the breakpoints.
+        (WebInspector.ScriptsPanel.prototype._addScriptToFilesMenu): Adds a script to the 
+        files menu. If the Script is part of a resource, that resource is added.
+        (WebInspector.ScriptsPanel.prototype._removeScriptFromFilesMenu): Remove a script from
+        the files menu. If that script is part of a resource and it is the last script of that
+        resource, then remove the whole resource.
+        (WebInspector.ScriptsPanel.prototype._clearCurrentExecutionLine): Clears the execution
+        line from the SourceFrame that is showing it.
+        (WebInspector.ScriptsPanel.prototype._callFrameSelected): Event listener for when the
+        call frame changes in the CallStackSidebarPane. Triggers updates to the ScopeChainSidebarPane
+        and the visible view.
+        (WebInspector.ScriptsPanel.prototype._changeVisibleFile): Event listener for the change state
+        of the files select element.
+        (WebInspector.ScriptsPanel.prototype._updateDebuggerButtons): Update more of the 
+        buttons to reflect the current debugger state. Updates the status text too.
+        (WebInspector.ScriptsPanel.prototype._toggleDebugging): Reset the UI and state when
+        the debugger is attached/detached.
+        (WebInspector.ScriptsPanel.prototype._togglePause): Call InspectorController.resumeDebugger or
+        InspectorController.pauseInDebugger depending on the paused state.
+        (WebInspector.ScriptsPanel.prototype._stepOverClicked): Call InspectorController.stepOverStatementInDebugger.
+        (WebInspector.ScriptsPanel.prototype._stepIntoClicked): Call InspectorController.stepIntoStatementInDebugger.
+        (WebInspector.ScriptsPanel.prototype._stepOutClicked): InspectorController.stepOutOfFunctionInDebugger.
+        * page/inspector/SourceView.js:
+        (WebInspector.SourceView): Passes in _addBreakpoint for the add breakpoint delegate.
+        (WebInspector.SourceView.prototype._addBreakpoint): Calls ScriptsPanel's addBreakpoint
+        for the nearest Script's sourceID and passed in line.
+        * page/inspector/inspector.css: New style rules for the UI changes.
+        * page/inspector/inspector.js:
+        (WebInspector.loaded): Add the ScriptsPanel to the panels list.
+        (WebInspector.parsedScriptSource): Call ScriptsPanel.addScript.
+        (WebInspector.failedToParseScriptSource): Ditto.
+        (WebInspector.pausedScript): Call ScriptsPanel.debuggerPaused.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds implementations of the Scope Chain and Call Stack sidebar panes.
+        These panes use the JSJavaScriptCallFrame object that will be passed
+        to the update functions.
+
+        Reviewed by Kevin McCullough.
+
+        * English.lproj/localizedStrings.js: Adds new strings.
+        * WebCore.vcproj/WebCore.vcproj: Adds new files.
+        * page/inspector/CallStackSidebarPane.js:
+        (WebInspector.CallStackSidebarPane.prototype.update): Walk the 
+        caller chain of the call frame and make placards for each.
+        (WebInspector.CallStackSidebarPane.prototype.get selectedCallFrame):
+        Return _selectedCallFrame. 
+        (WebInspector.CallStackSidebarPane.prototype.set selectedCallFrame):
+        Set _selectedCallFrame and dispatch the "call frame selected" event.
+        (WebInspector.CallStackSidebarPane.prototype._placardSelected):
+        Set the selectedCallFrame based on the clicked placard.
+        * page/inspector/Placard.js: Added. A user interface object that can
+        be used to show a title and a subtitle block with a selected state.
+        * page/inspector/ScopeChainSidebarPane.js: Added.
+        (WebInspector.ScopeChainSidebarPane): Call the base object and set the title.
+        (WebInspector.ScopeChainSidebarPane.prototype.update): Iterate over the
+        call frame's scope chain and make ObjectPropertiesSections for each.
+        * page/inspector/SidebarPane.js:
+        (WebInspector.SidebarPane.prototype): Inherit from WebInspector.Object.
+        * page/inspector/WebKit.qrc: Add new files.
+        * page/inspector/inspector.css: Add placard styles.
+        * page/inspector/inspector.html: Add new files.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Fixes the bug where SourceViews would be blank if shown before
+        the Resource finished loading.
+
+        <rdar://problem/5807420> Safari's Web Inspector won't display the
+        contents of some CSS and JS files
+
+        Reviewed by Kevin McCullough.
+
+        * page/inspector/Resource.js:
+        (WebInspector.Resource.prototype.set finished): Dispatch the finished event
+        (WebInspector.Resource.prototype): Inherit from WebInspector.Object.prototype.
+        * page/inspector/SourceView.js:
+        (WebInspector.SourceView): Register for the finished event on the resource.
+        When the event fires, setup the source frame and deregister the event.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Factored most of SourceView out into SourceFrame so it can be shared
+        by the new ScriptView. Added the ScriptView class to be used for
+        scripts that arn't Resources (like eval code.) Added a simple Script
+        object that hold the data from the debugger parsedSource hooks. A
+        ScriptView holds a Script object, and uses it for source data.
+
+        Added breakpoint and execution line support to the SourceFrame
+        where they are visually represented in the source.
+
+        Reviewed by Kevin McCullough.
+
+        * page/inspector/inspector.js:
+        (WebInspector.performSearch): Change the caller of sourceFrameForResource
+        to use the SourceFrame result's element property.
+        * page/inspector/ResourcesPanel.js: Use the new SourceFrame.
+        * page/inspector/Script.js: Added.
+        * page/inspector/ScriptView.js: Added.
+        * page/inspector/SourceFrame.js: Added.
+        * page/inspector/SourceView.js: Use the new SourceFrame.
+        * WebCore.vcproj/WebCore.vcproj: Add new files.
+        * page/inspector/WebKit.qrc: Ditto.
+        * page/inspector/inspector.html: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds a Breakpoint object and basic add/remove functions on
+        BreakpointsSidebarPane that call the InspectorController to
+        add/remove the breakpoint.
+
+        Reviewed by Kevin McCullough.
+
+        * page/inspector/Breakpoint.js:
+        (WebInspector.Breakpoint): 
+        (WebInspector.Breakpoint.prototype.get enabled): Return _enabled.
+        (WebInspector.Breakpoint.prototype.set enabled): Set _enabled and
+        dispatch the enabled/disabled event to listeners.
+        * page/inspector/BreakpointsSidebarPane.js:
+        (WebInspector.BreakpointsSidebarPane): Add a breakpoints array.
+        (WebInspector.BreakpointsSidebarPane.prototype.addBreakpoint):
+        Adds the breakpoint to the breakpoints array. Registers for the disabled
+        and enabled event types. Call InspectorController.addBreakpoint if attached.
+        (WebInspector.BreakpointsSidebarPane.prototype.removeBreakpoint):
+        Removes the breakpoint from the breakpoints array. Deregisters for the disabled
+        and enabled event types. Call InspectorController.removeBreakpoint if attached.
+        (WebInspector.BreakpointsSidebarPane.prototype._breakpointEnableChanged):
+        Call InspectorController.addBreakpoint or InspectorController.removeBreakpoint
+        depending on the enabled state of the breakpoint.
+        * WebCore.vcproj/WebCore.vcproj: Add new files.
+        * page/inspector/WebKit.qrc: Ditto.
+        * page/inspector/inspector.html: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Make addSourceToFrame not dependent on InspectorResource so it
+        can be used to add source of a passed in string and mime-type to
+        a frame. Added addResourceSourceToFrame for use by SourceView.
+
+        Also fixes an assertion because of an incorrect static_cast of identifiers
+        to unsigned long long, when they can be unsigned.
+
+        Reviewed by Geoff Garen.
+
+        * page/InspectorController.cpp:
+        (WebCore::addSourceToFrame): Helper function used by addSourceToFrame
+        and addResourceSourceToFrame.
+        (WebCore::addSourceToFrame): Generalized to take a source and mime-type string.
+        (WebCore::addResourceSourceToFrame): Renamed from addSourceToFrame.
+        (WebCore::getResourceDocumentNode): Fixes the static_cast to be long long.
+        (WebCore::InspectorController::windowScriptObjectAvailable): Adds
+        addResourceSourceToFrame to the JavaScript class.
+        * page/inspector/SourceView.js: Use the new addResourceSourceToFrame.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Add debugger related functions to the InspectorController and
+        expose them to the JavaScript side of InspectorController.
+
+        Reviewed by Geoff Garen.
+
+        * page/InspectorController.cpp:
+        (WebCore::jsStringRef): Added helper to convert a UString to a JSStringRef.
+        (WebCore::currentCallFrame): Call InspectorController::currentCallFrame.
+        (WebCore::pauseInDebugger): Call InspectorController::pauseInDebugger.
+        (WebCore::resumeDebugger): Call InspectorController::resumeDebugger.
+        (WebCore::stepOverStatementInDebugger): Call InspectorController::stepOverStatementInDebugger.
+        (WebCore::stepIntoStatementInDebugger): Call InspectorController::stepIntoStatementInDebugger.
+        (WebCore::stepOutOfFunctionInDebugger): Call InspectorController::stepOutOfFunctionInDebugger.
+        (WebCore::addBreakpoint): Call InspectorController::addBreakpoint.
+        (WebCore::removeBreakpoint): Call InspectorController::removeBreakpoint.
+        (WebCore::InspectorController::windowScriptObjectAvailable): Add the new functions to the
+        InspectorController JavaScript class.
+        (WebCore::InspectorController::startDebuggingAndReloadInspectedPage): Clear breakpoints.
+        (WebCore::InspectorController::currentCallFrame): Return the currentCallFrame from the
+        JavaScriptDebugServer.
+        (WebCore::InspectorController::pauseInDebugger): Call JavaScriptDebugServer's pauseOnNextStatement.
+        (WebCore::InspectorController::resumeDebugger): Call JavaScriptDebugServer's resume.
+        (WebCore::InspectorController::stepOverStatementInDebugger):  Call JavaScriptDebugServer's stepOverStatement.
+        (WebCore::InspectorController::stepIntoStatementInDebugger): Call JavaScriptDebugServer's stepIntoStatement.
+        (WebCore::InspectorController::stepOutOfFunctionInDebugger): Call JavaScriptDebugServer's stepOutOfFunction.
+        (WebCore::InspectorController::addBreakpoint): Call JavaScriptDebugServer's addBreakpoint.
+        (WebCore::InspectorController::removeBreakpoint): Call JavaScriptDebugServer's removeBreakpoint.
+        (WebCore::InspectorController::didParseSource): Call into the Inspector's JavaScript.
+        (WebCore::InspectorController::failedToParseSource): Ditto.
+        (WebCore::InspectorController::didPause): Ditto.
+        * page/InspectorController.h: Add new functions.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Implements more debugger APIs on JavaScriptDebugServer and reduces
+        the number of callbacks to JavaScriptDebugListeners. These changes
+        will better facilitate debugger optimizations when SquirrelFish merges.
+
+        Reviewed by Kevin McCullough.
+
+        * page/InspectorController.cpp:
+        (WebCore::InspectorController::didParseSource): Removed the ExecState.
+        (WebCore::InspectorController::failedToParseSource): Ditto.
+        (WebCore::InspectorController::didPause): Added.
+        * page/InspectorController.h: Changed the JavaScriptDebugListener functions.
+        * page/JavaScriptDebugListener.h: Removed some callbacks and added didPause.
+        * page/JavaScriptDebugServer.cpp:
+        (WebCore::JavaScriptDebugServer::JavaScriptDebugServer): Initialize new data members.
+        (WebCore::JavaScriptDebugServer::~JavaScriptDebugServer): Delete all values of m_breakpoints.
+        (WebCore::JavaScriptDebugServer::removeListener): Call resume if the last listener was removed.
+        (WebCore::JavaScriptDebugServer::hasListenersInterestedInPage): Returns true if there are any
+        global listeners or a listener for the page.
+        (WebCore::JavaScriptDebugServer::addBreakpoint): Adds and entry to m_breakpoints.
+        (WebCore::JavaScriptDebugServer::removeBreakpoint): Removes a entry in m_breakpoints.
+        (WebCore::JavaScriptDebugServer::hasBreakpoint):  Checks if there is a breakpoint for the
+        sourceID and line.
+        (WebCore::JavaScriptDebugServer::clearBreakpoints): Removed all breakpoints.
+        (WebCore::JavaScriptDebugServer::pauseOnNextStatement): Sets m_pauseOnNextStatement to true.
+        (WebCore::JavaScriptDebugServer::resume): Sets m_paused to false.
+        (WebCore::JavaScriptDebugServer::stepIntoStatement): Calls resume and sets
+        m_pauseOnNextStatement to true.
+        (WebCore::JavaScriptDebugServer::stepOverStatement): Calls resume and sets m_pauseOnExecState to
+        the current call frame's ExecState.
+        (WebCore::JavaScriptDebugServer::stepOutOfFunction): Calls resume and sets m_pauseOnExecState to
+        the current call frame's caller ExecState.
+        (WebCore::JavaScriptDebugServer::currentCallFrame): Returns m_currentCallFrame if paused.
+        (WebCore::dispatchDidParseSource): Removed the ExecState argument.
+        (WebCore::dispatchFailedToParseSource): Ditto.
+        (WebCore::JavaScriptDebugServer::sourceParsed): Doesn't pass the ExecState to dispatchDidParseSource
+        or dispatchFailedToParseSource.
+        (WebCore::dispatchFunctionToListeners):
+        (WebCore::JavaScriptDebugServer::dispatchFunctionToListeners): Removes all the arguments passed
+        to the callback.
+        (WebCore::JavaScriptDebugServer::setJavaScriptPaused): Various overloaded functions
+        to pause parts of WebCore to prevent JavaScript execution while paused.
+        (WebCore::JavaScriptDebugServer::pauseIfNeeded): Decides if the debugger should pause based
+        on the passed in ExecState, source ID and line number. This checks for breakpoints, stepping, etc.
+        Calls didPause on all the listeners and spins a EventLoop until resume is called.
+        (WebCore::JavaScriptDebugServer::callEvent): Call pauseIfNeeded.
+        (WebCore::JavaScriptDebugServer::atStatement): Ditto.
+        (WebCore::JavaScriptDebugServer::returnEvent): Ditto.
+        (WebCore::JavaScriptDebugServer::exception): Ditto.
+        * page/JavaScriptDebugServer.h: Added new functions.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Change View.show to call detach if the parentNode dosen't
+        match before appending to the passed in parent element.
+        This also prevents appending to the same parent element
+        multiple times.
+
+        Reviewed by John Sullivan.
+
+        * page/inspector/FontView.js:
+        (WebInspector.FontView.prototype.show): Pass the parent element to View.show.
+        * page/inspector/ResourceView.js: Optimize the attach method to no append if
+        there is a parentNode already.
+        * page/inspector/SourceView.js: Ditto.
+        * page/inspector/View.js: Call detach before appending if the parentNode
+        doesn't match the passed in element.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Optimize the panel attach method to no append if there is a
+        parentNode already.
+
+        Reviewed by Adam Roben.
+
+        * page/inspector/Panel.js:
+        (WebInspector.Panel.prototype.attach): Don't append to main-panels
+        if the panel element already has a parentNode.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Add Widget::isPluginView so the JavaScriptDebugServer can identify
+        plugins that need to be paused during debugging. This will be used
+        in a upcoming commit.
+
+        Reviewed by Kevin McCullough.
+
+        * platform/Widget.h: Add isPluginView. Return false.
+        * plugins/PluginView.h: Add isPluginView. Return true.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds an event loop abstraction to platform. This abstraction will be
+        used by the JavaScriptDebugServer to implement pausing.
+
+        Reviewed by Kevin McCullough.
+
+        * platform/EventLoop.h: Added.
+        (WebCore::EventLoop::EventLoop):
+        (WebCore::EventLoop::ended): Return m_ended.
+        * platform/mac/EventLoopMac.mm: Added.
+        (WebCore::EventLoop::cycle): Call nextEventMatchingMask and then sendEvent.
+        * platform/win/EventLoopWin.cpp: Added.
+        (WebCore::EventLoop::cycle): Call GetMessage, TranslateMessage and DispatchMessage.
+        * WebCore.xcodeproj/project.pbxproj: Add new files.
+        * WebCore.vcproj/WebCore.vcproj: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Breaks out ObjectPropertiesSection from PropertiesSidebarPane
+        so it can be used by the Scripts panel's Scope Chain pane.
+
+        Rubber-stamped by Adam Roben.
+
+        * page/inspector/ObjectPropertiesSection.js: Added.
+        * page/inspector/PropertiesSidebarPane.js: Moved ObjectPropertiesSection
+        to ObjectPropertiesSection.js.
+        * WebCore.vcproj/WebCore.vcproj: Add the new file.
+        * page/inspector/WebKit.qrc: Ditto.
+        * page/inspector/inspector.html: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Add a helper function to the Inspector's Array prototype
+        that will remove any identical values/objects from the array.
+
+        Reviewed by Kevin McCullough.
+
+        * page/inspector/utilities.js:
+        (Array.prototype.remove): Iterate over the array and strict
+        compare to the passed in value. If they match, splice that index
+        out of the array. If onlyFirst is true, return after the first splice.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Adds a JavaScriptCallFrame object and JavaScript binding with an IDL.
+        This object will expose the stack to the Inspector's debugger.
+
+        Reviewed by Adam Roben.
+
+        * DerivedSources.make: Add JavaScriptCallFrame.
+        * bindings/js/JSJavaScriptCallFrameCustom.cpp: Added.
+        (WebCore::JSJavaScriptCallFrame::evaluate): Calls impl evaluate and returns the result.
+        (WebCore::JSJavaScriptCallFrame::scopeChain): Makes an array of the ScopeChain.
+        * page/JavaScriptCallFrame.cpp: Added.
+        (WebCore::JavaScriptCallFrame::JavaScriptCallFrame):
+        (WebCore::JavaScriptCallFrame::caller): Returns m_caller.
+        (WebCore::JavaScriptCallFrame::functionName): Returns the function
+        name from the ExecState if this is not global code or anonymous.
+        (WebCore::JavaScriptCallFrame::evaluate): Evaluates a script string
+        in the scope of the call frame.
+        * page/JavaScriptCallFrame.h: Added.
+        (WebCore::JavaScriptCallFrame::create): Call the ctor can return in a PassRefPtr.
+        (WebCore::JavaScriptCallFrame::invalidate): Sets m_mexec to 0. This prevents a
+        stale ExecState from being accessed after the lifetime of the ExecState.
+        (WebCore::JavaScriptCallFrame::isValid): Checks if m_exec is 0.
+        (WebCore::JavaScriptCallFrame::execState): Returns m_exec.
+        (WebCore::JavaScriptCallFrame::sourceIdentifier): Returns m_sourceID.
+        (WebCore::JavaScriptCallFrame::line): Returns m_line.
+        (WebCore::JavaScriptCallFrame::setLine): Sets m_line.
+        (WebCore::JavaScriptCallFrame::scopeChain): Returns by reference m_exec->scopeChain().
+        * page/JavaScriptCallFrame.idl: Added.
+        * WebCore.xcodeproj/project.pbxproj: Add new files.
+        * WebCore.vcproj/WebCore.vcproj: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Add a new WebInspector.Object base class that will be used for
+        a few objects in the Web Inspector to support listeners on any
+        object. This will help add more abstraction to the Inspector.
+
+        Reviewed by Adam Roben.
+
+        * page/inspector/Object.js: Added.
+        (WebInspector.Object): Does nothing.
+        (WebInspector.Object.prototype.addEventListener): Adds the listener to
+        the _listeners map by type. Supports a this object argument, for easy
+        addition of listeners without the need for bind.
+        (WebInspector.Object.prototype.removeEventListener): Remove the listener
+        from the _listeners map. If the listener is null and the thisObject was
+        passed, remove any listener for that thisObject.
+        (WebInspector.Object.prototype.dispatchEventToListeners): Sends an event
+        for a type to all listeners for that type. Mimics some of the DOMEvent
+        methods and properties for the event object passed to the listeners.
+        * WebCore.vcproj/WebCore.vcproj: Add new files.
+        * page/inspector/WebKit.qrc: Ditto.
+        * page/inspector/inspector.html: Ditto.
+
+2008-05-13  Timothy Hatcher  <timothy@apple.com>
+
+        Update the view source CSS to better match the new Inspector mock-ups.
+
+        Reviewed by Kevin McCullough.
+
+        * css/view-source.css:
+
+2008-05-13  John Sullivan  <sullivan@apple.com>
+
+        Reviewed by Dan Bernstein and Kevin Decker
+        
+        - fixed <rdar://problem/5879597> reproducible crash in HTMLSelectElement::typeAheadFind
+
+        Test: fast/forms/select-type-ahead-list-box-no-selection.html
+
+        * html/HTMLSelectElement.cpp:
+        (WebCore::HTMLSelectElement::typeAheadFind):
+        When there's no initially-selected element, we were accessing index -1. Check for this
+        case and start at 0.
+
+2008-05-13  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Dan Bernstein.
+
+        Small cleanup to XMLHttpRequest in preparation for Access Control changes.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::XMLHttpRequest):
+        (WebCore::XMLHttpRequest::~XMLHttpRequest):
+        (WebCore::XMLHttpRequest::open):
+        (WebCore::XMLHttpRequest::send):
+        (WebCore::XMLHttpRequest::internalAbort):
+        (WebCore::XMLHttpRequest::processSyncLoadResults):
+        (WebCore::XMLHttpRequest::didFinishLoading):
+        (WebCore::XMLHttpRequest::didReceiveResponse):
+        (WebCore::XMLHttpRequest::didReceiveData):
+        * xml/XMLHttpRequest.h:
+
+2008-05-13  chris fleizach  <cfleizach@apple.com>
+
+        Beth Dakin
+
+        <rdar://problem/5701210> VO: If image is missing, VoiceOver does not speak the alternative text.
+
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::accessibilityIsIgnored):
+
+2008-05-13  chris fleizach  <cfleizach@apple.com>
+
+        Beth Dakin
+
+        <rdar://problem/5908446> AX: webkit needs to return blockquote information for all AX objects, not just in AXTextMarker info
+
+        * page/mac/AccessibilityObjectWrapper.mm:
+        (-[AccessibilityObjectWrapper accessibilityAttributeNames]):
+        (-[AccessibilityObjectWrapper accessibilityAttributeValue:]):
+
+2008-05-13  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by John Sullivan.
+
+        <rdar://problem/4852077> REGRESSION: The content of the HTML file which is saved as Thai
+        (ISO 8859-11) disappear.
+
+        <rdar://problem/5842597> Thai ISO-8859-11 should be upgraded to Windows-874
+
+        Test: fast/encoding/char-decoding.html
+
+        * platform/text/TextCodecICU.cpp: (WebCore::TextCodecICU::registerExtendedEncodingNames):
+        Register ISO-8859-11, which doesn't have a standard IANA name, despite following
+        the usual 8859 naming scheme. Also, made TIS-620 map to windows-874-2000 explicitly.
+
+2008-05-13  chris fleizach  <cfleizach@apple.com>
+
+        Reviewed by Beth Dakin
+
+        <rdar://problem/5471973> Some AXLinks are not getting AXTitles though there is title text
+
+        * page/AccessibilityRenderObject.cpp:
+        (WebCore::AccessibilityRenderObject::title):
+
+2008-05-13  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Eric Seidel.
+
+        https://bugs.webkit.org/show_bug.cgi?id=18681
+        <rdar://problem/5888130> WebKit should not remove BOM characters from content.
+
+        We were only trying to match Firefox, and it doesn't do this any more.
+
+        Tests: fast/encoding/bom-in-content.html
+               fast/encoding/bom-in-content-utf16.html
+
+        * platform/text/TextDecoder.cpp: (WebCore::TextDecoder::checkForBOM): Skip the BOM if it's
+        at the start of input stream.
+
+        * platform/text/TextCodec.cpp:
+        * platform/text/TextCodec.h:
+        * platform/text/TextCodecICU.cpp:
+        (WebCore::TextCodecICU::decode):
+        * platform/text/TextCodecUTF16.cpp:
+        (WebCore::TextCodecUTF16::decode):
+        * platform/text/mac/TextCodecMac.cpp:
+        (WebCore::TextCodecMac::decode):
+        Don't remove the BOM.
+
+2008-05-13  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Darin.
+
+        Don't crash when a document loader is destroyed while an initial caching attempt
+        is in progress.
+
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::~ApplicationCacheGroup):
+        Stop loading.
+        
+        (WebCore::ApplicationCacheGroup::stopLoading):
+        New method that stops a cache update.
+        
+        (WebCore::ApplicationCacheGroup::documentLoaderDestroyed):
+        Delete ourselves here.
+        
+        * loader/appcache/ApplicationCacheGroup.h:
+
+2008-05-13  Alexey Proskuryakov  <ap@webkit.org>
+
+        Reviewed by Darin.
+
+        <rdar://problem/5841351> Turkish ISO 8859-9 encoding should be treated as windows-1254
+
+        Match IE and upgrade ISO-8859-9 to windows-1254, which is its strict superset.
+
+        Test: fast/encoding/char-decoding.html
+
+        * platform/text/TextCodecICU.cpp:
+        (WebCore::TextCodecICU::registerExtendedEncodingNames): Register the standard name
+        unconditionally. Previously, we registered windows-949-2000 as a special case that lacked 
+        an IANA standard name, and got away with not registering GBK because it happened
+        to be reported by ICU normally earlier than any encoding upgraded to it.
+
+2008-05-13  Tor Arne Vestbø  <tavestbo@trolltech.com>
+
+        Reviewed by Simon
+
+        Fix QtWebKit build on Qt embedded.
+
+        * WebCore.pro:
+        * platform/FileSystem.h:
+        * platform/qt/FileSystemQt.cpp:
+
+2008-05-13  Ariya Hidayat  <ariya.hidayat@trolltech.com>
+
+        Reviewed by Simon.
+
+        For Gtk/X11 and Qt/X11, use a more extensive plug-ins scan directories set
+
+        * plugins/PluginDatabase.cpp:
+        (WebCore::addMozillaPluginDirectories):
+        (WebCore::PluginDatabase::isPreferredPluginDirectory):
+
+2008-05-12  Adam Roben  <aroben@apple.com>
+
+        Turn on warnings as errors in WebCore.vcproj
+
+        Rubberstamped by Anders Carlsson.
+
+        * WebCore.vcproj/WebCore.vcproj: Also let VS reformat the file as it
+        saw fit. The important part is the removal of the WarnAsError="false"
+        lines.
+
+2008-05-12  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in PluginViewWin
+
+        Reviewed by Anders Carlsson.
+
+        Test: http/tests/plugins/post-url-file.html
+
+        * plugins/win/PluginViewWin.cpp:
+        (WebCore::PluginView::handlePostReadFile): Added a missing return
+        statement.
+
+2008-05-12  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in GetEOTHeader
+
+        Reviewed by Dan Bernstein.
+
+        * platform/graphics/win/GetEOTHeader.cpp:
+        (WebCore::getEOTHeader): MSVC complains that having a 0-sized array in
+        a struct is a non-standard extension. I've replaced the 0-sized arrays
+        with arrays of 1 element, and replaced sizeof(structType) with
+        offsetof(structType, arrayMember).
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in TextCodecICU
+
+        Reviewed by John Sullivan and Dan Bernstein.
+
+        * platform/text/TextCodecICU.cpp:
+        (WebCore::ErrorCallbackSetter::~ErrorCallbackSetter):
+        UCNV_SUB_STOP_ON_ILLEGAL is a string literal, so using == with it
+        doesn't really do what we want. Use strcmp instead. It's OK to pass an
+        unknown value to strcmp here since 1) UCNV_SUB_STOP_ON_ILLEGAL is only
+        a single character long so we're not going to ready more than 2 bytes
+        from oldContext, and 2) we're inside an ASSERT which will cause a
+        crash anyway if it fails.
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in CSSComputedStyleDeclaration
+
+        Reviewed by Geoff Garen.
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::valueForRepeatRule): Removed some unreachable code.
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in InlineTextBox
+
+        Reviewed by Dan Bernstein.
+
+        * rendering/InlineTextBox.cpp:
+        (WebCore::InlineTextBox::paint): Initialize some variables that MSVC
+        isn't smart enough to figure out will always be initialized in the
+        cases where they are used.
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in Position
+
+        Reviewed by Darin Adler.
+
+        * dom/Position.cpp:
+        (WebCore::Position::getInlineBoxAndOffset): Use parentheses to make
+        the precedence of our expressions explicit.
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in String
+
+        Reviewed by Geoff Garen.
+
+        * platform/text/String.cpp:
+        (WebCore::toIntegralType): Disable a bogus warning about using unary -
+        on an unsigned value. MSVC isn't smart enough to figure out that
+        isNegative will always be false when value is unsigned.
+
+2008-05-09  Adam Roben  <aroben@apple.com>
+
+        Fix a MSVC warning in XMLHttpRequest
+
+        Reviewed by Geoff Garen.
+
+        * xml/XMLHttpRequest.cpp:
+        (WebCore::XMLHttpRequest::XMLHttpRequest): Added static_cast<unsigned
+        long>.
+
+2008-05-12  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Adam.
+
+        Handle the case when a resource with the same URL as the manifest is listed in the manifest.
+
+        * loader/appcache/ApplicationCacheGroup.cpp:
+        (WebCore::ApplicationCacheGroup::addEntry):
+
+2008-05-12  Sam Weinig  <sam@webkit.org>
+
+        Reviewed by Dan Bernstein.
+
+        Add parsing of AccessControlHeader and AccessItemRule.
+
+        * xml/AccessControlList.cpp:
+        (WebCore::AccessControlList::parseAccessControlHeader): When multiple http headers are sent
+        in the response, the engine will concatenate them with commas separating the rules.  This simply
+        reverses that process by splitting on the commas.
+        (WebCore::AccessControlList::show):
+        * xml/AccessControlList.h:
+        * xml/AccessItem.cpp:
+        (WebCore::AccessItem::AccessItem):
+        (WebCore::AccessItem::show):
+        * xml/AccessItem.h:
+        (WebCore::AccessItem::isValid):
+        * xml/AccessItemRule.cpp:
+        (WebCore::skipLWS):
+        (WebCore::AccessItemRule::parseAccessItemRule): Parse the rule according to the BNF provided by
+        the Access Control spec.
+        (WebCore::AccessItemRule::parsePatternList):
+        (WebCore::AccessItemRule::invalidate):
+        (WebCore::AccessItemRule::show):
+        * xml/AccessItemRule.h:
 
 2008-05-12  David Kilzer  <ddkilzer@apple.com>
 

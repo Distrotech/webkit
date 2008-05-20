@@ -30,7 +30,7 @@
 #include "config.h"
 #include "JSGlobalObject.h"
 
-#include "CodeBlock.h"
+#include "Activation.h"
 #include "array_object.h"
 #include "bool_object.h"
 #include "date_object.h"
@@ -104,6 +104,15 @@ static inline unsigned getCurrentTime()
 
 JSGlobalObject* JSGlobalObject::s_head = 0;
 
+void JSGlobalObject::deleteActivationStack()
+{
+    ActivationStackNode* prevNode = 0;
+    for (ActivationStackNode* currentNode = d()->activations; currentNode; currentNode = prevNode) {
+        prevNode = currentNode->prev;
+        delete currentNode;
+    }
+}
+
 JSGlobalObject::~JSGlobalObject()
 {
     ASSERT(JSLock::currentThreadIsHoldingLock());
@@ -116,10 +125,8 @@ JSGlobalObject::~JSGlobalObject()
     s_head = d()->next;
     if (s_head == this)
         s_head = 0;
-
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->globalObject = 0;
+    
+    deleteActivationStack();
     
     delete d();
 }
@@ -198,6 +205,11 @@ void JSGlobalObject::init(JSObject* thisValue)
     d()->recursion = 0;
     d()->debugger = 0;
     
+    ActivationStackNode* newStackNode = new ActivationStackNode;
+    newStackNode->prev = 0;    
+    d()->activations = newStackNode;
+    d()->activationCount = 0;
+
     d()->perThreadData.arrayTable = &threadClassInfoHashTables()->arrayTable;
     d()->perThreadData.dateTable = &threadClassInfoHashTables()->dateTable;
     d()->perThreadData.mathTable = &threadClassInfoHashTables()->mathTable;
@@ -207,7 +219,7 @@ void JSGlobalObject::init(JSObject* thisValue)
     d()->perThreadData.stringTable = &threadClassInfoHashTables()->stringTable;
     d()->perThreadData.propertyNames = CommonIdentifiers::shared();
 
-    d()->globalExec.set(new ExecState(this, thisValue, d()->globalScopeChain.node()));
+    d()->globalExec.set(new GlobalExecState(this, thisValue));
 
     d()->pageGroupIdentifier = 0;
 
@@ -256,8 +268,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    registerFileStack().current()->clear();
-    registerFileStack().current()->addGlobalSlots(1);
+    localStorage().clear();
     symbolTable().clear();
 
     // Prototypes
@@ -378,14 +389,21 @@ void JSGlobalObject::reset(JSValue* prototype)
     putDirect("URIError", d()->URIErrorConstructor);
 
     // Set global values.
-    GlobalPropertyInfo staticGlobals[] = {
-        GlobalPropertyInfo("Math", new MathObjectImp(exec, d()->objectPrototype), DontEnum | DontDelete),
-        GlobalPropertyInfo("NaN", jsNaN(), DontEnum | DontDelete),
-        GlobalPropertyInfo("Infinity", jsNumber(Inf), DontEnum | DontDelete),
-        GlobalPropertyInfo("undefined", jsUndefined(), DontEnum | DontDelete)
-    };
-
-    addStaticGlobals(staticGlobals, sizeof(staticGlobals) / sizeof(GlobalPropertyInfo));
+    Identifier mathIdent = "Math";
+    JSValue* mathObject = new MathObjectImp(exec, d()->objectPrototype);
+    symbolTableInsert(mathIdent, mathObject, DontEnum | DontDelete);
+    
+    Identifier nanIdent = "NaN";
+    JSValue* nanValue = jsNaN();
+    symbolTableInsert(nanIdent, nanValue, DontEnum | DontDelete);
+    
+    Identifier infinityIdent = "Infinity";
+    JSValue* infinityValue = jsNumber(Inf);
+    symbolTableInsert(infinityIdent, infinityValue, DontEnum | DontDelete);
+    
+    Identifier undefinedIdent = "undefined";
+    JSValue* undefinedValue = jsUndefined();
+    symbolTableInsert(undefinedIdent, undefinedValue, DontEnum | DontDelete);
 
     // Set global functions.
 
@@ -474,12 +492,10 @@ bool JSGlobalObject::checkTimeout()
 void JSGlobalObject::mark()
 {
     JSVariableObject::mark();
-    
-    HashSet<ProgramCodeBlock*>::const_iterator end = codeBlocks().end();
-    for (HashSet<ProgramCodeBlock*>::const_iterator it = codeBlocks().begin(); it != end; ++it)
-        (*it)->mark();
 
-    registerFileStack().mark();
+    ExecStateStack::const_iterator end = d()->activeExecStates.end();
+    for (ExecStateStack::const_iterator it = d()->activeExecStates.begin(); it != end; ++it)
+        (*it)->m_scopeChain.mark();
 
     markIfNeeded(d()->globalExec->exception());
 
@@ -526,6 +542,28 @@ JSGlobalObject* JSGlobalObject::toGlobalObject(ExecState*) const
 ExecState* JSGlobalObject::globalExec()
 {
     return d()->globalExec.get();
+}
+
+void JSGlobalObject::tearOffActivation(ExecState* exec, bool leaveRelic)
+{
+    ActivationImp* oldActivation = exec->activationObject();
+    if (!oldActivation || !oldActivation->isOnStack())
+        return;
+
+    ASSERT(exec->codeType() == FunctionCode);
+    ActivationImp* newActivation = new ActivationImp(*oldActivation->d(), leaveRelic);
+    
+    if (!leaveRelic) {
+        checkActivationCount();
+        d()->activationCount--;
+    }
+    
+    oldActivation->d()->localStorage.shrink(0);
+    
+    exec->setActivationObject(newActivation);
+    exec->setVariableObject(newActivation);
+    exec->setLocalStorage(&newActivation->localStorage());
+    exec->replaceScopeChainTop(newActivation);
 }
 
 bool JSGlobalObject::isDynamicScope() const

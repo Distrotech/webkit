@@ -2416,6 +2416,10 @@ WEBCORE_COMMAND(yankAndSelect)
 
 - (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)item
 {
+    // This can be called during teardown when _webView is nil. Return NO when this happens, because CallUIDelegateReturningBoolean
+    // assumes the WebVIew is non-nil.
+    if (![self _webView])
+        return NO;
     BOOL result = [self validateUserInterfaceItemWithoutDelegate:item];
     return CallUIDelegateReturningBoolean(result, [self _webView], @selector(webView:validateUserInterfaceItem:defaultValidation:), item, result);
 }
@@ -4853,6 +4857,11 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
 #ifndef NDEBUG
     _private->enumeratingSubviews = NO;
 #endif
+}
+
+- (void) _destroyAllWebPlugins
+{
+    [[self _pluginController] destroyAllPlugins];
 }
 
 @end

@@ -29,25 +29,24 @@
 #ifndef JSVariableObject_h
 #define JSVariableObject_h
 
-#include "Register.h"
+#include "LocalStorageEntry.h"
 #include "SymbolTable.h"
-#include "UnusedParam.h"
 #include "object.h"
-#include <wtf/UnusedParam.h>
 
 namespace KJS {
-
-    class Register;
 
     class JSVariableObject : public JSObject {
     public:
         SymbolTable& symbolTable() const { return *d->symbolTable; }
+        LocalStorage& localStorage() const { return d->localStorage; }
 
         virtual void putWithAttributes(ExecState*, const Identifier&, JSValue*, unsigned attributes) = 0;
 
         virtual bool deleteProperty(ExecState*, const Identifier&);
         virtual void getPropertyNames(ExecState*, PropertyNameArray&);
         
+        virtual void mark();
+
         virtual bool isVariableObject() const;
         virtual bool isDynamicScope() const = 0;
 
@@ -58,20 +57,17 @@ namespace KJS {
         // without increasing their own size (since there's a hard limit on the
         // size of a JSCell).
         struct JSVariableObjectData {
-            JSVariableObjectData(SymbolTable* symbolTable_, Register** registerBase_, int registerOffset_)
-                : symbolTable(symbolTable_)
-                , registerBase(registerBase_)
-                , registerOffset(registerOffset_)
+            JSVariableObjectData() { }
+            JSVariableObjectData(SymbolTable* s)
+                : symbolTable(s) // Subclass owns this pointer.
             {
-                ASSERT(symbolTable_);
-                ASSERT(registerBase_);
             }
 
-            SymbolTable* symbolTable; // Maps name -> offset from "r" in register file.
-
-            Register** registerBase; // Location where a pointer to the base of the register file is stored.
-            int registerOffset; // Offset of "r", the register past the end of local storage.
+            LocalStorage localStorage; // Storage for variables in the symbol table.
+            SymbolTable* symbolTable; // Maps name -> index in localStorage.
         };
+
+        JSVariableObject() { }
 
         JSVariableObject(JSVariableObjectData* data)
             : d(data) // Subclass owns this pointer.
@@ -84,47 +80,64 @@ namespace KJS {
         {
         }
 
-        Register** registerBase() const { return d->registerBase; }
-        Register* registers() const { return *registerBase() + d->registerOffset; }
-        JSValue*& valueAt(int index) const { return registers()[index].u.jsValue; }
-
         bool symbolTableGet(const Identifier&, PropertySlot&);
         bool symbolTablePut(const Identifier&, JSValue*);
         bool symbolTablePutWithAttributes(const Identifier&, JSValue*, unsigned attributes);
+        bool symbolTableInsert(const Identifier&, JSValue*, unsigned attributes);
 
         JSVariableObjectData* d;
     };
 
     inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot)
     {
-        SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
-        if (!entry.isEmpty()) {
-            slot.setValueSlot(this, &valueAt(entry.getIndex()));
+        size_t index = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (index == missingSymbolMarker())
+            return false;
+#ifndef NDEBUG
+        // During initialization, the variable object needs to advertise that it has certain
+        // properties, even if they're not ready for access yet. This check verifies that
+        // no one tries to access such a property. In a release build, we optimize this check
+        // away and just return an invalid pointer. There's no harm in an invalid pointer,
+        // since no one dereferences it.
+        if (index >= d->localStorage.size()) {
+            slot.setUngettable(this);
             return true;
         }
-        return false;
+#endif
+        slot.setValueSlot(this, &d->localStorage[index].value);
+        return true;
     }
 
     inline bool JSVariableObject::symbolTablePut(const Identifier& propertyName, JSValue* value)
     {
-        SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
-        if (entry.isEmpty())
+        size_t index = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (index == missingSymbolMarker())
             return false;
-        if (entry.isReadOnly())
+        LocalStorageEntry& entry = d->localStorage[index];
+        if (entry.attributes & ReadOnly)
             return true;
-        valueAt(entry.getIndex()) = value;
+        entry.value = value;
         return true;
     }
 
     inline bool JSVariableObject::symbolTablePutWithAttributes(const Identifier& propertyName, JSValue* value, unsigned attributes)
     {
-        SymbolTable::iterator iter = symbolTable().find(propertyName.ustring().rep());
-        if (iter == symbolTable().end())
+        size_t index = symbolTable().get(propertyName.ustring().rep());
+        if (index == missingSymbolMarker())
             return false;
-        SymbolTableEntry& entry = iter->second;
-        ASSERT(!entry.isEmpty());
-        entry.setAttributes(attributes);
-        valueAt(entry.getIndex()) = value;
+        LocalStorageEntry& entry = d->localStorage[index];
+        entry.value = value;
+        entry.attributes = attributes;
+        return true;
+    }
+
+    inline bool JSVariableObject::symbolTableInsert(const Identifier& propertyName, JSValue* value, unsigned attributes)
+    {
+        if (symbolTable().get(propertyName.ustring().rep()) != missingSymbolMarker())
+            return false;
+        size_t localStorageIndex = d->localStorage.size();
+        d->localStorage.append(LocalStorageEntry(value, attributes));
+        symbolTable().add(propertyName.ustring().rep(), localStorageIndex);
         return true;
     }
 

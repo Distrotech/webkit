@@ -22,7 +22,6 @@
 
 #include "config.h"
 
-#include "CodeGenerator.h"
 #include "JSGlobalObject.h"
 #include "JSLock.h"
 #include "Parser.h"
@@ -184,10 +183,8 @@ JSValue* functionRun(ExecState* exec, JSObject*, const List& args)
     if (!fillBufferWithContentsOfFile(fileName, script))
         return throwError(exec, GeneralError, "Could not open file.");
 
-    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
-
     stopWatch.start();
-    Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
+    Interpreter::evaluate(exec->dynamicGlobalObject()->globalExec(), fileName, 0, script.data());
     stopWatch.stop();
 
     return jsNumber(stopWatch.getElapsedMS());
@@ -200,8 +197,7 @@ JSValue* functionLoad(ExecState* exec, JSObject*, const List& args)
     if (!fillBufferWithContentsOfFile(fileName, script))
         return throwError(exec, GeneralError, "Could not open file.");
 
-    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
-    Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
+    Interpreter::evaluate(exec->dynamicGlobalObject()->globalExec(), fileName, 0, script.data());
 
     return jsUndefined();
 }
@@ -262,12 +258,12 @@ int main(int argc, char** argv)
     return res;
 }
 
-static bool prettyPrintScript(ExecState* exec, const UString& fileName, const Vector<char>& script)
+static bool prettyPrintScript(const UString& fileName, const Vector<char>& script)
 {
     int errLine = 0;
     UString errMsg;
     UString scriptUString(script.data());
-    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(exec, fileName, 0, UStringSourceProvider::create(scriptUString), 0, &errLine, &errMsg);
+    RefPtr<ProgramNode> programNode = parser().parse<ProgramNode>(fileName, 0, scriptUString.data(), scriptUString.size(), 0, &errLine, &errMsg);
     if (!programNode) {
         fprintf(stderr, "%s:%d: %s.\n", fileName.UTF8String().c_str(), errLine, errMsg.UTF8String().c_str());
         return false;
@@ -277,13 +273,10 @@ static bool prettyPrintScript(ExecState* exec, const UString& fileName, const Ve
     return true;
 }
 
-static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint, bool dump)
+static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& arguments, bool prettyPrint)
 {
     GlobalObject* globalObject = new GlobalObject(arguments);
     Vector<char> script;
-
-    if (dump)
-        CodeGenerator::setDumpsGeneratedCode(true);
 
     bool success = true;
 
@@ -294,16 +287,10 @@ static bool runWithScripts(const Vector<UString>& fileNames, Vector<UString>& ar
             return false; // fail early so we can catch missing files
 
         if (prettyPrint)
-            prettyPrintScript(globalObject->globalExec(), fileName, script);
+            prettyPrintScript(fileName, script);
         else {
-            Completion completion = Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), fileName, 0, script.data());
+            Completion completion = Interpreter::evaluate(globalObject->globalExec(), fileName, 0, script.data());
             success = success && completion.complType() != Throw;
-            if (dump) {
-                if (success)
-                    printf("End: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
-                else
-                    printf("Exception: %s\n", completion.value()->toString(globalObject->globalExec()).ascii());
-            }
         }
     }
     return success;
@@ -315,7 +302,7 @@ static void printUsageStatement()
     exit(-1);
 }
 
-static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint, bool& dump)
+static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Vector<UString>& arguments, bool& prettyPrint)
 {
     if (argc < 3)
         printUsageStatement();
@@ -331,19 +318,6 @@ static void parseArguments(int argc, char** argv, Vector<UString>& fileNames, Ve
         }
         if (strcmp(arg, "-p") == 0) {
             prettyPrint = true;
-            continue;
-        }
-        if (strcmp(arg, "-d") == 0) {
-            dump = true;
-            continue;
-        }
-        if (strcmp(arg, "-s") == 0) {
-#if PLATFORM(UNIX)
-            signal(SIGILL, _exit);
-            signal(SIGFPE, _exit);
-            signal(SIGBUS, _exit);
-            signal(SIGSEGV, _exit);
-#endif
             continue;
         }
         if (strcmp(arg, "--") == 0) {
@@ -364,12 +338,11 @@ int kjsmain(int argc, char** argv)
     JSLock lock;
 
     bool prettyPrint = false;
-    bool dump = false;
     Vector<UString> fileNames;
     Vector<UString> arguments;
-    parseArguments(argc, argv, fileNames, arguments, prettyPrint, dump);
+    parseArguments(argc, argv, fileNames, arguments, prettyPrint);
 
-    bool success = runWithScripts(fileNames, arguments, prettyPrint, dump);
+    bool success = runWithScripts(fileNames, arguments, prettyPrint);
 
 #ifndef NDEBUG
     Collector::collect();

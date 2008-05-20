@@ -225,10 +225,14 @@ JSType ObjcFallbackObjectImp::type() const
     return UndefinedType;
 }
 
-CallType ObjcFallbackObjectImp::getCallData(CallData&)
+bool ObjcFallbackObjectImp::implementsCall() const
 {
     id targetObject = _instance->getObject();
-    return [targetObject respondsToSelector:@selector(invokeUndefinedMethodFromWebScript:withArguments:)] ? CallTypeNative : CallTypeNone;
+    
+    if ([targetObject respondsToSelector:@selector(invokeUndefinedMethodFromWebScript:withArguments:)])
+        return true;
+    
+    return false;
 }
 
 JSValue* ObjcFallbackObjectImp::callAsFunction(ExecState* exec, JSObject* thisObj, const List &args)

@@ -37,9 +37,9 @@ JSXMLHttpRequestConstructor::JSXMLHttpRequestConstructor(ExecState* exec, Docume
     putDirect(exec->propertyNames().prototype, JSXMLHttpRequestPrototype::self(exec), None);
 }
 
-KJS::ConstructType JSXMLHttpRequestConstructor::getConstructData(KJS::ConstructData& data)
+bool JSXMLHttpRequestConstructor::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* JSXMLHttpRequestConstructor::construct(ExecState* exec, const List&)

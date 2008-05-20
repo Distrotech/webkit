@@ -58,6 +58,9 @@ ApplicationCacheGroup::~ApplicationCacheGroup()
     ASSERT(!m_newestCache);
     ASSERT(m_caches.isEmpty());
     
+    if (m_cacheBeingUpdated)
+        stopLoading();
+    
     cacheStorage().cacheGroupDestroyed(this);
 }
     
@@ -220,6 +223,35 @@ void ApplicationCacheGroup::finishedLoadingMainResource(DocumentLoader* loader)
     checkIfLoadIsComplete();
 }
 
+void ApplicationCacheGroup::failedLoadingMainResource(DocumentLoader* loader)
+{
+    ASSERT(m_cacheCandidates.contains(loader) || m_associatedDocumentLoaders.contains(loader));
+    cacheUpdateFailed();
+}
+
+void ApplicationCacheGroup::stopLoading()
+{
+    ASSERT(m_cacheBeingUpdated);
+    
+    if (m_manifestHandle) {
+        ASSERT(!m_currentHandle);
+        
+        m_manifestHandle->setClient(0);
+        m_manifestHandle->cancel();
+        m_manifestHandle = 0;
+    }
+    
+    if (m_currentHandle) {
+        ASSERT(!m_manifestHandle);
+        
+        m_currentHandle->setClient(0);
+        m_currentHandle->cancel();
+        m_currentHandle = 0;
+    }    
+    
+    m_cacheBeingUpdated = 0;
+}    
+
 void ApplicationCacheGroup::documentLoaderDestroyed(DocumentLoader* loader)
 {
     HashSet<DocumentLoader*>::iterator it = m_associatedDocumentLoaders.find(loader);
@@ -233,9 +265,14 @@ void ApplicationCacheGroup::documentLoaderDestroyed(DocumentLoader* loader)
         m_cacheCandidates.remove(loader);
     }
     
-    if (m_associatedDocumentLoaders.isEmpty() && m_cacheCandidates.isEmpty()) {
-        // We should only have the newest cache remaining.
-        ASSERT(m_caches.size() == 1);
+    if (!m_associatedDocumentLoaders.isEmpty() || !m_cacheCandidates.isEmpty())
+        return;
+    
+    // We should only have the newest cache remaining, or there is an initial cache attempt in progress.
+    ASSERT(m_caches.size() == 1 || m_cacheBeingUpdated);
+        
+    // If a cache update is in progress, stop it.
+    if (m_caches.size() == 1) {
         ASSERT(m_caches.contains(m_newestCache.get()));
         
         // Release our reference to the newest cache.
@@ -243,7 +280,16 @@ void ApplicationCacheGroup::documentLoaderDestroyed(DocumentLoader* loader)
         
         // This could cause us to be deleted.
         m_newestCache = 0;
-    }    
+        
+        return;
+    }
+    
+    // There is an initial cache attempt in progress
+    ASSERT(m_cacheBeingUpdated);
+    ASSERT(m_caches.size() == 0);
+    
+    // Delete ourselves, causing the cache attempt to be stopped.
+    delete this;
 }    
 
 void ApplicationCacheGroup::cacheDestroyed(ApplicationCache* cache)
@@ -469,10 +515,12 @@ void ApplicationCacheGroup::didFinishLoadingManifest()
 
 void ApplicationCacheGroup::cacheUpdateFailed()
 {
+    if (m_cacheBeingUpdated)
+        stopLoading();
+        
     callListenersOnAssociatedDocuments(&DOMApplicationCache::callErrorListener);
 
     m_pendingEntries.clear();
-    m_cacheBeingUpdated = 0;
     m_manifestResource = 0;
 
     while (!m_cacheCandidates.isEmpty()) {
@@ -485,6 +533,10 @@ void ApplicationCacheGroup::cacheUpdateFailed()
     
     m_status = Idle;    
     m_frame = 0;
+    
+    // If there are no associated caches, delete ourselves
+    if (m_associatedDocumentLoaders.isEmpty())
+        delete this;
 }
     
     
@@ -568,7 +620,8 @@ void ApplicationCacheGroup::startLoadingEntry()
         }
     }
     
-    // FIXME: Fire progress event.
+    callListenersOnAssociatedDocuments(&DOMApplicationCache::callProgressListener);
+
     // FIXME: If this is an upgrade attempt, the newest cache should be used as an HTTP cache.
     
     ASSERT(!m_currentHandle);
@@ -583,11 +636,17 @@ void ApplicationCacheGroup::addEntry(const String& url, unsigned type)
 {
     ASSERT(m_cacheBeingUpdated);
     
-    // Don't add the url if we already have an implicit resource in the cache
+    // Don't add the URL if we already have an implicit resource in the cache
     if (ApplicationCacheResource* resource = m_cacheBeingUpdated->resourceForURL(url)) {
         ASSERT(resource->type() & ApplicationCacheResource::Implicit);
     
         resource->addType(type);
+        return;
+    }
+
+    // Don't add the URL if it's the same as the manifest URL.
+    if (m_manifestResource && m_manifestResource->url() == url) {
+        m_manifestResource->addType(type);
         return;
     }
     

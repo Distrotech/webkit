@@ -27,24 +27,12 @@
 #define WebScriptDebugServer_H
 
 #include "WebKit.h"
-#pragma warning(push, 0)
-#include <WebCore/JavaScriptDebugListener.h>
-#pragma warning(pop)
 
-namespace KJS {
-    class SourceProvider;
-}
+// FIXME: <rdar://5932722> Remove this class entirely once we stop exporting progIDForClass.
 
-namespace WebCore {
-    class Page;
-}
-
-interface IWebView;
-
-class WebScriptDebugServer : public IWebScriptDebugServer, WebCore::JavaScriptDebugListener {
+class WebScriptDebugServer : public IWebScriptDebugServer {
 public:
     static WebScriptDebugServer* createInstance();
-    static WebScriptDebugServer* sharedWebScriptDebugServer();
 
     // IUnknown
     virtual HRESULT STDMETHODCALLTYPE QueryInterface( 
@@ -74,28 +62,9 @@ public:
     virtual HRESULT STDMETHODCALLTYPE isPaused(
         /* [out, retval] */ BOOL* isPaused);
 
-    void didLoadMainResourceForDataSource(IWebView*, IWebDataSource*);
-    void serverDidDie();
-
-    static unsigned listenerCount();
-
 private:
     WebScriptDebugServer();
     ~WebScriptDebugServer();
-
-    void suspendProcessIfPaused();
-
-    // JavaScriptDebugListener
-    virtual void didParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int sourceID);
-    virtual void failedToParseSource(KJS::ExecState*, const KJS::SourceProvider& source, int startingLineNumber, const KJS::UString& sourceURL, int errorLine, const KJS::UString& errorMessage);
-    virtual void didEnterCallFrame(KJS::ExecState*, int sourceID, int lineNumber);
-    virtual void willExecuteStatement(KJS::ExecState*, int sourceID, int lineNumber);
-    virtual void willLeaveCallFrame(KJS::ExecState*, int sourceID, int lineNumber);
-    virtual void exceptionWasRaised(KJS::ExecState*, int sourceID, int lineNumber);
-
-    bool m_paused;
-    bool m_step;
-    bool m_callingListeners;
 
     ULONG m_refCount;
 };

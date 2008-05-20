@@ -31,6 +31,7 @@
 
 #include "AuthenticationCF.h"
 #include "AuthenticationChallenge.h"
+#include "CookieStorageWin.h"
 #include "CString.h"
 #include "DocLoader.h"
 #include "Frame.h"
@@ -258,8 +259,10 @@ static CFURLRequestRef makeFinalRequest(const ResourceRequest& request, bool sho
     if (sslProps)
         CFURLRequestSetSSLProperties(newRequest, sslProps.get());
 
-    if (CFHTTPCookieStorageRef defaultCookieStorage = wkGetDefaultHTTPCookieStorage())
-        CFURLRequestSetHTTPCookieStorageAcceptPolicy(newRequest, CFHTTPCookieStorageGetCookieAcceptPolicy(defaultCookieStorage));
+    if (CFHTTPCookieStorageRef cookieStorage = currentCookieStorage()) {
+        CFURLRequestSetHTTPCookieStorage(newRequest, cookieStorage);
+        CFURLRequestSetHTTPCookieStorageAcceptPolicy(newRequest, CFHTTPCookieStorageGetCookieAcceptPolicy(cookieStorage));
+    }
 
     return newRequest;
 }
@@ -381,13 +384,17 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
 
     CFDataRef data = CFURLConnectionSendSynchronousRequest(cfRequest.get(), &cfResponse, &cfError, request.timeoutInterval());
 
-    response = cfResponse;
-    if (cfResponse)
-        CFRelease(cfResponse);
-
-    error = cfError;
-    if (cfError)
+    if (cfError) {
+        error = cfError;
         CFRelease(cfError);
+
+        response = ResourceResponse(request.url(), String(), 0, String(), String());
+        response.setHTTPStatusCode(404);
+    } else {
+        response = cfResponse;
+        if (cfResponse)
+            CFRelease(cfResponse);
+    }
 
     if (data) {
         ASSERT(vector.isEmpty());

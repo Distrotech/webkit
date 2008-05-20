@@ -154,6 +154,15 @@ public:
 
     void capsLockStateMayHaveChanged();
     
+    unsigned pendingFrameUnloadEventCount();
+    void addPendingFrameUnloadEventCount();
+    void removePendingFrameUnloadEventCount();
+    void clearPendingFrameUnloadEventCount();
+    unsigned pendingFrameBeforeUnloadEventCount();
+    void addPendingFrameBeforeUnloadEventCount();
+    void removePendingFrameBeforeUnloadEventCount();
+    void clearPendingFrameBeforeUnloadEventCount();
+    
 #if PLATFORM(MAC)
     PassRefPtr<KeyboardEvent> currentKeyboardEvent() const;
 
@@ -199,6 +208,8 @@ private:
     bool handleMouseDraggedEvent(const MouseEventWithHitTestResults&);
     bool handleMouseReleaseEvent(const MouseEventWithHitTestResults&);
 
+    void handleKeyboardSelectionMovement(KeyboardEvent*);
+    
     Cursor selectCursor(const MouseEventWithHitTestResults&, PlatformScrollbar*);
 
     void hoverTimerFired(Timer<EventHandler>*);
@@ -314,6 +325,9 @@ private:
     PlatformMouseEvent m_mouseDown;
 
     static unsigned s_accessKeyModifiers;
+    
+    unsigned m_pendingFrameUnloadEventCount;
+    unsigned m_pendingFrameBeforeUnloadEventCount;
 
 #if PLATFORM(MAC)
     NSView *m_mouseDownView;

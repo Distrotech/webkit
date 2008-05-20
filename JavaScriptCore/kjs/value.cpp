@@ -207,16 +207,6 @@ const JSObject *JSCell::getObject() const
     return isObject() ? static_cast<const JSObject *>(this) : 0;
 }
 
-CallType JSCell::getCallData(CallData&)
-{
-    return CallTypeNone;
-}
-
-ConstructType JSCell::getConstructData(ConstructData&)
-{
-    return ConstructTypeNone;
-}
-
 JSCell* jsString(const char* s)
 {
     return new StringImp(s ? s : "");
@@ -230,6 +220,13 @@ JSCell* jsString(const UString& s)
 JSCell* jsOwnedString(const UString& s)
 {
     return s.isNull() ? new StringImp("", StringImp::HasOtherOwner) : new StringImp(s, StringImp::HasOtherOwner);
+}
+
+// This method includes a PIC branch to set up the NumberImp's vtable, so we quarantine
+// it in a separate function to keep the normal case speedy.
+JSValue *jsNumberCell(double d)
+{
+    return new NumberImp(d);
 }
 
 } // namespace KJS

@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/webkit/inspector">
+    <file>Breakpoint.js</file>
     <file>BreakpointsSidebarPane.js</file>
     <file>CallStackSidebarPane.js</file>
     <file>Console.js</file>
@@ -14,7 +15,10 @@
     <file>inspector.html</file>
     <file>inspector.js</file>
     <file>MetricsSidebarPane.js</file>
+    <file>Object.js</file>
+    <file>ObjectPropertiesSection.js</file>
     <file>Panel.js</file>
+    <file>Placard.js</file>
     <file>PropertiesSection.js</file>
     <file>PropertiesSidebarPane.js</file>
     <file>ResourceCategory.js</file>
@@ -22,9 +26,13 @@
     <file>ResourcesPanel.js</file>
     <file>ResourceView.js</file>
     <file>ScriptsPanel.js</file>
+    <file>ScopeChainSidebarPane.js</file>
     <file>SidebarPane.js</file>
     <file>SidebarTreeElement.js</file>
     <file>SourceView.js</file>
+    <file>Script.js</file>
+    <file>ScriptView.js</file>
+    <file>SourceFrame.js</file>
     <file>StylesSidebarPane.js</file>
     <file>TextPrompt.js</file>
     <file>treeoutline.js</file>

@@ -26,8 +26,9 @@
 #ifndef Profile_h
 #define Profile_h
 
-#include "FunctionCallProfile.h"
-#include <wtf/OwnPtr.h>
+#include "ProfileNode.h"
+#include <wtf/RefCounted.h>
+#include <wtf/RefPtr.h>
 
 namespace KJS {
 
@@ -35,24 +36,37 @@ namespace KJS {
     class FunctionImp;
     class JSObject;
 
-    class Profile {
+    class Profile : public RefCounted<Profile> {
     public:
-        Profile(const UString& title);
+        static PassRefPtr<Profile> create(const UString& title) { return adoptRef(new Profile(title)); }
 
         void willExecute(const Vector<UString>& callStackNames);
-        void didExecute(Vector<UString> stackNames);
+        void didExecute(const Vector<UString>& stackNames);
 
         void stopProfiling() { m_callTree->stopProfiling(); };
+        const UString& title() const { return m_title; };
+        ProfileNode* callTree() const { return m_callTree.get(); };
 
+        double totalTime() const { return m_callTree->totalTime(); }
+
+        void sortTotalTimeDescending() { m_callTree->sortTotalTimeDescending(); }
+        void sortTotalTimeAscending() { m_callTree->sortTotalTimeAscending(); }
+        void sortSelfTimeDescending() { m_callTree->sortSelfTimeDescending(); }
+        void sortSelfTimeAscending() { m_callTree->sortSelfTimeAscending(); }
+        void sortCallsDescending() { m_callTree->sortCallsDescending(); }
+        void sortCallsAscending() { m_callTree->sortCallsAscending(); }
+        
         void printDataInspectorStyle() const;
         void printDataSampleStyle() const;
 
     private:
-        const UString& m_title;
+        Profile(const UString& title);
+
+        UString m_title;
 
         void insertStackNamesInTree(const Vector<UString>& callStackNames);
 
-        OwnPtr<FunctionCallProfile> m_callTree;
+        RefPtr<ProfileNode> m_callTree;
     };
 
 } // namespace KJS

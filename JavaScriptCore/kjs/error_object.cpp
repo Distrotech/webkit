@@ -78,9 +78,9 @@ ErrorObjectImp::ErrorObjectImp(ExecState* exec, FunctionPrototype* funcProto, Er
     putDirect(exec->propertyNames().length, jsNumber(1), DontDelete|ReadOnly|DontEnum);
 }
 
-ConstructType ErrorObjectImp::getConstructData(ConstructData&)
+bool ErrorObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 // ECMA 15.9.3
@@ -124,9 +124,9 @@ NativeErrorImp::NativeErrorImp(ExecState* exec, FunctionPrototype* funcProto, Na
     putDirect(exec->propertyNames().prototype, proto, DontDelete|ReadOnly|DontEnum);
 }
 
-ConstructType NativeErrorImp::getConstructData(ConstructData&)
+bool NativeErrorImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+    return true;
 }
 
 JSObject* NativeErrorImp::construct(ExecState* exec, const List& args)

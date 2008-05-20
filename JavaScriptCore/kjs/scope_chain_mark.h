@@ -21,15 +21,25 @@
 #ifndef scope_chain_mark_h
 #define scope_chain_mark_h
 
+#include "Activation.h"
 #include "scope_chain.h"
 
 namespace KJS {
 
-    inline void ScopeChain::mark() const
+    inline void ScopeChain::mark()
     {
         for (ScopeChainNode* n = _node; n; n = n->next) {
             JSObject* o = n->object;
-            if (!o->marked())
+            
+            // An ActivationImp that is on the activation stack can't have the
+            // JSObject::marked() method called on it, because it doesn't have an
+            // entry in a GC mark bitmap, so we check here whether it is on the
+            // stack and directly call the portion of the marking code that is
+            // still relevant.
+            
+            if (o->isActivationObject() && static_cast<ActivationImp*>(o)->isOnStack())
+                static_cast<ActivationImp*>(o)->markChildren();
+            else if (!o->marked())
                 o->mark();
         }
     }

@@ -55,6 +55,7 @@ namespace WTF {
     macro(message) \
     macro(multiline) \
     macro(name) \
+    macro(now) \
     macro(parse) \
     macro(propertyIsEnumerable) \
     macro(prototype) \
@@ -81,7 +82,6 @@ namespace KJS {
 
         const Identifier nullIdentifier;
         const Identifier underscoreProto;
-        const Identifier thisIdentifier;
 
 #define KJS_IDENTIFIER_DECLARE_PROPERTY_NAME_GLOBAL(name) const Identifier name;
         KJS_COMMON_IDENTIFIERS_EACH_PROPERTY_NAME(KJS_IDENTIFIER_DECLARE_PROPERTY_NAME_GLOBAL)

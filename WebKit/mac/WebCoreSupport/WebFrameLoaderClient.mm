@@ -68,7 +68,6 @@
 #import "WebPreferences.h"
 #import "WebResourceLoadDelegate.h"
 #import "WebResourcePrivate.h"
-#import "WebScriptDebugServerPrivate.h"
 #import "WebUIDelegate.h"
 #import "WebUIDelegatePrivate.h"
 #import "WebViewInternal.h"
@@ -203,6 +202,9 @@ void WebFrameLoaderClient::setCopiesOnScroll()
 
 void WebFrameLoaderClient::detachedFromParent2()
 {
+    //remove any NetScape plugins that are children of this frame because they are about to be detached
+    WebView *webView = getWebView(m_webFrame.get());
+    [webView removePluginInstanceViewsFor:(m_webFrame.get())];
     [m_webFrame->_private->webFrameView _setWebFrame:nil]; // needed for now to be compatible w/ old behavior
 }
 
@@ -637,8 +639,6 @@ void WebFrameLoaderClient::dispatchWillSubmitForm(FramePolicyFunction function, 
 
 void WebFrameLoaderClient::dispatchDidLoadMainResource(DocumentLoader* loader)
 {
-    if ([WebScriptDebugServer listenerCount])
-        [[WebScriptDebugServer sharedScriptDebugServer] webView:getWebView(m_webFrame.get()) didLoadMainResourceForDataSource:dataSource(loader)];
 }
 
 void WebFrameLoaderClient::revertToProvisionalState(DocumentLoader* loader)
@@ -908,6 +908,11 @@ void WebFrameLoaderClient::transitionToCommittedFromCachedPage(CachedPage* cache
     ASSERT(cachedView != nil);
     ASSERT(cachedPage->documentLoader());
     [cachedView setDataSource:dataSource(cachedPage->documentLoader())];
+    
+    // clean up webkit plugin instances before WebHTMLView gets freed.
+    WebView *webView = getWebView(m_webFrame.get());
+    [webView removePluginInstanceViewsFor:(m_webFrame.get())];
+    
     [m_webFrame->_private->webFrameView _setDocumentView:cachedView];
 }
 
@@ -926,6 +931,10 @@ void WebFrameLoaderClient::transitionToCommittedForNewPage()
     // Don't suppress scrollbars before the view creation if we're making the view for a non-HTML view.
     if (!willProduceHTMLView)
         [[v _scrollView] setScrollBarsSuppressed:NO repaintOnUnsuppress:NO];
+    
+    // clean up webkit plugin instances before WebHTMLView gets freed.
+    WebView *webView = getWebView(m_webFrame.get());
+    [webView removePluginInstanceViewsFor:(m_webFrame.get())];
     
     NSView <WebDocumentView> *documentView = [v _makeDocumentViewForDataSource:ds];
     if (!documentView)
@@ -1442,7 +1451,7 @@ void WebFrameLoaderClient::windowObjectCleared()
             frame->windowScriptObject());
     }
 
-    if ([webView scriptDebugDelegate] || [WebScriptDebugServer listenerCount]) {
+    if ([webView scriptDebugDelegate]) {
         [m_webFrame.get() _detachScriptDebugger];
         [m_webFrame.get() _attachScriptDebugger];
     }

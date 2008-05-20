@@ -120,6 +120,9 @@ NSString *WebPageCacheEntryDateKey = @"WebPageCacheEntryDateKey";
 NSString *WebPageCacheDataSourceKey = @"WebPageCacheDataSourceKey";
 NSString *WebPageCacheDocumentViewKey = @"WebPageCacheDocumentViewKey";
 
+// FIXME: Remove when this key becomes publicly defined
+NSString *NSAccessibilityEnhancedUserInterfaceAttribute = @"AXEnhancedUserInterface";
+
 @implementation WebFramePrivate
 
 - (void)dealloc
@@ -299,14 +302,12 @@ WebView *getWebView(WebFrame *webFrame)
 
 - (void)_attachScriptDebugger
 {
+    if (_private->scriptDebugger)
+        return;
+
     JSGlobalObject* globalObject = _private->coreFrame->scriptProxy()->globalObject();
     if (!globalObject)
         return;
-
-    if (_private->scriptDebugger) {
-        ASSERT(_private->scriptDebugger == globalObject->debugger());
-        return;
-    }
 
     _private->scriptDebugger = new WebScriptDebugger(globalObject);
 }
@@ -671,7 +672,12 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 
 - (id)_accessibilityTree
 {
-    AXObjectCache::enableAccessibility();
+    if (!AXObjectCache::accessibilityEnabled()) {
+        AXObjectCache::enableAccessibility();
+        if ([[NSApp accessibilityAttributeValue:NSAccessibilityEnhancedUserInterfaceAttribute] boolValue])
+            AXObjectCache::enableEnhancedUserInterfaceAccessibility();
+    }
+
     if (!_private->coreFrame || !_private->coreFrame->document())
         return nil;
     RenderView* root = static_cast<RenderView *>(_private->coreFrame->document()->renderer());
@@ -1082,6 +1088,11 @@ static inline WebDataSource *dataSource(DocumentLoader* loader)
 {
     Document* document = _private->coreFrame->document();
     return document && document->isImageDocument();
+}
+
+- (unsigned)_pendingFrameUnloadEventCount
+{
+    return _private->coreFrame->eventHandler()->pendingFrameUnloadEventCount();
 }
 
 @end

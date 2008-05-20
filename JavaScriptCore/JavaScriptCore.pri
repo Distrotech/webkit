@@ -2,15 +2,10 @@
 VPATH += $$PWD
 
 INCLUDEPATH += tmp
-INCLUDEPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode $$PWD/VM
-DEPENDPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode $$PWD/VM
+INCLUDEPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode
+DEPENDPATH += $$PWD $$PWD/kjs $$PWD/wtf $$PWD/wtf/unicode
 DEFINES -= KJS_IDENTIFIER_HIDE_GLOBALS 
-qt-port:DEFINES += BUILDING_QT__
-gtk-port:DEFINES += BUILDING_GTK__
-
-# http://bugs.webkit.org/show_bug.cgi?id=16406
-# [Gtk] JavaScriptCore needs -lpthread
-gtk-port:!win32-*:LIBS += -lpthread
+DEFINES += BUILDING_QT__
 
 win32-msvc*: INCLUDEPATH += $$PWD/os-win32
 
@@ -50,28 +45,10 @@ SOURCES += \
     API/JSValueRef.cpp \
     kjs/InitializeThreading.cpp \
     kjs/JSGlobalObject.cpp \
-    kjs/JSVariableObject.cpp \
-    kjs/JSActivation.cpp \
-    kjs/JSNotAnObject.cpp \
-    VM/CodeBlock.cpp \
-    VM/CodeGenerator.cpp \
-    VM/ExceptionHelpers.cpp \
-    VM/Instruction.cpp \
-    VM/JSPropertyNameIterator.cpp \
-    VM/LabelID.cpp \
-    VM/Machine.cpp \
-    VM/Opcode.cpp \
-    VM/Register.cpp \
-    VM/RegisterFile.cpp \
-    VM/RegisterFileStack.cpp \
-    VM/RegisterID.cpp
+    kjs/JSVariableObject.cpp
 
 # AllInOneFile.cpp helps gcc analize and optimize code
 # Other compilers may be able to do this at link time
-gtk-port:CONFIG(release) {
-SOURCES += \
-    kjs/AllInOneFile.cpp
-} else {
 SOURCES += \
     kjs/function.cpp \
     kjs/debugger.cpp \
@@ -112,20 +89,10 @@ SOURCES += \
     kjs/string_object.cpp \
     kjs/ustring.cpp \
     kjs/value.cpp \
-    profiler/FunctionCallProfile.cpp \
+    profiler/ProfileNode.cpp \
     profiler/Profile.cpp \
     profiler/Profiler.cpp \
-    wtf/FastMalloc.cpp
-
-!qt-port:SOURCES += \
-    wtf/TCSystemAlloc.cpp
-}
-
-gtk-port:SOURCES += \
-    wtf/ThreadingGtk.cpp \
-    wtf/gtk/MainThreadGtk.cpp
-
-!gtk-port:SOURCES += \
+    wtf/FastMalloc.cpp \
     wtf/ThreadingQt.cpp \
     wtf/qt/MainThreadQt.cpp
 

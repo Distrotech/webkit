@@ -1181,9 +1181,8 @@ void CSSStyleSelector::adjustRenderStyle(RenderStyle* style, Element *e)
             style->setPosition(StaticPosition);
     }
 
-    // Make sure our z-index value is only applied if the object is positioned,
-    // relatively positioned, transparent, or has a transform/mask/reflection.
-    if (style->position() == StaticPosition && style->opacity() == 1.0f && !style->hasTransform() && !style->hasMask() && !style->boxReflect())
+    // Make sure our z-index value is only applied if the object is positioned.
+    if (style->position() == StaticPosition)
         style->setHasAutoZIndex();
 
     // Auto z-index becomes 0 for the root element and transparent objects.  This prevents
@@ -3563,7 +3562,8 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             if (fontDescription.keywordSize() && fontDescription.genericFamily() == FontDescription::MonospaceFamily)
                 setFontSize(fontDescription, fontSizeForKeyword(CSSValueXxSmall + fontDescription.keywordSize() - 1, m_style->htmlHacks(), false));
             fontDescription.setGenericFamily(initialDesc.genericFamily());
-            fontDescription.setFamily(initialDesc.firstFamily());
+            if (!initialDesc.firstFamily().familyIsEmpty())
+                fontDescription.setFamily(initialDesc.firstFamily());
             if (m_style->setFontDescription(fontDescription))
                 m_fontDirty = true;
             return;

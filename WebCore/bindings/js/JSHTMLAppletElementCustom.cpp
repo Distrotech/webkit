@@ -43,9 +43,9 @@ bool JSHTMLAppletElement::customPut(ExecState* exec, const Identifier& propertyN
     return runtimeObjectCustomPut(exec, propertyName, value, static_cast<HTMLElement*>(impl()));
 }
 
-CallType JSHTMLAppletElement::getCallData(CallData&)
+bool JSHTMLAppletElement::implementsCall() const
 {
-    return runtimeObjectImplementsCall(static_cast<HTMLElement*>(impl())) ? CallTypeNative : CallTypeNone;
+    return runtimeObjectImplementsCall(static_cast<HTMLElement*>(impl()));
 }
 
 JSValue* JSHTMLAppletElement::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)

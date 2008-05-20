@@ -139,7 +139,27 @@ static bool isValidHeaderValue(const String& name)
         
     return !name.contains('\r') && !name.contains('\n');
 }
-    
+
+XMLHttpRequest::XMLHttpRequest(Document* doc)
+    : m_doc(doc)
+    , m_async(true)
+    , m_state(UNSENT)
+    , m_identifier(std::numeric_limits<unsigned long>::max())
+    , m_responseText("")
+    , m_createdDocument(false)
+    , m_error(false)
+    , m_receivedLength(0)
+{
+    ASSERT(m_doc);
+    addToRequestsByDocument(m_doc, this);
+}
+
+XMLHttpRequest::~XMLHttpRequest()
+{
+    if (m_doc)
+        removeFromRequestsByDocument(m_doc, this);
+}
+
 XMLHttpRequestState XMLHttpRequest::readyState() const
 {
     return m_state;
@@ -257,26 +277,6 @@ bool XMLHttpRequest::dispatchEvent(PassRefPtr<Event> evt, ExceptionCode& ec, boo
     return !evt->defaultPrevented();
 }
 
-XMLHttpRequest::XMLHttpRequest(Document* d)
-    : m_doc(d)
-    , m_async(true)
-    , m_state(UNSENT)
-    , m_identifier(-1)
-    , m_responseText("")
-    , m_createdDocument(false)
-    , m_aborted(false)
-    , m_receivedLength(0)
-{
-    ASSERT(m_doc);
-    addToRequestsByDocument(m_doc, this);
-}
-
-XMLHttpRequest::~XMLHttpRequest()
-{
-    if (m_doc)
-        removeFromRequestsByDocument(m_doc, this);
-}
-
 void XMLHttpRequest::changeState(XMLHttpRequestState newState)
 {
     if (m_state != newState) {
@@ -335,17 +335,11 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
     internalAbort();
     XMLHttpRequestState previousState = m_state;
     m_state = UNSENT;
-    m_aborted = false;
+    m_error = false;
 
     // clear stuff from possible previous load
     m_requestHeaders.clear();
-    m_response = ResourceResponse();
-    {
-        KJS::JSLock lock;
-        m_responseText = "";
-    }
-    m_createdDocument = false;
-    m_responseXML = 0;
+    clearResponseEntityBody();
 
     ASSERT(m_state == UNSENT);
 
@@ -416,28 +410,39 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         return;
     }
 
-    m_aborted = false;
+    m_error = false;
 
-    ResourceRequest request(m_url);
+    ResourceRequest request;
+    sameOriginRequest(body, request);
+
+    if (m_async) {
+        loadRequestAsynchronously(request);
+        return;
+    }
+
+    loadRequestSynchronously(request, ec);
+}
+
+void XMLHttpRequest::sameOriginRequest(const String& body, ResourceRequest& request)
+{
+    request.setURL(m_url);
     request.setHTTPMethod(m_method);
 
-    if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && (m_url.protocol().lower() == "http" || m_url.protocol().lower() == "https")) {
+    if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && (m_url.protocolIs("http") || m_url.protocolIs("https"))) {
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
-            ExceptionCode ec = 0;
 #if ENABLE(DASHBOARD_SUPPORT)
             Settings* settings = m_doc->settings();
             if (settings && settings->usesDashboardBackwardCompatibilityMode())
-                setRequestHeader("Content-Type", "application/x-www-form-urlencoded", ec);
+                setRequestHeaderInternal("Content-Type", "application/x-www-form-urlencoded");
             else
 #endif
-                setRequestHeader("Content-Type", "application/xml", ec);
-            ASSERT(ec == 0);
+                setRequestHeaderInternal("Content-Type", "application/xml");
         }
 
         // FIXME: must use xmlEncoding for documents.
         String charset = "UTF-8";
-      
+
         TextEncoding encoding(charset);
         if (!encoding.isValid()) // FIXME: report an error?
             encoding = UTF8Encoding();
@@ -446,31 +451,45 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
 
     if (m_requestHeaders.size() > 0)
         request.addHTTPHeaderFields(m_requestHeaders);
+}
 
-    if (!m_async) {
-        Vector<char> data;
-        ResourceError error;
-        ResourceResponse response;
+void XMLHttpRequest::loadRequestSynchronously(ResourceRequest& request, ExceptionCode& ec)
+{
+    ASSERT(!m_async);
+    Vector<char> data;
+    ResourceError error;
+    ResourceResponse response;
 
-        {
-            // avoid deadlock in case the loader wants to use JS on a background thread
-            KJS::JSLock::DropAllLocks dropLocks;
-            if (m_doc->frame())
-                m_identifier = m_doc->frame()->loader()->loadResourceSynchronously(request, error, response, data);
-        }
+    {
+        // avoid deadlock in case the loader wants to use JS on a background thread
+        KJS::JSLock::DropAllLocks dropLocks;
+        if (m_doc->frame())
+            m_identifier = m_doc->frame()->loader()->loadResourceSynchronously(request, error, response, data);
+    }
 
-        m_loader = 0;
-        
-        // No exception for file:/// resources, see <rdar://problem/4962298>.
-        // Also, if we have an HTTP response, then it wasn't a network error in fact.
-        if (error.isNull() || request.url().isLocalFile() || response.httpStatusCode() > 0)
-            processSyncLoadResults(data, response);
-        else
-            ec = XMLHttpRequestException::NETWORK_ERR;
+    m_loader = 0;
 
+    // No exception for file:/// resources, see <rdar://problem/4962298>.
+    // Also, if we have an HTTP response, then it wasn't a network error in fact.
+    if (error.isNull() || request.url().isLocalFile() || response.httpStatusCode() > 0) {
+        processSyncLoadResults(data, response);
         return;
     }
 
+    if (error.isCancellation()) {
+        abortError();
+        ec = XMLHttpRequestException::ABORT_ERR;
+        return;
+    }
+
+    networkError();
+    ec = XMLHttpRequestException::NETWORK_ERR;
+}
+
+
+void XMLHttpRequest::loadRequestAsynchronously(ResourceRequest& request)
+{
+    ASSERT(m_async);
     // SubresourceLoader::create can return null here, for example if we're no longer attached to a page.
     // This is true while running onunload handlers.
     // FIXME: We need to be able to send XMLHttpRequests from onunload, <http://bugs.webkit.org/show_bug.cgi?id=10904>.
@@ -512,7 +531,7 @@ void XMLHttpRequest::internalAbort()
 {
     bool hadLoader = m_loader;
 
-    m_aborted = true;
+    m_error = true;
 
     // FIXME: when we add the support for multi-part XHR, we will have to think be careful with this initialization.
     m_receivedLength = 0;
@@ -526,6 +545,39 @@ void XMLHttpRequest::internalAbort()
 
     if (hadLoader)
         dropProtection();
+}
+
+void XMLHttpRequest::clearResponseEntityBody()
+{
+    m_response = ResourceResponse();
+    {
+        KJS::JSLock lock;
+        m_responseText = "";
+    }
+    m_createdDocument = false;
+    m_responseXML = 0;
+}
+
+void XMLHttpRequest::genericError()
+{
+    clearResponseEntityBody();
+    m_requestHeaders.clear();
+    m_error = true;
+
+    // The spec says we should "Synchronously switch the state to DONE." and then "Synchronously dispatch a readystatechange event on the object"
+    // but this does not match Firefox.
+}
+
+void XMLHttpRequest::networkError()
+{
+    genericError();
+    // FIXME: we need to "Synchronously dispatch a progress event called error on the object" here.
+}
+
+void XMLHttpRequest::abortError()
+{
+    genericError();
+    // FIXME: we need to "Synchronously dispatch a progress event called abort on the object" here.
 }
 
 void XMLHttpRequest::dropProtection()        
@@ -579,6 +631,11 @@ void XMLHttpRequest::setRequestHeader(const String& name, const String& value, E
         return;
     }
 
+    setRequestHeaderInternal(name, value);
+}
+
+void XMLHttpRequest::setRequestHeaderInternal(const String& name, const String& value)
+{
     if (!m_requestHeaders.contains(name)) {
         m_requestHeaders.set(name, value);
         return;
@@ -685,27 +742,33 @@ void XMLHttpRequest::processSyncLoadResults(const Vector<char>& data, const Reso
 
     didReceiveResponse(0, response);
     changeState(HEADERS_RECEIVED);
-    if (m_aborted)
+    if (m_error)
         return;
 
     const char* bytes = static_cast<const char*>(data.data());
     int len = static_cast<int>(data.size());
 
     didReceiveData(0, bytes, len);
-    if (m_aborted)
+    if (m_error)
         return;
 
     didFinishLoading(0);
 }
 
-void XMLHttpRequest::didFail(SubresourceLoader* loader, const ResourceError&)
+void XMLHttpRequest::didFail(SubresourceLoader* loader, const ResourceError& error)
 {
-    didFinishLoading(loader);
+    if (error.isCancellation()) {
+        abortError();
+        return;
+    }
+
+    networkError();
+    return;
 }
 
 void XMLHttpRequest::didFinishLoading(SubresourceLoader* loader)
 {
-    if (m_aborted)
+    if (m_error)
         return;
         
     ASSERT(loader == m_loader);
@@ -746,7 +809,6 @@ void XMLHttpRequest::didReceiveResponse(SubresourceLoader*, const ResourceRespon
     m_responseEncoding = extractCharsetFromMediaType(m_mimeTypeOverride);
     if (m_responseEncoding.isEmpty())
         m_responseEncoding = response.textEncodingName();
-
 }
 
 void XMLHttpRequest::receivedCancellation(SubresourceLoader*, const AuthenticationChallenge& challenge)
@@ -783,7 +845,7 @@ void XMLHttpRequest::didReceiveData(SubresourceLoader*, const char* data, int le
         m_responseText += decoded;
     }
 
-    if (!m_aborted) {
+    if (!m_error) {
         updateAndDispatchOnProgress(len);
 
         if (m_state != LOADING)

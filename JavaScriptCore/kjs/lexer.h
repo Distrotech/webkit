@@ -27,7 +27,6 @@
 #include "lookup.h"
 #include "ustring.h"
 #include <wtf/Vector.h>
-#include "SourceRange.h"
 
 namespace WTF {
     template<typename T> class ThreadSpecific;
@@ -40,7 +39,7 @@ namespace KJS {
 
   class Lexer : Noncopyable {
   public:
-    void setCode(int startingLineNumber, PassRefPtr<SourceProvider> source);
+    void setCode(int startingLineNumber, const UChar *c, unsigned int len);
     int lex(void* lvalp, void* llocp);
 
     int lineNo() const { return yylineno; }
@@ -91,7 +90,6 @@ namespace KJS {
     bool sawError() const { return error; }
 
     void clear();
-    SourceRange sourceRange(int openBrace, int closeBrace) { return SourceRange(m_source, openBrace + 1, closeBrace); }
 
   private:
     friend Lexer& lexer();
@@ -124,7 +122,7 @@ namespace KJS {
     bool isLineTerminator();
     static bool isOctalDigit(int);
 
-    int matchPunctuator(int& charPos, int c1, int c2, int c3, int c4);
+    int matchPunctuator(int c1, int c2, int c3, int c4);
     static unsigned short singleEscape(unsigned short);
     static unsigned short convertOctal(int c1, int c2, int c3);
 
@@ -135,7 +133,6 @@ namespace KJS {
     KJS::Identifier* makeIdentifier(const Vector<UChar>& buffer);
     UString* makeUString(const Vector<UChar>& buffer);
 
-    RefPtr<SourceProvider> m_source;
     const UChar* code;
     unsigned int length;
     int yycolumn;

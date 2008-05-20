@@ -74,6 +74,7 @@ public:
     virtual bool isWebArea() const;
     virtual bool isCheckboxOrRadio() const;
     virtual bool isFileUploadButton() const;
+    virtual bool isProgressIndicator() const;
     
     virtual bool isEnabled() const;
     virtual bool isSelected() const;
@@ -87,7 +88,8 @@ public:
     virtual bool isPressed() const;
     virtual bool isReadOnly() const;
     virtual bool isVisited() const;        
-    
+
+    const AtomicString& getAttribute(const QualifiedName&) const;
     virtual bool canSetFocusAttribute() const;
     virtual bool canSetTextRangeAttributes() const;
     virtual bool canSetValueAttribute() const;
@@ -99,6 +101,9 @@ public:
     
     static int headingLevel(Node*);
     virtual int intValue() const;
+    virtual float valueForRange() const;
+    virtual float maxValueForRange() const;
+    virtual float minValueForRange() const;
     virtual int layoutCount() const;
     
     virtual AccessibilityObject* doAccessibilityHitTest(const IntPoint&) const;
@@ -162,7 +167,12 @@ public:
     virtual void detach();
     virtual void childrenChanged();
     virtual void addChildren();
-    
+    virtual void selectedChildren(Vector<RefPtr<AccessibilityObject> >&);
+    virtual void visibleChildren(Vector<RefPtr<AccessibilityObject> >&);
+    virtual bool shouldFocusActiveDescendant() const;
+    virtual AccessibilityObject* activeDescendant() const;
+    virtual void handleActiveDescendantChanged();
+
     virtual VisiblePositionRange visiblePositionRange() const;
     virtual VisiblePositionRange doAXTextMarkerRangeForLine(unsigned) const;
     virtual IntRect doAXBoundsForTextMarkerRange(const VisiblePositionRange&) const;
@@ -181,7 +191,6 @@ public:
     virtual String doAXStringForRange(const PlainTextRange&) const;
     virtual IntRect doAXBoundsForRange(const PlainTextRange&) const;
     
-    
 protected:
     RenderObject* m_renderer;
     RefPtr<HTMLAreaElement> m_areaElement;
@@ -189,7 +198,12 @@ protected:
     void setRenderObject(RenderObject* renderer) { m_renderer = renderer; }
     virtual void removeAXObjectID();
     
-    virtual bool isDetached() const { return !m_renderer; }    
+    virtual bool isDetached() const { return !m_renderer; }
+
+private:
+    void ariaListboxSelectedChildren(Vector<RefPtr<AccessibilityObject> >&);
+    void ariaListboxVisibleChildren(Vector<RefPtr<AccessibilityObject> >&);
+
 };
     
 } // namespace WebCore

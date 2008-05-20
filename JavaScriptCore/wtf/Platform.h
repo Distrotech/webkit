@@ -239,10 +239,6 @@
 #define HAVE_ACCESSIBILITY 1
 #endif
 
-#if COMPILER(GCC)
-#define HAVE_COMPUTED_GOTO 1
-#endif
-
 /* ENABLE macro defaults */
 
 #if !defined(ENABLE_ICONDATABASE)

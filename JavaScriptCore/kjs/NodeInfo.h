@@ -30,7 +30,6 @@ namespace KJS {
     const FeatureInfo NoFeatures = 0;
     const FeatureInfo EvalFeature = 1 << 0;
     const FeatureInfo ClosureFeature = 1 << 1;
-    const FeatureInfo AssignFeature = 1 << 2;
 
     template <typename T> struct NodeFeatureInfo {
         T m_node;

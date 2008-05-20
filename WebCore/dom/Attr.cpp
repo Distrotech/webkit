@@ -105,7 +105,7 @@ void Attr::setValue( const String& v, ExceptionCode& ec)
 {
     ec = 0;
 
-    // do not interprete entities in the string, its literal!
+    // do not interpret entities in the string, it's literal!
 
     // NO_MODIFICATION_ALLOWED_ERR: Raised when the node is readonly
     if (isReadOnlyNode()) {
@@ -113,13 +113,12 @@ void Attr::setValue( const String& v, ExceptionCode& ec)
         return;
     }
 
-    int e = 0;
     m_ignoreChildrenChanged++;
     removeChildren();
-    appendChild(document()->createTextNode(v), e);
-    m_ignoreChildrenChanged--;
-    
     m_attribute->setValue(v.impl());
+    createTextChild();
+    m_ignoreChildrenChanged--;
+
     if (m_element)
         m_element->attributeChanged(m_attribute.get());
 }
@@ -167,29 +166,6 @@ void Attr::childrenChanged(bool changedByParser, Node* beforeChange, Node* after
     m_attribute->setValue(val.impl());
     if (m_element)
         m_element->attributeChanged(m_attribute.get());
-}
-
-String Attr::toString() const
-{
-    String result;
-
-    result += nodeName();
-
-    // FIXME: substitute entities for any instances of " or ' --
-    // maybe easier to just use text value and ignore existing
-    // entity refs?
-
-    if (firstChild() != NULL) {
-        result += "=\"";
-
-        for (Node *child = firstChild(); child != NULL; child = child->nextSibling()) {
-            result += child->toString();
-        }
-        
-        result += "\"";
-    }
-
-    return result;
 }
 
 }

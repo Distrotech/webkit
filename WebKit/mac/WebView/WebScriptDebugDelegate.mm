@@ -30,9 +30,8 @@
 #import "WebDataSource.h"
 #import "WebDataSourceInternal.h"
 #import "WebFrameInternal.h"
-#import "WebScriptDebugServerPrivate.h"
+#import "WebScriptDebugDelegate.h"
 #import "WebViewInternal.h"
-#import <JavaScriptCore/DebuggerCallFrame.h>
 #import <JavaScriptCore/ExecState.h>
 #import <JavaScriptCore/JSGlobalObject.h>
 #import <JavaScriptCore/function.h>
@@ -60,7 +59,7 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 @public
     WebScriptObject        *globalObject;   // the global object's proxy (not retained)
     WebScriptCallFrame     *caller;         // previous stack frame
-    DebuggerCallFrame* debuggerCallFrame;
+    KJS::ExecState         *state;
 }
 @end
 
@@ -68,7 +67,6 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 - (void)dealloc
 {
     [caller release];
-    delete debuggerCallFrame;
     [super dealloc];
 }
 @end
@@ -84,26 +82,15 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 @implementation WebScriptCallFrame (WebScriptDebugDelegateInternal)
 
-- (WebScriptCallFrame *)_initWithGlobalObject:(WebScriptObject *)globalObj caller:(WebScriptCallFrame *)caller debuggerCallFrame:(const DebuggerCallFrame&)debuggerCallFrame
+- (WebScriptCallFrame *)_initWithGlobalObject:(WebScriptObject *)globalObj caller:(WebScriptCallFrame *)caller state:(ExecState *)state
 {
     if ((self = [super init])) {
         _private = [[WebScriptCallFramePrivate alloc] init];
         _private->globalObject = globalObj;
         _private->caller = [caller retain];
-        _private->debuggerCallFrame = new DebuggerCallFrame(debuggerCallFrame);
+        _private->state = state;
     }
     return self;
-}
-
-- (void)_setDebuggerCallFrame:(const DebuggerCallFrame&)debuggerCallFrame
-{
-    *_private->debuggerCallFrame = debuggerCallFrame;
-}
-
-- (void)_clearDebuggerCallFrame
-{
-    delete _private->debuggerCallFrame;
-    _private->debuggerCallFrame = 0;
 }
 
 - (id)_convertValueToObjcValue:(JSValue *)value
@@ -164,15 +151,17 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 - (NSArray *)scopeChain
 {
-    const ScopeChainNode* scopeChain = _private->debuggerCallFrame->scopeChain();
-    if (!scopeChain->next)  // global frame
+    ExecState* state = _private->state;
+    if (!state->scopeNode())  // global frame
         return [NSArray arrayWithObject:_private->globalObject];
 
+    ScopeChain      chain  = state->scopeChain();
     NSMutableArray *scopes = [[NSMutableArray alloc] init];
 
-    ScopeChainIterator end = scopeChain->end();
-    for (ScopeChainIterator it = scopeChain->begin(); it != end; ++it)
-        [scopes addObject:[self _convertValueToObjcValue:(*it)]];
+    while (!chain.isEmpty()) {
+        [scopes addObject:[self _convertValueToObjcValue:chain.top()]];
+        chain.pop();
+    }
 
     NSArray *result = [NSArray arrayWithArray:scopes];
     [scopes release];
@@ -184,16 +173,26 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 - (NSString *)functionName
 {
-    const UString* functionName = _private->debuggerCallFrame->functionName();
-    return functionName ? toNSString(*functionName) : nil;
+    ExecState* state = _private->state;
+    if (!state->scopeNode())
+        return nil;
+
+    FunctionImp* func = state->function();
+    if (!func)
+        return nil;
+
+    Identifier fn = func->functionName();
+    return toNSString(fn.ustring());
 }
 
 // Returns the pending exception for this frame (nil if none).
 
 - (id)exception
 {
-    JSValue* exception = _private->debuggerCallFrame->exception();
-    return exception ? [self _convertValueToObjcValue:exception] : nil;
+    ExecState* state = _private->state;
+    if (!state->hadException())
+        return nil;
+    return [self _convertValueToObjcValue:state->exception()];
 }
 
 // Evaluate some JavaScript code in the context of this frame.
@@ -202,10 +201,47 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 // Calling this method on the global frame is not quite the same as calling the WebScriptObject
 // method of the same name, due to the treatment of exceptions.
 
+// FIXME: If "script" contains var declarations, the machinery to handle local variables
+// efficiently in JavaScriptCore will not work properly. This could lead to crashes or
+// incorrect variable values. So this is not appropriate for evaluating arbitrary script.
 - (id)evaluateWebScript:(NSString *)script
 {
-    JSValue* result = _private->debuggerCallFrame->evaluateScript(String(script));
-    return result ? [self _convertValueToObjcValue:result] : nil;
+    JSLock lock;
+
+    UString code = String(script);
+
+    ExecState* state = _private->state;
+    JSGlobalObject* globalObject = state->dynamicGlobalObject();
+
+    // find "eval"
+    JSObject* eval = NULL;
+    if (state->scopeNode()) {  // "eval" won't work without context (i.e. at global scope)
+        JSValue* v = globalObject->get(state, "eval");
+        if (v->isObject() && static_cast<JSObject*>(v)->implementsCall())
+            eval = static_cast<JSObject*>(v);
+        else
+            // no "eval" - fallback operates on global exec state
+            state = globalObject->globalExec();
+    }
+
+    JSValue* savedException = state->exception();
+    state->clearException();
+
+    // evaluate
+    JSValue* result;
+    if (eval) {
+        List args;
+        args.append(jsString(code));
+        result = eval->call(state, 0, args);
+    } else
+        // no "eval", or no context (i.e. global scope) - use global fallback
+        result = Interpreter::evaluate(state, UString(), 0, code.data(), code.size(), globalObject).value();
+
+    if (state->hadException())
+        result = state->exception();    // (may be redundant depending on which eval path was used)
+    state->setException(savedException);
+
+    return [self _convertValueToObjcValue:result];
 }
 
 @end

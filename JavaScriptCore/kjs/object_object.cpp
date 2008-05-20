@@ -143,9 +143,10 @@ ObjectObjectImp::ObjectObjectImp(ExecState* exec, ObjectPrototype* objProto, Fun
   putDirect(exec->propertyNames().length, jsNumber(1), ReadOnly|DontDelete|DontEnum);
 }
 
-ConstructType ObjectObjectImp::getConstructData(ConstructData&)
+
+bool ObjectObjectImp::implementsConstruct() const
 {
-    return ConstructTypeNative;
+  return true;
 }
 
 // ECMA 15.2.2

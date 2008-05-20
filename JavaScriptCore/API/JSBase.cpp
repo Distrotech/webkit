@@ -44,10 +44,8 @@ JSValueRef JSEvaluateScript(JSContextRef ctx, JSStringRef script, JSObjectRef th
     JSObject* jsThisObject = toJS(thisObject);
     UString::Rep* scriptRep = toJS(script);
     UString::Rep* sourceURLRep = sourceURL ? toJS(sourceURL) : &UString::Rep::null;
-
     // Interpreter::evaluate sets "this" to the global object if it is NULL
-    JSGlobalObject* globalObject = exec->dynamicGlobalObject();
-    Completion completion = Interpreter::evaluate(globalObject->globalExec(), globalObject->globalScopeChain(), UString(sourceURLRep), startingLineNumber, UString(scriptRep), jsThisObject);
+    Completion completion = Interpreter::evaluate(exec->dynamicGlobalObject()->globalExec(), UString(sourceURLRep), startingLineNumber, UString(scriptRep), jsThisObject);
 
     if (completion.complType() == Throw) {
         if (exception)
