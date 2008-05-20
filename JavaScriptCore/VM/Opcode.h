@@ -73,6 +73,8 @@ namespace KJS {
         macro(op_resolve_base) \
         macro(op_get_prop_id) \
         macro(op_put_prop_id) \
+        macro(op_get_prop_val) \
+        macro(op_put_prop_val) \
         macro(op_put_prop_index) \
         \
         macro(op_jmp) \

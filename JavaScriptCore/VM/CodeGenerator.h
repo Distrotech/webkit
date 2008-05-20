@@ -164,10 +164,11 @@ namespace KJS {
         RegisterID* emitResolveBase(RegisterID*, int);
         RegisterID* emitResolveBase(RegisterID*, int, int);
         
-        RegisterID* emitGetPropId(RegisterID*, RegisterID*, const Identifier& ident);
-        RegisterID* emitPutPropId(RegisterID*, const Identifier& ident, RegisterID*);
-
-        RegisterID* emitPutPropIndex(RegisterID*, unsigned index, RegisterID*);
+        RegisterID* emitGetPropId(RegisterID* dst, RegisterID* base, const Identifier&);
+        RegisterID* emitPutPropId(RegisterID* base, const Identifier&, RegisterID* val);
+        RegisterID* emitGetPropVal(RegisterID* dst, RegisterID* base, RegisterID* property);
+        RegisterID* emitPutPropVal(RegisterID* base, RegisterID* property, RegisterID* val);
+        RegisterID* emitPutPropIndex(RegisterID* base, unsigned index, RegisterID* val);
 
         RegisterID* emitCall(RegisterID*, RegisterID*, RegisterID*, ArgumentsNode*);
         RegisterID* emitReturn(RegisterID*);
