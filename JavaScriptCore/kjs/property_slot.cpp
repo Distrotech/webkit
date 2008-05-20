@@ -52,7 +52,7 @@ JSValue *PropertySlot::functionGetter(ExecState* exec, JSObject* originalObject,
     stack->pushFunctionRegisterFile();
     JSValue* result = slot.m_data.getterFunc->call(exec, originalObject, exec->emptyList());
     stack->popFunctionRegisterFile();
-    return result;
+    return result;    
 }
 
 }
