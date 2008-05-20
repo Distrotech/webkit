@@ -1,3 +1,13 @@
+2008-03-31  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Add support for FunctionCallValueNode.
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallValueNode::emitCode):
+        * kjs/nodes.h:
+
 2008-03-31  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
