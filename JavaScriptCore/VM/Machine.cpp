@@ -381,19 +381,26 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     callFrame[Machine::OptionalCalleeActivation].u.jsValue = 0;
 }
 
-ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc)
+ALWAYS_INLINE Register* slideRegisterWindowForCall(ExecState* exec, CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc, JSValue*& exceptionValue)
 {
-    Register* r;
+    Register* r = 0;
+    int oldOffset = registerOffset;
     registerOffset += argv + argc + newCodeBlock->numVars;
 
     if (argc == newCodeBlock->numParameters) { // correct number of arguments
         size_t size = registerOffset + newCodeBlock->numTemporaries;
-        registerFile->grow(size);
+        if (!registerFile->grow(size)) {
+            exceptionValue = createStackOverflowError(exec);
+            return *registerBase + oldOffset;
+        }
         r = (*registerBase) + registerOffset;
     } else if (argc < newCodeBlock->numParameters) { // too few arguments -- fill in the blanks
         int omittedArgCount = newCodeBlock->numParameters - argc;
         size_t size = registerOffset + omittedArgCount + newCodeBlock->numTemporaries;
-        registerFile->grow(size);
+        if (!registerFile->grow(size)) {
+            exceptionValue = createStackOverflowError(exec);
+            return *registerBase + oldOffset;
+        }
         r = (*registerBase) + omittedArgCount + registerOffset;
         
         Register* endOfParams = r - newCodeBlock->numVars;
@@ -401,7 +408,10 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
             (*it).u.jsValue = jsUndefined();
     } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
         size_t size = registerOffset + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
-        registerFile->grow(size);
+        if (!registerFile->grow(size)) {
+            exceptionValue = createStackOverflowError(exec);
+            return *registerBase + oldOffset;
+        }
         r = (*registerBase) + Machine::CallFrameHeaderSize + newCodeBlock->numParameters + registerOffset;
         
         int shift = Machine::CallFrameHeaderSize + argc;
@@ -565,7 +575,6 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     
     size_t oldSize = registerFile->size();
     registerFile->grow(oldSize + CallFrameHeaderSize + argc);
-    
     Register** registerBase = registerFile->basePointer();
     int registerOffset = oldSize;
     int callFrameOffset = registerOffset;
@@ -583,13 +592,15 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     initializeCallFrame(callFrame, 0, 0, 0, registerOffset, 0, registerOffset + CallFrameHeaderSize, 0, function);
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
-    Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
+    Register* r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, *exception);
+    
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(newCodeBlock, scopeChain, functionBodyNode, callFrame, registerBase, r);            
 
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
     registerFile->shrink(oldSize);
     return result;
+    
 }
 
 JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj, RegisterFile* registerFile, int registerOffset, ScopeChainNode* scopeChain, JSValue** exception, JSObject* variableObject)
@@ -616,7 +627,10 @@ JSValue* Machine::execute(EvalNode* evalNode, ExecState* exec, JSObject* thisObj
     
     size_t oldSize = registerFile->size();
     size_t newSize = registerOffset + codeBlock->numVars + codeBlock->numTemporaries + CallFrameHeaderSize;
-    registerFile->grow(newSize);
+    if (!registerFile->grow(newSize)) {
+        *exception = createStackOverflowError(exec);
+        return 0;
+    }
     Register* r = (*registerFile->basePointer()) + registerOffset + codeBlock->numVars + CallFrameHeaderSize;
     
     ((*registerFile->basePointer()) + registerOffset)[CallerCodeBlock].u.codeBlock = 0;
@@ -1328,8 +1342,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = callData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(callDataScopeChain);
-            r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            CodeBlock* newCodeBlock = &functionBodyNode->code(callDataScopeChain);
+            r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, exceptionValue);
+            if (UNLIKELY(exceptionValue != 0))
+                goto vm_throw;
+
+            codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();
@@ -1430,8 +1448,12 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             ScopeChainNode* callDataScopeChain = constructData.js.scopeChain;
             FunctionBodyNode* functionBodyNode = constructData.js.functionBody;
 
-            codeBlock = &functionBodyNode->code(callDataScopeChain);
-            r = slideRegisterWindowForCall(codeBlock, registerFile, registerBase, registerOffset, argv, argc);
+            CodeBlock* newCodeBlock = &functionBodyNode->code(callDataScopeChain);
+            r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, exceptionValue);
+            if (exceptionValue)
+                goto vm_throw;
+
+            codeBlock = newCodeBlock;
             callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
             scopeChain = scopeChainForCall(codeBlock, callDataScopeChain, functionBodyNode, callFrame, registerBase, r);            
             k = codeBlock->jsValues.data();

@@ -33,6 +33,7 @@
 
 namespace KJS {
     class Node;
+    JSValue* createStackOverflowError(ExecState*);
     JSValue* createUndefinedVariableError(ExecState*, const Identifier&);
     JSValue* createNotAnObjectError(ExecState*, JSValue*, Node*);
     JSValue* createNotAConstructorError(ExecState* exec, JSValue* value, Node* expr);
