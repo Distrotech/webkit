@@ -1,3 +1,24 @@
+2008-04-10  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
+
+        Reviewed by Maciej.
+
+        Bug 18231: Improve support for function call nodes in SquirrelFish
+        <https://bugs.webkit.org/show_bug.cgi?id=18231>
+
+        Use correct value of 'this' for function calls.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitResolveBaseAndFunc):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::resolveBaseAndFunc):
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallResolveNode::emitCode):
+
 2008-04-10  Geoffrey Garen  <ggaren@apple.com>
 
         This time for sure.
