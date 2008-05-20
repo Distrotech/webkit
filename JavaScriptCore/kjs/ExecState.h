@@ -41,6 +41,7 @@ namespace KJS  {
     class Interpreter;
     class JSGlobalObject;
     class JSVariableObject;
+    class Machine;
     class ProgramNode;
     class RegisterFile;
     class ScopeNode;
@@ -66,7 +67,7 @@ namespace KJS  {
         friend class Machine;
 
     public:
-        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, const RegisterFile* globalRegisterFile);
+        ExecState(JSGlobalObject*, JSObject* globalThisValue, ScopeChainNode* globalScopeChain);
 
         // Global object in which execution began.
         JSGlobalObject* dynamicGlobalObject() const { return m_globalObject; }
@@ -79,6 +80,8 @@ namespace KJS  {
         }
         
         JSObject* globalThisValue() const { return m_globalThisValue; }
+        
+        Machine* machine() const { return m_machine; }
         
         // Exception propogation.
         void setExceptionSource(Instruction* source) { m_exceptionSource = source; }
@@ -103,7 +106,7 @@ namespace KJS  {
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
     private:
-        ExecState(const ExecState*, ScopeChainNode*, const RegisterFile*, int callFrameOffset);
+        ExecState(ExecState*, Machine*, RegisterFile*, ScopeChainNode*, int callFrameOffset);
 
         bool isGlobalObject(JSObject*) const;
 
@@ -116,10 +119,11 @@ namespace KJS  {
         const PerThreadData* m_perThreadData;
 
         // These values are controlled by the machine.
-        const ExecState* m_prev;
-        const RegisterFile* m_registerFile;
+        ExecState* m_prev;
+        Machine* m_machine;
+        RegisterFile* m_registerFile;
         ScopeChainNode* m_scopeChain;
-        int m_callFrameOffset;
+        int m_callFrameOffset; // A negative offset indicates a non-function scope.
     };
 
     // This code is now defunct:

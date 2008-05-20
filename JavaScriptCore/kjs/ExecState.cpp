@@ -31,26 +31,28 @@
 
 namespace KJS {
 
-ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain, const RegisterFile* globalRegisterFile)
+ExecState::ExecState(JSGlobalObject* globalObject, JSObject* globalThisValue, ScopeChainNode* globalScopeChain)
     : m_globalObject(globalObject)
     , m_globalThisValue(globalThisValue)
     , m_exception(0)
     , m_exceptionSource(0)
     , m_perThreadData(globalObject->perThreadData())
     , m_prev(0)
-    , m_registerFile(globalRegisterFile)
+    , m_machine(0)
+    , m_registerFile(0)
     , m_scopeChain(globalScopeChain)
-    , m_callFrameOffset(0)
+    , m_callFrameOffset(-1)
 {
 }
 
-ExecState::ExecState(const ExecState* exec, ScopeChainNode* scopeChain, const RegisterFile* registerFile, int callFrameOffset)
+ExecState::ExecState(ExecState* exec, Machine* machine, RegisterFile* registerFile, ScopeChainNode* scopeChain, int callFrameOffset)
     : m_globalObject(exec->m_globalObject)
     , m_globalThisValue(exec->m_globalThisValue)
     , m_exception(0)
     , m_exceptionSource(0)
     , m_perThreadData(exec->m_globalObject->perThreadData())
     , m_prev(exec)
+    , m_machine(machine)
     , m_registerFile(registerFile)
     , m_scopeChain(scopeChain)
     , m_callFrameOffset(callFrameOffset)

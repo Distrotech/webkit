@@ -88,45 +88,22 @@ JSValue* FunctionImp::callAsFunction(ExecState* exec, JSObject* thisObj, const L
     return result;
 }
 
-JSValue* FunctionImp::argumentsGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&)
+JSValue* FunctionImp::argumentsGetter(ExecState* exec, JSObject*, const Identifier&, const PropertySlot& slot)
 {
-    ASSERT_NOT_REACHED();
-#if 0
-  FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
-  
-  for (ExecState* e = exec; e; e = e->callingExecState())
-    if (e->function() == thisObj) {
-      ASSERT_NOT_REACHED();
-      return e->activationObject()->get(exec, propertyName);
-    }
-#endif  
-  return jsNull();
+    FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
+    ASSERT(exec->machine());
+    return exec->machine()->retrieveArguments(exec, thisObj);
 }
 
-JSValue* FunctionImp::callerGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot&)
+JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&, const PropertySlot& slot)
 {
-    ASSERT_NOT_REACHED();
-#if 0
     FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
-    ExecState* e = exec;
-    while (e) {
-        if (e->function() == thisObj)
-            break;
-        e = e->callingExecState();
-    }
-    if (!e)
-        return jsNull();
-    
-    ExecState* callingExecState = e->callingExecState();
-    if (!callingExecState)
-        return jsNull();
-    
-    FunctionImp* callingFunction = callingExecState->function();
-    if (!callingFunction)
-        return jsNull();
-    return callingFunction;
-#endif
-    return 0;
+    ASSERT(exec->machine());
+    UNUSED_PARAM(exec);
+    UNUSED_PARAM(slot);
+    UNUSED_PARAM(thisObj);
+    // FIXME: Implement this.
+    return jsNull();
 }
 
 JSValue* FunctionImp::lengthGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot)
@@ -137,13 +114,11 @@ JSValue* FunctionImp::lengthGetter(ExecState*, JSObject*, const Identifier&, con
 
 bool FunctionImp::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    // Find the arguments from the closest context.
     if (propertyName == exec->propertyNames().arguments) {
         slot.setCustom(this, argumentsGetter);
         return true;
     }
 
-    // Compute length of parameters.
     if (propertyName == exec->propertyNames().length) {
         slot.setCustom(this, lengthGetter);
         return true;
