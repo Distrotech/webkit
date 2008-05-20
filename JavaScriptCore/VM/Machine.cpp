@@ -39,24 +39,24 @@
 
 namespace KJS {
 
-void Machine::dumpRegisters(const Vector<Register>& registers, Register* r)
+void Machine::dumpRegisters(const Vector<Register>* registers, Register* r)
 {
     printf("\nRegisters: ");
 
-    size_t size = registers.size();
+    size_t size = registers->size();
     for (size_t i = 0; i < size; ++i) {
-        printf("| %10p ", registers[i].u.jsValue);
+        printf("| %10p ", (*registers)[i].u.jsValue);
     }
     printf("|\n           ");
 
-    Vector<Register>::const_iterator it = registers.begin();
+    Vector<Register>::const_iterator it = registers->begin();
     for ( ; it != r; ++it)
         printf("| %10p ", it);
 
     printf("|     r^     ");
     ++it;
     
-    Vector<Register>::const_iterator end = registers.end();
+    Vector<Register>::const_iterator end = registers->end();
     for ( ; it < end; ++it)
         printf("| %10p ", it);
 
@@ -252,7 +252,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
     JSValue** k = codeBlock->jsValues.data();
 
 #ifndef NDEBUG
-    dumpRegisters(*registers, r);
+    dumpRegisters(registers, r);
 #endif
 
 #if HAVE(COMPUTED_GOTO)
