@@ -252,7 +252,7 @@ void JSGlobalObject::reset(JSValue* prototype)
     // dangerous. (The allocations below may cause a GC.)
 
     _prop.clear();
-    localStorage().clear();
+    registers().clear();
     symbolTable().clear();
 
     // Prototypes

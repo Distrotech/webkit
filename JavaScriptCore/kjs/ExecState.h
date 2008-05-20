@@ -120,8 +120,8 @@ namespace KJS  {
         static const HashTable* RegExpObjectImpTable(ExecState* exec) { return exec->m_perThreadData->RegExpObjectImpTable; }
         static const HashTable* stringTable(ExecState* exec) { return exec->m_perThreadData->stringTable; }
 
-        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *m_localStorage; }
-        void setLocalStorage(LocalStorage* s) { m_localStorage = s; }
+        LocalStorage& localStorage() { ASSERT_NOT_REACHED(); return *(LocalStorage*)0; }
+        void setLocalStorage(LocalStorage*) { ASSERT_NOT_REACHED(); }
 
         // These are only valid right after calling execute().
         ComplType completionType() const { return m_completionType; }
@@ -207,7 +207,6 @@ namespace KJS  {
         FunctionImp* m_function;
         const List* m_arguments;
         ActivationImp* m_activation;
-        LocalStorage* m_localStorage;
 
         ScopeChain m_scopeChain;
         ScopeChainNode m_inlineScopeChainNode;

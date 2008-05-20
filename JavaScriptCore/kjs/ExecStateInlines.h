@@ -51,7 +51,6 @@ namespace KJS  {
         ASSERT(m_scopeNode);
         
         m_activation = 0;
-        m_localStorage = 0;
         m_variableObject = 0;
     }
 

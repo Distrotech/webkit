@@ -1,3 +1,43 @@
+2008-04-02  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Removed the last vestiges of LocalStorage from JSVariableObject and
+        JSGlobalObject.
+
+        * kjs/JSGlobalObject.cpp:
+        (KJS::JSGlobalObject::saveLocalStorage): Save and restore from/to
+        registers. Use stub isReadOnly and isDontEnum methods for now, until
+        we really implement attributes in the symbol table.
+        (KJS::JSGlobalObject::restoreLocalStorage):
+        (KJS::JSGlobalObject::reset):
+
+        * kjs/JSVariableObject.cpp:
+        (KJS::JSVariableObject::getPropertyNames): Use stub isDontEnum method
+        for now, as above.
+        (KJS::JSVariableObject::getPropertyAttributes): ditto
+
+        * kjs/JSVariableObject.h: Removed LocalStorage from JSVariableObjectData.
+        Removed mark method, because subclasses implement different strategies for
+        marking registers.
+        (KJS::JSVariableObject::isReadOnly): Stub method
+        (KJS::JSVariableObject::isDontEnum): ditto
+
+        Changed the code below to ASSERT_NOT_REACHED() and return 0, since it
+        can no longer retrieve LocalStorage from the ExecState. (Eventually,
+        we'll just remove this code and all its friends, but that's a task for
+        later.)
+        
+        * kjs/ExecState.cpp:
+        (KJS::ExecState::ExecState):
+        * kjs/function.cpp:
+        (KJS::ActivationImp::markChildren):
+        * kjs/function.h:
+        * kjs/nodes.cpp:
+        (KJS::getNonLocalSymbol):
+        (KJS::ScopeNode::optimizeVariableAccess):
+        (KJS::ProgramNode::processDeclarations):
+
 2008-04-01  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
