@@ -1,3 +1,18 @@
+2008-05-02  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - properly copy globals into and out of implicit call register
+        files, otherwise they will fail at global lookup
+
+        Fixes fast/js/array-tostring-and-join.html layout test.
+        
+        * VM/RegisterFileStack.cpp:
+        (KJS::RegisterFileStack::pushGlobalRegisterFile):
+        (KJS::RegisterFileStack::popGlobalRegisterFile):
+        (KJS::RegisterFileStack::pushFunctionRegisterFile):
+        (KJS::RegisterFileStack::popFunctionRegisterFile):
+
 2008-05-02  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.
