@@ -2,6 +2,17 @@
 
         Reviewed by Oliver.
         
+        - fix problem with code generation for return with no argument
+        
+        3d-cube now runs
+
+        * kjs/nodes.cpp:
+        (KJS::ReturnNode::emitCode):
+
+2008-04-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
         - Implement support for JS constructors
         
         access-binary-trees and access-nbody now run.
