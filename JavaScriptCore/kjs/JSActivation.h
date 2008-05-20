@@ -37,10 +37,6 @@ namespace KJS {
 
     class Register;
     
-    // This class will eventually inherit from JSVariableObject and replace
-    // ActivationImp. That's why, for example, it accesses all its data members
-    // through d().
-
     class JSActivation : public JSVariableObject {
     typedef JSVariableObject Base;
     public:

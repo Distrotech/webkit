@@ -5358,8 +5358,10 @@ void FunctionBodyNode::generateCode(ScopeChain& scopeChain)
 {
     m_code.set(new CodeBlock(usesEval(), needsClosure()));
     
-    unsigned localCount = m_functionStack.size() + m_varStack.size();
-    CodeGenerator generator(scopeChain, &m_symbolTable, localCount, m_parameters.size(), this, m_code.get());
+    unsigned localCount = m_functionStack.size() + m_varStack.size() + m_parameters.size() + 1;
+    CodeGenerator generator(scopeChain, &m_symbolTable, localCount, this, m_code.get());
+
+    generator.addParameter(CommonIdentifiers::shared()->thisIdentifier);
 
     for (size_t i = 0, size = m_parameters.size(); i < size; ++i)
         generator.addParameter(m_parameters[i]);
@@ -5414,8 +5416,13 @@ void ProgramNode::generateCode(ScopeChain& scopeChain)
 {
     m_code.set(new CodeBlock(usesEval(), needsClosure()));
     
-    unsigned localCount = m_functionStack.size() + m_varStack.size();
-    CodeGenerator generator(scopeChain, &static_cast<JSGlobalObject*>(scopeChain.bottom())->symbolTable(), localCount, 0, this, m_code.get());
+    JSGlobalObject* globalObject = static_cast<JSGlobalObject*>(scopeChain.bottom());
+    ASSERT(globalObject->isGlobalObject());
+    
+    unsigned localCount = m_functionStack.size() + m_varStack.size() + 1;
+    CodeGenerator generator(scopeChain, &globalObject->symbolTable(), localCount, this, m_code.get());
+
+    generator.addParameter(CommonIdentifiers::shared()->thisIdentifier);
 
     for (size_t i = 0, size = m_varStack.size(); i < size; ++i)
         generator.addVar(m_varStack[i].first);
