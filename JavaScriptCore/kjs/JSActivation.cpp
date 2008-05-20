@@ -36,7 +36,7 @@ namespace KJS {
 const ClassInfo JSActivation::info = { "JSActivation", 0, 0, 0 };
 
 JSActivation::JSActivation(PassRefPtr<FunctionBodyNode> functionBody, Vector<Register>* registers, int rOffset)
-    : JSVariableObject(new JSActivationData(functionBody, registers, rOffset))
+    : Base(new JSActivationData(functionBody, registers, rOffset))
 {
 }
 
@@ -65,13 +65,10 @@ void JSActivation::copyRegisters()
 
 bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName, PropertySlot& slot)
 {
-    int index = symbolTable().get(propertyName.ustring().rep());
-    if (index != missingSymbolMarker()) {
-        slot.setValueSlot(this, &registers()[d()->rOffset + index].u.jsValue);
+    if (symbolTableGet(propertyName, slot))
         return true;
-    }
-    
-    // FIXME: Implement "arguments" property.
+
+    // FIXME: Implement the "arguments" property.
     ASSERT(propertyName != CommonIdentifiers::shared()->arguments);
 
     if (JSValue** location = getDirectLocation(propertyName)) {
@@ -88,11 +85,8 @@ bool JSActivation::getOwnPropertySlot(ExecState*, const Identifier& propertyName
 
 void JSActivation::put(ExecState*, const Identifier& propertyName, JSValue* value)
 {
-    int index = symbolTable().get(propertyName.ustring().rep());
-    if (index != missingSymbolMarker()) {
-        registers()[d()->rOffset + index].u.jsValue = value;
+    if (symbolTablePut(propertyName, value))
         return;
-    }
 
     // We don't call through to JSObject because __proto__ and getter/setter 
     // properties are non-standard extensions that other implementations do not
@@ -102,9 +96,16 @@ void JSActivation::put(ExecState*, const Identifier& propertyName, JSValue* valu
 }
 
 // FIXME: Make this function honor ReadOnly (const) and DontEnum
-void JSActivation::putWithAttributes(ExecState* exec, const Identifier& propertyName, JSValue* value, unsigned)
+void JSActivation::putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes)
 {
-    put(exec, propertyName, value);
+    if (symbolTablePutWithAttributes(propertyName, value, attributes))
+        return;
+
+    // We don't call through to JSObject because __proto__ and getter/setter 
+    // properties are non-standard extensions that other implementations do not
+    // expose in the activation object.
+    ASSERT(!_prop.hasGetterSetterProperties());
+    _prop.put(propertyName, value, attributes, true);
 }
 
 bool JSActivation::deleteProperty(ExecState* exec, const Identifier& propertyName)
