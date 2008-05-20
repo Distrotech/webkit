@@ -1,3 +1,12 @@
+2008-04-30  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        #ifdef'd out some debugger code that doesn't work anymore.
+
+        * WebView/WebScriptDebugDelegate.mm:
+        (-[WebScriptCallFrame scopeChain]):
+
 2008-04-21  Geoffrey Garen  <ggaren@apple.com>
 
         Build fix.
