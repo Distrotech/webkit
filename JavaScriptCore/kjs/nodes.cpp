@@ -48,7 +48,7 @@ namespace KJS {
 class FunctionBodyNodeWithDebuggerHooks : public FunctionBodyNode {
 public:
     FunctionBodyNodeWithDebuggerHooks(SourceElements*, VarStack*, FunctionStack*, bool usesEval, bool needsClosure) KJS_FAST_CALL;
-    virtual JSValue* execute(ExecState*) KJS_FAST_CALL;
+    virtual JSValue* execute(OldInterpreterExecState*) KJS_FAST_CALL;
 };
 
 #if COMPILER(GCC)
@@ -235,28 +235,28 @@ Node::Node(JSType expectedReturn)
     m_line = lexer().lineNo();
 }
 
-double ExpressionNode::evaluateToNumber(ExecState* exec)
+double ExpressionNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* value = evaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return value->toNumber(exec);
 }
 
-bool ExpressionNode::evaluateToBoolean(ExecState* exec)
+bool ExpressionNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* value = evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return value->toBoolean(exec);
 }
 
-int32_t ExpressionNode::evaluateToInt32(ExecState* exec)
+int32_t ExpressionNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* value = evaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return value->toInt32(exec);
 }
 
-uint32_t ExpressionNode::evaluateToUInt32(ExecState* exec)
+uint32_t ExpressionNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* value = evaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -286,31 +286,31 @@ static inline const UString& currentSourceURL(ExecState* exec)
     return exec->scopeNode()->sourceURL();
 }
 
-JSValue* Node::setErrorCompletion(ExecState* exec, ErrorType e, const char* msg)
+JSValue* Node::setErrorCompletion(OldInterpreterExecState* exec, ErrorType e, const char* msg)
 {
     return exec->setThrowCompletion(Error::create(exec, e, msg, lineNo(), currentSourceId(exec), currentSourceURL(exec)));
 }
 
-JSValue* Node::setErrorCompletion(ExecState* exec, ErrorType e, const char* msg, const Identifier& ident)
+JSValue* Node::setErrorCompletion(OldInterpreterExecState* exec, ErrorType e, const char* msg, const Identifier& ident)
 {
     UString message = msg;
     substitute(message, ident.ustring());
     return exec->setThrowCompletion(Error::create(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec)));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg)
 {
     return KJS::throwError(exec, e, msg, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, const char* string)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, const char* string)
 {
     UString message = msg;
     substitute(message, string);
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* expr)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* expr)
 {
     UString message = msg;
     substitute(message, v->toString(exec));
@@ -318,14 +318,14 @@ JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, const Identifier& label)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, const Identifier& label)
 {
     UString message = msg;
     substitute(message, label.ustring());
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* e1, Node* e2)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* e1, Node* e2)
 {
     UString message = msg;
     substitute(message, v->toString(exec));
@@ -334,7 +334,7 @@ JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* expr, const Identifier& label)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, JSValue* v, Node* expr, const Identifier& label)
 {
     UString message = msg;
     substitute(message, v->toString(exec));
@@ -343,7 +343,7 @@ JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue* v, const Identifier& label)
+JSValue* Node::throwError(OldInterpreterExecState* exec, ErrorType e, const char* msg, JSValue* v, const Identifier& label)
 {
     UString message = msg;
     substitute(message, v->toString(exec));
@@ -351,17 +351,17 @@ JSValue* Node::throwError(ExecState* exec, ErrorType e, const char* msg, JSValue
     return KJS::throwError(exec, e, message, lineNo(), currentSourceId(exec), currentSourceURL(exec));
 }
 
-JSValue* Node::throwUndefinedVariableError(ExecState* exec, const Identifier& ident)
+JSValue* Node::throwUndefinedVariableError(OldInterpreterExecState* exec, const Identifier& ident)
 {
     return throwError(exec, ReferenceError, "Can't find variable: %s", ident);
 }
 
-void Node::handleException(ExecState* exec)
+void Node::handleException(OldInterpreterExecState* exec)
 {
     handleException(exec, exec->exception());
 }
 
-void Node::handleException(ExecState* exec, JSValue* exceptionValue)
+void Node::handleException(OldInterpreterExecState* exec, JSValue* exceptionValue)
 {
     if (exceptionValue->isObject()) {
         JSObject* exception = static_cast<JSObject*>(exceptionValue);
@@ -375,7 +375,7 @@ void Node::handleException(ExecState* exec, JSValue* exceptionValue)
         dbg->exception(exec, currentSourceId(exec), m_line, exceptionValue);
 }
 
-NEVER_INLINE JSValue* Node::rethrowException(ExecState* exec)
+NEVER_INLINE JSValue* Node::rethrowException(OldInterpreterExecState* exec)
 {
     JSValue* exception = exec->exception();
     exec->clearException();
@@ -434,7 +434,7 @@ BreakpointCheckStatement::BreakpointCheckStatement(PassRefPtr<StatementNode> sta
     ASSERT(m_statement);
 }
 
-JSValue* BreakpointCheckStatement::execute(ExecState* exec)
+JSValue* BreakpointCheckStatement::execute(OldInterpreterExecState* exec)
 {
     if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
         if (!debugger->atStatement(exec, currentSourceId(exec), m_statement->firstLine(), m_statement->lastLine()))
@@ -447,7 +447,7 @@ void BreakpointCheckStatement::streamTo(SourceStream& stream) const
     m_statement->streamTo(stream);
 }
 
-void BreakpointCheckStatement::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BreakpointCheckStatement::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
 }
@@ -459,7 +459,7 @@ RegisterID* NullNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), jsNull());
 }
 
-JSValue* NullNode::evaluate(ExecState* )
+JSValue* NullNode::evaluate(OldInterpreterExecState* )
 {
     return jsNull();
 }
@@ -471,7 +471,7 @@ RegisterID* FalseNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), false);
 }
 
-JSValue* FalseNode::evaluate(ExecState*)
+JSValue* FalseNode::evaluate(OldInterpreterExecState*)
 {
     return jsBoolean(false);
 }
@@ -483,7 +483,7 @@ RegisterID* TrueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), true);
 }
 
-JSValue* TrueNode::evaluate(ExecState*)
+JSValue* TrueNode::evaluate(OldInterpreterExecState*)
 {
     return jsBoolean(true);
 }
@@ -495,45 +495,45 @@ RegisterID* NumberNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), m_double);
 }
 
-JSValue* NumberNode::evaluate(ExecState*)
+JSValue* NumberNode::evaluate(OldInterpreterExecState*)
 {
     // Number nodes are only created when the number can't fit in a JSImmediate, so no need to check again.
     return jsNumberCell(m_double);
 }
 
-double NumberNode::evaluateToNumber(ExecState*)
+double NumberNode::evaluateToNumber(OldInterpreterExecState*)
 {
     return m_double;
 }
 
-bool NumberNode::evaluateToBoolean(ExecState*)
+bool NumberNode::evaluateToBoolean(OldInterpreterExecState*)
 {
     return m_double < 0.0 || m_double > 0.0; // false for NaN as well as 0
 }
 
-int32_t NumberNode::evaluateToInt32(ExecState*)
+int32_t NumberNode::evaluateToInt32(OldInterpreterExecState*)
 {
     return JSValue::toInt32(m_double);
 }
 
-uint32_t NumberNode::evaluateToUInt32(ExecState*)
+uint32_t NumberNode::evaluateToUInt32(OldInterpreterExecState*)
 {
     return JSValue::toUInt32(m_double);
 }
 
 // ------------------------------ ImmediateNumberNode -----------------------------------
 
-JSValue* ImmediateNumberNode::evaluate(ExecState*)
+JSValue* ImmediateNumberNode::evaluate(OldInterpreterExecState*)
 {
     return m_value;
 }
 
-int32_t ImmediateNumberNode::evaluateToInt32(ExecState*)
+int32_t ImmediateNumberNode::evaluateToInt32(OldInterpreterExecState*)
 {
     return JSImmediate::getTruncatedInt32(m_value);
 }
 
-uint32_t ImmediateNumberNode::evaluateToUInt32(ExecState*)
+uint32_t ImmediateNumberNode::evaluateToUInt32(OldInterpreterExecState*)
 {
     uint32_t i;
     if (JSImmediate::getTruncatedUInt32(m_value, i))
@@ -550,17 +550,17 @@ RegisterID* StringNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), jsOwnedString(m_value));
 }
 
-JSValue* StringNode::evaluate(ExecState*)
+JSValue* StringNode::evaluate(OldInterpreterExecState*)
 {
     return jsOwnedString(m_value);
 }
 
-double StringNode::evaluateToNumber(ExecState*)
+double StringNode::evaluateToNumber(OldInterpreterExecState*)
 {
     return m_value.toDouble();
 }
 
-bool StringNode::evaluateToBoolean(ExecState*)
+bool StringNode::evaluateToBoolean(OldInterpreterExecState*)
 {
     return !m_value.isEmpty();
 }
@@ -572,7 +572,7 @@ RegisterID* RegExpNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNewRegExp(generator.finalDestination(dst), m_regExp.get());
 }
 
-JSValue* RegExpNode::evaluate(ExecState* exec)
+JSValue* RegExpNode::evaluate(OldInterpreterExecState* exec)
 {
     return exec->lexicalGlobalObject()->regExpConstructor()->createRegExpImp(exec, m_regExp);
 }
@@ -586,7 +586,7 @@ RegisterID* ThisNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 }
 
 // ECMA 11.1.1
-JSValue* ThisNode::evaluate(ExecState* exec)
+JSValue* ThisNode::evaluate(OldInterpreterExecState* exec)
 {
     return exec->thisValue();
 }
@@ -602,7 +602,7 @@ RegisterID* ResolveNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 }
 
 // ECMA 11.1.2 & 10.1.4
-JSValue* ResolveNode::inlineEvaluate(ExecState* exec)
+JSValue* ResolveNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -627,40 +627,40 @@ JSValue* ResolveNode::inlineEvaluate(ExecState* exec)
     return throwUndefinedVariableError(exec, m_ident);
 }
 
-JSValue* ResolveNode::evaluate(ExecState* exec)
+JSValue* ResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double ResolveNode::evaluateToNumber(ExecState* exec)
+double ResolveNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool ResolveNode::evaluateToBoolean(ExecState* exec)
+bool ResolveNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t ResolveNode::evaluateToInt32(ExecState* exec)
+int32_t ResolveNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t ResolveNode::evaluateToUInt32(ExecState* exec)
+uint32_t ResolveNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toUInt32(exec);
 }
 
-static size_t getSymbolTableEntry(ExecState* exec, const Identifier& ident, const SymbolTable& symbolTable, size_t& stackDepth) 
+static size_t getSymbolTableEntry(OldInterpreterExecState* exec, const Identifier& ident, const SymbolTable& symbolTable, size_t& stackDepth) 
 {
     int index = symbolTable.get(ident.ustring().rep());
     if (index != missingSymbolMarker()) {
@@ -694,7 +694,7 @@ static size_t getSymbolTableEntry(ExecState* exec, const Identifier& ident, cons
     return missingSymbolMarker();
 }
 
-void ResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
+void ResolveNode::optimizeVariableAccess(OldInterpreterExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
     size_t depth = 0;
     int index = getSymbolTableEntry(exec, m_ident, symbolTable, depth);
@@ -712,38 +712,38 @@ void ResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& sym
     new (this) NonLocalVarAccessNode(depth);
 }
 
-JSValue* LocalVarAccessNode::inlineEvaluate(ExecState* exec)
+JSValue* LocalVarAccessNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     return exec->localStorage()[m_index].value;
 }
 
-JSValue* LocalVarAccessNode::evaluate(ExecState* exec)
+JSValue* LocalVarAccessNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double LocalVarAccessNode::evaluateToNumber(ExecState* exec)
+double LocalVarAccessNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toNumber(exec);
 }
 
-bool LocalVarAccessNode::evaluateToBoolean(ExecState* exec)
+bool LocalVarAccessNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toBoolean(exec);
 }
 
-int32_t LocalVarAccessNode::evaluateToInt32(ExecState* exec)
+int32_t LocalVarAccessNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toInt32(exec);
 }
 
-uint32_t LocalVarAccessNode::evaluateToUInt32(ExecState* exec)
+uint32_t LocalVarAccessNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toUInt32(exec);
 }
 
-static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t, size_t scopeDepth)
+static inline JSValue* getNonLocalSymbol(OldInterpreterExecState* exec, size_t, size_t scopeDepth)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -757,37 +757,37 @@ static inline JSValue* getNonLocalSymbol(ExecState* exec, size_t, size_t scopeDe
     return 0;
 }
 
-JSValue* ScopedVarAccessNode::inlineEvaluate(ExecState* exec)
+JSValue* ScopedVarAccessNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     return getNonLocalSymbol(exec, m_index, m_scopeDepth);
 }
 
-JSValue* ScopedVarAccessNode::evaluate(ExecState* exec)
+JSValue* ScopedVarAccessNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double ScopedVarAccessNode::evaluateToNumber(ExecState* exec)
+double ScopedVarAccessNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toNumber(exec);
 }
 
-bool ScopedVarAccessNode::evaluateToBoolean(ExecState* exec)
+bool ScopedVarAccessNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toBoolean(exec);
 }
 
-int32_t ScopedVarAccessNode::evaluateToInt32(ExecState* exec)
+int32_t ScopedVarAccessNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toInt32(exec);
 }
 
-uint32_t ScopedVarAccessNode::evaluateToUInt32(ExecState* exec)
+uint32_t ScopedVarAccessNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toUInt32(exec);
 }
 
-JSValue* NonLocalVarAccessNode::inlineEvaluate(ExecState* exec)
+JSValue* NonLocalVarAccessNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -814,34 +814,34 @@ JSValue* NonLocalVarAccessNode::inlineEvaluate(ExecState* exec)
     return throwUndefinedVariableError(exec, m_ident);
 }
 
-JSValue* NonLocalVarAccessNode::evaluate(ExecState* exec)
+JSValue* NonLocalVarAccessNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double NonLocalVarAccessNode::evaluateToNumber(ExecState* exec)
+double NonLocalVarAccessNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toNumber(exec);
 }
 
-bool NonLocalVarAccessNode::evaluateToBoolean(ExecState* exec)
+bool NonLocalVarAccessNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toBoolean(exec);
 }
 
-int32_t NonLocalVarAccessNode::evaluateToInt32(ExecState* exec)
+int32_t NonLocalVarAccessNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toInt32(exec);
 }
 
-uint32_t NonLocalVarAccessNode::evaluateToUInt32(ExecState* exec)
+uint32_t NonLocalVarAccessNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec)->toUInt32(exec);
 }
 
 // ------------------------------ ElementNode ----------------------------------
 
-void ElementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ElementNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
         nodeStack.append(m_next.get());
@@ -850,7 +850,7 @@ void ElementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const L
 }
 
 // ECMA 11.1.4
-JSValue* ElementNode::evaluate(ExecState* exec)
+JSValue* ElementNode::evaluate(OldInterpreterExecState* exec)
 {
     JSObject* array = exec->lexicalGlobalObject()->arrayConstructor()->construct(exec, exec->emptyList());
     int length = 0;
@@ -884,14 +884,14 @@ RegisterID* ArrayNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.moveToDestinationIfNeeded(dst, r0.get());
 }
 
-void ArrayNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ArrayNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_element)
         nodeStack.append(m_element.get());
 }
 
 // ECMA 11.1.4
-JSValue* ArrayNode::evaluate(ExecState* exec)
+JSValue* ArrayNode::evaluate(OldInterpreterExecState* exec)
 {
     JSObject* array;
     int length;
@@ -922,14 +922,14 @@ RegisterID* ObjectLiteralNode::emitCode(CodeGenerator& generator, RegisterID* ds
         return generator.emitNewObject(generator.finalDestination(dst));
 }
 
-void ObjectLiteralNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ObjectLiteralNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_list)
         nodeStack.append(m_list.get());
 }
 
 // ECMA 11.1.5
-JSValue* ObjectLiteralNode::evaluate(ExecState* exec)
+JSValue* ObjectLiteralNode::evaluate(OldInterpreterExecState* exec)
 {
     if (m_list)
         return m_list->evaluate(exec);
@@ -962,7 +962,7 @@ RegisterID* PropertyListNode::emitCode(CodeGenerator& generator, RegisterID* dst
     return generator.moveToDestinationIfNeeded(dst, r0.get());
 }
 
-void PropertyListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PropertyListNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
         nodeStack.append(m_next.get());
@@ -970,7 +970,7 @@ void PropertyListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, co
 }
 
 // ECMA 11.1.5
-JSValue* PropertyListNode::evaluate(ExecState* exec)
+JSValue* PropertyListNode::evaluate(OldInterpreterExecState* exec)
 {
     JSObject* obj = exec->lexicalGlobalObject()->objectConstructor()->construct(exec, exec->emptyList());
 
@@ -998,13 +998,13 @@ JSValue* PropertyListNode::evaluate(ExecState* exec)
 
 // ------------------------------ PropertyNode -----------------------------
 
-void PropertyNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PropertyNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_assign.get());
 }
 
 // ECMA 11.1.5
-JSValue* PropertyNode::evaluate(ExecState*)
+JSValue* PropertyNode::evaluate(OldInterpreterExecState*)
 {
     ASSERT(false);
     return jsNull();
@@ -1020,14 +1020,14 @@ RegisterID* BracketAccessorNode::emitCode(CodeGenerator& generator, RegisterID* 
     return generator.emitGetPropVal(generator.finalDestination(dst), r0.get(), r1);
 }
 
-void BracketAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BracketAccessorNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
 }
 
 // ECMA 11.2.1a
-JSValue* BracketAccessorNode::inlineEvaluate(ExecState* exec)
+JSValue* BracketAccessorNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1040,33 +1040,33 @@ JSValue* BracketAccessorNode::inlineEvaluate(ExecState* exec)
     return o->get(exec, Identifier(v2->toString(exec)));
 }
 
-JSValue* BracketAccessorNode::evaluate(ExecState* exec)
+JSValue* BracketAccessorNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double BracketAccessorNode::evaluateToNumber(ExecState* exec)
+double BracketAccessorNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool BracketAccessorNode::evaluateToBoolean(ExecState* exec)
+bool BracketAccessorNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t BracketAccessorNode::evaluateToInt32(ExecState* exec)
+int32_t BracketAccessorNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t BracketAccessorNode::evaluateToUInt32(ExecState* exec)
+uint32_t BracketAccessorNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -1081,46 +1081,46 @@ RegisterID* DotAccessorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitGetPropId(generator.finalDestination(dst), base, m_ident);
 }
 
-void DotAccessorNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DotAccessorNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_base.get());
 }
 
 // ECMA 11.2.1b
-JSValue* DotAccessorNode::inlineEvaluate(ExecState* exec)
+JSValue* DotAccessorNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
     return v->toObject(exec)->get(exec, m_ident);
 }
 
-JSValue* DotAccessorNode::evaluate(ExecState* exec)
+JSValue* DotAccessorNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double DotAccessorNode::evaluateToNumber(ExecState* exec)
+double DotAccessorNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool DotAccessorNode::evaluateToBoolean(ExecState* exec)
+bool DotAccessorNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t DotAccessorNode::evaluateToInt32(ExecState* exec)
+int32_t DotAccessorNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t DotAccessorNode::evaluateToUInt32(ExecState* exec)
+uint32_t DotAccessorNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -1135,7 +1135,7 @@ RegisterID* ArgumentListNode::emitCode(CodeGenerator& generator, RegisterID* dst
     return generator.emitNode(dst, m_expr.get());
 }
 
-void ArgumentListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ArgumentListNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
         nodeStack.append(m_next.get());
@@ -1144,7 +1144,7 @@ void ArgumentListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, co
 }
 
 // ECMA 11.2.4
-void ArgumentListNode::evaluateList(ExecState* exec, List& list)
+void ArgumentListNode::evaluateList(OldInterpreterExecState* exec, List& list)
 {
     for (ArgumentListNode* n = this; n; n = n->m_next.get()) {
         JSValue* v = n->m_expr->evaluate(exec);
@@ -1155,7 +1155,7 @@ void ArgumentListNode::evaluateList(ExecState* exec, List& list)
 
 // ------------------------------ ArgumentsNode --------------------------------
 
-void ArgumentsNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ArgumentsNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_listNode)
         nodeStack.append(m_listNode.get());
@@ -1169,7 +1169,7 @@ RegisterID* NewExprNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitConstruct(generator.finalDestination(dst), r0.get(), m_args.get());
 }
 
-void NewExprNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void NewExprNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_args)
         nodeStack.append(m_args.get());
@@ -1178,7 +1178,7 @@ void NewExprNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const L
 
 // ECMA 11.2.2
 
-JSValue* NewExprNode::inlineEvaluate(ExecState* exec)
+JSValue* NewExprNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1199,33 +1199,33 @@ JSValue* NewExprNode::inlineEvaluate(ExecState* exec)
     return static_cast<JSObject*>(v)->construct(exec, argList);
 }
 
-JSValue* NewExprNode::evaluate(ExecState* exec)
+JSValue* NewExprNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double NewExprNode::evaluateToNumber(ExecState* exec)
+double NewExprNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool NewExprNode::evaluateToBoolean(ExecState* exec)
+bool NewExprNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t NewExprNode::evaluateToInt32(ExecState* exec)
+int32_t NewExprNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t NewExprNode::evaluateToUInt32(ExecState* exec)
+uint32_t NewExprNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -1233,7 +1233,7 @@ uint32_t NewExprNode::evaluateToUInt32(ExecState* exec)
 }
 
 template <ExpressionNode::CallerType callerType, bool scopeDepthIsZero> 
-inline JSValue* ExpressionNode::resolveAndCall(ExecState* exec, const Identifier& ident, ArgumentsNode* args, size_t scopeDepth)
+inline JSValue* ExpressionNode::resolveAndCall(OldInterpreterExecState* exec, const Identifier& ident, ArgumentsNode* args, size_t scopeDepth)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -1290,12 +1290,12 @@ RegisterID* EvalFunctionCallNode::emitCode(CodeGenerator& generator, RegisterID*
     return generator.emitCallEval(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
 }
 
-void EvalFunctionCallNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void EvalFunctionCallNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
 }
 
-JSValue* EvalFunctionCallNode::evaluate(ExecState* exec)
+JSValue* EvalFunctionCallNode::evaluate(OldInterpreterExecState* exec)
 {
     return resolveAndCall<EvalOperator, true>(exec, exec->propertyNames().eval, m_args.get());
 }
@@ -1306,14 +1306,14 @@ RegisterID* FunctionCallValueNode::emitCode(CodeGenerator& generator, RegisterID
     return generator.emitCall(generator.finalDestination(dst), r0, 0, m_args.get());
 }
 
-void FunctionCallValueNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void FunctionCallValueNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.2.3
-JSValue* FunctionCallValueNode::evaluate(ExecState* exec)
+JSValue* FunctionCallValueNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1347,7 +1347,7 @@ RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, Register
     return generator.emitCall(generator.finalDestination(dst, r0.get()), r1, r0.get(), m_args.get());
 }
 
-void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)
+void FunctionCallResolveNode::optimizeVariableAccess(OldInterpreterExecState* exec, const SymbolTable& symbolTable, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
 
@@ -1368,7 +1368,7 @@ void FunctionCallResolveNode::optimizeVariableAccess(ExecState* exec, const Symb
 }
 
 // ECMA 11.2.3
-JSValue* FunctionCallResolveNode::inlineEvaluate(ExecState* exec)
+JSValue* FunctionCallResolveNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -1376,40 +1376,40 @@ JSValue* FunctionCallResolveNode::inlineEvaluate(ExecState* exec)
     return resolveAndCall<FunctionCall, true>(exec, m_ident, m_args.get());
 }
 
-JSValue* FunctionCallResolveNode::evaluate(ExecState* exec)
+JSValue* FunctionCallResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double FunctionCallResolveNode::evaluateToNumber(ExecState* exec)
+double FunctionCallResolveNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool FunctionCallResolveNode::evaluateToBoolean(ExecState* exec)
+bool FunctionCallResolveNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t FunctionCallResolveNode::evaluateToInt32(ExecState* exec)
+int32_t FunctionCallResolveNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t FunctionCallResolveNode::evaluateToUInt32(ExecState* exec)
+uint32_t FunctionCallResolveNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toUInt32(exec);
 }
 
-JSValue* LocalVarFunctionCallNode::inlineEvaluate(ExecState* exec)
+JSValue* LocalVarFunctionCallNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -1430,40 +1430,40 @@ JSValue* LocalVarFunctionCallNode::inlineEvaluate(ExecState* exec)
     return func->call(exec, thisObj, argList);
 }
 
-JSValue* LocalVarFunctionCallNode::evaluate(ExecState* exec)
+JSValue* LocalVarFunctionCallNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double LocalVarFunctionCallNode::evaluateToNumber(ExecState* exec)
+double LocalVarFunctionCallNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool LocalVarFunctionCallNode::evaluateToBoolean(ExecState* exec)
+bool LocalVarFunctionCallNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t LocalVarFunctionCallNode::evaluateToInt32(ExecState* exec)
+int32_t LocalVarFunctionCallNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t LocalVarFunctionCallNode::evaluateToUInt32(ExecState* exec)
+uint32_t LocalVarFunctionCallNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toUInt32(exec);
 }
 
-JSValue* ScopedVarFunctionCallNode::inlineEvaluate(ExecState* exec)
+JSValue* ScopedVarFunctionCallNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     
@@ -1484,40 +1484,40 @@ JSValue* ScopedVarFunctionCallNode::inlineEvaluate(ExecState* exec)
     return func->call(exec, thisObj, argList);
 }
 
-JSValue* ScopedVarFunctionCallNode::evaluate(ExecState* exec)
+JSValue* ScopedVarFunctionCallNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double ScopedVarFunctionCallNode::evaluateToNumber(ExecState* exec)
+double ScopedVarFunctionCallNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool ScopedVarFunctionCallNode::evaluateToBoolean(ExecState* exec)
+bool ScopedVarFunctionCallNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t ScopedVarFunctionCallNode::evaluateToInt32(ExecState* exec)
+int32_t ScopedVarFunctionCallNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t ScopedVarFunctionCallNode::evaluateToUInt32(ExecState* exec)
+uint32_t ScopedVarFunctionCallNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toUInt32(exec);
 }
 
-JSValue* NonLocalVarFunctionCallNode::inlineEvaluate(ExecState* exec)
+JSValue* NonLocalVarFunctionCallNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -1525,33 +1525,33 @@ JSValue* NonLocalVarFunctionCallNode::inlineEvaluate(ExecState* exec)
     return resolveAndCall<FunctionCall, false>(exec, m_ident, m_args.get(), m_scopeDepth);
 }
 
-JSValue* NonLocalVarFunctionCallNode::evaluate(ExecState* exec)
+JSValue* NonLocalVarFunctionCallNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double NonLocalVarFunctionCallNode::evaluateToNumber(ExecState* exec)
+double NonLocalVarFunctionCallNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool NonLocalVarFunctionCallNode::evaluateToBoolean(ExecState* exec)
+bool NonLocalVarFunctionCallNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t NonLocalVarFunctionCallNode::evaluateToInt32(ExecState* exec)
+int32_t NonLocalVarFunctionCallNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t NonLocalVarFunctionCallNode::evaluateToUInt32(ExecState* exec)
+uint32_t NonLocalVarFunctionCallNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -1566,7 +1566,7 @@ RegisterID* FunctionCallBracketNode::emitCode(CodeGenerator& generator, Register
     return generator.emitCall(generator.finalDestination(dst, r0.get()), r2, r0.get(), m_args.get());
 }
 
-void FunctionCallBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void FunctionCallBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
     nodeStack.append(m_subscript.get());
@@ -1574,7 +1574,7 @@ void FunctionCallBracketNode::optimizeVariableAccess(ExecState*, const SymbolTab
 }
 
 // ECMA 11.2.3
-JSValue* FunctionCallBracketNode::evaluate(ExecState* exec)
+JSValue* FunctionCallBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseVal = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1641,14 +1641,14 @@ RegisterID* FunctionCallDotNode::emitCode(CodeGenerator& generator, RegisterID* 
     return generator.emitCall(generator.finalDestination(dst, base.get()), function, base.get(), m_args.get());
 }
 
-void FunctionCallDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void FunctionCallDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_args.get());
     nodeStack.append(m_base.get());
 }
 
 // ECMA 11.2.3
-JSValue* FunctionCallDotNode::inlineEvaluate(ExecState* exec)
+JSValue* FunctionCallDotNode::inlineEvaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseVal = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1679,33 +1679,33 @@ JSValue* FunctionCallDotNode::inlineEvaluate(ExecState* exec)
     return func->call(exec, thisObj, argList);
 }
 
-JSValue* FunctionCallDotNode::evaluate(ExecState* exec)
+JSValue* FunctionCallDotNode::evaluate(OldInterpreterExecState* exec)
 {
     return inlineEvaluate(exec);
 }
 
-double FunctionCallDotNode::evaluateToNumber(ExecState* exec)
+double FunctionCallDotNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toNumber(exec);
 }
 
-bool FunctionCallDotNode::evaluateToBoolean(ExecState* exec)
+bool FunctionCallDotNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return v->toBoolean(exec);
 }
 
-int32_t FunctionCallDotNode::evaluateToInt32(ExecState* exec)
+int32_t FunctionCallDotNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return v->toInt32(exec);
 }
 
-uint32_t FunctionCallDotNode::evaluateToUInt32(ExecState* exec)
+uint32_t FunctionCallDotNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     JSValue* v = inlineEvaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -1732,7 +1732,7 @@ RegisterID* PostIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
 }
 
 // Increment
-void PostIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
+void PostIncResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
@@ -1743,7 +1743,7 @@ void PostIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& s
     }
 }
 
-JSValue* PostIncResolveNode::evaluate(ExecState* exec)
+JSValue* PostIncResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -1780,7 +1780,7 @@ void PostIncResolveNode::optimizeForUnnecessaryResult()
     new (this) PreIncResolveNode(PlacementNewAdopt);
 }
 
-JSValue* PostIncLocalVarNode::evaluate(ExecState* exec)
+JSValue* PostIncLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -1811,7 +1811,7 @@ RegisterID* PostDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* d
     return r2;
 }
 
-void PostDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
+void PostDecResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
@@ -1822,7 +1822,7 @@ void PostDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& s
     }
 }
 
-JSValue* PostDecResolveNode::evaluate(ExecState* exec)
+JSValue* PostDecResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -1856,7 +1856,7 @@ void PostDecResolveNode::optimizeForUnnecessaryResult()
     new (this) PreDecResolveNode(PlacementNewAdopt);
 }
 
-JSValue* PostDecLocalVarNode::evaluate(ExecState* exec)
+JSValue* PostDecLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -1866,7 +1866,7 @@ JSValue* PostDecLocalVarNode::evaluate(ExecState* exec)
     return v;
 }
 
-double PostDecLocalVarNode::inlineEvaluateToNumber(ExecState* exec)
+double PostDecLocalVarNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -1876,23 +1876,23 @@ double PostDecLocalVarNode::inlineEvaluateToNumber(ExecState* exec)
     return n;
 }
 
-double PostDecLocalVarNode::evaluateToNumber(ExecState* exec)
+double PostDecLocalVarNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-bool PostDecLocalVarNode::evaluateToBoolean(ExecState* exec)
+bool PostDecLocalVarNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     double result = inlineEvaluateToNumber(exec);
     return  result > 0.0 || 0.0 > result; // NaN produces false as well
 }
 
-int32_t PostDecLocalVarNode::evaluateToInt32(ExecState* exec)
+int32_t PostDecLocalVarNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t PostDecLocalVarNode::evaluateToUInt32(ExecState* exec)
+uint32_t PostDecLocalVarNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
@@ -1904,7 +1904,7 @@ void PostDecLocalVarNode::optimizeForUnnecessaryResult()
 
 // ------------------------------ PostfixBracketNode ----------------------------------
 
-void PostfixBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PostfixBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
@@ -1920,7 +1920,7 @@ RegisterID* PostIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* d
     return r3;
 }
 
-JSValue* PostIncBracketNode::evaluate(ExecState* exec)
+JSValue* PostIncBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1961,7 +1961,7 @@ RegisterID* PostDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* d
     return r3;
 }
 
-JSValue* PostDecBracketNode::evaluate(ExecState* exec)
+JSValue* PostDecBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -1993,7 +1993,7 @@ JSValue* PostDecBracketNode::evaluate(ExecState* exec)
 
 // ------------------------------ PostfixDotNode ----------------------------------
 
-void PostfixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PostfixDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_base.get());
 }
@@ -2007,7 +2007,7 @@ RegisterID* PostIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r2;
 }
 
-JSValue* PostIncDotNode::evaluate(ExecState* exec)
+JSValue* PostIncDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2031,7 +2031,7 @@ RegisterID* PostDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r2;
 }
 
-JSValue* PostDecDotNode::evaluate(ExecState* exec)
+JSValue* PostDecDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2053,7 +2053,7 @@ RegisterID* PostfixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst
     return emitThrowError(generator, dst, ReferenceError, m_operator == OpPlusPlus ? "Postfix ++ operator applied to value that is not a reference." : "Postfix -- operator applied to value that is not a reference.");
 }
 
-JSValue* PostfixErrorNode::evaluate(ExecState* exec)
+JSValue* PostfixErrorNode::evaluate(OldInterpreterExecState* exec)
 {
     throwError(exec, ReferenceError, "Postfix %s operator applied to value that is not a reference.",
                m_operator == OpPlusPlus ? "++" : "--");
@@ -2072,7 +2072,7 @@ RegisterID* DeleteResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitDeletePropId(generator.finalDestination(dst, r0), r0, m_ident);
 }
 
-void DeleteResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
+void DeleteResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker())
@@ -2081,7 +2081,7 @@ void DeleteResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& sy
 
 // ECMA 11.4.1
 
-JSValue* DeleteResolveNode::evaluate(ExecState* exec)
+JSValue* DeleteResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     // Check for missed optimization opportunity.
     ASSERT(!canSkipLookup(exec, m_ident));
@@ -2106,7 +2106,7 @@ JSValue* DeleteResolveNode::evaluate(ExecState* exec)
     return jsBoolean(true);
 }
 
-JSValue* LocalVarDeleteNode::evaluate(ExecState*)
+JSValue* LocalVarDeleteNode::evaluate(OldInterpreterExecState*)
 {
     return jsBoolean(false);
 }
@@ -2120,13 +2120,13 @@ RegisterID* DeleteBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitDeletePropVal(generator.finalDestination(dst), r0.get(), r1.get());
 }
 
-void DeleteBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DeleteBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
 }
 
-JSValue* DeleteBracketNode::evaluate(ExecState* exec)
+JSValue* DeleteBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2151,12 +2151,12 @@ RegisterID* DeleteDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitDeletePropId(generator.finalDestination(dst), r0, m_ident);
 }
 
-void DeleteDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DeleteDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_base.get());
 }
 
-JSValue* DeleteDotNode::evaluate(ExecState* exec)
+JSValue* DeleteDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     JSObject* base = baseValue->toObject(exec);
@@ -2175,12 +2175,12 @@ RegisterID* DeleteValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst), true);
 }
 
-void DeleteValueNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DeleteValueNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
-JSValue* DeleteValueNode::evaluate(ExecState* exec)
+JSValue* DeleteValueNode::evaluate(OldInterpreterExecState* exec)
 {
     m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2197,13 +2197,13 @@ RegisterID* VoidNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLoad(generator.finalDestination(dst, r0.get()), jsUndefined());
 }
 
-void VoidNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void VoidNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.4.2
-JSValue* VoidNode::evaluate(ExecState* exec)
+JSValue* VoidNode::evaluate(OldInterpreterExecState* exec)
 {
     m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2215,7 +2215,7 @@ JSValue* VoidNode::evaluate(ExecState* exec)
 
 // ------------------------------ TypeOfValueNode -----------------------------------
 
-void TypeOfValueNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void TypeOfValueNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
@@ -2248,14 +2248,14 @@ static JSValue* typeStringForValue(JSValue* v)
     }
 }
 
-void TypeOfResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
+void TypeOfResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage&, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker())
         new (this) LocalVarTypeOfNode(index);
 }
 
-JSValue* LocalVarTypeOfNode::evaluate(ExecState* exec)
+JSValue* LocalVarTypeOfNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -2271,7 +2271,7 @@ RegisterID* TypeOfResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitTypeOf(generator.finalDestination(dst, r0), r0);
 }
 
-JSValue* TypeOfResolveNode::evaluate(ExecState* exec)
+JSValue* TypeOfResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -2303,7 +2303,7 @@ RegisterID* TypeOfValueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitTypeOf(generator.finalDestination(dst), r0.get());
 }
 
-JSValue* TypeOfValueNode::evaluate(ExecState* exec)
+JSValue* TypeOfValueNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2328,7 +2328,7 @@ RegisterID* PreIncResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropId(r0.get(), m_ident, r1.get());
 }
 
-void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
+void PreIncResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
@@ -2339,7 +2339,7 @@ void PreIncResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& sy
     }
 }
 
-JSValue* PreIncLocalVarNode::evaluate(ExecState* exec)
+JSValue* PreIncLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     JSValue** slot = &exec->localStorage()[m_index].value;
@@ -2350,7 +2350,7 @@ JSValue* PreIncLocalVarNode::evaluate(ExecState* exec)
     return n2;
 }
 
-JSValue* PreIncResolveNode::evaluate(ExecState* exec)
+JSValue* PreIncResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -2393,7 +2393,7 @@ RegisterID* PreDecResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropId(r0.get(), m_ident, r1.get());
 }
 
-void PreDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
+void PreDecResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack&)
 {
     int index = symbolTable.get(m_ident.ustring().rep());
     if (index != missingSymbolMarker()) {
@@ -2404,7 +2404,7 @@ void PreDecResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& sy
     }
 }
 
-JSValue* PreDecLocalVarNode::evaluate(ExecState* exec)
+JSValue* PreDecLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     JSValue** slot = &exec->localStorage()[m_index].value;
@@ -2415,7 +2415,7 @@ JSValue* PreDecLocalVarNode::evaluate(ExecState* exec)
     return n2;
 }
 
-JSValue* PreDecResolveNode::evaluate(ExecState* exec)
+JSValue* PreDecResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -2447,7 +2447,7 @@ JSValue* PreDecResolveNode::evaluate(ExecState* exec)
 
 // ------------------------------ PreIncConstNode ----------------------------------
 
-JSValue* PreIncConstNode::evaluate(ExecState* exec)
+JSValue* PreIncConstNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     return jsNumber(exec->localStorage()[m_index].value->toNumber(exec) + 1);
@@ -2455,7 +2455,7 @@ JSValue* PreIncConstNode::evaluate(ExecState* exec)
 
 // ------------------------------ PreDecConstNode ----------------------------------
 
-JSValue* PreDecConstNode::evaluate(ExecState* exec)
+JSValue* PreDecConstNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     return jsNumber(exec->localStorage()[m_index].value->toNumber(exec) - 1);
@@ -2463,7 +2463,7 @@ JSValue* PreDecConstNode::evaluate(ExecState* exec)
 
 // ------------------------------ PostIncConstNode ----------------------------------
 
-JSValue* PostIncConstNode::evaluate(ExecState* exec)
+JSValue* PostIncConstNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     return jsNumber(exec->localStorage()[m_index].value->toNumber(exec));
@@ -2471,7 +2471,7 @@ JSValue* PostIncConstNode::evaluate(ExecState* exec)
 
 // ------------------------------ PostDecConstNode ----------------------------------
 
-JSValue* PostDecConstNode::evaluate(ExecState* exec)
+JSValue* PostDecConstNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     return jsNumber(exec->localStorage()[m_index].value->toNumber(exec));
@@ -2479,7 +2479,7 @@ JSValue* PostDecConstNode::evaluate(ExecState* exec)
 
 // ------------------------------ PrefixBracketNode ----------------------------------
 
-void PrefixBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PrefixBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
@@ -2494,7 +2494,7 @@ RegisterID* PreIncBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropVal(r0.get(), r1.get(), r2);
 }
 
-JSValue* PreIncBracketNode::evaluate(ExecState* exec)
+JSValue* PreIncBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2535,7 +2535,7 @@ RegisterID* PreDecBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropVal(r0.get(), r1.get(), r2);
 }
 
-JSValue* PreDecBracketNode::evaluate(ExecState* exec)
+JSValue* PreDecBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2569,7 +2569,7 @@ JSValue* PreDecBracketNode::evaluate(ExecState* exec)
 
 // ------------------------------ PrefixDotNode ----------------------------------
 
-void PrefixDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void PrefixDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_base.get());
 }
@@ -2582,7 +2582,7 @@ RegisterID* PreIncDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
-JSValue* PreIncDotNode::evaluate(ExecState* exec)
+JSValue* PreIncDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2607,7 +2607,7 @@ RegisterID* PreDecDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitPutPropId(base.get(), m_ident, value);
 }
 
-JSValue* PreDecDotNode::evaluate(ExecState* exec)
+JSValue* PreDecDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -2631,7 +2631,7 @@ RegisterID* PrefixErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return emitThrowError(generator, dst, ReferenceError, m_operator == OpPlusPlus ? "Prefix ++ operator applied to value that is not a reference." : "Prefix -- operator applied to value that is not a reference.");
 }
 
-JSValue* PrefixErrorNode::evaluate(ExecState* exec)
+JSValue* PrefixErrorNode::evaluate(OldInterpreterExecState* exec)
 {
     throwError(exec, ReferenceError, "Prefix %s operator applied to value that is not a reference.",
                m_operator == OpPlusPlus ? "++" : "--");
@@ -2647,35 +2647,35 @@ RegisterID* UnaryPlusNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitToJSNumber(generator.finalDestination(dst), r0);
 }
 
-void UnaryPlusNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void UnaryPlusNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.4.6
-JSValue* UnaryPlusNode::evaluate(ExecState* exec)
+JSValue* UnaryPlusNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
     return v->toJSNumber(exec);
 }
 
-bool UnaryPlusNode::evaluateToBoolean(ExecState* exec)
+bool UnaryPlusNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return m_expr->evaluateToBoolean(exec);
 }
 
-double UnaryPlusNode::evaluateToNumber(ExecState* exec)
+double UnaryPlusNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return m_expr->evaluateToNumber(exec);
 }
 
-int32_t UnaryPlusNode::evaluateToInt32(ExecState* exec)
+int32_t UnaryPlusNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return m_expr->evaluateToInt32(exec);
 }
 
-uint32_t UnaryPlusNode::evaluateToUInt32(ExecState* exec)
+uint32_t UnaryPlusNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return m_expr->evaluateToInt32(exec);
 }
@@ -2688,19 +2688,19 @@ RegisterID* NegateNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNegate(generator.finalDestination(dst), r0);
 }
 
-void NegateNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void NegateNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.4.7
-JSValue* NegateNode::evaluate(ExecState* exec)
+JSValue* NegateNode::evaluate(OldInterpreterExecState* exec)
 {
     // No need to check exception, caller will do so right after evaluate()
     return jsNumber(-m_expr->evaluateToNumber(exec));
 }
 
-double NegateNode::evaluateToNumber(ExecState* exec)
+double NegateNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     // No need to check exception, caller will do so right after evaluateToNumber()
     return -m_expr->evaluateToNumber(exec);
@@ -2714,38 +2714,38 @@ RegisterID* BitwiseNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitBitNot(generator.finalDestination(dst), r0);
 }
 
-void BitwiseNotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BitwiseNotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.4.8
-int32_t BitwiseNotNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t BitwiseNotNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     return ~m_expr->evaluateToInt32(exec);
 }
 
-JSValue* BitwiseNotNode::evaluate(ExecState* exec)
+JSValue* BitwiseNotNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToInt32(exec));
 }
 
-double BitwiseNotNode::evaluateToNumber(ExecState* exec)
+double BitwiseNotNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-bool BitwiseNotNode::evaluateToBoolean(ExecState* exec)
+bool BitwiseNotNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t BitwiseNotNode::evaluateToInt32(ExecState* exec)
+int32_t BitwiseNotNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t BitwiseNotNode::evaluateToUInt32(ExecState* exec)
+uint32_t BitwiseNotNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -2758,18 +2758,18 @@ RegisterID* LogicalNotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNot(generator.finalDestination(dst), r0);
 }
 
-void LogicalNotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LogicalNotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 11.4.9
-JSValue* LogicalNotNode::evaluate(ExecState* exec)
+JSValue* LogicalNotNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(!m_expr->evaluateToBoolean(exec));
 }
 
-bool LogicalNotNode::evaluateToBoolean(ExecState* exec)
+bool LogicalNotNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return !m_expr->evaluateToBoolean(exec);
 }
@@ -2783,14 +2783,14 @@ RegisterID* MultNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitMul(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void MultNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void MultNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.5.1
-double MultNode::inlineEvaluateToNumber(ExecState* exec)
+double MultNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     double n1 = m_term1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -2798,28 +2798,28 @@ double MultNode::inlineEvaluateToNumber(ExecState* exec)
     return n1 * n2;
 }
 
-JSValue* MultNode::evaluate(ExecState* exec)
+JSValue* MultNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToNumber(exec));
 }
 
-double MultNode::evaluateToNumber(ExecState* exec)
+double MultNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-bool MultNode::evaluateToBoolean(ExecState* exec)
+bool MultNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     double result = inlineEvaluateToNumber(exec);
     return  result > 0.0 || 0.0 > result; // NaN produces false as well
 }
 
-int32_t MultNode::evaluateToInt32(ExecState* exec)
+int32_t MultNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t MultNode::evaluateToUInt32(ExecState* exec)
+uint32_t MultNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
@@ -2831,14 +2831,14 @@ RegisterID* DivNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitDiv(generator.finalDestination(dst, dividend.get()), dividend.get(), divisor);
 }
 
-void DivNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DivNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.5.2
-double DivNode::inlineEvaluateToNumber(ExecState* exec)
+double DivNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     double n1 = m_term1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -2846,22 +2846,22 @@ double DivNode::inlineEvaluateToNumber(ExecState* exec)
     return n1 / n2;
 }
 
-JSValue* DivNode::evaluate(ExecState* exec)
+JSValue* DivNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToNumber(exec));
 }
 
-double DivNode::evaluateToNumber(ExecState* exec)
+double DivNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-int32_t DivNode::evaluateToInt32(ExecState* exec)
+int32_t DivNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t DivNode::evaluateToUInt32(ExecState* exec)
+uint32_t DivNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
@@ -2873,14 +2873,14 @@ RegisterID* ModNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitMod(generator.finalDestination(dst, dividend.get()), dividend.get(), divisor);
 }
 
-void ModNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ModNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.5.3
-double ModNode::inlineEvaluateToNumber(ExecState* exec)
+double ModNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     double n1 = m_term1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -2888,35 +2888,35 @@ double ModNode::inlineEvaluateToNumber(ExecState* exec)
     return fmod(n1, n2);
 }
 
-JSValue* ModNode::evaluate(ExecState* exec)
+JSValue* ModNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToNumber(exec));
 }
 
-double ModNode::evaluateToNumber(ExecState* exec)
+double ModNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-bool ModNode::evaluateToBoolean(ExecState* exec)
+bool ModNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     double result = inlineEvaluateToNumber(exec);
     return  result > 0.0 || 0.0 > result; // NaN produces false as well
 }
 
-int32_t ModNode::evaluateToInt32(ExecState* exec)
+int32_t ModNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t ModNode::evaluateToUInt32(ExecState* exec)
+uint32_t ModNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
 
 // ------------------------------ Additive Nodes --------------------------------------
 
-static double throwOutOfMemoryErrorToNumber(ExecState* exec)
+static double throwOutOfMemoryErrorToNumber(OldInterpreterExecState* exec)
 {
     JSObject* error = Error::create(exec, GeneralError, "Out of memory");
     exec->setException(error);
@@ -2924,7 +2924,7 @@ static double throwOutOfMemoryErrorToNumber(ExecState* exec)
 }
 
 // ECMA 11.6
-static JSValue* addSlowCase(ExecState* exec, JSValue* v1, JSValue* v2)
+static JSValue* addSlowCase(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     // exception for the Date exception in defaultValue()
     JSValue* p1 = v1->toPrimitive(exec, UnspecifiedType);
@@ -2940,7 +2940,7 @@ static JSValue* addSlowCase(ExecState* exec, JSValue* v1, JSValue* v2)
     return jsNumber(p1->toNumber(exec) + p2->toNumber(exec));
 }
 
-static double addSlowCaseToNumber(ExecState* exec, JSValue* v1, JSValue* v2)
+static double addSlowCaseToNumber(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     // exception for the Date exception in defaultValue()
     JSValue* p1 = v1->toPrimitive(exec, UnspecifiedType);
@@ -2966,7 +2966,7 @@ static double addSlowCaseToNumber(ExecState* exec, JSValue* v1, JSValue* v2)
 //    4000    Add case: 1 5
 //    1       Add case: 3 5
 
-static inline JSValue* add(ExecState* exec, JSValue* v1, JSValue* v2)
+static inline JSValue* add(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     JSType t1 = v1->type();
     JSType t2 = v2->type();
@@ -2985,7 +2985,7 @@ static inline JSValue* add(ExecState* exec, JSValue* v1, JSValue* v2)
     return addSlowCase(exec, v1, v2);
 }
 
-static inline double addToNumber(ExecState* exec, JSValue* v1, JSValue* v2)
+static inline double addToNumber(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     JSType t1 = v1->type();
     JSType t2 = v2->type();
@@ -3011,14 +3011,14 @@ RegisterID* AddNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitAdd(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void AddNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void AddNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.6.1
-JSValue* AddNode::evaluate(ExecState* exec)
+JSValue* AddNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_term1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3029,7 +3029,7 @@ JSValue* AddNode::evaluate(ExecState* exec)
     return add(exec, v1, v2);
 }
 
-double AddNode::inlineEvaluateToNumber(ExecState* exec)
+double AddNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_term1->evaluate(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3040,22 +3040,22 @@ double AddNode::inlineEvaluateToNumber(ExecState* exec)
     return addToNumber(exec, v1, v2);
 }
 
-double AddNode::evaluateToNumber(ExecState* exec)
+double AddNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-int32_t AddNode::evaluateToInt32(ExecState* exec)
+int32_t AddNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t AddNode::evaluateToUInt32(ExecState* exec)
+uint32_t AddNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
 
-double AddNumbersNode::inlineEvaluateToNumber(ExecState* exec)
+double AddNumbersNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     double n1 = m_term1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3063,27 +3063,27 @@ double AddNumbersNode::inlineEvaluateToNumber(ExecState* exec)
     return n1 + n2;
 }
 
-JSValue* AddNumbersNode::evaluate(ExecState* exec)
+JSValue* AddNumbersNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToNumber(exec));
 }
 
-double AddNumbersNode::evaluateToNumber(ExecState* exec)
+double AddNumbersNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-int32_t AddNumbersNode::evaluateToInt32(ExecState* exec)
+int32_t AddNumbersNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t AddNumbersNode::evaluateToUInt32(ExecState* exec)
+uint32_t AddNumbersNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
 
-JSValue* AddStringsNode::evaluate(ExecState* exec)
+JSValue* AddStringsNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_term1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3094,7 +3094,7 @@ JSValue* AddStringsNode::evaluate(ExecState* exec)
     return jsString(static_cast<StringImp*>(v1)->value() + static_cast<StringImp*>(v2)->value());
 }
 
-JSValue* AddStringLeftNode::evaluate(ExecState* exec)
+JSValue* AddStringLeftNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_term1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3106,7 +3106,7 @@ JSValue* AddStringLeftNode::evaluate(ExecState* exec)
     return jsString(static_cast<StringImp*>(v1)->value() + p2->toString(exec));
 }
 
-JSValue* AddStringRightNode::evaluate(ExecState* exec)
+JSValue* AddStringRightNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_term1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3125,14 +3125,14 @@ RegisterID* SubNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitSub(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void SubNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void SubNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.6.2
-double SubNode::inlineEvaluateToNumber(ExecState* exec)
+double SubNode::inlineEvaluateToNumber(OldInterpreterExecState* exec)
 {
     double n1 = m_term1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3140,22 +3140,22 @@ double SubNode::inlineEvaluateToNumber(ExecState* exec)
     return n1 - n2;
 }
 
-JSValue* SubNode::evaluate(ExecState* exec)
+JSValue* SubNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToNumber(exec));
 }
 
-double SubNode::evaluateToNumber(ExecState* exec)
+double SubNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToNumber(exec);
 }
 
-int32_t SubNode::evaluateToInt32(ExecState* exec)
+int32_t SubNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toInt32(inlineEvaluateToNumber(exec));
 }
 
-uint32_t SubNode::evaluateToUInt32(ExecState* exec)
+uint32_t SubNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return JSValue::toUInt32(inlineEvaluateToNumber(exec));
 }
@@ -3169,14 +3169,14 @@ RegisterID* LeftShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLeftShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
-void LeftShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LeftShiftNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.7.1
-int32_t LeftShiftNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t LeftShiftNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     int i1 = m_term1->evaluateToInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3184,22 +3184,22 @@ int32_t LeftShiftNode::inlineEvaluateToInt32(ExecState* exec)
     return (i1 << i2);
 }
 
-JSValue* LeftShiftNode::evaluate(ExecState* exec)
+JSValue* LeftShiftNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToInt32(exec));
 }
 
-double LeftShiftNode::evaluateToNumber(ExecState* exec)
+double LeftShiftNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t LeftShiftNode::evaluateToInt32(ExecState* exec)
+int32_t LeftShiftNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t LeftShiftNode::evaluateToUInt32(ExecState* exec)
+uint32_t LeftShiftNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -3211,14 +3211,14 @@ RegisterID* RightShiftNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitRightShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
-void RightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void RightShiftNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.7.2
-int32_t RightShiftNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t RightShiftNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     int i1 = m_term1->evaluateToInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3226,22 +3226,22 @@ int32_t RightShiftNode::inlineEvaluateToInt32(ExecState* exec)
     return (i1 >> i2);
 }
 
-JSValue* RightShiftNode::evaluate(ExecState* exec)
+JSValue* RightShiftNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToInt32(exec));
 }
 
-double RightShiftNode::evaluateToNumber(ExecState* exec)
+double RightShiftNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t RightShiftNode::evaluateToInt32(ExecState* exec)
+int32_t RightShiftNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t RightShiftNode::evaluateToUInt32(ExecState* exec)
+uint32_t RightShiftNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -3253,14 +3253,14 @@ RegisterID* UnsignedRightShiftNode::emitCode(CodeGenerator& generator, RegisterI
     return generator.emitUnsignedRightShift(generator.finalDestination(dst, val.get()), val.get(), shift);
 }
 
-void UnsignedRightShiftNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void UnsignedRightShiftNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_term1.get());
     nodeStack.append(m_term2.get());
 }
 
 // ECMA 11.7.3
-uint32_t UnsignedRightShiftNode::inlineEvaluateToUInt32(ExecState* exec)
+uint32_t UnsignedRightShiftNode::inlineEvaluateToUInt32(OldInterpreterExecState* exec)
 {
     unsigned int i1 = m_term1->evaluateToUInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3268,29 +3268,29 @@ uint32_t UnsignedRightShiftNode::inlineEvaluateToUInt32(ExecState* exec)
     return (i1 >> i2);
 }
 
-JSValue* UnsignedRightShiftNode::evaluate(ExecState* exec)
+JSValue* UnsignedRightShiftNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToUInt32(exec));
 }
 
-double UnsignedRightShiftNode::evaluateToNumber(ExecState* exec)
+double UnsignedRightShiftNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToUInt32(exec);
 }
 
-int32_t UnsignedRightShiftNode::evaluateToInt32(ExecState* exec)
+int32_t UnsignedRightShiftNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToUInt32(exec);
 }
 
-uint32_t UnsignedRightShiftNode::evaluateToUInt32(ExecState* exec)
+uint32_t UnsignedRightShiftNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToUInt32(exec);
 }
 
 // ------------------------------ Relational Nodes -------------------------------
 
-static inline bool lessThan(ExecState* exec, JSValue* v1, JSValue* v2)
+static inline bool lessThan(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     double n1;
     double n2;
@@ -3305,7 +3305,7 @@ static inline bool lessThan(ExecState* exec, JSValue* v1, JSValue* v2)
     return static_cast<const StringImp*>(p1)->value() < static_cast<const StringImp*>(p2)->value();
 }
 
-static inline bool lessThanEq(ExecState* exec, JSValue* v1, JSValue* v2)
+static inline bool lessThanEq(OldInterpreterExecState* exec, JSValue* v1, JSValue* v2)
 {
     double n1;
     double n2;
@@ -3327,14 +3327,14 @@ RegisterID* LessNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLess(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void LessNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LessNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.1
-bool LessNode::inlineEvaluateToBoolean(ExecState* exec)
+bool LessNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3343,17 +3343,17 @@ bool LessNode::inlineEvaluateToBoolean(ExecState* exec)
     return lessThan(exec, v1, v2);
 }
 
-JSValue* LessNode::evaluate(ExecState* exec)
+JSValue* LessNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool LessNode::evaluateToBoolean(ExecState* exec)
+bool LessNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
 
-bool LessNumbersNode::inlineEvaluateToBoolean(ExecState* exec)
+bool LessNumbersNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     double n1 = m_expr1->evaluateToNumber(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3361,17 +3361,17 @@ bool LessNumbersNode::inlineEvaluateToBoolean(ExecState* exec)
     return n1 < n2;
 }
 
-JSValue* LessNumbersNode::evaluate(ExecState* exec)
+JSValue* LessNumbersNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool LessNumbersNode::evaluateToBoolean(ExecState* exec)
+bool LessNumbersNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
 
-bool LessStringsNode::inlineEvaluateToBoolean(ExecState* exec)
+bool LessStringsNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3379,12 +3379,12 @@ bool LessStringsNode::inlineEvaluateToBoolean(ExecState* exec)
     return static_cast<StringImp*>(v1)->value() < static_cast<StringImp*>(v2)->value();
 }
 
-JSValue* LessStringsNode::evaluate(ExecState* exec)
+JSValue* LessStringsNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool LessStringsNode::evaluateToBoolean(ExecState* exec)
+bool LessStringsNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3396,14 +3396,14 @@ RegisterID* GreaterNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLess(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void GreaterNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void GreaterNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.2
-bool GreaterNode::inlineEvaluateToBoolean(ExecState* exec)
+bool GreaterNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3412,12 +3412,12 @@ bool GreaterNode::inlineEvaluateToBoolean(ExecState* exec)
     return lessThan(exec, v2, v1);
 }
 
-JSValue* GreaterNode::evaluate(ExecState* exec)
+JSValue* GreaterNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool GreaterNode::evaluateToBoolean(ExecState* exec)
+bool GreaterNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3429,14 +3429,14 @@ RegisterID* LessEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLessEq(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void LessEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LessEqNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.3
-bool LessEqNode::inlineEvaluateToBoolean(ExecState* exec)
+bool LessEqNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3445,12 +3445,12 @@ bool LessEqNode::inlineEvaluateToBoolean(ExecState* exec)
     return lessThanEq(exec, v1, v2);
 }
 
-JSValue* LessEqNode::evaluate(ExecState* exec)
+JSValue* LessEqNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool LessEqNode::evaluateToBoolean(ExecState* exec)
+bool LessEqNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3462,14 +3462,14 @@ RegisterID* GreaterEqNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitLessEq(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void GreaterEqNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void GreaterEqNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.4
-bool GreaterEqNode::inlineEvaluateToBoolean(ExecState* exec)
+bool GreaterEqNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3478,12 +3478,12 @@ bool GreaterEqNode::inlineEvaluateToBoolean(ExecState* exec)
     return lessThanEq(exec, v2, v1);
 }
 
-JSValue* GreaterEqNode::evaluate(ExecState* exec)
+JSValue* GreaterEqNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool GreaterEqNode::evaluateToBoolean(ExecState* exec)
+bool GreaterEqNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3495,14 +3495,14 @@ RegisterID* InstanceOfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitInstanceOf(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void InstanceOfNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void InstanceOfNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.6
-JSValue* InstanceOfNode::evaluate(ExecState* exec)
+JSValue* InstanceOfNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3524,7 +3524,7 @@ JSValue* InstanceOfNode::evaluate(ExecState* exec)
     return jsBoolean(o2->hasInstance(exec, v1));
 }
 
-bool InstanceOfNode::evaluateToBoolean(ExecState* exec)
+bool InstanceOfNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3555,14 +3555,14 @@ RegisterID* InNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitIn(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void InNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void InNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.8.7
-JSValue* InNode::evaluate(ExecState* exec)
+JSValue* InNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3575,7 +3575,7 @@ JSValue* InNode::evaluate(ExecState* exec)
     return jsBoolean(static_cast<JSObject*>(v2)->hasProperty(exec, Identifier(v1->toString(exec))));
 }
 
-bool InNode::evaluateToBoolean(ExecState* exec)
+bool InNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3599,14 +3599,14 @@ RegisterID* EqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void EqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void EqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.9.1
-bool EqualNode::inlineEvaluateToBoolean(ExecState* exec)
+bool EqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3616,12 +3616,12 @@ bool EqualNode::inlineEvaluateToBoolean(ExecState* exec)
     return equal(exec, v1, v2);
 }
 
-JSValue* EqualNode::evaluate(ExecState* exec)
+JSValue* EqualNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool EqualNode::evaluateToBoolean(ExecState* exec)
+bool EqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3633,14 +3633,14 @@ RegisterID* NotEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNotEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void NotEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void NotEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.9.2
-bool NotEqualNode::inlineEvaluateToBoolean(ExecState* exec)
+bool NotEqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3650,12 +3650,12 @@ bool NotEqualNode::inlineEvaluateToBoolean(ExecState* exec)
     return !equal(exec,v1, v2);
 }
 
-JSValue* NotEqualNode::evaluate(ExecState* exec)
+JSValue* NotEqualNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool NotEqualNode::evaluateToBoolean(ExecState* exec)
+bool NotEqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3667,14 +3667,14 @@ RegisterID* StrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitStrictEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void StrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void StrictEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.9.4
-bool StrictEqualNode::inlineEvaluateToBoolean(ExecState* exec)
+bool StrictEqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3684,12 +3684,12 @@ bool StrictEqualNode::inlineEvaluateToBoolean(ExecState* exec)
     return strictEqual(exec,v1, v2);
 }
 
-JSValue* StrictEqualNode::evaluate(ExecState* exec)
+JSValue* StrictEqualNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool StrictEqualNode::evaluateToBoolean(ExecState* exec)
+bool StrictEqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3701,14 +3701,14 @@ RegisterID* NotStrictEqualNode::emitCode(CodeGenerator& generator, RegisterID* d
     return generator.emitNotStrictEqual(generator.finalDestination(dst, r0.get()), r0.get(), r1);
 }
 
-void NotStrictEqualNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void NotStrictEqualNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.9.5
-bool NotStrictEqualNode::inlineEvaluateToBoolean(ExecState* exec)
+bool NotStrictEqualNode::inlineEvaluateToBoolean(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3718,12 +3718,12 @@ bool NotStrictEqualNode::inlineEvaluateToBoolean(ExecState* exec)
     return !strictEqual(exec,v1, v2);
 }
 
-JSValue* NotStrictEqualNode::evaluate(ExecState* exec)
+JSValue* NotStrictEqualNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsBoolean(inlineEvaluateToBoolean(exec));
 }
 
-bool NotStrictEqualNode::evaluateToBoolean(ExecState* exec)
+bool NotStrictEqualNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToBoolean(exec);
 }
@@ -3737,14 +3737,14 @@ RegisterID* BitAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitBitAnd(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void BitAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BitAndNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.10
-JSValue* BitAndNode::evaluate(ExecState* exec)
+JSValue* BitAndNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3754,7 +3754,7 @@ JSValue* BitAndNode::evaluate(ExecState* exec)
     return jsNumberFromAnd(exec, v1, v2);
 }
 
-int32_t BitAndNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t BitAndNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     int32_t i1 = m_expr1->evaluateToInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3762,22 +3762,22 @@ int32_t BitAndNode::inlineEvaluateToInt32(ExecState* exec)
     return (i1 & i2);
 }
 
-double BitAndNode::evaluateToNumber(ExecState* exec)
+double BitAndNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-bool BitAndNode::evaluateToBoolean(ExecState* exec)
+bool BitAndNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t BitAndNode::evaluateToInt32(ExecState* exec)
+int32_t BitAndNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t BitAndNode::evaluateToUInt32(ExecState* exec)
+uint32_t BitAndNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -3789,13 +3789,13 @@ RegisterID* BitXOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitBitXOr(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void BitXOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BitXOrNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
-int32_t BitXOrNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t BitXOrNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     int i1 = m_expr1->evaluateToInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3803,27 +3803,27 @@ int32_t BitXOrNode::inlineEvaluateToInt32(ExecState* exec)
     return (i1 ^ i2);
 }
 
-JSValue* BitXOrNode::evaluate(ExecState* exec)
+JSValue* BitXOrNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToInt32(exec));
 }
 
-double BitXOrNode::evaluateToNumber(ExecState* exec)
+double BitXOrNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-bool BitXOrNode::evaluateToBoolean(ExecState* exec)
+bool BitXOrNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t BitXOrNode::evaluateToInt32(ExecState* exec)
+int32_t BitXOrNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t BitXOrNode::evaluateToUInt32(ExecState* exec)
+uint32_t BitXOrNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -3835,13 +3835,13 @@ RegisterID* BitOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitBitOr(generator.finalDestination(dst, src1.get()), src1.get(), src2);
 }
 
-void BitOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BitOrNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
-int32_t BitOrNode::inlineEvaluateToInt32(ExecState* exec)
+int32_t BitOrNode::inlineEvaluateToInt32(OldInterpreterExecState* exec)
 {
     int i1 = m_expr1->evaluateToInt32(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -3849,27 +3849,27 @@ int32_t BitOrNode::inlineEvaluateToInt32(ExecState* exec)
     return (i1 | i2);
 }
 
-JSValue* BitOrNode::evaluate(ExecState* exec)
+JSValue* BitOrNode::evaluate(OldInterpreterExecState* exec)
 {
     return jsNumber(inlineEvaluateToInt32(exec));
 }
 
-double BitOrNode::evaluateToNumber(ExecState* exec)
+double BitOrNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-bool BitOrNode::evaluateToBoolean(ExecState* exec)
+bool BitOrNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-int32_t BitOrNode::evaluateToInt32(ExecState* exec)
+int32_t BitOrNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
 
-uint32_t BitOrNode::evaluateToUInt32(ExecState* exec)
+uint32_t BitOrNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     return inlineEvaluateToInt32(exec);
 }
@@ -3889,14 +3889,14 @@ RegisterID* LogicalAndNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return newDst.get();
 }
 
-void LogicalAndNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LogicalAndNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.11
-JSValue* LogicalAndNode::evaluate(ExecState* exec)
+JSValue* LogicalAndNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3909,7 +3909,7 @@ JSValue* LogicalAndNode::evaluate(ExecState* exec)
     return v2;
 }
 
-bool LogicalAndNode::evaluateToBoolean(ExecState* exec)
+bool LogicalAndNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     bool b = m_expr1->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3929,13 +3929,13 @@ RegisterID* LogicalOrNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return newDst.get();
 }
 
-void LogicalOrNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LogicalOrNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
-JSValue* LogicalOrNode::evaluate(ExecState* exec)
+JSValue* LogicalOrNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v1 = m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -3944,7 +3944,7 @@ JSValue* LogicalOrNode::evaluate(ExecState* exec)
     return m_expr2->evaluate(exec);
 }
 
-bool LogicalOrNode::evaluateToBoolean(ExecState* exec)
+bool LogicalOrNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     bool b = m_expr1->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
@@ -3973,7 +3973,7 @@ RegisterID* ConditionalNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return newDst.get();
 }
 
-void ConditionalNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ConditionalNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
@@ -3981,35 +3981,35 @@ void ConditionalNode::optimizeVariableAccess(ExecState*, const SymbolTable&, con
 }
 
 // ECMA 11.12
-JSValue* ConditionalNode::evaluate(ExecState* exec)
+JSValue* ConditionalNode::evaluate(OldInterpreterExecState* exec)
 {
     bool b = m_logical->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONVALUE
     return b ? m_expr1->evaluate(exec) : m_expr2->evaluate(exec);
 }
 
-bool ConditionalNode::evaluateToBoolean(ExecState* exec)
+bool ConditionalNode::evaluateToBoolean(OldInterpreterExecState* exec)
 {
     bool b = m_logical->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONBOOLEAN
     return b ? m_expr1->evaluateToBoolean(exec) : m_expr2->evaluateToBoolean(exec);
 }
 
-double ConditionalNode::evaluateToNumber(ExecState* exec)
+double ConditionalNode::evaluateToNumber(OldInterpreterExecState* exec)
 {
     bool b = m_logical->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return b ? m_expr1->evaluateToNumber(exec) : m_expr2->evaluateToNumber(exec);
 }
 
-int32_t ConditionalNode::evaluateToInt32(ExecState* exec)
+int32_t ConditionalNode::evaluateToInt32(OldInterpreterExecState* exec)
 {
     bool b = m_logical->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONNUMBER
     return b ? m_expr1->evaluateToInt32(exec) : m_expr2->evaluateToInt32(exec);
 }
 
-uint32_t ConditionalNode::evaluateToUInt32(ExecState* exec)
+uint32_t ConditionalNode::evaluateToUInt32(OldInterpreterExecState* exec)
 {
     bool b = m_logical->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTIONNUMBER
@@ -4018,8 +4018,8 @@ uint32_t ConditionalNode::evaluateToUInt32(ExecState* exec)
 
 // ECMA 11.13
 
-static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(ExecState* exec, JSValue* current, ExpressionNode* right, Operator oper) KJS_FAST_CALL;
-static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(ExecState* exec, JSValue* current, ExpressionNode* right, Operator oper)
+static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(OldInterpreterExecState* exec, JSValue* current, ExpressionNode* right, Operator oper) KJS_FAST_CALL;
+static ALWAYS_INLINE JSValue* valueForReadModifyAssignment(OldInterpreterExecState* exec, JSValue* current, ExpressionNode* right, Operator oper)
 {
     JSValue* v;
     int i1;
@@ -4132,7 +4132,7 @@ RegisterID* ReadModifyResolveNode::emitCode(CodeGenerator& generator, RegisterID
     return generator.emitPutPropId(base.get(), m_ident, result);
 }
 
-void ReadModifyResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
+void ReadModifyResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     int index = symbolTable.get(m_ident.ustring().rep());
@@ -4158,7 +4158,7 @@ RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
-void AssignResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
+void AssignResolveNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     int index = symbolTable.get(m_ident.ustring().rep());
@@ -4172,7 +4172,7 @@ void AssignResolveNode::optimizeVariableAccess(ExecState*, const SymbolTable& sy
 
 // ------------------------------ ReadModifyLocalVarNode -----------------------------------
 
-JSValue* ReadModifyLocalVarNode::evaluate(ExecState* exec)
+JSValue* ReadModifyLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
 
@@ -4191,7 +4191,7 @@ JSValue* ReadModifyLocalVarNode::evaluate(ExecState* exec)
 
 // ------------------------------ AssignLocalVarNode -----------------------------------
 
-JSValue* AssignLocalVarNode::evaluate(ExecState* exec)
+JSValue* AssignLocalVarNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     JSValue* v = m_right->evaluate(exec);
@@ -4205,7 +4205,7 @@ JSValue* AssignLocalVarNode::evaluate(ExecState* exec)
 
 // ------------------------------ ReadModifyConstNode -----------------------------------
 
-JSValue* ReadModifyConstNode::evaluate(ExecState* exec)
+JSValue* ReadModifyConstNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject() == exec->scopeChain().top());
     JSValue* left = exec->localStorage()[m_index].value;
@@ -4217,12 +4217,12 @@ JSValue* ReadModifyConstNode::evaluate(ExecState* exec)
 
 // ------------------------------ AssignConstNode -----------------------------------
 
-JSValue* AssignConstNode::evaluate(ExecState* exec)
+JSValue* AssignConstNode::evaluate(OldInterpreterExecState* exec)
 {
     return m_right->evaluate(exec);
 }
 
-JSValue* ReadModifyResolveNode::evaluate(ExecState* exec)
+JSValue* ReadModifyResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -4265,7 +4265,7 @@ found:
     return v;
 }
 
-JSValue* AssignResolveNode::evaluate(ExecState* exec)
+JSValue* AssignResolveNode::evaluate(OldInterpreterExecState* exec)
 {
     const ScopeChain& chain = exec->scopeChain();
     ScopeChainIterator iter = chain.begin();
@@ -4306,13 +4306,13 @@ RegisterID* AssignDotNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitPutPropId(r0.get(), m_ident, r1);
 }
 
-void AssignDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void AssignDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     nodeStack.append(m_base.get());
 }
 
-JSValue* AssignDotNode::evaluate(ExecState* exec)
+JSValue* AssignDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -4337,13 +4337,13 @@ RegisterID* ReadModifyDotNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropId(base.get(), m_ident, r3);
 }
 
-void ReadModifyDotNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ReadModifyDotNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     nodeStack.append(m_base.get());
 }
 
-JSValue* ReadModifyDotNode::evaluate(ExecState* exec)
+JSValue* ReadModifyDotNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -4370,7 +4370,7 @@ RegisterID* AssignErrorNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return emitThrowError(generator, dst, ReferenceError, "Left side of assignment is not a reference.");
 }
 
-JSValue* AssignErrorNode::evaluate(ExecState* exec)
+JSValue* AssignErrorNode::evaluate(OldInterpreterExecState* exec)
 {
     throwError(exec, ReferenceError, "Left side of assignment is not a reference.");
     handleException(exec);
@@ -4387,14 +4387,14 @@ RegisterID* AssignBracketNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitPutPropVal(r0.get(), r1.get(), r2);
 }
 
-void AssignBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void AssignBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
 }
 
-JSValue* AssignBracketNode::evaluate(ExecState* exec)
+JSValue* AssignBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -4434,14 +4434,14 @@ RegisterID* ReadModifyBracketNode::emitCode(CodeGenerator& generator, RegisterID
     return r4;
 }
 
-void ReadModifyBracketNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ReadModifyBracketNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_right.get());
     nodeStack.append(m_subscript.get());
     nodeStack.append(m_base.get());
 }
 
-JSValue* ReadModifyBracketNode::evaluate(ExecState* exec)
+JSValue* ReadModifyBracketNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* baseValue = m_base->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -4488,14 +4488,14 @@ RegisterID* CommaNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitNode(dst, m_expr2.get());
 }
 
-void CommaNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void CommaNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr2.get());
     nodeStack.append(m_expr1.get());
 }
 
 // ECMA 11.14
-JSValue* CommaNode::evaluate(ExecState* exec)
+JSValue* CommaNode::evaluate(OldInterpreterExecState* exec)
 {
     m_expr1->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -4510,7 +4510,7 @@ ConstDeclNode::ConstDeclNode(const Identifier& ident, ExpressionNode* init)
 {
 }
 
-void ConstDeclNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ConstDeclNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
         nodeStack.append(m_next.get());
@@ -4518,7 +4518,7 @@ void ConstDeclNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const
         nodeStack.append(m_init.get());
 }
 
-void ConstDeclNode::handleSlowCase(ExecState* exec, const ScopeChain& chain, JSValue* val)
+void ConstDeclNode::handleSlowCase(OldInterpreterExecState* exec, const ScopeChain& chain, JSValue* val)
 {
     ScopeChainIterator iter = chain.begin();
     ScopeChainIterator end = chain.end();
@@ -4541,7 +4541,7 @@ void ConstDeclNode::handleSlowCase(ExecState* exec, const ScopeChain& chain, JSV
 }
 
 // ECMA 12.2
-inline void ConstDeclNode::evaluateSingle(ExecState* exec)
+inline void ConstDeclNode::evaluateSingle(OldInterpreterExecState* exec)
 {
     ASSERT(exec->variableObject()->hasOwnProperty(exec, m_ident) || exec->codeType() == EvalCode); // Guaranteed by processDeclarations.
     const ScopeChain& chain = exec->scopeChain();
@@ -4594,7 +4594,7 @@ RegisterID* ConstDeclNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return result;
 }
 
-JSValue* ConstDeclNode::evaluate(ExecState* exec)
+JSValue* ConstDeclNode::evaluate(OldInterpreterExecState* exec)
 {
     evaluateSingle(exec);
 
@@ -4610,7 +4610,7 @@ JSValue* ConstDeclNode::evaluate(ExecState* exec)
 
 // ------------------------------ ConstStatementNode -----------------------------
 
-void ConstStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ConstStatementNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     ASSERT(m_next);
     nodeStack.append(m_next.get());
@@ -4622,7 +4622,7 @@ RegisterID* ConstStatementNode::emitCode(CodeGenerator& generator, RegisterID* d
 }
 
 // ECMA 12.2
-JSValue* ConstStatementNode::execute(ExecState* exec)
+JSValue* ConstStatementNode::execute(OldInterpreterExecState* exec)
 {
     m_next->evaluate(exec);
     KJS_CHECKEXCEPTION
@@ -4671,7 +4671,7 @@ static inline Node* statementListInitializeVariableAccessStack(StatementVector& 
     return (*begin).get();
 }
 
-static inline JSValue* statementListExecute(StatementVector& statements, ExecState* exec)
+static inline JSValue* statementListExecute(StatementVector& statements, OldInterpreterExecState* exec)
 {
     JSValue* value = 0;
     size_t size = statements.size();
@@ -4698,13 +4698,13 @@ RegisterID* BlockNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return statementListEmitCode(m_children, generator, dst);
 }
 
-void BlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void BlockNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     statementListPushFIFO(m_children, nodeStack);
 }
 
 // ECMA 12.1
-JSValue* BlockNode::execute(ExecState* exec)
+JSValue* BlockNode::execute(OldInterpreterExecState* exec)
 {
     return statementListExecute(m_children, exec);
 }
@@ -4717,7 +4717,7 @@ RegisterID* EmptyStatementNode::emitCode(CodeGenerator&, RegisterID* dst)
 }
 
 // ECMA 12.3
-JSValue* EmptyStatementNode::execute(ExecState* exec)
+JSValue* EmptyStatementNode::execute(OldInterpreterExecState* exec)
 {
     return exec->setNormalCompletion();
 }
@@ -4730,14 +4730,14 @@ RegisterID* ExprStatementNode::emitCode(CodeGenerator& generator, RegisterID* ds
     return generator.emitNode(dst, m_expr.get());
 }
 
-void ExprStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ExprStatementNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     ASSERT(m_expr);
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.4
-JSValue* ExprStatementNode::execute(ExecState* exec)
+JSValue* ExprStatementNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* value = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTION
@@ -4753,13 +4753,13 @@ RegisterID* VarStatementNode::emitCode(CodeGenerator& generator, RegisterID* dst
     return generator.emitNode(dst, m_expr.get());
 }
 
-void VarStatementNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void VarStatementNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     ASSERT(m_expr);
     nodeStack.append(m_expr.get());
 }
 
-JSValue* VarStatementNode::execute(ExecState* exec)
+JSValue* VarStatementNode::execute(OldInterpreterExecState* exec)
 {
     m_expr->evaluate(exec);
     KJS_CHECKEXCEPTION
@@ -4783,14 +4783,14 @@ RegisterID* IfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return 0;
 }
 
-void IfNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void IfNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_ifBlock.get());
     nodeStack.append(m_condition.get());
 }
 
 // ECMA 12.5
-JSValue* IfNode::execute(ExecState* exec)
+JSValue* IfNode::execute(OldInterpreterExecState* exec)
 {
     bool b = m_condition->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTION
@@ -4820,14 +4820,14 @@ RegisterID* IfElseNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return 0;
 }
 
-void IfElseNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
+void IfElseNode::optimizeVariableAccess(OldInterpreterExecState* exec, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
 {
     nodeStack.append(m_elseBlock.get());
     IfNode::optimizeVariableAccess(exec, symbolTable, localStorage, nodeStack);
 }
 
 // ECMA 12.5
-JSValue* IfElseNode::execute(ExecState* exec)
+JSValue* IfElseNode::execute(OldInterpreterExecState* exec)
 {
     bool b = m_condition->evaluateToBoolean(exec);
     KJS_CHECKEXCEPTION
@@ -4858,14 +4858,14 @@ RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r0.get();
 }
 
-void DoWhileNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void DoWhileNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.6.1
-JSValue* DoWhileNode::execute(ExecState* exec)
+JSValue* DoWhileNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* value = 0;
 
@@ -4923,14 +4923,14 @@ RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return 0;
 }
 
-void WhileNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void WhileNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.6.2
-JSValue* WhileNode::execute(ExecState* exec)
+JSValue* WhileNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* value = 0;
 
@@ -4988,7 +4988,7 @@ RegisterID* ForNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r0.get();
 }
 
-void ForNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ForNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
     nodeStack.append(m_expr3.get());
@@ -4997,7 +4997,7 @@ void ForNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const Local
 }
 
 // ECMA 12.6.3
-JSValue* ForNode::execute(ExecState* exec)
+JSValue* ForNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* value = 0;
 
@@ -5058,7 +5058,7 @@ ForInNode::ForInNode(const Identifier& ident, ExpressionNode* in, ExpressionNode
     // for( var foo = bar in baz )
 }
 
-void ForInNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ForInNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
     nodeStack.append(m_expr.get());
@@ -5117,7 +5117,7 @@ RegisterID* ForInNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 }
 
 // ECMA 12.6.4
-JSValue* ForInNode::execute(ExecState* exec)
+JSValue* ForInNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* value = 0;
 
@@ -5238,7 +5238,7 @@ RegisterID* ContinueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return dst;
 }
 
-JSValue* ContinueNode::execute(ExecState* exec)
+JSValue* ContinueNode::execute(OldInterpreterExecState* exec)
 {
     if (m_ident.isEmpty() && !exec->inIteration())
         return setErrorCompletion(exec, SyntaxError, "Invalid continue statement.");
@@ -5271,7 +5271,7 @@ RegisterID* BreakNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return dst;
 }
 
-JSValue* BreakNode::execute(ExecState* exec)
+JSValue* BreakNode::execute(OldInterpreterExecState* exec)
 {
     if (m_ident.isEmpty() && !exec->inIteration() && !exec->inSwitch())
         return setErrorCompletion(exec, SyntaxError, "Invalid break statement.");
@@ -5296,14 +5296,14 @@ RegisterID* ReturnNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return generator.emitReturn(r0);
 }
 
-void ReturnNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ReturnNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_value)
         nodeStack.append(m_value.get());
 }
 
 // ECMA 12.9
-JSValue* ReturnNode::execute(ExecState* exec)
+JSValue* ReturnNode::execute(OldInterpreterExecState* exec)
 {
     CodeType codeType = exec->codeType();
     if (codeType != FunctionCode)
@@ -5329,14 +5329,14 @@ RegisterID* WithNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r1;
 }
 
-void WithNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void WithNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     // Can't optimize within statement because "with" introduces a dynamic scope.
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.10
-JSValue* WithNode::execute(ExecState*)
+JSValue* WithNode::execute(OldInterpreterExecState*)
 {
     ASSERT_NOT_REACHED();
     return 0;
@@ -5344,7 +5344,7 @@ JSValue* WithNode::execute(ExecState*)
 
 // ------------------------------ CaseClauseNode -------------------------------
 
-void CaseClauseNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void CaseClauseNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_expr)
         nodeStack.append(m_expr.get());
@@ -5352,7 +5352,7 @@ void CaseClauseNode::optimizeVariableAccess(ExecState*, const SymbolTable&, cons
 }
 
 // ECMA 12.11
-JSValue* CaseClauseNode::evaluate(ExecState* exec)
+JSValue* CaseClauseNode::evaluate(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTIONVALUE
@@ -5361,14 +5361,14 @@ JSValue* CaseClauseNode::evaluate(ExecState* exec)
 }
 
 // ECMA 12.11
-JSValue* CaseClauseNode::executeStatements(ExecState* exec)
+JSValue* CaseClauseNode::executeStatements(OldInterpreterExecState* exec)
 {
     return statementListExecute(m_children, exec);
 }
 
 // ------------------------------ ClauseListNode -------------------------------
 
-void ClauseListNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ClauseListNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_next)
         nodeStack.append(m_next.get());
@@ -5425,7 +5425,7 @@ RegisterID* CaseBlockNode::emitCodeForBlock(CodeGenerator& generator, RegisterID
     return result;
 }
 
-void CaseBlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void CaseBlockNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     if (m_list2)
         nodeStack.append(m_list2.get());
@@ -5436,7 +5436,7 @@ void CaseBlockNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const
 }
 
 // ECMA 12.11
-JSValue* CaseBlockNode::executeBlock(ExecState* exec, JSValue* input)
+JSValue* CaseBlockNode::executeBlock(OldInterpreterExecState* exec, JSValue* input)
 {
     ClauseListNode* a = m_list1.get();
     while (a) {
@@ -5509,14 +5509,14 @@ RegisterID* SwitchNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r1;
 }
 
-void SwitchNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void SwitchNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_block.get());
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.11
-JSValue* SwitchNode::execute(ExecState* exec)
+JSValue* SwitchNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTION
@@ -5549,13 +5549,13 @@ RegisterID* LabelNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return r0;
 }
 
-void LabelNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void LabelNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_statement.get());
 }
 
 // ECMA 12.12
-JSValue* LabelNode::execute(ExecState* exec)
+JSValue* LabelNode::execute(OldInterpreterExecState* exec)
 {
     if (!exec->seenLabels().push(m_label))
         return setErrorCompletion(exec, SyntaxError, "Duplicated label %s found.", m_label);
@@ -5575,13 +5575,13 @@ RegisterID* ThrowNode::emitCode(CodeGenerator& generator, RegisterID* dst)
     return dst;
 }
 
-void ThrowNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void ThrowNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_expr.get());
 }
 
 // ECMA 12.13
-JSValue* ThrowNode::execute(ExecState* exec)
+JSValue* ThrowNode::execute(OldInterpreterExecState* exec)
 {
     JSValue* v = m_expr->evaluate(exec);
     KJS_CHECKEXCEPTION
@@ -5643,7 +5643,7 @@ RegisterID* TryNode::emitCode(CodeGenerator& generator, RegisterID* dst)
 }
 
 
-void TryNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
+void TryNode::optimizeVariableAccess(OldInterpreterExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     // Can't optimize within catchBlock because "catch" introduces a dynamic scope.
     if (m_finallyBlock)
@@ -5652,7 +5652,7 @@ void TryNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const Local
 }
 
 // ECMA 12.14
-JSValue* TryNode::execute(ExecState*)
+JSValue* TryNode::execute(OldInterpreterExecState*)
 {
     ASSERT_NOT_REACHED();
     return 0;
@@ -5796,7 +5796,7 @@ void ProgramNode::generateCode(ScopeChainNode* sc)
     m_children.shrinkCapacity(0);
 }
 
-void ProgramNode::initializeSymbolTable(ExecState* exec)
+void ProgramNode::initializeSymbolTable(OldInterpreterExecState* exec)
 {
     // If a previous script defined a symbol with the same name as one of our
     // symbols, to avoid breaking previously optimized nodes, we need to reuse
@@ -5843,7 +5843,7 @@ void ProgramNode::initializeSymbolTable(ExecState* exec)
     }
 }
 
-void ScopeNode::optimizeVariableAccess(ExecState* exec)
+void ScopeNode::optimizeVariableAccess(OldInterpreterExecState* exec)
 {
     NodeStack nodeStack;
     Node* node = statementListInitializeVariableAccessStack(m_children, nodeStack);
@@ -5870,7 +5870,7 @@ static void gccIsCrazy()
 {
 }
 
-void ProgramNode::processDeclarations(ExecState* exec)
+void ProgramNode::processDeclarations(OldInterpreterExecState* exec)
 {
     // If you remove this call, some SunSpider tests, including
     // bitops-nsieve-bits.js, will regress substantially on Mac, due to a ~40%
@@ -5921,7 +5921,7 @@ void ProgramNode::processDeclarations(ExecState* exec)
     optimizeVariableAccess(exec);
 }
 
-void EvalNode::processDeclarations(ExecState* exec)
+void EvalNode::processDeclarations(OldInterpreterExecState* exec)
 {
     // We could optimize access to pre-existing symbols here, but SunSpider
     // reports that to be a net loss.
@@ -5960,13 +5960,13 @@ UString FunctionBodyNode::paramString() const
     return s;
 }
 
-JSValue* ProgramNode::execute(ExecState* exec)
+JSValue* ProgramNode::execute(OldInterpreterExecState* exec)
 {
     processDeclarations(exec);
     return ScopeNode::execute(exec);
 }
 
-JSValue* EvalNode::execute(ExecState* exec)
+JSValue* EvalNode::execute(OldInterpreterExecState* exec)
 {
     processDeclarations(exec);
     return ScopeNode::execute(exec);
@@ -5979,7 +5979,7 @@ FunctionBodyNodeWithDebuggerHooks::FunctionBodyNodeWithDebuggerHooks(SourceEleme
 {
 }
 
-JSValue* FunctionBodyNodeWithDebuggerHooks::execute(ExecState* exec)
+JSValue* FunctionBodyNodeWithDebuggerHooks::execute(OldInterpreterExecState* exec)
 {
     if (Debugger* dbg = exec->dynamicGlobalObject()->debugger()) {
         if (!dbg->callEvent(exec, sourceId(), lineNo(), exec->function(), *exec->arguments()))
@@ -6022,7 +6022,7 @@ RegisterID* FuncDeclNode::emitCode(CodeGenerator&, RegisterID* dst)
     return dst;
 }
 
-JSValue* FuncDeclNode::execute(ExecState* exec)
+JSValue* FuncDeclNode::execute(OldInterpreterExecState* exec)
 {
     return exec->setNormalCompletion();
 }
@@ -6067,7 +6067,7 @@ void FuncExprNode::addParams()
         m_body->parameters().append(p->ident());
 }
 
-JSValue* FuncExprNode::evaluate(ExecState* exec)
+JSValue* FuncExprNode::evaluate(OldInterpreterExecState* exec)
 {
     ASSERT_NOT_REACHED();
 
