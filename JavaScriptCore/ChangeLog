@@ -1,5 +1,23 @@
 2008-04-05  Sam Weinig  <sam@webkit.org>
 
+        Reviewed by Geoffrey Garen.
+
+        Implement codegen for ForInNode.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitIn):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::InNode::emitCode):
+        * kjs/nodes.h:
+
+2008-04-05  Sam Weinig  <sam@webkit.org>
+
         Reviewed by Oliver Hunt.
 
         - Implement codegen for DeleteResolveNode, DeleteBracketNode, DeleteDotNode and DeleteValueNode.

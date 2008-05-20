@@ -502,6 +502,15 @@ RegisterID* CodeGenerator::emitTypeOf(RegisterID* r0, RegisterID* r1)
     return r0;
 }
 
+RegisterID* CodeGenerator::emitIn(RegisterID* r0, RegisterID* r1, RegisterID* r2)
+{
+    instructions().append(machine().getOpcode(op_in));
+    instructions().append(r0->index());
+    instructions().append(r1->index());
+    instructions().append(r2->index());
+    return r0;
+}
+
 RegisterID* CodeGenerator::emitLoad(RegisterID* r0, bool b)
 {
     instructions().append(machine().getOpcode(op_load));

@@ -543,6 +543,27 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, Vector<Registe
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_in) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        int r2 = (++vPC)->u.operand;
+
+        JSValue* v2 = r[r2].u.jsValue;
+        // FIXME: this should throw a TypeError excpetion
+        ASSERT(v2->isObject());
+        JSObject* o2 = static_cast<JSObject*>(v2);
+
+        JSValue* v1 = r[r1].u.jsValue;
+
+        uint32_t i;
+        if (v1->getUInt32(i))
+            r[r0].u.jsValue = jsBoolean(o2->hasProperty(exec, i));
+        else
+            r[r0].u.jsValue = jsBoolean(o2->hasProperty(exec, Identifier(v1->toString(exec))));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_resolve) {
         resolve(exec, vPC, r, scopeChain, codeBlock);
         vPC += 3;
