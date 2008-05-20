@@ -76,8 +76,6 @@ namespace KJS {
 
         RegExpObjectImp(ExecState*, FunctionPrototype*, RegExpPrototype*);
 
-        JSObject* createRegExpImp(ExecState*, PassRefPtr<RegExp>);
-
         virtual ConstructType getConstructData(ConstructData&);
         virtual JSObject* construct(ExecState*, const List&);
 
