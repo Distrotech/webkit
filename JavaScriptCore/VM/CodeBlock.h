@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,29 +25,46 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef CodeBlock_h
+#define CodeBlock_h
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
-
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include <wtf/RefPtr.h>
+#include <wtf/Vector.h>
+#include "nodes.h"
+#include "Instruction.h"
+#include "UString.h"
 
 namespace KJS {
 
-    struct IdentifierRepHash : PtrHash<RefPtr<UString::Rep> > {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static unsigned hash(UString::Rep* key) { return key->computedHash(); }
+    class ExecState;
+
+    struct CodeBlock {
+        CodeBlock()
+            : numTemporaries(0)
+            , numLocals(0)
+            , numParameters(0)
+        {
+        }
+        
+        void dump(ExecState*);
+        unsigned numRegisters() { return numTemporaries + numLocals; }
+        
+        Vector<Instruction> instructions;
+        
+        int numTemporaries;
+        int numLocals;
+        int numParameters;
+        
+        // Constant pool
+        Vector<Identifier> identifiers;
+        Vector<RefPtr<FuncDeclNode> > functions;
+        Vector<JSValue*> jsValues;
+        
+    private:
+        void dump(ExecState*, const Vector<Instruction>::iterator& begin, Vector<Instruction>::iterator&);
     };
-
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
-
-    struct SymbolTableIndexHashTraits : HashTraits<size_t> {
-        static const bool emptyValueIsZero = false;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, HashTraits<RefPtr<UString::Rep> >, SymbolTableIndexHashTraits> SymbolTable;
-
+    
 } // namespace KJS
 
-#endif // SymbolTable_h
+#endif // CodeBlock_h

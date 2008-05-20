@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,28 +26,49 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
+#ifndef Opcodes_h
+#define Opcodes_h
 
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include <wtf/Assertions.h>
 
 namespace KJS {
 
-    struct IdentifierRepHash : PtrHash<RefPtr<UString::Rep> > {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static unsigned hash(UString::Rep* key) { return key->computedHash(); }
-    };
+    typedef void* Opcode;
+        
+    #define FOR_EACH_OPCODE_ID(macro) \
+        macro(op_load) \
+        macro(op_mov) \
+        \
+        macro(op_less) \
+        \
+        macro(op_pre_inc) \
+        macro(op_post_inc) \
+        macro(op_add) \
+        \
+        macro(op_resolve) \
+        macro(op_resolve_base) \
+        macro(op_object_get) \
+        macro(op_object_put) \
+        \
+        macro(op_jmp) \
+        macro(op_jtrue) \
+        \
+        macro(op_new_func) \
+        macro(op_call) \
+        macro(op_ret) \
+        \
+        macro(op_end) // end must be the last opcode in the list
+        
+    #define OPCODE_ID_ENUM(opcode) opcode,
+        typedef enum { FOR_EACH_OPCODE_ID(OPCODE_ID_ENUM) } OpcodeID;
+    #undef OPCODE_ID_ENUM
 
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
+    const int numOpcodeIDs = op_end + 1;
 
-    struct SymbolTableIndexHashTraits : HashTraits<size_t> {
-        static const bool emptyValueIsZero = false;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, HashTraits<RefPtr<UString::Rep> >, SymbolTableIndexHashTraits> SymbolTable;
+    #define VERIFY_OPCODE_ID(id) COMPILE_ASSERT(id <= op_end, ASSERT_THAT_JS_OPCODE_IDS_ARE_VALID);
+        FOR_EACH_OPCODE_ID(VERIFY_OPCODE_ID);
+    #undef VERIFY_OPCODE_ID
 
 } // namespace KJS
 
-#endif // SymbolTable_h
+#endif // Opcodes_h

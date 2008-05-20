@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,29 +25,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef Instruction_h
+#define Instruction_h
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
-
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include "Opcode.h"
 
 namespace KJS {
 
-    struct IdentifierRepHash : PtrHash<RefPtr<UString::Rep> > {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static unsigned hash(UString::Rep* key) { return key->computedHash(); }
+    struct Instruction {
+        Instruction(Opcode opcode) { u.opcode = opcode; }
+        Instruction(int operand) { u.operand = operand; }
+            
+        union {
+            Opcode opcode;
+            int operand;
+        } u;
     };
-
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
-
-    struct SymbolTableIndexHashTraits : HashTraits<size_t> {
-        static const bool emptyValueIsZero = false;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, HashTraits<RefPtr<UString::Rep> >, SymbolTableIndexHashTraits> SymbolTable;
-
+    
 } // namespace KJS
 
-#endif // SymbolTable_h
+#endif // Instruction_h

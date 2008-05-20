@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,29 +25,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+#ifndef Machine_h
+#define Machine_h
 
-#ifndef SymbolTable_h
-#define SymbolTable_h
-
-#include "ustring.h"
-#include <wtf/AlwaysInline.h>
+#include <wtf/HashMap.h>
+#include "Opcode.h"
 
 namespace KJS {
 
-    struct IdentifierRepHash : PtrHash<RefPtr<UString::Rep> > {
-        static unsigned hash(const RefPtr<UString::Rep>& key) { return key->computedHash(); }
-        static unsigned hash(UString::Rep* key) { return key->computedHash(); }
+    class CodeBlock;
+    class ExecState;
+    class Register;
+
+    class Machine {
+    public:
+        static const int returnInfoSize = 6;
+
+        Machine();
+        
+        Opcode getOpcode(OpcodeID id) { return m_opcodeTable[id]; }
+        OpcodeID getOpcodeID(Opcode opcode) { ASSERT(isOpcode(opcode)); return m_opcodeIDTable.get(opcode); }
+        bool isOpcode(Opcode opcode);
+        
+        void execute(ExecState* exec, ScopeChain* scopeChain, CodeBlock* codeBlock) { privateExecute(Normal, exec, scopeChain, codeBlock); }
+        
+    private:
+        typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
+        
+        void privateExecute(ExecutionFlag, ExecState* = 0, ScopeChain* = 0, CodeBlock* = 0);
+        void dumpRegisters(const Vector<Register>&, Register*);
+        
+        Opcode m_opcodeTable[numOpcodeIDs]; // Maps OpcodeID => Opcode for compiling
+        HashMap<Opcode, OpcodeID> m_opcodeIDTable; // Maps Opcode => OpcodeID for decompiling
     };
-
-    static ALWAYS_INLINE size_t missingSymbolMarker() { return std::numeric_limits<int>::max(); }
-
-    struct SymbolTableIndexHashTraits : HashTraits<size_t> {
-        static const bool emptyValueIsZero = false;
-        static size_t emptyValue() { return missingSymbolMarker(); }
-    };
-
-    typedef HashMap<RefPtr<UString::Rep>, int, IdentifierRepHash, HashTraits<RefPtr<UString::Rep> >, SymbolTableIndexHashTraits> SymbolTable;
+    
+    Machine& machine();
 
 } // namespace KJS
 
-#endif // SymbolTable_h
+#endif // Machine_h
