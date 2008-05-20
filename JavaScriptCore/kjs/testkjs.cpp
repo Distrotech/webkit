@@ -252,6 +252,13 @@ int main(int argc, char** argv)
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
 #endif
 
+#if PLATFORM(UNIX)
+    signal(SIGILL, _exit);
+    signal(SIGFPE, _exit);
+    signal(SIGBUS, _exit);
+    signal(SIGSEGV, _exit);
+#endif
+
     int res = 0;
     TRY
         res = kjsmain(argc, argv);
