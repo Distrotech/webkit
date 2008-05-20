@@ -97,9 +97,9 @@ namespace KJS {
 
     inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot)
     {
-        int index = symbolTable().inlineGet(propertyName.ustring().rep()).index;
-        if (index != missingSymbolMarker()) {
-            slot.setValueSlot(this, &valueAt(index));
+        SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (!entry.isEmpty()) {
+            slot.setValueSlot(this, &valueAt(entry.getIndex()));
             return true;
         }
         return false;
@@ -108,11 +108,11 @@ namespace KJS {
     inline bool JSVariableObject::symbolTablePut(const Identifier& propertyName, JSValue* value)
     {
         SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
-        if (entry.index == missingSymbolMarker())
+        if (entry.isEmpty())
             return false;
-        if (entry.attributes & ReadOnly)
+        if (entry.isReadOnly())
             return true;
-        valueAt(entry.index) = value;
+        valueAt(entry.getIndex()) = value;
         return true;
     }
 
@@ -122,9 +122,9 @@ namespace KJS {
         if (iter == symbolTable().end())
             return false;
         SymbolTableEntry& entry = iter->second;
-        ASSERT(entry.index != missingSymbolMarker());
-        entry.attributes = attributes;
-        valueAt(entry.index) = value;
+        ASSERT(!entry.isEmpty());
+        entry.setAttributes(attributes);
+        valueAt(entry.getIndex()) = value;
         return true;
     }
 

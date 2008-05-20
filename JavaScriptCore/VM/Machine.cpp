@@ -1640,7 +1640,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             Register* callFrame = r + argv - CallFrameHeaderSize;
             int callFrameOffset = registerOffset + argv - CallFrameHeaderSize;
 
-            r[argv].u.jsValue = r2 == missingSymbolMarker() ? exec->globalThisValue() : r[r2].u.jsValue; // "this" value
+            r[argv].u.jsValue = r2 == missingThisObjectMarker() ? exec->globalThisValue() : r[r2].u.jsValue; // "this" value
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, argc, 0, v);
 
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
@@ -1664,7 +1664,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         if (callType == CallTypeNative) {
             int registerOffset = r - (*registerBase);
             
-            r[argv].u.jsValue = r2 == missingSymbolMarker() ? exec->globalThisValue() : (r[r2].u.jsValue)->toObject(exec); // "this" value
+            r[argv].u.jsValue = r2 == missingThisObjectMarker() ? exec->globalThisValue() : (r[r2].u.jsValue)->toObject(exec); // "this" value
             JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
 
             List args(&r[argv + 1].u.jsValue, argc - 1);

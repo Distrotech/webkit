@@ -41,6 +41,8 @@ namespace KJS {
 
     class ExecState;
 
+    static ALWAYS_INLINE int missingThisObjectMarker() { return std::numeric_limits<int>::max(); }
+
     struct HandlerInfo {
         unsigned start;
         unsigned end;

@@ -145,7 +145,7 @@ bool CodeGenerator::addVar(const Identifier& ident, RegisterID*& r0, bool isCons
     pair<SymbolTable::iterator, bool> result = symbolTable().add(ident.ustring().rep(), newEntry);
 
     if (!result.second)
-        index = result.first->second.index;
+        index = result.first->second.getIndex();
     else {
         --m_nextVar;
         ++m_codeBlock->numVars;
@@ -181,7 +181,7 @@ CodeGenerator::CodeGenerator(ProgramNode* programNode, const ScopeChain& scopeCh
         m_locals.resize(size);
         SymbolTable::iterator end = symbolTable->end();
         for (SymbolTable::iterator it = symbolTable->begin(); it != end; ++it)
-            m_locals[localsIndex(it->second.index)].setIndex(it->second.index);
+            m_locals[localsIndex(it->second.getIndex())].setIndex(it->second.getIndex());
 
         // Shift new symbols so they get stored prior to previously defined symbols.
         m_nextVar -= size;
@@ -312,11 +312,11 @@ RegisterID* CodeGenerator::registerForLocal(const Identifier& ident)
     if (!shouldOptimizeLocals() && ident != m_propertyNames->thisIdentifier)
         return 0;
 
-    int index = symbolTable().get(ident.ustring().rep()).index;
-    if (index == missingSymbolMarker())
+    SymbolTableEntry entry = symbolTable().get(ident.ustring().rep());
+    if (entry.isEmpty())
         return 0;
 
-    return &m_locals[localsIndex(index)];
+    return &m_locals[localsIndex(entry.getIndex())];
 }
 
 RegisterID* CodeGenerator::registerForLocalConstInit(const Identifier& ident)
@@ -324,15 +324,15 @@ RegisterID* CodeGenerator::registerForLocalConstInit(const Identifier& ident)
     if (m_codeType == EvalCode)
         return 0;
     
-    int index = symbolTable().get(ident.ustring().rep()).index;
-    ASSERT(index != missingSymbolMarker());
+    SymbolTableEntry entry = symbolTable().get(ident.ustring().rep());
+    ASSERT(!entry.isEmpty());
     
-    return &m_locals[localsIndex(index)];
+    return &m_locals[localsIndex(entry.getIndex())];
 }
 
 bool CodeGenerator::isLocalConstant(const Identifier& ident)
 {
-    return symbolTable().get(ident.ustring().rep()).attributes & ReadOnly;
+    return symbolTable().get(ident.ustring().rep()).isReadOnly();
 }
 
 RegisterID* CodeGenerator::newTemporary()
@@ -406,11 +406,11 @@ unsigned CodeGenerator::addConstant(FuncExprNode* n)
 unsigned CodeGenerator::addConstant(const Identifier& ident)
 {
     UString::Rep* rep = ident.ustring().rep();
-    pair<SymbolTable::iterator, bool> result = m_identifierMap.add(rep, m_codeBlock->identifiers.size());
+    pair<IdentifierMap::iterator, bool> result = m_identifierMap.add(rep, m_codeBlock->identifiers.size());
     if (result.second) // new entry
         m_codeBlock->identifiers.append(rep);
     
-    return result.first->second.index;
+    return result.first->second;
 }
 
 unsigned CodeGenerator::addConstant(JSValue* v)
@@ -889,7 +889,7 @@ RegisterID* CodeGenerator::emitCall(OpcodeID opcodeID, RegisterID* r0, RegisterI
     instructions().append(machine().getOpcode(opcodeID));
     instructions().append(r0->index());
     instructions().append(r1->index());
-    instructions().append(r2 ? r2->index() : missingSymbolMarker()); // We encode the "this" value in the instruction stream, to avoid an explicit instruction for copying or loading it.
+    instructions().append(r2 ? r2->index() : missingThisObjectMarker()); // We encode the "this" value in the instruction stream, to avoid an explicit instruction for copying or loading it.
     instructions().append(argv.size() ? argv[0]->index() : m_temporaries.size()); // argv
     instructions().append(argv.size()); // argc
 
