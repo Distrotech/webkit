@@ -1,3 +1,21 @@
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Next steps toward global code:
+        
+        * Moved access to the register file into JSVariableObject.
+        
+        * Added more ASSERTs to indicate obsolete APIs there are just hanging
+        around to stave off build failures.
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::JSGlobalObjectData::JSGlobalObjectData):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::registers):
+        (KJS::JSVariableObject::JSVariableObjectData::JSVariableObjectData):
+        (KJS::JSVariableObject::JSVariableObject):
+
 2008-03-31  Sam Weinig  <sam@webkit.org>
 
         Reviewed by Oliver. Tweaked somewhat by Maciej.
