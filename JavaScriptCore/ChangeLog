@@ -1,6 +1,17 @@
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
         Not reviewed.
+        
+        Removed FIXME that I just fixed.
+        
+        Added ASSERT to cover an error previously only covered by a FIXME.
+
+        * kjs/JSActivation.cpp:
+        (KJS::JSActivation::getOwnPropertySlot):
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
+        Not reviewed.
 
         Fixed indentation inside op_call. (I had left this code badly indented
         to make the behavior-changing diff clearer.)
