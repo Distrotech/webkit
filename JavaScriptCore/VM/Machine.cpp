@@ -295,9 +295,11 @@ ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock
     // callFrame[Machine::OptionalCalleeScopeChain] gets optionally set later
 }
 
-ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc, Register* r)
+ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, Register** registerBase, int registerOffset, int argv, int argc)
 {
+    Register* r;
     registerOffset += argv + argc + newCodeBlock->numVars;
+
     if (argc == newCodeBlock->numParameters) { // correct number of arguments
         size_t size = registerOffset + newCodeBlock->numTemporaries;
         registerFile->grow(size);
@@ -326,7 +328,7 @@ ALWAYS_INLINE Register* slideRegisterWindowForCall(CodeBlock* newCodeBlock, Regi
     return r;
 }
 
-    ALWAYS_INLINE ScopeChain* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
+ALWAYS_INLINE ScopeChain* scopeChainForCall(CodeBlock* newCodeBlock, ScopeChain* callDataScopeChain, FunctionBodyNode* functionBody, Register* callFrame, Register** registerBase, Register* r)
 {
     ScopeChain* scopeChain;
 
@@ -412,26 +414,46 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFil
     CodeBlock* codeBlock = &programNode->code(*scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->grow(codeBlock->numTemporaries);
+    Register* r = (*registerFile->basePointer());
 
-    JSValue* result = privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
+    JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
 
     registerFileStack->popRegisterFile();
     return result;
 }
 
-JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
+JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, const List& args, JSObject* thisObj, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->current();
-    CodeBlock* codeBlock = &functionBodyNode->code(*scopeChain);
-    registerFile->grow(registerFile->size() + CallFrameHeaderSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
-    // put return info in place
-    // use 0 codeBlock to indicate termination
-    // put args in place
 
-    return privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
+    int argv = CallFrameHeaderSize;
+    int argc = args.size() + 1; // implicit "this" parameter
+    
+    size_t oldSize = registerFile->size();
+    registerFile->grow(oldSize + CallFrameHeaderSize + argc);
+    
+    Register** registerBase = registerFile->basePointer();
+    int registerOffset = oldSize;
+    Register* callFrame = (*registerBase) + registerOffset;
+    
+    // put return info in place, using 0 codeBlock to indicate built-in caller
+    callFrame[CallerCodeBlock].u.codeBlock = 0;
+
+    // put args in place, including "this"
+    Register* dst = callFrame + CallFrameHeaderSize;
+    (*dst).u.jsValue = thisObj;
+    
+    List::const_iterator end = args.end();
+    for (List::const_iterator it = args.begin(); it != end; ++it)
+        (*++dst).u.jsValue = *it;
+
+    CodeBlock* newCodeBlock = &functionBodyNode->code(*scopeChain);
+    Register* r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
+    scopeChain = scopeChainForCall(newCodeBlock, scopeChain, functionBodyNode, callFrame, registerBase, r);            
+    return privateExecute(Normal, exec, registerFile, r, scopeChain, newCodeBlock, exception);
 }
 
-JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue** exception)
+JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue** exception)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
@@ -453,7 +475,6 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     JSValue* exceptionData = 0;
     
     Register** registerBase = registerFile->basePointer();
-    Register* r = (*registerBase);
     Instruction* vPC = codeBlock->instructions.begin();
     Instruction* exceptionTarget = 0;
     JSValue** k = codeBlock->jsValues.data();
@@ -949,13 +970,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 0);
-
-            // WARNING: If code generation wants to optimize resolves to parent scopes,
-            // it needs to be aware that, for functions that require activations,
-            // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, r);
+            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
             k = newCodeBlock->jsValues.data();
             vPC = newCodeBlock->instructions.begin();
@@ -975,10 +992,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             
             List args(&r[argv + 1].u.jsValue, argc - 1);
 
-            r[r0].u.jsValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
+            JSValue* returnValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
 
             r = (*registerBase) + registerOffset;
-
+            r[r0].u.jsValue = returnValue;
+            
             ++vPC;
             NEXT_OPCODE;
         }
@@ -1053,13 +1071,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             r[argv].u.jsValue = newObject; // "this" value
 
             initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv, 1);
-
-            // WARNING: If code generation wants to optimize resolves to parent scopes,
-            // it needs to be aware that, for functions that require activations,
-            // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
-            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, r);
+            r = slideRegisterWindowForCall(newCodeBlock, registerFile, registerBase, registerOffset, argv, argc);
             scopeChain = scopeChainForCall(newCodeBlock, callData.js.scopeChain, callData.js.functionBody, callFrame, registerBase, r);            
             k = newCodeBlock->jsValues.data();
             vPC = newCodeBlock->instructions.begin();
