@@ -39,7 +39,7 @@ RegisterFileStack::~RegisterFileStack()
         delete m_stack[i];
 }
 
-RegisterFile* RegisterFileStack::pushRegisterFile()
+RegisterFile* RegisterFileStack::pushGlobalRegisterFile()
 {
     RegisterFile* current = this->current();
 
@@ -57,7 +57,7 @@ RegisterFile* RegisterFileStack::pushRegisterFile()
     return registerFile;
 }
 
-void RegisterFileStack::popRegisterFile()
+void RegisterFileStack::popGlobalRegisterFile()
 {
     // Common case: This is the only register file: clear its call frames.
     if (!hasPrevious()) {
@@ -74,6 +74,18 @@ void RegisterFileStack::popRegisterFile()
     current->addGlobalSlots(tmp->numGlobalSlots() - current->numGlobalSlots());
     current->copyGlobals(tmp);
     delete tmp;
+}
+
+RegisterFile* RegisterFileStack::pushFunctionRegisterFile()
+{
+    return allocateRegisterFile(current()->maxSize() - current()->size());;
+}
+
+void RegisterFileStack::popFunctionRegisterFile()
+{
+    delete m_stack.last();
+    m_stack.removeLast();
+    m_base = *m_stack.last()->basePointer();
 }
 
 RegisterFile* RegisterFileStack::allocateRegisterFile(size_t maxSize)

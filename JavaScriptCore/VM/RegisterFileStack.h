@@ -42,9 +42,11 @@ namespace KJS {
         }
 
         ~RegisterFileStack();
-
-        RegisterFile* pushRegisterFile();
-        void popRegisterFile();
+        
+        RegisterFile* pushGlobalRegisterFile();
+        void popGlobalRegisterFile();
+        RegisterFile* pushFunctionRegisterFile();
+        void popFunctionRegisterFile();
 
         RegisterFile* current() { return m_stack.last(); }
         

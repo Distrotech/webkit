@@ -555,7 +555,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
         return 0;
     }
 
-    RegisterFile* registerFile = registerFileStack->pushRegisterFile();
+    RegisterFile* registerFile = registerFileStack->pushGlobalRegisterFile();
     CodeBlock* codeBlock = &programNode->code(scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
 
@@ -570,7 +570,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     m_reentryDepth++;
     JSValue* result = privateExecute(Normal, exec, registerFile, r, scopeChain, codeBlock, exception);
     m_reentryDepth--;
-    registerFileStack->popRegisterFile();
+    registerFileStack->popGlobalRegisterFile();
     return result;
 }
 
