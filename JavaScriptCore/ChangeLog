@@ -1,3 +1,15 @@
+2008-04-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Sam Weinig.
+        
+        Fixed dumpCallFrame to match our new convention of passing around a
+        ScopeChainNode* instead of a ScopeChain*.
+
+        * JavaScriptCore.exp:
+        * VM/Machine.cpp:
+        (KJS::Machine::dumpCallFrame):
+        * VM/Machine.h:
+
 2008-04-15  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.
