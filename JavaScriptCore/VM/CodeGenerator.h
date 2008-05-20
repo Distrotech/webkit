@@ -98,6 +98,8 @@ namespace KJS {
         RegisterID* emitLess(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitLessEq(RegisterID*, RegisterID*, RegisterID*);
 
+        RegisterID* emitToJSNumber(RegisterID*, RegisterID*);
+        RegisterID* emitNegate(RegisterID*, RegisterID*);
         RegisterID* emitPreInc(RegisterID*);
         RegisterID* emitPostInc(RegisterID*, RegisterID*);
         RegisterID* emitAdd(RegisterID*, RegisterID*, RegisterID*);
@@ -113,6 +115,9 @@ namespace KJS {
         RegisterID* emitBitAnd(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitBitXOr(RegisterID*, RegisterID*, RegisterID*);
         RegisterID* emitBitOr(RegisterID*, RegisterID*, RegisterID*);
+        RegisterID* emitBitNot(RegisterID*, RegisterID*);
+
+        RegisterID* emitNot(RegisterID*, RegisterID*);
 
         RegisterID* emitInstanceOf(RegisterID*, RegisterID*, RegisterID*);
 

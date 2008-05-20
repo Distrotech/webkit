@@ -47,6 +47,8 @@ namespace KJS {
         \
         macro(op_pre_inc) \
         macro(op_post_inc) \
+        macro(op_to_jsnumber) \
+        macro(op_negate) \
         macro(op_add) \
         macro(op_mult) \
         macro(op_div) \
@@ -59,6 +61,9 @@ namespace KJS {
         macro(op_bitand) \
         macro(op_bitxor) \
         macro(op_bitor) \
+        macro(op_bitnot) \
+        \
+        macro(op_not) \
         \
         macro(op_instance_of) \
         \

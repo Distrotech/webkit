@@ -326,6 +326,22 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_to_jsnumber) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        r[r0].u.jsValue = r[r1].u.jsValue->toJSNumber(exec);
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_negate) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(-r[r1].u.jsValue->toNumber(exec));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_add) {
         int r0 = (++vPC)->u.operand;
         int r1 = (++vPC)->u.operand;
@@ -422,6 +438,22 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, ScopeChain* sc
         int r2 = (++vPC)->u.operand;
         r[r0].u.jsValue = jsNumber((r[r1].u.jsValue->toInt32(exec)) | (r[r2].u.jsValue->toInt32(exec)));
         
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_bitnot) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsNumber(~r[r1].u.jsValue->toInt32(exec));
+
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_not) {
+        int r0 = (++vPC)->u.operand;
+        int r1 = (++vPC)->u.operand;
+        r[r0].u.jsValue = jsBoolean(!r[r1].u.jsValue->toBoolean(exec));
+
         ++vPC;
         NEXT_OPCODE;
     }
