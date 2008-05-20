@@ -2,6 +2,17 @@
 
         Reviewed by Oliver.
         
+        - fix function.call for calls of more than 8 arguments
+        
+        Fixes svg/carto.net/button.svg
+
+        * kjs/list.cpp:
+        (KJS::List::getSlice): properly set up the m_buffer of the target list.
+
+2008-05-08  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
         - don't return a null RegisterID from RegExpNode in the exception case, since the caller may need a real register
 
         Fixes:
