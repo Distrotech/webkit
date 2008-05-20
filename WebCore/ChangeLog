@@ -1,3 +1,11 @@
+2008-05-19  Steve Falkenburg  <sfalken@apple.com>
+
+        Disable C4273, C4565 for CSSGrammar.cpp, XPathGrammar.cpp to fix build.
+        
+        Reviewed by Adam Roben.
+
+        * WebCore.vcproj/WebCore.vcproj:
+
 2008-05-15  Steve Falkenburg  <sfalken@apple.com>
 
         Fix build.
