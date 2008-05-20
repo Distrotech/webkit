@@ -88,12 +88,7 @@ Completion Interpreter::evaluate(ExecState* exec, ScopeChain& scopeChain, const 
     Profiler::profiler()->didExecute(exec, sourceURL, startingLineNumber);
 #endif
 
-    if (exception) {
-        if (exception->isObject() && static_cast<JSObject*>(exception)->isWatchdogException())
-            return Completion(Interrupted, result);
-        return Completion(Throw, exception);
-    }
-    return Completion(Normal, result);
+    return exception ? Completion(Throw, exception) : Completion(Normal, result);
 }
 
 static bool printExceptions = false;
