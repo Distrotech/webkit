@@ -2,6 +2,16 @@
 
         Reviewed by Geoff.
         
+        - generate code for FunctionCallBracketNode
+
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallBracketNode::emitCode):
+        * kjs/nodes.h:
+
+2008-04-01  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Geoff.
+        
         - Fix two crashing SunSpider tests
 
         * VM/Machine.cpp:
