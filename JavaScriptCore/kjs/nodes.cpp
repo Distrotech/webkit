@@ -438,6 +438,11 @@ void BreakpointCheckStatement::optimizeVariableAccess(ExecState*, const SymbolTa
 
 // ------------------------------ NullNode -------------------------------------
 
+RegisterID* NullNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), jsNull());
+}
+
 JSValue* NullNode::evaluate(ExecState* )
 {
     return jsNull();
@@ -445,12 +450,22 @@ JSValue* NullNode::evaluate(ExecState* )
 
 // ------------------------------ FalseNode ----------------------------------
 
+RegisterID* FalseNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), false);
+}
+
 JSValue* FalseNode::evaluate(ExecState*)
 {
     return jsBoolean(false);
 }
 
 // ------------------------------ TrueNode ----------------------------------
+
+RegisterID* TrueNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    return generator.emitLoad(dst ? dst : generator.newTemporary(), true);
+}
 
 JSValue* TrueNode::evaluate(ExecState*)
 {
@@ -4254,6 +4269,20 @@ JSValue* VarStatementNode::execute(ExecState* exec)
 
 // ------------------------------ IfNode ---------------------------------------
 
+RegisterID* IfNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> l0 = generator.newLabel();
+
+    RegisterID* r0 = generator.emitNode(m_condition.get());
+    generator.emitJumpIfFalse(r0, l0.get());
+
+    generator.emitNode(dst, m_ifBlock.get());
+    generator.emitLabel(l0.get());
+
+    // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
+    return 0;
+}
+
 void IfNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
     nodeStack.append(m_ifBlock.get());
@@ -4269,6 +4298,26 @@ JSValue* IfNode::execute(ExecState* exec)
     if (b)
         return m_ifBlock->execute(exec);
     return exec->setNormalCompletion();
+}
+
+RegisterID* IfElseNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> l0 = generator.newLabel();
+    RefPtr<LabelID> l1 = generator.newLabel();
+
+    RegisterID* r1 = generator.emitNode(m_condition.get());
+    generator.emitJumpIfFalse(r1, l0.get());
+
+    generator.emitNode(dst, m_ifBlock.get());
+    generator.emitJump(l1.get());
+
+    generator.emitLabel(l0.get());
+    generator.emitNode(dst, m_elseBlock.get());
+
+    generator.emitLabel(l1.get());
+
+    // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
+    return 0;
 }
 
 void IfElseNode::optimizeVariableAccess(ExecState* exec, const SymbolTable& symbolTable, const LocalStorage& localStorage, NodeStack& nodeStack)
@@ -4289,6 +4338,18 @@ JSValue* IfElseNode::execute(ExecState* exec)
 }
 
 // ------------------------------ DoWhileNode ----------------------------------
+
+RegisterID* DoWhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> l0 = generator.newLabel();
+    generator.emitLabel(l0.get());
+
+    RefPtr<RegisterID> r0 = generator.emitNode(dst, m_statement.get());
+
+    RegisterID* r1 = generator.emitNode(m_expr.get());
+    generator.emitJumpIfTrue(r1, l0.get());
+    return r0.get();
+}
 
 void DoWhileNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
@@ -4331,6 +4392,23 @@ JSValue* DoWhileNode::execute(ExecState* exec)
 }
 
 // ------------------------------ WhileNode ------------------------------------
+
+RegisterID* WhileNode::emitCode(CodeGenerator& generator, RegisterID* dst)
+{
+    RefPtr<LabelID> l0 = generator.newLabel();
+    RefPtr<LabelID> l1 = generator.newLabel(); 
+    generator.emitJump(l1.get());
+
+    generator.emitLabel(l0.get());
+    generator.emitNode(dst, m_statement.get());
+
+    generator.emitLabel(l1.get());
+    RegisterID* r1 = generator.emitNode(m_expr.get());
+    generator.emitJumpIfTrue(r1, l0.get());
+
+    // FIXME: This should return the last statement exectuted so that it can be returned as a Completion
+    return 0;
+}
 
 void WhileNode::optimizeVariableAccess(ExecState*, const SymbolTable&, const LocalStorage&, NodeStack& nodeStack)
 {
