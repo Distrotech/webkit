@@ -1,3 +1,16 @@
+2008-05-12  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Bug 18934: SQUIRRELFISH: ASSERT @ nytimes.com due to RegisterFile being clobbered
+        <https://bugs.webkit.org/show_bug.cgi?id=18934>
+
+        Add testcases to cover global reentry from an implicit call.
+
+        * fast/js/implicit-call-with-global-reentry-expected.txt: Added.
+        * fast/js/implicit-call-with-global-reentry.html: Added.
+        * fast/js/resources/implicit-call-with-global-reentry.js: Added.
+
 2008-05-12  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.

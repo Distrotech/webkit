@@ -38,6 +38,7 @@ namespace KJS {
     public:
         RegisterFileStack()
             : m_globalBase(0)
+            , m_functionStackDepth(0)
         {
             allocateRegisterFile(RegisterFile::DefaultRegisterFileSize, this);
         }
@@ -68,6 +69,7 @@ namespace KJS {
             m_globalBase = *registerFile->basePointer();
         }
 
+        bool inImplicitCall() { return m_functionStackDepth > 0; }
     private:
         typedef Vector<RegisterFile*, 4> Stack;
 
@@ -88,6 +90,7 @@ namespace KJS {
 
         Stack m_stack;
         Register* m_globalBase;
+        int m_functionStackDepth;
     };
 
 } // namespace KJS
