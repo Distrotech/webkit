@@ -69,11 +69,11 @@ void Machine::dumpRegisters(const CodeBlock* codeBlock, RegisterFile* registerFi
             printf("----------------------------------------\n");
         }
     } else {
-        it = r - codeBlock->numVars - codeBlock->numParameters - returnInfoSize;
-        end = it + returnInfoSize;
+        it = r - codeBlock->numVars - codeBlock->numParameters - CallFrameHeaderSize;
+        end = it + CallFrameHeaderSize;
         if (it != end) {
             do {
-                printf("[return info] | %10p | %10p \n", it, (*it).u.jsValue);
+                printf("[call frame] | %10p | %10p \n", it, (*it).u.jsValue);
                 ++it;
             } while (it != end);
             printf("----------------------------------------\n");
@@ -283,6 +283,17 @@ NEVER_INLINE JSValue* prepareException(ExecState* exec, JSValue* exceptionValue)
     return exceptionValue;
 }
 
+ALWAYS_INLINE void initializeCallFrame(Register* callFrame, CodeBlock* codeBlock, Instruction* vPC, ScopeChain* scopeChain, int registerOffset, int returnValueRegister, int argv)
+{
+    callFrame[Machine::CallerCodeBlock].u.codeBlock = codeBlock;
+    callFrame[Machine::ReturnVPC].u.vPC = vPC + 1;
+    callFrame[Machine::CallerScopeChain].u.scopeChain = scopeChain;
+    callFrame[Machine::CallerRegisterOffset].u.i = registerOffset;
+    callFrame[Machine::ReturnValueRegister].u.i = returnValueRegister;
+    callFrame[Machine::ArgumentStartRegister].u.i = argv; // original argument vector (for the sake of the "arguments" object)
+    // callFrame[Machine::OptionalCalleeScopeChain] gets optionally set later
+}
+
 NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r)
 {
     if (isGlobalCallFrame(registerBase, r)) {
@@ -292,7 +303,7 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
 
     CodeBlock* oldCodeBlock = codeBlock;
 
-    Register* returnInfo = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - returnInfoSize;
+    Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
     
     if (oldCodeBlock->needsActivation) {
         // Find the functions activation in the scope chain
@@ -309,14 +320,14 @@ NEVER_INLINE Instruction* Machine::unwindCallFrame(CodeBlock*& codeBlock, JSValu
         scopeChain->~ScopeChain();
     }
     
-    codeBlock = returnInfo[0].u.codeBlock;
+    codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
     if (!codeBlock)
         return 0; // 0 means we've hit a native call frame
 
     k = codeBlock->jsValues.data();
-    scopeChain = returnInfo[2].u.scopeChain;
-    r = (*registerBase) + returnInfo[3].u.i;
-    return returnInfo[1].u.vPC;
+    scopeChain = callFrame[CallerScopeChain].u.scopeChain;
+    r = (*registerBase) + callFrame[CallerRegisterOffset].u.i;
+    return callFrame[ReturnVPC].u.vPC;
 }
 
 NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue**& k, ScopeChain*& scopeChain, Register** registerBase, Register*& r, const Instruction* vPC)
@@ -366,10 +377,9 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, R
 {
     RegisterFile* registerFile = registerFileStack->current();
     CodeBlock* codeBlock = &functionBodyNode->code(*scopeChain);
-
-    registerFile->grow(registerFile->size() + returnInfoSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
+    registerFile->grow(registerFile->size() + CallFrameHeaderSize + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
     // put return info in place
-        // use 0 codeBlock to indicate termination
+    // use 0 codeBlock to indicate termination
     // put args in place
 
     return privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
@@ -888,18 +898,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         
         if (callType == CallTypeJS) {
             int registerOffset = r - (*registerBase);
-            Register* returnInfo = r + argv - returnInfoSize;
-
-            returnInfo[0].u.codeBlock = codeBlock; // codeBlock after return
-            returnInfo[1].u.vPC = ++vPC; // vPC after return
-            returnInfo[2].u.scopeChain = scopeChain; // scope chain after return
-            returnInfo[3].u.i = registerOffset; // offset of "r" after return
-            returnInfo[4].u.i = r0; // return value slot
-            returnInfo[5].u.i = argv; // original argument vector (for the sake of the "arguments" object)
-            // returnInfo[6] gets optionally set later
+            Register* callFrame = r + argv - CallFrameHeaderSize;
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : r[r2].u.jsValue; // "this" value
 
+            initializeCallFrame(callFrame, codeBlock, vPC, scopeChain, registerOffset, r0, argv);
+
+            // WARNING: If code generation wants to optimize resolves to parent scopes,
+            // it needs to be aware that, for functions that require activations,
+            // the scope chain is off by one, since the activation hasn't been pushed yet.
             CodeBlock* newCodeBlock = &callData.js.functionBody->code(*scopeChain);
 
             registerOffset += argv + argc + newCodeBlock->numVars;
@@ -917,20 +924,20 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
                 for (Register* it = r - omittedArgCount; it != end; ++it)
                     (*it).u.jsValue = jsUndefined();
             } else { // too many arguments -- copy return info and expected arguments, leaving the extra arguments behind
-                size_t size = registerOffset + returnInfoSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
+                size_t size = registerOffset + CallFrameHeaderSize + newCodeBlock->numParameters + newCodeBlock->numTemporaries;
                 registerFile->grow(size);
-                r = (*registerBase) + returnInfoSize + newCodeBlock->numParameters + registerOffset;
+                r = (*registerBase) + CallFrameHeaderSize + newCodeBlock->numParameters + registerOffset;
 
-                int shift = returnInfoSize + argc;
-                Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - returnInfoSize - shift;
-                Register* end = it + returnInfoSize + newCodeBlock->numParameters;
+                int shift = CallFrameHeaderSize + argc;
+                Register* it = r - newCodeBlock->numVars - newCodeBlock->numParameters - CallFrameHeaderSize - shift;
+                Register* end = it + CallFrameHeaderSize + newCodeBlock->numParameters;
                 for ( ; it != end; ++it)
                     *(it + shift) = *it;
             }
 
             if (newCodeBlock->needsActivation) {
-                COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(returnInfo[6]), ScopeChain_fits_in_register);
-                scopeChain = new (&returnInfo[6]) ScopeChain(*callData.js.scopeChain);
+                COMPILE_ASSERT(sizeof(ScopeChain) <= sizeof(callFrame[OptionalCalleeScopeChain]), ScopeChain_fits_in_register);
+                scopeChain = new (&callFrame[OptionalCalleeScopeChain]) ScopeChain(*callData.js.scopeChain);
                 scopeChain->push(new JSActivation(callData.js.functionBody, registerBase, r - (*registerBase)));
             } else
                 scopeChain = callData.js.scopeChain;
@@ -970,7 +977,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         CodeBlock* oldCodeBlock = codeBlock;
 
-        Register* returnInfo = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - returnInfoSize;
+        Register* callFrame = r - oldCodeBlock->numVars - oldCodeBlock->numParameters - CallFrameHeaderSize;
         JSValue* returnValue = r[r1].u.jsValue;
         
         if (oldCodeBlock->needsActivation) {
@@ -979,15 +986,15 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             scopeChain->~ScopeChain();
         }
 
-        codeBlock = returnInfo[0].u.codeBlock;
+        codeBlock = callFrame[CallerCodeBlock].u.codeBlock;
         if (!codeBlock)
             return returnValue;
         
         k = codeBlock->jsValues.data();
-        vPC = returnInfo[1].u.vPC;
-        scopeChain = returnInfo[2].u.scopeChain;
-        r = (*registerBase) + returnInfo[3].u.i;
-        int r0 = returnInfo[4].u.i;
+        vPC = callFrame[ReturnVPC].u.vPC;
+        scopeChain = callFrame[CallerScopeChain].u.scopeChain;
+        r = (*registerBase) + callFrame[CallerRegisterOffset].u.i;
+        int r0 = callFrame[ReturnValueRegister].u.i;
         r[r0].u.jsValue = returnValue;
         
         NEXT_OPCODE;
