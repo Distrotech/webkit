@@ -1,3 +1,14 @@
+2008-04-29  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        In nested program code, don't propogate "this" back to the parent
+        register file. ("this" should remain constant in the parent register
+        file, regardless of the scripts it invokes.)
+
+        * VM/RegisterFile.cpp:
+        (KJS::RegisterFile::copyGlobals):
+
 2008-04-28  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Geoff.

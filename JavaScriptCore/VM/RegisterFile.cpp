@@ -87,10 +87,11 @@ void RegisterFile::addGlobalSlots(size_t count)
 
 void RegisterFile::copyGlobals(RegisterFile* src)
 {
-    size_t numGlobalSlots = src->numGlobalSlots();
-    if (!numGlobalSlots)
+    ASSERT(src->numGlobalSlots() > 0); // Global code should always allocate at least a "this" slot.
+    size_t numSlotsToCopy = src->numGlobalSlots() - 1; // Don't propogate the nested "this" value back to the parent register file.
+    if (!numSlotsToCopy)
         return;
-    memcpy(m_buffer, src->m_buffer, numGlobalSlots * sizeof(Register));
+    memcpy(m_buffer, src->m_buffer, numSlotsToCopy * sizeof(Register));
 }
 
 void RegisterFile::setBase(Register* base)
