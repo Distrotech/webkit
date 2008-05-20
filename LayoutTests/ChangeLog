@@ -1,3 +1,13 @@
+2008-05-12  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Layout test for function.arguments and function.caller in interesting
+        scopes.
+
+        * fast/js/function-dot-arguments-and-caller-expected.txt: Added.
+        * fast/js/function-dot-arguments-and-caller.html: Added.
+
 2008-05-11  Cameron Zwarich  <cwzwarich@uwaterloo.ca>
 
         Reviewed by Oliver.

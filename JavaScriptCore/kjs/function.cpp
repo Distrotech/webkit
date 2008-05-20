@@ -110,11 +110,7 @@ JSValue* FunctionImp::callerGetter(ExecState* exec, JSObject*, const Identifier&
 {
     FunctionImp* thisObj = static_cast<FunctionImp*>(slot.slotBase());
     ASSERT(exec->machine());
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(slot);
-    UNUSED_PARAM(thisObj);
-    // FIXME: Implement this.
-    return jsNull();
+    return exec->machine()->retrieveCaller(exec, thisObj);
 }
 
 JSValue* FunctionImp::lengthGetter(ExecState*, JSObject*, const Identifier&, const PropertySlot& slot)
