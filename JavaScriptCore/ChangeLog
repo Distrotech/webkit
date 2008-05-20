@@ -1,3 +1,17 @@
+2008-04-16  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Oliver Hunt.
+        
+        Fixed a codegen bug when returning from inside a dynamic scope (a with
+        or catch block): we need to pop any dynamic scope(s) that have been
+        added so op_ret can find the activation object at the top of the scope
+        chain.
+
+        * kjs/nodes.cpp:
+        (KJS::ReturnNode::emitCode): If we're returning from inside a dynamic
+        scope, emit a jmp_scopes to take care of popping any dynamic scope(s)
+        and then branching to the return instruction.
+
 2008-04-16  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Geoff.
