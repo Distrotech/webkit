@@ -31,6 +31,7 @@
 #include "Machine.h"
 
 #include "CodeBlock.h"
+#include "ExceptionHelpers.h"
 #include "ExecState.h"
 #include "JSActivation.h"
 #include "JSLock.h"
@@ -225,7 +226,7 @@ bool Machine::isOpcode(Opcode opcode)
 #endif
 }
 
-static void NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
+static NEVER_INLINE bool resolve(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
 {
     int r0 = (vPC + 1)->u.operand;
     int id0 = (vPC + 2)->u.operand;
@@ -240,11 +241,11 @@ static void NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r,
         JSObject* o = *iter;
         if (o->getPropertySlot(exec, ident, slot)) {
             r[r0].u.jsValue = slot.getValue(exec, o, ident);
-            return;
+            return true;
         }
     } while (++iter != end);
-
-    ASSERT_NOT_REACHED(); // FIXME: throw an undefined variable exception
+    exceptionValue = createUndefinedVariableError(exec, ident);
+    return false;
 }
 
 static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChain* scopeChain, CodeBlock* codeBlock)
@@ -399,6 +400,14 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     return 0;
 }
 
+static NEVER_INLINE bool isNotObject(ExecState* exec, const Instruction*, CodeBlock*, JSValue* value, JSValue*& exceptionData)
+{
+    if (value->isObject())
+        return false;
+    exceptionData = createNotAnObjectError(exec, value, 0);
+    return true;
+}
+
 #if HAVE(COMPUTED_GOTO)
 static void* throwTarget;
 #endif
@@ -474,13 +483,21 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     Register** registerBase = registerFile->basePointer();
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
-    
+#define VM_CHECK_EXCEPTION() \
+     do { \
+        if (UNLIKELY(exec->hadException())) { \
+            exceptionValue = exec->exception(); \
+            exec->clearException(); \
+            goto internal_throw; \
+        } \
+    }while (0)
+
 #if HAVE(COMPUTED_GOTO)
-    #define NEXT_OPCODE goto *vPC->u.opcode
+    #define NEXT_OPCODE ASSERT(!exec->hadException()); goto *vPC->u.opcode
     #define BEGIN_OPCODE(opcode) opcode:
     NEXT_OPCODE;
 #else
-    #define NEXT_OPCODE continue
+    #define NEXT_OPCODE ASSERT(!exec->hadException()); continue
     #define BEGIN_OPCODE(opcode) case opcode:
     while(1) // iterator loop begins
     switch (vPC->u.opcode)
@@ -748,8 +765,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
         JSValue* v2 = r[r2].u.jsValue;
 
-        // FIXME: this should throw a TypeError excpetion
-        ASSERT(v2->isObject());
+        if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
+            goto internal_throw;
 
         JSObject* o2 = static_cast<JSObject*>(v2);
         r[r0].u.jsValue = jsBoolean(o2->implementsHasInstance() ? o2->hasInstance(exec, r[r1].u.jsValue) : false);
@@ -771,8 +788,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r2 = (++vPC)->u.operand;
 
         JSValue* v2 = r[r2].u.jsValue;
-        // FIXME: this should throw a TypeError excpetion
-        ASSERT(v2->isObject());
+        if (isNotObject(exec, vPC, codeBlock, v2, exceptionValue))
+            goto internal_throw;
+
         JSObject* o2 = static_cast<JSObject*>(v2);
 
         JSValue* v1 = r[r1].u.jsValue;
@@ -787,7 +805,9 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve) {
-        resolve(exec, vPC, r, scopeChain, codeBlock);
+        if (UNLIKELY(!resolve(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
+            goto internal_throw;
+
         vPC += 3;
         
         NEXT_OPCODE;
@@ -804,10 +824,10 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int id0 = (++vPC)->u.operand;
 
         JSObject* base = r[r1].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+
         Identifier& ident = codeBlock->identifiers[id0];
         r[r0].u.jsValue = base->get(exec, ident);
-
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -817,10 +837,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r1 = (++vPC)->u.operand;
 
         JSObject* base = r[r0].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+        
         Identifier& ident = codeBlock->identifiers[id0];
         base->put(exec, ident, r[r1].u.jsValue);
-
+        
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -830,10 +851,11 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int id0 = (++vPC)->u.operand;
 
         JSObject* base = r[r1].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+        
         Identifier& ident = codeBlock->identifiers[id0];
         r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, ident));
-
+        
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -842,16 +864,19 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+        JSObject* base = r[r1].u.jsValue->toObject(exec); // may throw
+        
         JSValue* subscript = r[r2].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
             r[r0].u.jsValue = base->get(exec, i);
-        else
+        else {
+            VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
             r[r0].u.jsValue = base->get(exec, Identifier(subscript->toString(exec)));
-
+        }
+        
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -861,15 +886,18 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r2 = (++vPC)->u.operand;
 
         JSObject* base = r[r0].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+        
         JSValue* subscript = r[r1].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
             base->put(exec, i, r[r2].u.jsValue);
-        else
+        else {
+            VM_CHECK_EXCEPTION(); // If toObject threw, we must not call toString, which may execute arbitrary code
             base->put(exec, Identifier(subscript->toString(exec)), r[r2].u.jsValue);
-
+        }
+        
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -878,16 +906,19 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r1 = (++vPC)->u.operand;
         int r2 = (++vPC)->u.operand;
 
-        JSObject* base = r[r1].u.jsValue->toObject(exec);
-        // FIXME: missing exception check
+        JSObject* base = r[r1].u.jsValue->toObject(exec); // may throw
+
         JSValue* subscript = r[r2].u.jsValue;
 
         uint32_t i;
         if (subscript->getUInt32(i))
             r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, i));
-        else
+        else {
+            VM_CHECK_EXCEPTION(); // This is needed as toString may have side effects
             r[r0].u.jsValue = jsBoolean(base->deleteProperty(exec, Identifier(subscript->toString(exec))));
-
+        }
+        
+        VM_CHECK_EXCEPTION();
         ++vPC;
         NEXT_OPCODE;
     }
@@ -977,7 +1008,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             NEXT_OPCODE;
         }
-        
+
         if (callType == CallTypeNative) {
             int registerOffset = r - (*registerBase);
             
@@ -985,21 +1016,24 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
 
             r[argv].u.jsValue = r2 == missingSymbolMarker() ? jsNull() : (r[r2].u.jsValue)->toObject(exec); // "this" value
             JSObject* thisObj = static_cast<JSObject*>(r[argv].u.jsValue);
-            // FIXME: needs exception check
-            
+
             List args(&r[argv + 1].u.jsValue, argc - 1);
 
             JSValue* returnValue = static_cast<JSObject*>(v)->callAsFunction(exec, thisObj, args);
 
             r = (*registerBase) + registerOffset;
             r[r0].u.jsValue = returnValue;
-            
+
+            VM_CHECK_EXCEPTION();
+
             ++vPC;
             NEXT_OPCODE;
         }
 
+        // FIXME throw type error
         ASSERT(callType == CallTypeNone);
-        ++vPC;
+
+        vPC++;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_ret) {
@@ -1046,9 +1080,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         CallData callData;
         CallType callType = v->getCallData(callData);
 
-        // FIXME: We need to throw a TypeError here if v is not an Object.
-        ASSERT(v->isObject());
-
+        ASSERT(callType == CallTypeNone || v->isObject());
         JSObject* constructor = static_cast<JSObject*>(v);
 
         // FIXME: We need to throw a TypeError here if v doesn't implementConstuct.
@@ -1094,9 +1126,13 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
-        // FIXME: throw exception
         ASSERT(callType == CallTypeNone);
+        
+        if (isNotObject(exec, vPC, codeBlock, v, exceptionValue))
+            goto internal_throw;
 
+        // throw type error for non-contructor object
+        ASSERT(!constructor->implementsConstruct()); // if we get here then v must be an Object that is not a constructor
         ++vPC;
         NEXT_OPCODE;
     }
@@ -1104,7 +1140,8 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         JSValue* v = r[r0].u.jsValue;
         JSObject* o = v->toObject(exec);
-        ASSERT(!exec->hadException()); // FIXME: handle once we support exceptions.
+        VM_CHECK_EXCEPTION();
+        
         scopeChain->push(o);
         ++vPC;
         NEXT_OPCODE;
@@ -1178,9 +1215,17 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         int r0 = (++vPC)->u.operand;
         return r[r0].u.jsValue;
     }
+    internal_throw: {
+        exceptionTarget = throwException(exec, exceptionValue, codeBlock, k, scopeChain, registerBase, r, vPC);
+        if (!exceptionTarget)
+            return exceptionValue;
+        vPC = exceptionTarget;
+        NEXT_OPCODE;
+    }          
     }
     #undef NEXT_OPCODE
     #undef BEGIN_OPCODE
+    #undef VM_CHECK_EXCEPTION
 }
 
 Machine& machine()
