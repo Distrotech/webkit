@@ -551,6 +551,7 @@ JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, JSObject* t
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
     CodeBlock* codeBlock = &programNode->code(scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
+
     registerFile->grow(codeBlock->numTemporaries);
     Register* r = (*registerFile->basePointer());
 
@@ -574,7 +575,11 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
     int argc = args.size() + 1; // implicit "this" parameter
     
     size_t oldSize = registerFile->size();
-    registerFile->grow(oldSize + CallFrameHeaderSize + argc);
+    if (!registerFile->grow(oldSize + CallFrameHeaderSize + argc)) {
+        *exception = createStackOverflowError(exec);
+        return 0;
+    }
+        
     Register** registerBase = registerFile->basePointer();
     int registerOffset = oldSize;
     int callFrameOffset = registerOffset;
@@ -593,7 +598,11 @@ JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, F
 
     CodeBlock* newCodeBlock = &functionBodyNode->code(scopeChain);
     Register* r = slideRegisterWindowForCall(exec, newCodeBlock, registerFile, registerBase, registerOffset, argv, argc, *exception);
-    
+    if (*exception) {
+        registerFile->shrink(oldSize);
+        return 0;
+    }
+
     callFrame = (*registerBase) + callFrameOffset; // registerBase may have moved, recompute callFrame
     scopeChain = scopeChainForCall(newCodeBlock, scopeChain, function, callFrame, registerBase, r);            
 
