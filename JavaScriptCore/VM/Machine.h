@@ -49,6 +49,7 @@ namespace KJS {
                CallerRegisterOffset, 
                ReturnValueRegister,
                ArgumentStartRegister,
+               CalledAsConstructor,
                OptionalCalleeScopeChain,
                CallFrameHeaderSize};
 

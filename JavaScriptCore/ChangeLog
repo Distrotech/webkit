@@ -1,6 +1,22 @@
 2008-04-10  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
+        
+        - Implement support for JS constructors
+        
+        access-binary-trees and access-nbody now run.
+        
+        Inexplicably a 1% speedup.
+
+        * VM/Machine.cpp:
+        (KJS::initializeCallFrame):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        (KJS::Machine::):
+
+2008-04-10  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
 
         - More code cleanup in preparation for JS constructors
 
