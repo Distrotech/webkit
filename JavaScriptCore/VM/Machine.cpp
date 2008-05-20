@@ -36,6 +36,7 @@
 #include "JSActivation.h"
 #include "JSLock.h"
 #include "JSPropertyNameIterator.h"
+#include "Parser.h"
 #include "Register.h"
 #include "internal.h"
 #include "operations.h"

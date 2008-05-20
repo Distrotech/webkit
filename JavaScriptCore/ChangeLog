@@ -1,3 +1,15 @@
+2008-04-20  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Maciej Stachowiak.
+        
+        Removed Machine.cpp from AllInOneFile.cpp, and manually inlined a few
+        things that used to be inlined automatically.
+        
+        1.9% speedup on SunSpider.
+        
+        My hope is that we'll face fewer surprises in Machine.cpp codegen, now
+        that GCC is making fewer decisions. The speedup seems to confirm that.
+
 2008-04-20  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

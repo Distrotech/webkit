@@ -164,43 +164,6 @@ UString JSObject::className() const
   return "Object";
 }
 
-JSValue *JSObject::get(ExecState *exec, const Identifier &propertyName) const
-{
-  PropertySlot slot;
-
-  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
-    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
-    
-  return jsUndefined();
-}
-
-JSValue *JSObject::get(ExecState *exec, unsigned propertyName) const
-{
-  PropertySlot slot;
-  if (const_cast<JSObject *>(this)->getPropertySlot(exec, propertyName, slot))
-    return slot.getValue(exec, const_cast<JSObject *>(this), propertyName);
-    
-  return jsUndefined();
-}
-
-bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
-{
-  JSObject *imp = this;
-  
-  while (true) {
-    if (imp->getOwnPropertySlot(exec, propertyName, slot))
-      return true;
-    
-    JSValue *proto = imp->_proto;
-    if (!proto->isObject())
-      break;
-    
-    imp = static_cast<JSObject *>(proto);
-  }
-  
-  return false;
-}
-
 bool JSObject::getOwnPropertySlot(ExecState *exec, unsigned propertyName, PropertySlot& slot)
 {
   return getOwnPropertySlot(exec, Identifier::from(propertyName), slot);
@@ -303,7 +266,6 @@ void JSObject::putWithAttributes(ExecState* exec, unsigned propertyName, JSValue
     putWithAttributes(exec, Identifier::from(propertyName), value, attributes);
 }
 
-// ECMA 8.6.2.4
 bool JSObject::hasProperty(ExecState *exec, const Identifier &propertyName) const
 {
   PropertySlot slot;
