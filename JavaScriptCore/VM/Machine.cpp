@@ -559,6 +559,8 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
             exception->put(exec, "line", jsNumber(codeBlock->lineNumberForVPC(vPC)));
             exception->put(exec, "sourceURL", jsOwnedString(codeBlock->ownerNode->sourceURL()));
         }
+        if (exception->isWatchdogException())
+            return 0;
     }
 
     if (Debugger* debugger = exec->dynamicGlobalObject()->debugger())
@@ -792,7 +794,7 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
     Register** registerBase = registerFile->basePointer();
     Instruction* vPC = codeBlock->instructions.begin();
     JSValue** k = codeBlock->jsValues.data();
-    
+
     registerFile->setSafeForReentry(false);
 #define VM_CHECK_EXCEPTION() \
      do { \
@@ -1648,6 +1650,32 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             NEXT_OPCODE;
         }
 
+        ++vPC;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_loop_if_true) {
+        /* loop_if_true cond(r) target(offset)
+
+          Does a JS timeout check, and immediately terminates execution and sets
+          an uncatchable exception on the ExecState.
+
+          Assuming the watchdog test indicates it is safe, this jumps to offset
+          target from the current instruction, if and only if register cond 
+          converts to boolean as true.
+         */
+
+        if (UNLIKELY(exec->dynamicGlobalObject()->timedOut())) {
+            exceptionValue = createInterruptedExecutionException(exec);
+            goto vm_throw;
+        }
+
+        int cond = (++vPC)->u.operand;
+        int target = (++vPC)->u.operand;
+        if (r[cond].u.jsValue->toBoolean(exec)) {
+            vPC += target;
+            NEXT_OPCODE;
+        }
+        
         ++vPC;
         NEXT_OPCODE;
     }

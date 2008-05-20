@@ -426,6 +426,10 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printConditionalJump(begin, it, location, "jtrue");
             break;
         }
+        case op_loop_if_true: {
+            printConditionalJump(begin, it, location, "loop_if_true");
+            break;
+        }
         case op_jfalse: {
             printConditionalJump(begin, it, location, "jfalse");
             break;

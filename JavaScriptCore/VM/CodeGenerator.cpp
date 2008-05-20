@@ -377,6 +377,14 @@ PassRefPtr<LabelID> CodeGenerator::emitJump(LabelID* target)
     return target;
 }
 
+PassRefPtr<LabelID> CodeGenerator::emitLoopIfTrue(RegisterID* cond, LabelID* target)
+{
+    instructions().append(machine().getOpcode(op_loop_if_true));
+    instructions().append(cond->index());
+    instructions().append(target->offsetFrom(instructions().size()));
+    return target;
+}
+
 PassRefPtr<LabelID> CodeGenerator::emitJumpIfTrue(RegisterID* cond, LabelID* target)
 {
     instructions().append(machine().getOpcode(op_jtrue));

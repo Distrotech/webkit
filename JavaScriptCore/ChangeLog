@@ -1,3 +1,34 @@
+2008-05-15  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 18626: SQUIRRELFISH: support the "slow script" dialog
+        <https://bugs.webkit.org/show_bug.cgi?id=18626>
+
+        Support the slow script dialog for for(;;), while, and do..while
+        loops.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitLoopIfTrue):
+        * VM/CodeGenerator.h:
+        * VM/ExceptionHelpers.cpp:
+        (KJS::InterruptedExecutionError::isWatchdogException):
+        (KJS::createInterruptedExecutionException):
+        * VM/ExceptionHelpers.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::throwException):
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/interpreter.cpp:
+        (KJS::Interpreter::evaluate):
+        * kjs/nodes.cpp:
+        (KJS::DoWhileNode::emitCode):
+        (KJS::WhileNode::emitCode):
+        (KJS::ForNode::emitCode):
+        * kjs/object.h:
+
 2008-05-15  Geoffrey Garen  <ggaren@apple.com>
 
         Not reviewed.

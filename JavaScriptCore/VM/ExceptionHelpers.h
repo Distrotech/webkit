@@ -38,6 +38,7 @@ namespace KJS {
     JSValue* createNotAnObjectError(ExecState*, JSValue*, Node*);
     JSValue* createNotAConstructorError(ExecState* exec, JSValue* value, Node* expr);
     JSValue* createNotAFunctionError(ExecState* exec, JSValue* value, Node* expr);
+    JSValue* createInterruptedExecutionException(ExecState* exec);
 }
 
 #endif
