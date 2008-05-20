@@ -2,8 +2,8 @@
 
         Reviewed by Geoff.
 
-        Bug 18736: SQUIRRELFISH: switch statements with no default have incorrect codegen
-        <https://bugs.webkit.org/show_bug.cgi?id=18736>
+        Bug 18628: SQUIRRELFISH: need to support recursion limit
+        <https://bugs.webkit.org/show_bug.cgi?id=18628>
 
         Put a limit on the level of reentry recursion.  128 levels of re-entrant recursion
         seems reasonable as it is greater than the old eval limit, and a long way short of
