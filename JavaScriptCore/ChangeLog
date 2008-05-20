@@ -1,5 +1,15 @@
 2008-03-31  Geoffrey Garen  <ggaren@apple.com>
 
+        Not reviewed.
+
+        Fixed indentation inside op_call. (I had left this code badly indented
+        to make the behavior-changing diff clearer.)
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
+2008-03-31  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Sam Weinig.
         
         Fixed up logging of jump instructions to follow the following style:
