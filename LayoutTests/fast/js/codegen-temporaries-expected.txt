@@ -21,6 +21,20 @@ PASS assign_test13() is 'PASS'
 PASS assign_test14() is 'PASS'
 PASS assign_test15() is 'PASS'
 PASS assign_test16() is 2
+PASS a17 is 3
+PASS assign_test18() is 3
+PASS a19.b is 3
+PASS assign_test20() is 3
+PASS a21['b'] is 3
+PASS assign_test22() is 3
+PASS assign_test23() is 3
+PASS assign_test24() is 3
+PASS assign_test25() is 3
+PASS assign_test26() is 3
+PASS assign_test27() is 3
+PASS assign_test28() is 3
+PASS assign_test29() is 3
+PASS assign_test30() is 'fooNaN'
 PASS successfullyParsed is true
 
 TEST COMPLETE

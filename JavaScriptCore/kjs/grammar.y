@@ -423,14 +423,14 @@ LeftHandSideExprNoBF:
 
 PostfixExpr:
     LeftHandSideExpr
-  | LeftHandSideExpr PLUSPLUS           { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpPlusPlus), $1.m_featureInfo); }
-  | LeftHandSideExpr MINUSMINUS         { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpMinusMinus), $1.m_featureInfo); }
+  | LeftHandSideExpr PLUSPLUS           { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpPlusPlus), $1.m_featureInfo | AssignFeature); }
+  | LeftHandSideExpr MINUSMINUS         { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpMinusMinus), $1.m_featureInfo | AssignFeature); }
 ;
 
 PostfixExprNoBF:
     LeftHandSideExprNoBF
-  | LeftHandSideExprNoBF PLUSPLUS       { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpPlusPlus), $1.m_featureInfo); }
-  | LeftHandSideExprNoBF MINUSMINUS     { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpMinusMinus), $1.m_featureInfo); }
+  | LeftHandSideExprNoBF PLUSPLUS       { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpPlusPlus), $1.m_featureInfo | AssignFeature); }
+  | LeftHandSideExprNoBF MINUSMINUS     { $$ = createNodeFeatureInfo<ExpressionNode*>(makePostfixNode($1.m_node, OpMinusMinus), $1.m_featureInfo | AssignFeature); }
 ;
 
 UnaryExprCommon:
