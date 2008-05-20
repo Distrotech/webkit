@@ -1,3 +1,14 @@
+2008-04-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Geoff.
+
+        Partial fix for Bug 18649: SQUIRRELFISH: correctly handle exceptions in eval code
+
+        Make sure we correct the register state before jumping to vm_throw.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+
 2008-04-21  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Maciej Stachowiak.
