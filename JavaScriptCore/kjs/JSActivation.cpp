@@ -121,6 +121,11 @@ bool JSActivation::deleteProperty(ExecState* exec, const Identifier& propertyNam
     return Base::deleteProperty(exec, propertyName);
 }
 
+JSObject* JSActivation::toThisObject(ExecState* exec) const
+{
+    return exec->globalThisValue();
+}
+
 void JSActivation::mark()
 {
     Base::mark();

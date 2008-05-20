@@ -52,6 +52,8 @@ namespace KJS {
         virtual void putWithAttributes(ExecState*, const Identifier&, JSValue*, unsigned attributes);
         virtual bool deleteProperty(ExecState*, const Identifier& propertyName);
 
+        virtual JSObject* toThisObject(ExecState*) const;
+
         virtual void mark();
         
         void copyRegisters();
