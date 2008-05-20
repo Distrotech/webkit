@@ -78,13 +78,14 @@ Completion Interpreter::evaluate(ExecState* exec, const UString& sourceURL, int 
     if (!programNode)
         return Completion(Throw, Error::create(exec, SyntaxError, errMsg, errLine, sourceId, sourceURL));
 
-    machine().execute(programNode.get(), exec, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain());
+    JSValue* exception;
+    JSValue* result = machine().execute(programNode.get(), exec, &exec->dynamicGlobalObject()->registerFileStack(), &exec->scopeChain(), &exception);
 
 #if JAVASCRIPT_PROFILING
     Profiler::profiler()->didExecute(exec, sourceURL, startingLineNumber);
 #endif
 
-    return Completion(Normal, jsUndefined());
+    return result ? Completion(Normal, result) : Completion(Throw, exception);
 }
 
 static bool printExceptions = false;

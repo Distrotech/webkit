@@ -1,5 +1,28 @@
 2008-04-09  Geoffrey Garen  <ggaren@apple.com>
 
+        Reviewed by Maciej Stachowiak.
+
+        Next step toward re-entrant execution of function code (global code ->
+        built-in function -> JS function):
+        
+        Made Machine::execute return a value.
+        
+        Sketched out some code for Machine::execute for functions -- still
+        doesn't work yet, though.
+
+        sunspider --squirrelfish reports no regression.
+
+        * VM/Machine.cpp:
+        (KJS::Machine::execute):
+        (KJS::Machine::privateExecute):
+        * VM/Machine.h:
+        * kjs/interpreter.cpp:
+        (KJS::Interpreter::evaluate):
+        * kjs/testkjs.cpp:
+        (runWithScripts):
+
+2008-04-09  Geoffrey Garen  <ggaren@apple.com>
+
         Reviewed by Sam Weinig.
         
         First step toward re-entrant execution of function code (global code ->

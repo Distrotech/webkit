@@ -346,29 +346,33 @@ NEVER_INLINE Instruction* Machine::throwException(CodeBlock*& codeBlock, JSValue
 static void* throwTarget = 0;
 #endif
 
-void Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain)
+JSValue* Machine::execute(ProgramNode* programNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
 {
     RegisterFile* registerFile = registerFileStack->pushRegisterFile();
+
     CodeBlock* codeBlock = &programNode->code(*scopeChain);
     registerFile->addGlobalSlots(codeBlock->numVars);
     registerFile->resize(codeBlock->numTemporaries);
 
-    privateExecute(Normal, exec, registerFile, scopeChain, codeBlock);
+    JSValue* result = privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
 
     registerFileStack->popRegisterFile();
+    return result;
 }
 
-void Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain)
+JSValue* Machine::execute(FunctionBodyNode* functionBodyNode, ExecState* exec, RegisterFileStack* registerFileStack, ScopeChain* scopeChain, JSValue** exception)
 {
-    UNUSED_PARAM(exec);
-    UNUSED_PARAM(registerFileStack);
-    UNUSED_PARAM(scopeChain);
-    UNUSED_PARAM(functionBodyNode);
+    RegisterFile* registerFile = registerFileStack->current();
+    CodeBlock* codeBlock = &functionBodyNode->code(*scopeChain);
 
-    ASSERT_NOT_REACHED();
+    // do we need return info, too?
+    registerFile->resize(registerFile->size() + codeBlock->numParameters + codeBlock->numVars + codeBlock->numTemporaries);
+    // put args in place
+
+    return privateExecute(Normal, exec, registerFile, scopeChain, codeBlock, exception);
 }
 
-void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, ScopeChain* scopeChain, CodeBlock* codeBlock)
+JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* registerFile, ScopeChain* scopeChain, CodeBlock* codeBlock, JSValue** exception)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
@@ -384,7 +388,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
             ASSERT(m_opcodeIDTable.size() == numOpcodeIDs);
             throwTarget = &&gcc_dependency_hack;
         #endif // HAVE(COMPUTED_GOTO)
-        return;
+        return 0;
     }
 
     JSValue* exceptionData = 0;
@@ -1073,7 +1077,8 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
         if (!(exceptionTarget = throwException(codeBlock, k, scopeChain, registerBase, r, vPC))) {
             // Removing this line of code causes a measurable regression on squirrelfish/function-missing-args.js.
             registerFile->resize(0);
-            return;
+            *exception = exceptionData;
+            return 0;
         }
 
 #if HAVE(COMPUTED_GOTO)
@@ -1090,12 +1095,7 @@ void Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFile* 
     }
     BEGIN_OPCODE(op_end) {
         int r0 = (++vPC)->u.operand;
-#ifndef NDEBUG
-        printf("End: %s\n", r[r0].u.jsValue->toString(exec).ascii());
-#else
-        UNUSED_PARAM(r0);
-#endif
-        return;
+        return r[r0].u.jsValue;
     }
     }
     #undef NEXT_OPCODE
