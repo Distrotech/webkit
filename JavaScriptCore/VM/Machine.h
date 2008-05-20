@@ -82,10 +82,10 @@ namespace KJS {
     private:
         typedef enum { Normal, InitializeAndReturn } ExecutionFlag;
 
-        NEVER_INLINE Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&);
-        NEVER_INLINE Instruction* throwException(ExecState*, JSValue*, CodeBlock*&, JSValue**&, ScopeChain*&, Register**, Register*&, const Instruction*);
+        NEVER_INLINE Instruction* unwindCallFrame(CodeBlock*&, JSValue**&, ScopeChainNode*&, Register**, Register*&);
+        NEVER_INLINE Instruction* throwException(ExecState*, JSValue*, CodeBlock*&, JSValue**&, ScopeChainNode*&, Register**, Register*&, const Instruction*);
 
-        JSValue* privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, Register* = 0, ScopeChain* = 0, CodeBlock* = 0, JSValue** exception = 0);
+        JSValue* privateExecute(ExecutionFlag, ExecState* = 0, RegisterFile* = 0, Register* = 0, ScopeChainNode* = 0, CodeBlock* = 0, JSValue** exception = 0);
 
         void dumpCallFrame(const CodeBlock*, const ScopeChain*, RegisterFile*, const Register*);
         void dumpRegisters(const CodeBlock*, RegisterFile*, const Register*);
