@@ -351,7 +351,7 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             int r0 = (++it)->u.operand;
             int index = (++it)->u.operand;
             int skipLevels = (++it)->u.operand;
-            printf("[%4d] load_n\t\t %s, %d, %d\n", location, registerName(r0).c_str(), index, skipLevels);
+            printf("[%4d] get_scoped_var\t\t %s, %d, %d\n", location, registerName(r0).c_str(), index, skipLevels);
             break;
         }
         case op_resolve_base: {

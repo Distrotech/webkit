@@ -1,3 +1,22 @@
+2008-05-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 19116: SquirrelFish shouldn't regress on variable lookups
+        <https://bugs.webkit.org/show_bug.cgi?id=19116>
+
+        Optimise multiscope lookup of statically resolvable function calls.
+        SunSpider reports a 1.5% improvement, including 37% on 
+        controlflow-recursive for some reason :D
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitResolve):
+        * VM/CodeGenerator.h:
+        * kjs/nodes.cpp:
+        (KJS::FunctionCallResolveNode::emitCode):
+
 2008-05-21  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

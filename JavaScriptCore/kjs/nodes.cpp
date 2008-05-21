@@ -1347,7 +1347,14 @@ RegisterID* FunctionCallResolveNode::emitCode(CodeGenerator& generator, Register
 {
     if (RegisterID* local = generator.registerForLocal(m_ident))
         return generator.emitCall(generator.finalDestination(dst), local, 0, m_args.get());
- 
+
+    int index = 0;
+    size_t depth = 0;
+    if (generator.findScopedProperty(m_ident, index, depth) && index != missingSymbolMarker()) {
+        RegisterID* func = generator.emitGetScopedVar(generator.newTemporary(), depth, index);
+        return generator.emitCall(generator.finalDestination(dst), func, 0, m_args.get());
+    }
+
     RefPtr<RegisterID> base = generator.tempDestination(dst);
     RegisterID* func = generator.newTemporary();
     generator.emitResolveFunction(base.get(), func, m_ident);

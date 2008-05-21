@@ -94,6 +94,17 @@ namespace KJS {
         // dynamic scope should not interfere with const initialisation
         RegisterID* registerForLocalConstInit(const Identifier&);
 
+        // Searches the scope chain in an attempt to  statically locate the requested
+        // property.  Returns false if for any reason the property cannot be safely 
+        // optimised at all.  Otherwise it will return the index and depth of the
+        // VariableObject that defines the property.  If the property cannot be found 
+        // statically, depth will contain the depth of the scope chain where dynamic
+        // lookup must begin.
+        //
+        // NB: depth does _not_ include the local scope.  eg. a depth of 0 refers
+        // to the scope containing this codeblock.
+        bool findScopedProperty(const Identifier&, int& index, size_t& depth);
+
         // Returns the register storing "this"
         RegisterID* thisRegister() { return m_thisRegister; }
 
@@ -220,11 +231,12 @@ namespace KJS {
         RegisterID* emitIn(RegisterID* dst, RegisterID* property, RegisterID* base);
 
         RegisterID* emitResolve(RegisterID* dst, const Identifier& property);
+        RegisterID* emitGetScopedVar(RegisterID* dst, size_t skip, int index);
 
         RegisterID* emitResolveBase(RegisterID* dst, const Identifier& property);
         RegisterID* emitResolveWithBase(RegisterID* baseDst, RegisterID* propDst, const Identifier& property);
         RegisterID* emitResolveFunction(RegisterID* baseDst, RegisterID* funcDst, const Identifier& property);
-        
+
         RegisterID* emitGetById(RegisterID* dst, RegisterID* base, const Identifier& property);
         RegisterID* emitPutById(RegisterID* base, const Identifier& property, RegisterID* value);
         RegisterID* emitDeleteById(RegisterID* dst, RegisterID* base, const Identifier&);
@@ -314,7 +326,6 @@ namespace KJS {
 
         RegisterID* addParameter(const Identifier&);
 
-        bool findScopedProperty(const Identifier&, int& index, size_t& depth);
         unsigned addConstant(FuncDeclNode*);
         unsigned addConstant(FuncExprNode*);
         unsigned addConstant(const Identifier&);

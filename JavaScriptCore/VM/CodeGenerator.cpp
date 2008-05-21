@@ -790,6 +790,11 @@ RegisterID* CodeGenerator::emitResolve(RegisterID* dst, const Identifier& proper
     }
 
     // Directly index the property lookup across multiple scopes.  Yay!
+    return emitGetScopedVar(dst, depth, index);
+}
+    
+RegisterID* CodeGenerator::emitGetScopedVar(RegisterID* dst, size_t depth, int index)
+{
     instructions().append(machine().getOpcode(op_get_scoped_var));
     instructions().append(dst->index());
     instructions().append(index);
