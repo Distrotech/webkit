@@ -24,6 +24,7 @@
 #define KJS_GlobalObject_h
 
 #include "JSVariableObject.h"
+#include "RegisterFile.h"
 #include "RegisterFileStack.h"
 #include <wtf/HashSet.h>
 #include <wtf/OwnPtr.h>

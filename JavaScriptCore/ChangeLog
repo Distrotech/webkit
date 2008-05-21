@@ -1,5 +1,18 @@
 2008-05-20  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by NOBODY (Build fix).
+
+        Fixerate the windows build.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.vcproj:
+        * VM/CodeGenerator.cpp:
+        * VM/RegisterFile.h:
+        * kjs/JSGlobalObject.h:
+        * kjs/Parser.cpp:
+        * kjs/interpreter.h:
+
+2008-05-20  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by Geoff.
 
         Bug 19110: SquirrelFish: Google Maps - no maps

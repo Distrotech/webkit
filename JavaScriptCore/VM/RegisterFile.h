@@ -141,7 +141,7 @@ namespace KJS {
         void clear();
 
         void addGlobalSlots(size_t count);
-        size_t numGlobalSlots() { return m_base - m_buffer; }
+        int numGlobalSlots() { return static_cast<int>(m_base - m_buffer); }
 
         void copyGlobals(RegisterFile* src);
 

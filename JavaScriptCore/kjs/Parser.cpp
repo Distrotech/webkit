@@ -24,6 +24,7 @@
 
 #include "config.h"
 #include "Parser.h"
+#include "debugger.h"
 
 #include "lexer.h"
 #include <wtf/HashSet.h>
