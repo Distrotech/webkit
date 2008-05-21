@@ -167,6 +167,7 @@ namespace KJS {
         virtual ~JSGlobalObject();
 
         virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+        virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&, bool& slotIsWriteable);
         virtual void put(ExecState*, const Identifier&, JSValue*);
         virtual void putWithAttributes(ExecState*, const Identifier& propertyName, JSValue* value, unsigned attributes);
 
@@ -304,6 +305,13 @@ namespace KJS {
         if (symbolTableGet(propertyName, slot))
             return true;
         return JSVariableObject::getOwnPropertySlot(exec, propertyName, slot);
+    }
+
+    inline bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot, bool& slotIsWriteable)
+    {
+        if (symbolTableGet(propertyName, slot, slotIsWriteable))
+            return true;
+        return JSVariableObject::getOwnPropertySlotForWrite(exec, propertyName, slot, slotIsWriteable);
     }
 
     inline bool JSGlobalObject::timedOut()

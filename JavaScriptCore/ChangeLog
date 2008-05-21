@@ -1,3 +1,24 @@
+2008-05-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - give JSGlobalObject a special version of getOwnPropertySlot that tells you if the slot is directly writable
+        (WebCore change using this is a 2.6% speedup on in-browser SunSpider).
+
+        * JavaScriptCore.exp:
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::getOwnPropertySlot):
+        * kjs/JSVariableObject.h:
+        (KJS::JSVariableObject::symbolTableGet):
+        * kjs/object.h:
+        (KJS::JSObject::getDirectLocation):
+        (KJS::JSObject::getOwnPropertySlotForWrite):
+        * kjs/property_map.cpp:
+        (KJS::PropertyMap::getLocation):
+        * kjs/property_map.h:
+        * kjs/property_slot.h:
+        (KJS::PropertySlot::putValue):
+
 2008-05-20  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

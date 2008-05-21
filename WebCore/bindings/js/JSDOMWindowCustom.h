@@ -132,9 +132,14 @@ inline bool JSDOMWindow::customPut(KJS::ExecState* exec, const KJS::Identifier& 
 
     // We have a local override (e.g. "var location"), save time and jump directly to JSGlobalObject.
     KJS::PropertySlot slot;
-    if (JSGlobalObject::getOwnPropertySlot(exec, propertyName, slot)) {
-        if (allowsAccessFrom(exec))
-            JSGlobalObject::put(exec, propertyName, value);
+    bool slotIsWriteable;
+    if (JSGlobalObject::getOwnPropertySlot(exec, propertyName, slot, slotIsWriteable)) {
+        if (allowsAccessFrom(exec)) {
+            if (slotIsWriteable)
+                slot.putValue(value);
+            else
+                JSGlobalObject::put(exec, propertyName, value);
+        }
         return true;
     }
 

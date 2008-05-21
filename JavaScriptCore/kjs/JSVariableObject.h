@@ -89,6 +89,7 @@ namespace KJS {
         Register* registers() const { return *registerBase() + d->registerOffset; }
 
         bool symbolTableGet(const Identifier&, PropertySlot&);
+        bool symbolTableGet(const Identifier&, PropertySlot&, bool& slotIsWriteable);
         bool symbolTablePut(const Identifier&, JSValue*);
         bool symbolTablePutWithAttributes(const Identifier&, JSValue*, unsigned attributes);
 
@@ -100,6 +101,17 @@ namespace KJS {
         SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
         if (!entry.isEmpty()) {
             slot.setValueSlot(this, &valueAt(entry.getIndex()));
+            return true;
+        }
+        return false;
+    }
+
+    inline bool JSVariableObject::symbolTableGet(const Identifier& propertyName, PropertySlot& slot, bool& slotIsWriteable)
+    {
+        SymbolTableEntry entry = symbolTable().inlineGet(propertyName.ustring().rep());
+        if (!entry.isEmpty()) {
+            slot.setValueSlot(this, &valueAt(entry.getIndex()));
+            slotIsWriteable = !entry.isReadOnly();
             return true;
         }
         return false;

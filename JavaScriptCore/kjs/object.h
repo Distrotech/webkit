@@ -234,14 +234,14 @@ namespace KJS {
      *
      * @return The specified property, or Undefined
      */
-    JSValue *get(ExecState *exec, const Identifier &propertyName) const;
-    JSValue *get(ExecState *exec, unsigned propertyName) const;
+    JSValue* get(ExecState* exec, const Identifier& propertyName) const;
+    JSValue* get(ExecState* exec, unsigned propertyName) const;
 
-    bool getPropertySlot(ExecState *, const Identifier&, PropertySlot&);
-    bool getPropertySlot(ExecState *, unsigned, PropertySlot&);
+    bool getPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    bool getPropertySlot(ExecState*, unsigned, PropertySlot&);
 
-    virtual bool getOwnPropertySlot(ExecState *, const Identifier&, PropertySlot&);
-    virtual bool getOwnPropertySlot(ExecState *, unsigned index, PropertySlot&);
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual bool getOwnPropertySlot(ExecState*, unsigned index, PropertySlot&);
 
     /**
      * Sets the specified property.
@@ -413,6 +413,8 @@ namespace KJS {
         { return _prop.get(propertyName); }
     JSValue **getDirectLocation(const Identifier& propertyName)
         { return _prop.getLocation(propertyName); }
+   JSValue **getDirectLocation(const Identifier& propertyName, bool& isWriteable)
+        { return _prop.getLocation(propertyName, isWriteable); }
     void putDirect(const Identifier &propertyName, JSValue *value, int attr = 0);
     void putDirect(const Identifier &propertyName, int value, int attr = 0);
     void removeDirect(const Identifier &propertyName);
@@ -433,6 +435,7 @@ namespace KJS {
 
   protected:
     PropertyMap _prop;
+    bool getOwnPropertySlotForWrite(ExecState*, const Identifier&, PropertySlot&, bool& slotIsWriteable);
 
   private:
     const HashEntry* findPropertyHashEntry(ExecState*, const Identifier& propertyName) const;
@@ -574,6 +577,30 @@ inline bool JSObject::getPropertySlot(ExecState *exec, unsigned propertyName, Pr
   }
   
   return false;
+}
+
+// It may seem crazy to inline a function this large, especially a virtual function,
+// but it makes a big difference to property lookup that derived classes can inline their
+// base class call to this.
+ALWAYS_INLINE bool JSObject::getOwnPropertySlotForWrite(ExecState* exec, const Identifier& propertyName, PropertySlot& slot, bool& slotIsWriteable)
+{
+    if (JSValue **location = getDirectLocation(propertyName, slotIsWriteable)) {
+        if (_prop.hasGetterSetterProperties() && location[0]->type() == GetterSetterType) {
+            slotIsWriteable = false;
+            fillGetterPropertySlot(slot, location);
+        } else
+            slot.setValueSlot(this, location);
+        return true;
+    }
+
+    // non-standard Netscape extension
+    if (propertyName == exec->propertyNames().underscoreProto) {
+        slot.setValueSlot(this, &_proto);
+        slotIsWriteable = true;
+        return true;
+    }
+
+    return false;
 }
 
 // It may seem crazy to inline a function this large, especially a virtual function,

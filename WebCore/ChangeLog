@@ -1,3 +1,13 @@
+2008-05-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+
+        - write directly to the slot we used to check for override properties, when possible
+        2.6% speedup on in-browser SunSpider
+
+        * bindings/js/JSDOMWindowCustom.h:
+        (WebCore::JSDOMWindow::customPut):
+
 2008-05-20  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.
