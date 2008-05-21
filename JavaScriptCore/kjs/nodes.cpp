@@ -4214,6 +4214,14 @@ RegisterID* AssignResolveNode::emitCode(CodeGenerator& generator, RegisterID* ds
         return generator.moveToDestinationIfNeeded(dst, result);
     }
 
+    int index = 0;
+    size_t depth = 0;
+    if (generator.findScopedProperty(m_ident, index, depth) && index != missingSymbolMarker()) {
+        RegisterID* value = generator.emitNode(dst, m_right.get());
+        generator.emitPutScopedVar(depth, index, value);
+        return value;
+    }
+
     RefPtr<RegisterID> base = generator.emitResolveBase(generator.newTemporary(), m_ident);
     RegisterID* value = generator.emitNode(dst, m_right.get());
     return generator.emitPutById(base.get(), m_ident, value);

@@ -232,6 +232,7 @@ namespace KJS {
 
         RegisterID* emitResolve(RegisterID* dst, const Identifier& property);
         RegisterID* emitGetScopedVar(RegisterID* dst, size_t skip, int index);
+        RegisterID* emitPutScopedVar(size_t skip, int index, RegisterID* value);
 
         RegisterID* emitResolveBase(RegisterID* dst, const Identifier& property);
         RegisterID* emitResolveWithBase(RegisterID* baseDst, RegisterID* propDst, const Identifier& property);

@@ -801,6 +801,15 @@ RegisterID* CodeGenerator::emitGetScopedVar(RegisterID* dst, size_t depth, int i
     instructions().append(depth);
     return dst;
 }
+    
+RegisterID* CodeGenerator::emitPutScopedVar(size_t depth, int index, RegisterID* value)
+{
+    instructions().append(machine().getOpcode(op_put_scoped_var));
+    instructions().append(index);
+    instructions().append(depth);
+    instructions().append(value->index());
+    return value;
+}
 
 RegisterID* CodeGenerator::emitResolveBase(RegisterID* dst, const Identifier& property)
 {

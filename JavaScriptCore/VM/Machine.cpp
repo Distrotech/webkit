@@ -1446,6 +1446,28 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
         ++vPC;
         NEXT_OPCODE;
     }
+    BEGIN_OPCODE(op_put_scoped_var) {
+        /* put_scoped_var index(n) skip(n) value(r)
+
+         */
+        int index = (++vPC)->u.operand;
+        int skip = (++vPC)->u.operand + codeBlock->needsFullScopeChain;
+        int value = (++vPC)->u.operand;
+        
+        ScopeChainIterator iter = scopeChain->begin();
+        ScopeChainIterator end = scopeChain->end();
+        ASSERT(iter != end);
+        while (skip--) {
+            ++iter;
+            ASSERT(iter != end);
+        }
+        
+        ASSERT((*iter)->isVariableObject());
+        JSVariableObject* scope = static_cast<JSVariableObject*>(*iter);
+        scope->valueAt(index) = r[value].u.jsValue;
+        ++vPC;
+        NEXT_OPCODE;
+    }
     BEGIN_OPCODE(op_resolve_base) {
         /* resolve_base dst(r) property(id)
 

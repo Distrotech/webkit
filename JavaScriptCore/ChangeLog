@@ -1,3 +1,23 @@
+2008-05-21  Oliver Hunt  <oliver@apple.com>
+
+        Reviewed by Maciej.
+
+        Bug 19116: SquirrelFish shouldn't regress on variable lookups
+        <https://bugs.webkit.org/show_bug.cgi?id=19116>
+
+        Optimise cross scope assignment, 0.4% progression in sunspider.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::emitPutScopedVar):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/nodes.cpp:
+        (KJS::AssignResolveNode::emitCode):
+
 2008-05-21  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

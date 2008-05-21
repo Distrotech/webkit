@@ -354,6 +354,13 @@ void CodeBlock::dump(ExecState* exec, const Vector<Instruction>::const_iterator&
             printf("[%4d] get_scoped_var\t\t %s, %d, %d\n", location, registerName(r0).c_str(), index, skipLevels);
             break;
         }
+        case op_put_scoped_var: {
+            int index = (++it)->u.operand;
+            int skipLevels = (++it)->u.operand;
+            int r0 = (++it)->u.operand;
+            printf("[%4d] put_scoped_var\t\t %d, %d, %s\n", location, index, skipLevels, registerName(r0).c_str());
+            break;
+        }
         case op_resolve_base: {
             int r0 = (++it)->u.operand;
             int id0 = (++it)->u.operand;
