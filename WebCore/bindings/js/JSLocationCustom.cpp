@@ -21,7 +21,7 @@
  */
 
 #include "config.h"
-#include "JSLocation.h"
+#include "JSLocationCustom.h"
 
 #include "DOMWindow.h"
 #include "Frame.h"

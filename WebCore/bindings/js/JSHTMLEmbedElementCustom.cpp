@@ -24,7 +24,7 @@
  */
 
 #include "config.h"
-#include "JSHTMLEmbedElement.h"
+#include "JSHTMLEmbedElementCustom.h"
 
 #include "HTMLEmbedElement.h"
 #include "kjs_html.h"

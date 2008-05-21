@@ -24,7 +24,7 @@
  */
 
 #include "config.h"
-#include "JSHTMLObjectElement.h"
+#include "JSHTMLObjectElementCustom.h"
 
 #include "HTMLObjectElement.h"
 #include "kjs_html.h"

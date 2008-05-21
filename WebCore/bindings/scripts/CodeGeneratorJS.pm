@@ -329,6 +329,11 @@ sub GenerateHeader
     # Destructor
     push(@headerContent, "    virtual ~$className();\n") if (!$hasParent or $interfaceName eq "Document");
 
+
+    $implIncludes{"${className}Custom.h"} = 1 if
+       $dataNode->extendedAttributes->{"CustomPutFunction"}
+    || $dataNode->extendedAttributes->{"CustomGetOwnPropertySlot"};
+
     my $hasGetter = $numAttributes > 0 
                  || $dataNode->extendedAttributes->{"GenerateConstructor"} 
                  || $dataNode->extendedAttributes->{"HasIndexGetter"}
