@@ -53,6 +53,7 @@ namespace KJS {
 
         virtual bool getPropertyAttributes(ExecState*, const Identifier& propertyName, unsigned& attributes) const;
 
+        JSValue*& valueAt(int index) const { return registers()[index].u.jsValue; }
     protected:
         // Subclasses of JSVariableObject can subclass this struct to add data
         // without increasing their own size (since there's a hard limit on the
@@ -86,7 +87,6 @@ namespace KJS {
 
         Register** registerBase() const { return d->registerBase; }
         Register* registers() const { return *registerBase() + d->registerOffset; }
-        JSValue*& valueAt(int index) const { return registers()[index].u.jsValue; }
 
         bool symbolTableGet(const Identifier&, PropertySlot&);
         bool symbolTablePut(const Identifier&, JSValue*);

@@ -63,6 +63,7 @@ namespace KJS {
             , numParameters(0)
             , numLocals(0)
             , needsFullScopeChain(ownerNode_->usesEval() || ownerNode_->needsClosure())
+            , usesEval(ownerNode_->usesEval())
         {
         }
 
@@ -79,6 +80,7 @@ namespace KJS {
         int numLocals;
         int thisRegister;
         bool needsFullScopeChain;
+        bool usesEval;
 
         Vector<Instruction> instructions;
 

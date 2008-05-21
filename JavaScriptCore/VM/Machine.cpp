@@ -222,6 +222,36 @@ static bool NEVER_INLINE resolve(ExecState* exec, Instruction* vPC, Register* r,
     exceptionValue = createUndefinedVariableError(exec, ident);
     return false;
 }
+    
+static bool NEVER_INLINE resolve_skip(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock, JSValue*& exceptionValue)
+{
+    int dst = (vPC + 1)->u.operand;
+    int property = (vPC + 2)->u.operand;
+    int skip = (vPC + 3)->u.operand + codeBlock->needsFullScopeChain;
+    
+    ScopeChainIterator iter = scopeChain->begin();
+    ScopeChainIterator end = scopeChain->end();
+    ASSERT(iter != end);
+    while (skip--) {
+        ++iter;
+        ASSERT(iter != end);
+    }
+    PropertySlot slot;
+    Identifier& ident = codeBlock->identifiers[property];
+    do {
+        JSObject* o = *iter;
+        if (o->getPropertySlot(exec, ident, slot)) {
+            JSValue* result = slot.getValue(exec, o, ident);
+            exceptionValue = exec->exception();
+            if (exceptionValue)
+                return false;
+            r[dst].u.jsValue = result;
+            return true;
+        }
+    } while (++iter != end);
+    exceptionValue = createUndefinedVariableError(exec, ident);
+    return false;
+}
 
 static void NEVER_INLINE resolveBase(ExecState* exec, Instruction* vPC, Register* r, ScopeChainNode* scopeChain, CodeBlock* codeBlock)
 {
@@ -1376,6 +1406,44 @@ JSValue* Machine::privateExecute(ExecutionFlag flag, ExecState* exec, RegisterFi
             goto vm_throw;
 
         vPC += 3;
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_resolve_skip) {
+        /* resolve_skip dst(r) property(id) skip(n)
+         
+         Looks up the property named by identifier property in the
+         scope chain skipping the top 'skip' levels, and writes the resulting
+         value to register dst. If the property is not found, raises an exception.
+         */
+        if (UNLIKELY(!resolve_skip(exec, vPC, r, scopeChain, codeBlock, exceptionValue)))
+            goto vm_throw;
+        
+        vPC += 4;
+        
+        NEXT_OPCODE;
+    }
+    BEGIN_OPCODE(op_get_scoped_var) {
+        /* get_scoped_var dst(r) index(n) skip(n)
+         
+         Loads the contents of the index-th local from the scope skip nodes from
+         the top of the scope chain, and places it in register dst
+         */
+        int dst = (++vPC)->u.operand;
+        int index = (++vPC)->u.operand;
+        int skip = (++vPC)->u.operand + codeBlock->needsFullScopeChain;
+        
+        ScopeChainIterator iter = scopeChain->begin();
+        ScopeChainIterator end = scopeChain->end();
+        ASSERT(iter != end);
+        while (skip--) {
+            ++iter;
+            ASSERT(iter != end);
+        }
+        
+        ASSERT((*iter)->isVariableObject());
+        JSVariableObject* scope = static_cast<JSVariableObject*>(*iter);
+        r[dst].u.jsValue = scope->valueAt(index);
+        ++vPC;
         NEXT_OPCODE;
     }
     BEGIN_OPCODE(op_resolve_base) {

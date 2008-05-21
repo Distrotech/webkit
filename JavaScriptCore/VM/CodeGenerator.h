@@ -314,6 +314,7 @@ namespace KJS {
 
         RegisterID* addParameter(const Identifier&);
 
+        bool findScopedProperty(const Identifier&, int& index, size_t& depth);
         unsigned addConstant(FuncDeclNode*);
         unsigned addConstant(FuncExprNode*);
         unsigned addConstant(const Identifier&);
@@ -325,6 +326,7 @@ namespace KJS {
         Vector<HandlerInfo>& exceptionHandlers() { return m_codeBlock->exceptionHandlers; }
         
         bool shouldOptimizeLocals() { return (m_codeType != EvalCode) && !m_dynamicScopeDepth; }
+        bool canOptimizeNonLocals() { return (m_codeType == FunctionCode) && !m_dynamicScopeDepth && !m_codeBlock->usesEval; }
 
         bool m_shouldEmitDebugHooks;
         

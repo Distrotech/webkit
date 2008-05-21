@@ -731,11 +731,69 @@ RegisterID* CodeGenerator::emitNewArray(RegisterID* dst)
     return dst;
 }
 
+bool CodeGenerator::findScopedProperty(const Identifier& property, int& index, size_t& stackDepth)
+{
+    // Cases where we cannot optimise the lookup
+    if (property == m_propertyNames->arguments || !canOptimizeNonLocals()) {
+        stackDepth = 0;
+        index = missingSymbolMarker();
+        return false;
+    }
+
+    ScopeChainIterator iter = m_scopeChain->begin();
+    ScopeChainIterator end = m_scopeChain->end();
+    size_t depth = 0;
+
+    for (; iter != end; ++iter, ++depth) {
+        JSObject* currentScope = *iter;
+        if (!currentScope->isVariableObject()) 
+            break;
+        JSVariableObject* currentVariableObject = static_cast<JSVariableObject*>(currentScope);
+        SymbolTableEntry entry = currentVariableObject->symbolTable().get(property.ustring().rep());
+
+        // Found the property
+        if (!entry.isEmpty()) {
+            stackDepth = depth;
+            index = entry.getIndex();
+            return true;
+        }
+        if (currentVariableObject->isDynamicScope())
+            break;
+    }
+
+    // Can't locate the property but we're able to avoid a few lookups
+    stackDepth = depth;
+    index = missingSymbolMarker();
+    return true;
+}
+
 RegisterID* CodeGenerator::emitResolve(RegisterID* dst, const Identifier& property)
 {
-    instructions().append(machine().getOpcode(op_resolve));
+    size_t depth = 0;
+    int index = 0;
+    if (!findScopedProperty(property, index, depth)) {
+        // We can't optimise at all :-(
+        instructions().append(machine().getOpcode(op_resolve));
+        instructions().append(dst->index());
+        instructions().append(addConstant(property));
+        return dst;
+    }
+
+    if (index == missingSymbolMarker()) {
+        // In this case we are at least able to drop a few scope chains from the
+        // lookup chain, although we still need to hash from then on.
+        instructions().append(machine().getOpcode(op_resolve_skip));
+        instructions().append(dst->index());
+        instructions().append(addConstant(property));
+        instructions().append(depth);
+        return dst;
+    }
+
+    // Directly index the property lookup across multiple scopes.  Yay!
+    instructions().append(machine().getOpcode(op_get_scoped_var));
     instructions().append(dst->index());
-    instructions().append(addConstant(property));
+    instructions().append(index);
+    instructions().append(depth);
     return dst;
 }
 

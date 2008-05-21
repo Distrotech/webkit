@@ -1,5 +1,31 @@
 2008-05-20  Oliver Hunt  <oliver@apple.com>
 
+        Reviewed by Maciej.
+
+        Bug 19116: SquirrelFish shouldn't regress on variable lookups
+        <https://bugs.webkit.org/show_bug.cgi?id=19116>
+
+        This restores multiscope optimisation to simple resolve, producing
+        a 2.6% progression in SunSpider.  Have verified that none of the
+        sites broken by the multiscope optimisation in trunk were effected
+        by this change.
+
+        * VM/CodeBlock.cpp:
+        (KJS::CodeBlock::dump):
+        * VM/CodeBlock.h:
+        (KJS::CodeBlock::CodeBlock):
+        * VM/CodeGenerator.cpp:
+        (KJS::CodeGenerator::findScopedProperty):
+        (KJS::CodeGenerator::emitResolve):
+        * VM/CodeGenerator.h:
+        * VM/Machine.cpp:
+        (KJS::resolve_n):
+        (KJS::Machine::privateExecute):
+        * VM/Opcode.h:
+        * kjs/JSVariableObject.h:
+
+2008-05-20  Oliver Hunt  <oliver@apple.com>
+
         Reviewed by NOBODY (Build fix).
 
         Fixerate the windows build.
