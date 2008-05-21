@@ -36,7 +36,7 @@
 
 namespace KJS {
 
-const UString* DebuggerCallFrame::functionName()
+const UString* DebuggerCallFrame::functionName() const
 {
     if (!m_codeBlock)
         return 0;
@@ -60,12 +60,12 @@ JSObject* DebuggerCallFrame::thisObject() const
     return static_cast<JSObject*>((*m_registerBase + m_registerOffset)[m_codeBlock->thisRegister].u.jsValue);
 }
 
-JSValue* DebuggerCallFrame::evaluateScript(const UString& script)
+JSValue* DebuggerCallFrame::evaluate(const UString& script, JSValue*& exception) const
 {
-    JSLock lock;
-    JSObject* thisObject = this->thisObject();
-    if (!thisObject)
+    if (!m_codeBlock)
         return 0;
+
+    JSObject* thisObject = this->thisObject();
 
     ExecState newExec(m_scopeChain->globalObject(), thisObject, m_scopeChain);
 
@@ -78,9 +78,8 @@ JSValue* DebuggerCallFrame::evaluateScript(const UString& script)
     if (!evalNode)
         return Error::create(&newExec, SyntaxError, errMsg, errLine, sourceId, 0);
 
-    JSValue* exception = 0;
     JSValue* result = machine().execute(evalNode.get(), &newExec, thisObject, &newExec.dynamicGlobalObject()->registerFileStack(), m_scopeChain, &exception);
-    return exception ? exception : result;
+    return result;
 }
 
 } // namespace KJS

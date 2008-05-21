@@ -89,6 +89,11 @@ static JSRetainPtr<JSStringRef> jsStringRef(const char* str)
     return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithUTF8CString(str));
 }
 
+static JSRetainPtr<JSStringRef> jsStringRef(const SourceProvider& str)
+{
+    return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithCharacters(str.data(), str.length()));
+}
+
 static JSRetainPtr<JSStringRef> jsStringRef(const String& str)
 {
     return JSRetainPtr<JSStringRef>(Adopt, JSStringCreateWithCharacters(str.characters(), str.length()));
@@ -834,7 +839,7 @@ static JSValueRef currentCallFrame(JSContextRef ctx, JSObjectRef /*function*/, J
     if (!callFrame || !callFrame->isValid())
         return JSValueMakeNull(ctx);
 
-    ExecState* globalExec = callFrame->execState()->lexicalGlobalObject()->globalExec();
+    ExecState* globalExec = callFrame->scopeChain()->globalObject()->globalExec();
 
     JSLock lock;
     return toRef(JSInspectedObjectWrapper::wrap(globalExec, toJS(toJS(ctx), callFrame)));
@@ -2161,14 +2166,14 @@ void InspectorController::pauseInDebugger()
 {
     if (!m_debuggerAttached)
         return;
-    JavaScriptDebugServer::shared().pauseOnNextStatement();
+    JavaScriptDebugServer::shared().pauseProgram();
 }
 
 void InspectorController::resumeDebugger()
 {
     if (!m_debuggerAttached)
         return;
-    JavaScriptDebugServer::shared().resume();
+    JavaScriptDebugServer::shared().continueProgram();
 }
 
 void InspectorController::stepOverStatementInDebugger()
@@ -2340,7 +2345,7 @@ void InspectorController::didParseSource(ExecState*, const SourceProvider& sourc
 {
     JSValueRef sourceIDValue = JSValueMakeNumber(m_scriptContext, sourceID);
     JSValueRef sourceURLValue = JSValueMakeString(m_scriptContext, jsStringRef(sourceURL).get());
-    JSValueRef sourceValue = JSValueMakeString(m_scriptContext, jsStringRef(source.data()).get());
+    JSValueRef sourceValue = JSValueMakeString(m_scriptContext, jsStringRef(source).get());
     JSValueRef startingLineNumberValue = JSValueMakeNumber(m_scriptContext, startingLineNumber);
 
     JSValueRef exception = 0;

@@ -1,3 +1,19 @@
+2008-05-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Tim Hatcher.
+        
+        Merged with trunk WebCore's new debugger.
+
+        * kjs/DebuggerCallFrame.cpp:
+        (KJS::DebuggerCallFrame::evaluate): Changed this function to separate
+        the exception value from the return value. The WebKit debugger treats
+        them as one, but the WebCore debugger doesn't.
+
+        * kjs/DebuggerCallFrame.h:
+        (KJS::DebuggerCallFrame::dynamicGlobalObject): Added a new accessor for
+        the dynamic global object, since the debugger doesn't want the lexical
+        global object.
+
 2008-05-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

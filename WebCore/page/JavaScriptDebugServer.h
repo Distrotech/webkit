@@ -67,9 +67,8 @@ namespace WebCore {
         bool pauseOnExceptions() const { return m_pauseOnExceptions; }
         void setPauseOnExceptions(bool);
 
-        void pauseOnNextStatement();
-        void resume();
-
+        void pauseProgram();
+        void continueProgram();
         void stepIntoStatement();
         void stepOverStatement();
         void stepOutOfFunction();
@@ -93,8 +92,8 @@ namespace WebCore {
         void setJavaScriptPaused(Frame*, bool paused);
         void setJavaScriptPaused(FrameView*, bool paused);
 
-        void dispatchFunctionToListeners(JavaScriptExecutionCallback, const KJS::DebuggerCallFrame&);
-        void pauseIfNeeded(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
+        void dispatchFunctionToListeners(JavaScriptExecutionCallback, Page*);
+        void pauseIfNeeded(Page*);
 
         virtual void sourceParsed(KJS::ExecState*, int sourceID, const KJS::UString& sourceURL, const KJS::SourceProvider& source, int startingLineNumber, int errorLine, const KJS::UString& errorMsg);
         virtual void callEvent(const KJS::DebuggerCallFrame&, int sourceID, int lineNumber);
@@ -109,7 +108,8 @@ namespace WebCore {
         bool m_pauseOnExceptions;
         bool m_pauseOnNextStatement;
         bool m_paused;
-        KJS::ExecState* m_pauseOnExecState;
+        bool m_doneProcessingDebuggerEvents;
+        JavaScriptCallFrame* m_pauseOnCallFrame;
         RefPtr<JavaScriptCallFrame> m_currentCallFrame;
         HashMap<RefPtr<Frame>, PausedTimeouts*> m_pausedTimeouts;
         HashMap<int, HashSet<unsigned>*> m_breakpoints;

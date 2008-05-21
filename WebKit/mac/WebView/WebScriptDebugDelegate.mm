@@ -204,7 +204,12 @@ NSString * const WebScriptErrorLineNumberKey = @"WebScriptErrorLineNumber";
 
 - (id)evaluateWebScript:(NSString *)script
 {
-    JSValue* result = _private->debuggerCallFrame->evaluateScript(String(script));
+    JSLock lock;
+
+    JSValue* exception = 0;
+    JSValue* result = _private->debuggerCallFrame->evaluate(String(script), exception);
+    if (exception)
+        return [self _convertValueToObjcValue:exception];
     return result ? [self _convertValueToObjcValue:result] : nil;
 }
 

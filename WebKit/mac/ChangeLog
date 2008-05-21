@@ -1,3 +1,18 @@
+2008-05-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Tim Hatcher.
+        
+        Updated for API changes from merging with trunk WebCore's new debugger.
+
+        * WebView/WebScriptDebugDelegate.mm:
+        (-[WebScriptCallFrame evaluateWebScript:]): Explicitly check for an
+        exception return, since the DebuggerCallFrame no longer automatically
+        substitutes the exception for the return value.
+
+        * WebView/WebScriptDebugger.mm: Use the dynamic global object, not the
+        lexical global object, since the debugger attaches based on dynamic
+        global object.
+
 2008-05-17  Geoffrey Garen  <ggaren@apple.com>
 
         Reviewed by Oliver Hunt.

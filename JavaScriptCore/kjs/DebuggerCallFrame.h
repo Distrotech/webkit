@@ -32,6 +32,7 @@
 namespace KJS {
     
     class CodeBlock;
+    class JSGlobalObject;
     class JSObject;
     class JSValue;
     class Machine;
@@ -41,8 +42,9 @@ namespace KJS {
     
     class DebuggerCallFrame {
     public:
-        DebuggerCallFrame(Machine* machine, const CodeBlock* codeBlock, ScopeChainNode* scopeChain, JSValue* exception, Register** registerBase, int registerOffset)
+        DebuggerCallFrame(Machine* machine, JSGlobalObject* dynamicGlobalObject, const CodeBlock* codeBlock, ScopeChainNode* scopeChain, JSValue* exception, Register** registerBase, int registerOffset)
             : m_machine(machine)
+            , m_dynamicGlobalObject(dynamicGlobalObject)
             , m_codeBlock(codeBlock)
             , m_scopeChain(scopeChain)
             , m_exception(exception)
@@ -51,14 +53,16 @@ namespace KJS {
         {
         }
 
+        JSGlobalObject* dynamicGlobalObject() const { return m_dynamicGlobalObject; }
         const ScopeChainNode* scopeChain() const { return m_scopeChain; }
-        const UString* functionName();
+        const UString* functionName() const;
         JSObject* thisObject() const;
-        JSValue* evaluateScript(const UString&);
+        JSValue* evaluate(const UString&, JSValue*& exception) const;
         JSValue* exception() const { return m_exception; }
-        
+
     private:
         Machine* m_machine;
+        JSGlobalObject* m_dynamicGlobalObject;
         const CodeBlock* m_codeBlock;
         ScopeChainNode* m_scopeChain;
         JSValue* m_exception;

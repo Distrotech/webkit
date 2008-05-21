@@ -1,3 +1,57 @@
+2008-05-21  Geoffrey Garen  <ggaren@apple.com>
+
+        Reviewed by Tim Hatcher.
+
+        Merged with trunk WebCore's new debugger.
+
+        * page/InspectorController.cpp:
+        (WebCore::currentCallFrame): Updated to use the DebuggerCallFrame API.
+        (WebCore::InspectorController::pauseInDebugger): Updated for name change
+        explained below.
+        (WebCore::InspectorController::resumeDebugger): ditto
+        (WebCore::InspectorController::didParseSource): Fixed a bug that would
+        produce garbled text in some cases: Don't treat JS source as null-
+        terminated UTF8; it's UTF16.
+
+        * page/JavaScriptCallFrame.cpp:
+        * page/JavaScriptCallFrame.h: Changed this class to do all of its processing
+        through a JavaScriptCore DebuggerCallFrame. We have to copy the DebuggerCallFrame
+        because it's a temporary.
+        (WebCore::JavaScriptCallFrame::update): Added an API for updating a call
+        frame during execution: this is how we handle "with" and "eval".
+
+        * page/JavaScriptDebugServer.cpp: Separated "m_paused" from
+        "m_doneProcessingDebuggerEvents", because they have different semantics:
+        "m_paused" is the flag the debug server uses to indicate that new debugger
+        callbacks should be ignored, because they come from the debugger's own
+        JS code; "m_doneProcessingDebuggerEvents" is the flag the debugger UI
+        uses to indicate that it's done processing events, and would like execution
+        to continue. When these flags were one, the debugger would erroneously
+        process callbacks that ocurred while unwinding from its own JS code.
+
+        (WebCore::toPage): Removed some unnecessary NULL checking. Added some
+        missing NULL checking.
+        
+        (WebCore::JavaScriptDebugServer::pauseIfNeeded): Changed pause tracking
+        to track a JavaScriptCallFrame instead of an ExecState, since ExecState
+        is no longer a unique identifier for a call frame.
+
+        I removed the updateCurrentCallFrame scheme, and replaced it with
+        individual tracking inside these callbacks:
+        
+        (WebCore::JavaScriptDebugServer::callEvent):
+        (WebCore::JavaScriptDebugServer::atStatement):
+        (WebCore::JavaScriptDebugServer::returnEvent):
+        (WebCore::JavaScriptDebugServer::exception):
+        
+        The updateCurrentCallFrame scheme was just too incompatible with the
+        squirrelfish execution model. Everything still works as before, except
+        for eval, which no longer shows up as an independent call frame. We'll
+        need to augment our debugger callbacks to bring back support for that.
+
+        * page/inspector/ScopeChainSidebarPane.js: Updated to use the activation
+        class's new name.
+
 2008-05-21  Maciej Stachowiak  <mjs@apple.com>
 
         Reviewed by Oliver.

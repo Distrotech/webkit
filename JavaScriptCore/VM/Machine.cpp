@@ -555,7 +555,7 @@ NEVER_INLINE bool Machine::unwindCallFrame(ExecState* exec, JSValue* exceptionVa
 
     if (Debugger* debugger = exec->dynamicGlobalObject()->debugger()) {
         if (!isGlobalCallFrame(registerBase, r)) {
-            DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
+            DebuggerCallFrame debuggerCallFrame(this, exec->dynamicGlobalObject(), codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
             debugger->returnEvent(debuggerCallFrame, codeBlock->ownerNode->sourceId(), codeBlock->ownerNode->lastLine());
         }
     }
@@ -600,7 +600,7 @@ NEVER_INLINE Instruction* Machine::throwException(ExecState* exec, JSValue* exce
     }
 
     if (Debugger* debugger = exec->dynamicGlobalObject()->debugger()) {
-        DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
+        DebuggerCallFrame debuggerCallFrame(this, exec->dynamicGlobalObject(), codeBlock, scopeChain, exceptionValue, registerBase, r - *registerBase);
         debugger->exception(debuggerCallFrame, codeBlock->ownerNode->sourceId(), codeBlock->lineNumberForVPC(vPC));
     }
 
@@ -792,7 +792,7 @@ NEVER_INLINE void Machine::debug(ExecState* exec, const Instruction* vPC, const 
     if (!debugger)
         return;
 
-    DebuggerCallFrame debuggerCallFrame(this, codeBlock, scopeChain, 0, registerBase, r - *registerBase);
+    DebuggerCallFrame debuggerCallFrame(this, exec->dynamicGlobalObject(), codeBlock, scopeChain, 0, registerBase, r - *registerBase);
 
     switch((DebugHookID)debugHookID) {
     case DidEnterCallFrame: {

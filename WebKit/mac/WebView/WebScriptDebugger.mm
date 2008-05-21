@@ -79,7 +79,7 @@ WebScriptDebugger::WebScriptDebugger(JSGlobalObject* globalObject)
     : m_callingDelegate(false)
 {
     attach(globalObject);
-    DebuggerCallFrame globalCallFrame(globalObject->globalExec()->machine(), 0, globalObject->globalScopeChain().node(), 0, 0, 0);
+    DebuggerCallFrame globalCallFrame(globalObject->globalExec()->machine(), globalObject, 0, globalObject->globalScopeChain().node(), 0, 0, 0);
     callEvent(globalCallFrame, 0, -1);
 }
 
@@ -118,7 +118,7 @@ void WebScriptDebugger::callEvent(const DebuggerCallFrame& debuggerCallFrame, in
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.dynamicGlobalObject());
 
     m_topCallFrame.adoptNS([[WebScriptCallFrame alloc] _initWithGlobalObject:core(webFrame)->windowScriptObject() caller:m_topCallFrame.get() debuggerCallFrame:debuggerCallFrame]);
 
@@ -135,7 +135,7 @@ void WebScriptDebugger::atStatement(const DebuggerCallFrame& debuggerCallFrame, 
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.dynamicGlobalObject());
     WebView *webView = [webFrame webView];
 
     [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
@@ -151,7 +151,7 @@ void WebScriptDebugger::returnEvent(const DebuggerCallFrame& debuggerCallFrame, 
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.dynamicGlobalObject());
     WebView *webView = [webFrame webView];
 
     [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
@@ -170,7 +170,7 @@ void WebScriptDebugger::exception(const DebuggerCallFrame& debuggerCallFrame, in
 
     m_callingDelegate = true;
 
-    WebFrame *webFrame = toWebFrame(debuggerCallFrame.scopeChain()->globalObject());
+    WebFrame *webFrame = toWebFrame(debuggerCallFrame.dynamicGlobalObject());
     WebView *webView = [webFrame webView];
     [m_topCallFrame.get() _setDebuggerCallFrame:debuggerCallFrame];
 
