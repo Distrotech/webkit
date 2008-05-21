@@ -1,5 +1,20 @@
 2008-05-20  Maciej Stachowiak  <mjs@apple.com>
 
+        Reviewed by Oliver.
+
+        - inline JSDOMWindow security checks
+        0.9% speedup to SunSpider in-browser
+
+        * bindings/js/JSDOMWindowBase.cpp:
+        * bindings/js/JSDOMWindowCustom.h:
+        (WebCore::JSDOMWindowBasePrivate::JSDOMWindowBasePrivate):
+        (WebCore::JSDOMWindowBase::allowsAccessFrom):
+        (WebCore::JSDOMWindowBase::allowsAccessFromNoErrorMessage):
+        (WebCore::JSDOMWindowBase::allowsAccessFromPrivate):
+        * bindings/js/kjs_binding.cpp:
+
+2008-05-20  Maciej Stachowiak  <mjs@apple.com>
+
         Reviewed by Adam.
 
         - use ALWAYS_INLINE on customGetOwnPropertySlot since it wasn't inlining
