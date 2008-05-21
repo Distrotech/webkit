@@ -1,3 +1,14 @@
+2008-05-21  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Oliver.
+        
+        - check property map before symbol table in JSGlobalObject::getOwnPropertySlot
+        0.5% speedup on SunSpider
+
+        * kjs/JSGlobalObject.h:
+        (KJS::JSGlobalObject::getOwnPropertySlot): Check property map before symbol table
+        because symbol table access is likely to have been optimized.
+
 2008-05-21  Oliver Hunt  <oliver@apple.com>
 
         Reviewed by Maciej.

@@ -302,16 +302,16 @@ namespace KJS {
 
     inline bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
     {
-        if (symbolTableGet(propertyName, slot))
+        if (JSVariableObject::getOwnPropertySlot(exec, propertyName, slot))
             return true;
-        return JSVariableObject::getOwnPropertySlot(exec, propertyName, slot);
+        return symbolTableGet(propertyName, slot);
     }
 
     inline bool JSGlobalObject::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot, bool& slotIsWriteable)
     {
-        if (symbolTableGet(propertyName, slot, slotIsWriteable))
+        if (JSVariableObject::getOwnPropertySlotForWrite(exec, propertyName, slot, slotIsWriteable))
             return true;
-        return JSVariableObject::getOwnPropertySlotForWrite(exec, propertyName, slot, slotIsWriteable);
+        return symbolTableGet(propertyName, slot, slotIsWriteable);
     }
 
     inline bool JSGlobalObject::timedOut()
