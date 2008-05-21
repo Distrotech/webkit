@@ -2,6 +2,16 @@
 
         Reviewed by Adam.
 
+        - use ALWAYS_INLINE on customGetOwnPropertySlot since it wasn't inlining
+        2% speedup to SunSpider in-browser
+
+        * bindings/js/JSDOMWindowCustom.h:
+        (WebCore::JSDOMWindow::customGetOwnPropertySlot):
+
+2008-05-20  Maciej Stachowiak  <mjs@apple.com>
+
+        Reviewed by Adam.
+
         - inline JSDOMWindow's customPut and customGetOwnPropertySlot methods
         1.2% speedup to SunSpider in-browser
         

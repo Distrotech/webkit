@@ -20,6 +20,7 @@
 #define JSDOMWindowCustom_h
 
 #include "JSDOMWindow.h"
+#include <wtf/AlwaysInline.h>
 
 namespace WebCore {
 
@@ -33,7 +34,7 @@ inline const JSDOMWindow* asJSDOMWindow(const KJS::JSGlobalObject* globalObject)
     return static_cast<const JSDOMWindow*>(globalObject);
 }
 
-inline bool JSDOMWindow::customGetOwnPropertySlot(KJS::ExecState* exec, const KJS::Identifier& propertyName, KJS::PropertySlot& slot)
+ALWAYS_INLINE bool JSDOMWindow::customGetOwnPropertySlot(KJS::ExecState* exec, const KJS::Identifier& propertyName, KJS::PropertySlot& slot)
 {
     // When accessing a Window cross-domain, functions are always the native built-in ones, and they
     // are not affected by properties changed on the Window or anything in its prototype chain.
