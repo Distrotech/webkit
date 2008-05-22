@@ -1,0 +1,9 @@
+Test that playcount DOM attribute causes playback to end after right number of repeats.
+
+TEST(video.playCount == 3) OK
+TEST(video.currentLoop == 0) OK
+TEST(video.getAttribute('playCount') == 3) OK
+RUN(video.play())
+EVENT(ended) TEST(video.currentLoop == 2) OK
+END OF TEST
+

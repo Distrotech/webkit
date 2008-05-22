@@ -1,0 +1,126 @@
+<html>
+<head>
+<link rel="stylesheet" href="../js/resources/js-test-style.css">
+<script src="../js/resources/js-test-pre.js"></script>
+</head>
+<body>
+<p id="description"></p>
+<div id="console"></div>
+<script>
+
+description("This tests decoding characters in various character sets.");
+
+function hex(number)
+{
+    var hexDigit = "0123456789ABCDEF";
+    var hex = hexDigit.substr(number & 0xf, 1);
+    while (number > 15) {
+        number >>= 4;
+        hex = hexDigit.substr(number & 15, 1) + hex;
+    }
+    return hex;
+}
+
+function decode(charsetName, characterSequence)
+{
+    var req = new XMLHttpRequest;
+    req.open('GET', 'data:text/plain,' + characterSequence, false);
+    req.overrideMimeType('text/plain; charset="' + charsetName + '"');
+    req.send('');
+    var code = hex(req.responseText.charCodeAt(0));
+    return "U+" + ("0000" + code).substr(code.length, 4);
+}
+
+function testDecode(charsetName, characterSequence, unicode)
+{
+    shouldBe("decode('" + charsetName + "', '" + characterSequence + "')", "'" + unicode + "'");
+}
+
+testDecode('UTF-8', '%E2%88%9A', 'U+221A');
+testDecode('macintosh', '%C3', 'U+221A');
+testDecode('MacRoman', '%C3', 'U+221A');
+
+// <http://bugs.webkit.org/show_bug.cgi?id=17014> EUC-CN code A3A0 is mapped to U+E5E5 instead of U+3000
+testDecode('gb2312', '%A3%A0', 'U+3000');
+testDecode('gb_2312-80', '%A3%A0', 'U+3000');
+testDecode('chinese', '%A3%A0', 'U+3000');
+testDecode('gbk', '%A3%A0', 'U+3000');
+testDecode('gb18030', '%A3%A0', 'U+3000');
+
+// Test that all Korean encodings of EUC-KR family are treated as windows-949.
+testDecode('korean', '%A2%E6', 'U+20AC');
+testDecode('korean', '%A1%A4', 'U+00B7');
+testDecode('korean', '%A1%A9', 'U+00AD');
+testDecode('korean', '%A1%AA', 'U+2015');
+testDecode('korean', '%A1%AD', 'U+223C');
+testDecode('korean', '%A2%A6', 'U+FF5E');
+testDecode('korean', '%A2%C1', 'U+2299');
+testDecode('korean', '%1A', 'U+001A');
+testDecode('korean', '%1C', 'U+001C');
+testDecode('korean', '%8F%A1', 'U+B8EA');
+testDecode('korean', '%B4%D3', 'U+B2D2');
+testDecode('korean', '%A2%41', 'U+C910');
+testDecode('euc-kr', '%A2%41', 'U+C910');
+testDecode('korean', '%A2%41', 'U+C910');
+testDecode('windows-949', '%A2%41', 'U+C910');
+testDecode('iso-ir-149', '%A2%41', 'U+C910');
+testDecode('KS_C_5601-1987', '%A2%41', 'U+C910');
+testDecode('KS_C_5601-1989', '%A2%41', 'U+C910');
+
+// Test that ISO-8859-9 (Turkish) is upgraded to windows-1254 with Euro symbol.
+testDecode('iso-8859-9', '%80', 'U+20AC');
+testDecode('iso-8859-9', '%9F', 'U+0178');
+testDecode('iso-8859-9', '%FD', 'U+0131');
+testDecode('latin5', '%80', 'U+20AC');
+testDecode('latin5', '%9F', 'U+0178');
+testDecode('latin5', '%FD', 'U+0131');
+testDecode('windows-1254', '%80', 'U+20AC');
+
+// Baltic encodings fine points.
+testDecode('ISO-8859-13', '%A1', 'U+201D');
+testDecode('ISO-8859-13', '%A5', 'U+201E');
+testDecode('ISO-8859-13', '%B4', 'U+201C');
+testDecode('ISO-8859-13', '%FF', 'U+2019');
+testDecode('windows-1257', '%80', 'U+20AC');
+testDecode('windows-1257', '%B4', 'U+00B4');
+testDecode('windows-1257', '%FF', 'U+02D9');
+
+// Greek encodings fine points.
+testDecode('iso-8859-7', '%A1', 'U+2018');
+testDecode('iso-8859-7', '%B5', 'U+0385');
+testDecode('iso-8859-7', '%B6', 'U+0386');
+testDecode('windows-1253', '%80', 'U+20AC');
+testDecode('windows-1253', '%A1', 'U+0385');
+testDecode('windows-1253', '%B5', 'U+00B5');
+testDecode('windows-1253', '%B6', 'U+00B6');
+
+// KOI-8 variants
+testDecode('KOI8-R', '%A4', 'U+2553');
+testDecode('KOI8-R', '%AD', 'U+255C');
+testDecode('KOI8-U', '%A4', 'U+0454');
+testDecode('KOI8-U', '%AD', 'U+0491');
+
+// Test that TIS-620 and ISO-8859-11 (Thai) are upgraded to windows-874.
+testDecode('TIS-620', '%80', 'U+20AC');
+testDecode('TIS-620', '%96', 'U+2013');
+testDecode('TIS-620', '%A0', 'U+00A0');
+testDecode('TIS-620', '%A1', 'U+0E01');
+testDecode('ISO-8859-11', '%80', 'U+20AC');
+testDecode('ISO-8859-11', '%96', 'U+2013');
+testDecode('ISO-8859-11', '%A0', 'U+00A0');
+testDecode('ISO-8859-11', '%A1', 'U+0E01');
+testDecode('windows-874', '%80', 'U+20AC');
+testDecode('windows-874', '%96', 'U+2013');
+testDecode('windows-874', '%A0', 'U+00A0');
+testDecode('windows-874', '%A1', 'U+0E01');
+testDecode('windows-874', '%DB', 'U+F8C1'); // A weird PUA mapping that doesn't seem to be of any use, even on Windows.
+testDecode('TIS-620', '%DB', 'U+F8C1');
+testDecode('ISO-8859-11', '%DB', 'U+F8C1');
+
+
+successfullyParsed = true;
+
+</script>
+<script src="../js/resources/js-test-post.js"></script>
+</body>
+</html>
