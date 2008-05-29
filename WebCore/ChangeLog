@@ -1,3 +1,13 @@
+2008-05-29  Anders Carlsson  <andersca@apple.com>
+
+        Reviewed by Mitz.
+
+        <rdar://problem/5971845>
+        https://bugs.webkit.org/show_bug.cgi?id=19313
+        Add version member to NPCocoaEvent
+        
+        * bridge/npapi.h:
+
 2008-05-28  Ada Chan  <adachan@apple.com>
 
         <rdar://problem/5957036> REGRESSION (r31960): 20-30% slowdown in i-Bench JavaScript test on XP Home
