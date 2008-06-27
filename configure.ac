@@ -319,6 +319,14 @@ AC_ARG_ENABLE(video,
               [],[enable_video="no"])
 AC_MSG_RESULT([$enable_video])
 
+# check whether to enable XBL support
+AC_MSG_CHECKING([whether to enable XBL support])
+AC_ARG_ENABLE(xbl,
+              AC_HELP_STRING([--enable-xbl],
+                             [enable support for XBL [default=no]]),
+              [],[enable_xbl="no"])
+AC_MSG_RESULT([$enable_xbl])
+
 # check whether to enable XPath support
 AC_MSG_CHECKING([whether to enable XPath support])
 AC_ARG_ENABLE(xpath,
@@ -546,6 +554,7 @@ AM_CONDITIONAL([ENABLE_OFFLINE_WEB_APPLICATIONS],[test "$enable_offline_web_appl
 AM_CONDITIONAL([ENABLE_DOM_STORAGE],[test "$enable_dom_storage" = "yes"])
 AM_CONDITIONAL([ENABLE_DATABASE],[test "$enable_database" = "yes"])
 AM_CONDITIONAL([ENABLE_ICONDATABASE],[test "$enable_icon_database" = "yes"])
+AM_CONDITIONAL([ENABLE_XBL],[test "$enable_xbl" = "yes"])
 AM_CONDITIONAL([ENABLE_XPATH],[test "$enable_xpath" = "yes"])
 AM_CONDITIONAL([ENABLE_XSLT],[test "$enable_xslt" = "yes"])
 AM_CONDITIONAL([ENABLE_VIDEO],[test "$enable_video" = "yes"])
@@ -594,6 +603,7 @@ Features:
  SVG foreign object support                               : $enable_svg_foreign_object
  SVG as image support                                     : $enable_svg_as_image
  SVG use element support                                  : $enable_svg_use_element
+ XBL support                                              : $enable_xbl
  XPATH support                                            : $enable_xpath
  XSLT support                                             : $enable_xslt
 GTK+ configuration:

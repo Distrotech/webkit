@@ -52,6 +52,7 @@ my $svgUseSupport = 1;
 my $svgFontsSupport = 1;
 my $svgAsImageSupport = 1;
 my $xpathSupport = 1;
+my $xblSupport = 0;
 my $xsltSupport = 1;
 my $coverageSupport = 0;
 my $videoSupport = (isOSX() || isCygwin()); # Enable by default on OSX and Windows
@@ -81,6 +82,7 @@ Usage: $programName [options] [options to pass to build system]
   --[no-]svg-fonts              Toggle SVG fonts support (default: $svgFontsSupport, implies SVG Support)
   --[no-]svg-as-image           Toggle SVG as Image support (default: $svgAsImageSupport, implies SVG Support)
   --[no-]svg-use                Toggle SVG use element support (default: $svgUseSupport, implies SVG Support)
+  --[no-]xbl                    Toggle XBL2 support (default: $xblSupport)
   --[no-]xpath                  Toggle XPath support (default: $xpathSupport)
   --[no-]xslt                   Toggle XSLT support (default: $xsltSupport)
   --[no-]video                  Toggle Video support (default: $videoSupport)
@@ -99,6 +101,7 @@ GetOptions('database!' => \$databaseSupport,
            'svg-fonts!' => \$svgFontsSupport,
            'svg-as-image!' => \$svgAsImageSupport,
            'svg-use!' => \$svgUseSupport,
+           'xbl!' => \$xblSupport,
            'xpath!' => \$xpathSupport,
            'xslt!' => \$xsltSupport,
            'video!' => \$videoSupport,
@@ -166,6 +169,7 @@ push @overrideFeatureDefinesOption, "ENABLE_SVG_FONTS" if $svgFontsSupport;
 push @overrideFeatureDefinesOption, "ENABLE_SVG_FOREIGN_OBJECT" if $svgForeignObjectSupport;
 push @overrideFeatureDefinesOption, "ENABLE_SVG_USE" if $svgUseSupport;
 push @overrideFeatureDefinesOption, "ENABLE_VIDEO" if $videoSupport;
+push @overrideFeatureDefinesOption, "ENABLE_XBL" if $xblSupport;
 push @overrideFeatureDefinesOption, "ENABLE_XPATH" if $xpathSupport;
 push @overrideFeatureDefinesOption, "ENABLE_XSLT" if $xsltSupport;
 my $overrideFeatureDefinesString = "FEATURE_DEFINES=" . join(" ", @overrideFeatureDefinesOption);
@@ -223,6 +227,7 @@ if (isGtk()) {
     push @options, autotoolsFlag($svgFontsSupport, "svg-fonts");
     push @options, autotoolsFlag($svgAsImageSupport, "svg-as-image");
     push @options, autotoolsFlag($svgUseSupport, "svg-use-element");
+    push @options, autotoolsFlag($xblSupport, "xbl");
     push @options, autotoolsFlag($xpathSupport, "xpath");
     push @options, autotoolsFlag($xsltSupport, "xslt");
     push @options, autotoolsFlag($videoSupport, "video");

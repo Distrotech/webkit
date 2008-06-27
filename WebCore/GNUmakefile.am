@@ -1430,6 +1430,19 @@ $(GENSOURCES)/XPathGrammar.cpp: $(WebCore)/xml/XPathGrammar.y
 endif # END ENABLE_XPATH
 
 # ----
+# XBL Support
+# ----
+if ENABLE_XBL
+FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
+
+webcore_cppflags += -DENABLE_XBL=1
+
+webcore_sources += \
+    WebCore/loader/CachedXBLDocument.cpp
+
+endif # END ENABLE_XBL
+
+# ----
 # XSLT Support
 # ----
 if ENABLE_XSLT

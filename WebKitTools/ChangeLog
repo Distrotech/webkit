@@ -1,3 +1,12 @@
+2008-06-27  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Add build-webkit --xbl option.
+
+        * Scripts/build-webkit: Add the option and
+        the build systems' bit.
+
 2008-06-26  Darin Adler  <darin@apple.com>
 
         * Scripts/check-for-weak-vtables: Fixed comment.

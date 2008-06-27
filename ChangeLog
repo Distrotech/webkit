@@ -1,3 +1,11 @@
+2008-06-27  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Add build-webkit --xbl option.
+
+        * configure.ac: Add XBL checks.
+
 2008-06-18  Marco Barisione  <marco.barisione@collabora.co.uk>
 
         Reviewed by Alp Toker.
