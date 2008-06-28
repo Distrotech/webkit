@@ -4010,7 +4010,7 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         return;
     }
     case CSSPropertyWebkitBinding: {
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         if (isInitial || (primitiveValue && primitiveValue->getIdent() == CSSValueNone)) {
             m_style->deleteBindingURIs();
             return;

@@ -4942,7 +4942,7 @@ bool FrameLoader::addLowBandwidthDisplayRequest(CachedResource* cache)
 #if ENABLE(XSLT)
         case CachedResource::XSLStyleSheet:
 #endif
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         case CachedResource::XBLStyleSheet:
 #endif
             return false;

@@ -1084,7 +1084,7 @@ bool CSSParser::parseValue(int propId, bool important)
         break;
 
     case CSSPropertyWebkitBinding:
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         if (id == CSSValueNone)
             valid_primitive = true;
         else {

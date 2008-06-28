@@ -107,7 +107,7 @@ namespace WebCore {
     class SVGDocumentExtensions;
 #endif
     
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     class XBLBindingManager;
 #endif
 
@@ -697,7 +697,7 @@ public:
     void setTransformSourceDocument(Document* doc) { m_transformSourceDocument = doc; }
 #endif
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     // XBL methods
     XBLBindingManager* bindingManager() const { return m_bindingManager; }
 #endif
@@ -886,7 +886,7 @@ private:
     RefPtr<Document> m_transformSourceDocument;
 #endif
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     XBLBindingManager* m_bindingManager; // The access point through which documents and elements communicate with XBL.
 #endif
     

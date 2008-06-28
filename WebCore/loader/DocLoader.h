@@ -63,7 +63,7 @@ public:
 #if ENABLE(XSLT)
     CachedXSLStyleSheet* requestXSLStyleSheet(const String& url);
 #endif
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     CachedXBLDocument* requestXBLDocument(const String &url);
 #endif
 

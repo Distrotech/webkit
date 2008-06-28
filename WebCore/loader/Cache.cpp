@@ -77,7 +77,7 @@ static CachedResource* createResource(CachedResource::Type type, const KURL& url
     case CachedResource::XSLStyleSheet:
         return new CachedXSLStyleSheet(url.string());
 #endif
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     case CachedResource::XBLStyleSheet:
         return new CachedXBLDocument(url.string());
 #endif
@@ -596,7 +596,7 @@ Cache::Statistics Cache::getStatistics()
                 stats.fonts.liveSize += o->referenced() ? o->size() : 0;
                 stats.fonts.decodedSize += o->decodedSize();
                 break;
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
             case CachedResource::XBL:
                 stats.xblDocs.count++;
                 stats.xblDocs.size += o->size();

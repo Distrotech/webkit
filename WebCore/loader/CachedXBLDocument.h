@@ -38,7 +38,7 @@ namespace WebCore {
     class TextResourceDecoder;
     class CachedResourceClient;
     
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     class CachedXBLDocument : public CachedResource {
     public:
         CachedXBLDocument(const String& url);

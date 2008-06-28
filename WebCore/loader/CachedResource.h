@@ -53,7 +53,7 @@ public:
 #if ENABLE(XSLT)
         , XSLStyleSheet
 #endif
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         , XBL
 #endif
     };

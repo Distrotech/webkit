@@ -786,7 +786,7 @@ StyleRareNonInheritedData::StyleRareNonInheritedData()
     , m_boxShadow(0)
     , m_transition(0)
     , m_mask(FillLayer(MaskFillLayer))
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     , bindingURI(0)
 #endif
 {
@@ -813,7 +813,7 @@ StyleRareNonInheritedData::StyleRareNonInheritedData(const StyleRareNonInherited
     , m_boxReflect(o.m_boxReflect)
     , m_transition(o.m_transition ? new Transition(*o.m_transition) : 0)
     , m_mask(o.m_mask)
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     , bindingURI(o.bindingURI ? o.bindingURI->copy() : 0)
 #endif
 {
@@ -825,12 +825,12 @@ StyleRareNonInheritedData::~StyleRareNonInheritedData()
     delete m_counterDirectives;
     delete m_boxShadow;
     delete m_transition;
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     delete bindingURI;
 #endif
 }
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 bool StyleRareNonInheritedData::bindingsEquivalent(const StyleRareNonInheritedData& o) const
 {
     if (this == &o) return true;
@@ -866,7 +866,7 @@ bool StyleRareNonInheritedData::operator==(const StyleRareNonInheritedData& o) c
         && reflectionDataEquivalent(o)
         && transitionDataEquivalent(o)
         && m_mask == o.m_mask
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         && bindingsEquivalent(o)
 #endif
         ;
@@ -1721,7 +1721,7 @@ void RenderStyle::applyTransform(AffineTransform& transform, const IntSize& bord
         transform.translate(-transformOriginX().calcFloatValue(borderBoxSize.width()), -transformOriginY().calcFloatValue(borderBoxSize.height()));
 }
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 BindingURI::BindingURI(StringImpl* uri) 
 :m_next(0)
 { 

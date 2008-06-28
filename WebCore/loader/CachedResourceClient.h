@@ -27,7 +27,7 @@
 #ifndef CachedResourceClient_h
 #define CachedResourceClient_h
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 namespace XBL {
     class XBLDocument;
 }
@@ -70,7 +70,7 @@ namespace WebCore {
 
         virtual void fontLoaded(CachedFont*) {};
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
         virtual void setXBLDocument(const String& /*URL*/, XBL::XBLDocument*) { }
 #endif
 

@@ -2,6 +2,43 @@
 
         Reviewed by Eric.
 
+        Change XBL legacy code's guard to ENABLE(DEPRECATED_XBL)
+        to enable compilation.
+
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue):
+        * css/CSSStyleSelector.cpp:
+        (WebCore::CSSStyleSelector::applyProperty):
+        * dom/Document.cpp:
+        (WebCore::Document::Document):
+        (WebCore::Document::~Document):
+        * dom/Document.h:
+        * loader/Cache.cpp:
+        (WebCore::createResource):
+        (WebCore::Cache::getStatistics):
+        * loader/Cache.h:
+        * loader/CachedResource.h:
+        (WebCore::CachedResource::):
+        * loader/CachedResourceClient.h:
+        * loader/CachedXBLDocument.cpp:
+        * loader/CachedXBLDocument.h:
+        * loader/DocLoader.cpp:
+        (WebCore::DocLoader::requestResource):
+        * loader/DocLoader.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::addLowBandwidthDisplayRequest):
+        * loader/loader.cpp:
+        (WebCore::Loader::determinePriority):
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::StyleRareNonInheritedData::StyleRareNonInheritedData):
+        (WebCore::StyleRareNonInheritedData::~StyleRareNonInheritedData):
+        (WebCore::StyleRareNonInheritedData::operator==):
+        * rendering/style/RenderStyle.h:
+
+2008-06-27  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Add build-webkit --xbl option.
 
         * GNUmakefile.am: Add XBL compilation flags and legacy files.

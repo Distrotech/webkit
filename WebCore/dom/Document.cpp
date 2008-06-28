@@ -126,7 +126,7 @@
 #include "XSLTProcessor.h"
 #endif
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 #include "XBLBindingManager.h"
 #endif
 
@@ -270,7 +270,7 @@ Document::Document(Frame* frame, bool isXHTML)
 #endif
     , m_xmlVersion("1.0")
     , m_xmlStandalone(false)
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     , m_bindingManager(new XBLBindingManager(this))
 #endif
     , m_savedRenderer(0)
@@ -426,7 +426,7 @@ Document::~Document()
     xmlFreeDoc((xmlDocPtr)m_transformSource);
 #endif
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     delete m_bindingManager;
 #endif
 

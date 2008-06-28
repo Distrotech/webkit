@@ -28,7 +28,7 @@
 
 #include "config.h"
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 
 #include "CachedXBLDocument.h"
 

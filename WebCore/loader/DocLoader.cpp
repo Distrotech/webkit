@@ -136,7 +136,7 @@ CachedXSLStyleSheet* DocLoader::requestXSLStyleSheet(const String& url)
 }
 #endif
 
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
 CachedXBLDocument* DocLoader::requestXBLDocument(const String& url)
 {
     return static_cast<CachedXSLStyleSheet*>(requestResource(CachedResource::XBL, url, String()));
@@ -161,10 +161,10 @@ CachedResource* DocLoader::requestResource(CachedResource::Type type, const Stri
 #if ENABLE(XSLT)
     case CachedResource::XSLStyleSheet:
 #endif
-#if ENABLE(XBL)
+#if ENABLE(DEPRECATED_XBL)
     case CachedResource::XBL:
 #endif
-#if ENABLE(XSLT) || ENABLE(XBL)
+#if ENABLE(XSLT) || ENABLE(DEPRECATED_XBL)
         if (!m_doc->securityOrigin()->canRequest(fullURL)) {
             printAccessDeniedMessage(fullURL);
             return 0;
