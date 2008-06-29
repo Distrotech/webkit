@@ -1,3 +1,37 @@
+2008-06-28  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Add the <xbl> element. The hierarchy is inspired from svg:
+
+        - XBLElement is the base class for all XBL elements.
+        - XBLXBLElement represents the <xbl> element tag.
+
+        * DerivedSources.make: Added build system information.
+        * GNUmakefile.am: Ditto.
+        * WebCore.pro: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+
+        * dom/Document.cpp:
+        (WebCore::Document::createElement): Create XBL elements
+        if we are in XBL namespace.
+
+        * dom/Node.h:
+        (WebCore::Node::isXBLElement):
+        * dom/make_names.pl:
+        * page/Frame.cpp:
+        (WebCore::Frame::Frame): Added XBLNames structures
+        initialization.
+
+        * xbl: Added.
+        * xbl/XBLElement.h: Added.
+        (WebCore::XBLElement::XBLElement):
+        (WebCore::XBLElement::isXBLElement):
+        * xbl/XBLXBLElement.cpp: Added.
+        * xbl/XBLXBLElement.h: Added.
+        (WebCore::XBLXBLElement::XBLXBLElement):
+        * xbl/xbltags.in: Added.
+
 2008-06-27  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

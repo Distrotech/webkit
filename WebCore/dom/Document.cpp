@@ -126,8 +126,10 @@
 #include "XSLTProcessor.h"
 #endif
 
-#if ENABLE(DEPRECATED_XBL)
-#include "XBLBindingManager.h"
+#if ENABLE(XBL)
+#include "XBLElement.h"
+#include "XBLElementFactory.h"
+#include "XBLNames.h"
 #endif
 
 #if ENABLE(SVG)
@@ -745,6 +747,10 @@ PassRefPtr<Element> Document::createElement(const QualifiedName& qName, bool cre
 #if ENABLE(SVG)
     else if (qName.namespaceURI() == SVGNames::svgNamespaceURI)
         e = SVGElementFactory::createSVGElement(qName, this, createdByParser);
+#endif
+#if ENABLE(XBL)
+    else if (qName.namespaceURI() == XBLNames::xblNamespaceURI)
+        e = XBLElementFactory::createXBLElement(qName, this, createdByParser);
 #endif
     
     if (!e)

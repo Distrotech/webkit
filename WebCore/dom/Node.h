@@ -151,6 +151,11 @@ public:
 #endif
         bool isSVGElement() const { return false; }
 
+#if ENABLE(XBL)
+    virtual
+#endif
+        bool isXBLElement() const { return false; }
+
     virtual bool isStyledElement() const { return false; }
     virtual bool isFrameOwnerElement() const { return false; }
     virtual bool isAttributeNode() const { return false; }

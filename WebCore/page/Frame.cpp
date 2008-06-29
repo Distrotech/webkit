@@ -80,6 +80,10 @@
 #include "UserStyleSheetLoader.h"
 #endif
 
+#if ENABLE(XBL)
+#include "XBLNames.h"
+#endif
+
 #if ENABLE(SVG)
 #include "SVGDocument.h"
 #include "SVGDocumentExtensions.h"
@@ -132,6 +136,10 @@ Frame::Frame(Page* page, HTMLFrameOwnerElement* ownerElement, FrameLoaderClient*
 #if ENABLE(SVG)
     SVGNames::init();
     XLinkNames::init();
+#endif
+
+#if ENABLE(XBL)
+    XBLNames::init();
 #endif
 
     XMLNames::init();

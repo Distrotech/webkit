@@ -36,6 +36,7 @@ VPATH = \
     $(WebCore)/page \
     $(WebCore)/plugins \
     $(WebCore)/storage \
+    $(WebCore)/xbl \
     $(WebCore)/xml \
     $(WebCore)/svg \
 #
@@ -377,6 +378,8 @@ all : \
     SVGElementFactory.cpp \
     SVGNames.cpp \
     UserAgentStyleSheets.h \
+    XBLNames.cpp \
+    XBLElementFactory.cpp \
     XLinkNames.cpp \
     XMLNames.cpp \
     XPathGrammar.cpp \
@@ -526,6 +529,23 @@ endif
 XMLNames.cpp : dom/make_names.pl xml/xmlattrs.in
 	perl -I $(WebCore)/bindings/scripts $< --attrs $(WebCore)/xml/xmlattrs.in \
             --namespace XML --cppNamespace WebCore --namespaceURI "http://www.w3.org/XML/1998/namespace" --output .
+
+# --------
+
+ifeq ($(findstring ENABLE_XBL,$(FEATURE_DEFINES)), ENABLE_XBL)
+
+XBLNames.cpp XBLElementFactory.cpp : dom/make_names.pl xbl/xbltags.in
+	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in  --output .
+
+else
+
+XBLNames.cpp :
+	echo > $@
+
+XBLElementFactory.cpp :
+	echo > $@
+
+endif
 
 # --------
 

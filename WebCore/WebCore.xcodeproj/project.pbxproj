@@ -4039,6 +4039,13 @@
 		F916C48D0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F916C48B0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.cpp */; };
 		F916C48E0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F916C48C0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.h */; };
 		F9F0ED7A0DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */; };
+		F9C6755F0DEC76A5008D0C2F /* XBLElement.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6755B0DEC76A5008D0C2F /* XBLElement.h */; };
+		F9C675610DEC76A5008D0C2F /* XBLXBLElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */; };
+		F9C675620DEC76A5008D0C2F /* XBLXBLElement.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6755E0DEC76A5008D0C2F /* XBLXBLElement.h */; };
+		F9C6760A0DEC7903008D0C2F /* XBLElementFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9C676080DEC7903008D0C2F /* XBLElementFactory.cpp */; };
+		F9C6760B0DEC7903008D0C2F /* XBLNames.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9C676090DEC7903008D0C2F /* XBLNames.cpp */; };
+		F9C6760D0DEC7D4C008D0C2F /* XBLElementFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */; };
+		F9C6760F0DEC7D7A008D0C2F /* XBLNames.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6760E0DEC7D7A008D0C2F /* XBLNames.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -8459,6 +8466,13 @@
 		F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XMLHttpRequestProgressEvent.h; sourceTree = "<group>"; };
 		F9F0ED780DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.idl */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = XMLHttpRequestProgressEvent.idl; sourceTree = "<group>"; };
 		FE49EF970DC51462004266E1 /* DashboardSupportCSSPropertyNames.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DashboardSupportCSSPropertyNames.in; sourceTree = "<group>"; };
+		F9C6755B0DEC76A5008D0C2F /* XBLElement.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLElement.h; sourceTree = "<group>"; };
+		F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XBLXBLElement.cpp; sourceTree = "<group>"; };
+		F9C6755E0DEC76A5008D0C2F /* XBLXBLElement.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLXBLElement.h; sourceTree = "<group>"; };
+		F9C676080DEC7903008D0C2F /* XBLElementFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = XBLElementFactory.cpp; path = XBLElementFactory.cpp; sourceTree = "<group>"; };
+		F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLElementFactory.h; sourceTree = "<group>"; };
+		F9C676090DEC7903008D0C2F /* XBLNames.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XBLNames.cpp; sourceTree = "<group>"; };
+		F9C6760E0DEC7D7A008D0C2F /* XBLNames.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLNames.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -8513,6 +8527,7 @@
 				F523D2F302DE443B018635CA /* rendering */,
 				1AE82EC90CAAE177002237AE /* storage */,
 				B22277CA0D00BF1E0071B782 /* svg */,
+				F9C6755A0DEC76A5008D0C2F /* xbl */,
 				E1F0424309839389006694EA /* xml */,
 				656580EC09D12B20000E61D7 /* Derived Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
@@ -8969,6 +8984,10 @@
 				6565814C09D13043000E61D7 /* tokenizer.cpp */,
 				656581AE09D14EE6000E61D7 /* UserAgentStyleSheets.h */,
 				656581AF09D14EE6000E61D7 /* UserAgentStyleSheetsData.cpp */,
+				F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */,
+				F9C676080DEC7903008D0C2F /* XBLElementFactory.cpp */,
+				F9C676090DEC7903008D0C2F /* XBLNames.cpp */,
+				F9C6760E0DEC7D7A008D0C2F /* XBLNames.h */,
 				656581EA09D1508D000E61D7 /* XLinkNames.cpp */,
 				656581EB09D1508D000E61D7 /* XLinkNames.h */,
 				A833C80A0A2CF25600D57664 /* XMLNames.cpp */,
@@ -13269,6 +13288,16 @@
 			tabWidth = 4;
 			usesTabs = 0;
 		};
+		F9C6755A0DEC76A5008D0C2F /* xbl */ = {
+			isa = PBXGroup;
+			children = (
+				F9C6755B0DEC76A5008D0C2F /* XBLElement.h */,
+				F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */,
+				F9C6755E0DEC76A5008D0C2F /* XBLXBLElement.h */,
+			);
+			path = xbl;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -15028,6 +15057,8 @@
 				93B780CA09B3B7FE00690162 /* WidgetClient.h in Headers */,
 				BC8243E90D0CFD7500460C8F /* WindowFeatures.h in Headers */,
 				93309E24099E64920056E581 /* WrapContentsInDummySpanCommand.h in Headers */,
+				F9C675620DEC76A5008D0C2F /* XBLXBLElement.h in Headers */,
+				F9C6755F0DEC76A5008D0C2F /* XBLElement.h in Headers */,
 				6565820209D1508D000E61D7 /* XLinkNames.h in Headers */,
 				BC772C470C4EB2C60083285F /* XMLHttpRequest.h in Headers */,
 				A833C80D0A2CF25600D57664 /* XMLNames.h in Headers */,
@@ -15271,6 +15302,8 @@
 				BC686CBB0E0C349D00DE8A08 /* DOMCSSVariablesDeclarationInternal.h in Headers */,
 				BC686CBC0E0C349D00DE8A08 /* DOMCSSVariablesRuleInternal.h in Headers */,
 				3784C34B0E11AA34007D8D48 /* FontTraitsMask.h in Headers */,
+				F9C6760D0DEC7D4C008D0C2F /* XBLElementFactory.h in Headers */,
+				F9C6760F0DEC7D7A008D0C2F /* XBLNames.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -17043,6 +17076,9 @@
 				BC686C7E0E0C330100DE8A08 /* JSCSSVariablesRule.cpp in Sources */,
 				BC686CB30E0C343900DE8A08 /* DOMCSSVariablesDeclaration.mm in Sources */,
 				BC686CB60E0C343900DE8A08 /* DOMCSSVariablesRule.mm in Sources */,
+				F9C675610DEC76A5008D0C2F /* XBLXBLElement.cpp in Sources */,
+				F9C6760A0DEC7903008D0C2F /* XBLElementFactory.cpp in Sources */,
+				F9C6760B0DEC7903008D0C2F /* XBLNames.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

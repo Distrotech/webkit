@@ -1443,6 +1443,25 @@ webcore_sources += \
 endif # END ENABLE_XBL
 
 # ----
+# XBL Support
+# ----
+if ENABLE_XBL
+FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
+
+webcore_cppflags += -DENABLE_XBL=1 \
+	-I\$(top_srcdir)/WebCore/xbl
+
+webcore_built_sources += \ 
+	DerivedSources/XBLElementFactory.cpp \
+	DerivedSources/XBLNames.cpp
+
+webcore_sources += \
+	WebCore/loader/CachedXBLDocument.cpp \
+	WebCore/xbl/XBLXBLElement.cpp
+
+endif # END ENABLE_XBL
+
+# ----
 # XSLT Support
 # ----
 if ENABLE_XSLT
@@ -2151,6 +2170,15 @@ DerivedSources/XLinkNames.cpp : $(WebCore)/dom/make_names.pl $(WebCore)/svg/xlin
 	$(PERL) -I$(WebCore)/bindings/scripts $< --attrs $(WebCore)/svg/xlinkattrs.in --namespace XLink --cppNamespace WebCore --namespaceURI "http://www.w3.org/1999/xlink" --output $(GENSOURCES)
 
 endif # END ENABLE_SVG
+
+if ENABLE_XBL
+
+DerivedSources/XBLNames.cpp: DerivedSources/XBLElementFactory.cpp;
+
+DerivedSources/XBLElementFactory.cpp: $(WebCore)/dom/make_names.pl $(WebCore)/xbl/xbltags.in
+	$(PERL) -I$(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in --output $(GENSOURCES)
+
+endif # END ENABLE_XBL
 
 DerivedSources/CSSPropertyNames.h: $(WEBCORE_CSS_PROPERTY_NAMES) $(WebCore)/css/makeprop.pl
 	if sort $(WEBCORE_CSS_PROPERTY_NAMES) | uniq -d | grep -E '^[^#]'; then echo 'Duplicate value!'; exit 1; fi

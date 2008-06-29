@@ -509,6 +509,7 @@ print F <<END
 #include "config.h"
 #include "$parameters{'namespace'}ElementFactory.h"
 #include "$parameters{'namespace'}Names.h"
+#include "Document.h"
 #include "Page.h"
 #include "Settings.h"
 END

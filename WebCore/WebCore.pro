@@ -1231,9 +1231,31 @@ contains(DEFINES, ENABLE_XSLT=1) {
 contains(DEFINES, ENABLE_XBL=1) {
     FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
 
-    SOURCES += \
-        WebCore/loader/CachedXBLDocument.cpp
+    DEPENDPATH += xbl/
+    INCLUDEPATH += xbl
 
+    SOURCES += \
+        loader/CachedXBLDocument.cpp \
+        xbl/XBLXBLElement.cpp
+
+        XBL_NAMES = $$PWD/xbl/xbltags.in
+
+        xblnames_a.output = $$GENERATED_SOURCES_DIR/XBLNames.cpp
+        xblnames_a.commands = perl -I$$PWD/bindings/scripts  $$PWD/dom/make_names.pl --tags $$PWD/xbl/xbltags.in --preprocessor \"$${QMAKE_MOC} -E\" --output $$GENERATED_SOURCES_DIR
+        xblnames_a.input = XBL_NAMES
+        xblnames_a.dependency_type = TYPE_C
+        xblnames_a.CONFIG = target_predeps
+        xblnames_a.variable_out = GENERATED_SOURCES
+        xblnames_a.clean = ${QMAKE_FILE_OUT} ${QMAKE_VAR_GENERATED_SOURCES_DIR_SLASH}XBLNames.h
+        addExtraCompiler(xblnames_a)
+        xblnames_b.output = $$GENERATED_SOURCES_DIR/XBLElementFactory.cpp
+        xblnames_b.commands = @echo -n ''
+        xblnames_b.input = XBL_NAMES
+        xblnames_b.depends = $$GENERATED_SOURCES_DIR/XBLNames.cpp
+        xblnames_b.CONFIG = target_predeps
+        xblnames_b.variable_out = GENERATED_SOURCES
+        xblnames_b.clean += ${QMAKE_VAR_GENERATED_SOURCES_DIR_SLASH}XBLElementFactory.h ${QMAKE_FILE_OUT}
+        addExtraCompiler(xblnames_b)
 }
 
 contains(DEFINES, ENABLE_SVG=1) {
