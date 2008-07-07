@@ -47,6 +47,11 @@
 #include "TextDocument.h"
 #include "XMLNames.h"
 
+#if ENABLE(XBL)
+#include "XBLNames.h"
+#include "XBLDocument.h"
+#endif
+
 #if ENABLE(SVG)
 #include "SVGNames.h"
 #include "SVGDocument.h"
@@ -228,6 +233,11 @@ PassRefPtr<Document> DOMImplementation::createDocument(const String& namespaceUR
     if (namespaceURI == HTMLNames::xhtmlNamespaceURI)
         doc = Document::createXHTML(0);
     else
+#if ENABLE(XBL)
+    if (namespaceURI == XBLNames::xblNamespaceURI)
+        doc = XBLDocument::create();
+    else
+#endif
         doc = Document::create(0);
 
     // now get the interesting parts of the doctype

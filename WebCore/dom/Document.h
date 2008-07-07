@@ -107,10 +107,6 @@ namespace WebCore {
     class SVGDocumentExtensions;
 #endif
     
-#if ENABLE(DEPRECATED_XBL)
-    class XBLBindingManager;
-#endif
-
 #if ENABLE(XPATH)
     class XPathEvaluator;
     class XPathExpression;
@@ -288,6 +284,10 @@ public:
 #if ENABLE(SVG)
     virtual bool isSVGDocument() const { return false; }
 #endif
+#if ENABLE(XBL)
+    virtual bool isXBLDocument() const { return false; }
+#endif
+
     virtual bool isPluginDocument() const { return false; }
     virtual bool isMediaDocument() const { return false; }
     

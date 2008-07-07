@@ -1,3 +1,19 @@
+2008-07-07  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Bug 19918: [XBL] Add XBLDocument.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/DOMImplementation.cpp:
+        (WebCore::DOMImplementation::createDocument): Added XBLDocument creation.
+        * dom/Document.h:
+        (WebCore::Document::isXBLDocument):
+        * xbl/XBLDocument.h: Added.
+        (WebCore::XBLDocument::create):
+        (WebCore::XBLDocument::isXBLDocument):
+        (WebCore::XBLDocument::XBLDocument):
+
 2008-06-28  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.
