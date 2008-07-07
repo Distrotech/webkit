@@ -2,6 +2,18 @@
 
         Reviewed by Eric.
 
+        Disable renderer creation for XBLElement and
+        XBLDocument.
+
+        * xbl/XBLDocument.h:
+        (WebCore::XBLDocument::XBLDocument):
+        * xbl/XBLElement.h:
+        (WebCore::XBLElement::createRendererIfNeeded):
+
+2008-07-07  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Bug 19918: [XBL] Add XBLDocument.
 
         * WebCore.xcodeproj/project.pbxproj:

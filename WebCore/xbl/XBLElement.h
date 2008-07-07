@@ -42,6 +42,9 @@ namespace WebCore {
 
         virtual bool isXBLElement() { return true; }
 
+        // Disable renderer creation for XBL elements.
+        virtual bool createRendererIfNeeded() { return false; }
+
     };
 
 } // namespace WebCore

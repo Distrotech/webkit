@@ -46,6 +46,8 @@ namespace WebCore {
         XBLDocument()
             : Document(0, false)
         {
+            // XBL document do not have renderers.
+            setShouldCreateRenderers(false);
         }
     };
 
