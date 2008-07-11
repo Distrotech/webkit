@@ -1,3 +1,9 @@
+2008-07-10  Steve Falkenburg  <sfalken@apple.com>
+
+        Build fix.
+
+        * WebKit.vcproj/Interfaces.vcproj:
+
 2008-06-27  Adam Roben  <aroben@apple.com>
 
         Change WebKitGraphics truncation functions to return the length of the
