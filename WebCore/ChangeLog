@@ -1,3 +1,53 @@
+2008-07-23  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Bug 20056: [XBL] XBLCachedDocument cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=20056
+
+        - Changed XBLDocument::create return to XBLDocument
+        to match SVGDocument.
+
+        - Updated CachedXBLDocument methods to behave as the
+        other CachedResourceClients.
+
+        - Fixed some coding style violation and variable names.
+
+        - XBL -> XBLDocument in CachedResource::Type enum.
+
+        * loader/Cache.cpp:
+        (WebCore::createResource):
+        (WebCore::Cache::getStatistics):
+        * loader/Cache.h:
+        * loader/CachedResource.h:
+        (WebCore::CachedResource::): XBL -> XBLDocument
+        as XBL was ambiguous.
+
+        * loader/CachedResourceClient.h:
+        (WebCore::CachedResourceClient::setXBLDocument):
+        * loader/CachedXBLDocument.cpp:
+        (WebCore::CachedXBLDocument::CachedXBLDocument):
+        (WebCore::CachedXBLDocument::~CachedXBLDocument): Removed
+        deref() call as we use a RefPtr now.
+
+        (WebCore::CachedXBLDocument::addClient): Removed ref()
+        call replaced with addClient.
+
+        (WebCore::CachedXBLDocument::setEncoding):
+        (WebCore::CachedXBLDocument::data): Changed signature
+        and method to match other CachedResourceClients.
+
+        (WebCore::CachedXBLDocument::checkNotify):
+        * loader/CachedXBLDocument.h: Use a RefPtr<XBLDocument>
+        instead of a raw XBLDocument.
+
+        (WebCore::CachedXBLDocument::document): Return a PassRefPtr.
+        * loader/loader.cpp:
+        (WebCore::Loader::determinePriority):
+        * xbl/XBLDocument.h:
+        (WebCore::XBLDocument::create): return an XBLDocument instead of a
+        Document to match SVGDocument::create.
+
 2008-07-07  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

@@ -1,6 +1,4 @@
 /*
-    This file is part of the KDE libraries
-
     Copyright (C) 1998 Lars Knoll (knoll@mpi-hd.mpg.de)
     Copyright (C) 2001 Dirk Mueller (mueller@kde.org)
     Copyright (C) 2002 Waldo Bastian (bastian@kde.org)
@@ -27,44 +25,43 @@
 */
 
 #include "config.h"
-
-#if ENABLE(DEPRECATED_XBL)
-
 #include "CachedXBLDocument.h"
 
+#if ENABLE(XBL)
+
 #include "Cache.h"
+#include "CachedResourceClient.h"
 #include "CachedResourceClientWalker.h"
 #include "TextResourceDecoder.h"
+#include "XBLDocument.h"
 #include "loader.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
-CachedXBLDocument::CachedXBLDocument(const String &url)
-: CachedResource(url, XBL), m_document(0)
+CachedXBLDocument::CachedXBLDocument(const String& url)
+    : CachedResource(url, XBLDocument)
+    , m_document(0)
+    , m_decoder(TextResourceDecoder::create("application/xml"))
 {
     // It's XML we want.
     setAccept("text/xml, application/xml, application/xhtml+xml, text/xsl, application/rss+xml, application/atom+xml");
-
-    m_decoder = new TextResourceDecoder("application/xml");
 }
 
 CachedXBLDocument::~CachedXBLDocument()
 {
-    if (m_document)
-        m_document->deref();
 }
 
-void CachedXBLDocument::ref(CachedResourceClient *c)
+void CachedXBLDocument::addClient(CachedResourceClient* client)
 {
-    CachedResource::ref(c);
+    CachedResource::addClient(client);
     if (!m_loading)
-        c->setXBLDocument(m_url, m_document);
+        client->setXBLDocument(m_url, m_document.get());
 }
 
-void CachedXBLDocument::setEncoding(const String& chs)
+void CachedXBLDocument::setEncoding(const String& encoding)
 {
-    m_decoder->setEncoding(chs, TextResourceDecoder::EncodingFromHTTPHeader);
+    m_decoder->setEncoding(encoding, TextResourceDecoder::EncodingFromHTTPHeader);
 }
 
 String CachedXBLDocument::encoding() const
@@ -72,19 +69,20 @@ String CachedXBLDocument::encoding() const
     return m_decoder->encoding().name();
 }
 
-void CachedXBLDocument::data(Vector<char>& data, bool )
+void CachedXBLDocument::data(PassRefPtr<SharedBuffer> data, bool allDataReceived)
 {
     if (!allDataReceived)
         return;
     
     ASSERT(!m_document);
     
-    m_document = new XBL::XBLDocument();
-    m_document->ref();
+    m_data = data;
+    setEncodedSize(m_data.get() ? m_data->size() : 0);
+
+    m_document = XBLDocument::create();
     m_document->open();
     
-    m_document->write(m_decoder->decode(data.data(), data.size()));
-    setSize(data.size());
+    m_document->write(m_decoder->decode(m_data->data(), m_data->size()));
     
     m_document->finishParsing();
     m_document->close();
@@ -97,9 +95,9 @@ void CachedXBLDocument::checkNotify()
     if (m_loading)
         return;
     
-    CachedResourceClientWalker w(m_clients);
-    while (CachedResourceClient *c = w.next())
-        c->setXBLDocument(m_url, m_document);
+    CachedResourceClientWalker walker(m_clients);
+    while (CachedResourceClient* client = walker.next())
+        client->setXBLDocument(m_url, m_document.get());
 }
 
 void CachedXBLDocument::error()
@@ -109,6 +107,6 @@ void CachedXBLDocument::error()
     checkNotify();
 }
 
-}
+} // namespace WebCore
 
-#endif
+#endif // ENABLE(XBL)

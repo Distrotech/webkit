@@ -35,7 +35,7 @@ namespace WebCore {
 
     class XBLDocument : public Document {
     public:
-        static PassRefPtr<Document> create()
+        static PassRefPtr<XBLDocument> create()
         {
             return adoptRef(new XBLDocument());
         }

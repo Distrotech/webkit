@@ -84,7 +84,7 @@ public:
 #if ENABLE(XSLT)
         TypeStatistic xslStyleSheets;
 #endif
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
         TypeStatistic xblDocs;
 #endif
         TypeStatistic fonts;

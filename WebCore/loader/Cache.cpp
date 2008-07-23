@@ -27,6 +27,7 @@
 #include "CachedFont.h"
 #include "CachedImage.h"
 #include "CachedScript.h"
+#include "CachedXBLDocument.h"
 #include "CachedXSLStyleSheet.h"
 #include "DocLoader.h"
 #include "Document.h"
@@ -77,8 +78,8 @@ static CachedResource* createResource(CachedResource::Type type, const KURL& url
     case CachedResource::XSLStyleSheet:
         return new CachedXSLStyleSheet(url.string());
 #endif
-#if ENABLE(DEPRECATED_XBL)
-    case CachedResource::XBLStyleSheet:
+#if ENABLE(XBL)
+    case CachedResource::XBLDocument:
         return new CachedXBLDocument(url.string());
 #endif
     default:
@@ -596,8 +597,8 @@ Cache::Statistics Cache::getStatistics()
                 stats.fonts.liveSize += o->referenced() ? o->size() : 0;
                 stats.fonts.decodedSize += o->decodedSize();
                 break;
-#if ENABLE(DEPRECATED_XBL)
-            case CachedResource::XBL:
+#if ENABLE(XBL)
+            case CachedResource::XBLDocument:
                 stats.xblDocs.count++;
                 stats.xblDocs.size += o->size();
                 stats.xblDocs.liveSize += o->referenced() ? o->size() : 0;

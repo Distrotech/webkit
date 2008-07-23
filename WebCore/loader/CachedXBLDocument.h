@@ -1,6 +1,4 @@
 /*
-    This file is part of the KDE libraries
-
     Copyright (C) 1998 Lars Knoll (knoll@mpi-hd.mpg.de)
     Copyright (C) 2001 Dirk Mueller <mueller@kde.org>
     Copyright (C) 2006 Samuel Weinig (sam.weinig@gmail.com)
@@ -28,29 +26,29 @@
 #ifndef CachedXBLDocument_h
 #define CachedXBLDocument_h
 
+#if ENABLE(XBL)
+
 #include "CachedResource.h"
-#include <wtf/Vector.h>
+#include "XBLDocument.h"
+#include "wtf/RefPtr.h"
 
 namespace WebCore {
-    class CachedResource;
-    class Request;
-    class DocLoader;
-    class TextResourceDecoder;
+
     class CachedResourceClient;
+    class Request;
     
-#if ENABLE(DEPRECATED_XBL)
     class CachedXBLDocument : public CachedResource {
     public:
         CachedXBLDocument(const String& url);
         virtual ~CachedXBLDocument();
         
-        XBL::XBLDocument* document() const { return m_document; }
+        PassRefPtr<WebCore::XBLDocument> document() const { return m_document; }
         
         virtual void addClient(CachedResourceClient*);
         
         virtual void setEncoding(const String&);
         virtual String encoding() const;
-        virtual void data(Vector<char>&, bool allDataReceived);
+        virtual void data(PassRefPtr<SharedBuffer> data, bool allDataReceived);
         virtual void error();
         
         virtual bool schedule() const { return true; }
@@ -58,12 +56,12 @@ namespace WebCore {
         void checkNotify();
         
     protected:
-        XBL::XBLDocument* m_document;
+        RefPtr<WebCore::XBLDocument> m_document;
         RefPtr<TextResourceDecoder> m_decoder;
     };
 
-#endif
+} // namespace WebCore
 
-}
+#endif // ENABLE(XBL)
 
-#endif
+#endif // CachedXBLDocument_h

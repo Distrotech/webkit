@@ -73,8 +73,8 @@ Loader::Priority Loader::determinePriority(const CachedResource* resource) const
 #if REQUEST_MANAGEMENT_ENABLED
     switch (resource->type()) {
         case CachedResource::Script: 
-#if ENABLE(DEPRECATED_XBL)
-        case CachedResource::XBL:
+#if ENABLE(XBL)
+        case CachedResource::XBLDocument:
 #endif
             return High;
         case CachedResource::CSSStyleSheet:
