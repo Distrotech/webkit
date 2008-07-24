@@ -1236,6 +1236,7 @@ contains(DEFINES, ENABLE_XBL=1) {
 
     SOURCES += \
         loader/CachedXBLDocument.cpp \
+        xbl/XBLBindingManager.cpp \
         xbl/XBLXBLElement.cpp
 
         XBL_NAMES = $$PWD/xbl/xbltags.in

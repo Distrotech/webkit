@@ -697,11 +697,6 @@ public:
     void setTransformSourceDocument(Document* doc) { m_transformSourceDocument = doc; }
 #endif
 
-#if ENABLE(DEPRECATED_XBL)
-    // XBL methods
-    XBLBindingManager* bindingManager() const { return m_bindingManager; }
-#endif
-
     void incDOMTreeVersion() { ++m_domtree_version; }
     unsigned domTreeVersion() const { return m_domtree_version; }
 
@@ -886,10 +881,6 @@ private:
     RefPtr<Document> m_transformSourceDocument;
 #endif
 
-#if ENABLE(DEPRECATED_XBL)
-    XBLBindingManager* m_bindingManager; // The access point through which documents and elements communicate with XBL.
-#endif
-    
     typedef HashMap<AtomicStringImpl*, HTMLMapElement*> ImageMapsByName;
     ImageMapsByName m_imageMapsByName;
 

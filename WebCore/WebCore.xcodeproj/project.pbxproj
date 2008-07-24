@@ -1823,6 +1823,9 @@
 		95969B480DD8D21B00F653EE /* JavaScriptProfileNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 95969B440DD8D21B00F653EE /* JavaScriptProfileNode.h */; };
 		95969B490DD8D21B00F653EE /* JavaScriptProfile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95969B450DD8D21B00F653EE /* JavaScriptProfile.cpp */; };
 		95969B4A0DD8D21B00F653EE /* JavaScriptProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 95969B460DD8D21B00F653EE /* JavaScriptProfile.h */; };
+		A10D20A60E386DCF007E500B /* XBLBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = A10D20A30E386DCF007E500B /* XBLBinding.h */; };
+		A10D20A70E386DCF007E500B /* XBLBindingManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10D20A40E386DCF007E500B /* XBLBindingManager.cpp */; };
+		A10D20A80E386DCF007E500B /* XBLBindingManager.h in Headers */ = {isa = PBXBuildFile; fileRef = A10D20A50E386DCF007E500B /* XBLBindingManager.h */; };
 		A1172D6E0E0C539E00175C88 /* XBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = A1172D6D0E0C539E00175C88 /* XBLDocument.h */; };
 		A718760E0B2A120100A16ECE /* DragActions.h in Headers */ = {isa = PBXBuildFile; fileRef = A718760D0B2A120100A16ECE /* DragActions.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A71878900B2D04AC00A16ECE /* DragControllerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = A718788F0B2D04AC00A16ECE /* DragControllerMac.mm */; };
@@ -4039,7 +4042,6 @@
 		EDEC98030AED7E170059137F /* WebCorePrefix.h in Headers */ = {isa = PBXBuildFile; fileRef = EDEC98020AED7E170059137F /* WebCorePrefix.h */; };
 		F916C48D0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F916C48B0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.cpp */; };
 		F916C48E0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F916C48C0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.h */; };
-		F9F0ED7A0DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */; };
 		F9C6755F0DEC76A5008D0C2F /* XBLElement.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6755B0DEC76A5008D0C2F /* XBLElement.h */; };
 		F9C675610DEC76A5008D0C2F /* XBLXBLElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */; };
 		F9C675620DEC76A5008D0C2F /* XBLXBLElement.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6755E0DEC76A5008D0C2F /* XBLXBLElement.h */; };
@@ -4047,6 +4049,7 @@
 		F9C6760B0DEC7903008D0C2F /* XBLNames.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F9C676090DEC7903008D0C2F /* XBLNames.cpp */; };
 		F9C6760D0DEC7D4C008D0C2F /* XBLElementFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */; };
 		F9C6760F0DEC7D7A008D0C2F /* XBLNames.h in Headers */ = {isa = PBXBuildFile; fileRef = F9C6760E0DEC7D7A008D0C2F /* XBLNames.h */; };
+		F9F0ED7A0DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -6292,6 +6295,9 @@
 		95969B440DD8D21B00F653EE /* JavaScriptProfileNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JavaScriptProfileNode.h; sourceTree = "<group>"; };
 		95969B450DD8D21B00F653EE /* JavaScriptProfile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JavaScriptProfile.cpp; sourceTree = "<group>"; };
 		95969B460DD8D21B00F653EE /* JavaScriptProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JavaScriptProfile.h; sourceTree = "<group>"; };
+		A10D20A30E386DCF007E500B /* XBLBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLBinding.h; sourceTree = "<group>"; };
+		A10D20A40E386DCF007E500B /* XBLBindingManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBLBindingManager.cpp; sourceTree = "<group>"; };
+		A10D20A50E386DCF007E500B /* XBLBindingManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLBindingManager.h; sourceTree = "<group>"; };
 		A1172D6D0E0C539E00175C88 /* XBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLDocument.h; sourceTree = "<group>"; };
 		A718760D0B2A120100A16ECE /* DragActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragActions.h; sourceTree = "<group>"; };
 		A718788F0B2D04AC00A16ECE /* DragControllerMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DragControllerMac.mm; sourceTree = "<group>"; };
@@ -8465,16 +8471,16 @@
 		F8216299029F4FB501000131 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = JavaScriptCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F916C48B0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = JSXMLHttpRequestProgressEvent.cpp; sourceTree = "<group>"; };
 		F916C48C0DB510F80076CD83 /* JSXMLHttpRequestProgressEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JSXMLHttpRequestProgressEvent.h; sourceTree = "<group>"; };
-		F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XMLHttpRequestProgressEvent.h; sourceTree = "<group>"; };
-		F9F0ED780DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.idl */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = XMLHttpRequestProgressEvent.idl; sourceTree = "<group>"; };
-		FE49EF970DC51462004266E1 /* DashboardSupportCSSPropertyNames.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DashboardSupportCSSPropertyNames.in; sourceTree = "<group>"; };
 		F9C6755B0DEC76A5008D0C2F /* XBLElement.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLElement.h; sourceTree = "<group>"; };
 		F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XBLXBLElement.cpp; sourceTree = "<group>"; };
 		F9C6755E0DEC76A5008D0C2F /* XBLXBLElement.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLXBLElement.h; sourceTree = "<group>"; };
-		F9C676080DEC7903008D0C2F /* XBLElementFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = XBLElementFactory.cpp; path = XBLElementFactory.cpp; sourceTree = "<group>"; };
-		F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLElementFactory.h; sourceTree = "<group>"; };
+		F9C676080DEC7903008D0C2F /* XBLElementFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XBLElementFactory.cpp; sourceTree = "<group>"; };
 		F9C676090DEC7903008D0C2F /* XBLNames.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = XBLNames.cpp; sourceTree = "<group>"; };
+		F9C6760C0DEC7D4C008D0C2F /* XBLElementFactory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLElementFactory.h; sourceTree = "<group>"; };
 		F9C6760E0DEC7D7A008D0C2F /* XBLNames.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XBLNames.h; sourceTree = "<group>"; };
+		F9F0ED770DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = XMLHttpRequestProgressEvent.h; sourceTree = "<group>"; };
+		F9F0ED780DB50CA200D16DB9 /* XMLHttpRequestProgressEvent.idl */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = XMLHttpRequestProgressEvent.idl; sourceTree = "<group>"; };
+		FE49EF970DC51462004266E1 /* DashboardSupportCSSPropertyNames.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DashboardSupportCSSPropertyNames.in; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -13293,6 +13299,9 @@
 		F9C6755A0DEC76A5008D0C2F /* xbl */ = {
 			isa = PBXGroup;
 			children = (
+				A10D20A30E386DCF007E500B /* XBLBinding.h */,
+				A10D20A40E386DCF007E500B /* XBLBindingManager.cpp */,
+				A10D20A50E386DCF007E500B /* XBLBindingManager.h */,
 				A1172D6D0E0C539E00175C88 /* XBLDocument.h */,
 				F9C6755B0DEC76A5008D0C2F /* XBLElement.h */,
 				F9C6755D0DEC76A5008D0C2F /* XBLXBLElement.cpp */,
@@ -15308,6 +15317,8 @@
 				F9C6760D0DEC7D4C008D0C2F /* XBLElementFactory.h in Headers */,
 				F9C6760F0DEC7D7A008D0C2F /* XBLNames.h in Headers */,
 				A1172D6E0E0C539E00175C88 /* XBLDocument.h in Headers */,
+				A10D20A60E386DCF007E500B /* XBLBinding.h in Headers */,
+				A10D20A80E386DCF007E500B /* XBLBindingManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -17083,6 +17094,7 @@
 				F9C675610DEC76A5008D0C2F /* XBLXBLElement.cpp in Sources */,
 				F9C6760A0DEC7903008D0C2F /* XBLElementFactory.cpp in Sources */,
 				F9C6760B0DEC7903008D0C2F /* XBLNames.cpp in Sources */,
+				A10D20A70E386DCF007E500B /* XBLBindingManager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

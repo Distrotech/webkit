@@ -123,6 +123,14 @@ module core {
         readonly attribute DOMString innerText;
 #endif
 
+#if ENABLE_XBL
+        // ElementXBL interface
+        void addBinding(in DOMString bindingURI)
+            raises(DOMException);
+
+        void removeBinding(in DOMString bindingURI);
+        boolean hasBinding(in DOMString bindingURI);
+#endif
     };
 
 }

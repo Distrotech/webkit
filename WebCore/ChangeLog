@@ -1,3 +1,45 @@
+2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Bug 19917: [XBL] We need the ability to manage bindings
+
+        - Move XBLBindingManager from per-document to global.
+
+        - Implement part of ElementXBL interface (to add bindings,
+        remove bindings and check if an element has a binding).
+
+        * GNUmakefile.am: Add compilation information.
+        * WebCore.pro: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * dom/Document.cpp:
+        (WebCore::Document::Document): Remove per-document
+        XBLBindingManager instance.
+        (WebCore::Document::~Document): Ditto.
+        * dom/Document.h: Ditto.
+        * dom/Element.cpp:
+        (WebCore::Element::~Element): Remove associated bindings
+        to avoid leaks.
+        (WebCore::Element::addBinding): Part of ElementXBL interface
+        to manage bindings.
+        (WebCore::Element::removeBinding): Ditto.
+        (WebCore::Element::hasBinding): Ditto.
+        * dom/Element.h: Add ElementXBL interface.
+        * dom/Element.idl: Ditto.
+        * xbl/XBLBinding.h: Added.
+        (WebCore::XBLBinding::XBLBinding):
+        (WebCore::XBLBinding::uri):
+        * xbl/XBLBindingManager.cpp: Added.
+        (WebCore::XBLBindingManager::sharedInstance):
+        (WebCore::XBLBindingManager::XBLBindingManager):
+        (WebCore::XBLBindingManager::addBinding):
+        (WebCore::XBLBindingManager::removeBinding):
+        (WebCore::XBLBindingManager::hasBinding):
+        (WebCore::XBLBindingManager::removeAllBindings): Used in Element
+        destructor to remove all the bindings associated with the Element.
+
+        * xbl/XBLBindingManager.h: Added.
+
 2008-07-23  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

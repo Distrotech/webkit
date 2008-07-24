@@ -1435,19 +1435,6 @@ endif # END ENABLE_XPATH
 if ENABLE_XBL
 FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
 
-webcore_cppflags += -DENABLE_XBL=1
-
-webcore_sources += \
-    WebCore/loader/CachedXBLDocument.cpp
-
-endif # END ENABLE_XBL
-
-# ----
-# XBL Support
-# ----
-if ENABLE_XBL
-FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
-
 webcore_cppflags += -DENABLE_XBL=1 \
 	-I\$(top_srcdir)/WebCore/xbl
 
@@ -1457,6 +1444,7 @@ webcore_built_sources += \
 
 webcore_sources += \
 	WebCore/loader/CachedXBLDocument.cpp \
+	WebCore/xbl/XBLBindingManager.cpp \
 	WebCore/xbl/XBLXBLElement.cpp
 
 endif # END ENABLE_XBL

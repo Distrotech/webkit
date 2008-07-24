@@ -44,6 +44,7 @@
 #include "RenderBlock.h"
 #include "SelectionController.h"
 #include "TextIterator.h"
+#include "XBLBindingManager.h"
 #include "XMLNames.h"
 
 namespace WebCore {
@@ -117,6 +118,13 @@ Element::~Element()
         delete it->second;
         dataMap.remove(it);
     }
+
+#if ENABLE(XBL)
+    // Clean bindings
+    // FIXME: we need a flag to remove unnecessary calls.
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->removeAllBindings(this);
+#endif
 }
 
 inline ElementRareData* Element::rareData()
@@ -1286,5 +1294,31 @@ unsigned Element::childElementCount() const
     }
     return count;
 }
+
+#if ENABLE(XBL)
+void Element::addBinding(const String& uri, ExceptionCode& ec)
+{
+    if (!isElementNode()) {
+        ec = HIERARCHY_REQUEST_ERR;
+        return;
+    }
+
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->addBinding(this, uri);
+}
+
+void Element::removeBinding(const String& uri)
+{
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->removeBinding(this, uri);
+}
+
+bool Element::hasBinding(const String& uri)
+{
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    return manager->hasBinding(this, uri);
+}
+
+#endif
 
 }

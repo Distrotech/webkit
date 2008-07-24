@@ -272,9 +272,6 @@ Document::Document(Frame* frame, bool isXHTML)
 #endif
     , m_xmlVersion("1.0")
     , m_xmlStandalone(false)
-#if ENABLE(DEPRECATED_XBL)
-    , m_bindingManager(new XBLBindingManager(this))
-#endif
     , m_savedRenderer(0)
     , m_secureForms(0)
     , m_designMode(inherit)
@@ -426,10 +423,6 @@ Document::~Document()
 
 #if ENABLE(XSLT)
     xmlFreeDoc((xmlDocPtr)m_transformSource);
-#endif
-
-#if ENABLE(DEPRECATED_XBL)
-    delete m_bindingManager;
 #endif
 
     deleteAllValues(m_markers);

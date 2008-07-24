@@ -197,6 +197,12 @@ public:
     Element* nextElementSibling() const;
     unsigned childElementCount() const;
 
+#if ENABLE(XBL)
+    void addBinding(const String& uri, ExceptionCode&);
+    void removeBinding(const String& uri);
+    bool hasBinding(const String& uri);
+#endif
+
 private:
     ElementRareData* rareData();
     const ElementRareData* rareData() const;
