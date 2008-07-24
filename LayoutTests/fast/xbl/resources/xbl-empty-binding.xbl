@@ -1,0 +1,4 @@
+<!-- This file defines an empty binding for testing purpose -->
+<xbl xmlns="http://www.w3.org/ns/xbl">
+    <binding element="*" id="binding"/>
+</xbl>

@@ -1,3 +1,25 @@
+2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Ap.
+
+        - Add test for bug 19917: [XBL] We need the ability to manage bindings
+
+        - Updated some tests' results.
+
+        Note: the 2 updated test in fast/dom will fail when XBL is disabled
+              because they depend on Element's number of properties. It is
+              fine for now but it will need to be properly fixed.
+
+        * fast/dom/Window/window-properties-expected.txt: Updated as we
+        have added the 3 new methods to Element.
+        * fast/dom/domListEnumeration-expected.txt: Ditto.
+        * fast/dom/resources/domListEnumeration.js: Ditto.
+        * fast/xbl: Added.
+        * fast/xbl/resources: Added.
+        * fast/xbl/resources/xbl-empty-binding.xbl: Added.
+        * fast/xbl/xbl-ElementXBL-Interface-expected.txt: Added.
+        * fast/xbl/xbl-ElementXBL-Interface.html: Added.
+
 2008-06-26  David Smith  <catfish.man@gmail.com>
 
         Reviewed by Sam Weinig.

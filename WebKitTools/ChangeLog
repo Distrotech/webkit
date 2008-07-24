@@ -1,3 +1,19 @@
+2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Ap.
+
+        Add XBL detection to run-webkit-test.
+
+        * Scripts/build-drawtest:
+        * Scripts/run-drawtest:
+        * Scripts/run-webkit-tests: Detect if WebKit was
+        compiled with XBL support and enable or disable XBL
+        test.
+
+        * Scripts/webkitdirs.pm: Renamed checkWebKitSVGSupport
+        to checkWebKitSupportFor taking a string parameter for the
+        standard to test to share the code between SVG and XBL.
+
 2008-06-27  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

@@ -411,6 +411,25 @@ sub hasSVGSupport
     return $hasSVGSupport;
 }
 
+sub hasXBLSupport
+{
+    my $path = shift;
+
+    if (isGtk() and $path =~ /WebCore/) {
+        $path .= "/../.libs/webkit-1.0.so";
+    }
+
+    my $hasXBLSupport = 0;
+    if (-e $path) {
+        open NM, "-|", "nm", $path or die;
+        while (<NM>) {
+            $hasXBLSupport = 1 if /XBLElement/;
+        }
+        close NM;
+    }
+    return $hasXBLSupport;
+}
+
 sub removeLibraryDependingOnSVG
 {
     my $frameworkName = shift;
@@ -423,16 +442,24 @@ sub removeLibraryDependingOnSVG
     system "rm -f $path" if ($shouldHaveSVG xor $hasSVG);
 }
 
-sub checkWebCoreSVGSupport
+sub checkWebCoreSupportFor
 {
-    my $required = shift;
+    my ($feature, $required) = @_;
     my $framework = "WebCore";
     my $path = builtDylibPathForName($framework);
-    my $hasSVG = hasSVGSupport($path);
-    if ($required && !$hasSVG) {
-        die "$framework at \"$path\" does not include SVG Support, please run build-webkit --svg\n";
+    my $hasSupport;
+    if ($feature eq "SVG") {
+        $hasSupport = hasSVGSupport($path);
+    } elsif ($feature eq "XBL") {
+        $hasSupport = hasXBLSupport($path);
+    } else {
+        die "Do not know how to check \"$feature\" support";
     }
-    return $hasSVG;
+
+    if ($required && !$hasSupport) {
+        die "$framework at \"$path\" does not include $feature support, please run build-webkit --".lc($feature)."\n";
+    }
+    return $hasSupport;
 }
 
 sub isQt()

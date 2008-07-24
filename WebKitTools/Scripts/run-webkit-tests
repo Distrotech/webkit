@@ -331,7 +331,7 @@ my %ignoredFiles = ();
 my %ignoredDirectories = map { $_ => 1 } qw(platform);
 my %ignoredLocalDirectories = map { $_ => 1 } qw(.svn _svn resources);
 my %supportedFileExtensions = map { $_ => 1 } qw(html shtml xml xhtml pl php);
-if (checkWebCoreSVGSupport(0)) { 
+if (checkWebCoreSupportFor("SVG", 0)) { 
     $supportedFileExtensions{'svg'} = 1;
 } elsif (isCygwin()) {
     # FIXME: We should fix webkitdirs.pm:hasSVGSupport() to do the correct
@@ -339,6 +339,11 @@ if (checkWebCoreSVGSupport(0)) {
     $supportedFileExtensions{'svg'} = 1;
 } else {
     $ignoredLocalDirectories{'svg'} = 1;
+}
+if (checkWebCoreSupportFor("XBL", 0)) {
+    $supportedFileExtensions{'xbl'} = 1;
+} else {
+    $ignoredLocalDirectories{'xbl'} = 1;
 }
 if (!$testHTTP) {
     $ignoredDirectories{'http'} = 1;
