@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Apple Inc.  All rights reserved.
+ * Copyright (C) 2008 Julien Chaffraix <jchaffraix@webkit.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,32 +23,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef XBLElement_h
-#define XBLElement_h
+#ifndef XBLBindingElement_h
+#define XBLBindingElement_h
 
 #if ENABLE(XBL)
 
 #include "config.h"
-#include "StyledElement.h"
+#include "XBLElement.h"
 
 namespace WebCore {
 
-    class XBLElement : public StyledElement {
+    class XBLBindingElement : public XBLElement {
     public:
-        XBLElement(const WebCore::QualifiedName& qName, WebCore::Document* doc)
-            : StyledElement(qName, doc)
+        XBLBindingElement(const WebCore::QualifiedName& qName, WebCore::Document* doc)
+            : XBLElement(qName, doc)
         {
         }
-
-        virtual bool isXBLElement() { return true; }
-
-        // Disable renderer creation for XBL elements.
-        virtual bool createRendererIfNeeded() { return false; }
-
     };
 
 } // namespace WebCore
 
 #endif // ENABLE(XBL)
 
-#endif // XBLElement_h
+#endif // XBLBindingElement_h

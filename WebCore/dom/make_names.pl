@@ -86,7 +86,8 @@ if ($parameters{'generateWrapperFactory'}) {
 sub initializeTagPropertyHash
 {
     return ('upperCase' => upperCaseName($_[0]),
-            'applyAudioHack' => 0);
+            'applyAudioHack' => 0,
+            'generateNameOnly' => 0);
 }
 
 sub initializeAttrPropertyHash
@@ -236,6 +237,8 @@ sub printConstructors
 
     print F "#if $parameters{'guardFactoryWith'}\n" if $parameters{'guardFactoryWith'};
     for my $name (sort keys %names) {
+        next if ($names{$name}{'generateNameOnly'});
+
         my $ucName = $names{$name}{"upperCase"};
 
         print F "$parameters{'namespace'}Element* ${name}Constructor(Document* doc, bool createdByParser)\n";
@@ -249,7 +252,10 @@ sub printConstructors
 sub printFunctionInits
 {
     my ($F, $namesRef) = @_;
-    for my $name (sort keys %$namesRef) {
+    my %names = %$namesRef;
+    for my $name (sort keys %names) {
+        next if ($names{$name}{'generateNameOnly'});
+        
         print F "    gFunctionMap->set(${name}Tag.localName().impl(), ${name}Constructor);\n";
     }
 }
@@ -459,7 +465,7 @@ sub printElementIncludes
     my ($F, $namesRef, $shouldSkipCustomMappings) = @_;
     my %names = %$namesRef;
     for my $name (sort keys %names) {
-        next if ($shouldSkipCustomMappings && hasCustomMapping($name));
+        next if ($names{$name}{'generateNameOnly'} || ($shouldSkipCustomMappings && hasCustomMapping($name)));
 
         my $ucName = $names{$name}{"upperCase"};
         print F "#include \"$parameters{'namespace'}${ucName}Element.h\"\n";
@@ -721,7 +727,7 @@ sub printWrapperFunctions
     my %names = %$namesRef;
     for my $name (sort keys %names) {
         # Custom mapping do not need a JS wrapper
-        next if (hasCustomMapping($name));
+        next if ($names{$name}{'generateNameOnly'} || hasCustomMapping($name));
 
         my $ucName = $names{$name}{"upperCase"};
         # Hack for the media tags
@@ -792,7 +798,7 @@ END
 ;
 
     for my $tag (sort keys %tags) {
-        next if (hasCustomMapping($tag));
+        next if ($tags{$tag}{'generateNameOnly'} || hasCustomMapping($tag));
 
         my $ucTag = $tags{$tag}{"upperCase"};
         print F "       map.set(${tag}Tag.localName().impl(), create${ucTag}Wrapper);\n";

@@ -1,3 +1,6 @@
 <tags namespace="XBL" cppNamespace="WebCore" namespaceURI="http://www.w3.org/ns/xbl" generateFactory="1" guardFactoryWith="ENABLE(XBL)">
+<binding/>
+<div generateNameOnly="1"/>
+<template/>
 <xbl upperCase="XBL"/>
 </tags>

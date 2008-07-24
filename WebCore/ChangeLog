@@ -2,6 +2,38 @@
 
         Reviewed by Eric.
 
+        Bug 20029: [XBL] Add more tags
+
+        Add <binding> and <template> classes.
+        Add <div> tag.
+
+        The two classes are stubs for the moment.
+
+        These tags are required to have a simple XBL example
+        running.
+        
+        XBLElement now inherits from StyledElement as <div>
+        is a placeholder for CSS style information.
+
+        * WebCore.xcodeproj/project.pbxproj:
+        * dom/make_names.pl: Add 'generateNameOnly' attribute
+        used for <div> as we do not want to add a specialized
+        class.
+
+        * xbl/XBLBindingElement.h: Added.
+        (WebCore::XBLBindingElement::XBLBindingElement):
+        * xbl/XBLElement.h:
+        (WebCore::XBLElement::XBLElement): Now XBLElement
+        inherits from styledElement.
+
+        * xbl/XBLTemplateElement.h: Added.
+        (WebCore::XBLTemplateElement::XBLTemplateElement):
+        * xbl/xbltags.in: Add tags.
+
+2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Bug 19917: [XBL] We need the ability to manage bindings
 
         - Move XBLBindingManager from per-document to global.
