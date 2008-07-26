@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:xhtml='http://www.w3.org/1999/xhtml'>
+<body>
+    <script>
+        if (window.layoutTestController)
+            layoutTestController.dumpAsText();
+    </script>
+    <p> Test case for bug <a href="https://bugs.webkit.org/show_bug.cgi?id=20172">20172</a>: [XBL] XBL elements should not be rendered</p>
+    <p> You should see a green PASSED.</p>
+    <p style="color: green"> PASSED </p>
+    <!-- This binding has not element so it should not apply nor appear -->
+    <xbl xmlns="http://www.w3.org/ns/xbl">
+      <binding>
+        <template>
+            <div style="color: red"> FAILED </div>
+        </template>
+      </binding>
+    </xbl>
+</body>
+</html>

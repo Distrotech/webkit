@@ -1,3 +1,21 @@
+2008-07-26  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by David Hyatt.
+
+        Bug 20172: [XBL] XBL elements should not be rendered
+
+        - Roll out renderer disabling bits as they were bogus.
+
+        - Add XBL CSS default rules to html4.css.
+
+        Test: fast/xbl/xbl-default-rules.xhtml
+
+        * css/html4.css:
+        * xbl/XBLDocument.h:
+        (WebCore::XBLDocument::XBLDocument):
+        * xbl/XBLElement.h:
+        (WebCore::XBLElement::isXBLElement):
+
 2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

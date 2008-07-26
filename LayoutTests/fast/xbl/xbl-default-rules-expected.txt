@@ -1,0 +1,5 @@
+Test case for bug 20172: [XBL] XBL elements should not be rendered
+
+You should see a green PASSED.
+
+PASSED

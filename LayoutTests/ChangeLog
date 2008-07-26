@@ -1,3 +1,12 @@
+2008-07-26  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by David Hyatt.
+
+        Test case for bug 20172: [XBL] XBL elements should not be rendered
+
+        * fast/xbl/xbl-default-rules-expected.txt: Added.
+        * fast/xbl/xbl-default-rules.xhtml: Added.
+
 2008-07-24  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Ap.

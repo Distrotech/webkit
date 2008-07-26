@@ -22,6 +22,7 @@
  */
 
 @namespace "http://www.w3.org/1999/xhtml";
+@namespace xbl "http://www.w3.org/ns/xbl";
 
 html {
     display: block
@@ -658,6 +659,16 @@ audio::-webkit-media-controls-seek-forward-button, video::-webkit-media-controls
 
 audio::-webkit-media-controls-fullscreen-button, video::-webkit-media-controls-fullscreen-button {
     display: none;
+}
+
+/* xbl */
+
+xbl|* {
+    display: none
+}
+
+xbl|div {
+    display: block
 }
 
 /* noscript is handled internally, as it depends on settings */
