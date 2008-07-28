@@ -535,7 +535,7 @@ XMLNames.cpp : dom/make_names.pl xml/xmlattrs.in
 ifeq ($(findstring ENABLE_XBL,$(FEATURE_DEFINES)), ENABLE_XBL)
 
 XBLNames.cpp XBLElementFactory.cpp : dom/make_names.pl xbl/xbltags.in
-	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in  --output .
+	perl -I $(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in --attrs $(WebCore)/xbl/xblattrs.in  --output .
 
 else
 

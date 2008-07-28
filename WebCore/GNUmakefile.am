@@ -1438,7 +1438,7 @@ FEATURE_DEFINES_JAVASCRIPT += ENABLE_XBL=1
 webcore_cppflags += -DENABLE_XBL=1 \
 	-I\$(top_srcdir)/WebCore/xbl
 
-webcore_built_sources += \ 
+webcore_built_sources += \
 	DerivedSources/XBLElementFactory.cpp \
 	DerivedSources/XBLNames.cpp
 
@@ -2164,7 +2164,7 @@ if ENABLE_XBL
 DerivedSources/XBLNames.cpp: DerivedSources/XBLElementFactory.cpp;
 
 DerivedSources/XBLElementFactory.cpp: $(WebCore)/dom/make_names.pl $(WebCore)/xbl/xbltags.in
-	$(PERL) -I$(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in --output $(GENSOURCES)
+	$(PERL) -I$(WebCore)/bindings/scripts $< --tags $(WebCore)/xbl/xbltags.in --attrs $(WebCore)/xbl/xblattrs.in --output $(GENSOURCES)
 
 endif # END ENABLE_XBL
 

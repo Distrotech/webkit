@@ -1242,7 +1242,7 @@ contains(DEFINES, ENABLE_XBL=1) {
         XBL_NAMES = $$PWD/xbl/xbltags.in
 
         xblnames_a.output = $$GENERATED_SOURCES_DIR/XBLNames.cpp
-        xblnames_a.commands = perl -I$$PWD/bindings/scripts  $$PWD/dom/make_names.pl --tags $$PWD/xbl/xbltags.in --preprocessor \"$${QMAKE_MOC} -E\" --output $$GENERATED_SOURCES_DIR
+        xblnames_a.commands = perl -I$$PWD/bindings/scripts  $$PWD/dom/make_names.pl --tags $$PWD/xbl/xbltags.in --attrs $$PWD/xbl/xblattrs.in --preprocessor \"$${QMAKE_MOC} -E\" --output $$GENERATED_SOURCES_DIR
         xblnames_a.input = XBL_NAMES
         xblnames_a.dependency_type = TYPE_C
         xblnames_a.CONFIG = target_predeps

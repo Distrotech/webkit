@@ -1,0 +1,3 @@
+<attrs namespace="XBL" cppNamespace="WebCore" namespaceURI="http://www.w3.org/ns/xbl" nullNamespace="1" generateFactory="1" guardFactoryWith="ENABLE(XBL)">
+<element/>
+</attrs>
