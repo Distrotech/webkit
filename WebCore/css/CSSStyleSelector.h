@@ -215,7 +215,10 @@ public:
 #if ENABLE(SVG)
         void applySVGProperty(int id, CSSValue*);
 #endif
-
+#if ENABLE(XBL)
+        // This will remove all the bindings and update the binding manager.
+        void removeBindings();
+#endif
         StyleImage* styleImage(CSSValue* value);
 
         // We collect the set of decls that match in |m_matchedDecls|.  We then walk the

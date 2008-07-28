@@ -1315,6 +1315,12 @@ void Element::removeBinding(const String& uri)
 
 bool Element::hasBinding(const String& uri)
 {
+    // CSS bindings updates are done when updating the style information
+    // so update it now to have accurate bindings.
+    // FIXME: this may lead to unnecessary style computation
+    // and should eventually be removed.
+    document()->updateRendering();
+
     XBLBindingManager* manager = XBLBindingManager::sharedInstance();
     return manager->hasBinding(this, uri);
 }

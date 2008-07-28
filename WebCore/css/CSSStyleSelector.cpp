@@ -83,6 +83,10 @@
 #include "SVGNames.h"
 #endif
 
+#if ENABLE(XBL)
+#include "XBLBindingManager.h"
+#endif
+
 using namespace std;
 
 namespace WebCore {
@@ -4009,21 +4013,23 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
         m_style->setAppearance(*primitiveValue);
         return;
     }
-    case CSSPropertyWebkitBinding: {
-#if ENABLE(DEPRECATED_XBL)
+    case CSSPropertyBinding: {
+#if ENABLE(XBL)
         if (isInitial || (primitiveValue && primitiveValue->getIdent() == CSSValueNone)) {
-            m_style->deleteBindingURIs();
+            removeBindings();
             return;
         }
         else if (isInherit) {
             if (m_parentStyle->bindingURIs())
                 m_style->inheritBindingURIs(m_parentStyle->bindingURIs());
             else
-                m_style->deleteBindingURIs();
+                removeBindings();
             return;
         }
 
-        if (!value->isValueList()) return;
+        if (!value->isValueList())
+            return;
+
         CSSValueList* list = static_cast<CSSValueList*>(value);
         bool firstBinding = true;
         for (unsigned int i = 0; i < list->length(); i++) {
@@ -4032,9 +4038,11 @@ void CSSStyleSelector::applyProperty(int id, CSSValue *value)
             if (val->primitiveType() == CSSPrimitiveValue::CSS_URI) {
                 if (firstBinding) {
                     firstBinding = false;
-                    m_style->deleteBindingURIs();
+                    removeBindings();
                 }
-                m_style->addBindingURI(val->getStringValue());
+                m_style->addBindingURI(val->getStringValue().impl());
+                XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+                manager->addBinding(m_element, val->getStringValue());
             }
         }
 #endif
@@ -5411,4 +5419,18 @@ void CSSStyleSelector::SelectorChecker::visitedStateChanged(unsigned visitedHash
     }
 }
 
+#if ENABLE(XBL)
+void CSSStyleSelector::removeBindings()
+{
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    BindingURI* bindingURI = m_style->bindingURIs();
+
+    while (bindingURI) {
+        manager->removeBinding(m_element, bindingURI->uri());
+        bindingURI = bindingURI->next();
+    }
+    m_style->deleteBindingURIs();
+}
+
+#endif
 } // namespace WebCore

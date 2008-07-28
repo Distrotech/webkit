@@ -1083,8 +1083,8 @@ bool CSSParser::parseValue(int propId, bool important)
             valid_primitive = true;
         break;
 
-    case CSSPropertyWebkitBinding:
-#if ENABLE(DEPRECATED_XBL)
+    case CSSPropertyBinding:
+#if ENABLE(XBL)
         if (id == CSSValueNone)
             valid_primitive = true;
         else {
@@ -1103,8 +1103,8 @@ bool CSSParser::parseValue(int propId, bool important)
                 // FIXME: We can't use release() here since we might hit this path twice
                 // but that logic seems wrong to me to begin with, we convert all non-uri values
                 // into the last seen URI value!?
-                // -webkit-binding: url(foo.xml), 1, 2; (if that were valid) is treated as:
-                // -webkit-binding: url(foo.xml), url(foo.xml), url(foo.xml); !?
+                // binding: url(foo.xml), 1, 2; (if that were valid) is treated as:
+                // binding: url(foo.xml), url(foo.xml), url(foo.xml); !?
                 values->append(parsedValue.get());
                 m_valueList->next();
             }

@@ -1069,7 +1069,7 @@ struct ShadowData {
     ShadowData* next;
 };
 
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
 struct BindingURI {
     BindingURI(StringImpl*);
     ~BindingURI();
@@ -1353,7 +1353,7 @@ public:
     PassRefPtr<StyleRareNonInheritedData> copy() const { return adoptRef(new StyleRareNonInheritedData(*this)); }
     ~StyleRareNonInheritedData();
     
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
     bool bindingsEquivalent(const StyleRareNonInheritedData&) const;
 #endif
 
@@ -1394,7 +1394,7 @@ public:
     FillLayer m_mask;
     NinePieceImage m_maskBoxImage;
 
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
     BindingURI* bindingURI; // The XBL binding URI list.
 #endif
     
@@ -2021,7 +2021,7 @@ public:
     EPageBreak pageBreakAfter() const { return static_cast<EPageBreak>(noninherited_flags._page_break_after); }
     
     // CSS3 Getter Methods
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
     BindingURI* bindingURIs() const { return rareNonInheritedData->bindingURI; }
 #endif
     int outlineOffset() const { 
@@ -2286,7 +2286,7 @@ public:
     void setPageBreakAfter(EPageBreak b) { noninherited_flags._page_break_after = b; }
     
     // CSS3 Setters
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
     void deleteBindingURIs() { 
         delete rareNonInheritedData->bindingURI; 
         SET_VAR(rareNonInheritedData, bindingURI, (BindingURI*) 0);

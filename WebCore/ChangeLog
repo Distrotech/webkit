@@ -2,6 +2,48 @@
 
         Reviewed by Eric.
 
+        Bug 20196: [XBL] Re-enable CSS binding attachment
+
+        - Re-enable legacy CSS attachment code.
+
+        - Add XBLBindingManager bits so that it also creates / removes
+        the required bindings.
+
+        - Renamed '-webkit-binding' property to 'binding' (the name
+        in the specification)
+
+        Test: fast/xbl/xbl-css-attachment.html
+
+        * css/CSSComputedStyleDeclaration.cpp:
+        (WebCore::CSSComputedStyleDeclaration::getPropertyCSSValue):
+        * css/CSSParser.cpp:
+        (WebCore::CSSParser::parseValue):
+        * css/CSSPropertyNames.in:
+        * css/CSSStyleSelector.cpp:
+        (WebCore::CSSStyleSelector::applyProperty):
+        (WebCore::CSSStyleSelector::removeBindings): Added remove bindings
+        and the style information associated.
+
+        * css/CSSStyleSelector.h:
+        * dom/Element.cpp:
+        (WebCore::Element::hasBinding): Update the style as it will cause
+        binding updates.
+
+        * rendering/style/RenderStyle.cpp:
+        (WebCore::StyleRareNonInheritedData::StyleRareNonInheritedData):
+        (WebCore::StyleRareNonInheritedData::~StyleRareNonInheritedData):
+        (WebCore::StyleRareNonInheritedData::operator==):
+        (WebCore::BindingURI::BindingURI):
+        * rendering/style/RenderStyle.h:
+        * xbl/XBLBindingManager.cpp:
+        (WebCore::XBLBindingManager::addBinding): Limit to one binding
+        per element with the same uri as the CSS attachment code can be hit
+        twice.
+
+2008-07-28  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Bug 20171: [XBL] Add <binding> 'element' attribute
 
         * DerivedSources.make: Add attrs file.

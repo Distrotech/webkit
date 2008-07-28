@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:xhtml='http://www.w3.org/1999/xhtml'>
+  <head>
+    <style>
+        .p { 
+            binding: url("http://example.com/");
+        };
+    </style>
+    <script>
+    function test()
+    {
+        if (window.layoutTestController)
+            layoutTestController.dumpAsText();
+
+        var par = document.getElementById('test');
+        try {
+            if (!par.hasBinding('http://example.com/')) {
+                par.innerHTML = "FAILED";
+                return;
+            }
+
+            par.style.binding = 'url("http://example2.com/")';
+            if (!par.hasBinding('http://example.com/') && par.hasBinding('http://example2.com/')) {
+                par.innerHTML = "PASSED";
+            } else {
+                par.innerHTML = "FAILED";
+            }
+        } catch (e) {
+            par.innerHTML = "FAILED (exception thrown)";
+        }
+    }
+    </script>
+  </head>
+<body onload="test()">
+    <p> Test case for bug <a href="https://bugs.webkit.org/show_bug.cgi?id=20196">20196</a>: [XBL] Re-enable CSS binding attachment </p>
+    <p> You should see "PASSED" once. </p>
+    <p id="test" class="p"> </p>
+</body>
+</html>

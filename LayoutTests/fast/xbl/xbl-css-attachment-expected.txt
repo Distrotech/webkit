@@ -1,0 +1,5 @@
+Test case for bug 20196: [XBL] Re-enable CSS binding attachment
+
+You should see "PASSED" once.
+
+PASSED

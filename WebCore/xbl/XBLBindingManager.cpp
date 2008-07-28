@@ -50,7 +50,11 @@ void XBLBindingManager::addBinding(Element* boundElement, const String& uri)
         m_bindings.add(boundElement, elementBindings);
     }
 
-    // FIXME: we can add the same binding several times.
+    // CSS attachment might call us twice, so allow only one binding with the same URI per bound element.
+    for (Vector<XBLBinding>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
+        if ((*it).uri() == uri)
+            return;
+
     elementBindings->append(XBLBinding(uri));
 }
 
