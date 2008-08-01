@@ -184,9 +184,9 @@ typedef struct {
     AGLContext oldContext;
 } PortState_GL;
 
-@class NSInputContext;
-@interface NSResponder (IMSecretsIKnowAbout)
-- (NSInputContext *)inputContext;
+@class NSTextInputContext;
+@interface NSResponder (AppKitDetails)
+- (NSTextInputContext *)inputContext;
 @end
 
 @interface WebPluginRequest : NSObject
@@ -1935,13 +1935,13 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
 #pragma mark NSTextInput implementation
 
-- (NSInputContext *)inputContext
+- (NSTextInputContext *)inputContext
 {
 #ifndef NP_NO_CARBON
     if (![self isStarted] || eventModel == NPEventModelCarbon)
         return nil;
 #endif
-        
+
     return [super inputContext];
 }
 
