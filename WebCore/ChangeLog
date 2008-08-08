@@ -1,3 +1,21 @@
+2008-08-08  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Re-enable last bits of XBLDocument loading
+        legacy code.
+
+        * loader/DocLoader.cpp:
+        (WebCore::DocLoader::requestXBLDocument):
+        (WebCore::DocLoader::requestResource):
+        * loader/DocLoader.h:
+        * loader/FrameLoader.cpp:
+        (WebCore::FrameLoader::addLowBandwidthDisplayRequest):
+        * xbl/XBLDocument.h:
+        (WebCore::XBLDocument::create): Removed adoptRef to
+        match other Document 'create' method as it would lead
+        to refcount churn. Also added missing 'const' in isXBLDocument.
+
 2008-07-28  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

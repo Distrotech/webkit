@@ -32,6 +32,7 @@
 #include "CachedImage.h"
 #include "CachedScript.h"
 #include "CachedXSLStyleSheet.h"
+#include "CachedXBLDocument.h"
 #include "Console.h"
 #include "CString.h"
 #include "Document.h"
@@ -136,10 +137,10 @@ CachedXSLStyleSheet* DocLoader::requestXSLStyleSheet(const String& url)
 }
 #endif
 
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
 CachedXBLDocument* DocLoader::requestXBLDocument(const String& url)
 {
-    return static_cast<CachedXSLStyleSheet*>(requestResource(CachedResource::XBL, url, String()));
+    return static_cast<CachedXBLDocument*>(requestResource(CachedResource::XBLDocument, url, String()));
 }
 #endif
 
@@ -161,10 +162,10 @@ CachedResource* DocLoader::requestResource(CachedResource::Type type, const Stri
 #if ENABLE(XSLT)
     case CachedResource::XSLStyleSheet:
 #endif
-#if ENABLE(DEPRECATED_XBL)
-    case CachedResource::XBL:
+#if ENABLE(XBL)
+    case CachedResource::XBLDocument:
 #endif
-#if ENABLE(XSLT) || ENABLE(DEPRECATED_XBL)
+#if ENABLE(XSLT) || ENABLE(XBL)
         if (!m_doc->securityOrigin()->canRequest(fullURL)) {
             printAccessDeniedMessage(fullURL);
             return 0;

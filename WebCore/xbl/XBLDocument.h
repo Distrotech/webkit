@@ -35,12 +35,15 @@ namespace WebCore {
 
     class XBLDocument : public Document {
     public:
+        // Document manually overrides RefCounted to start with 0 instead of 1.  When that's fixed, this should return adoptRef()
         static PassRefPtr<XBLDocument> create()
         {
-            return adoptRef(new XBLDocument());
+            XBLDocument* newDocument =  new XBLDocument();
+            ASSERT(newDocument->refCount() == 0); // This ASSERT will fail if Document is fixed but someone forgets to fix this code
+            return newDocument;
         }
 
-        virtual bool isXBLDocument() { return true; }
+        virtual bool isXBLDocument() const { return true; }
 
     private:
         XBLDocument()

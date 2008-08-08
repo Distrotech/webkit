@@ -38,6 +38,7 @@ class CachedCSSStyleSheet;
 class CachedFont;
 class CachedImage;
 class CachedScript;
+class CachedXBLDocument;
 class CachedXSLStyleSheet;
 class Document;
 class Frame;
@@ -63,7 +64,7 @@ public:
 #if ENABLE(XSLT)
     CachedXSLStyleSheet* requestXSLStyleSheet(const String& url);
 #endif
-#if ENABLE(DEPRECATED_XBL)
+#if ENABLE(XBL)
     CachedXBLDocument* requestXBLDocument(const String &url);
 #endif
 
