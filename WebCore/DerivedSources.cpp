@@ -314,7 +314,6 @@
 #include "JSXMLHttpRequest.cpp"
 #include "JSXMLHttpRequestException.cpp"
 #include "JSXMLHttpRequestProgressEvent.cpp"
-#include "JSXMLHttpRequestUpload.cpp"
 #include "JSXMLSerializer.cpp"
 #include "JSXPathEvaluator.cpp"
 #include "JSXPathException.cpp"
