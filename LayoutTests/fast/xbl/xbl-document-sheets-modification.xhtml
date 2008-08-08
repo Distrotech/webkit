@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <script>
+    var sheets = document.styleSheets;
+
+    function test()
+    {
+        if (window.layoutTestController)
+            layoutTestController.dumpAsText();
+
+        var console = document.getElementById('console');
+        var curSheets = document.styleSheets;
+
+        if (curSheets.length != sheets.length) {
+            console.innerHTML = "FAILED (length does not match)";
+            return;
+        }
+
+        for (var i = 0; i &lt; sheets.length; ++i) {
+            if (sheets.item(i) !== curSheets.item(i)) {
+                console.innerHTML = "FAILED (item " + i + " does not match)";
+                return;
+            }
+        }
+        console.innerHTML = "PASSED";
+    }
+    </script>
+</head>
+<body onload="test()">
+    <p> Test case for bug <a href="https://bugs.webkit.org/show_bug.cgi?id=20212">20212</a>: Bug 20212: [XBL] Add full support for element="" attachment </p>
+    <p class="target"> This test verify that adding XBL binding does not modify the document's sheets. </p>
+    <p> You should see "PASSED" once. </p>
+    <p id="console"> </p>
+    <xbl xmlns="http://www.w3.org/ns/xbl">
+      <binding element="#console"/>
+      <binding id="binding2" element=".p"/>
+    </xbl>
+</body>
+</html>

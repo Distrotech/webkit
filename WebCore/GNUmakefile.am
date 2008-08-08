@@ -1444,6 +1444,7 @@ webcore_built_sources += \
 
 webcore_sources += \
 	WebCore/loader/CachedXBLDocument.cpp \
+	WebCore/xbl/XBLBindingElement.cpp \
 	WebCore/xbl/XBLBindingManager.cpp \
 	WebCore/xbl/XBLXBLElement.cpp
 

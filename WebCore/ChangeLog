@@ -2,6 +2,62 @@
 
         Reviewed by Eric.
 
+        Tests: fast/xbl/xbl-crash-inline.xhtml
+               fast/xbl/xbl-document-sheets-modification.xhtml
+               fast/xbl/xbl-element-binding.xhtml
+
+        Bug 20212: [XBL] Add full support for element="" attachment
+
+        - Add attributeChanged method to XBLBindingElement to catch "element"
+        changes and update the bindings.
+
+        - Translate "element" attribute to a stylesheet that is added to the bound
+        document's sheets.
+
+        * GNUmakefile.am: Add XBLBindingElement.cpp.
+        * WebCore.pro: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+
+        * css/CSSStyleSelector.cpp:
+        (WebCore::CSSStyleSelector::CSSStyleSelector): Add binding
+        sheets.
+
+        * dom/Document.cpp:
+        (WebCore::Document::~Document): Remove binding
+        sheet information.
+
+        (WebCore::Document::recalcStyleSelector): When
+        recalculating the style selector, remove all the bindings
+        as the removed sheets would never remove theirs.
+
+        (WebCore::Document::addBindingSheet): Update binding manager
+        information.
+        (WebCore::Document::removeBindingSheet): Ditto.
+
+        * dom/Document.h:
+        * xbl/XBLBindingElement.cpp: Added.
+        (WebCore::XBLBindingElement::XBLBindingElement):
+        (WebCore::XBLBindingElement::attributeChanged): Check
+        for "element" changes and update the cached sheet and the
+        bound element's bindings style sheets.
+
+        (WebCore::XBLBindingElement::generateBindingSheet): Create
+        the style sheet from the "element" attribute.
+
+        * xbl/XBLBindingElement.h:
+        * xbl/XBLBindingManager.cpp:
+        (WebCore::XBLBindingManager::addBindingSheet):
+        (WebCore::XBLBindingManager::removeBindingSheet):
+        (WebCore::XBLBindingManager::clearBindingSheets):
+        (WebCore::XBLBindingManager::getBindingSheets): All 4 previous
+        methods are used to manage the binding sheets.
+
+        * xbl/XBLBindingManager.h:
+
+2008-08-08  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Re-enable last bits of XBLDocument loading
         legacy code.
 

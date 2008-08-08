@@ -934,6 +934,11 @@ public:
     SVGDocumentExtensions* accessSVGExtensions();
 #endif
 
+#if ENABLE(XBL)
+    void addBindingSheet(PassRefPtr<CSSStyleSheet>);
+    void removeBindingSheet(CSSStyleSheet*);
+#endif
+
     void initSecurityContext();
     SecurityOrigin* securityOrigin() const { return m_securityOrigin.get(); }
 
@@ -994,7 +999,7 @@ private:
 #if ENABLE(SVG)
     SVGDocumentExtensions* m_svgExtensions;
 #endif
-    
+
 #if ENABLE(DASHBOARD_SUPPORT)
     Vector<DashboardRegionValue> m_dashboardRegions;
     bool m_hasDashboardRegions;

@@ -28,6 +28,7 @@
 
 #if ENABLE(XBL)
 
+#include "CSSStyleSheet.h"
 #include "XBLBinding.h"
 
 namespace WebCore {
@@ -86,6 +87,45 @@ void XBLBindingManager::removeAllBindings(Element* boundElement)
     Vector<XBLBinding>* elementBindings = m_bindings.take(boundElement);
     if (elementBindings)
         delete elementBindings;
+}
+
+
+void XBLBindingManager::addBindingSheet(Document* document, PassRefPtr<CSSStyleSheet> sheet)
+{
+    StyleSheetVector* documentSheets = m_bindingSheets.get(document);
+    if (!documentSheets) {
+        documentSheets = new StyleSheetVector();
+        m_bindingSheets.add(document, documentSheets);
+    }
+    documentSheets->append(sheet);
+}
+
+void XBLBindingManager::removeBindingSheet(Document* document, PassRefPtr<CSSStyleSheet> sheet)
+{
+    StyleSheetVector* documentSheets = m_bindingSheets.get(document);
+
+    // documentSheets is null if no sheets were added for this document.
+    if (documentSheets) {
+        for (StyleSheetVector::iterator it = documentSheets->begin(); it != documentSheets->end(); ++it)
+            if (*it == sheet) {
+                documentSheets->remove(it - documentSheets->begin());
+                return;
+            }
+    }
+
+    // If we arrive here, it means that we did not find the sheet to remove, which
+    // should NEVER occur.
+    ASSERT_NOT_REACHED();
+}
+
+void XBLBindingManager::clearBindingSheets(Document* document)
+{
+    delete m_bindingSheets.take(document);
+}
+
+StyleSheetVector* XBLBindingManager::getBindingSheets(Document* document)
+{
+    return m_bindingSheets.get(document);
 }
 
 };

@@ -30,11 +30,14 @@
 
 #if ENABLE(XBL)
 
+#include "StyleSheetList.h"
 #include "wtf/HashMap.h"
 #include "wtf/Vector.h"
 
 namespace WebCore {
 
+    class CSSStyleSheet;
+    class Document;
     class Element;
     class XBLBinding;
     class String;
@@ -49,10 +52,18 @@ namespace WebCore {
 
         // Used by Element destructor to prevent leakage.
         void removeAllBindings(Element* boundElement);
+
+        // Binding style sheets management.
+        void addBindingSheet(Document*, PassRefPtr<CSSStyleSheet>);
+        void removeBindingSheet(Document*, PassRefPtr<CSSStyleSheet>);
+        void clearBindingSheets(Document*);
+        StyleSheetVector* getBindingSheets(Document*);
+
     private:
         XBLBindingManager();
 
         HashMap<Element*, Vector<XBLBinding>* > m_bindings;
+        HashMap<Document*, StyleSheetVector*> m_bindingSheets;
     };
 
 } // namespace WebCore

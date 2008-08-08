@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:xhtml='http://www.w3.org/1999/xhtml'>
+<head>
+    <script>
+    function testBinding()
+    {
+        if (window.layoutTestController)
+            layoutTestController.dumpAsText();
+
+        var target1 = document.getElementById('target1');
+        var target2 = document.getElementById('target2');
+        var console = document.getElementById('console');
+        var binding = document.getElementById('binding');
+
+        // Binding attached with element="" are added with the document url
+        // and appending "#" and the element ID.
+        var url = document.URL + "#binding";
+
+        try {
+            if (!target1.hasBinding(url)) {
+                console.innerHTML = "FAILED (1st)";
+                return;
+            }
+
+            // Set an invalid selector.
+            binding.setAttributeNS(null, "element", "#target2,");
+            if (target1.hasBinding(url) || target2.hasBinding(url)) {
+                console.innerHTML = "FAILED (2nd)";
+                return;
+            }
+
+            // Now set a good selector.
+            binding.setAttributeNS(null, "element", "#target2");
+            if (!target1.hasBinding(url) &amp;&amp; target2.hasBinding(url))
+                console.innerHTML = "PASSED";
+            else
+                console.innerHTML = "FAILED (3rd)";
+        } catch (e) {
+            console.innerHTML = "FAILED (exception thrown)";
+        }
+    }
+    </script>
+
+    <!-- Empty binding -->
+     <xbl xmlns="http://www.w3.org/ns/xbl">
+        <binding id="binding" element=".target"/>
+    </xbl>
+</head>
+<body onload="testBinding()">
+    <p> Test case for bug <a href="https://bugs.webkit.org/show_bug.cgi?id=20212"> 20212 </a>: [XBL] Add full support for element="" attachment</p>
+    <p> You should see "PASSED" once. </p>
+    <p id="console"> </p>
+    <span id="target1" class="target"> </span>
+    <span id="target2"> </span>
+</body>
+</html>

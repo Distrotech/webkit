@@ -1,3 +1,16 @@
+2008-08-08  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Test case for bug 20212: [XBL] Add full support for element="" attachment
+
+        * fast/xbl/xbl-crash-inline-expected.txt: Added.
+        * fast/xbl/xbl-crash-inline.xhtml: Added.
+        * fast/xbl/xbl-document-sheets-modification-expected.txt: Added.
+        * fast/xbl/xbl-document-sheets-modification.xhtml: Added.
+        * fast/xbl/xbl-element-binding-expected.txt: Added.
+        * fast/xbl/xbl-element-binding.xhtml: Added.
+
 2008-07-28  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

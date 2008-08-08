@@ -1,0 +1,7 @@
+Test case for bug 20212: Bug 20212: [XBL] Add full support for element="" attachment
+
+This test verify that adding XBL binding does not modify the document's sheets.
+
+You should see "PASSED" once.
+
+PASSED

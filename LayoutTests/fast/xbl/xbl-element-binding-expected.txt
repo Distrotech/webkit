@@ -1,0 +1,7 @@
+Test case for bug 20212 : [XBL] Add full support for element="" attachment
+
+You should see "PASSED" once.
+
+PASSED
+
+

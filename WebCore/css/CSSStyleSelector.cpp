@@ -377,6 +377,19 @@ CSSStyleSelector::CSSStyleSelector(Document* doc, const String& userStyleSheet, 
         if (sheet->isCSSStyleSheet() && !sheet->disabled())
             m_authorStyle->addRulesFromSheet(static_cast<CSSStyleSheet*>(sheet), *m_medium, this);
     }
+
+#if ENABLE(XBL)
+    // Add bindings's style sheets.
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    StyleSheetVector* bindingSheets = manager->getBindingSheets(doc);
+
+    if (!bindingSheets)
+        return;
+
+    for (StyleSheetVector::iterator it = bindingSheets->begin(); it != bindingSheets->end(); ++it)
+        if ((*it)->isCSSStyleSheet() && !(*it)->disabled())
+            m_authorStyle->addRulesFromSheet(static_cast<CSSStyleSheet*>((*it).get()), *m_medium, this);
+#endif
 }
 
 void CSSStyleSelector::init()

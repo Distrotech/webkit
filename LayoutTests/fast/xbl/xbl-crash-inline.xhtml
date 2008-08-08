@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+    <script>
+    function test()
+    {
+        if (window.layoutTestController)
+            layoutTestController.dumpAsText();
+
+        // Construct an XBLDocument.
+        var xblDoc = document.implementation.createDocument("http://www.w3.org/ns/xbl", null, null);
+
+        // Create the xbl and binding element.
+        var xblElement = xblDoc.createElementNS("http://www.w3.org/ns/xbl", "xbl");
+        var bindingElement = xblDoc.createElementNS("http://www.w3.org/ns/xbl", "binding");
+
+        // Set the "element" attribute.
+        bindingElement.setAttributeNS(null, "element", "*");
+
+        // Append the 2 nodes in the hierarchy.
+        xblElement.appendChild(bindingElement);
+        xblDoc.appendChild(xblElement);
+
+        // Change the "element" attribute.
+        bindingElement.setAttributeNS(null, "element", ".target");
+    }
+    </script>
+</head>
+<body onload="test()">
+    <p> Test case for bug <a href="https://bugs.webkit.org/show_bug.cgi?id=20212">20212</a>: Bug 20212: [XBL] Add full support for element="" attachment </p>
+    <p class="target"> This test case is passed if it does not crash. </p>
+</body>
+</html>

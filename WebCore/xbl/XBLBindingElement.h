@@ -33,12 +33,21 @@
 
 namespace WebCore {
 
+    class Attribute;
+    class CSSStyleSheet;
+
     class XBLBindingElement : public XBLElement {
     public:
-        XBLBindingElement(const WebCore::QualifiedName& qName, WebCore::Document* doc)
-            : XBLElement(qName, doc)
-        {
-        }
+        XBLBindingElement(const QualifiedName&, Document*); 
+
+        virtual void attributeChanged(Attribute*, bool preserveDecls = false);
+
+         // Generate the binding sheet associated by this element.
+        PassRefPtr<CSSStyleSheet> generateBindingSheet();
+
+    private:
+        // FIXME: This should be moved to the XBLBindingPrototype when it is created.
+        RefPtr<CSSStyleSheet> m_bindingSheet;
     };
 
 } // namespace WebCore

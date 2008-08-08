@@ -1829,6 +1829,7 @@
 		A10D21400E389A0D007E500B /* XBLBindingElement.h in Headers */ = {isa = PBXBuildFile; fileRef = A10D213F0E389A0D007E500B /* XBLBindingElement.h */; };
 		A10D21420E389A18007E500B /* XBLTemplateElement.h in Headers */ = {isa = PBXBuildFile; fileRef = A10D21410E389A18007E500B /* XBLTemplateElement.h */; };
 		A1172D6E0E0C539E00175C88 /* XBLDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = A1172D6D0E0C539E00175C88 /* XBLDocument.h */; };
+		A14EF7AC0E3F106900DA9F39 /* XBLBindingElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A14EF7AB0E3F106900DA9F39 /* XBLBindingElement.cpp */; };
 		A718760E0B2A120100A16ECE /* DragActions.h in Headers */ = {isa = PBXBuildFile; fileRef = A718760D0B2A120100A16ECE /* DragActions.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		A71878900B2D04AC00A16ECE /* DragControllerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = A718788F0B2D04AC00A16ECE /* DragControllerMac.mm */; };
 		A7352C190B1BB89D00A986D0 /* RenderSVGBlock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7352C170B1BB89D00A986D0 /* RenderSVGBlock.cpp */; };
@@ -6303,6 +6304,7 @@
 		A10D213F0E389A0D007E500B /* XBLBindingElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLBindingElement.h; sourceTree = "<group>"; };
 		A10D21410E389A18007E500B /* XBLTemplateElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLTemplateElement.h; sourceTree = "<group>"; };
 		A1172D6D0E0C539E00175C88 /* XBLDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XBLDocument.h; sourceTree = "<group>"; };
+		A14EF7AB0E3F106900DA9F39 /* XBLBindingElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XBLBindingElement.cpp; sourceTree = "<group>"; };
 		A718760D0B2A120100A16ECE /* DragActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DragActions.h; sourceTree = "<group>"; };
 		A718788F0B2D04AC00A16ECE /* DragControllerMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DragControllerMac.mm; sourceTree = "<group>"; };
 		A7352C170B1BB89D00A986D0 /* RenderSVGBlock.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = RenderSVGBlock.cpp; sourceTree = "<group>"; };
@@ -13305,6 +13307,7 @@
 			children = (
 				A10D21410E389A18007E500B /* XBLTemplateElement.h */,
 				A10D213F0E389A0D007E500B /* XBLBindingElement.h */,
+				A14EF7AB0E3F106900DA9F39 /* XBLBindingElement.cpp */,
 				A10D20A30E386DCF007E500B /* XBLBinding.h */,
 				A10D20A40E386DCF007E500B /* XBLBindingManager.cpp */,
 				A10D20A50E386DCF007E500B /* XBLBindingManager.h */,
@@ -17103,6 +17106,7 @@
 				F9C6760A0DEC7903008D0C2F /* XBLElementFactory.cpp in Sources */,
 				F9C6760B0DEC7903008D0C2F /* XBLNames.cpp in Sources */,
 				A10D20A70E386DCF007E500B /* XBLBindingManager.cpp in Sources */,
+				A14EF7AC0E3F106900DA9F39 /* XBLBindingElement.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

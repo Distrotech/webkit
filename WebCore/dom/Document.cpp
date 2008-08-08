@@ -127,6 +127,7 @@
 #endif
 
 #if ENABLE(XBL)
+#include "XBLBindingManager.h"
 #include "XBLElement.h"
 #include "XBLElementFactory.h"
 #include "XBLNames.h"
@@ -401,6 +402,10 @@ Document::~Document()
 
 #if ENABLE(SVG)
     delete m_svgExtensions;
+#endif
+#if ENABLE(XBL)
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->clearBindingSheets(this);
 #endif
 
     XMLHttpRequest::detachRequests(this);
@@ -2268,6 +2273,15 @@ void Document::recalcStyleSelector()
         if (sheet)
             sheets.append(sheet);
 
+#if ENABLE(XBL)
+        // Remove all bindings as some binding sheets may be removed
+        // and they wouldn't update their bindings.
+        // FIXME: This should be done only if a binding sheet was removed instead of always.
+        if (n->isElementNode()) {
+            XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+            manager->removeAllBindings(static_cast<Element*>(n));
+        }
+#endif
         // For HTML documents, stylesheets are not allowed within/after the <BODY> tag. So we
         // can stop searching here.
         if (isHTMLDocument() && n->hasTagName(bodyTag))
@@ -3632,6 +3646,20 @@ SVGDocumentExtensions* Document::accessSVGExtensions()
     if (!m_svgExtensions)
         m_svgExtensions = new SVGDocumentExtensions(this);
     return m_svgExtensions;
+}
+#endif
+
+#if ENABLE(XBL)
+void Document::addBindingSheet(PassRefPtr<CSSStyleSheet> sheet)
+{
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->addBindingSheet(this, sheet);
+}
+
+void Document::removeBindingSheet(CSSStyleSheet* sheet)
+{
+    XBLBindingManager* manager = XBLBindingManager::sharedInstance();
+    manager->removeBindingSheet(this, sheet);
 }
 #endif
 
