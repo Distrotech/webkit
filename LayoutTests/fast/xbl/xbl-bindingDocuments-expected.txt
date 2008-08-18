@@ -1,0 +1,38 @@
+This test checks the behaviour of document.bindingDocuments as specified by the XBL specification.
+
+On success, you will see a series of "PASS" messages, followed by "TEST COMPLETE".
+
+
+Initial value of bindingDocuments
+
+PASS bindingDocuments.toString() is "[object NamedNodeMap]"
+PASS bindingDocuments.length is 0
+PASS bindingDocuments.getNamedItem('foobar') is null
+PASS bindingDocuments.item(0) is null
+
+Try changing the empty bindingDocuments
+
+PASS bindingDocuments.setNamedItem(bindingDocuments.item(0)) threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.setNamedItemNS(bindingDocuments.item(0)) threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.removeNamedItem('foobar') threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.removeNamedItemNS('', 'foobar') threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+
+Add a value to bindingDocuments and check the results (This part should fail as the loading code is not implemented)
+
+FAIL bindingDocuments.length should be 1. Was 0.
+FAIL bindingDocuments.item(0).toString() should be [object Document]. Threw exception TypeError: Null value
+FAIL bindingDocuments.getNamedItem('resources/xbl-passed-binding.xbl') should be true (of type boolean). Was null (of type object).
+PASS bindingDocuments.getNamedItemNS('', 'resources/xbl-passed-binding.xbl') is bindingDocuments.item(0)
+PASS bindingDocuments.getNamedItemNS('', 'resources/xbl-passed-binding.xbl') is bindingDocuments.item(0)
+PASS bindingDocuments.getNamedItemNS('foobar', 'resources/xbl-passed-binding.xbl') is null
+
+Try to change an existing value
+
+PASS bindingDocuments.setNamedItem(bindingDocuments.item(0)) threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.setNamedItemNS(bindingDocuments.item(0)) threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.removeNamedItem('resources/xbl-passed-binding.xbl') threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS bindingDocuments.removeNamedItemNS('', 'resources/xbl-passed-binding.xbl') threw exception Error: NO_MODIFICATION_ALLOWED_ERR: DOM Exception 7.
+PASS successfullyParsed is true
+
+TEST COMPLETE
+

@@ -1443,6 +1443,7 @@ webcore_built_sources += \
 	DerivedSources/XBLNames.cpp
 
 webcore_sources += \
+	WebCore/dom/NamedStaticDocumentMap.cpp \
 	WebCore/loader/CachedXBLDocument.cpp \
 	WebCore/xbl/XBLBinding.cpp \
 	WebCore/xbl/XBLBindingElement.cpp \

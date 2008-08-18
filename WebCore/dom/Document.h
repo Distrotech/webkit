@@ -86,6 +86,7 @@ namespace WebCore {
     class IntPoint;
     class JSNode;
     class MouseEventWithHitTestResults;
+    class NamedStaticDocumentMap;
     class NodeFilter;
     class NodeIterator;
     class Page;
@@ -937,6 +938,9 @@ public:
 #if ENABLE(XBL)
     void addBindingSheet(PassRefPtr<CSSStyleSheet>);
     void removeBindingSheet(CSSStyleSheet*);
+
+    NamedNodeMap* bindingDocuments();
+    Document* loadBindingDocument(const String& documentURI);
 #endif
 
     void initSecurityContext();
@@ -998,6 +1002,13 @@ private:
     
 #if ENABLE(SVG)
     SVGDocumentExtensions* m_svgExtensions;
+#endif
+
+#if ENABLE(XBL)
+    // The binding documents are lazily created.
+    void createBindingDocumentsIfNeeded();
+
+    RefPtr<NamedStaticDocumentMap> m_bindingDocuments;
 #endif
 
 #if ENABLE(DASHBOARD_SUPPORT)

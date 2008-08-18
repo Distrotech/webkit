@@ -2,6 +2,16 @@
 
         Reviewed by Eric.
 
+        Test case for bug 20347: [XBL] Add support for DocumentXBL interface
+
+        * fast/xbl/resources/bindingDocuments.js: Added.
+        * fast/xbl/xbl-bindingDocuments-expected.txt: Added.
+        * fast/xbl/xbl-bindingDocuments.html: Added.
+
+2008-08-18  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Test case for bug 20263: [XBL] Add loading code for XBLBinding
 
         * fast/xbl/resources/xbl-failed-binding.xbl: Added.

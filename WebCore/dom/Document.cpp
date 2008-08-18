@@ -127,6 +127,7 @@
 #endif
 
 #if ENABLE(XBL)
+#include "NamedStaticDocumentMap.h"
 #include "XBLBindingManager.h"
 #include "XBLElement.h"
 #include "XBLElementFactory.h"
@@ -280,6 +281,9 @@ Document::Document(Frame* frame, bool isXHTML)
 #if ENABLE(SVG)
     , m_svgExtensions(0)
 #endif
+#if ENABLE(XBL)
+    , m_bindingDocuments(0)
+#endif
 #if ENABLE(DASHBOARD_SUPPORT)
     , m_hasDashboardRegions(false)
     , m_dashboardRegionsDirty(false)
@@ -406,6 +410,8 @@ Document::~Document()
 #if ENABLE(XBL)
     XBLBindingManager* manager = XBLBindingManager::sharedInstance();
     manager->clearBindingSheets(this);
+
+    m_bindingDocuments = 0;
 #endif
 
     XMLHttpRequest::detachRequests(this);
@@ -3650,6 +3656,7 @@ SVGDocumentExtensions* Document::accessSVGExtensions()
 #endif
 
 #if ENABLE(XBL)
+
 void Document::addBindingSheet(PassRefPtr<CSSStyleSheet> sheet)
 {
     XBLBindingManager* manager = XBLBindingManager::sharedInstance();
@@ -3661,6 +3668,30 @@ void Document::removeBindingSheet(CSSStyleSheet* sheet)
     XBLBindingManager* manager = XBLBindingManager::sharedInstance();
     manager->removeBindingSheet(this, sheet);
 }
+
+NamedNodeMap* Document::bindingDocuments()
+{
+    createBindingDocumentsIfNeeded();
+
+    return m_bindingDocuments.get();
+}
+
+Document* Document::loadBindingDocument(const String& documentURI)
+{
+    createBindingDocumentsIfNeeded();
+
+    // FIXME: we need to load the required document with
+    // some helper class.
+
+    return 0;
+}
+
+void Document::createBindingDocumentsIfNeeded()
+{
+    if (!m_bindingDocuments)
+        m_bindingDocuments = NamedStaticDocumentMap::create();
+}
+
 #endif
 
 PassRefPtr<HTMLCollection> Document::images()

@@ -240,6 +240,11 @@ module core {
             raises(DOMException);
         NodeList            querySelectorAll(in [ConvertUndefinedOrNullToNullString] DOMString selectors)
             raises(DOMException);
+
+#if ENABLE_XBL
+        readonly attribute NamedNodeMap bindingDocuments;
+        Document loadBindingDocument(in DOMString documentURI);
+#endif
     };
 
 }

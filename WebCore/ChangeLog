@@ -2,6 +2,46 @@
 
         Reviewed by Eric.
 
+        Bug 20347: [XBL] Add support for DocumentXBL interface
+
+        - Add a custom NamedNodeMap for document.bindingsDocument
+        as it is a static map that throws NO_MODIFICATIN_ALLOWED_ERR
+        on modification.
+
+        Test: fast/xbl/xbl-bindingDocuments.html
+
+        * GNUmakefile.am: Add NamedStaticDocumentMap.cpp.
+        * WebCore.pro: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+        * dom/Document.cpp:
+        (WebCore::Document::Document): Initialize m_bindingDocuments.
+        (WebCore::Document::~Document): Zero m_bindingDocuments.
+        (WebCore::Document::bindingDocuments): Getter method.
+        (WebCore::Document::loadBindingDocument): Stub method as we need an helper
+        class to load bindings.
+        (WebCore::Document::createBindingDocumentsIfNeeded):
+        * dom/Document.h:
+        * dom/Document.idl: Add documentXBL interface.
+        * dom/NamedStaticDocumentMap.cpp: Added.
+        (WebCore::NamedStaticDocumentMap::NamedStaticDocumentMap):
+        (WebCore::NamedStaticDocumentMap::~NamedStaticDocumentMap):
+        (WebCore::NamedStaticDocumentMap::getNamedItem):
+        (WebCore::NamedStaticDocumentMap::removeNamedItem):
+        (WebCore::NamedStaticDocumentMap::getNamedItemNS):
+        (WebCore::NamedStaticDocumentMap::removeNamedItemNS):
+        (WebCore::NamedStaticDocumentMap::setNamedItem):
+        (WebCore::NamedStaticDocumentMap::item):
+        (WebCore::NamedStaticDocumentMap::addItem):
+        * dom/NamedStaticDocumentMap.h: Added.
+        (WebCore::NamedStaticDocumentMap::create):
+        (WebCore::NamedStaticDocumentMap::length):
+        (WebCore::NamedStaticDocumentMap::clear): Custom NamedNodeMap
+        that match the specification.
+
+2008-08-18  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
         Bug 20263: [XBL] Add loading code for XBLBinding
 
         Test: fast/xbl/xbl-empty-fragment-loadBinding.html

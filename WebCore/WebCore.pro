@@ -1235,6 +1235,7 @@ contains(DEFINES, ENABLE_XBL=1) {
     INCLUDEPATH += xbl
 
     SOURCES += \
+        dom/NamedStaticDocumentMap.cpp \
         loader/CachedXBLDocument.cpp \
         xbl/XBLBinding.cpp \
         xbl/XBLBindingElement.cpp \
