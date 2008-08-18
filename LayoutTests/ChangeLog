@@ -1,3 +1,14 @@
+2008-08-18  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Test case for bug 20263: [XBL] Add loading code for XBLBinding
+
+        * fast/xbl/resources/xbl-failed-binding.xbl: Added.
+        * fast/xbl/resources/xbl-passed-binding.xbl: Added.
+        * fast/xbl/xbl-empty-fragment-loadBinding-expected.txt: Added.
+        * fast/xbl/xbl-empty-fragment-loadBinding.html: Added.
+
 2008-08-08  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

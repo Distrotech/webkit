@@ -1,3 +1,34 @@
+2008-08-18  Julien Chaffraix  <jchaffraix@webkit.org>
+
+        Reviewed by Eric.
+
+        Bug 20263: [XBL] Add loading code for XBLBinding
+
+        Test: fast/xbl/xbl-empty-fragment-loadBinding.html
+
+        * GNUmakefile.am: Add XBLBinding.cpp.
+        * WebCore.pro: Ditto.
+        * WebCore.xcodeproj/project.pbxproj: Ditto.
+
+        * xbl/XBLBinding.cpp: Added.
+        (WebCore::XBLBinding::XBLBinding):
+        (WebCore::XBLBinding::~XBLBinding):
+        (WebCore::XBLBinding::setXBLDocument):
+        (WebCore::XBLBinding::getBindingElement):
+        * xbl/XBLBinding.h: Inherit from CachedResourceClient
+        to use the Cache management. Also added the bound element,
+        the <binding> element as members.
+
+        * xbl/XBLBindingManager.cpp: Changed Vector<XBLBinding>* to
+        Vector<XBLBinding*>* as we were taking a pointer to a local
+        value.
+
+        (WebCore::XBLBindingManager::addBinding): Ditto.
+        (WebCore::XBLBindingManager::removeBinding): Ditto.
+        (WebCore::XBLBindingManager::hasBinding): Ditto.
+        (WebCore::XBLBindingManager::removeAllBindings): Ditto.
+        * xbl/XBLBindingManager.h: Ditto.
+
 2008-08-08  Julien Chaffraix  <jchaffraix@webkit.org>
 
         Reviewed by Eric.

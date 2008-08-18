@@ -62,7 +62,7 @@ namespace WebCore {
     private:
         XBLBindingManager();
 
-        HashMap<Element*, Vector<XBLBinding>* > m_bindings;
+        HashMap<Element*, Vector<XBLBinding*>* > m_bindings;
         HashMap<Document*, StyleSheetVector*> m_bindingSheets;
     };
 

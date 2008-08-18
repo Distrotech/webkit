@@ -26,23 +26,45 @@
 #ifndef XBLBinding_h
 #define XBLBinding_h
 
+#include "config.h"
+
 #if ENABLE(XBL)
 
+#include "CachedResourceClient.h"
 #include "PlatformString.h"
+#include "XBLBindingElement.h"
+#include "XBLDocument.h"
 
 namespace WebCore {
 
-    class XBLBinding {
+    class CachedXBLDocument;
+    class Element;
+
+    class XBLBinding : public CachedResourceClient {
     public:
-        XBLBinding(const String& uri)
-            : m_uri(uri)
-        {
-        }
+        XBLBinding(Element* boundElement, const String& uri);
+        ~XBLBinding();
 
         const String& uri() { return m_uri; }
+
+        // From CacheResourceClient.
+        virtual void setXBLDocument(const String& /*URL*/, XBLDocument*);
     private:
-        // FIXME: we should have the <binding> element too.
+        void getBindingElement(Document* bindingDocument);
+
+        // FIXME: These elements should be distributed among the prototype classes
+        // and this one once they have been created.
+
+        // Weak pointer: as the bound element is
+        // responsible for cleaning its bindings.
+        Element* m_boundElement;
         String m_uri;
+        String m_bindingID;
+
+        // We hold our bindingElement and the binding document.
+        RefPtr<XBLBindingElement> m_bindingElement;
+        CachedXBLDocument* m_cachedDocument;
+        RefPtr<XBLDocument> m_bindingDocument;
     };
 
 } // namespace WebCore

@@ -1,0 +1,8 @@
+<!-- This binding should be attached for the test to pass -->
+<xbl xmlns="http://www.w3.org/ns/xbl">
+    <binding element="*" id="binding">
+        <template>
+            <div style="color: green"> PASSED </div>
+        </template>
+    </binding>
+</xbl>

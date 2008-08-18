@@ -1,0 +1,9 @@
+This is the test case for 19917: [XBL] We need the ability to manage bindings
+
+You should see 2 green "PASSED".
+
+This test is expected to fail as the rendering is not done yet
+
+PASSED
+
+PASSED

@@ -45,27 +45,29 @@ XBLBindingManager::XBLBindingManager()
 
 void XBLBindingManager::addBinding(Element* boundElement, const String& uri)
 {
-    Vector<XBLBinding>* elementBindings = m_bindings.get(boundElement);
+    Vector<XBLBinding*>* elementBindings = m_bindings.get(boundElement);
     if (!elementBindings) {
-        elementBindings = new Vector<XBLBinding>();
+        elementBindings = new Vector<XBLBinding*>();
         m_bindings.add(boundElement, elementBindings);
     }
 
     // CSS attachment might call us twice, so allow only one binding with the same URI per bound element.
-    for (Vector<XBLBinding>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
-        if ((*it).uri() == uri)
+    for (Vector<XBLBinding*>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
+        if ((*it)->uri() == uri)
             return;
 
-    elementBindings->append(XBLBinding(uri));
+    elementBindings->append(new XBLBinding(boundElement, uri));
 }
 
 void XBLBindingManager::removeBinding(Element* boundElement, const String& uri)
 {
-    Vector<XBLBinding>* elementBindings = m_bindings.get(boundElement);
+    Vector<XBLBinding*>* elementBindings = m_bindings.get(boundElement);
     if (elementBindings) {
-        for (Vector<XBLBinding>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
-            if ((*it).uri() == uri) {
-                elementBindings->remove(it - elementBindings->begin());
+        for (Vector<XBLBinding*>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
+            if ((*it)->uri() == uri) {
+                size_t position = it - elementBindings->begin();
+                delete elementBindings->at(position);
+                elementBindings->remove(position);
                 return;
             }
     }
@@ -73,10 +75,10 @@ void XBLBindingManager::removeBinding(Element* boundElement, const String& uri)
 
 bool XBLBindingManager::hasBinding(Element* boundElement, const String& uri)
 {
-    Vector<XBLBinding>* elementBindings = m_bindings.get(boundElement);
+    Vector<XBLBinding*>* elementBindings = m_bindings.get(boundElement);
     if (elementBindings)
-        for (Vector<XBLBinding>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
-            if ((*it).uri() == uri)
+        for (Vector<XBLBinding*>::iterator it = elementBindings->begin(); it != elementBindings->end(); ++it)
+            if ((*it)->uri() == uri)
                 return true;
 
     return false;
@@ -84,9 +86,11 @@ bool XBLBindingManager::hasBinding(Element* boundElement, const String& uri)
 
 void XBLBindingManager::removeAllBindings(Element* boundElement)
 {
-    Vector<XBLBinding>* elementBindings = m_bindings.take(boundElement);
+    Vector<XBLBinding*>* elementBindings = m_bindings.take(boundElement);
     if (elementBindings)
-        delete elementBindings;
+        WTF::deleteAllValues(*elementBindings);
+
+    delete elementBindings;
 }
 
 

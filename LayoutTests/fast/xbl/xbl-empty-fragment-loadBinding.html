@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:xhtml='http://www.w3.org/1999/xhtml'>
+<body>
+    <p> This is the test case for <a href="https://bugs.webkit.org/show_bug.cgi?id=19917">19917</a>: [XBL] We need the ability to manage bindings </p>
+    <p> You should see "PASSED" twice. </p>
+    <p id="testBinding"> </p>
+    <p id="console" style="color: green"> PASSED </p>
+    <script>
+    if (window.layoutTestController)
+        layoutTestController.dumpAsText();
+
+    var console = document.getElementById('console');
+    var testBinding = document.getElementById('testBinding');
+    try {
+        testBinding.addBinding('resources/xbl-passed-binding.xbl#binding');
+        console.addBinding('resources/xbl-failed-binding.xbl');
+
+        // This test our behaviour for attaching the binding in case we want
+        // to change it.
+        if (!console.hasBinding('resources/xbl-failed-binding.xbl') || !testBinding.hasBinding('resources/xbl-passed-binding.xbl#binding')) {
+            console.innerHTML = "FAILED (binding not attached)";
+            return;
+        }
+    } catch (e) {
+        console.innerHTML = "FAILED (exception thrown)";
+    }
+    </script>
+</body>
+</html>
